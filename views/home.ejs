@@ -1,0 +1,308 @@
+<%- include('partials/header', { title: 'หน้าแรก - CoopChain' }) %>
+
+<!-- เพิ่ม FontAwesome สำหรับไอคอนดาวน์โหลด -->
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  rel="stylesheet"
+/>
+
+<style>
+  /* ส่วนล็อกอิน */
+  .coop-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.3s ease;
+  }
+  .coop-card:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+  }
+  .coop-card-img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .coop-card-img:hover {
+    transform: scale(1.05);
+  }
+  .coop-login {
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 0 1rem 1rem 0;
+  }
+  @media (max-width: 768px) {
+    .coop-card-img {
+      height: 250px;
+      border-radius: 1rem 1rem 0 0;
+    }
+    .coop-login {
+      border-radius: 0 0 1rem 1rem;
+    }
+  }
+
+  /* บทความ */
+  .card-title {
+    font-weight: 600;
+  }
+  .card-text {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .btn-outline-success:hover {
+    background-color: #198754;
+    color: white;
+  }
+  .carousel-item .card {
+    margin-bottom: 1.5rem;
+  }
+
+  /* ดาวน์โหลด */
+  .list-group-item {
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+  .list-group-item:hover {
+    background-color: #e6f4ea;
+  }
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  .download-icon {
+    margin-right: 8px;
+    color: #198754;
+  }
+</style>
+
+<div class="container my-3">
+  <div class="card coop-card">
+    <div class="row g-0">
+      <!-- รูปภาพ -->
+      <div class="col-md-6">
+        <img
+          src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+          alt="Coop Image"
+          class="coop-card-img"
+        />
+      </div>
+
+      <!-- กล่องล็อกอิน -->
+      <div class="col-md-6 d-flex align-items-center">
+        <div class="coop-login w-100">
+          <h1 class="display-6 mb-2 text-success text-center">CoopChainReport</h1>
+          <p class="lead mb-4 text-center">สนับสนุนการปฏิบัติงาน</p>
+
+          <h5 class="text-center mb-3">🔐 เข้าสู่ระบบ</h5>
+          <form action="/login" method="POST">
+            <div class="mb-3">
+              <label for="username" class="form-label">ชื่อผู้ใช้</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                name="username"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">รหัสผ่าน</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-success w-100">เข้าสู่ระบบ</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%
+const articles = [
+  {
+    id: 1,
+    title: "ทำไมสหกรณ์ถึงสำคัญกับเศรษฐกิจท้องถิ่น?",
+    summary: "บทบาทของสหกรณ์ในการพัฒนาเศรษฐกิจชุมชน",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  },
+  {
+    id: 2,
+    title: "วิธีเริ่มต้นออมเงินในสหกรณ์อย่างชาญฉลาด",
+    summary: "แนวทางการออมเงินที่ปลอดภัยผ่านสหกรณ์",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  },
+  {
+    id: 3,
+    title: "สหกรณ์กับการสร้างเครือข่ายเกษตรกร",
+    summary: "รวมพลังเกษตรกรด้วยสหกรณ์",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  },
+  {
+    id: 4,
+    title: "รู้จักกฎหมายสหกรณ์ในประเทศไทย",
+    summary: "กฎหมายที่เกี่ยวข้องกับสหกรณ์",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  },
+  {
+    id: 5,
+    title: "Case Study: สหกรณ์ในชัยภูมิกับความสำเร็จ",
+    summary: "บทเรียนจากความสำเร็จในชัยภูมิ",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  },
+  {
+    id: 6,
+    title: "แนวทางสหกรณ์ยุคดิจิทัล",
+    summary: "สหกรณ์ปรับตัวสู่ยุคออนไลน์อย่างไร",
+    image: "https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+  }
+];
+const downloads = [
+  { id: 1, name: "คู่มือการใช้งานระบบ", link: "/downloads/manual.pdf" },
+  { id: 2, name: "รายงานประจำปี 2024", link: "/downloads/annual_report_2024.pdf" },
+  { id: 3, name: "แบบฟอร์มสมัครสมาชิก", link: "/downloads/membership_form.pdf" },
+  { id: 4, name: "คู่มือการเงินสหกรณ์", link: "/downloads/finance_manual.pdf" },
+  { id: 5, name: "เอกสารนโยบายความปลอดภัย", link: "/downloads/security_policy.pdf" },
+  { id: 6, name: "แผนงานประจำปี", link: "/downloads/annual_plan.pdf" },
+  { id: 7, name: "คู่มือฝึกอบรม", link: "/downloads/training_manual.pdf" },
+  { id: 8, name: "เอกสารมาตรฐานการทำงาน", link: "/downloads/standards.pdf" },
+  { id: 9, name: "รายงานผลการตรวจสอบ", link: "/downloads/audit_report.pdf" },
+  { id: 10, name: "แบบฟอร์มรายงานกิจกรรม", link: "/downloads/activity_report_form.pdf" }
+];
+%>
+
+<!-- Section: บทความน่ารู้ (พื้นหลังเต็มจอ) -->
+<section
+  class="py-5"
+  style="background-color: #f8f9fa; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;"
+>
+  <div class="container">
+    <h2 class="mb-4 text-center text-success">📰 บทความน่ารู้</h2>
+
+    <!-- Carousel -->
+    <div id="multiArticleCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        <!-- Slide 1 -->
+        <div class="carousel-item active">
+          <div class="row">
+            <% articles.slice(0, 3).forEach((article) => { %>
+            <div class="col-md-4 col-sm-6">
+              <div class="card h-100 shadow-sm border-0 mb-3">
+                <img
+                  src="<%= article.image %>"
+                  class="card-img-top"
+                  style="height: 200px; object-fit: cover;"
+                />
+                <div class="card-body">
+                  <h5 class="card-title"><%= article.title %></h5>
+                  <p class="card-text"><%= article.summary %></p>
+                  <a
+                    href="/article/<%= article.id %>"
+                    class="btn btn-outline-success btn-sm"
+                    >อ่านต่อ</a
+                  >
+                </div>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="carousel-item">
+          <div class="row">
+            <% articles.slice(3, 6).forEach((article) => { %>
+            <div class="col-md-4 col-sm-6">
+              <div class="card h-100 shadow-sm border-0 mb-3">
+                <img
+                  src="<%= article.image %>"
+                  class="card-img-top"
+                  style="height: 200px; object-fit: cover;"
+                />
+                <div class="card-body">
+                  <h5 class="card-title"><%= article.title %></h5>
+                  <p class="card-text"><%= article.summary %></p>
+                  <a
+                    href="/article/<%= article.id %>"
+                    class="btn btn-outline-success btn-sm"
+                    >อ่านต่อ</a
+                  >
+                </div>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <button
+        class="carousel-control-prev"
+        type="button"
+        data-bs-target="#multiArticleCarousel"
+        data-bs-slide="prev"
+      >
+        <span
+          class="carousel-control-prev-icon bg-dark rounded-circle p-2"
+        ></span>
+        <span class="visually-hidden">ก่อนหน้า</span>
+      </button>
+      <button
+        class="carousel-control-next"
+        type="button"
+        data-bs-target="#multiArticleCarousel"
+        data-bs-slide="next"
+      >
+        <span
+          class="carousel-control-next-icon bg-dark rounded-circle p-2"
+        ></span>
+        <span class="visually-hidden">ถัดไป</span>
+      </button>
+    </div>
+
+    <!-- ปุ่มดูทั้งหมด -->
+    <div class="text-center mt-4">
+      <a href="/articles" class="btn btn-success btn-lg px-4">📚 ดูบทความทั้งหมด</a>
+    </div>
+  </div>
+</section>
+
+<!-- Section: Top 10 ดาวน์โหลด (กว้างแค่ container) -->
+<section class="py-5" style="background-color: #dff4e1;">
+  <div class="container">
+    <h2 class="mb-4 text-center text-success">📥 Top 10 ดาวน์โหลด</h2>
+
+    <ul class="list-group mx-auto" style="max-width: 900px;">
+      <% downloads.forEach((file, index) => { %>
+      <li
+        class="list-group-item d-flex justify-content-between align-items-center"
+      >
+        <span>
+          <i class="fas fa-download download-icon"></i>
+          <strong><%= index + 1 %>.</strong> <%= file.name %>
+        </span>
+        <a
+          href="<%= file.link %>"
+          class="btn btn-sm btn-outline-success"
+          target="_blank"
+          rel="noopener noreferrer"
+          >ดาวน์โหลด</a
+        >
+      </li>
+      <% }); %>
+    </ul>
+
+    <div class="text-center mt-4">
+      <a href="/downloads" class="btn btn-success btn-lg px-4"
+        >📂 ดูข้อมูลทั้งหมด</a
+      >
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

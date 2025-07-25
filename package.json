@@ -1,0 +1,34 @@
+{
+  "name": "express-chain",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saipunya/express-chain.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saipunya/express-chain/issues"
+  },
+  "homepage": "https://github.com/saipunya/express-chain#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "bootstrap": "^5.3.7",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.14.2",
+    "nodemon": "^3.1.10"
+  }
+}

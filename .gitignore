@@ -1,0 +1,46 @@
+# ------------------------------
+# Node.js & Express Project
+# ------------------------------
+
+# Node modules
+node_modules/
+
+# dotenv config file (ห้าม push key ต่าง ๆ)
+.env
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor folders
+.vscode/
+.idea/
+
+# Uploaded files (กรณีมีอัปโหลดรูปภาพ)
+uploads/
+public/uploads/
+
+# Session & temp files
+tmp/
+*.tmp
+*.bak
+
+# Database dump
+*.sql
+
+# Build artifacts
+dist/
+build/
+
+# หากมี coverage report (เช่นใช้ Jest)
+coverage/
+
+# EJS cache (ถ้าเปิดใช้งานใน prod)
+views_cache/
+

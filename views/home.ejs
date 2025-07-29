@@ -307,5 +307,45 @@ const downloads = [
     </div>
   </div>
 </section>
+<!-- HTML ส่วนแสดงผล -->
+<div class="showUser"></div>
+
+<!-- Axios CDN -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+  // ฟังก์ชันสำหรับแสดงข้อมูลผู้ใช้
+  function showUser() {
+  axios.get('/test')
+    .then(response => {
+      const users = response.data; // เป็น array
+      const userDiv = document.querySelector('.showUser');
+      if (!userDiv) return;
+
+      // เคลียร์ก่อน
+      userDiv.innerHTML = '';
+
+      users.forEach(user => {
+        userDiv.innerHTML += `
+          <div class="alert alert-info mb-2">
+            <h4 class="alert-heading">👤 ข้อมูลผู้ใช้</h4>
+            <img src="${user.m_img}" width="80" class="rounded-circle mb-2"><br>
+            <p><strong>ชื่อ:</strong> ${user.m_name}</p>
+            <p><strong>ตำแหน่ง:</strong> ${user.m_position}</p>
+            <p><strong>สิทธิ์:</strong> ${user.m_class}</p>
+          </div>
+        `;
+      });
+    })
+    .catch(error => {
+      console.error('❌ ดึงข้อมูลผู้ใช้ไม่สำเร็จ:', error);
+    });
+}
+
+  // เรียกใช้งานฟังก์ชันเมื่อโหลดหน้าเสร็จ
+  document.addEventListener('DOMContentLoaded', showUser);
+</script>
+
+
 
 <%- include('partials/footer') %>

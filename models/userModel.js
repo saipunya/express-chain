@@ -3,34 +3,41 @@ const db = require('../config/db');
 exports.createUser = async (userData) => {
   const {
     username,
+    hashedPassword,
+    group,
     fullname,
     position,
-    group,
-    email,
-    hashedPassword
+    type,
+    userClass,
+    status,
+    img
+   
   } = userData;
 
   const sql = `
-    INSERT INTO tbl_users (
-      tbl_username, tbl_fullname, tbl_position, tbl_group, tbl_email,
-      tbl_password, tbl_level, tbl_status
+    INSERT INTO member2 (
+      m_user, m_pass, m_group, m_name, m_position, m_type, m_class,
+      m_status, m_img
     )
-    VALUES (?, ?, ? ,?, ?, ?, 'user', 'active')
+    VALUES (?, ?, ? ,?, ?, ?, 'user', 'active', 'default.png')
   `;
 
   await db.execute(sql, [
     username,
+    hashedPassword,
+    group,
     fullname,
     position,
-    group,
-    email,
-    hashedPassword
+    type,
+    userClass,
+    status,
+    img
   ]);
 };
 
 exports.findUserByUsername = async (username) => {
     try {
-      const [rows] = await db.query('SELECT * FROM tbl_users WHERE tbl_username = ?', [username]);
+      const [rows] = await db.query('SELECT * FROM member2 WHERE m_user = ?', [username]);
       return rows[0]; // สมมุติมีแค่ 1 คน
     } catch (err) {
       console.error('Database error:', err);

@@ -29,7 +29,7 @@ exports.login = async (req, res) => {
   try {
     const user = await UserModel.findUserByUsername(username);
 
-    if (!user || user.tbl_status !== 'active') {
+    if (!user || user.m_status !== 'active') {
       return res.send('ไม่พบผู้ใช้ หรือบัญชีถูกปิดใช้งาน');
     }
 
@@ -40,11 +40,11 @@ exports.login = async (req, res) => {
 
     req.session.user = {
       id: user.tbl_id,
-      username: user.tbl_username,
-      fullname: user.tbl_fullname,
-      position: user.tbl_position,
-      group: user.tbl_group,
-      level: user.tbl_level
+      username: user.m_user,
+      fullname: user.m_name,
+      position: user.m_position,
+      class: user.m_class,
+      img: user.m_img
     };
 
     res.redirect('/dashboard');

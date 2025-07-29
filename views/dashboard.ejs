@@ -1,0 +1,16 @@
+<%- include('header') %>
+<!-- สร้างหน้า dashboard -->
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <h1 class="text-center mb-4">แดชบอร์ด</h1>
+      <div class="card shadow rounded-4">
+        <div class="card-body p-5">
+          <h2 class="mb-4">ยินดีต้อนรับ, <%= user.fullname %>!</h2>
+          <p>นี่คือแดชบอร์ดของคุณที่สามารถเข้าถึงข้อมูลและฟีเจอร์ต่างๆ ได้</p>
+          <!-- เพิ่มเนื้อหาแดชบอร์ดที่นี่ -->
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('footer') %>

@@ -1,3 +1,4 @@
+const file = require('../models/homeModel');
 exports.index = (req, res) => {
     const user = req.session.user;
     res.render('dashboard', { title: 'แดชบอร์ด', user });

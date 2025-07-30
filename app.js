@@ -15,8 +15,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
-// require routes/index.js
-require('./routes')(app);
+
 
 
 // ตั้งค่า View Engine
@@ -34,11 +33,14 @@ app.use(express.json());
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(setUserLocals);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use((req, res, next) => {
   res.locals.title = 'CoopChain ชัยภูมิ'; // ค่า default
   next();
 });
-
+// require routes/index.js
+require('./routes')(app);
 // Routing
 // const homeRoutes = require('./routes/homeRoutes');
 // const authRoutes = require('./routes/authRoutes');

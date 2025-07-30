@@ -1,55 +1,61 @@
 const bcrypt = require('bcryptjs');
-const UserModel = require('../models/userModel');
-
-exports.register = async (req, res) => {
-  const { username, fullname, position, group, email, password } = req.body;
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await UserModel.createUser({
-      username,
-      fullname,
-      position,
-      group,
-      email,
-      hashedPassword
-    });
-
-    res.redirect('/login');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('เกิดข้อผิดพลาดขณะลงทะเบียน');
-  }
-};
+const authModel = require('../models/userModel');
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await UserModel.findUserByUsername(username);
+    const user = await authModel.findUserByUsername(username);
 
-    if (!user || user.m_status !== 'active') {
-      return res.send('ไม่พบผู้ใช้ หรือบัญชีถูกปิดใช้งาน');
+    if (!user) {
+      return res.status(401).send('ไม่พบบัญชีผู้ใช้นี้');
+    }
+    console.log(`User password: ${user.m_pass}`);
+
+    const isPasswordValid = await bcrypt.compare(password, user.m_pass);
+    if (!isPasswordValid) {
+      return res.status(401).send('รหัสผ่านไม่ถูกต้อง');
     }
 
-    const isMatch = await bcrypt.compare(password, user.tbl_password);
-    if (!isMatch) {
-      return res.send('รหัสผ่านไม่ถูกต้อง');
-    }
 
+
+
+
+
+    
+    // ตั้ง session หรือ token ตามที่ต้องการ
     req.session.user = {
-      id: user.tbl_id,
+      id: user.id,
       username: user.m_user,
       fullname: user.m_name,
       position: user.m_position,
-      class: user.m_class,
-      img: user.m_img
+      level: user.m_type
     };
 
-    res.redirect('/dashboard');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('เกิดข้อผิดพลาดขณะเข้าสู่ระบบ');
+    res.redirect('/dashboard'); // หรือเส้นทางที่ต้องการหลังล็อกอิน
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+  }
+};
+
+exports.register = async (req, res) => {
+  const { username, password, fullname, position, group } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await authModel.createUser({
+      username,
+      password: hashedPassword,
+      fullname,
+      position,
+      group
+    });
+
+    res.redirect('/login'); // สมัครเสร็จให้ไปล็อกอิน
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดระหว่างสมัครสมาชิก:', error);
+    res.status(500).send('สมัครไม่สำเร็จ');
   }
 };

@@ -3,53 +3,44 @@ const db = require('../config/db');
 exports.createUser = async (userData) => {
   const {
     username,
-    hashedPassword,
+    password,
     group,
     fullname,
-    position,
-    type,
-    userClass,
-    status,
-    img
-   
+    position
   } = userData;
 
   const sql = `
-    INSERT INTO member2 (
-      m_user, m_pass, m_group, m_name, m_position, m_type, m_class,
-      m_status, m_img
+    INSERT INTO member3 (
+      m_user, m_pass, m_group, m_name, m_position,
+      m_type, m_class, m_status, m_img
     )
-    VALUES (?, ?, ? ,?, ?, ?, 'user', 'active', 'default.png')
+    VALUES (?, ?, ?, ?, ?, 'user', 'user', 'active', 'default.png')
   `;
 
   await db.execute(sql, [
     username,
-    hashedPassword,
+    password,
     group,
     fullname,
-    position,
-    type,
-    userClass,
-    status,
-    img
+    position
   ]);
 };
 
 exports.findUserByUsername = async (username) => {
-    try {
-      const [rows] = await db.query('SELECT * FROM member2 WHERE m_user = ?', [username]);
-      return rows[0]; // สมมุติมีแค่ 1 คน
-    } catch (err) {
-      console.error('Database error:', err);
-      throw err;
-    }
-  };
-  exports.test = async () => {
-    try {
-      const [rows] = await db.query('SELECT * FROM member2');
-      return rows; // สมมุติมีแค่ 1 คน
-    } catch (err) {
-      console.error('Database error:', err);
-      throw err;
-    }
+  try {
+    const [rows] = await db.query('SELECT * FROM member3 WHERE m_user = ?', [username]);
+    return rows[0];
+  } catch (err) {
+    console.error('Database error:', err);
+    throw err;
   }
+};
+exports.test = async () => {
+  try {
+    const [rows] = await db.query('SELECT * FROM member3');
+    return rows;
+  } catch (err) {
+    console.error('Database error:', err);
+    throw err;
+  }
+};

@@ -89,12 +89,14 @@
 
       <!-- กล่องล็อกอิน -->
       <div class="col-md-6 d-flex align-items-center">
+        <!-- if login show user detail -->
+         <% if(!user){%>
         <div class="coop-login w-100">
           <h1 class="display-6 mb-2 text-success text-center">CoopChainReport</h1>
           <p class="lead mb-4 text-center">สนับสนุนการปฏิบัติงาน</p>
 
           <h5 class="text-center mb-3">🔐 เข้าสู่ระบบ</h5>
-          <form action="/login" method="POST">
+          <form action="/auth/login" method="POST">
             <div class="mb-3">
               <label for="username" class="form-label">ชื่อผู้ใช้</label>
               <input
@@ -121,7 +123,15 @@
           <hr>
           <p class="text-center mb-3"><i class="bi bi-person-add"></i> ยังไม่มีบัญชี? <a href="/register">สมัครสมาชิก</a></p>  
         </div>
+      <% } else { %>
+
       </div>
+        <div class="coop-login w-100">
+          <h2 class="text-center mb-3">ยินดีต้อนรับ, <%= user.fullname %>!</h2>
+          <p class="text-center">คุณได้เข้าสู่ระบบแล้ว</p>
+          <a href="/dashboard" class="btn btn-success w-100">ไปที่แดชบอร์ด</a>
+        </div>
+      <% } %>
     </div>
   </div>
 </div>
@@ -307,6 +317,40 @@ const downloads = [
     </div>
   </div>
 </section>
+<!-- ดึงข้อมูล filelist ul li loop -->
+<section>
+  <div class="container">
+    <h2 class="mb-4 text-center text-success">📂 รายการไฟล์ทั้งหมด</h2>
+    <ul class="list-group mx-auto" style="max-width: 900px;">
+      <% fileAll.forEach((file, index) => { %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>
+            <i class="fas fa-file-alt me-2"></i>
+            <strong><%= index + 1 %>.</strong> <%= file.c_name %>
+          </span>
+          <% if(user){ %>
+          <a 
+            href="/download/<%= file.id %>" 
+            class="btn btn-sm btn-outline-success" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            ดาวน์โหลด
+          </a>
+          <% } %>
+        </li>
+      <% }); %>
+    </ul>
+
+    <div class="text-center mt-4">
+      <a href="/files" class="btn btn-success btn-lg px-4">
+        📂 ดูไฟล์ทั้งหมด
+      </a>
+    </div>
+  </div>
+</section>
+
+
 <!-- HTML ส่วนแสดงผล -->
 <div class="showUser"></div>
 

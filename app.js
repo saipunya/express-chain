@@ -40,7 +40,14 @@ app.use((req, res, next) => {
   next();
 });
 // require routes/index.js
-require('./routes')(app);
+require('./routes/index')(app);
+// when not routes found, it will return 404 button to home page
+app.use((req, res) => {
+  res.status(404).render('error_page', {
+    message: 'เส้นทางที่คุณเข้าถึงไม่มีอยู่ในระบบ'
+  });
+});
+
 // Routing
 // const homeRoutes = require('./routes/homeRoutes');
 // const authRoutes = require('./routes/authRoutes');

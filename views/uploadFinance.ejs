@@ -1,0 +1,66 @@
+<%- include('./partials/header') %>
+
+<form action="/finance/upload" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="c_code" class="form-label">เลือกสหกรณ์</label>
+        <select name="c_code" id="c_code" class="form-select" required>
+          <option value="">-- กรุณาเลือกสหกรณ์ --</option>
+          <% coops.forEach(coop => { %>
+            <option value="<%= coop.c_code %>"><%= coop.c_name %></option>
+          <% }); %>
+        </select>
+    </div>
+    <input type="hidden" name="c_name" id="c_name">
+    <script>
+    const cCodeSelect = document.getElementById('c_code');
+    const cNameInput = document.getElementById('c_name');
+
+    cCodeSelect.addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        cNameInput.value = selectedOption.text;
+    });
+    </script>
+    <div class="mb-3">
+      <label>ปีสิ้นสุดงบประมาณ (end_year)</label>
+      <input type="text" name="end_year" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>เลือกไฟล์ PDF</label>
+      <input type="file" name="file" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">อัปโหลด</button>
+  </form>
+  <hr>
+  <h5 class="mt-5">📂 ไฟล์ที่อัปโหลดล่าสุด</h5>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>ชื่อสหกรณ์</th>
+      <th>ปีงบประมาณ</th>
+      <th>ไฟล์</th>
+      <th>อัปโหลดโดย</th>
+      <th>เมื่อ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% recentUploads.forEach(file => { %>
+      <tr>
+        <td><%= file.c_name %></td>
+        <td><%= file.end_year %></td>
+        <td>
+          <a href="/download/<%= file.id %>" target="_blank" class="btn btn-sm btn-outline-primary">
+            🔗 ดูไฟล์
+          </a>
+        </td>
+        <td><%= file.saveby %></td>
+        <td><%= new Date(file.savedate).toLocaleString('th-TH') %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+<div class="mt-4 text-end">
+    <a href="/finance" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> กลับไปหน้ารายงานงบการเงิน 
+    </a>
+</div>
+<%- include('./partials/footer') %>

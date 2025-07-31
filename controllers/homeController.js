@@ -2,20 +2,38 @@ const path = require('path');
 const fs = require('fs');
 const fontkit = require('@pdf-lib/fontkit');
 const { PDFDocument, rgb, degrees } = require('pdf-lib');
+const db = require('../config/db');
 
 const allfiles = require('../models/homeModel');
 const financeModel = require('../models/financeModel');
+const coopModel = require('../models/coopModel');
+
+// controllers/homeController.js
+
+const allfiles2 = require('../models/allfilesModel');
 
 exports.index = async (req, res) => {
   try {
-    const allFiles = await allfiles.listFiles();
+    const fileAll = await allfiles2.listFiles();
+
+    const byStatus = await coopModel.getByStatus();
+    const byGroup = await coopModel.getByGroup();
+    const byCoopGroup = await coopModel.getByCoopGroup();
+    const coopTypeOnly = await coopModel.getCoopTypeOnly();
+    const farmerTypeOnly = await coopModel.getFarmerTypeOnly();
+
     res.render('home', {
       title: 'หน้าแรก - CoopChain ชัยภูมิ',
-      fileAll: allFiles
+      fileAll,
+      byStatus,
+      byGroup,
+      byCoopGroup,
+      coopTypeOnly,
+      farmerTypeOnly
     });
   } catch (error) {
-    console.error('Error fetching files:', error);
-    res.status(500).send('เกิดข้อผิดพลาดในการดึงไฟล์');
+    console.error('Error loading home data:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าแรก');
   }
 };
 
@@ -100,5 +118,39 @@ exports.loadFinance = async (req, res) => {
   } catch (err) {
     console.error('Error loading finance files:', err);
     res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+  }
+};
+
+
+
+exports.showDashboard = async (req, res) => {
+  try {
+    const [statusStats] = await db.query(`
+      SELECT coop_group, c_status, COUNT(*) AS total
+      FROM active_coop
+      GROUP BY coop_group, c_status
+    `);
+
+    const [groupStats] = await db.query(`
+      SELECT c_group, COUNT(*) AS total
+      FROM active_coop
+      GROUP BY c_group
+    `);
+
+    const [typeStats] = await db.query(`
+      SELECT coop_group, c_type, COUNT(*) AS total
+      FROM active_coop
+      GROUP BY coop_group, c_type
+    `);
+
+    res.render('home', {
+      statusStats,
+      groupStats,
+      typeStats
+    });
+
+  } catch (err) {
+    console.error('Error fetching dashboard stats:', err);
+    res.status(500).send('Server Error');
   }
 };

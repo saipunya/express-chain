@@ -23,14 +23,14 @@
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link active" href="/">หน้าแรก</a></li>
             <li class="nav-item"><a class="nav-link" href="/plans">แผนงาน</a></li>
-            <li class="nav-item"><a class="nav-link" href="/reports">รายงาน</a></li>
             <!-- ตรวจสอบ login -->
             <% if (user) { %>
+            <li class="nav-item"><a class="nav-link" href="/finance">รายงานงบการเงิน</a></li>
               <li class="nav-item"><a class="nav-link" href="/dashboard">แดชบอร์ด</a></li>
               <li class="nav-item"><a class="nav-link" href="/auth/logout">ออกจากระบบ</a></li>
             <% } else { %>
             <li class="nav-item"><a class="nav-link" href="/auth/login">เข้าสู่ระบบ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/register">สมัครสมาชิก</a></li>
+            <li class="nav-item"><a class="nav-link" href="/auth/register">สมัครสมาชิก</a></li>
             <% } %>
           </ul>
         </div>

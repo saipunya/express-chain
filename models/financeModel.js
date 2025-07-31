@@ -20,3 +20,48 @@ exports.getFinanceFiles = async (search = '', page = 1) => {
 };
 
 exports.ITEMS_PER_PAGE = ITEMS_PER_PAGE;
+
+
+
+
+
+exports.insertFile = async (data) => {
+  const {
+    c_code, c_name, end_year, file_name, link_file, saveby, savedate
+  } = data;
+
+  const [result] = await db.query(
+    `INSERT INTO kb_finance (c_code, c_name, end_year, file_name, link_file, saveby, savedate)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [c_code, c_name, end_year, file_name, link_file, saveby, savedate]
+  );
+
+  return result.insertId;
+};
+
+exports.getFiles = async (offset = 0, limit = 30) => {
+  const [rows] = await db.query('SELECT * FROM kb_finance ORDER BY uploaded_at DESC LIMIT ? OFFSET ?', [limit, offset]);
+  return rows;
+};
+
+exports.countFiles = async () => {
+  const [[{ count }]] = await db.query('SELECT COUNT(*) AS count FROM kb_finance');
+  return count;
+};
+// ใน models/financeModel.js
+exports.getLastUploads = async (limit = 5) => {
+  const [rows] = await db.query(`
+    SELECT * FROM finance_files
+    ORDER BY savedate DESC
+    LIMIT ?
+  `, [limit]);
+  return rows;
+};
+exports.getLastUploads = async (limit = 5) => {
+  const [rows] = await db.query(`
+    SELECT * FROM kb_finance
+    ORDER BY savedate DESC
+    LIMIT ?
+  `, [limit]);
+  return rows;
+}

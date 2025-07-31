@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <h3><%= title %></h3>
+
+  <input type="text" id="searchInput" class="form-control mb-3" placeholder="ค้นหาไฟล์ในหน้านี้เท่านั้น...">
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>ชื่อไฟล์</th>
+        <th>ดูไฟล์</th>
+      </tr>
+    </thead>
+    <tbody id="fileTable">
+      <% fileAll.forEach(file => { %>
+        <tr>
+          <td><%= file.c_name %></td>
+          <td>
+            <a href="/download/<%= file.id %>" target="_blank" class="btn btn-primary btn-sm">
+              ดูไฟล์
+            </a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination justify-content-center">
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link" href="/finance?page=<%= i %>"><%= i %></a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const fileTable = document.getElementById('fileTable');
+
+  searchInput.addEventListener('input', () => {
+    const keyword = searchInput.value.toLowerCase();
+    const rows = fileTable.querySelectorAll('tr');
+
+    rows.forEach(row => {
+      const fileName = row.children[0].innerText.toLowerCase();
+      row.style.display = fileName.includes(keyword) ? '' : 'none';
+    });
+  });
+</script>
+
+<%- include('partials/footer') %>

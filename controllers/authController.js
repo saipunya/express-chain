@@ -10,26 +10,22 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(401).send('ไม่พบบัญชีผู้ใช้นี้');
     }
-    console.log(`User password: ${user.m_pass}`);
+  
 
     const isPasswordValid = await bcrypt.compare(password, user.m_pass);
     if (!isPasswordValid) {
       return res.status(401).send('รหัสผ่านไม่ถูกต้อง');
     }
 
-
-
-
-
-
-    
     // ตั้ง session หรือ token ตามที่ต้องการ
     req.session.user = {
       id: user.id,
       username: user.m_user,
       fullname: user.m_name,
       position: user.m_position,
-      level: user.m_type
+      level: user.m_type,
+      group: user.m_group,
+      mClass : user.m_class,
     };
 
     res.redirect('/dashboard'); // หรือเส้นทางที่ต้องการหลังล็อกอิน

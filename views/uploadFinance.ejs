@@ -1,29 +1,96 @@
 <%- include('./partials/header') %>
 
 <form action="/finance/upload" method="POST" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label for="c_code" class="form-label">เลือกสหกรณ์</label>
-        <select name="c_code" id="c_code" class="form-select" required>
-          <option value="">-- กรุณาเลือกสหกรณ์ --</option>
-          <% coops.forEach(coop => { %>
-            <option value="<%= coop.c_code %>"><%= coop.c_name %></option>
-          <% }); %>
-        </select>
-    </div>
-    <input type="hidden" name="c_name" id="c_name">
-    <script>
+  <h3 class="mt-4">📤 อัปโหลดรายงานงบการเงิน</h3>
+  <div class="mb-3">
+    <label for="c_group" class="form-label">เลือกกลุ่มส่งเสริมสหกรณ์</label>
+    <select id="c_group" class="form-select" required>
+      <option value="">-- กรุณาเลือก --</option>
+      <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
+      <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
+      <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
+      <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
+      <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
+    </select>
+  </div>
+  
+  <div class="mb-3">
+    <label for="c_code" class="form-label">เลือกสหกรณ์/กลุ่มเกษตรกร</label>
+    <select name="c_code" id="c_code" class="form-select" required>
+      <option value="">-- กรุณาเลือก --</option>
+    </select>
+  </div>
+  <input type="hidden" name="c_name" id="c_name">
+  
+  <script>
+    const cGroupSelect = document.getElementById('c_group');
     const cCodeSelect = document.getElementById('c_code');
     const cNameInput = document.getElementById('c_name');
-
-    cCodeSelect.addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        cNameInput.value = selectedOption.text;
+  
+    cGroupSelect.addEventListener('change', async function () {
+      const group = this.value;
+      cCodeSelect.innerHTML = '<option value="">กำลังโหลด...</option>';
+  
+      if (!group) {
+        cCodeSelect.innerHTML = '<option value="">-- กรุณาเลือกกลุ่มก่อน --</option>';
+        return;
+      }
+  
+      try {
+        const response = await fetch(`/finance/coops/${group}`);
+        const data = await response.json();
+  
+        if (Array.isArray(data) && data.length > 0) {
+          cCodeSelect.innerHTML = '<option value="">-- กรุณาเลือกสถาบัน --</option>';
+          data.forEach(coop => {
+            const option = document.createElement('option');
+            option.value = coop.c_code;
+            option.text = coop.c_name;
+            cCodeSelect.appendChild(option);
+          });
+        } else {
+          cCodeSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่มนี้</option>';
+        }
+      } catch (error) {
+        console.error('โหลดข้อมูลสหกรณ์ล้มเหลว:', error);
+        cCodeSelect.innerHTML = '<option value="">เกิดข้อผิดพลาด</option>';
+      }
     });
-    </script>
+  
+    cCodeSelect.addEventListener('change', function () {
+      const selectedOption = this.options[this.selectedIndex];
+      cNameInput.value = selectedOption.text;
+    });
+  </script>
+  
+
+
+
+
+
+
     <div class="mb-3">
-      <label>ปีสิ้นสุดงบประมาณ (end_year)</label>
-      <input type="text" name="end_year" class="form-control" required>
-    </div>
+      <!-- select now year -->
+       <div class="mb-3">
+        <label for="" class="form-label">ปีบัญชี</label>
+        <select
+          class="form-select form-select-lg"
+          name="end_year"
+          id=""
+        >
+        <% 
+         const nowYear = new Date().getFullYear() 
+        %>
+          <option value="<%= nowYear + 542 %>" ><%= nowYear + 542 %></option>
+          <option value="<%= nowYear + 543 %>" selected><%= nowYear + 543 %></option>
+          <option value="<%= nowYear + 544 %>" ><%= nowYear + 544 %></option>
+        </select>
+       </div>
+      </div>
+     
+       
+        
+      
     <div class="mb-3">
       <label>เลือกไฟล์ PDF</label>
       <input type="file" name="file" class="form-control" required>

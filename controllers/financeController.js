@@ -3,7 +3,7 @@ const financeModel = require('../models/financeModel');
 const path = require('path');
 const db = require('../config/db'); // Assuming you have a db config file
 const uploadPath = path.join(__dirname, '..', 'uploads', 'finance');
-const coopModel = require('../models/coopModel'); // Assuming you have a coop model for fetching coops
+// const coopModel = require('../models/coopModel'); // Assuming you have a coop model for fetching coops
 
 
 
@@ -17,10 +17,10 @@ const storage = multer.diskStorage({
 exports.upload = multer({ storage });
 
 // หน้าอัปโหลด
-exports.showUploadForm = async (req, res) => {
+exports.showuploadForm = async (req, res) => {
     try {
-      const coops = await coopModel.getAllCoops(); // ดึงข้อมูล active_coop
-      const recentUploads = await financeModel.getLastUploads(5); // ดึงไฟล์ล่าสุด
+      const coops = await financeModel.getAllCoops(); // ดึงข้อมูล active_coop
+      const recentUploads = await financeModel.getLastUploads(); // ดึงไฟล์ล่าสุด
   
       res.render('uploadFinance', {
         title: 'อัปโหลดเอกสารการเงิน',
@@ -67,7 +67,7 @@ exports.uploadFinance = async (req, res) => {
   exports.lastUpload = async (req, res) => {
     try {
       // ดึงข้อมูลสหกรณ์ทั้งหมดเพื่อแสดงใน dropdown
-      const [coops] = await db.query('SELECT c_code, c_name FROM cooperatives');
+      const [coops] = await db.query('SELECT c_code, c_name FROM cooperatives WHERE c_status = "active"');
   
       // ดึง 5 รายการไฟล์ที่อัปโหลดล่าสุด
       const [recentUploads] = await db.query(
@@ -75,7 +75,8 @@ exports.uploadFinance = async (req, res) => {
       );
   
       res.render('uploadFinance', {
-        coops,
+        title: 'อัปโหลดเอกสารการเงิน',
+        coops, // ส่งข้อมูลสหกรณ์เข้า view
         recentUploads // ส่งตัวนี้เข้า view
       });
     } catch (error) {
@@ -83,3 +84,15 @@ exports.uploadFinance = async (req, res) => {
       res.status(500).send('Internal Server Error');
     }
   };
+
+  // API: GET /finance/coops/:group
+exports.getCoopsByGroup = async (req, res) => {
+  const group = req.params.group;
+  try {
+    const coops = await financeModel.getCoopsByGroup(group);
+    res.json(coops);
+  } catch (err) {
+    console.error('Error fetching coops by group:', err);
+    res.status(500).json({ error: 'ไม่สามารถดึงข้อมูลสหกรณ์ได้' });
+  }
+};

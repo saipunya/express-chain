@@ -1,6 +1,12 @@
 // models/coopModel.js
 
+
 const db = require('../config/db');
+
+exports.getAllCoops = async () => {
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "active"');
+  return rows;
+};
 
 // 1. จำนวนสหกรณ์/กลุ่มเกษตรกร แยกตาม c_status
 exports.getByStatus = async () => {
@@ -53,3 +59,4 @@ exports.getFarmerTypeOnly = async () => {
   `);
   return rows;
 };
+

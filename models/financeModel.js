@@ -49,19 +49,27 @@ exports.countFiles = async () => {
   return count;
 };
 // ใน models/financeModel.js
-exports.getLastUploads = async (limit = 5) => {
-  const [rows] = await db.query(`
-    SELECT * FROM finance_files
-    ORDER BY savedate DESC
-    LIMIT ?
-  `, [limit]);
-  return rows;
-};
-exports.getLastUploads = async (limit = 5) => {
+exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
     SELECT * FROM kb_finance
     ORDER BY savedate DESC
     LIMIT ?
   `, [limit]);
   return rows;
-}
+};
+
+
+
+
+exports.getAllCoops = async () => {
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
+  return rows;
+};
+
+exports.getCoopsByGroup = async (group) => {
+  const [rows] = await db.query(
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ?',
+    [group]
+  );
+  return rows;
+};

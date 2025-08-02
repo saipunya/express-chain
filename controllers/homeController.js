@@ -7,6 +7,7 @@ const db = require('../config/db');
 const allfiles = require('../models/homeModel');
 const financeModel = require('../models/financeModel');
 const coopModel = require('../models/coopModel');
+const ruleModel = require('../models/ruleModel');
 
 // controllers/homeController.js
 
@@ -15,6 +16,7 @@ const allfiles2 = require('../models/allfilesModel');
 exports.index = async (req, res) => {
   try {
     const fileAll = await allfiles2.listFiles();
+    const ruleFiles = await ruleModel.getLastUploads(5);
 
     const byStatus = await coopModel.getByStatus();
     const byGroup = await coopModel.getByGroup();
@@ -23,12 +25,13 @@ exports.index = async (req, res) => {
     const farmerTypeOnly = await coopModel.getFarmerTypeOnly();
 
     res.render('home', {
-      title: 'หน้าแรก - CoopChain ชัยภูมิ',
+      title: 'หน้าแรก - CoopChain <|im_start|><|im_start|>',
       fileAll,
+      ruleFiles,
     });
   } catch (error) {
     console.error('Error loading home data:', error);
-    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าแรก');
+    res.status(500).send('<|im_start|>ข้อ<|im_start|>พลาดในการโหลดหน้าแรก');
   }
 };
 
@@ -45,7 +48,7 @@ exports.downloadById = async (req, res) => {
     const filePath = path.join(__dirname, '..', 'uploads', 'finance', filename);
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).send('ไม่พบไฟล์จริงในระบบ');
+      return res.status(404).send('ไม่พบไฟล์ในระบบ');
     }
 
     const isAdmin = req.session?.user?.mClass === 'admin';
@@ -53,10 +56,10 @@ exports.downloadById = async (req, res) => {
     let finalPdfBytes;
 
     if (isAdmin) {
-      // 🔹 Admin: ไม่มีลายน้ำ
+      // 🔹 Admin: ไม่ลายน้ำ
       finalPdfBytes = pdfBytes;
     } else {
-      // 🔸 ผู้ใช้ทั่วไป: เพิ่มลายน้ำ
+      // 🔸 ้ใช้ วไป: เ่่มลายน้ำ
       const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
       const fontBytes = fs.readFileSync(fontPath);
 
@@ -66,7 +69,7 @@ exports.downloadById = async (req, res) => {
       const customFont = await pdfDoc.embedFont(fontBytes);
       const pages = pdfDoc.getPages();
 
-      const watermarkText = 'ใช้สำหรับสำนักงานสหกรณ์จังหวัดชัยภูมิเท่านั้น !';
+      const watermarkText = 'ใช้สหกรณ์เท่า้น !';
 
       pages.forEach(page => {
         const { width, height } = page.getSize();
@@ -90,7 +93,7 @@ exports.downloadById = async (req, res) => {
     res.send(Buffer.from(finalPdfBytes));
   } catch (err) {
     console.error('Download error:', err);
-    res.status(500).send('เกิดข้อผิดพลาดในการแสดงไฟล์');
+    res.status(500).send('ข้อพลาดในการแสดงไฟล์');
   }
 };
 exports.loadFinance = async (req, res) => {
@@ -104,7 +107,7 @@ exports.loadFinance = async (req, res) => {
     const fileAll = await financeModel.getFinanceFiles(search, page);
 
     res.render('loadFinance', {
-      title: 'ไฟล์ทั้งหมด',
+      title: 'ไฟล์งหมด',
       fileAll,
       currentPage: page,
       totalPages,
@@ -112,7 +115,7 @@ exports.loadFinance = async (req, res) => {
     });
   } catch (err) {
     console.error('Error loading finance files:', err);
-    res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    res.status(500).send('ข้อพลาดในการโหลดข้อมูล');
   }
 };
 

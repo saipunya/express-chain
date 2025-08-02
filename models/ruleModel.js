@@ -42,7 +42,7 @@ exports.insertRule = async (data) => {
 
 exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
-    SELECT rule_id, rule_name, rule_year, rule_saveby, rule_savedate 
+    SELECT rule_id, rule_name, rule_year, rule_type, er_no, rule_saveby, rule_savedate 
     FROM kt_rule 
     ORDER BY rule_id DESC
     LIMIT ?

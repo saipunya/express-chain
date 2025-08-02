@@ -19,6 +19,7 @@
       <tr>
         <th>ชื่อไฟล์</th>
         <th>ไฟล์</th>
+        <th>ดาวน์โหลด</th>
       </tr>
     </thead>
     <tbody id="fileTable">
@@ -27,9 +28,16 @@
           <td><%= file.c_name %></td>
           <td><%= file.end_date + " " + file.end_year  %></td>
           <td>
+            <% if(user){ %>
             <a href="/download/<%= file.id %>" target="_blank" class="btn btn-primary btn-sm">
               ไฟล์
             </a>
+            <% }else{ %>
+            <a href="/auth/login" class="btn btn-primary btn-sm">
+              ไฟล์
+            </a>
+            <% } %>
+           
           </td>
         </tr>
       <% }) %>

@@ -51,8 +51,8 @@ exports.countFiles = async () => {
 // ใน models/financeModel.js
 exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
-    SELECT * FROM kb_finance
-    ORDER BY savedate DESC
+    SELECT kb_finance.id,kb_finance.c_name, kb_finance.end_year,kb_finance.c_code,kb_finance.saveby, kb_finance.savedate, active_coop.c_code, active_coop.end_date FROM kb_finance
+    LEFT JOIN active_coop ON kb_finance.c_code = kb_finance.c_code ORDER BY kb_finance.id DESC
     LIMIT ?
   `, [limit]);
   return rows;

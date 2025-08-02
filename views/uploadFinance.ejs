@@ -103,7 +103,7 @@
   <thead>
     <tr>
       <th>ชื่อสหกรณ์</th>
-      <th>ปีงบประมาณ</th>
+      <th>ปีบัญชี</th>
       <th>ไฟล์</th>
       <th>อัปโหลดโดย</th>
       <th>เมื่อ</th>
@@ -113,14 +113,20 @@
     <% recentUploads.forEach(file => { %>
       <tr>
         <td><%= file.c_name %></td>
-        <td><%= file.end_year %></td>
+        <td><%= file.end_date + " " + file.end_year %></td>
         <td>
           <a href="/download/<%= file.id %>" target="_blank" class="btn btn-sm btn-outline-primary">
             🔗 ดูไฟล์
           </a>
         </td>
         <td><%= file.saveby %></td>
-        <td><%= new Date(file.savedate).toLocaleString('th-TH') %></td>
+        <td>
+          <%= new Date(file.savedate).toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+          }) %>
+        </td>
       </tr>
     <% }) %>
   </tbody>

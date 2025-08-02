@@ -286,6 +286,42 @@ const downloads = [
 </section>
 
 
+<section class="py-5 bg-white">
+  <div class="container-lg">
+    <h2 class="mb-4 text-center text-success">📂 รายการไฟล์ทั้งหมด</h2>
+    
+    <div class="bg-light p-4 rounded shadow-sm">
+      <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
+        <% fileAll.forEach((file, index) => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <i class="fas fa-file-alt me-2 text-secondary"></i>
+              <strong><%= index + 1 %>.</strong> <%= file.c_name %> <span> [ <%= file.end_date %> <%= file.end_year  %>]</span>
+            </span>
+            <% if(user){ %>
+              <a 
+                href="/download/<%= file.id %>" 
+                class="btn btn-sm btn-outline-success" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                ดาวน์โหลด
+              </a>
+            <% } %>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="/files" class="btn btn-success btn-lg px-4 shadow-sm">
+        📂 ดูไฟล์ทั้งหมด
+      </a>
+    </div>
+  </div>
+</section>
+
+
 
 
 <!-- Section: Top 10 ดาวน์โหลด (กว้างแค่ container) -->
@@ -321,37 +357,7 @@ const downloads = [
   </div>
 </section>
 <!-- ดึงข้อมูล filelist ul li loop -->
-<section>
-  <div class="container">
-    <h2 class="mb-4 text-center text-success">📂 รายการไฟล์ทั้งหมด</h2>
-    <ul class="list-group mx-auto" style="max-width: 900px;">
-      <% fileAll.forEach((file, index) => { %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <span>
-            <i class="fas fa-file-alt me-2"></i>
-            <strong><%= index + 1 %>.</strong> <%= file.c_name %>
-          </span>
-          <% if(user){ %>
-          <a 
-            href="/download/<%= file.id %>" 
-            class="btn btn-sm btn-outline-success" 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            ดาวน์โหลด
-          </a>
-          <% } %>
-        </li>
-      <% }); %>
-    </ul>
 
-    <div class="text-center mt-4">
-      <a href="/files" class="btn btn-success btn-lg px-4">
-        📂 ดูไฟล์ทั้งหมด
-      </a>
-    </div>
-  </div>
-</section>
 
 
 <!-- HTML ส่วนแสดงผล -->

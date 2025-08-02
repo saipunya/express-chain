@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 exports.getAllFiles = async () => {
-  const [rows] = await db.query('SELECT * FROM kb_finance ORDER BY id DESC');
+  const [rows] = await db.query("SELECT kb_finance.id AS finance_id,kb_finance.c_name,kb_finance.c_code,active_coop.c_group,active_coop.coop_name,active_coop.end_year,active_coop.end_date FROM kb_finance LEFT JOIN active_coop ON kb_finance.c_code = active_coop.c_code ORDER BY kb_finance.id DESC");
   return rows;
 };
 

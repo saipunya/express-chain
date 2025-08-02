@@ -24,14 +24,15 @@
             <li class="nav-item"><a class="nav-link active" href="/">หน้าแรก</a></li>
             <li class="nav-item"><a class="nav-link" href="/plans">แผนงาน</a></li>
             <!-- ตรวจสอบ login -->
-            <% if (user) { %>
               <li class="nav-item"><a href="/rule" class="nav-link">ข้อบังคับ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/finance">รายงานงบการเงิน</a></li>
+            
+              <li class="nav-item"><a class="nav-link" href="/finance">รายงานงบการเงิน</a></li>
+              
+              <% if (user) { %>
               <li class="nav-item"><a class="nav-link" href="/dashboard">แดชบอร์ด</a></li>
               <li class="nav-item"><a class="nav-link" href="/auth/logout">ออกจากระบบ</a></li>
             <% } else { %>
             <li class="nav-item"><a class="nav-link" href="/auth/login">เข้าสู่ระบบ</a></li>
-            <li class="nav-item"><a class="nav-link" href="/auth/register">สมัครสมาชิก</a></li>
             <% } %>
           </ul>
         </div>

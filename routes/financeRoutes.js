@@ -7,11 +7,11 @@ const { requireLogin } = require('../middlewares/authMiddleware');
 // GET: แสดงหน้า upload form
 router.get('/upload', financeController.showuploadForm);
 
-// POST: รับไฟล์อัปโหลด
+// POST: ไฟล์ ปoload
 router.post('/upload', financeController.upload.single('file'), financeController.uploadFinance);
 
-// GET: หน้าแสดงรายการไฟล์ทั้งหมด (ถ้ามี)
-router.get('/finance', requireLogin, homeController.loadFinance);
+// GET: หน้าแสดงรายการไฟล์ งหมด (ถ้า)
+router.get('/finance', homeController.loadFinance);
 router.get('/finance/view/:id', requireLogin, homeController.downloadById);
 router.get('/coops/:group', financeController.getCoopsByGroup);
 

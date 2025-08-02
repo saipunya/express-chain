@@ -25,11 +25,6 @@ exports.index = async (req, res) => {
     res.render('home', {
       title: 'หน้าแรก - CoopChain ชัยภูมิ',
       fileAll,
-      byStatus,
-      byGroup,
-      byCoopGroup,
-      coopTypeOnly,
-      farmerTypeOnly
     });
   } catch (error) {
     console.error('Error loading home data:', error);

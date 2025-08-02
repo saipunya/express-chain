@@ -5,10 +5,30 @@
     <div class="col-md-10 col-lg-8">
       <h1 class="text-center mb-4">แดชบอร์ด</h1>
       <div class="card shadow rounded-4">
-        <div class="card-body p-5">
+        <div class="card-body p-5 d-flex flex-column align-items-center">
           <h2 class="mb-4">ยินดีต้อนรับ, <%= user.fullname %>!</h2>
-          <p>นี่คือแดชบอร์ดของคุณที่สามารถเข้าถึงข้อมูลและฟีเจอร์ต่างๆ ได้</p>
+          <img
+            src="<%= user.m_img %>"
+            class="img-fluid rounded-top"
+            alt=""
+          />
+          <h4>นี่คือแดชบอร์ดของคุณที่สามารถเข้าถึงข้อมูลและฟีเจอร์ต่างๆ ได้</h4>
           <!-- เพิ่มเนื้อหาแดชบอร์ดที่นี่ -->
+          <hr>
+            <!-- group menu type nav -->
+             <nav class="navbar navbar-expand navbar-light bg-light">
+              <ul class="nav navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link active" href="/finance/" aria-current="page"
+                    >รายงานงบการเงิน<span class="visually-hidden">(current)</span></a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Nav 2</a>
+                </li>
+              </ul>
+             </nav>
+             
         </div>
       </div>
     </div>

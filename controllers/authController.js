@@ -26,6 +26,7 @@ exports.login = async (req, res) => {
       level: user.m_type,
       group: user.m_group,
       mClass : user.m_class,
+      m_img : user.m_img
     };
 
     res.redirect('/dashboard'); // หรือเส้นทางที่ต้องการหลังล็อกอิน
@@ -49,7 +50,7 @@ exports.register = async (req, res) => {
       group
     });
 
-    res.redirect('/login'); // สมัครเสร็จให้ไปล็อกอิน
+    res.redirect('auth/login'); // สมัครเสร็จให้ไปล็อกอิน
   } catch (error) {
     console.error('เกิดข้อผิดพลาดระหว่างสมัครสมาชิก:', error);
     res.status(500).send('สมัครไม่สำเร็จ');

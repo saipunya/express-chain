@@ -124,8 +124,6 @@
           <p class="text-center mb-3"><i class="bi bi-person-add"></i> ยังไม่มีบัญชี? <a href="/auth/register">สมัครสมาชิก</a></p>  
         </div>
       <% } else { %>
-
-      </div>
         <div class="coop-login w-100">
           <h2 class="text-center mb-3">ยินดีต้อนรับ, <%= user.fullname %>!</h2>
           <p class="text-center">คุณได้เข้าสู่ระบบแล้ว</p>
@@ -288,7 +286,7 @@ const downloads = [
 
 <section class="py-5 bg-white">
   <div class="container-lg">
-    <h2 class="mb-4 text-center text-success">📂 รายการไฟล์ทั้งหมด</h2>
+    <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
     
     <div class="bg-light p-4 rounded shadow-sm">
       <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
@@ -314,7 +312,7 @@ const downloads = [
     </div>
 
     <div class="text-center mt-5">
-      <a href="/files" class="btn btn-success btn-lg px-4 shadow-sm">
+      <a href="/finance" class="btn btn-success btn-lg px-4 shadow-sm">
         📂 ดูไฟล์ทั้งหมด
       </a>
     </div>
@@ -356,17 +354,16 @@ const downloads = [
     </div>
   </div>
 </section>
-<!-- ดึงข้อมูล filelist ul li loop -->
 
 
 
 <!-- HTML ส่วนแสดงผล -->
-<div class="showUser"></div>
+<!-- <div class="showUser"></div> -->
 
 <!-- Axios CDN -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
 
-<script>
+<!-- <script>
   // ฟังก์ชันสำหรับแสดงข้อมูลผู้ใช้
   function showUser() {
   axios.get('/test')
@@ -397,7 +394,7 @@ const downloads = [
 
   // เรียกใช้งานฟังก์ชันเมื่อโหลดหน้าเสร็จ
   document.addEventListener('DOMContentLoaded', showUser);
-</script>
+</script> -->
 
 
 

@@ -18,16 +18,29 @@ const Finance = require('../models/financeModel');
 const homeController = {
   index: async (req, res) => {
     try {
-      const finances = await Finance.getAll(); // Ensure `getAll` is implemented in `financeModel`
+      const finances = await Finance.getAll();
       const ruleFiles = await ruleModel.getLastUploads();
       const usecars = await UseCar.getAll();
+      
+      // ข้อมูล สหกรณ์
+      const coopStats = await coopModel.getCoopStats();
+      const closingCount = await coopModel.getClosingStats();
+      
+      // แปลงข้อมูลให้ใช้งานง่าย
+      const stats = {
+        coop: coopStats.find(item => item.coop_group === 'สหกรณ์')?.count || 0,
+        farmer: coopStats.find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
+        closing: closingCount
+      };
+      
       res.render('home', { 
         finances, 
         ruleFiles,
-        usecars
-      }); // Pass `finances` and `user` to the view
+        usecars,
+        stats
+      });
     } catch (error) {
-      console.error('Error fetching data:', error); // Log the error for debugging
+      console.error('Error fetching data:', error);
       res.status(500).send('Error fetching data');
     }
   },
@@ -105,7 +118,7 @@ exports.loadFinance = async (req, res) => {
     const fileAll = await financeModel.getFinanceFiles(search, page);
 
     res.render('loadFinance', {
-      title: 'ไฟล์ทั้งหมด',
+      title: 'ไฟล์หมด',
       fileAll,
       currentPage: page,
       totalPages,

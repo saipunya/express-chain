@@ -4,6 +4,8 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+
+
 <div class="container my-5">
   <div class="card shadow-lg rounded">
     <div class="row g-0">
@@ -22,12 +24,12 @@
         <% if(!user){ %>
         <div class="w-100 px-4">
           <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-          <p class="lead mb-4 text-center">ระบบสารสนสารเทศและเครือข่ายสหกรณ์ฯ</p>
+          <p class="lead mb-4 text-center">ระบบสารสนสารเทศและapyสหกรณ์ฯ</p>
 
-          <h5 class="text-center mb-3">🔐 เข้าสู่ระบบ</h5>
+          <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
           <form action="/auth/login" method="POST">
             <div class="mb-3">
-              <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+              <label for="username" class="form-label">ชื่อใช้งาน</label>
               <input
                 type="text"
                 class="form-control"
@@ -37,7 +39,7 @@
               />
             </div>
             <div class="mb-3">
-              <label for="password" class="form-label">รหัสผ่าน</label>
+              <label for="password" class="form-label">ผ่าน</label>
               <input
                 type="password"
                 class="form-control"
@@ -50,13 +52,13 @@
           </form>
           
           <p class="text-center mt-2">
-            <i class="bi bi-person-add"></i> ยังไม่ได้เป็นสมาชิก 
-            <a href="/auth/register" class="text-success">สมัครสมาชิก</a>
+            <i class="bi bi-person-add"></i> ไม่ได้เป็น 
+            <a href="/auth/register" class="text-success">สมาชิก</a>
           </p>
         </div>
         <% } else { %>
         <div class="w-100 px-4">
-          <h1 class="display-6 mb-3 text-success text-center">ยินดีต้อนรับ</h1>
+          <h1 class="display-6 mb-3 text-success text-center">ต้อนรับ</h1>
           <p class="lead mb-4 text-center"><%= user.fullname %></p>
           <div class="text-center">
             <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
@@ -69,13 +71,46 @@
   </div>
 </div>
 
+<section>
+  <div class="container-lg">
+    <h2 class="my-3 text-center text-primary">📊 ข้อมูลสหกรณ์</h2>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title">จำนวนสหกรณ์</h5>
+            <p class="card-text display-6 text-success"><%= stats.coop %></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title">จำนวนกลุ่มเกษตรกร</h5>
+            <p class="card-text display-6 text-info"><%= stats.farmer %></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
+            <p class="card-text display-6 text-warning"><%= stats.closing %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <!-- ส่วนแสดงไฟล์ -->
 <section class="py-2 bg-white">
   <div class="container-lg">
-    <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
+    
     
     <div class="bg-light p-4 rounded shadow-sm">
+      <h2 class="mb-4 text-center text-success">📂 รายงานงบ</h2>
       <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
         <% finances.forEach((file, index) => { %>
           <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -105,7 +140,7 @@
         <% }); %>
         <div class="text-end mt-2">
           <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
-            📂 งบการเงินทั้งหมด
+            📂 งบงหมด
           </a>
         </div>
       </ul>
@@ -116,7 +151,7 @@
 <!-- ส่วนแสดงไฟล์ข้อ3 -->
 <section class="py-2 bg-white">
   <div class="container-lg">
-    <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
+    <h2 class="mb-4 text-center text-success">📋 ข้อสหกรณ์/กลุ่มเกษตรกร</h2>
     <div class="bg-light p-4 rounded shadow-sm">
       <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
         <% ruleFiles.forEach((rule, index) => { %>
@@ -127,9 +162,9 @@
               <span>[ <%= rule.rule_year %>]</span>
               <span class="badge bg-info ms-2">
                 <% if (rule.rule_type === 'MR') { %>
-                  ข้อบังคับหลัก
+                  ข้อ
                 <% } else if (rule.rule_type === 'ER') { %>
-                  แก้ไขเพิ่มเติม <%= rule.er_no %>
+                  แก้ไขมูล <%= rule.er_no %>
                 <% } %>
               </span>
               <% 
@@ -155,7 +190,7 @@
         <% }); %>
         <div class="text-end mt-2">
           <a href="/rule" class="btn btn-success btn-sm px-4 shadow-sm">
-            📋 ข้อบังคับทั้งหมด
+            📋 ข้อสหกรณ์/กลุ่มเกษตรกร
           </a>
         </div>
       </ul>
@@ -205,4 +240,7 @@
     </div>
   </div>
 </section>
+
+
+
 <%- include('partials/footer') %>

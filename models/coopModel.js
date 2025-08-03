@@ -60,3 +60,26 @@ exports.getFarmerTypeOnly = async () => {
   return rows;
 };
 
+// 6. จำนวนสหกรณ์/กลุ่มเกษตรกร แยกตาม c_status
+exports.getCoopStats = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+      coop_group,
+      COUNT(*) as count
+    FROM active_coop 
+    WHERE c_status = "ดำเนินการ"
+    GROUP BY coop_group
+  `);
+  return rows;
+};
+
+// 3จำนวน3่อยู่ระหว่างชำระบัญ3
+exports.getClosingStats = async () => {
+  const [rows] = await db.query(`
+    SELECT COUNT(*) as count
+    FROM active_coop 
+    WHERE c_status = "เลิก"
+  `);
+  return rows[0].count;
+};
+

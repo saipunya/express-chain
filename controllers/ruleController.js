@@ -154,3 +154,19 @@ exports.showDetailData = async (req,res) =>{
     }
 }
 
+//  delete
+exports.deleteRule = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await ruleModel.deleteRule(id);
+    // delete file from folder
+    const filename =  await ruleModel.getFilenameById(id);
+    const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
+    fs.unlinkSync(filePath);
+
+    res.redirect('/rule');
+  } catch (error) {
+    console.error('Error deleting rule:', error);
+    res.status(500).send('ข้อมูลไม่สำเร็จ');
+  }
+};

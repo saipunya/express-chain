@@ -1,0 +1,26 @@
+<%- include('../partials/header', { title: 'Edit Use Car Record' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">Edit Use Car Record</h1>
+  <form action="/usecar/edit/<%= usecar.id_usecar %>" method="POST">
+    <div class="mb-3">
+      <label for="date_car" class="form-label">Date</label>
+      <input type="date" id="date_car" name="date_car" class="form-control" value="<%= usecar.date_car %>" required>
+    </div>
+    <div class="mb-3">
+      <label for="time_car" class="form-label">Time</label>
+      <input type="text" id="time_car" name="time_car" class="form-control" value="<%= usecar.time_car %>" required>
+    </div>
+    <div class="mb-3">
+      <label for="act_car" class="form-label">Activity</label>
+      <input type="text" id="act_car" name="act_car" class="form-control" value="<%= usecar.act_car %>" required>
+    </div>
+    <div class="mb-3">
+      <label for="place_car" class="form-label">Place</label>
+      <input type="text" id="place_car" name="place_car" class="form-control" value="<%= usecar.place_car %>" required>
+    </div>
+    <button type="submit" class="btn btn-success">Update</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

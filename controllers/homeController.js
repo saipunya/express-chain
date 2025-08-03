@@ -8,31 +8,29 @@ const allfiles = require('../models/homeModel');
 const financeModel = require('../models/financeModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
+const UseCar = require('../models/usecarModel');
 
 // controllers/homeController.js
 
 const allfiles2 = require('../models/allfilesModel');
+const Finance = require('../models/financeModel');
 
-exports.index = async (req, res) => {
-  try {
-    const fileAll = await allfiles2.listFiles();
-    const ruleFiles = await ruleModel.getLastUploads(5);
-
-    const byStatus = await coopModel.getByStatus();
-    const byGroup = await coopModel.getByGroup();
-    const byCoopGroup = await coopModel.getByCoopGroup();
-    const coopTypeOnly = await coopModel.getCoopTypeOnly();
-    const farmerTypeOnly = await coopModel.getFarmerTypeOnly();
-
-    res.render('home', {
-      title: 'หน้าแรก - CoopChain <|im_start|><|im_start|>',
-      fileAll,
-      ruleFiles,
-    });
-  } catch (error) {
-    console.error('Error loading home data:', error);
-    res.status(500).send('<|im_start|>ข้อ<|im_start|>พลาดในการโหลดหน้าแรก');
-  }
+const homeController = {
+  index: async (req, res) => {
+    try {
+      const finances = await Finance.getAll(); // Ensure `getAll` is implemented in `financeModel`
+      const ruleFiles = await ruleModel.getLastUploads();
+      const usecars = await UseCar.getAll();
+      res.render('home', { 
+        finances, 
+        ruleFiles,
+        usecars
+      }); // Pass `finances` and `user` to the view
+    } catch (error) {
+      console.error('Error fetching data:', error); // Log the error for debugging
+      res.status(500).send('Error fetching data');
+    }
+  },
 };
 
 exports.downloadById = async (req, res) => {
@@ -107,7 +105,7 @@ exports.loadFinance = async (req, res) => {
     const fileAll = await financeModel.getFinanceFiles(search, page);
 
     res.render('loadFinance', {
-      title: 'ไฟล์งหมด',
+      title: 'ไฟล์ทั้งหมด',
       fileAll,
       currentPage: page,
       totalPages,
@@ -152,3 +150,5 @@ exports.showDashboard = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
+
+module.exports = homeController;

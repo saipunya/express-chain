@@ -1,23 +1,23 @@
 <%- include('./partials/header') %>
 
 <form action="/finance/upload" method="POST" enctype="multipart/form-data">
-  <h3 class="mt-4">📤 อัปโหลดรายงานงบการเงิน</h3>
+  <h3 class="mt-4">📤 อัพโหลดรายงานงบการเงิน</h3>
   <div class="mb-3">
-    <label for="c_group" class="form-label">เลือกกลุ่มส่งเสริมสหกรณ์</label>
+    <label for="c_group" class="form-label">กลุ่มส่งสหกรณ์</label>
     <select id="c_group" class="form-select" required>
-      <option value="">-- กรุณาเลือก --</option>
-      <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
-      <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
-      <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
-      <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
-      <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
+      <option value="">++ โปรดเลือก ++</option>
+      <option value="group1">กลุ่มส่งสหกรณ์ 1</option>
+      <option value="group2">กลุ่มส่งสหกรณ์ 2</option>
+      <option value="group3">กลุ่มส่งสหกรณ์ 3</option>
+      <option value="group4">กลุ่มส่งสหกรณ์ 4</option>
+      <option value="group5">กลุ่มส่งสหกรณ์ 5</option>
     </select>
   </div>
   
   <div class="mb-3">
-    <label for="c_code" class="form-label">เลือกสหกรณ์/กลุ่มเกษตรกร</label>
+    <label for="c_code" class="form-label">สหกรณ์/กลุ่มเกษตรกร</label>
     <select name="c_code" id="c_code" class="form-select" required>
-      <option value="">-- กรุณาเลือก --</option>
+      <option value="">++โปรดเลือก++</option>
     </select>
   </div>
   <input type="hidden" name="c_name" id="c_name">
@@ -29,19 +29,22 @@
   
     cGroupSelect.addEventListener('change', async function () {
       const group = this.value;
-      cCodeSelect.innerHTML = '<option value="">กำลังโหลด...</option>';
-  
+      cCodeSelect.innerHTML = '<option value="">โหลด...</option>';
+
       if (!group) {
-        cCodeSelect.innerHTML = '<option value="">-- กรุณาเลือกกลุ่มก่อน --</option>';
+        cCodeSelect.innerHTML = '<option value="">-- เลือกกลุ่มก่อน --</option>';
         return;
       }
-  
+
       try {
+        console.log('Fetching coops for group:', group); // Debug
         const response = await fetch(`/finance/coops/${group}`);
         const data = await response.json();
-  
+        
+        console.log('Response data:', data); // Debug
+
         if (Array.isArray(data) && data.length > 0) {
-          cCodeSelect.innerHTML = '<option value="">-- กรุณาเลือกสถาบัน --</option>';
+          cCodeSelect.innerHTML = '<option value="">-- เลือกสหกรณ์ --</option>';
           data.forEach(coop => {
             const option = document.createElement('option');
             option.value = coop.c_code;
@@ -49,11 +52,11 @@
             cCodeSelect.appendChild(option);
           });
         } else {
-          cCodeSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่มนี้</option>';
+          cCodeSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่ม</option>';
         }
       } catch (error) {
         console.error('โหลดข้อมูลสหกรณ์ล้มเหลว:', error);
-        cCodeSelect.innerHTML = '<option value="">เกิดข้อผิดพลาด</option>';
+        cCodeSelect.innerHTML = '<option value="">ข้อผิดพลาด</option>';
       }
     });
   
@@ -72,7 +75,7 @@
     <div class="mb-3">
       <!-- select now year -->
        <div class="mb-3">
-        <label for="" class="form-label">ปีบัญชี</label>
+        <label for="" class="form-label">ประจำปี</label>
         <select
           class="form-select form-select-lg"
           name="end_year"
@@ -92,21 +95,24 @@
         
       
     <div class="mb-3">
-      <label>เลือกไฟล์ PDF</label>
+      <label>ไฟล์ PDF</label>
       <input type="file" name="file" class="form-control" required>
     </div>
-    <button type="submit" class="btn btn-success">อัปโหลด</button>
+    <button type="submit" class="btn btn-success">อัพโหลด</button>
   </form>
   <hr>
-  <h5 class="mt-5">📂 ไฟล์ที่อัปโหลดล่าสุด</h5>
+  <h5 class="mt-5">📂 อัพโหลดล่าสุด</h5>
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th>ชื่อสหกรณ์</th>
+      <th>สถาบัน</th>
       <th>ปีบัญชี</th>
       <th>ไฟล์</th>
-      <th>อัปโหลดโดย</th>
+      <th>อัพโหลดโดย</th>
       <th>เมื่อ</th>
+      <% if(user && user.mClass=='admin'){ %>
+      <th>ลบ</th>
+      <% } %>
     </tr>
   </thead>
   <tbody>
@@ -116,7 +122,7 @@
         <td><%= file.end_date + " " + file.end_year %></td>
         <td>
           <a href="/download/<%= file.id %>" target="_blank" class="btn btn-sm btn-outline-primary">
-            🔗 ดูไฟล์
+            🔗 3ไฟล์
           </a>
         </td>
         <td><%= file.saveby %></td>
@@ -127,13 +133,20 @@
                 day: 'numeric'
           }) %>
         </td>
+        <% if(user && user.mClass=='admin'){ %>
+        <td>
+          <a href="/finance/delete/<%= file.id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('3แน่ใจ3ไม่3่จะลบไฟล์3้?')">
+            <i class="bi bi-trash"></i>
+          </a>
+        </td>
+        <% } %>
       </tr>
     <% }) %>
   </tbody>
 </table>
 <div class="mt-4 text-end">
     <a href="/finance" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> กลับไปหน้ารายงานงบการเงิน 
+        <i class="bi bi-arrow-left"></i> งบการเงินทั้งหมด
     </a>
 </div>
 <%- include('./partials/footer') %>

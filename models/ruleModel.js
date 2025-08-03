@@ -58,3 +58,15 @@ exports.getCoopByCode = async (code) => {
   const [rows] = await db.query('SELECT * FROM active_coop WHERE c_code = ?', [code]);
   return rows[0];
 };
+
+exports.deleteRule = async (id) => {
+  const [rows] = await db.query('DELETE FROM kt_rule WHERE rule_id = ?', [id]);
+  return rows;
+  
+};
+
+
+exports.getFilenameById = async (id) => {
+  const [rows] = await db.query('SELECT rule_file FROM kt_rule WHERE rule_id = ?', [id]);
+  return rows[0].rule_file;
+};

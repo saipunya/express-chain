@@ -63,14 +63,28 @@ exports.getLastUploads = async (limit = 10) => {
 
 
 exports.getAllCoops = async () => {
-  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "_system"');
   return rows;
 };
 
 exports.getCoopsByGroup = async (group) => {
   const [rows] = await db.query(
-    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ?',
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "<|im_start|>" AND c_group = ?',
     [group]
   );
+  return rows;
+};
+
+exports.deleteFile = async (id) => {
+  const [rows] = await db.query('DELETE FROM kb_finance WHERE id = ?', [id]);
+  return rows;
+};
+
+exports.getFilenameById = async (id) => {
+  const [rows] = await db.query('SELECT c_name FROM kb_finance WHERE id = ?', [id]);
+  return rows[0]?.file_name;
+};
+exports.getAll = async () => {
+  const [rows] = await db.query('SELECT * FROM kb_finance ORDER BY id DESC LIMIT 10');
   return rows;
 };

@@ -3,12 +3,8 @@
 const express = require('express');
 const router = express.Router();
 const homeController = require('../controllers/homeController');
-const { requireLogin } = require('../middlewares/authMiddleware');
 
-router.get('/', homeController.index);
-router.get('/download/:id', homeController.downloadById);
-
-router.get('/finance', homeController.loadFinance);
-router.get('/finance/view/:id', requireLogin, homeController.downloadById);
+// Define routes
+router.get('/', homeController.index); // Ensure `index` is a valid function in `homeController`
 
 module.exports = router;

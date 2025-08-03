@@ -1,0 +1,46 @@
+<%- include('../partials/header', { title: 'Use Car Records' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">Use Car Records</h1>
+  <% if(user && user.mClass=='admin'){ %>
+  <a href="/usecar/create" class="btn btn-primary mb-3">Add New Record</a>
+  
+  <% } %>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th >Time</th>
+        <th>Activity</th>
+        <th>Place</th>
+        <% if(user && user.mClass=='admin'){ %>
+        <th>Actions</th>
+        <% } %>
+      </tr>
+    </thead>
+    <tbody>
+      <% usecars.forEach(usecar => { %>
+        <tr>
+            <!-- thai date -->
+             <% const date = new Date(usecar.date_car); %>
+              <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
+              <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+          <td><%= thaiDate %></td>
+          <td class="text-nowrap"><%= usecar.time_car %></td>
+          <td><%= usecar.act_car %></td>
+          <td class="text-nowrap"><%= usecar.place_car %></td>
+          <% if(user && user.mClass=='admin'){ %>
+          <td class="text-nowrap">
+            <a href="/usecar/edit/<%= usecar.id_usecar %>" class="btn btn-warning btn-sm">Edit</a>
+            <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST" style="display: inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+          <% } %>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

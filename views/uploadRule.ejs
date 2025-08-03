@@ -100,6 +100,9 @@
       <th>โดย</th>
       <th>เมื่อ</th>
       <th>ไฟล์</th>
+      <% if(user && user.mClass=='admin'){ %>
+      <th>ลบ</th>
+      <% } %>
     </tr>
   </thead>
   <tbody>
@@ -119,6 +122,14 @@
           <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
             <lemma></lemma>ไฟล์
           </a>
+        </td>
+        <td>
+          <!-- delete button -->
+           <% if(user && user.mClass=='admin'){ %>
+           <a href="/rule/delete/<%= rule.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
+            <i class="bi bi-trash"></i>
+          </a>
+          <% } %>
         </td>
       </tr>
     <% }) %>

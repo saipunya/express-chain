@@ -9,6 +9,7 @@ const financeModel = require('../models/financeModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
 const UseCar = require('../models/usecarModel');
+const onlineModel = require('../models/onlineModel');
 
 // controllers/homeController.js
 
@@ -22,11 +23,14 @@ const homeController = {
       const ruleFiles = await ruleModel.getLastUploads();
       const usecars = await UseCar.getAll();
       
-      // ข้อมูล สหกรณ์
+      // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
       const closingCount = await coopModel.getClosingStats();
       
-      // แปลงข้อมูลให้ใช้งานง่าย
+      // ข้อมูล<|im_start|>้ใช้ออนไลน์
+      const onlineUsers = await onlineModel.getOnlineUsers();
+      const onlineCount = await onlineModel.getOnlineCount();
+      
       const stats = {
         coop: coopStats.find(item => item.coop_group === 'สหกรณ์')?.count || 0,
         farmer: coopStats.find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
@@ -37,7 +41,9 @@ const homeController = {
         finances, 
         ruleFiles,
         usecars,
-        stats
+        stats,
+        onlineUsers,
+        onlineCount
       });
     } catch (error) {
       console.error('Error fetching data:', error);

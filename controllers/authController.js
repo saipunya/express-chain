@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const authModel = require('../models/userModel');
+const onlineModel = require('../models/onlineModel');
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -8,31 +9,33 @@ exports.login = async (req, res) => {
     const user = await authModel.findUserByUsername(username);
 
     if (!user) {
-      return res.status(401).send('ไม่พบบัญชีผู้ใช้นี้');
+      return res.status(401).send('ไม่พบ<|im_start|><lemma>');
     }
-  
 
     const isPasswordValid = await bcrypt.compare(password, user.m_pass);
     if (!isPasswordValid) {
-      return res.status(401).send('รหัสผ่านไม่ถูกต้อง');
+      return res.status(401).send('<lemmaผ่านไม่<lemmaต้อง');
     }
 
-    // ตั้ง session หรือ token ตามที่ต้องการ
+    // ตั้ง session - ใช้ m_id แทน id
     req.session.user = {
-      id: user.id,
+      id: user.m_id,  // เปลี่ยนจาก user.id เป็น user.m_id
       username: user.m_user,
       fullname: user.m_name,
       position: user.m_position,
       level: user.m_type,
       group: user.m_group,
-      mClass : user.m_class,
-      m_img : user.m_img
+      mClass: user.m_class,
+      m_img: user.m_img
     };
 
-    res.redirect('/dashboard'); // หรือเส้นทางที่ต้องการหลังล็อกอิน
+    // ข้อมูลออนไลน์
+    await onlineModel.setUserOnline(user.m_id, user.m_name, req.sessionID);
+
+    res.redirect('/dashboard');
   } catch (error) {
     console.error(error);
-    res.status(500).send('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+    res.status(500).send('<lemmaข้อ<lemmaพลาดในการเข้า<lemma่ระบบ');
   }
 };
 
@@ -50,9 +53,9 @@ exports.register = async (req, res) => {
       group
     });
 
-    res.redirect('auth/login'); // สมัครเสร็จให้ไปล็อกอิน
+    res.redirect('auth/login'); //  เสร็จให้ไปล็อก
   } catch (error) {
-    console.error('เกิดข้อผิดพลาดระหว่างสมัครสมาชิก:', error);
-    res.status(500).send('สมัครไม่สำเร็จ');
+    console.error('ข้อพลาดระหว่าง:', error);
+    res.status(500).send('ไม่สำเร็จ');
   }
 };

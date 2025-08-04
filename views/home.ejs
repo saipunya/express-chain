@@ -24,7 +24,7 @@
         <% if(!user){ %>
         <div class="w-100 px-4">
           <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-          <p class="lead mb-4 text-center">ระบบสารสนสารเทศและเครือข่ายสหกรณ์</p>
+          <p class="lead mb-4 text-center">ระบบสารสนสารเทศและเครือข่ายสหกรณ์ฯ</p>
 
           <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
           <form action="/auth/login" method="POST">
@@ -52,14 +52,24 @@
           </form>
           
           <p class="text-center mt-2">
-            <i class="bi bi-person-add"></i> ยังไม่ได้เป็น 
-            <a href="/auth/register" class="text-success">สมาชิก</a>
+            <i class="bi bi-person-add"></i> ไม่ได้เป็นสมาชิก? 
+            <a href="/auth/register" class="text-success">สมัครสมาชิก</a>
           </p>
         </div>
         <% } else { %>
         <div class="w-100 px-4">
-          <h1 class="display-6 mb-3 text-success text-center">ยินดีต้อนรับต้อนรับ</h1>
+          <h1 class="display-6 mb-3 text-success text-center">ยินดีต้อนรับ</h1>
+          <div class="text-center">
+          <img
+            src="<%= user.m_img %>"
+
+            alt="User Image"
+            class="img-fluid rounded-circle"
+            width="100"
+          />
+        </div>
           <p class="lead mb-4 text-center"><%= user.fullname %></p>
+
           <div class="text-center">
             <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
             <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
@@ -128,7 +138,7 @@
             </span>
             <% if(user){ %>
               <a 
-                href="/download/<%= file.id %>" 
+                href="/finance/download/<%= file.id %>" 
                 class="btn btn-sm btn-outline-success" 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -148,10 +158,10 @@
   </div>
 </section>
 
-<!-- ส่วนแสดงไฟล์ข้อ3 -->
+<!-- ส่วนแสดงไฟล์ข้อบังคับ -->
 <section class="py-2 bg-white">
   <div class="container-lg">
-    <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสถาบัน</h2>
+    <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
     <div class="bg-light p-4 rounded shadow-sm">
       <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
         <% ruleFiles.forEach((rule, index) => { %>
@@ -164,7 +174,7 @@
                 <% if (rule.rule_type === 'MR') { %>
                   ข้อ
                 <% } else if (rule.rule_type === 'ER') { %>
-                  แก้ไขมูล <%= rule.er_no %>
+                  แก้ไข <%= rule.er_no %>
                 <% } %>
               </span>
               <% 
@@ -189,7 +199,7 @@
           </li>
         <% }); %>
         <div class="text-end mt-2">
-          <a href="/rule" class="btn btn-success btn-sm px-4 shadow-sm">
+          <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
             📋 ดูทั้งหมด
           </a>
         </div>
@@ -241,6 +251,78 @@
   </div>
 </section>
 
-
+<!-- ส่วนแสดงispiel -->
+<section class="py-4 bg-light">
+  <div class="container-lg">
+    <div class="row">
+      
+      
+      <!-- ข้อมูลสหกรณ์ -->
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
+            <div class="mb-3">
+              <div class="display-4 text-success"><%= onlineCount %></div>
+              <small class="text-muted">ผู้ใช้ออนไลน์</small>
+            </div>
+            <hr>
+            <div class="row text-center">
+              <h4 class="col-12 text-center">จำนวนสถาบัน</h4>
+              <div class="col-md-4">
+                <div class="h4 text-primary"><%= stats.coop  %></div>
+                <small>สหกรณ์</small>
+              </div>
+              <div class="col-md-4">
+                <div class="h4 text-success"><%=  stats.farmer %></div>
+                <small>กลุ่มเกษตรกร</small>
+              </div>
+              <div class="col-md-4">
+                <div class="h4 text-warning"><%= stats.closing %></div>
+                <small>ชำระบัญชี</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8 mt-4 mt-md-0">
+        <h2 class="mb-4 text-center text-success">🟢 สมาชิกใช้งานขณะนี้</h2>
+        
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="row">
+              <% onlineUsers.forEach((user, index) => { %>
+                <div class="col-md-6 mb-3">
+                  <div class="d-flex align-items-center">
+                    <img 
+                      src="<%= user.m_img || '/images/default-avatar.png' %>" 
+                      alt="Avatar" 
+                      class="rounded-circle me-3" 
+                      style="width: 40px; height: 40px; object-fit: cover;"
+                    >
+                    <div>
+                      <div class="fw-bold text-success"><%= user.on_name %></div>
+                      <small class="text-muted"><%= user.m_position || 'ispiel' %></small>
+                      <div class="badge bg-success ms-2">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+            
+            <% if (onlineUsers.length === 0) { %>
+              <div class="text-center text-muted">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <p>ไม่มีผู้ใช้ออนไลน์ในขณะนี้</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <%- include('partials/footer') %>

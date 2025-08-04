@@ -1,3 +1,5 @@
+const onlineModel = require('../models/onlineModel');
+
 // middlewares/authMiddleware.js
 exports.requireLogin = (req, res, next) => {
     if (!req.session.user) {
@@ -9,15 +11,31 @@ exports.requireLogin = (req, res, next) => {
   exports.requireLevel = (requiredLevel) => {
     return (req, res, next) => {
       if (!req.session.user || req.session.user.level !== requiredLevel) {
-        return res.status(403).send('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        return res.status(403).send('ไม่ได้เข้าหน้านี้');
       }
       next();
     };
   };
   
-  // แนบ session.user ให้ใช้งานใน EJS ได้ทุกหน้า
+  // แนบ session.user ให้ใช้งานใน EJS ได้
   exports.setUserLocals = (req, res, next) => {
     res.locals.user = req.session.user || null;
+    next();
+  };
+
+  // <lemmaปเดตเวลาออนไลน์เมื่อ<lemmaใช้งาน
+  exports.updateOnlineTime = async (req, res, next) => {
+    if (req.session.user) {
+      try {
+        await onlineModel.setUserOnline(
+          req.session.user.id, 
+          req.session.user.fullname, 
+          req.sessionID
+        );
+      } catch (error) {
+        console.error('Error updating online time:', error);
+      }
+    }
     next();
   };
   

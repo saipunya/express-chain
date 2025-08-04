@@ -3,12 +3,13 @@ const app = express();
 const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
-const morgan = require('morgan')
+const morgan = require('morgan');
+const onlineModel = require('./models/onlineModel');
 
 require('dotenv').config();
 
 // Import middleware
-const { setUserLocals } = require('./middlewares/authMiddleware');
+const { setUserLocals, updateOnlineTime } = require('./middlewares/authMiddleware');
 
 // Session setup
 app.use(session({
@@ -34,11 +35,12 @@ app.use(express.json());
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(setUserLocals);
+app.use(updateOnlineTime); // <lemmaปเดตเวลาออนไลน์<lemma request
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(morgan('dev'));
 
 app.use((req, res, next) => {
-  res.locals.title = 'CoopChain ชัยภูมิ'; // ค่า default
+  res.locals.title = 'CoopChain 4'; // ค่า default
   next();
 });
 // require routes/index.js
@@ -46,7 +48,7 @@ require('./routes/index')(app);
 // when not routes found, it will return 404 button to home page
 app.use((req, res) => {
   res.status(404).render('error_page', {
-    message: 'เส้นทางที่คุณเข้าถึงไม่มีอยู่ในระบบ'
+    message: 'เส้นทางเข้าไม่อยู่ในระบบ'
   });
 });
 
@@ -64,8 +66,18 @@ app.use((req, res) => {
 
 
 
-// เริ่ม server
+// เล่ม server
 const PORT = 5500;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
+
+// ทำความสะอาดข้อมูลออนไลน์เก่า<lemma 5 นา<lemma
+setInterval(async () => {
+  try {
+    await onlineModel.cleanupOldOnlineData();
+    console.log('🧹 Cleaned up old online data');
+  } catch (error) {
+    console.error('Error cleaning up online data:', error);
+  }
+}, 5 * 60 * 1000); // 5 นา<lemma

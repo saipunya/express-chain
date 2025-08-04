@@ -80,10 +80,16 @@ exports.deleteFile = async (id) => {
   return rows;
 };
 
+exports.getFileById = async (id) => {
+  const [rows] = await db.query('SELECT * FROM kb_finance WHERE id = ?', [id]);
+  return rows[0];
+};
+
 exports.getFilenameById = async (id) => {
-  const [rows] = await db.query('SELECT c_name FROM kb_finance WHERE id = ?', [id]);
+  const [rows] = await db.query('SELECT file_name FROM kb_finance WHERE id = ?', [id]);
   return rows[0]?.file_name;
 };
+
 exports.getAll = async () => {
   const [rows] = await db.query('SELECT * FROM kb_finance ORDER BY id DESC LIMIT 10');
   return rows;

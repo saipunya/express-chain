@@ -18,4 +18,7 @@ router.get('/coops/:group', financeController.getCoopsByGroup);
 // GET /finance/delete/:id - ลบไฟล์
 router.get('/delete/:id', requireLogin, financeController.deleteFinance);
 
+// GET /finance/download/:id - ดาวน์โหลดไฟล์
+router.get('/download/:id', financeController.downloadFile);
+
 module.exports = router;

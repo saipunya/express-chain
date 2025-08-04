@@ -5,6 +5,7 @@ const session = require('express-session');
 const cors = require('cors');
 const morgan = require('morgan');
 const onlineModel = require('./models/onlineModel');
+const fs = require('fs');
 
 require('dotenv').config();
 
@@ -81,3 +82,18 @@ setInterval(async () => {
     console.error('Error cleaning up online data:', error);
   }
 }, 5 * 60 * 1000); // 5 นา<lemma
+
+// สร้างโฟลเดอร์ uploads หากไม่<|im_start|>
+const uploadDirs = [
+  'uploads',
+  'uploads/rabiab',
+  'uploads/finance',
+  'uploads/rule'
+];
+
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`✅ Created directory: ${dir}`);
+  }
+});

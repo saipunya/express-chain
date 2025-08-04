@@ -1,0 +1,90 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📋 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
+    <% if(user) { %>
+      <a href="/rabiab/upload" class="btn btn-success">
+        <i class="fas fa-plus"></i> อัปโหลด
+      </a>
+    <% } %>
+  </div>
+
+  <!-- ค้นหา -->
+  <form method="GET" class="mb-4">
+    <div class="row">
+      <div class="col-md-8">
+        <input type="text" name="search" class="form-control" placeholder="ค้นหาระเบียบ" value="<%= search %>">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
+        <a href="/rabiab" class="btn btn-secondary">ล้าง</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- ตารางระ3บ -->
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ชื่อระบ</th>
+          <th>พ.ศ.</th>
+          <th>อนุมัติ</th>
+          <th>ไฟล์</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rabiabs.forEach((rabiab, index) => { %>
+          <tr>
+            <td>
+              <%= rabiab.ra_name %>
+              <% 
+                const rabiabSavedDate = new Date(rabiab.ra_savedate);
+                const currentDate = new Date();
+                const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
+              %>
+              <% if (diffDays <= 7) { %>
+                <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
+              <% } %>
+            </td>
+            <td><%= rabiab.ra_year %></td>
+            <td>
+              <%= new Date(rabiab.ra_approvedate).toLocaleDateString('th-TH') %>
+            </td>
+            <td class="text-nowrap">
+              <% if(user) { %>
+                <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="fas fa-download"></i> ดาวน์โหลด
+                </a>
+                <% if(user.mClass === 'admin') { %>
+                  <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" 
+                        onsubmit="return confirm('ต้องการลบระËบนี้? ไฟล์จะถูกลบออกจากระบบด้วย')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="fas fa-trash"></i> ลบ
+                    </button>
+                  </form>
+                <% } %>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if (totalPages > 1) { %>
+    <nav>
+      <ul class="pagination justify-content-center">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

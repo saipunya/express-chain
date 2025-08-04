@@ -169,12 +169,12 @@
             <span>
               <i class="fas fa-file-pdf me-2 text-secondary"></i>
               <strong><%= index + 1 %>.</strong> <%= rule.rule_name %> 
-              <span>[ <%= rule.rule_year %>]</span>
-              <span class="badge bg-info ms-2">
+               
+              <span class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
                 <% if (rule.rule_type === 'MR') { %>
-                  ข้อ
+                  ข้อบังคับหลัก <%= rule.rule_year %>
                 <% } else if (rule.rule_type === 'ER') { %>
-                  แก้ไข <%= rule.er_no %>
+                  แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
                 <% } %>
               </span>
               <% 
@@ -201,6 +201,46 @@
         <div class="text-end mt-2">
           <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
             📋 ดูทั้งหมด
+          </a>
+        </div>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="bg-light p-4 rounded shadow-sm">
+      <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
+      <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
+        <% rabiabFiles.forEach((rabiab, index) => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <i class="fas fa-file-alt me-2 text-secondary"></i>
+              <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %> 
+              <% 
+                const rabiabSavedDate = new Date(rabiab.ra_savedate);
+                const currentDate = new Date();
+                const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
+              %>
+              <% if (diffDays <= 7) { %>
+                <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
+              <% } %>
+            </span>
+            <% if(user){ %>
+              <a 
+                href="/rabiab/download/<%= rabiab.ra_id %>" 
+                class="btn btn-sm btn-outline-warning" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                ดาวน์โหลด
+              </a>
+            <% } %>
+          </li>
+        <% }); %>
+        <div class="text-end mt-2">
+          <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
+            📄 ดูทั้งหมด
           </a>
         </div>
       </ul>

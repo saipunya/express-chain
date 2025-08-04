@@ -10,6 +10,7 @@ const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
 const UseCar = require('../models/usecarModel');
 const onlineModel = require('../models/onlineModel');
+const rabiabModel = require('../models/rabiabModel');
 
 // controllers/homeController.js
 
@@ -21,13 +22,14 @@ const homeController = {
     try {
       const finances = await Finance.getAll();
       const ruleFiles = await ruleModel.getLastUploads();
+      const rabiabFiles = await rabiabModel.getLastUploads();
       const usecars = await UseCar.getAll();
       
       // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
       const closingCount = await coopModel.getClosingStats();
       
-      // ข้อมูล<|im_start|>้ใช้ออนไลน์
+      // ข้อมูล<lemma้ใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
       const onlineCount = await onlineModel.getOnlineCount();
       
@@ -40,6 +42,7 @@ const homeController = {
       res.render('home', { 
         finances, 
         ruleFiles,
+        rabiabFiles,
         usecars,
         stats,
         onlineUsers,

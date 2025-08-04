@@ -28,10 +28,12 @@
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>ชื่อระบ</th>
+          <th>ชื่อระเบียบ</th>
           <th>พ.ศ.</th>
           <th>อนุมัติ</th>
-          <th>ไฟล์</th>
+          <% if(user) { %>
+            <th>Actions</th>
+          <% } %>
         </tr>
       </thead>
       <tbody>

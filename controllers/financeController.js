@@ -144,7 +144,7 @@ const downloadFile = async (req, res) => {
       const customFont = await pdfDoc.embedFont(fontBytes);
       const pages = pdfDoc.getPages();
 
-      const watermarkText = 'ใช้ในราชการกรมส่งเสริมสหกรณ์เท่านั้น';
+      const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
 
       pages.forEach(page => {
         const { width, height } = page.getSize();
@@ -168,7 +168,7 @@ const downloadFile = async (req, res) => {
     res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
     console.error('Download error:', error);
-    res.status(500).send('<|im_start|>ี่พลาดในการดาวน์โหลด');
+    res.status(500).send('ผิดพลาดในการดาวน์โหลด');
   }
 };
 

@@ -126,7 +126,7 @@ exports.showDetailData = async (req,res) =>{
             const customFont = await pdfDoc.embedFont(fontBytes);
             const pages = pdfDoc.getPages();
 
-            const watermarkText = 'ใช้สหกรณ์เท่า้น';
+            const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
 
             pages.forEach(page => {
                 const { width, height } = page.getSize();

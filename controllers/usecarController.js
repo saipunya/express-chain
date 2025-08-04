@@ -14,9 +14,15 @@ const usecarController = {
   },
   create: async (req, res) => {
     try {
-      await UseCar.create(req.body);
+      const data = {
+        ...req.body,
+        saveby: req.session.user?.fullname || 'unknown',
+        savedate: new Date()
+      };
+      await UseCar.create(data);
       res.redirect('/usecar');
     } catch (error) {
+      console.error('Create error:', error);
       res.status(500).send('Error creating record');
     }
   },

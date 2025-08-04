@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 const UseCar = {
   getAll: async () => {
-    const [rows] = await db.query('SELECT * FROM pt_usecar WHERE date_car >= CURDATE() ORDER BY id_usecar ASC');
+    const [rows] = await db.query('SELECT * FROM pt_usecar WHERE date_car >= CURDATE() ORDER BY date_car ASC');
     return rows;
   },
   getById: async (id) => {

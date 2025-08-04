@@ -5,7 +5,25 @@
   <form action="/usecar/edit/<%= usecar.id_usecar %>" method="POST">
     <div class="mb-3">
       <label for="date_car" class="form-label">Date</label>
-      <input type="date" id="date_car" name="date_car" class="form-control" value="<%= usecar.date_car %>" required>
+      <% 
+        let formattedDate = '';
+        if (usecar.date_car) {
+          // แปลงเป็น string และเอาแค่ส่วน YYYY-MM-DD
+          const dateStr = usecar.date_car.toString();
+          if (dateStr.includes('-')) {
+            // ถ้าเป็น YYYY-MM-DD HH:mm:ss
+            formattedDate = dateStr.substring(0, 10);
+          } else {
+            // ถ้าเป็น Date object
+            const date = new Date(usecar.date_car);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            formattedDate = `${year}-${month}-${day}`;
+          }
+        }
+      %>
+      <input type="date" id="date_car" name="date_car" class="form-control" value="<%= formattedDate %>" readonly>
     </div>
     <div class="mb-3">
       <label for="time_car" class="form-label">Time</label>
@@ -19,6 +37,31 @@
       <label for="place_car" class="form-label">Place</label>
       <input type="text" id="place_car" name="place_car" class="form-control" value="<%= usecar.place_car %>" required>
     </div>
+    <div class="mb-3">
+      <label for="no_car" class="form-label">Car Number</label>
+      <input type="text" id="no_car" name="no_car" class="form-control" value="<%= usecar.no_car || '' %>">
+    </div>
+    <div class="mb-3">
+      <label for="respon_car" class="form-label">Responsible Person</label>
+      <input type="text" id="respon_car" name="respon_car" class="form-control" value="<%= usecar.respon_car || '' %>">
+    </div>
+    <div class="mb-3">
+      <label for="comment_car" class="form-label">Comment</label>
+      <textarea id="comment_car" name="comment_car" class="form-control" rows="3"><%= usecar.comment_car || '' %></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="no_book" class="form-label">Book Number</label>
+      <input type="text" id="no_book" name="no_book" class="form-control" value="<%= usecar.no_book || '' %>">
+    </div>
+    <div class="mb-3">
+      <label for="use_refuel" class="form-label">Refuel Usage</label>
+      <input type="text" id="use_refuel" name="use_refuel" class="form-control" value="<%= usecar.use_refuel || '' %>">
+    </div>
+    <div class="mb-3">
+      <label for="list_budget" class="form-label">Budget List</label>
+      <input type="text" id="list_budget" name="list_budget" class="form-control" value="<%= usecar.list_budget || '' %>">
+    </div>
+    <input type="hidden" name="savedate" value="<%= new Date().toLocaleString('en-CA', { timeZone: 'Asia/Bangkok' }).replace(', ', 'T') + '.000Z' %>">
     <button type="submit" class="btn btn-success">Update</button>
   </form>
 </div>

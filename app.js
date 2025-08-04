@@ -3,6 +3,7 @@ const app = express();
 const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
+const morgan = require('morgan')
 
 require('dotenv').config();
 
@@ -34,6 +35,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(setUserLocals);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(morgan('dev'));
 
 app.use((req, res, next) => {
   res.locals.title = 'CoopChain ชัยภูมิ'; // ค่า default

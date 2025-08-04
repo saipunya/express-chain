@@ -22,10 +22,10 @@ exports.insertRabiab = async (data) => {
 // <|im_start|>ระ3บล่า3
 exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
-    SELECT ra_id, ra_code, ra_name, ra_year, ra_approvedate, ra_saveby, ra_savedate 
-    FROM tbl_rabiab 
-    WHERE ra_status = 'active'
-    ORDER BY ra_id DESC
+    SELECT tbl_rabiab.ra_id, tbl_rabiab.ra_code, tbl_rabiab.ra_name, tbl_rabiab.ra_year, tbl_rabiab.ra_approvedate, tbl_rabiab.ra_saveby, tbl_rabiab.ra_savedate ,active_coop.c_code,active_coop.c_name , active_coop.c_group
+    FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
+    WHERE tbl_rabiab.ra_status = 'active'
+    ORDER BY tbl_rabiab.ra_id DESC
     LIMIT ?
   `, [limit]);
   return rows;
@@ -125,4 +125,14 @@ exports.getCoopsByGroup = async (group) => {
     console.error('Database error in getCoopsByGroup:', error);
     throw error;
   }
+};
+// get tbl_rabiab join active_coop
+exports.getRabiabWithCoop = async () => {
+  const [rows] = await db.query(`
+    SELECT tbl_rabiab.ra_id, tbl_rabiab.ra_code, tbl_rabiab.ra_name, tbl_rabiab.ra_year, tbl_rabiab.ra_approvedate, tbl_rabiab.ra_saveby, tbl_rabiab.ra_savedate ,active_coop.c_code,active_coop.c_name , active_coop.c_group
+    FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
+    WHERE tbl_rabiab.ra_status = 'active'
+    ORDER BY tbl_rabiab.ra_id DESC
+  `);
+  return rows;
 };

@@ -10,7 +10,7 @@ exports.index = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const search = req.query.search || '';
 
-    const rabiabs = await rabiabModel.getAllRabiab(page, search);
+    const rabiabs = await rabiabModel.getRabiabWithCoop(page, search);
     const totalItems = await rabiabModel.countRabiab(search);
     const totalPages = Math.ceil(totalItems / rabiabModel.ITEMS_PER_PAGE);
 

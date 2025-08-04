@@ -29,8 +29,9 @@
       <thead>
         <tr>
           <th>ชื่อระเบียบ</th>
-          <th>พ.ศ.</th>
           <th>อนุมัติ</th>
+          <th>สถาบัน</th>
+
           <% if(user) { %>
             <th>Actions</th>
           <% } %>
@@ -50,10 +51,11 @@
                 <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
               <% } %>
             </td>
-            <td><%= rabiab.ra_year %></td>
+           
             <td>
               <%= new Date(rabiab.ra_approvedate).toLocaleDateString('th-TH') %>
             </td>
+            <td class="text-nowrap"><%= rabiab.c_name %></td>
             <td class="text-nowrap">
               <% if(user) { %>
                 <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
@@ -61,7 +63,7 @@
                 </a>
                 <% if(user.mClass === 'admin') { %>
                   <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" 
-                        onsubmit="return confirm('ต้องการลบระËบนี้? ไฟล์จะถูกลบออกจากระบบด้วย')">
+                        onsubmit="return confirm('ต้องการลบระเบียบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                       <i class="fas fa-trash"></i> ลบ
                     </button>

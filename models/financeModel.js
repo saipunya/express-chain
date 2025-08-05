@@ -91,6 +91,6 @@ exports.getFilenameById = async (id) => {
 };
 
 exports.getAll = async () => {
-  const [rows] = await db.query('SELECT * FROM kb_finance ORDER BY id DESC LIMIT 10');
+  const [rows] = await db.query('SELECT * FROM kb_finance LEFT JOIN active_coop ON kb_finance.c_code = active_coop.c_code ORDER BY kb_finance.id DESC LIMIT 10');
   return rows;
 };

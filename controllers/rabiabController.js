@@ -23,7 +23,7 @@ exports.index = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('<|im_start|>ข้อ<|im_start|>พลาด');
+    res.status(500).send('ผิดพลาด');
   }
 };
 

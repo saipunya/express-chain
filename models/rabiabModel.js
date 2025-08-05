@@ -34,19 +34,19 @@ exports.getLastUploads = async (limit = 10) => {
 // 3ระ3บ3้งหมดแบบแบ่งหน้า
 exports.getAllRabiab = async (page = 1, search = '') => {
   const offset = (page - 1) * ITEMS_PER_PAGE;
-  let whereClause = "WHERE ra_status = 'active'";
+  let whereClause = "WHERE tbl_rabiab.ra_status = 'active'";
   let params = [];
 
   if (search) {
-    whereClause += " AND (ra_name LIKE ? OR ra_code LIKE ? OR ra_year LIKE ?)";
+    whereClause += " AND (tbl_rabiab.ra_name LIKE ? OR active_coop.c_name LIKE ? OR tbl_rabiab.ra_year LIKE ?)";
     const searchTerm = `%${search}%`;
     params = [searchTerm, searchTerm, searchTerm];
   }
 
   const [rows] = await db.query(`
-    SELECT * FROM tbl_rabiab 
+    SELECT * FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
     ${whereClause}
-    ORDER BY ra_id DESC
+    ORDER BY tbl_rabiab.ra_id DESC
     LIMIT ? OFFSET ?
   `, [...params, ITEMS_PER_PAGE, offset]);
 
@@ -55,17 +55,18 @@ exports.getAllRabiab = async (page = 1, search = '') => {
 
 // 3จำนวนระ3บ3้งหมด
 exports.countRabiab = async (search = '') => {
-  let whereClause = "WHERE ra_status = 'active'";
+  let whereClause = "WHERE tbl_rabiab.ra_status = 'active'";
   let params = [];
 
   if (search) {
-    whereClause += " AND (ra_name LIKE ? OR ra_code LIKE ? OR ra_year LIKE ?)";
+    whereClause += " AND (tbl_rabiab.ra_name LIKE ? OR active_coop.c_name LIKE ? OR tbl_rabiab.ra_year LIKE ?)";
     const searchTerm = `%${search}%`;
     params = [searchTerm, searchTerm, searchTerm];
   }
 
   const [rows] = await db.query(`
-    SELECT COUNT(*) as total FROM tbl_rabiab ${whereClause}
+    SELECT COUNT(*) as total FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
+    ${whereClause}
   `, params);
   
   return rows[0].total;

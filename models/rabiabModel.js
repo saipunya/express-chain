@@ -125,3 +125,14 @@ exports.getRabiabWithCoop = async () => {
   `);
   return rows;
 };
+exports.getLastUploads = async (limit = 10) => {
+  const [rows] = await db.query(`
+    SELECT tbl_rabiab.ra_id, tbl_rabiab.ra_name, tbl_rabiab.ra_year, tbl_rabiab.ra_saveby, tbl_rabiab.ra_savedate, active_coop.c_name
+    FROM tbl_rabiab 
+    LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
+    WHERE tbl_rabiab.ra_status = 'active'
+    ORDER BY tbl_rabiab.ra_id DESC
+    LIMIT ?
+  `, [limit]);
+  return rows;
+};

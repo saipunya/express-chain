@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'รายชื่อข้อมูลวง:<' }) %>
+<%- include('../partials/header', { title: 'วงเงินกู้ยืมหรือค้ำประกัน' }) %>
 
 <div class="container my-5">
   <h1 class="text-center mb-4">ข้อมูลวงเงินกู้ยืม/ค้ำประกันของสหกรณ์และกลุ่มเกษตรกร</h1>
@@ -34,7 +34,7 @@
       <% data.forEach(row => { %>
         <tr>
           <td><%= row.c_name || row.vong_code %></td>
-          <td><%= row.vong_year %></td>
+          <td><%= row.end_date %> <%= row.vong_year %></td>
           <!-- thai date -->
            <% const date = new Date(row.vong_date); %>
           <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>

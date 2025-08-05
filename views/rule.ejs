@@ -24,15 +24,18 @@
       <thead class="table-dark">
         <tr>
           <th scope="col">สถาบัน</th>
-          <th scope="col"> พ.ศ.</th>
+       
           <th scope="col">ข้อมูล</th>
         </tr>
       </thead>
       <tbody id="ruleTable">
         <% alls.forEach(list => { %>
         <tr>
-          <td><%= list.rule_name %></td>
-          <td><%= list.rule_year %></td>
+          <td>
+            <%= list.rule_name %><br/>
+            <span class="text-danger bg-white p-1 rounded"><%= list.rule_type == 'ER' ? 'แก้ไขเพิ่มเติม  ' + list.er_no + ' พ.ศ.' : 'ข้อบังคับหลัก พ.ศ.'  %><%= list.rule_year %></s>
+          </td>
+        
           <td>
             <% if(user){ %>
             <a href="/rule/<%= list.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>

@@ -58,15 +58,20 @@
                 <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
                   <i class="fas fa-download"></i> ดาวน์โหลด
                 </a>
-                <% if(user.mClass === 'admin') { %>
+                <% }else{ %>
+                <a href="/auth/login" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-download"></i> ดาวน์โหลด
+                </a>
+                <% } %>
+                <% if(user && user.mClass === 'admin') { %>
                   <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" 
                         onsubmit="return confirm('ต้องการลบระบบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                       <i class="fas fa-trash"></i> ลบ
                     </button>
                   </form>
-                <% } %>
-              <% } %>
+                  <% } %>
+               
             </td>
           </tr>
         <% }); %>

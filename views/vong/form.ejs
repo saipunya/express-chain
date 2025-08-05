@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: 'เพิ่มข้อมูลวงเงิน' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'เพิ่ม' %> ข้อมูลวงเงิน</h1>
+  <form method="POST" action="<%= vong ? '/vong/edit/' + vong.vong_id : '/vong/create' %>">
+    <div class="mb-3">
+      <input name="vong_code" value="<%= vong?.vong_code || '' %>" placeholder="รหัส" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_year" value="<%= vong?.vong_year || '' %>" placeholder="ปี" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_money" value="<%= vong?.vong_money || '' %>" placeholder="วงเงิน" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_date" type="date" value="<%= vong?.vong_date?.toISOString().split('T')[0] || '' %>" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_filename" value="<%= vong?.vong_filename || '' %>" placeholder="ชื่อไฟล์" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_saveby" value="<%= vong?.vong_saveby || '' %>" placeholder="ผู้บันทึก" class="form-control">
+    </div>
+    <div class="mb-3">
+      <input name="vong_savedate" type="date" value="<%= vong?.vong_savedate?.toISOString().split('T')[0] || '' %>" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">บันทึก</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,43 @@
+<%- include('../partials/header', { title: 'รายชื่อข้อมูลวง:<' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">รายชื่อข้อมูลวง:</h1>
+  <a href="/vong/create" class="btn btn-primary mb-3">่มข้อมูล</a>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>สถาบัน</th>
+        <th>ปี</th>
+        <th>วันที่</th>
+        <th>ยอด</th>
+        <th>ไฟล์</th>
+        <th>โดย</th>
+        <th>การ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% data.forEach(row => { %>
+        <tr>
+          <td><%= row.c_name || row.vong_code %></td>
+          <td><%= row.vong_year %></td>
+          <!-- thai date -->
+           <% const date = new Date(row.vong_date); %>
+          <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
+          <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+          <td><%= thaiDate %></td>
+          <!-- ส่วน comma vong_money -->
+           <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
+          <td class="text-end"><%= formattedMoney %></td>
+          <td><a href="/vong/download/<%= row.vong_id %>">ไฟล์</a></td>
+          <td><%= row.vong_saveby %></td>
+          <td>
+            <a href="/vong/edit/<%= row.vong_id %>">แก้ไข</a> | 
+            <a href="/vong/delete/<%= row.vong_id %>" onclick="return confirm('ลบข้อมูล?')">ลบ</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+    </table>
+</div>
+
+<%- include('../partials/footer') %>

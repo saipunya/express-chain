@@ -19,18 +19,6 @@ exports.insertRabiab = async (data) => {
   return result.insertId;
 };
 
-// <|im_start|>ระ3บล่า3
-exports.getLastUploads = async (limit = 10) => {
-  const [rows] = await db.query(`
-    SELECT tbl_rabiab.ra_id, tbl_rabiab.ra_code, tbl_rabiab.ra_name, tbl_rabiab.ra_year, tbl_rabiab.ra_approvedate, tbl_rabiab.ra_saveby, tbl_rabiab.ra_savedate ,active_coop.c_code,active_coop.c_name , active_coop.c_group
-    FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
-    WHERE tbl_rabiab.ra_status = 'active'
-    ORDER BY tbl_rabiab.ra_id DESC
-    LIMIT ?
-  `, [limit]);
-  return rows;
-};
-
 // 3ระ3บ3้งหมดแบบแบ่งหน้า
 exports.getAllRabiab = async (page = 1, search = '') => {
   const offset = (page - 1) * ITEMS_PER_PAGE;
@@ -118,7 +106,7 @@ exports.getCoopByCode = async (code) => {
 exports.getCoopsByGroup = async (group) => {
   try {
     const [rows] = await db.query(
-      'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ? ORDER BY c_name',
+      'SELECT c_code, c_name FROM active_coop WHERE c_status = "1" AND c_group = ? ORDER BY c_name',
       [group]
     );
     return rows;

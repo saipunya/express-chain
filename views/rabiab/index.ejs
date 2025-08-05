@@ -2,46 +2,43 @@
 
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>📋 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
-    <% if(user) { %>
+    <h2>📋 ระบสหกรณ์/กลุ่มเกษตรกร</h2>
+    <% if(user && user.mClass === 'kjs') { %>
       <a href="/rabiab/upload" class="btn btn-success">
         <i class="fas fa-plus"></i> อัปโหลด
       </a>
     <% } %>
   </div>
 
-  <!-- ค้นหา -->
-  <form method="GET" class="mb-4">
-    <div class="row">
-      <div class="col-md-8">
-        <input type="text" name="search" class="form-control" placeholder="ค้นหาระเบียบ" value="<%= search %>">
-      </div>
-      <div class="col-md-4">
-        <button type="submit" class="btn btn-primary">ค้นหา</button>
-        <a href="/rabiab" class="btn btn-secondary">ล้าง</a>
+  <!-- ช่องค้นหา -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="ชื่อสถาบัน/ชื่อระเบียบ" value="<%= search %>">
+        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
       </div>
     </div>
-  </form>
+  </div>
 
-  <!-- ตารางระ3บ -->
+  <!-- ตารางระบ -->
   <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
           <th>ชื่อระเบียบ</th>
           <th>อนุมัติ</th>
-          <th>สถาบัน</th>
-
+      
           <% if(user) { %>
             <th>Actions</th>
           <% } %>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="rabiabTable">
         <% rabiabs.forEach((rabiab, index) => { %>
           <tr>
             <td>
-              <%= rabiab.ra_name %>
+              <%= rabiab.ra_name %> <br/>
+              [<strong><%= rabiab.c_name %></strong>]
               <% 
                 const rabiabSavedDate = new Date(rabiab.ra_savedate);
                 const currentDate = new Date();
@@ -55,7 +52,7 @@
             <td>
               <%= new Date(rabiab.ra_approvedate).toLocaleDateString('th-TH') %>
             </td>
-            <td class="text-nowrap"><%= rabiab.c_name %></td>
+            
             <td class="text-nowrap">
               <% if(user) { %>
                 <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
@@ -63,7 +60,7 @@
                 </a>
                 <% if(user.mClass === 'admin') { %>
                   <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" 
-                        onsubmit="return confirm('ต้องการลบระเบียบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
+                        onsubmit="return confirm('ต้องการลบระบบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                       <i class="fas fa-trash"></i> ลบ
                     </button>
@@ -92,3 +89,32 @@
 </div>
 
 <%- include('../partials/footer') %>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const rabiabTable = document.getElementById('rabiabTable');
+  let searchTimeout;
+
+  searchInput.addEventListener('keyup', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const keyword = searchInput.value.toLowerCase();
+      const rows = rabiabTable.querySelectorAll('tr');
+
+      rows.forEach(row => {
+        const rabiabName = row.children[0].innerText.toLowerCase();
+        const instituteName = row.children[2].innerText.toLowerCase();
+        const shouldShow = rabiabName.includes(keyword) || instituteName.includes(keyword);
+        row.style.display = shouldShow ? '' : 'none';
+      });
+    }, 300); // รอ 300ms
+  });
+
+  function clearSearch() {
+    searchInput.value = '';
+    const rows = rabiabTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      row.style.display = '';
+    });
+  }
+</script>

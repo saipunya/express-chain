@@ -14,8 +14,8 @@ exports.getFinanceFiles = async (search = '', page = 1) => {
   const offset = (page - 1) * ITEMS_PER_PAGE;
   const [rows] = await db.query(
     `SELECT kb_finance.id, kb_finance.c_code, kb_finance.c_name, kb_finance.end_year, active_coop.c_code,active_coop.end_date FROM kb_finance LEFT JOIN active_coop ON kb_finance.c_code = active_coop.c_code
-     WHERE kb_finance.c_name LIKE ? ORDER BY kb_finance.id DESC LIMIT ? OFFSET ?`,
-    [`%${search}%`, ITEMS_PER_PAGE, offset]
+     WHERE kb_finance.c_name LIKE ? ORDER BY kb_finance.id DESC`,
+    [`%${search}%`]
   );
   return rows;
 };

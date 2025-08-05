@@ -7,74 +7,43 @@
 
 
 <div class="container my-5">
-  <div class="card shadow-lg rounded">
+  <div class="card shadow-lg rounded overflow-hidden">
     <div class="row g-0">
-      <!-- ภาพ -->
       <div class="col-md-6">
-        <img
-          src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
-          alt="Coop Image"
-          class="img-fluid rounded-start"
-        />
+        <img src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg" alt="Coop Image" class="img-fluid h-100 w-100 object-fit-cover">
       </div>
 
-      <!-- กล่องล็อก -->
-      <div class="col-md-6 d-flex align-items-center">
-        <!-- if login show user detail -->
-        <% if(!user){ %>
-        <div class="w-100 px-4">
-          <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-          <p class="lead mb-4 text-center">ระบบสารสนสารเทศและเครือข่ายสหกรณ์ฯ</p>
+      <div class="col-md-6 d-flex align-items-center p-4">
+        <% if (!user) { %>
+          <div class="w-100">
+            <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
+            <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
 
-          <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
-          <form action="/auth/login" method="POST">
-            <div class="mb-3">
-              <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
-              <input
-                type="text"
-                class="form-control"
-                id="username"
-                name="username"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">รหัสผ่าน</label>
-              <input
-                type="password"
-                class="form-control"
-                id="password"
-                name="password"
-                required
-              />
-            </div>
-            <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
-          </form>
-          
-          <p class="text-center mt-2">
-            <i class="bi bi-person-add"></i> ไม่ได้เป็นสมาชิก? 
-            <a href="/auth/register" class="text-success">สมัครสมาชิก</a>
-          </p>
-        </div>
+            <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
+            <form action="/auth/login" method="POST">
+              <div class="mb-3">
+                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+                <input type="text" class="form-control" id="username" name="username" required />
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <input type="password" class="form-control" id="password" name="password" required />
+              </div>
+              <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
+            </form>
+            <p class="text-center mt-2">
+              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี? 
+              <a href="/auth/register" class="text-success">สมัครสมาชิก</a>
+            </p>
+          </div>
         <% } else { %>
-        <div class="w-100 px-4">
-          <h1 class="display-6 mb-3 text-success text-center">ยินดีต้อนรับ</h1>
-          <div class="text-center">
-          <img
-            src="<%= user.m_img %>"
-
-            alt="User Image"
-            class="img-fluid rounded-circle"
-            width="100"
-          />
-        </div>
-          <p class="lead mb-4 text-center"><%= user.fullname %></p>
-
-          <div class="text-center">
+          <div class="w-100 text-center">
+            <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ</h1>
+            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
+            <p class="lead mb-4"><%= user.fullname %></p>
             <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
             <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
           </div>
-        </div>
         <% } %>
       </div>
     </div>
@@ -113,100 +82,101 @@
   </div>
 </section>
 
-
-<!-- ส่วนแสดงไฟล์ -->
 <section class="py-2 bg-white">
   <div class="container-lg">
-    
-    
-    <div class="bg-light p-4 rounded shadow-sm">
-      <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
-      <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
-        <% finances.forEach((file, index) => { %>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>
-              <i class="fas fa-file-alt me-2 text-secondary"></i>
-              <strong><%= index + 1 %>.</strong> <%= file.c_name %> <span>[ <%= file.end_date %> <%= file.end_year %>]</span>
-              <% 
-                const fileSavedDate = new Date(file.savedate);
-                const currentDate = new Date();
-                const diffDays = Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24));
-              %>
-              <% if (diffDays <= 7) { %>
-                <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 40px; height: 35px;" />
-              <% } %>
-            </span>
-            <% if(user){ %>
-              <a 
-                href="/finance/download/<%= file.id %>" 
-                class="btn btn-sm btn-outline-success" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                ดาวน์โหลด
-              </a>
-            <% } %>
-          </li>
-        <% }); %>
-        <div class="text-end mt-2">
-          <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
-            📂 ดูทั้งหมด
-          </a>
-        </div>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ส่วนแสดงไฟล์ข้อบังคับ -->
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
-    <div class="bg-light p-4 rounded shadow-sm">
-      <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
-        <% ruleFiles.forEach((rule, index) => { %>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>
-              <i class="fas fa-file-pdf me-2 text-secondary"></i>
-              <strong><%= index + 1 %>.</strong> <%= rule.rule_name %> 
-               
-              <span class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
-                <% if (rule.rule_type === 'MR') { %>
-                  ข้อบังคับหลัก <%= rule.rule_year %>
-                <% } else if (rule.rule_type === 'ER') { %>
-                  แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
+    <div class="row">
+      <!-- 📂 รายงานงบการเงิน -->
+      <div class="col-md-6 mb-4">
+        <div class="bg-light p-4 rounded shadow-sm h-100">
+          <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
+          <ul class="list-group list-group-flush">
+            <% finances.slice(0, 10).forEach((file, index) => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-alt me-2 text-secondary"></i>
+                  <strong><%= index + 1 %>.</strong> <%= file.c_name %> 
+                  <span>[ <%= file.end_date %> <%= file.end_year %> ]</span>
+                  <%
+                    const fileSavedDate = new Date(file.savedate);
+                    const currentDate = new Date();
+                    const diffDays = Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24));
+                  %>
+                  <% if (diffDays <= 7) { %>
+                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 40px; height: 35px;" />
+                  <% } %>
+                </span>
+                <% if(user){ %>
+                  <a 
+                    href="/finance/download/<%= file.id %>" 
+                    class="btn btn-sm btn-outline-success" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    ดาวน์โหลด
+                  </a>
                 <% } %>
-              </span>
-              <% 
-                const ruleSavedDate = new Date(rule.rule_savedate);
-                const currentDate = new Date();
-                const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24));
-              %>
-              <% if (diffDays <= 7) { %>
-                <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
-              <% } %>
-            </span>
-            <% if(user){ %>
-              <a 
-                href="/rule/<%= rule.rule_id %>" 
-                class="btn btn-sm btn-outline-success" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                ดาวน์โหลด
-              </a>
-            <% } %>
-          </li>
-        <% }); %>
-        <div class="text-end mt-2">
-          <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
-            📋 ดูทั้งหมด
-          </a>
+              </li>
+            <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
+              📂 ดูทั้งหมด
+            </a>
+          </div>
         </div>
-      </ul>
+      </div>
+
+      <!-- 📋 ข้อบังคับสหกรณ์ -->
+      <div class="col-md-6 mb-4">
+        <div class="bg-light p-4 rounded shadow-sm h-100">
+          <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
+          <ul class="list-group list-group-flush">
+            <% ruleFiles.slice(0, 10).forEach((rule, index) => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-pdf me-2 text-secondary"></i>
+                  <strong><%= index + 1 %>.</strong> <%= rule.rule_name %> 
+                  <span class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
+                    <% if (rule.rule_type === 'MR') { %>
+                      ข้อบังคับหลัก พ.ศ.<%= rule.rule_year %>
+                    <% } else if (rule.rule_type === 'ER') { %>
+                      แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
+                    <% } %>
+                  </span>
+                  <%
+                    const ruleSavedDate = new Date(rule.rule_savedate);
+                    const currentDate = new Date();
+                    const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24));
+                  %>
+                  <% if (diffDays <= 7) { %>
+                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
+                  <% } %>
+                </span>
+                <% if(user){ %>
+                  <a 
+                    href="/rule/<%= rule.rule_id %>" 
+                    class="btn btn-sm btn-outline-success" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    ดาวน์โหลด
+                  </a>
+                <% } %>
+              </li>
+            <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
+              📋 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+
 <section class="py-2 bg-white">
   <div class="container-lg">
     <div class="bg-light p-4 rounded shadow-sm">

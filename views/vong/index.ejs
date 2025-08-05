@@ -12,7 +12,9 @@
         <th>ยอด</th>
         <th>ไฟล์</th>
         <th>โดย</th>
-        <th>การ</th>
+        <% if(user && user.mClass === 'admin') { %>
+        <th>Manage</th>
+        <% } %>
       </tr>
     </thead>
     <tbody>
@@ -28,12 +30,19 @@
           <!-- ส่วน comma vong_money -->
            <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
           <td class="text-end"><%= formattedMoney %></td>
+          <% if(user){ %>
           <td><a href="/vong/download/<%= row.vong_id %>">ไฟล์</a></td>
+          <% }else{ %>
+          <td><a href="/auth/login">ไฟล์</a></td>
+          <% } %>
           <td><%= row.vong_saveby %></td>
+        
+          <% if(user && user.mClass === 'admin') { %>
           <td>
             <a href="/vong/edit/<%= row.vong_id %>">แก้ไข</a> | 
             <a href="/vong/delete/<%= row.vong_id %>" onclick="return confirm('ลบข้อมูล?')">ลบ</a>
           </td>
+          <% } %>
         </tr>
       <% }) %>
     </tbody>

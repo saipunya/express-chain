@@ -4,7 +4,7 @@
 const db = require('../config/db');
 
 exports.getAllCoops = async () => {
-  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "active"');
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
   return rows;
 };
 
@@ -23,6 +23,7 @@ exports.getByGroup = async () => {
   const [rows] = await db.query(`
     SELECT c_group AS label, COUNT(*) AS count
     FROM active_coop
+    WHERE c_status = "ดำเนินการ"
     GROUP BY c_group
   `);
   return rows;
@@ -33,6 +34,7 @@ exports.getByCoopGroup = async () => {
   const [rows] = await db.query(`
     SELECT coop_group AS label, COUNT(*) AS count
     FROM active_coop
+    WHERE c_status = "ดำเนินการ"
     GROUP BY coop_group
   `);
   return rows;
@@ -44,7 +46,7 @@ exports.getCoopTypeOnly = async () => {
     SELECT c_type AS label, COUNT(*) AS count
     FROM active_coop
     WHERE coop_group = 'สหกรณ์'
-    GROUP BY c_type
+    GROUP BY coop_group
   `);
   return rows;
 };
@@ -55,7 +57,8 @@ exports.getFarmerTypeOnly = async () => {
     SELECT c_type AS label, COUNT(*) AS count
     FROM active_coop
     WHERE coop_group = 'กลุ่มเกษตรกร'
-    GROUP BY c_type
+        GROUP BY coop_group
+ 
   `);
   return rows;
 };
@@ -81,5 +84,35 @@ exports.getClosingStats = async () => {
     WHERE c_status = "เลิก"
   `);
   return rows[0].count;
+};
+
+// แยกตาม c_group และ coop_group
+exports.getByGroupAndType = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+      CONCAT(c_group, ' - ', coop_group) AS label,
+      COUNT(*) AS count,
+      c_group,
+      coop_group
+    FROM active_coop
+    WHERE c_status = "ดำเนินการ"
+    GROUP BY c_group, coop_group
+    ORDER BY c_group, coop_group
+  `);
+  return rows;
+};
+
+exports.getByGroupAndType = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+      c_group,
+      coop_group,
+      COUNT(*) AS count
+    FROM active_coop
+    WHERE c_status = "ดำเนินการ"
+    GROUP BY c_group, coop_group
+    ORDER BY c_group, coop_group
+  `);
+  return rows;
 };
 

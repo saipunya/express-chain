@@ -63,13 +63,13 @@ exports.getLastUploads = async (limit = 10) => {
 
 
 exports.getAllCoops = async () => {
-  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "_system"');
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
   return rows;
 };
 
 exports.getCoopsByGroup = async (group) => {
   const [rows] = await db.query(
-    'SELECT c_code, c_name FROM active_coop WHERE c_status = "<|im_start|>" AND c_group = ?',
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ?',
     [group]
   );
   return rows;

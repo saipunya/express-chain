@@ -29,6 +29,10 @@ const homeController = {
       const coopStats = await coopModel.getCoopStats();
       const closingCount = await coopModel.getClosingStats();
       
+      // ข้อมูลกราฟ
+      const coopGroupChart = await coopModel.getByCoopGroup();
+      const cGroupChart = await coopModel.getByGroup();
+      
       // ข้อมูล<lemma้ใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
       const onlineCount = await onlineModel.getOnlineCount();
@@ -46,7 +50,9 @@ const homeController = {
         usecars,
         stats,
         onlineUsers,
-        onlineCount
+        onlineCount,
+        coopGroupChart,
+        cGroupChart
       });
     } catch (error) {
       console.error('Error fetching data:', error);

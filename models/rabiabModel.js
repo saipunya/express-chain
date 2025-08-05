@@ -93,7 +93,7 @@ exports.getFilenameById = async (id) => {
 
 // 3รายการสหกรณ์
 exports.coopAll = async () => {
-  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "1"');
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
   return rows;
 };
 
@@ -106,7 +106,7 @@ exports.getCoopByCode = async (code) => {
 exports.getCoopsByGroup = async (group) => {
   try {
     const [rows] = await db.query(
-      'SELECT c_code, c_name FROM active_coop WHERE c_status = "1" AND c_group = ? ORDER BY c_name',
+      'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ? ORDER BY c_name',
       [group]
     );
     return rows;

@@ -15,28 +15,30 @@
         <% if (!user) { %>
           <div class="w-100">
             <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-            <p class="lead mb-4 text-center">ระบบสารสนเทศและapyสหกรณ์ฯ</p>
+            <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์สหกรณ์ฯ</p>
 
             <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
             <form action="/auth/login" method="POST">
               <div class="mb-3">
-                <label for="username" class="form-label">ชื่อใช้งาน</label>
+                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
                 <input type="text" class="form-control" id="username" name="username" required />
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">ผ่าน</label>
+                <label for="password" class="form-label">รหัสผ่าน</label>
                 <input type="password" class="form-control" id="password" name="password" required />
               </div>
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
             <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ไม่? 
-              <a href="/auth/register" class="text-success">32</a>
+              <i class="bi bi-person-add"></i> ยังไม่มีบัญชีใช่หรือไม่? 
+              <a href="/auth/register" class="text-success">
+                สมัครสมาชิก
+              </a>
             </p>
           </div>
         <% } else { %>
           <div class="w-100 text-center">
-            <h1 class="display-6 mb-3 text-success">32ต้อน32</h1>
+            <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ</h1>
             <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
             <p class="lead mb-4"><%= user.fullname %></p>
             <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
@@ -71,7 +73,7 @@
       <div class="col-md-4">
         <div class="card shadow-sm border-0">
           <div class="card-body">
-            <h5 class="card-title">อยู่ระหว่างชำระบัญ</h5>
+            <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
             <p class="card-text display-6 text-warning"><%= stats.closing %></p>
           </div>
         </div>
@@ -95,7 +97,7 @@
       <div class="col-md-6">
         <div class="card shadow-sm border-0">
           <div class="card-body">
-            <h5 class="card-title text-center">แยกตามกลุ่ม</h5>
+            <h5 class="card-title text-center">แยกตามกลุ่มส่งเสริมสหกรณ์</h5>
             <canvas id="cGroupChart" width="400" height="200"></canvas>
           </div>
         </div>
@@ -184,7 +186,7 @@ new Chart(ctx2, {
       <!-- 📂 รายงานงบ -->
       <div class="col-md-6 mb-4">
         <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-success">📂 รายงานงบ</h2>
+          <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
           <ul class="list-group list-group-flush">
             <% finances.slice(0, 10).forEach((file, index) => { %>
               <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -225,7 +227,7 @@ new Chart(ctx2, {
       <!-- 📋 ข้อกำหนดสหกรณ์ -->
       <div class="col-md-6 mb-4">
         <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-success">📋 ข้อกำหนดสหกรณ์/กลุ่มเกษตรกร</h2>
+          <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
           <ul class="list-group list-group-flush">
             <% ruleFiles.slice(0, 10).forEach((rule, index) => { %>
               <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -275,7 +277,7 @@ new Chart(ctx2, {
 <section class="py-2 bg-white">
   <div class="container-lg">
     <div class="bg-light p-4 rounded shadow-sm">
-      <h2 class="mb-4 text-center text-warning">📄 ระบสหกรณ์/กลุ่มเกษตรกร</h2>
+      <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
       <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
         <% rabiabFiles.forEach((rabiab, index) => { %>
           <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -367,7 +369,7 @@ new Chart(ctx2, {
             <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
             <div class="mb-3">
               <div class="display-4 text-success"><%= onlineCount %></div>
-              <small class="text-muted">32ใช้ออนไลน์</small>
+              <small class="text-muted">ผู้ใช้ออนไลน์</small>
             </div>
             <hr>
             <div class="row text-center">
@@ -382,7 +384,7 @@ new Chart(ctx2, {
               </div>
               <div class="col-md-4">
                 <div class="h4 text-warning"><%= stats.closing %></div>
-                <small>ชำระบัญ32</small>
+                <small>ชำระบัญชี</small>
               </div>
             </div>
           </div>

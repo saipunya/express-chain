@@ -1,15 +1,28 @@
 <%- include('../partials/header', { title: 'รายชื่อข้อมูลวง:<' }) %>
 
 <div class="container my-5">
-  <h1 class="text-center mb-4">วงเงินกู้ยืม/ค้ำประกันของสหกรณ์/กลุ่มเกษตรกร </h1>
+  <h1 class="text-center mb-4">ข้อมูลวงเงินกู้ยืม/ค้ำประกันของสหกรณ์และกลุ่มเกษตรกร</h1>
+  <% if(user && user.mClass === 'kbs') { %>
   <a href="/vong/create" class="btn btn-primary mb-3">เพิ่มข้อมูล</a>
+  <% } %>
+
+  <!-- ช่องค้นหา -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน">
+        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
+      </div>
+    </div>
+  </div>
+
   <table class="table table-bordered">
     <thead>
       <tr>
         <th>สถาบัน</th>
-        <th>ปี</th>
+        <th>ประจำปี</th>
         <th>วันที่</th>
-        <th>ยอด</th>
+        <th>ยอดเงิน</th>
         <th>ไฟล์</th>
         <th>โดย</th>
         <% if(user && user.mClass === 'admin') { %>
@@ -17,7 +30,7 @@
         <% } %>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="vongTable">
       <% data.forEach(row => { %>
         <tr>
           <td><%= row.c_name || row.vong_code %></td>
@@ -48,5 +61,34 @@
     </tbody>
     </table>
 </div>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const vongTable = document.getElementById('vongTable');
+  let searchTimeout;
+
+  searchInput.addEventListener('keyup', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const keyword = searchInput.value.toLowerCase();
+      const rows = vongTable.querySelectorAll('tr');
+
+      rows.forEach(row => {
+        const instituteName = row.children[0].innerText.toLowerCase();
+        const year = row.children[1].innerText.toLowerCase();
+        const shouldShow = instituteName.includes(keyword) || year.includes(keyword);
+        row.style.display = shouldShow ? '' : 'none';
+      });
+    }, 300); // รอ 300ms
+  });
+
+  function clearSearch() {
+    searchInput.value = '';
+    const rows = vongTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      row.style.display = '';
+    });
+  }
+</script>
 
 <%- include('../partials/footer') %>

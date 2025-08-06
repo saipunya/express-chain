@@ -53,6 +53,29 @@ app.use((req, res) => {
   });
 });
 
+// สมมุติว่าใช้ Express
+app.get('/run-cron', async (req, res) => {
+  try {
+    // ใส่โค้ด cron job ที่เคยเขียนไว้ตรงนี้
+    // ตัวอย่างส่ง Telegram
+    const axios = require('axios');
+
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+    const message = `แจ้งเตือนกิจกรรมวันนี้เวลา ${new Date().toLocaleString('th-TH')}`;
+
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+    });
+
+    res.send('ส่งข้อความแจ้งเตือนเรียบร้อยแล้ว');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน');
+  }
+});
+
 // Routing
 // const homeRoutes = require('./routes/homeRoutes');
 // const authRoutes = require('./routes/authRoutes');

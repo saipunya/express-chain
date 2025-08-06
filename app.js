@@ -6,6 +6,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const onlineModel = require('./models/onlineModel');
 const fs = require('fs');
+const axios = require('axios');
 
 require('dotenv').config();
 
@@ -58,7 +59,7 @@ app.get('/run-cron', async (req, res) => {
   try {
     // ใส่โค้ด cron job ที่เคยเขียนไว้ตรงนี้
     // ตัวอย่างส่ง Telegram
-    const axios = require('axios');
+
 
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;

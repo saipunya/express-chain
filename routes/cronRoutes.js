@@ -6,7 +6,7 @@ const axios = require('axios');
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8266049965:AAEN80HAjOn6n3Mf2jYKy4oEeCSxQNyBw2g';
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1002391968125';
 
-router.get('/', async (req, res) => {
+router.get('/run-cron', async (req, res) => {
   try {
     const message = `แจ้งเตือนกิจกรรมวันนี้เวลา ${new Date().toLocaleString('th-TH')}`;
 

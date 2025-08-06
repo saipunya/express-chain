@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.getAll = async () => {
   const [rows] = await db.query(`
-    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group,active_coop.c_code
+    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group,active_coop.c_code,active_coop.end_date
     FROM vong_coop 
     LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code 
     ORDER BY vong_coop.vong_year DESC

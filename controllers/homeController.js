@@ -133,7 +133,7 @@ exports.loadFinance = async (req, res) => {
     const fileAll = await financeModel.getFinanceFiles(search, page);
 
     res.render('loadFinance', {
-      title: 'ไฟล์หมด',
+      title: 'ไฟล์ทั้งหมด',
       fileAll,
       currentPage: page,
       totalPages,

@@ -16,15 +16,13 @@
     </div>
   </div>
 
-  <table class="table table-bordered">
+  <table class="table table-bordered table-striped">
     <thead>
       <tr>
         <th>สถาบัน</th>
-        <th>ประจำปี</th>
-        <th>วันที่</th>
+        <th>ปีบัญชี</th>
         <th>ยอดเงิน</th>
         <th>ไฟล์</th>
-        <th>โดย</th>
         <% if(user && user.mClass === 'admin') { %>
         <th>Manage</th>
         <% } %>
@@ -36,19 +34,15 @@
           <td><%= row.c_name || row.vong_code %></td>
           <td><%= row.end_date %> <%= row.vong_year %></td>
           <!-- thai date -->
-           <% const date = new Date(row.vong_date); %>
-          <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
-          <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
-          <td><%= thaiDate %></td>
+          
           <!-- ส่วน comma vong_money -->
            <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
           <td class="text-end"><%= formattedMoney %></td>
           <% if(user){ %>
-          <td><a href="/vong/download/<%= row.vong_id %>">ไฟล์</a></td>
+          <td><a href="/vong/download/<%= row.vong_id %>"><i class="bi bi-file-pdf-fill fs-4"></i></a></td>
           <% }else{ %>
-          <td><a href="/auth/login">ไฟล์</a></td>
+          <td><a href="/auth/login"><i class="bi bi-file-pdf fs-4"></i></a></td>
           <% } %>
-          <td><%= row.vong_saveby %></td>
         
           <% if(user && user.mClass === 'admin') { %>
           <td>
@@ -79,7 +73,7 @@
         const shouldShow = instituteName.includes(keyword) || year.includes(keyword);
         row.style.display = shouldShow ? '' : 'none';
       });
-    }, 300); // รอ 300ms
+    }, 100); // รอ 300ms
   });
 
   function clearSearch() {

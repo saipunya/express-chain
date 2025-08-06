@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || 'ใส่โทเคนที่นี่';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || 'ใส่ chat id ที่นี่';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8266049965:AAEN80HAjOn6n3Mf2jYKy4oEeCSxQNyBw2g';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '-1002391968125';
 
 router.get('/', async (req, res) => {
   try {

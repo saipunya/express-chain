@@ -1,29 +1,104 @@
-<%- include('../partials/header', { title: 'เพิ่มข้อมูลวงเงิน' }) %>
+<%- include('../partials/header', { title: (vong ? 'แก้ไข' : 'เพิ่ม') + ' ข้อมูลวงเงิน' }) %>
 
 <div class="container my-5">
   <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'เพิ่ม' %> ข้อมูลวงเงิน</h1>
-  <form method="POST" action="<%= vong ? '/vong/edit/' + vong.vong_id : '/vong/create' %>">
+  <form method="POST" enctype="multipart/form-data" action="<%= vong ? '/vong/edit/' + vong.vong_id : '/vong/create' %>">
+
     <div class="mb-3">
-      <input name="vong_code" value="<%= vong?.vong_code || '' %>" placeholder="รหัส" class="form-control">
+      <label for="c_group" class="form-label">กลุ่มส่งสหกรณ์</label>
+      <select id="c_group" class="form-select" required>
+        <option value="">++ โปรดเลือก ++</option>
+        <option value="group1" <%= vong && vong.c_group === 'group1' ? 'selected' : '' %>>กลุ่มส่งสหกรณ์ 1</option>
+        <option value="group2" <%= vong && vong.c_group === 'group2' ? 'selected' : '' %>>กลุ่มส่งสหกรณ์ 2</option>
+        <option value="group3" <%= vong && vong.c_group === 'group3' ? 'selected' : '' %>>กลุ่มส่งสหกรณ์ 3</option>
+        <option value="group4" <%= vong && vong.c_group === 'group4' ? 'selected' : '' %>>กลุ่มส่งสหกรณ์ 4</option>
+        <option value="group5" <%= vong && vong.c_group === 'group5' ? 'selected' : '' %>>กลุ่มส่งสหกรณ์ 5</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="vong_code" class="form-label">สหกรณ์/กลุ่มเกษตรกร</label>
+      <select name="vong_code" id="vong_code" class="form-select" required>
+        <option value="">++โปรดเลือก++</option>
+      </select>
+    </div>
+    <input type="hidden" name="c_name" id="c_name" value="<%= vong ? vong.c_name : '' %>">
+
+    <script>
+      const cGroupSelect = document.getElementById('c_group');
+      const cCodeSelect = document.getElementById('vong_code');
+      const cNameInput = document.getElementById('c_name');
+
+      // ถ้ามีค่า c_group จากข้อมูลเดิม ให้โหลดสหกรณ์ตอนโหลดฟอร์ม
+      window.addEventListener('DOMContentLoaded', async () => {
+        if (cGroupSelect.value) {
+          await loadCoops(cGroupSelect.value);
+          if ('<%= vong ? vong.vong_code : '' %>') {
+            cCodeSelect.value = '<%= vong ? vong.vong_code : '' %>';
+            cNameInput.value = cCodeSelect.options[cCodeSelect.selectedIndex]?.text || '';
+          }
+        }
+      });
+
+      cGroupSelect.addEventListener('change', async function () {
+        await loadCoops(this.value);
+      });
+
+      cCodeSelect.addEventListener('change', function () {
+        cNameInput.value = this.options[this.selectedIndex]?.text || '';
+      });
+
+      async function loadCoops(group) {
+        if (!group) {
+          cCodeSelect.innerHTML = '<option value="">-- เลือกกลุ่มก่อน --</option>';
+          return;
+        }
+
+        cCodeSelect.innerHTML = '<option value="">โหลด...</option>';
+
+        try {
+          const response = await fetch(`/vong/coops/${group}`);
+          const data = await response.json();
+
+          if (Array.isArray(data) && data.length > 0) {
+            cCodeSelect.innerHTML = '<option value="">-- เลือกสหกรณ์ --</option>';
+            data.forEach(coop => {
+              const option = document.createElement('option');
+              option.value = coop.c_code;
+              option.text = coop.c_name;
+              cCodeSelect.appendChild(option);
+            });
+          } else {
+            cCodeSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่ม</option>';
+          }
+        } catch (error) {
+          console.error('โหลดข้อมูลสหกรณ์ล้มเหลว:', error);
+          cCodeSelect.innerHTML = '<option value="">ข้อผิดพลาด</option>';
+        }
+      }
+    </script>
+
+    <div class="mb-3">
+      <input name="vong_year" value="<%= vong?.vong_year || '' %>" placeholder="ปี" class="form-control" required>
     </div>
     <div class="mb-3">
-      <input name="vong_year" value="<%= vong?.vong_year || '' %>" placeholder="ปี" class="form-control">
+      <input name="vong_money" value="<%= vong?.vong_money || '' %>" placeholder="วงเงิน" class="form-control" required>
     </div>
     <div class="mb-3">
-      <input name="vong_money" value="<%= vong?.vong_money || '' %>" placeholder="วงเงิน" class="form-control">
+      <input name="vong_date" type="date" value="<%= vong?.vong_date?.toISOString().split('T')[0] || '' %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="vong_file" class="form-label">แนบไฟล์ (PDF, DOCX, ฯลฯ)</label>
+      <input type="file" name="vong_file" id="vong_file" class="form-control">
+      <% if (vong && vong.vong_filename) { %>
+        <a href="/uploads/vong/<%= vong.vong_filename %>" target="_blank" class="mt-2 d-block">ไฟล์เดิม: <%= vong.vong_filename %></a>
+      <% } %>
     </div>
     <div class="mb-3">
-      <input name="vong_date" type="date" value="<%= vong?.vong_date?.toISOString().split('T')[0] || '' %>" class="form-control">
+      <input name="vong_savedate" type="date" value="<%= vong?.vong_savedate?.toISOString().split('T')[0] || '' %>" class="form-control" required>
     </div>
-    <div class="mb-3">
-      <input name="vong_filename" value="<%= vong?.vong_filename || '' %>" placeholder="ชื่อไฟล์" class="form-control">
-    </div>
-    <div class="mb-3">
-      <input name="vong_saveby" value="<%= vong?.vong_saveby || '' %>" placeholder="ผู้บันทึก" class="form-control">
-    </div>
-    <div class="mb-3">
-      <input name="vong_savedate" type="date" value="<%= vong?.vong_savedate?.toISOString().split('T')[0] || '' %>" class="form-control">
-    </div>
+
     <button type="submit" class="btn btn-primary">บันทึก</button>
   </form>
 </div>

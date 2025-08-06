@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.getAll = async () => {
   const [rows] = await db.query(`
-    SELECT vong_coop.*, active_coop.c_name 
+    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group,active_coop.c_code
     FROM vong_coop 
     LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code 
     ORDER BY vong_coop.vong_year DESC
@@ -12,7 +12,7 @@ exports.getAll = async () => {
 
 exports.getById = async (id) => {
   const [rows] = await db.query(`
-    SELECT vong_coop.*, active_coop.c_name 
+    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group,active_coop.c_code 
     FROM vong_coop 
     LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code 
     WHERE vong_coop.vong_id = ?
@@ -22,7 +22,7 @@ exports.getById = async (id) => {
 
 exports.search = async (searchTerm) => {
   const [rows] = await db.query(`
-    SELECT vong_coop.*, active_coop.c_name 
+    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group,active_coop.c_code 
     FROM vong_coop 
     LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code 
     WHERE active_coop.c_name LIKE ? OR vong_coop.vong_year LIKE ?
@@ -55,4 +55,21 @@ exports.update = async (id, data) => {
 
 exports.delete = async (id) => {
   await db.query('DELETE FROM vong_coop WHERE vong_id = ?', [id]);
+};
+
+// สร้าง function สำหรับการสกัดสหกรณ์ตามกลุ่ม
+exports.getCoopsByGroup = async (group) => {
+  const [rows] = await db.query(
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ? ORDER BY c_name',
+    [group]
+  );
+  return rows;
+};
+
+exports.getCoopsByGroup = async (group) => {
+  const [rows] = await db.query(
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ?',
+    [group]
+  );
+  return rows;
 };

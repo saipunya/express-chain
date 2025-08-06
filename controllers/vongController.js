@@ -19,32 +19,86 @@ exports.editForm = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  await Vong.create(req.body);
-  res.redirect('/vong');
+  try {
+    if (!req.body) return res.status(400).send('ไม่มีข้อมูลที่ส่งมา');
+
+    const { vong_code, c_name, vong_year, vong_money, vong_date, vong_saveby, vong_savedate } = req.body;
+    const vong_filename = req.file ? req.file.filename : null;
+
+    const data = {
+      vong_code,
+      c_name,
+      vong_year,
+      vong_money,
+      vong_date,
+      vong_filename,
+      vong_saveby,
+      vong_savedate,
+    };
+
+    await Vong.create(data);
+    res.redirect('/vong');
+  } catch (err) {
+    console.error(err);
+    console.log('BODY:', req.body);
+    console.log('FILE:', req.file);
+    res.status(500).send('เกิดข้อผิดพลาด');
+  }
 };
 
 exports.update = async (req, res) => {
-  await Vong.update(req.params.id, req.body);
-  res.redirect('/vong');
+  try {
+    if (!req.body) return res.status(400).send('ไม่มีข้อมูลที่ส่งมา');
+
+    const { vong_code, c_name, vong_year, vong_money, vong_date, vong_saveby, vong_savedate } = req.body;
+
+    // ถ้ามีไฟล์ใหม่อัปโหลดมาให้ใช้ไฟล์ใหม่
+    let vong_filename = null;
+    if (req.file) {
+      vong_filename = req.file.filename;
+    }
+
+    const data = {
+      vong_code,
+      c_name,
+      vong_year,
+      vong_money,
+      vong_date,
+      vong_filename,
+      vong_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',
+      vong_savedate,
+    };
+
+    await Vong.update(req.params.id, data);
+    res.redirect('/vong');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('เกิดข้อผิดพลาดในการแก้ไข');
+  }
 };
 
 exports.delete = async (req, res) => {
-  await Vong.delete(req.params.id);
-  res.redirect('/vong');
+  try {
+    await Vong.delete(req.params.id);
+    res.redirect('/vong');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('เกิดข้อผิดพลาดในการลบ');
+  }
 };
 
 exports.downloadFile = async (req, res) => {
   try {
     const id = req.params.id;
     const vong = await Vong.getById(id);
-    
+
     if (!vong) {
       return res.status(404).send('ไม่พบข้อมูล');
     }
-    
+
     const filename = vong.vong_filename;
     const filePath = path.join(__dirname, '..', 'uploads', 'vong', filename);
-    
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).send('ไม่พบไฟล์');
     }
@@ -88,6 +142,17 @@ exports.downloadFile = async (req, res) => {
     res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
     console.error('Download error:', error);
-    res.status(500).send('ข้อ<lemmaพลาดในการดาวน์โหลด');
+    res.status(500).send('ข้อผิดพลาดในการดาวน์โหลด');
+  }
+};
+
+exports.getCoopsByGroup = async (req, res) => {
+  try {
+    const group = req.params.group;
+    const coops = await Vong.getCoopsByGroup(group);
+    res.json(coops);
+  } catch (error) {
+    console.error('Error fetching coops by group:', error);
+    res.status(500).json({ error: 'ไม่สามารถโหลดข้อมูลได้' });
   }
 };

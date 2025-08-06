@@ -42,15 +42,15 @@ exports.insertRule = async (data) => {
 
 exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
-    SELECT rule_id, rule_name, rule_year, rule_type, er_no, rule_saveby, rule_savedate 
-    FROM kt_rule 
-    ORDER BY rule_id DESC
+    SELECT kt_rule.rule_id, kt_rule.rule_name, kt_rule.rule_year, kt_rule.rule_type, kt_rule.er_no, kt_rule.rule_saveby, kt_rule.rule_savedate ,active_coop.c_name,active_coop.c_group,active_coop.c_code,active_coop.end_date
+    FROM kt_rule LEFT JOIN active_coop ON kt_rule.rule_code = active_coop.c_code
+    ORDER BY kt_rule.rule_id DESC
     LIMIT ?
   `, [limit]);
   return rows;
 };
 exports.coopAll = async () => {
-  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "1"');
+  const [rows] = await db.query('SELECT * FROM active_coop WHERE c_status = "ดำเนินการ"');
   return rows;
 };
 
@@ -69,4 +69,12 @@ exports.deleteRule = async (id) => {
 exports.getFilenameById = async (id) => {
   const [rows] = await db.query('SELECT rule_file FROM kt_rule WHERE rule_id = ?', [id]);
   return rows[0].rule_file;
+};
+
+exports.getCoopsByGroup = async (group) => {
+  const [rows] = await db.query(
+    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ? ORDER BY c_name',
+    [group]
+  );
+  return rows;
 };

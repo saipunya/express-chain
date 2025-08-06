@@ -22,13 +22,13 @@ exports.showUploadForm = async (req, res) => {
     const alls = await ruleModel.coopAll();
     
     res.render('uploadRule', {
-      title: 'upload ข้อบังคับ',
+      title: 'upload ข้อ',
       alls,
       recentUploads
     });
   } catch (err) {
     console.error('Error loading upload form:', err);
-    res.status(500).send('upload ผิดพลาด');
+    res.status(500).send('upload พลาด');
   }
 };
 
@@ -41,7 +41,9 @@ exports.uploadRule = async (req, res) => {
     const selectedCoop = await ruleModel.getCoopByCode(rule_name);
     const actualRuleName = selectedCoop ? selectedCoop.c_name : rule_name;
     
-    const user = req.session.user?.fullname || 'unknown';
+    const user = req.session.user?.fullname || 
+                 req.session.user?.username || 
+                 'unknown';
     const file = req.file;
     
     if (!file) return res.status(400).send('ไม่พบไฟล์');
@@ -53,13 +55,13 @@ exports.uploadRule = async (req, res) => {
       rule_year,
       er_no,
       rule_file: file.filename,
-      rule_saveby: user,
+      rule_saveby: req.session.user?.fullname || 'unknown',
       rule_savedate: new Date()
     };
     
     await ruleModel.insertRule(data);
     
-    res.redirect('/rule');
+    res.redirect('/rule/upload');
   } catch (err) {
     console.error('Error uploading rule file:', err);
     res.status(500).send('ไม่สามารถ upload ได้');
@@ -158,15 +160,35 @@ exports.showDetailData = async (req,res) =>{
 exports.deleteRule = async (req, res) => {
   try {
     const id = req.params.id;
+    
+    // ชื่อไฟล์ก่อนลบข้อมูลในฐานข้อมูล
+    const filename = await ruleModel.getFilenameById(id);
+    
+    // ลบข้อมูลในฐานข้อมูล
     await ruleModel.deleteRule(id);
-    // delete file from folder
-    const filename =  await ruleModel.getFilenameById(id);
-    const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
-    fs.unlinkSync(filePath);
+    
+    // ลบไฟล์จากโฟลเดอร์
+    if (filename) {
+      const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
 
-    res.redirect('/rule');
+    res.redirect('/rule/upload');
   } catch (error) {
     console.error('Error deleting rule:', error);
     res.status(500).send('ข้อมูลไม่สำเร็จ');
+  }
+};
+
+exports.getCoopsByGroup = async (req, res) => {
+  try {
+    const group = req.params.group;
+    const coops = await ruleModel.getCoopsByGroup(group);
+    res.json(coops);
+  } catch (err) {
+    console.error('Error fetching coops by group:', err);
+    res.status(500).json({ error: 'Error fetching coops by group' });
   }
 };

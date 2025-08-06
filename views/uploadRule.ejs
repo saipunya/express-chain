@@ -4,54 +4,89 @@
   <h3 class="mt-4">📤 ข้อสหกรณ์/กลุ่มเกษตรกร</h3>
   
   <div class="mb-3">
-    <label for="rule_name" class="form-label">ชื่อข้อสหกรณ์/กลุ่มเกษตรกร</label>
+    <label for="c_group" class="form-label">เลือกกลุ่มส่งเสริมสหกรณ์</label>
+    <select id="c_group" class="form-select" required>
+      <option value="">++ โปรดเลือก ++</option>
+      <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
+      <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
+      <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
+      <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
+      <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
+    </select>
+  </div>
+  
+  <div class="mb-3">
+    <label for="rule_name" class="form-label">สหกรณ์/กลุ่มเกษตรกร</label>
     <select name="rule_name" id="rule_name" class="form-select" required>
       <option value="">++โปรดเลือก++</option>
-      <% alls.forEach(item => { %>
-        <option value="<%= item.c_code %>" data-name="<%= item.c_name %>"><%= item.c_name %></option>
-      <% }) %>
     </select>
     <input type="hidden" name="rule_code" id="rule_code">
   </div>
 
   <script>
-  document.getElementById('rule_name').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const ruleCode = selectedOption.value;
-    const ruleName = selectedOption.getAttribute('data-name');
-    
-    document.getElementById('rule_code').value = ruleCode;
-    // rule_name จะได้ค่าจาก c_code แต่เราต้องการ c_name
-    this.setAttribute('data-selected-name', ruleName);
-  });
+    const cGroupSelect = document.getElementById('c_group');
+    const ruleNameSelect = document.getElementById('rule_name');
+    const ruleCodeInput = document.getElementById('rule_code');
+
+    cGroupSelect.addEventListener('change', async function () {
+      const group = this.value;
+      ruleNameSelect.innerHTML = '<option value="">โหลด...</option>';
+
+      if (!group) {
+        ruleNameSelect.innerHTML = '<option value="">-- เลือกกลุ่มก่อน --</option>';
+        return;
+      }
+
+      try {
+        console.log('Fetching coops for group:', group);
+        const response = await fetch(`/rule/coops/${group}`);
+        const data = await response.json();
+        
+        console.log('Response data:', data);
+
+        if (Array.isArray(data) && data.length > 0) {
+          ruleNameSelect.innerHTML = '<option value="">-- เลือกสหกรณ์ --</option>';
+          data.forEach(coop => {
+            const option = document.createElement('option');
+            option.value = coop.c_code;
+            option.text = coop.c_name;
+            ruleNameSelect.appendChild(option);
+          });
+        } else {
+          ruleNameSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่ม</option>';
+        }
+      } catch (error) {
+        console.error('โหลดข้อมูลสหกรณ์ล้มเหลว:', error);
+        ruleNameSelect.innerHTML = '<option value="">ข้อผิดพลาด</option>';
+      }
+    });
+
+    ruleNameSelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      const ruleCode = selectedOption.value;
+      
+      ruleCodeInput.value = ruleCode;
+    });
   </script>
   
   <div class="mb-3">
     <label for="rule_type" class="form-label">ประเภท</label>
     <select name="rule_type" id="rule_type" class="form-select" required>
       <option value=""> ++ โปรดเลือก ++</option>
-      <option value="MR">ข้อร้องขอ</option>
-      <option value="ER">แก้ไขข้อร้องขอ</option>
+      <option value="MR">ข้อบังคับหลัก</option>
+      <option value="ER">แก้ไขเพิ่มเติม</option>
     </select>
   </div>
 
   <!-- แสดงเมื่อ ER เท่า<|im_start|>้น -->
   <div class="mb-3" id="er_no_div" style="display: none;">
-    <label for="er_no" class="form-label">แก้ไขข้อร้องขอ</label>
+    <label for="er_no" class="form-label">แก้ไขเพิ่มเติม</label>
     <select name="er_no" class="form-select">
       <option value="" selected> ++ โปรดเลือก ++</option>
-      <option value="1"> 1</option>
-      <option value="2"> 2</option>
-      <option value="3"> 3</option>
-      <option value="4"> 4</option>
-      <option value="5"> 5</option>
-      <option value="6"> 6</option>
-      <option value="7"> 7</option>
-      <option value="8"> 8</option>
-      <option value="9"> 9</option>
-      <option value="10"> 10</option>
-      <option value="11"> 11</option>
-      <option value="12"> 12</option>
+      <% for (let i = 2; i <= 12; i++) { %>
+      <option value="ฉบับที่ <%= i %>"> ฉบับที่ <%= i %></option>
+      <% } %>
+      
 
      
     </select>
@@ -96,11 +131,10 @@
   <thead>
     <tr>
       <th>ชื่อข้อสหกรณ์/กลุ่มเกษตรกร</th>
-      <th> พ.ศ.</th>
+      <th> ประเภท</th>
       <th>โดย</th>
-      <th>เมื่อ</th>
       <th>ไฟล์</th>
-      <% if(user && user.mClass=='admin'){ %>
+      <% if(user && user.mClass=='kjs'){ %>
       <th>ลบ</th>
       <% } %>
     </tr>
@@ -109,37 +143,26 @@
     <% recentUploads.forEach(rule => { %>
       <tr>
         <td><%= rule.rule_name %></td>
-        <td><%= rule.rule_year %></td>
+        <td><%= rule.rule_type == 'ER' ? 'แก้ไข' + rule.er_no + ' พ.ศ.' : 'ข้อบังคับหลัก พ.ศ.'  %><%= rule.rule_year %></td>
         <td><%= rule.rule_saveby %></td>
-        <td>
-          <%= new Date(rule.rule_savedate).toLocaleDateString('th-TH', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-          }) %>
-        </td>
         <td>
           <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
             <lemma></lemma>ไฟล์
           </a>
-        </td>
+        </td>   
+        <!-- delete button -->
+        <% if(user && user.mClass=='kjs'){ %>
         <td>
-          <!-- delete button -->
-           <% if(user && user.mClass=='admin'){ %>
+       
            <a href="/rule/delete/<%= rule.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
             <i class="bi bi-trash"></i>
           </a>
-          <% } %>
+          
         </td>
+        <% } %>
       </tr>
     <% }) %>
   </tbody>
 </table>
-
-<div class="mt-4 text-end">
-    <a href="/rule" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> ข้อบังคับทั้งหมด
-    </a>
-</div>
 
 <%- include('./partials/footer') %>

@@ -7,7 +7,7 @@ router.get('/upload', rule.showUploadForm)
 router.post('/upload', rule.upload.single('file'), rule.uploadRule)
 router.get('/:id',rule.showDetailData)
 router.get('/delete/:id', rule.deleteRule)
-
+router.get('/coops/:group', rule.getCoopsByGroup)
 
 module.exports = router;
 

@@ -16,7 +16,10 @@ exports.runCron = async (req, res) => {
 
     res.send('ส่งแจ้งเตือนเรียบร้อยแล้ว');
   } catch (error) {
-    console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error.response?.data || error.message);
-    res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + (error.response?.data?.description || error.message));
+
+        console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error.response?.data || error.message);
+        res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + 
+          (error.response?.data?.description || error.message));
+      
   }
 };

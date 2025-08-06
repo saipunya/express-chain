@@ -1,7 +1,7 @@
-<%- include('../partials/header', { title: (vong ? 'แก้ไข' : 'เพิ่ม') + ' ข้อมูลวงเงิน' }) %>
+<%- include('../partials/header', { title: (vong ? 'แก้ไข' : 'สร้าง') + ' ข้อมูลวง' }) %>
 
 <div class="container my-5">
-  <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'เพิ่ม' %> ข้อมูลวงเงิน</h1>
+  <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'สร้าง' %> ข้อมูลวง</h1>
   <form method="POST" enctype="multipart/form-data" action="<%= vong ? '/vong/edit/' + vong.vong_id : '/vong/create' %>">
 
     <div class="mb-3">
@@ -29,12 +29,13 @@
       const cCodeSelect = document.getElementById('vong_code');
       const cNameInput = document.getElementById('c_name');
 
-      // ถ้ามีค่า c_group จากข้อมูลเดิม ให้โหลดสหกรณ์ตอนโหลดฟอร์ม
+      // ถ้าค่า c_group จากข้อมูล ให้โหลดสหกรณ์ตอนโหลดฟอร์ม
       window.addEventListener('DOMContentLoaded', async () => {
         if (cGroupSelect.value) {
           await loadCoops(cGroupSelect.value);
-          if ('<%= vong ? vong.vong_code : '' %>') {
-            cCodeSelect.value = '<%= vong ? vong.vong_code : '' %>';
+          const existingVongCode = '<%= vong ? vong.vong_code : "" %>';
+          if (existingVongCode) {
+            cCodeSelect.value = existingVongCode;
             cNameInput.value = cCodeSelect.options[cCodeSelect.selectedIndex]?.text || '';
           }
         }
@@ -92,7 +93,7 @@
       <label for="vong_file" class="form-label">แนบไฟล์ (PDF, DOCX, ฯลฯ)</label>
       <input type="file" name="vong_file" id="vong_file" class="form-control">
       <% if (vong && vong.vong_filename) { %>
-        <a href="/uploads/vong/<%= vong.vong_filename %>" target="_blank" class="mt-2 d-block">ไฟล์เดิม: <%= vong.vong_filename %></a>
+        <a href="/uploads/vong/<%= vong.vong_filename %>" target="_blank" class="mt-2 d-block">ไฟล์: <%= vong.vong_filename %></a>
       <% } %>
     </div>
     <div class="mb-3">

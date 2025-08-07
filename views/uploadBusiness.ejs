@@ -1,0 +1,80 @@
+<%- include('./partials/header') %>
+
+<form action="/business/upload" method="POST" enctype="multipart/form-data">
+  <h3 class="mt-4">📤 อัพโหลดข้อมูลธุรกิจ</h3>
+  
+  <div class="mb-3">
+    <label for="c_group" class="form-label">กลุ่มส่งสหกรณ์</label>
+    <select id="c_group" class="form-select" required>
+      <option value="">++ โปรดเลือก ++</option>
+      <option value="group1">กลุ่มส่งสหกรณ์ 1</option>
+      <option value="group2">กลุ่มส่งสหกรณ์ 2</option>
+      <option value="group3">กลุ่มส่งสหกรณ์ 3</option>
+      <option value="group4">กลุ่มส่งสหกรณ์ 4</option>
+      <option value="group5">กลุ่มส่งสหกรณ์ 5</option>
+    </select>
+  </div>
+  
+  <div class="mb-3">
+    <label for="bu_code" class="form-label">สหกรณ์/กลุ่มเกษตรกร</label>
+    <select name="bu_code" id="bu_code" class="form-select" required>
+      <option value="">++โปรดเลือก++</option>
+    </select>
+  </div>
+  <input type="hidden" name="bu_name" id="bu_name">
+  
+  <div class="mb-3">
+    <label for="bu_endyear" class="form-label">ปีสิ้นสุด</label>
+    <input type="number" name="bu_endyear" id="bu_endyear" class="form-control" required>
+  </div>
+  
+  <div class="mb-3">
+    <label>ไฟล์ PDF</label>
+    <input type="file" name="file" class="form-control" required>
+  </div>
+  
+  <button type="submit" class="btn btn-success">อัพโหลด</button>
+</form>
+
+<script>
+  const cGroupSelect = document.getElementById('c_group');
+  const cCodeSelect = document.getElementById('bu_code');
+  const cNameInput = document.getElementById('bu_name');
+
+  cGroupSelect.addEventListener('change', async function () {
+    const group = this.value;
+    cCodeSelect.innerHTML = '<option value="">โหลด...</option>';
+
+    if (!group) {
+      cCodeSelect.innerHTML = '<option value="">-- เลือกกลุ่มก่อน --</option>';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/business/coops/${group}`);
+      const data = await response.json();
+      
+      if (Array.isArray(data) && data.length > 0) {
+        cCodeSelect.innerHTML = '<option value="">-- เลือกสหกรณ์ --</option>';
+        data.forEach(coop => {
+          const option = document.createElement('option');
+          option.value = coop.c_code;
+          option.text = coop.c_name;
+          cCodeSelect.appendChild(option);
+        });
+      } else {
+        cCodeSelect.innerHTML = '<option value="">ไม่พบสหกรณ์ในกลุ่ม</option>';
+      }
+    } catch (error) {
+      console.error('โหลดข้อมูลสหกรณ์ล้มเหลว:', error);
+      cCodeSelect.innerHTML = '<option value="">ข้อผิดพลาด</option>';
+    }
+  });
+
+  cCodeSelect.addEventListener('change', function () {
+    const selectedOption = this.options[this.selectedIndex];
+    cNameInput.value = selectedOption.text !== '-- เลือกสหกรณ์ --' ? selectedOption.text : '';
+  });
+</script>
+
+<%- include('./partials/footer') %>

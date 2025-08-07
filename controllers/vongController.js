@@ -22,7 +22,7 @@ exports.create = async (req, res) => {
   try {
     if (!req.body) return res.status(400).send('ไม่มีข้อมูลที่ส่งมา');
 
-    const { vong_code, c_name, vong_year, vong_money, vong_date, vong_saveby, vong_savedate } = req.body;
+    const { vong_code, c_name, vong_year, vong_money, vong_date } = req.body;
     const vong_filename = req.file ? req.file.filename : null;
 
     const data = {
@@ -32,8 +32,8 @@ exports.create = async (req, res) => {
       vong_money,
       vong_date,
       vong_filename,
-      vong_saveby,
-      vong_savedate,
+      vong_saveby : req.session.user?.fullname || 'ไม่ทราบชื่อ',
+      vong_savedate : new Date(),
     };
 
     await Vong.create(data);
@@ -50,7 +50,7 @@ exports.update = async (req, res) => {
   try {
     if (!req.body) return res.status(400).send('ไม่มีข้อมูลที่ส่งมา');
 
-    const { vong_code, c_name, vong_year, vong_money, vong_date, vong_saveby, vong_savedate } = req.body;
+    const { vong_code, c_name, vong_year, vong_money, vong_date } = req.body;
 
     // ถ้ามีไฟล์ใหม่อัปโหลดมาให้ใช้ไฟล์ใหม่
     let vong_filename = null;
@@ -66,7 +66,7 @@ exports.update = async (req, res) => {
       vong_date,
       vong_filename,
       vong_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',
-      vong_savedate,
+      vong_savedate: new Date(),
     };
 
     await Vong.update(req.params.id, data);

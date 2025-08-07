@@ -1,7 +1,7 @@
-<%- include('../partials/header', { title: (vong ? 'แก้ไข' : 'สร้าง') + ' ข้อมูลวง' }) %>
+<%- include('../partials/header', { title: (vong ? 'แก้ไข' : 'สร้าง') + ' ข้อมูลวงเงินกู้ยืม/ค้ำประกัน' }) %>
 
 <div class="container my-5">
-  <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'สร้าง' %> ข้อมูลวง</h1>
+  <h1 class="text-center mb-4"><%= vong ? 'แก้ไข' : 'เพิ่ม' %> ข้อมูลวงเงินกู้ยืม/ค้ำประกัน</h1>
   <form method="POST" enctype="multipart/form-data" action="<%= vong ? '/vong/edit/' + vong.vong_id : '/vong/create' %>">
 
     <div class="mb-3">
@@ -80,13 +80,30 @@
     </script>
 
     <div class="mb-3">
-      <input name="vong_year" value="<%= vong?.vong_year || '' %>" placeholder="ปี" class="form-control" required>
+      <label for="vong_year" class="form-label">ปี พ.ศ.</label>
+      <%    const nowYear = new Date().getFullYear() %>
+      <select name="vong_year" class="form-select">
+        <option value="<%= nowYear + 542 %>"><%= nowYear + 542 %></option>
+        <option value="<%= nowYear + 543 %>" selected><%= nowYear + 543 %></option>
+        <option value="<%= nowYear + 544 %>"><%= nowYear + 544 %></option>
+      </select>
     </div>
     <div class="mb-3">
-      <input name="vong_money" value="<%= vong?.vong_money || '' %>" placeholder="วงเงิน" class="form-control" required>
+      <label for="vong_money" class="form-label">วงเงิน (บาท)</label>
+      
+      
+      <input name="vong_money" value="<%= vong?.vong_money || '' %>" placeholder="วงเงิน ไม่ต้องใส่ comma (,)" class="form-control" required>
+      <!-- protect comma -->
+      <script>
+        const vongMoneyInput = document.querySelector('input[name="vong_money"]');
+        vongMoneyInput.addEventListener('input', function() {
+          this.value = this.value.replace(/,/g, '');
+        });
+       </script>
     </div>
     <div class="mb-3">
-      <input name="vong_date" type="date" value="<%= vong?.vong_date?.toISOString().split('T')[0] || '' %>" class="form-control" required>
+      <label for="vong_date" class="form-label">วันที่อนุมัติ</label>
+      <input name="vong_date" type="date" value="" placeholder="วันที่อนุมัติ" class="form-control" required>
     </div>
 
     <div class="mb-3">
@@ -96,9 +113,7 @@
         <a href="/uploads/vong/<%= vong.vong_filename %>" target="_blank" class="mt-2 d-block">ไฟล์: <%= vong.vong_filename %></a>
       <% } %>
     </div>
-    <div class="mb-3">
-      <input name="vong_savedate" type="date" value="<%= vong?.vong_savedate?.toISOString().split('T')[0] || '' %>" class="form-control" required>
-    </div>
+
 
     <button type="submit" class="btn btn-primary">บันทึก</button>
   </form>

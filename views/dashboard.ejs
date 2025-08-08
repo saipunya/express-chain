@@ -36,8 +36,8 @@
         <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #FF6B6B, #FF8E8E);">
           <div class="card-body text-white text-center">
             <i class="bi bi-file-earmark-text display-4 mb-3"></i>
-            <h5>รายงานงบการเงิน</h5>
-            <p class="mb-0">งบการเงิน</p>
+            <h5>โครงการ</h5>
+            <p class="mb-0">กิจกรรมต่างๆ</p>
           </div>
         </div>
       </div>
@@ -45,8 +45,8 @@
         <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #4ECDC4, #44A08D);">
           <div class="card-body text-white text-center">
             <i class="bi bi-book display-4 mb-3"></i>
-            <h5>ข้อบังคับ</h5>
-            <p class="mb-0">สหกรณ์/กลุ่มเกษตรกร</p>
+            <h5>คำสั่งสำนักงาน</h5>
+            <p class="mb-0">คำสั่งต่างๆ</p>
           </div>
         </div>
       </div>
@@ -60,6 +60,7 @@
         </div>
       </div>
       <div class="col-md-3 mb-3">
+        <a href="<%= user.mClass === 'admin' ? '/activeCoop/' : '#' %>" class="text-decoration-none">
         <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #F093FB, #F5576C);">
           <div class="card-body text-white text-center">
             <i class="bi bi-gear display-4 mb-3"></i>
@@ -67,6 +68,7 @@
             <p class="mb-0">ระบบอื่นๆ</p>
           </div>
         </div>
+        </a>
       </div>
     </div>
 

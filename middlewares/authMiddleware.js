@@ -11,9 +11,10 @@ exports.requireLogin = (req, res, next) => {
   exports.requireLevel = (requiredLevel) => {
     return (req, res, next) => {
       if (!req.session.user || req.session.user.level !== requiredLevel) {
-        return res.status(403).send('ไม่ได้เข้าหน้านี้');
+        // ไม่ใช่แอดมินและไม่ได้เข้าสู่ระบบ
+        res.render('requireLevel', { title: 'ไม่ได้เข้าหน้านี้' }); 
       }
-      next();
+      // next();
     };
   };
   

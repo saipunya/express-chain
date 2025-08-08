@@ -3,7 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const rabiabController = require('../controllers/rabiabController');
-const { requireLogin } = require('../middlewares/authMiddleware');
+const { requireLogin , requireLevel } = require('../middlewares/authMiddleware');
+
 
 // ตั้งค่า multer<|im_start|><|im_start|>ปโหลดไฟล์
 const storage = multer.diskStorage({
@@ -31,7 +32,7 @@ const upload = multer({
 router.get('/coops/:group', rabiabController.getCoopsByGroup);
 
 // Routes อื่นๆ
-router.get('/', rabiabController.index);
+router.get('/',requireLevel('admin'), rabiabController.index);
 router.get('/upload', requireLogin, rabiabController.uploadForm);
 router.post('/upload', requireLogin, upload.single('file'), rabiabController.uploadRabiab);
 router.get('/download/:id', requireLogin, rabiabController.downloadRabiab);

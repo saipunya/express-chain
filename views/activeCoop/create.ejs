@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+
+<h2>➕ เพิ่มข้อมูล Active Coop</h2>
+<form action="/active-coop/create" method="POST">
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">รหัสสหกรณ์ (c_code)</label>
+      <input type="text" name="c_code" class="form-control" required>
+    </div>
+    <div class="col-md-8 mb-3">
+      <label class="form-label">ชื่อสหกรณ์/กลุ่มเกษตรกร (c_name)</label>
+      <input type="text" name="c_name" class="form-control" required>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">เลขทะเบียน (c_no)</label>
+      <input type="text" name="c_no" class="form-control">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">วันสิ้นสุด (end_date)</label>
+      <input type="text" name="end_date" class="form-control" placeholder="เช่น 31มีนาคม">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">รหัสวันสิ้นสุด (end_day)</label>
+      <input type="text" name="end_day" class="form-control" placeholder="MM-DD">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">สถานะ (c_status)</label>
+      <select name="c_status" class="form-select">
+        <option value="ดำเนินการ">ดำเนินการ</option>
+        <option value="เลิก/ชำระบัญชี">เลิก/ชำระบัญชี</option>
+        <option value="ถอนชื่อ">ถอนชื่อ</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">กลุ่ม (c_group)</label>
+      <select name="c_group" class="form-select">
+        <option value="">-- เลือกกลุ่ม --</option>
+        <option value="group1">group1</option>
+        <option value="group2">group2</option>
+        <option value="group3">group3</option>
+        <option value="group4">group4</option>
+        <option value="group5">group5</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">ประเภทสหกรณ์ (c_type)</label>
+      <input type="text" name="c_type" class="form-control">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ผู้ติดต่อ 1 (c_person)</label>
+      <input type="text" name="c_person" class="form-control">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ผู้ติดต่อ 2 (c_person2)</label>
+      <input type="text" name="c_person2" class="form-control">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">กลุ่มสหกรณ์ (coop_group)</label>
+      <input type="text" name="coop_group" class="form-control">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ใน/นอกกลุ่ม (in_out_group)</label>
+      <input type="text" name="in_out_group" class="form-control">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">บันทึกโดย (c_saveby)</label>
+      <input type="text" name="c_saveby" class="form-control">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">วันที่บันทึก (c_savedate)</label>
+      <input type="date" name="c_savedate" class="form-control" value="<%= new Date().toISOString().slice(0,10) %>">
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-success">บันทึก</button>
+  <a href="/active-coop" class="btn btn-secondary">ยกเลิก</a>
+</form>
+
+<%- include('../partials/footer') %>

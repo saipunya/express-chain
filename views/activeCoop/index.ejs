@@ -1,0 +1,85 @@
+<%- include('../partials/header') %>
+
+<h2>📋 รายการ Active Coop</h2>
+
+<form method="GET" class="mb-3 row g-2 align-items-center">
+  <div class="col-md-3">
+    <input type="text" name="search" class="form-control" placeholder="ค้นหา..." value="<%= search %>">
+  </div>
+
+  <div class="col-md-3">
+    <select name="group" class="form-select">
+      <option value="all" <%= group === 'all' ? 'selected' : '' %>>-- ทุกกลุ่ม --</option>
+      <option value="group1" <%= group === 'group1' ? 'selected' : '' %>>group1</option>
+      <option value="group2" <%= group === 'group2' ? 'selected' : '' %>>group2</option>
+      <option value="group3" <%= group === 'group3' ? 'selected' : '' %>>group3</option>
+      <option value="group4" <%= group === 'group4' ? 'selected' : '' %>>group4</option>
+      <option value="group5" <%= group === 'group5' ? 'selected' : '' %>>group5</option>
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <select name="status" class="form-select">
+      <option value="all" <%= status === 'all' ? 'selected' : '' %>>-- ทุกสถานะ --</option>
+      <option value="ดำเนินการ" <%= status === 'ดำเนินการ' ? 'selected' : '' %>>ดำเนินการ</option>
+      <option value="เลิก/ชำระบัญชี" <%= status === 'เลิก/ชำระบัญชี' ? 'selected' : '' %>>เลิก/ชำระบัญชี</option>
+      <option value="ถอนชื่อ" <%= status === 'ถอนชื่อ' ? 'selected' : '' %>>ถอนชื่อ</option>
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100">ค้นหา</button>
+  </div>
+</form>
+
+<a href="/active-coop/create" class="btn btn-success mb-3">➕ เพิ่มข้อมูล</a>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>รหัส</th>
+      <th>ชื่อ</th>
+      <th>เลขทะเบียน</th>
+      <th>วันสิ้นสุด</th>
+      <th>สถานะ</th>
+      <th>กลุ่ม</th>
+      <th>จัดการ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (coops.length > 0) { %>
+      <% coops.forEach(c => { %>
+        <tr>
+          <td><%= c.c_id %></td>
+          <td><%= c.c_code %></td>
+          <td><%= c.c_name %></td>
+          <td><%= c.c_no %></td>
+          <td><%= c.end_date %></td>
+          <td><%= c.c_status %></td>
+          <td><%= c.c_group %></td>
+          <td>
+            <a href="/active-coop/edit/<%= c.c_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
+            <a href="/active-coop/delete/<%= c.c_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ลบข้อมูลนี้?')">ลบ</a>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="8" class="text-center">ไม่พบข้อมูล</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<nav>
+  <ul class="pagination">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= page === i ? 'active' : '' %>">
+        <a class="page-link" href="?page=<%= i %>&search=<%= search %>&group=<%= group %>&status=<%= status %>"><%= i %></a>
+      </li>
+    <% } %>
+  </ul>
+</nav>
+
+<%- include('../partials/footer') %>

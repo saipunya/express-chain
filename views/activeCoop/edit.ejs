@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+
+<h2>✏️ แก้ไขข้อมูล Active Coop</h2>
+<form action="/active-coop/edit/<%= coop.c_id %>" method="POST">
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">รหัสสหกรณ์ (c_code)</label>
+      <input type="text" name="c_code" class="form-control" value="<%= coop.c_code %>" required>
+    </div>
+    <div class="col-md-8 mb-3">
+      <label class="form-label">ชื่อสหกรณ์/กลุ่มเกษตรกร (c_name)</label>
+      <input type="text" name="c_name" class="form-control" value="<%= coop.c_name %>" required>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">เลขทะเบียน (c_no)</label>
+      <input type="text" name="c_no" class="form-control" value="<%= coop.c_no %>">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">วันสิ้นสุด (end_date)</label>
+      <input type="text" name="end_date" class="form-control" value="<%= coop.end_date %>">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">รหัสวันสิ้นสุด (end_day)</label>
+      <input type="text" name="end_day" class="form-control" value="<%= coop.end_day %>">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">สถานะ (c_status)</label>
+      <select name="c_status" class="form-select">
+        <option value="ดำเนินการ" <%= coop.c_status === 'ดำเนินการ' ? 'selected' : '' %>>ดำเนินการ</option>
+        <option value="เลิก/ชำระบัญชี" <%= coop.c_status === 'เลิก/ชำระบัญชี' ? 'selected' : '' %>>เลิก/ชำระบัญชี</option>
+        <option value="ถอนชื่อ" <%= coop.c_status === 'ถอนชื่อ' ? 'selected' : '' %>>ถอนชื่อ</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">กลุ่ม (c_group)</label>
+      <select name="c_group" class="form-select">
+        <option value="">-- เลือกกลุ่ม --</option>
+        <option value="group1" <%= coop.c_group === 'group1' ? 'selected' : '' %>>group1</option>
+        <option value="group2" <%= coop.c_group === 'group2' ? 'selected' : '' %>>group2</option>
+        <option value="group3" <%= coop.c_group === 'group3' ? 'selected' : '' %>>group3</option>
+        <option value="group4" <%= coop.c_group === 'group4' ? 'selected' : '' %>>group4</option>
+        <option value="group5" <%= coop.c_group === 'group5' ? 'selected' : '' %>>group5</option>
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">ประเภทสหกรณ์ (c_type)</label>
+      <input type="text" name="c_type" class="form-control" value="<%= coop.c_type %>">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ผู้ติดต่อ 1 (c_person)</label>
+      <input type="text" name="c_person" class="form-control" value="<%= coop.c_person %>">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ผู้ติดต่อ 2 (c_person2)</label>
+      <input type="text" name="c_person2" class="form-control" value="<%= coop.c_person2 %>">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">กลุ่มสหกรณ์ (coop_group)</label>
+      <input type="text" name="coop_group" class="form-control" value="<%= coop.coop_group %>">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">ใน/นอกกลุ่ม (in_out_group)</label>
+      <input type="text" name="in_out_group" class="form-control" value="<%= coop.in_out_group %>">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">บันทึกโดย (c_saveby)</label>
+      <input type="text" name="c_saveby" class="form-control" value="<%= coop.c_saveby %>">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">วันที่บันทึก (c_savedate)</label>
+      <input type="date" name="c_savedate" class="form-control" value="<%= coop.c_savedate.toISOString().slice(0,10) %>">
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+  <a href="/active-coop" class="btn btn-secondary">ยกเลิก</a>
+</form>
+
+<%- include('../partials/footer') %>

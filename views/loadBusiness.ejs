@@ -1,0 +1,87 @@
+<%- include('./partials/header') %>
+
+<div class="container mt-4">
+  <h3 class="mb-4">📋 ไฟล์ธุรกิจทั้งหมด</h3>
+
+  <!-- ช่องค้นหา -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <form method="GET" action="/business">
+        <div class="input-group">
+          <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อสหกรณ์" value="<%= search %>">
+          <button class="btn btn-outline-secondary" type="submit">ค้นหา</button>
+          <a href="/business" class="btn btn-outline-danger">ล้าง</a>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-6 text-end">
+      <% if(user && user.mClass === 'kts' || user.mClass === 'admin') { %>
+        <a href="/business/upload" class="btn btn-success">
+          <i class="bi bi-plus-circle"></i> อัพโหลดข้อมูลธุรกิจ
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>สหกรณ์/กลุ่มเกษตรกร</th>
+          <th>ปีสิ้นสุด</th>
+          <th>อัพโหลดโดย</th>
+          <th>วันที่อัพโหลด</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(fileAll && fileAll.length > 0) { %>
+          <% fileAll.forEach(file => { %>
+            <tr>
+              <td><%= file.bu_name %></td>
+              <td><%= file.bu_endyear %></td>
+              <td><%= file.bu_saveby %></td>
+              <td><%= new Date(file.bu_savedate).toLocaleDateString('th-TH') %></td>
+              <td>
+                <% if(user) { %>
+                  <a href="/business/download/<%= file.bu_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-download"></i> ดาวน์โหลด
+                  </a>
+                  <% if(user.mClass === 'admin' || user.mClass === 'kbs') { %>
+                    <a href="/business/delete/<%= file.bu_id %>" class="btn btn-sm btn-outline-danger" 
+                       onclick="return confirm('ต้องการลบไฟล์นี้?')">
+                      <i class="bi bi-trash"></i> ลบ
+                    </a>
+                  <% } %>
+                <% } else { %>
+                  <a href="/auth/login" class="btn btn-sm btn-outline-primary">เข้าสู่ระบบ</a>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="text-center">ไม่พบข้อมูล</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if(totalPages > 1) { %>
+    <nav>
+      <ul class="pagination justify-content-center">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+            <a class="page-link" href="/business?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">
+              <%= i %>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<%- include('./partials/footer') %>

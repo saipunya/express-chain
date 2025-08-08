@@ -11,6 +11,7 @@ const ruleModel = require('../models/ruleModel');
 const UseCar = require('../models/usecarModel');
 const onlineModel = require('../models/onlineModel');
 const rabiabModel = require('../models/rabiabModel');
+const businessModel = require('../models/businessModel');
 
 // controllers/homeController.js
 
@@ -23,6 +24,7 @@ const homeController = {
       const finances = await Finance.getAll();
       const ruleFiles = await ruleModel.getLastUploads();
       const rabiabFiles = await rabiabModel.getLastUploads();
+      const businessFiles = await businessModel.getLastUploads(10);
       const usecars = await UseCar.getAll();
       
       // ข้อมูลสหกรณ์
@@ -47,6 +49,7 @@ const homeController = {
         finances, 
         ruleFiles,
         rabiabFiles,
+        businessFiles,
         usecars,
         stats,
         onlineUsers,
@@ -133,7 +136,7 @@ exports.loadFinance = async (req, res) => {
     const fileAll = await financeModel.getFinanceFiles(search, page);
 
     res.render('loadFinance', {
-      title: 'ไฟล์ทั้งหมด',
+      title: 'ไฟล์QtCore',
       fileAll,
       currentPage: page,
       totalPages,

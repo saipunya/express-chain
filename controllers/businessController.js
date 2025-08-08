@@ -24,8 +24,9 @@ const showUploadForm = async (req, res) => {
   try {
     const recentUploads = await businessModel.getLastUploads();
     res.render('uploadBusiness', { 
-      title: 'ข้อมูลธุรกิจ',
-      recentUploads
+      title: 'ข้อมูล',
+      recentUploads,
+      user: req.session.user
     });
   } catch (err) {
     console.error('Error showing upload form:', err);
@@ -77,7 +78,7 @@ const loadBusiness = async (req, res) => {
     const fileAll = await businessModel.getBusinessFiles(search, page);
 
     res.render('loadBusiness', {
-      title: 'ไฟล์ธุรกิจทั้งหมด',
+      title: 'ไฟล์ ทั้งหมด',
       fileAll,
       currentPage: page,
       totalPages,
@@ -85,7 +86,7 @@ const loadBusiness = async (req, res) => {
     });
   } catch (err) {
     console.error('Error loading business files:', err);
-    res.status(500).send('ผิดพลาดในการโหลดข้อมูล');
+    res.status(500).send('พลาดในการโหลดข้อมูล');
   }
 };
 
@@ -118,7 +119,7 @@ const downloadFile = async (req, res) => {
     const filePath = path.join(uploadPath, business.bu_filename);
     
     if (!fs.existsSync(filePath)) {
-      return res.status(404).send('ไฟล์ไม่มีอยู่ในระบบ');
+      return res.status(404).send('ไฟล์ไม่ อยู่ในระบบ');
     }
 
     const isAdmin = req.session?.user?.mClass === 'admin';
@@ -160,7 +161,7 @@ const downloadFile = async (req, res) => {
     res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
     console.error('Download error:', error);
-    res.status(500).send('ผิดพลาดในการดาวน์โหลด');
+    res.status(500).send('พลาดในการดาวน์โหลด');
   }
 };
 

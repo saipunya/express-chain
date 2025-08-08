@@ -15,22 +15,22 @@
         <% if (!user) { %>
           <div class="w-100">
             <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-            <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์สหกรณ์ฯ</p>
+            <p class="lead mb-4 text-center">ระบบสารสนเทศและapyสหกรณ์สหกรณ์ฯ</p>
 
             <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
             <form action="/auth/login" method="POST">
               <div class="mb-3">
-                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+                <label for="username" class="form-label">ชื่อใช้งาน</label>
                 <input type="text" class="form-control" id="username" name="username" required />
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">รหัสผ่าน</label>
+                <label for="password" class="form-label">ผ่าน</label>
                 <input type="password" class="form-control" id="password" name="password" required />
               </div>
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
             <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ยังไม่มีบัญชีใช่หรือไม่? 
+              <i class="bi bi-person-add"></i> ไม่ใช่? 
               <a href="/auth/register" class="text-success">
                 สมัครสมาชิก
               </a>
@@ -38,7 +38,7 @@
           </div>
         <% } else { %>
           <div class="w-100 text-center">
-            <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ</h1>
+            <h1 class="display-6 mb-3 text-success">ต้อนรับคุณ</h1>
             <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
             <p class="lead mb-4"><%= user.fullname %></p>
             <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
@@ -97,7 +97,7 @@
       <div class="col-md-6">
         <div class="card shadow-sm border-0">
           <div class="card-body">
-            <h5 class="card-title text-center">แยกตามกลุ่มส่งเสริมสหกรณ์</h5>
+            <h5 class="card-title text-center">แยกตามกลุ่มส่งสหกรณ์</h5>
             <canvas id="cGroupChart" width="400" height="200"></canvas>
           </div>
         </div>
@@ -224,7 +224,56 @@ new Chart(ctx2, {
         </div>
       </div>
 
-      <!-- 📋 ข้อกำหนดสหกรณ์ -->
+      <!-- 💼 รายงานกิจการสหกรณ์/กลุ่มเกษตรกร -->
+      <div class="col-md-6 mb-4">
+        <div class="bg-light p-4 rounded shadow-sm h-100">
+          <h2 class="mb-4 text-center text-info">💼 รายงานกิจการของสหกรณ์/กลุ่มเกษตรกร</h2>
+          <ul class="list-group list-group-flush">
+            <% businessFiles.slice(0, 10).forEach((business, index) => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-briefcase me-2 text-secondary"></i>
+                  <strong><%= index + 1 %>.</strong> <%= business.bu_name %> 
+                  <span class="badge bg-info ms-2"><%= business.bu_endyear %></span>
+                  <% 
+                    const businessSavedDate = new Date(business.bu_savedate);
+                    const currentDate = new Date();
+                    const diffDays = Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24));
+                  %>
+                  <% if (diffDays <= 7) { %>
+                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
+                  <% } %>
+                </span>
+                <% if(user){ %>
+                  <a 
+                    href="/business/download/<%= business.bu_id %>" 
+                    class="btn btn-sm btn-outline-info" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    ดาวน์โหลด
+                  </a>
+                <% } %>
+              </li>
+            <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
+              💼 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="row">
+
+      <!-- 📋 ข้อบังคับสหกรณ์ -->
       <div class="col-md-6 mb-4">
         <div class="bg-light p-4 rounded shadow-sm h-100">
           <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
@@ -270,47 +319,47 @@ new Chart(ctx2, {
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="bg-light p-4 rounded shadow-sm">
-      <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
-      <ul class="list-group list-group-flush" style="max-width: 900px; margin: auto;">
-        <% rabiabFiles.forEach((rabiab, index) => { %>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>
-              <i class="fas fa-file-alt me-2 text-secondary"></i>
-              <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %> 
-              <% 
-                const rabiabSavedDate = new Date(rabiab.ra_savedate);
-                const currentDate = new Date();
-                const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
-              %>
-              <% if (diffDays <= 7) { %>
-                <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
-              <% } %>
-            </span>
-            <% if(user){ %>
-              <a 
-                href="/rabiab/download/<%= rabiab.ra_id %>" 
-                class="btn btn-sm btn-outline-warning" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                ดาวน์โหลด
-              </a>
-            <% } %>
-          </li>
-        <% }); %>
-        <div class="text-end mt-2">
-          <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
-            📄 ดูทั้งหมด
-          </a>
+      <!-- 📄 ระเบียบสหกรณ์ -->
+      <div class="col-md-6 mb-4">
+        <div class="bg-light p-4 rounded shadow-sm h-100">
+          <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
+          <ul class="list-group list-group-flush">
+            <% rabiabFiles.slice(0, 10).forEach((rabiab, index) => { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-alt me-2 text-secondary"></i>
+                  <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %> 
+                  <% 
+                    const rabiabSavedDate = new Date(rabiab.ra_savedate);
+                    const currentDate = new Date();
+                    const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
+                  %>
+                  <% if (diffDays <= 7) { %>
+                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
+                  <% } %>
+                </span>
+                <% if(user){ %>
+                  <a 
+                    href="/rabiab/download/<%= rabiab.ra_id %>" 
+                    class="btn btn-sm btn-outline-warning" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    ดาวน์โหลด
+                  </a>
+                <% } %>
+              </li>
+            <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
+              📄 ดูทั้งหมด
+            </a>
+          </div>
         </div>
-      </ul>
+      </div>
+
+      
     </div>
   </div>
 </section>
@@ -369,7 +418,7 @@ new Chart(ctx2, {
             <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
             <div class="mb-3">
               <div class="display-4 text-success"><%= onlineCount %></div>
-              <small class="text-muted">ผู้ใช้ออนไลน์</small>
+              <small class="text-muted">กำลังใช้ออนไลน์</small>
             </div>
             <hr>
             <div class="row text-center">

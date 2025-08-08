@@ -1,7 +1,7 @@
 <%- include('./partials/header') %>
 
 <form action="/business/upload" method="POST" enctype="multipart/form-data">
-  <h3 class="mt-4">📤 อัพโหลดข้อมูลธุรกิจ</h3>
+  <h3 class="mt-4">📤 อัพโหลด</h3>
   
   <div class="mb-3">
     <label for="c_group" class="form-label">กลุ่มส่งสหกรณ์</label>
@@ -24,8 +24,13 @@
   <input type="hidden" name="bu_name" id="bu_name">
   
   <div class="mb-3">
-    <label for="bu_endyear" class="form-label">ปีสิ้นสุด</label>
-    <input type="number" name="bu_endyear" id="bu_endyear" class="form-control" required>
+    <label for="bu_endyear" class="form-label">ปีบัญชี</label>
+    <%    const nowYear = new Date().getFullYear() %>
+    <select name="bu_endyear" class="form-select">
+      <option value="<%= nowYear + 542 %>"><%= nowYear + 542 %></option>
+        <option value="<%= nowYear + 543 %>" selected><%= nowYear + 543 %></option>
+        <option value="<%= nowYear + 544 %>"><%= nowYear + 544 %></option>
+    </select>
   </div>
   
   <div class="mb-3">
@@ -33,8 +38,60 @@
     <input type="file" name="file" class="form-control" required>
   </div>
   
-  <button type="submit" class="btn btn-success">อัพโหลด</button>
+  <button type="submit" class="btn btn-success">โหลด</button>
 </form>
+
+<hr>
+<h5 class="mt-5">📂 โหลดล่าสุด</h5>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>สหกรณ์/กลุ่มเกษตรกร</th>
+      <th>ปลาย</th>
+      <th>ไฟล์</th>
+      <th>โหลดโดย</th>
+      <th>เมื่อ</th>
+      <% if(user && user.mClass=='admin'){ %>
+      <th>ลบ</th>
+      <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% recentUploads.slice(0, 5).forEach(file => { %>
+      <tr>
+        <td><%= file.bu_name %></td>
+        <td><%= file.bu_endyear %></td>
+        <td>
+          <a href="/business/download/<%= file.bu_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
+            📄 ไฟล์
+          </a>
+        </td>
+        <td><%= file.bu_saveby %></td>
+        <td>
+          <%= new Date(file.bu_savedate).toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+          }) %>
+        </td>
+        <% if(user && user.mClass=='admin'){ %>
+        <td>
+          <a href="/business/delete/<%= file.bu_id %>" class="btn btn-sm btn-outline-danger" 
+             onclick="return confirm('แน่ใจไหมจะลบไฟล์?')">
+            <i class="bi bi-trash"></i>
+          </a>
+        </td>
+        <% } %>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<div class="mt-4 text-end">
+    <a href="/business" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> ข้อมูลทั้งหมด
+    </a>
+</div>
 
 <script>
   const cGroupSelect = document.getElementById('c_group');

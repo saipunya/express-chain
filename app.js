@@ -48,6 +48,9 @@ app.use((req, res, next) => {
 // require routes/index.js
 require('./routes/index')(app);
 // when not routes found, it will return 404 button to home page
+
+
+
 app.use((req, res) => {
   res.status(404).render('error_page', {
     message: 'เส้นทางเข้าไม่อยู่ในระบบ'
@@ -112,7 +115,8 @@ const uploadDirs = [
   'uploads',
   'uploads/rabiab',
   'uploads/finance',
-  'uploads/rule'
+  'uploads/rule',
+  'uploads/business'
 ];
 
 uploadDirs.forEach(dir => {

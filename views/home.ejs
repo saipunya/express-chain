@@ -20,17 +20,17 @@
             <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
             <form action="/auth/login" method="POST">
               <div class="mb-3">
-                <label for="username" class="form-label">ชื่อใช้งาน</label>
+                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
                 <input type="text" class="form-control" id="username" name="username" required />
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">ผ่าน</label>
+                <label for="password" class="form-label">รหัสผ่าน</label>
                 <input type="password" class="form-control" id="password" name="password" required />
               </div>
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
             <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ไม่ใช่? 
+              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ? 
               <a href="/auth/register" class="text-success">
                 สมัครสมาชิก
               </a>
@@ -227,14 +227,14 @@ new Chart(ctx2, {
       <!-- 💼 รายงานกิจการสหกรณ์/กลุ่มเกษตรกร -->
       <div class="col-md-6 mb-4">
         <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-info">💼 รายงานกิจการของสหกรณ์/กลุ่มเกษตรกร</h2>
+          <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
           <ul class="list-group list-group-flush">
             <% businessFiles.slice(0, 10).forEach((business, index) => { %>
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fas fa-briefcase me-2 text-secondary"></i>
                   <strong><%= index + 1 %>.</strong> <%= business.bu_name %> 
-                  <span class="badge bg-info ms-2"><%= business.bu_endyear %></span>
+                  <span class="badge bg-info ms-2"><%= business.end_date  %> <%= business.bu_endyear %></span>
                   <% 
                     const businessSavedDate = new Date(business.bu_savedate);
                     const currentDate = new Date();

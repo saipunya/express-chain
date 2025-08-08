@@ -28,7 +28,7 @@
       <thead class="table-dark">
         <tr>
           <th>สหกรณ์/กลุ่มเกษตรกร</th>
-          <th>ปีสิ้นสุด</th>
+          <th>ปีบัญชีสิ้นสุด</th>
           <th>อัพโหลดโดย</th>
           <th>วันที่อัพโหลด</th>
           <th>จัดการ</th>
@@ -39,9 +39,14 @@
           <% fileAll.forEach(file => { %>
             <tr>
               <td><%= file.bu_name %></td>
-              <td><%= file.bu_endyear %></td>
+              <td><%= file.end_date %> %><%= file.bu_endyear %></td>
               <td><%= file.bu_saveby %></td>
-              <td><%= new Date(file.bu_savedate).toLocaleDateString('th-TH') %></td>
+              <td>
+                <% const date = new Date(file.bu_savedate); %>
+                <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
+                <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+                <%= thaiDate %>
+              </td>
               <td>
                 <% if(user) { %>
                   <a href="/business/download/<%= file.bu_id %>" target="_blank" class="btn btn-sm btn-outline-primary">

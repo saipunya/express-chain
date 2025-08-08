@@ -1,3 +1,4 @@
+const pool = require('../config/db'); 
 const activeCoopModel = require('../models/activeCoopModel');
 
 exports.index = async (req, res) => {
@@ -24,10 +25,16 @@ exports.store = async (req, res) => {
   res.redirect('/active-coop');
 };
 
-exports.editForm = async (req, res) => {
-  const coop = await activeCoopModel.getById(req.params.id);
-  res.render('activeCoop/edit', { coop });
-};
+
+
+  exports.editForm = async (req, res) => {
+    const coop = await activeCoopModel.getById(req.params.id);
+  
+    // ดึงรายชื่อสมาชิก member3
+    const [members] = await pool.query('SELECT m_name FROM member3 ORDER BY m_name ASC');
+  
+    res.render('activeCoop/edit', { coop, members });
+  };
 
 exports.update = async (req, res) => {
   await activeCoopModel.update(req.params.id, req.body);

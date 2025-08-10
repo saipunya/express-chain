@@ -20,10 +20,10 @@ router.get('/run-cron', async (req, res) => {
 
     console.log('Telegram response:', response.data);
 
-    res.send('ส่งข้อความแจ้งเตือนเรียบร้อยแล้ว');
+    return res.send('ส่งข้อความแจ้งเตือนเรียบร้อยแล้ว');
   } catch (error) {
     console.error('เกิดข้อผิดพลาด:', error.message);
-    res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + error.message);
+    return res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + error.message);
   }
 });
 

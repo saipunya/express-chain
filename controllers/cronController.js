@@ -14,12 +14,16 @@ exports.runCron = async (req, res) => {
 
     console.log('ส่งข้อความสำเร็จ:', response.data);
 
-    res.send('ส่งแจ้งเตือนเรียบร้อยแล้ว');
+    return res.send('ส่งแจ้งเตือนเรียบร้อยแล้ว'); // ✅ ใส่ return
   } catch (error) {
+    console.error(
+      'เกิดข้อผิดพลาดในการส่งแจ้งเตือน:',
+      error.response?.data || error.message
+    );
 
-        console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error.response?.data || error.message);
-        res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + 
-          (error.response?.data?.description || error.message));
-      
+    return res.status(500).send(
+      'เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' +
+      (error.response?.data?.description || error.message)
+    ); // ✅ ใส่ return
   }
 };

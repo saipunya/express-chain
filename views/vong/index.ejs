@@ -18,7 +18,7 @@
 
   <table class="table table-bordered table-striped">
     <thead>
-      <tr>
+      <tr class="text-center">
         <th>สถาบัน</th>
         <th>ปีบัญชี</th>
         <th>ยอดเงิน</th>
@@ -37,12 +37,16 @@
           
           <!-- ส่วน comma vong_money -->
            <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
-          <td class="text-end"><%= formattedMoney %></td>
-          <% if(user){ %>
+           <% if(user) { %>
+           <td class="text-end"><%= formattedMoney %></td>
           <td><a href="/vong/download/<%= row.vong_id %>"><i class="bi bi-file-pdf-fill fs-4"></i></a></td>
-          <% }else{ %>
-          <td><a href="/auth/login"><i class="bi bi-file-pdf fs-4"></i></a></td>
-          <% } %>
+
+           <% } else { %>
+           <td class="text-end"><button class="btn btn-primary" onclick="window.location.href='/auth/login'">เข้าสู่ระบบ</button></td>
+          <td class="text-center"><a href="/auth/login"><i class="bi bi-file-pdf fs-4"></i></a></td>
+           
+           <% } %>
+        
         
           <% if(user && user.mClass === 'admin') { %>
           <td>

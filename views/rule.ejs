@@ -37,10 +37,14 @@
           </td>
         
           <td>
-            <% if(user){ %>
-            <a href="/rule/<%= list.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
-            <% }else{ %>
+            <% if(!user){ %>
             <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+
+            <% }else{ %>
+            <a href="/rule/<%= list.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
+            <% if(user && user.mClass=='admin'){ %>
+            <a href="/rule/delete/<%= list.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">ลบ</a>
+            <% } %>
             <% } %>
         </td>
         </tr>

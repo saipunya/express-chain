@@ -10,15 +10,17 @@
     <% } %>
   </div>
 
-  <!-- ช่องค้นหา -->
-  <div class="row mb-3">
+  <!-- ช่องค้นหา (ส่งไป DB + keyup AJAX) -->
+  <form class="row mb-3" method="GET" action="">
     <div class="col-md-6">
       <div class="input-group">
-        <input type="text" id="searchInput" class="form-control" placeholder="ชื่อสถาบัน/ชื่อระเบียบ" value="<%= search %>">
-        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
+        <input type="text" id="searchName" name="searchName" class="form-control" placeholder="ชื่อระเบียบ" value="<%= searchName || '' %>">
+        <input type="text" id="searchCoop" name="searchCoop" class="form-control" placeholder="ชื่อสหกรณ์" value="<%= searchCoop || '' %>">
+        <button class="btn btn-primary" type="submit">ค้นหา</button>
+        <a class="btn btn-outline-secondary" href="/rabiab">ล้าง</a>
       </div>
     </div>
-  </div>
+  </form>
 
   <!-- ตารางระบ -->
   <div class="table-responsive">
@@ -86,7 +88,7 @@
       <ul class="pagination justify-content-center">
         <% for (let i = 1; i <= totalPages; i++) { %>
           <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+            <a class="page-link" href="?page=<%= i %><%= searchName ? '&searchName=' + encodeURIComponent(searchName) : '' %><%= searchCoop ? '&searchCoop=' + encodeURIComponent(searchCoop) : '' %>"><%= i %></a>
           </li>
         <% } %>
       </ul>
@@ -94,33 +96,6 @@
   <% } %>
 </div>
 
+<script src="/js/rabiab-search.js"></script>
 <%- include('../partials/footer') %>
 
-<script>
-  const searchInput = document.getElementById('searchInput');
-  const rabiabTable = document.getElementById('rabiabTable');
-  let searchTimeout;
-
-  searchInput.addEventListener('keyup', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const keyword = searchInput.value.toLowerCase();
-      const rows = rabiabTable.querySelectorAll('tr');
-
-      rows.forEach(row => {
-        const rabiabName = row.children[0].innerText.toLowerCase();
-        const instituteName = row.children[2].innerText.toLowerCase();
-        const shouldShow = rabiabName.includes(keyword) || instituteName.includes(keyword);
-        row.style.display = shouldShow ? '' : 'none';
-      });
-    }, 300); // รอ 300ms
-  });
-
-  function clearSearch() {
-    searchInput.value = '';
-    const rows = rabiabTable.querySelectorAll('tr');
-    rows.forEach(row => {
-      row.style.display = '';
-    });
-  }
-</script>

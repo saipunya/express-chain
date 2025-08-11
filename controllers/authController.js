@@ -9,12 +9,16 @@ exports.login = async (req, res) => {
     const user = await authModel.findUserByUsername(username);
 
     if (!user) {
-      return res.status(401).send('ไม่พบ<|im_start|><lemma>');
+      // user wrong
+      res.render('login_error', { error: 'ชื่อใช้งานหรือรหัสผ่านไม่ถูกต้อง' });
+      return;
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.m_pass);
     if (!isPasswordValid) {
-      return res.status(401).send('<lemmaผ่านไม่<lemmaต้อง');
+      // pass wrong
+      res.render('login_error', { error: 'ชื่อใช้งานหรือรหัสผ่านไม่ถูกต้อง' });
+      return;
     }
 
     // ตั้ง session - ใช้ m_id แทน id
@@ -35,7 +39,7 @@ exports.login = async (req, res) => {
     res.redirect('/dashboard');
   } catch (error) {
     console.error(error);
-    res.status(500).send('<lemmaข้อ<lemmaพลาดในการเข้า<lemma่ระบบ');
+    res.status(500).send('error');
   }
 };
 

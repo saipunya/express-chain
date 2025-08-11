@@ -1,0 +1,87 @@
+<%- include('../partials/header', { title: 'Use Car Detail' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">
+    <i class="bi bi-car-front-fill text-primary"></i> Use Car Detail
+  </h1>
+
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-body p-4">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-calendar3 text-success me-2 fs-5"></i>
+            <strong>Date:</strong>
+            <span class="ms-2">
+              <% const date = new Date(usecar.date_car); const options = { year: 'numeric', month: 'long', day: 'numeric' }; const thaiDate = date.toLocaleDateString('th-TH', options); %>
+              <%= thaiDate %>
+            </span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-clock-history text-info me-2 fs-5"></i>
+            <strong>Time:</strong>
+            <span class="ms-2"><%= usecar.time_car %></span>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <dl class="row mb-0">
+        <dt class="col-sm-3"><i class="bi bi-flag-fill text-warning me-1"></i> Activity</dt>
+        <dd class="col-sm-9"><%= usecar.act_car %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Place</dt>
+        <dd class="col-sm-9"><%= usecar.place_car %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-truck-front-fill text-primary me-1"></i> Car Number</dt>
+        <dd class="col-sm-9"><%= usecar.no_car || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-person-fill text-success me-1"></i> Responsible</dt>
+        <dd class="col-sm-9"><%= usecar.respon_car || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-chat-square-text-fill text-info me-1"></i> Comment</dt>
+        <dd class="col-sm-9"><%= usecar.comment_car || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-journal-text text-secondary me-1"></i> Book No.</dt>
+        <dd class="col-sm-9"><%= usecar.no_book || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-fuel-pump-fill text-warning me-1"></i> Refuel</dt>
+        <dd class="col-sm-9"><%= usecar.use_refuel || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-cash-stack text-success me-1"></i> Budget List</dt>
+        <dd class="col-sm-9"><%= usecar.list_budget || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-person-badge-fill text-primary me-1"></i> Saved By</dt>
+        <dd class="col-sm-9"><%= usecar.saveby || '-' %></dd>
+
+        <dt class="col-sm-3"><i class="bi bi-calendar-check-fill text-success me-1"></i> Saved At</dt>
+        <dd class="col-sm-9">
+          <% if (usecar.savedate) { const sd=new Date(usecar.savedate); %>
+            <%= sd.toLocaleString('th-TH') %>
+          <% } else { %>-<% } %>
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex gap-2">
+    <a href="/usecar" class="btn btn-secondary">
+      <i class="bi bi-arrow-left-circle"></i> Back
+    </a>
+    <% if (user && user.mClass === 'pbt' || user && user.mClass === 'admin') { %>
+      <a href="/usecar/edit/<%= usecar.id_usecar %>" class="btn btn-warning">
+        <i class="bi bi-pencil-square"></i> Edit
+      </a>
+      <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST" style="display:inline">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this record?')">
+          <i class="bi bi-trash3-fill"></i> Delete
+        </button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,70 @@
+<!-- list of gitgum find all -->
+ <%- include('partials/header') %>
+
+ <div class="container mt-4">
+    <h3 class="mb-4">📋 รายการกิจกรรม</h3> 
+     
+      <!-- รับข้อมูลจาก db มาแสดง -->
+       <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>เวลา</th>
+            <th>กิจกรรม</th>
+            <th>สถานที่</th>
+            <th>ผู้รับผิดชอบ</th>
+            <% if(user && user.mClass=='admin'){ %>
+            <th>Manage</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% data.forEach(gitgum => { %>
+            <tr>
+              <!-- thai date -->
+               <% const date = new Date(gitgum.git_date); %>
+               <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
+               <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+               <td><%= thaiDate %></td>
+              <td><%= gitgum.git_time %></td>
+              <td><%= gitgum.git_act %></td>
+              <td><%= gitgum.git_place %></td>
+              <td><%= gitgum.git_goto %></td>
+              <% if(user && user.mClass=='admin'){ %>
+              <td>
+                <a href="/gitgum/edit/<%= gitgum.git_id %>" class="btn btn-warning btn-sm">Edit</a>
+                <a href="/gitgum/delete/<%= gitgum.git_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ลบข้อมูล?')">Delete</a>
+              </td>
+              <% } %>
+            </tr>
+          <% }); %>
+          </tbody>
+       </table>
+       <!-- pagination controls -->
+       <% if (pagination && pagination.totalPages > 1) { %>
+        <nav aria-label="Gitgum pagination">
+          <ul class="pagination justify-content-center">
+            <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+              <a class="page-link" href="/gitgum/list?page=<%= pagination.page - 1 %>&pageSize=<%= pagination.pageSize %>">ก่อนหน้า</a>
+            </li>
+
+            <% for (let p = 1; p <= pagination.totalPages; p++) { %>
+              <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
+                <a class="page-link" href="/gitgum/list?page=<%= p %>&pageSize=<%= pagination.pageSize %>"><%= p %></a>
+              </li>
+            <% } %>
+
+            <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+              <a class="page-link" href="/gitgum/list?page=<%= pagination.page + 1 %>&pageSize=<%= pagination.pageSize %>">ถัดไป</a>
+            </li>
+          </ul>
+        </nav>
+       <% } %>
+
+
+    </div>
+    
+
+
+
+ <%- include('partials/footer') %>

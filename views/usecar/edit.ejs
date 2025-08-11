@@ -6,7 +6,6 @@
     <div class="mb-3">
       <label for="date_car" class="form-label">Date</label>
       <% 
-        let formattedDate = '';
         if (usecar.date_car) {
           // แปลงเป็น string และเอาแค่ส่วน YYYY-MM-DD
           const dateStr = usecar.date_car.toString();
@@ -27,7 +26,7 @@
     </div>
     <div class="mb-3">
       <label for="time_car" class="form-label">Time</label>
-      <input type="text" id="time_car" name="time_car" class="form-control" value="<%= usecar.time_car %>" required>
+      <input type="time" id="time_car" name="time_car" class="form-control" value="<%= (function(){ var t=(usecar.time_car||'').toString(); if (/^\d{2}:\d{2}$/.test(t)) return t; if (/^\d{2}:\d{2}:\d{2}$/.test(t)) return t.substring(0,5); try { var d=new Date('1970-01-01T'+t); if (!isNaN(d)) { var hh=String(d.getHours()).padStart(2,'0'); var mm=String(d.getMinutes()).padStart(2,'0'); return hh+':'+mm; } } catch(e) {} return ''; })() %>" required>
     </div>
     <div class="mb-3">
       <label for="act_car" class="form-label">Activity</label>

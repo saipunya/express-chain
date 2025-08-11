@@ -12,7 +12,22 @@ exports.insert = async (data) => {
 
 // ดึงข้อมูลทั้งหมด
 exports.findAll = async () => {
-  const [rows] = await db.query('SELECT * FROM tbl_gitgum ORDER BY git_date DESC');
+  const [rows] = await db.query('SELECT * FROM tbl_gitgum  WHERE git_date >= CURDATE() ORDER BY git_date DESC');
+  return rows;
+};
+
+// นับทั้งหมด (สำหรับทำหน้าเพจ)
+exports.countAll = async () => {
+  const [rows] = await db.query('SELECT COUNT(*) AS cnt FROM tbl_gitgum WHERE git_date >= CURDATE()');
+  return rows[0].cnt;
+};
+
+// ดึงตามหน้า (limit/offset)
+exports.findPage = async (limit, offset) => {
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_date >= CURDATE() ORDER BY git_date DESC LIMIT ? OFFSET ?',
+    [Number(limit), Number(offset)]
+  );
   return rows;
 };
 
@@ -42,6 +57,8 @@ exports.findToday = async () => {
   const [rows] = await db.query(`SELECT * FROM tbl_gitgum WHERE git_date = CURDATE()`);
   return rows;
 };
+
+// หมายเหตุ: findByDate เดิมอ้างอิง pool ซึ่งไม่มีในโมดูลนี้ จึงยังไม่แก้เพื่อไม่กระทบส่วนอื่น
 exports.findByDate = (date) => {
-    return pool.query('SELECT * FROM tbl_gitgum WHERE git_date = ?', [date]);
-  };
+  return db.query('SELECT * FROM tbl_gitgum WHERE git_date = ?', [date]);
+};

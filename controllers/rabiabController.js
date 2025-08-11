@@ -8,17 +8,30 @@ const fontkit = require('@pdf-lib/fontkit');
 exports.index = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const search = req.query.search || '';
+    const searchName = req.query.searchName || '';
+    const searchCoop = req.query.searchCoop || '';
 
-    const rabiabs = await rabiabModel.getRabiabWithCoop(page, search);
-    const totalItems = await rabiabModel.countRabiab(search);
+    // Use DB-level search and pagination (separate fields)
+    const rabiabs = await rabiabModel.getAllRabiab(page, searchName, searchCoop);
+    const totalItems = await rabiabModel.countRabiab(searchName, searchCoop);
     const totalPages = Math.ceil(totalItems / rabiabModel.ITEMS_PER_PAGE);
+
+    if (req.query.ajax === '1') {
+      return res.json({
+        items: rabiabs,
+        currentPage: page,
+        totalPages,
+        isAdmin: req.session?.user?.mClass === 'admin',
+        isLoggedIn: !!req.session?.user
+      });
+    }
 
     res.render('rabiab/index', {
       rabiabs,
       currentPage: page,
       totalPages,
-      search,
+      searchName,
+      searchCoop,
       user: req.session.user
     });
   } catch (error) {

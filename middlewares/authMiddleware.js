@@ -10,7 +10,7 @@ exports.requireLogin = (req, res, next) => {
   
   exports.requireLevel = (requiredLevel) => {
     return (req, res, next) => {
-      if (!req.session.user || req.session.user.level !== requiredLevel) {
+      if (!req.session.user || !requiredLevel.includes(req.session.user.mClass)) {
         return res.render('requireLevel', { title: 'ไม่ได้เข้าหน้านี้' }); 
       }
       next();

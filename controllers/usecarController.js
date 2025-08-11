@@ -34,6 +34,15 @@ const usecarController = {
       res.status(500).send('Error fetching record');
     }
   },
+  viewOne: async (req, res) => {
+    try {
+      const usecar = await UseCar.getById(req.params.id);
+      if (!usecar) return res.status(404).send('Not found');
+      res.render('usecar/view_usecar', { usecar });
+    } catch (error) {
+      res.status(500).send('Error fetching record');
+    }
+  },
   update: async (req, res) => {
     try {
       await UseCar.update(req.params.id, req.body);

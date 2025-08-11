@@ -1,189 +1,246 @@
 <%- include('partials/header.ejs') %>
 
-<!-- Modern Dashboard -->
-<div class="container-fluid py-4" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;">
-  <div class="container">
-    <!-- Welcome Section -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card border-0 shadow-lg" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
-          <div class="card-body p-4">
-            <div class="row align-items-center">
-              <div class="col-md-8">
-                <h1 class="display-5 fw-bold text-primary mb-2">
-                  <i class="bi bi-speedometer2 me-3"></i>แดชบอร์ด
-                </h1>
-                <h3 class="text-success mb-0">ยินดีต้อนรับ, <%= user.fullname %>!</h3>
-                <p class="text-muted mt-2">แดชบอร์ดสำหรับการเข้าถึงฟีเจอร์ต่างๆ ได้อย่างสะดวก</p>
-              </div>
-              <div class="col-md-4 text-center">
-                <img
-                  src="<%= user.m_img %>" 
-                  alt="Profile"
-                  class="rounded-circle shadow-lg border border-4 border-white"
-                  style="width: 120px; height: 120px; object-fit: cover;"
-                />
+  <!-- Modern Dashboard -->
+  <div class="container-fluid py-4"
+    style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;">
+    <div class="container">
+      <!-- Welcome Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-lg" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+            <div class="card-body p-4">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h1 class="display-5 fw-bold text-primary mb-2">
+                    <i class="bi bi-speedometer2 me-3"></i>แดชบอร์ด
+                  </h1>
+                  <h3 class="text-success mb-0">ยินดีต้อนรับ, <%= user.fullname %>!</h3>
+                  <p class="text-muted mt-2">แดชบอร์ดสำหรับการเข้าถึงฟีเจอร์ต่างๆ ได้อย่างสะดวก</p>
+                </div>
+                <div class="col-md-4 text-center">
+                  <img src="<%= user.m_img %>" alt="Profile"
+                    class="rounded-circle shadow-lg border border-4 border-white"
+                    style="width: 120px; height: 120px; object-fit: cover;" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Quick Stats Cards -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-3">
-        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #FF6B6B, #FF8E8E);">
-          <div class="card-body text-white text-center">
-            <i class="bi bi-file-earmark-text display-4 mb-3"></i>
-            <h5>โครงการ</h5>
-            <p class="mb-0">กิจกรรมต่างๆ</p>
+      <!-- Quick Stats Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #FF6B6B, #FF8E8E);">
+            <div class="card-body text-white text-center">
+              <i class="bi bi-file-earmark-text display-4 mb-3"></i>
+              <h5>โครงการ</h5>
+              <p class="mb-0">กิจกรรมต่างๆ</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #4ECDC4, #44A08D);">
-          <div class="card-body text-white text-center">
-            <i class="bi bi-book display-4 mb-3"></i>
-            <h5>คำสั่งสำนักงาน</h5>
-            <p class="mb-0">คำสั่งต่างๆ</p>
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #4ECDC4, #44A08D);">
+            <div class="card-body text-white text-center">
+              <i class="bi bi-book display-4 mb-3"></i>
+              <h5>คำสั่งสำนักงาน</h5>
+              <p class="mb-0">คำสั่งต่างๆ</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #45B7D1, #96C93D);">
-          <div class="card-body text-white text-center">
-            <i class="bi bi-graph-up display-4 mb-3"></i>
-            <h5>ข้อมูลพื้นฐาน</h5>
-            <p class="mb-0">ข้อมูลและรายงาน</p>
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #45B7D1, #96C93D);">
+            <div class="card-body text-white text-center">
+              <i class="bi bi-graph-up display-4 mb-3"></i>
+              <h5>ข้อมูลพื้นฐาน</h5>
+              <p class="mb-0">ข้อมูลและรายงาน</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 mb-3">
-        <a href="<%= user.mClass === 'admin' ? '/activeCoop/' : '#' %>" class="text-decoration-none">
-        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #F093FB, #F5576C);">
-          <div class="card-body text-white text-center">
-            <i class="bi bi-gear display-4 mb-3"></i>
-            <h5>ตั้งค่า</h5>
-            <p class="mb-0">ระบบอื่นๆ</p>
-          </div>
-        </div>
-        </a>
-      </div>
-    </div>
-
-    <!-- Main Navigation -->
-    <div class="row">
-      <div class="col-12">
-        <div class="card border-0 shadow-lg">
-          <div class="card-header bg-white border-0 py-4">
-            <h4 class="mb-0 text-center">
-              <i class="bi bi-grid-3x3-gap me-2"></i>ข้อมูลทั้งหมด
-            </h4>
-          </div>
-          <div class="card-body p-4">
-            <div class="row g-4">
-              <!-- รายงานงบ3 -->
-              <div class="col-lg-6">
-                <a href="/finance/" class="text-decoration-none">
-                  <div class="card border-0 shadow-sm h-100 hover-card">
-                    <div class="card-body p-4">
-                      <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                          <div class="bg-primary bg-gradient rounded-circle p-3">
-                            <i class="bi bi-file-earmark-bar-graph text-white fs-3"></i>
-                          </div>
-                        </div>
-                        <div class="flex-grow-1 ms-4">
-                          <h5 class="card-title text-primary mb-2">รายงานงบการเงิน</h5>
-                          <p class="card-text text-muted mb-0">
-                            สหกรณ์/กลุ่มเกษตรกร
-                          </p>
-                        </div>
-                        <div class="flex-shrink-0">
-                          <i class="bi bi-arrow-right-circle text-primary fs-4"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </a>
+        <div class="col-md-3 mb-3">
+          <a href="<%= user.mClass === 'admin' ? '/activeCoop/' : '#' %>" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #F093FB, #F5576C);">
+              <div class="card-body text-white text-center">
+                <i class="bi bi-gear display-4 mb-3"></i>
+                <h5>ตั้งค่า</h5>
+                <p class="mb-0">ระบบอื่นๆ</p>
               </div>
+            </div>
+          </a>
+        </div>
+      </div>
 
-              <!-- ข้อ3สหกรณ์ -->
-              <div class="col-lg-6">
-                <a href="/rule" class="text-decoration-none">
-                  <div class="card border-0 shadow-sm h-100 hover-card">
-                    <div class="card-body p-4">
-                      <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                          <div class="bg-success bg-gradient rounded-circle p-3">
-                            <i class="bi bi-journal-text text-white fs-3"></i>
+      <!-- Main Navigation -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card border-0 shadow-lg">
+            <div class="card-header bg-white border-0 py-4">
+              <h4 class="mb-0 text-center">
+                <i class="bi bi-grid-3x3-gap me-2"></i>ข้อมูลทั้งหมด
+              </h4>
+            </div>
+            <div class="card-body p-4">
+              <div class="row g-4">
+                <!-- รายงานงบ3 -->
+                <div class="col-lg-6">
+                  <a href="/finance/" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <div class="bg-primary bg-gradient rounded-circle p-3">
+                              <i class="bi bi-file-earmark-bar-graph text-white fs-3"></i>
+                            </div>
                           </div>
-                        </div>
-                        <div class="flex-grow-1 ms-4">
-                          <h5 class="card-title text-success mb-2">ข้อบังคับ</h5>
-                          <p class="card-text text-muted mb-0">
-                            สหกรณ์/กลุ่มเกษตรกร
-                          </p>
-                        </div>
-                        <div class="flex-shrink-0">
-                          <i class="bi bi-arrow-right-circle text-success fs-4"></i>
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-primary mb-2">รายงานงบการเงิน</h5>
+                            <p class="card-text text-muted mb-0">
+                              สหกรณ์/กลุ่มเกษตรกร
+                            </p>
+                          </div>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-primary fs-4"></i>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </a>
+                  </a>
+                </div>
+
+                <!-- ข้อ3สหกรณ์ -->
+                <div class="col-lg-6">
+                  <a href="/rule" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <div class="bg-success bg-gradient rounded-circle p-3">
+                              <i class="bi bi-journal-text text-white fs-3"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-success mb-2">ข้อบังคับ</h5>
+                            <p class="card-text text-muted mb-0">
+                              สหกรณ์/กลุ่มเกษตรกร
+                            </p>
+                          </div>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-success fs-4"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+
+                <!-- เราวม3อื่นๆ -->
+                <div class="col-lg-6">
+                  <a href="/business" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <div class="bg-info bg-gradient rounded-circle p-3">
+                              <i class="bi bi-people text-white fs-3"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-info mb-2">รายงานกิจการ</h5>
+                            <p class="card-text text-muted mb-0">
+                              สหกรณ์/กลุ่มเกษตรกร
+                            </p>
+                          </div>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-info fs-4"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+
+                <div class="col-lg-6">
+                  <a href="/rabiab" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <div class="bg-warning bg-gradient rounded-circle p-3">
+                              <i class="bi bi-bar-chart text-white fs-3"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-warning mb-2">ระเบียบ</h5>
+                            <p class="card-text text-muted mb-0">
+                              สหกรณ์/กลุ่มเกษตรกร
+                            </p>
+                          </div>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-warning fs-4"></i>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                </div>
               </div>
-
-              <!-- เราวม3อื่นๆ -->
-              <div class="col-lg-6">
-                <a href="/business" class="text-decoration-none">
-                  <div class="card border-0 shadow-sm h-100 hover-card">
-                    <div class="card-body p-4">
-                      <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                          <div class="bg-info bg-gradient rounded-circle p-3">
-                            <i class="bi bi-people text-white fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row my-2">
+        <div class="col-12">
+          <div class="card border-0 shadow-lg">
+            <div class="card-header bg-white border-0 py-4">
+              <h4 class="mb-0 text-center">
+                <i class="bi bi-grid-3x3-gap me-2"></i>ข้อมูล
+              </h4>
+            </div>
+            <div class="card-body p-4">
+              <div class="row my-2">
+                <div class="col-lg-6">
+                  <a href="/usecar" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0">
+                            <div class="bg-danger bg-gradient rounded-circle p-3">
+                              <i class="bi bi-calendar2-event text-white fs-3"></i>
+                            </div>
                           </div>
-                        </div>
-                        <div class="flex-grow-1 ms-4">
-                          <h5 class="card-title text-info mb-2">รายงานกิจการ</h5>
-                          <p class="card-text text-muted mb-0">
-                            สหกรณ์/กลุ่มเกษตรกร
-                          </p>
-                        </div>
-                        <div class="flex-shrink-0">
-                          <i class="bi bi-arrow-right-circle text-info fs-4"></i>
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-danger mb-2">การใช้รถ</h5>
+                            <p class="card-text text-muted mb-0">
+                              รายละเอียดการใช้รถ
+                            </p>
+                          </div>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-danger fs-4"></i>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </a>
-              </div>
-
-              <div class="col-lg-6">
-                <a href="/rabiab" class="text-decoration-none">
-                  <div class="card border-0 shadow-sm h-100 hover-card">
-                    <div class="card-body p-4">
-                      <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                          <div class="bg-warning bg-gradient rounded-circle p-3">
-                            <i class="bi bi-bar-chart text-white fs-3"></i>
+                  </a>
+                </div>
+                <div class="col-lg-6">
+                  <a href="/vong" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 hover-card">
+                      <div class="card-body p-4">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-grow-1 ms-4">
+                            <h5 class="card-title text-danger mb-2">วงกู้ยืม/ค้ำ</h5>
+                            <p class="card-text text-muted mb-0">
+                              วงกู้ยืม/ค้ำ
+                            </p>
                           </div>
-                        </div>
-                        <div class="flex-grow-1 ms-4">
-                          <h5 class="card-title text-warning mb-2">ระเบียบ</h5>
-                          <p class="card-text text-muted mb-0">
-                            สหกรณ์/กลุ่มเกษตรกร
-                          </p>
-                        </div>
-                        <div class="flex-shrink-0">
-                          <i class="bi bi-arrow-right-circle text-warning fs-4"></i>
+                          <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-right-circle text-danger fs-4"></i>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </a>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -191,26 +248,25 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- Custom CSS -->
-<style>
-.hover-card {
-  transition: all 0.3s ease;
-}
+  <!-- Custom CSS -->
+  <style>
+    .hover-card {
+      transition: all 0.3s ease;
+    }
 
-.hover-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
-}
+    .hover-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
 
-.card {
-  border-radius: 15px;
-}
+    .card {
+      border-radius: 15px;
+    }
 
-.bg-gradient {
-  background: linear-gradient(45deg, var(--bs-primary), var(--bs-primary-dark)) !important;
-}
-</style>
+    .bg-gradient {
+      background: linear-gradient(45deg, var(--bs-primary), var(--bs-primary-dark)) !important;
+    }
+  </style>
 
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>

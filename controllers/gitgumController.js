@@ -1,9 +1,30 @@
 const gitgumModel = require('../models/gitgumModel');
 
-// แสดงรายการ
+// แสดงรายการ (รองรับ pagination)
 exports.list = async (req, res) => {
-  const data = await gitgumModel.findAll();
-  res.render('gitgum_list', { title: 'รายการกิจกรรม', data });
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const pageSize = Math.max(parseInt(req.query.pageSize || '10', 10), 1);
+  const offset = (page - 1) * pageSize;
+
+  const [total, data] = await Promise.all([
+    gitgumModel.countAll(),
+    gitgumModel.findPage(pageSize, offset)
+  ]);
+
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+
+  res.render('gitgum_list', {
+    title: 'รายการกิจกรรม',
+    data,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages,
+      hasPrev: page > 1,
+      hasNext: page < totalPages
+    }
+  });
 };
 
 // แสดงฟอร์มเพิ่ม

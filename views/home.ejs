@@ -51,7 +51,7 @@
 </div>
 
 <section>
-  <div class="container-lg">
+  <div class="container">
     <h2 class="my-3 text-center text-primary">📊 ข้อมูลสหกรณ์</h2>
     <div class="row">
       <div class="col-md-4">
@@ -82,8 +82,8 @@
   </div>
 </section>
 
-<section class="py-4 bg-light">
-  <div class="container-lg">
+<section class="py-4">
+  <div class="container">
     <h2 class="my-3 text-center text-primary">📊 กราฟข้อมูลสหกรณ์</h2>
     <div class="row">
       <div class="col-md-6">
@@ -366,40 +366,67 @@ new Chart(ctx2, {
 
 <section class="py-4 bg-light">
   <div class="container-lg">
-    <h2 class="mb-4 text-center text-primary">🚗 รายการใช้รถ</h2>
+    <h2 class="mb-4 text-center text-primary">
+      <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
+    </h2>
     
     <div class="card shadow-sm border-0">
       <div class="card-body">
         <ul class="list-group list-group-flush">
-          <% usecars.forEach((usecar, index) => { %>
-            <li class="list-group-item d-flex justify-content-between align-items-start">
-              <div class="ms-2 me-auto">
-                <!-- Format Thai Date -->
-                <% const date = new Date(usecar.date_car); %>
-                <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
-                <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
-                
-                <div class="fw-bold text-success">
-                  <%= thaiDate %> || <%= usecar.time_car %>
+          <% usecars.forEach((usecar) => { %>
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
                   <% 
+                    const date = new Date(usecar.date_car);
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    const thaiDate = date.toLocaleDateString('th-TH', options);
                     const today = new Date();
                     const isToday = today.toLocaleDateString('th-TH') === date.toLocaleDateString('th-TH');
                   %>
-                  <% if (isToday) { %>
-                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 40px; height: 35px;" />
-                  <% } %>
+                  
+                  <!-- วันที่และเวลา -->
+                  <div class="fw-bold text-success mb-1">
+                    <i class="bi bi-calendar-event me-1"></i> <%= thaiDate %> 
+                    <span class="text-muted">(<i class="bi bi-clock"></i> <%= usecar.time_car %>)</span>
+                    <% if (isToday) { %>
+                      <span class="badge bg-danger ms-2">
+                        <i class="bi bi-stars"></i> วันนี้
+                      </span>
+                    <% } %>
+                  </div>
+
+                  <!-- สถานที่ -->
+                  <div class="text-dark mb-1">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> <%= usecar.place_car %>
+                  </div>
+
+                  <!-- กิจกรรม -->
+                  <small class="text-muted d-block mb-2">
+                    <i class="bi bi-clipboard2-check me-1"></i> <%= usecar.act_car %>
+                  </small>
+
+                  <!-- ปุ่ม Read More -->
+                  <a href="/usecar/view/<%= usecar.id_usecar %>" 
+                     class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
+                  </a>
                 </div>
-                <div class="text-dark"><%= usecar.act_car %></div>
-                <small class="text-muted">[สถานที่: <%= usecar.place_car %>]</small>
+
+                <!-- ปุ่มแก้ไข/ลบ -->
+                <% if(user && user.mClass === 'admin'){ %>
+                  <div class="d-flex align-items-center ms-3">
+                    <a href="/usecar/edit/<%= usecar.id_usecar %>" class="btn btn-outline-warning btn-sm me-2">
+                      <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST" style="display: inline;">
+                      <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </form>
+                  </div>
+                <% } %>
               </div>
-              <% if(user && user.mClass === 'admin'){ %>
-                <div class="d-flex align-items-center">
-                  <a href="/usecar/edit/<%= usecar.id_usecar %>" class="btn btn-warning btn-sm me-2">Edit</a>
-                  <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                  </form>
-                </div>
-              <% } %>
             </li>
           <% }); %>
         </ul>

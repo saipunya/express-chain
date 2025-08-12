@@ -506,4 +506,15 @@ new Chart(ctx2, {
   </div>
 </section>
 
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  socket.on('onlineUsers', (count) => {
+    const onlineCountDiv = document.querySelector('.display-4.text-success');
+    if (onlineCountDiv) {
+      onlineCountDiv.textContent = count;
+    }
+  });
+</script>
 <%- include('partials/footer') %>

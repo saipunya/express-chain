@@ -1,14 +1,15 @@
 <%- include('partials/header') %>
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-  <h3 class="mb-4">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h3>
-  <% if(user && user.mClass=='kjs'){ %> 
-    <a href="/rule/upload" class="btn btn-success mb-3">
-      <i class="bi bi-plus-circle"></i> อัปโหลดข้อบังคับ
-    </a>
+  <div class="d-flex justify-content-between align-items-center">
+    <h3 class="mb-4">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h3>
+    <% if(user && user.mClass=='kjs'){ %> 
+      <a href="/rule/upload" class="btn btn-success mb-3">
+        <i class="bi bi-plus-circle"></i> อัปโหลดข้อบังคับ
+      </a>
     <% } %>
-</div>
+  </div>
+
   <!-- ช่องค้นหา -->
   <div class="row mb-3">
     <div class="col-md-6">
@@ -19,42 +20,60 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-hover">
-      <thead class="table-dark">
-        <tr>
-          <th scope="col">สถาบัน</th>
-       
-          <th scope="col">ข้อมูล</th>
-        </tr>
-      </thead>
-      <tbody id="ruleTable">
-        <% alls.forEach(list => { %>
-        <tr>
-          <td>
-            <%= list.rule_name %><br/>
-            <span class="text-danger bg-white p-1 rounded"><%= list.rule_type == 'ER' ? 'แก้ไขเพิ่มเติม  ' + list.er_no + ' พ.ศ.' : 'ข้อบังคับหลัก พ.ศ.'  %><%= list.rule_year %></s>
-          </td>
-        
-          <td>
-            <% if(!user){ %>
-            <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+  <% 
+    // Group by c_name
+    const grouped = {};
+    alls.forEach(item => {
+      const name = item.c_name || 'ไม่ระบุชื่อสถาบัน';
+      if (!grouped[name]) grouped[name] = [];
+      grouped[name].push(item);
+    });
 
-            <% }else{ %>
-            <a href="/rule/<%= list.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
-            <% if(user && user.mClass=='admin'){ %>
-            <a href="/rule/delete/<%= list.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">ลบ</a>
+    // Sort groups by max rule_id DESC
+    const sortedGroups = Object.entries(grouped).sort((a, b) => {
+      const maxIdA = Math.max(...a[1].map(r => r.rule_id));
+      const maxIdB = Math.max(...b[1].map(r => r.rule_id));
+      return maxIdB - maxIdA;
+    });
+
+    sortedGroups.forEach(([cName, rules]) => {
+  %>
+    <h5 class="mt-4 text-primary"><%= cName %></h5>
+    <ul class="list-group mb-3">
+      <% rules
+        .sort((a, b) => {
+          // ข้อบังคับหลักมาก่อน
+          if (a.rule_type !== b.rule_type) {
+            return a.rule_type === 'ER' ? 1 : -1;
+          }
+          // ถ้าประเภทเดียวกันให้เรียงตามปี
+          return a.rule_year - b.rule_year;
+        })
+        .forEach(rule => { 
+      %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <% if(rule.rule_type === 'ER'){ %>
+            แก้ไขเพิ่มเติม ฉบับที่ <%= rule.er_no %> พ.ศ. <%= rule.rule_year %>
+          <% } else { %>
+            ข้อบังคับหลัก ปี พ.ศ. <%= rule.rule_year %>
+          <% } %>
+          <div>
+            <% if(!user){ %>
+              <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+            <% } else { %>
+              <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
+              <% if(user && user.mClass=='admin'){ %>
+                <a href="/rule/delete/<%= rule.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">ลบ</a>
+              <% } %>
             <% } %>
-            <% } %>
-        </td>
-        </tr>
-        <% }); %>
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% }) %>
 
   <!-- Pagination -->
-  <nav>
+  <nav class="mt-4">
     <ul class="pagination justify-content-center">
       <% for (let i = 1; i <= totalPages; i++) { %>
         <li class="page-item <%= currentPage === i ? 'active' : '' %>">
@@ -67,28 +86,33 @@
 
 <script>
   const searchInput = document.getElementById('searchInput');
-  const ruleTable = document.getElementById('ruleTable');
   let searchTimeout;
 
   searchInput.addEventListener('keyup', () => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const keyword = searchInput.value.toLowerCase();
-      const rows = ruleTable.querySelectorAll('tr');
+      document.querySelectorAll('h5').forEach(title => {
+        const group = title.nextElementSibling; // ul
+        const groupName = title.innerText.toLowerCase();
+        let hasMatch = groupName.includes(keyword);
 
-      rows.forEach(row => {
-        const ruleName = row.children[0].innerText.toLowerCase();
-        row.style.display = ruleName.includes(keyword) ? '' : 'none';
+        if (!hasMatch) {
+          const items = group.querySelectorAll('li');
+          items.forEach(li => {
+            if (li.innerText.toLowerCase().includes(keyword)) hasMatch = true;
+          });
+        }
+
+        title.style.display = hasMatch ? '' : 'none';
+        group.style.display = hasMatch ? '' : 'none';
       });
-    }, 300); // รอ 300ms
+    }, 300);
   });
 
   function clearSearch() {
     searchInput.value = '';
-    const rows = ruleTable.querySelectorAll('tr');
-    rows.forEach(row => {
-      row.style.display = '';
-    });
+    document.querySelectorAll('h5, ul.list-group').forEach(el => el.style.display = '');
   }
 </script>
 

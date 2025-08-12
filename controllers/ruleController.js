@@ -22,7 +22,7 @@ exports.showUploadForm = async (req, res) => {
     const alls = await ruleModel.coopAll();
     
     res.render('uploadRule', {
-      title: 'upload ข้อ',
+      title: 'upload ข้อบังคับ',
       alls,
       recentUploads
     });
@@ -36,20 +36,16 @@ exports.showUploadForm = async (req, res) => {
 exports.uploadRule = async (req, res) => {
   try {
     const { rule_name, rule_code, rule_type, rule_year, er_no } = req.body;
-    
-    // หา c_name จาก c_code
-    const selectedCoop = await ruleModel.getCoopByCode(rule_name);
+
+    // จริงๆ rule_name ที่ได้จากฟอร์มควรเป็นรหัส c_code เพื่อดึงชื่อจริง
+    const selectedCoop = await ruleModel.getCoopByCode(rule_code); 
     const actualRuleName = selectedCoop ? selectedCoop.c_name : rule_name;
-    
-    const user = req.session.user?.fullname || 
-                 req.session.user?.username || 
-                 'unknown';
+
     const file = req.file;
-    
     if (!file) return res.status(400).send('ไม่พบไฟล์');
-    
+
     const data = {
-      rule_code: rule_name, // c_code
+      rule_code: rule_code, // c_code
       rule_name: actualRuleName, // c_name
       rule_type,
       rule_year,
@@ -60,7 +56,6 @@ exports.uploadRule = async (req, res) => {
     };
     
     await ruleModel.insertRule(data);
-    
     res.redirect('/rule/upload');
   } catch (err) {
     console.error('Error uploading rule file:', err);
@@ -68,106 +63,100 @@ exports.uploadRule = async (req, res) => {
   }
 };
 
-exports.showListData = async (req,res) =>{
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const search = req.query.search || '';
 
-        const totalRules = await ruleModel.countRules(search);
-        const totalPages = Math.ceil(totalRules / ruleModel.ITEMS_PER_PAGE);
+// ปรับ showListData ใช้ getRules แบบ page-based pagination
+exports.showListData = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search || '';
 
-        const alls = await ruleModel.index(search, page);
+    const totalRules = await ruleModel.countRules(search);
+    const totalPages = Math.ceil(totalRules / ruleModel.ITEMS_PER_PAGE);
 
-        res.render('rule', {
-            alls,
-            currentPage: page,
-            totalPages,
-            search
-        })
-    } catch (error) {
-        console.error('Error fetching rules:', error);
-        res.status(500).send('ข้อมูลไม่สำเร็จ');
+    const alls = await ruleModel.getRules(search, page);
+
+    res.render('rule', {
+      alls,
+      currentPage: page,
+      totalPages,
+      search
+    });
+  } catch (error) {
+    console.error('Error fetching rules:', error);
+    res.status(500).send('ข้อมูลไม่สำเร็จ');
+  }
+};
+
+exports.showDetailData = async (req,res) => {
+  try {
+    const id = req.params.id;
+    const detail = await ruleModel.detail(id);
+    
+    if (!detail) {
+      return res.status(404).send('ไม่พบข้อมูล');
     }
-}
-exports.showDetailData = async (req,res) =>{
-    try {
-        const id = req.params.id;
-        const detail = await ruleModel.detail(id);
-        
-        if (!detail) {
-            return res.status(404).send('ไม่พบข้อมูล');
-        }
 
-        const filename = detail.rule_file;
-        
-        if (!filename) {
-            return res.status(404).send('ไม่พบชื่อไฟล์ในฐานข้อมูล');
-        }
-
-        const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).send('ไม่พบไฟล์');
-        }
-
-        const isAdmin = req.session?.user?.mClass === 'admin';
-        const pdfBytes = fs.readFileSync(filePath);
-        let finalPdfBytes;
-
-        if (isAdmin) {
-            // Admin: ไม่ใส่ลายน้ำ
-            finalPdfBytes = pdfBytes;
-        } else {
-            // ้ใช้: ใส่ลายน้ำ
-            const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
-            const fontBytes = fs.readFileSync(fontPath);
-
-            const pdfDoc = await PDFDocument.load(pdfBytes);
-            pdfDoc.registerFontkit(fontkit);
-
-            const customFont = await pdfDoc.embedFont(fontBytes);
-            const pages = pdfDoc.getPages();
-
-            const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
-
-            pages.forEach(page => {
-                const { width, height } = page.getSize();
-                page.drawText(watermarkText, {
-                    x: width / 4,
-                    y: height / 2,
-                    size: 30,
-                    font: customFont,
-                    color: rgb(1, 0, 0),
-                    opacity: 0.3,
-                    rotate: degrees(45)
-                });
-            });
-
-            finalPdfBytes = await pdfDoc.save();
-        }
-
-        // แสดง PDF ใน browser
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-        res.send(Buffer.from(finalPdfBytes));
-    } catch (error) {
-        console.error('Error downloading rule file:', error);
-        res.status(500).send('ข้อมูลไม่สำเร็จ');
+    const filename = detail.rule_file;
+    if (!filename) {
+      return res.status(404).send('ไม่พบชื่อไฟล์ในฐานข้อมูล');
     }
-}
 
-//  delete
+    const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('ไม่พบไฟล์');
+    }
+
+    const isAdmin = req.session?.user?.mClass === 'admin';
+    const pdfBytes = fs.readFileSync(filePath);
+    let finalPdfBytes;
+
+    if (isAdmin) {
+      finalPdfBytes = pdfBytes;
+    } else {
+      const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
+      const fontBytes = fs.readFileSync(fontPath);
+
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      pdfDoc.registerFontkit(fontkit);
+
+      const customFont = await pdfDoc.embedFont(fontBytes);
+      const pages = pdfDoc.getPages();
+
+      const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
+
+      pages.forEach(page => {
+        const { width, height } = page.getSize();
+        page.drawText(watermarkText, {
+          x: width / 4,
+          y: height / 2,
+          size: 30,
+          font: customFont,
+          color: rgb(1, 0, 0),
+          opacity: 0.3,
+          rotate: degrees(45)
+        });
+      });
+
+      finalPdfBytes = await pdfDoc.save();
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.send(Buffer.from(finalPdfBytes));
+  } catch (error) {
+    console.error('Error downloading rule file:', error);
+    res.status(500).send('ข้อมูลไม่สำเร็จ');
+  }
+};
+
+// delete
 exports.deleteRule = async (req, res) => {
   try {
     const id = req.params.id;
-    
-    // ชื่อไฟล์ก่อนลบข้อมูลในฐานข้อมูล
+
     const filename = await ruleModel.getFilenameById(id);
-    
-    // ลบข้อมูลในฐานข้อมูล
     await ruleModel.deleteRule(id);
-    
-    // ลบไฟล์จากโฟลเดอร์
+
     if (filename) {
       const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
       if (fs.existsSync(filePath)) {

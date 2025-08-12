@@ -6,6 +6,7 @@ const ctrl = require('../controllers/gitgumController');
 router.get('/list', ctrl.list);
 router.get('/add', ctrl.showAddForm);
 router.post('/add', ctrl.saveGitgum);
+router.get('/view/:id', ctrl.viewOne);
 router.get('/edit/:id', ctrl.showEditForm);
 router.post('/edit/:id', ctrl.updateGitgum);
 router.get('/delete/:id', ctrl.deleteGitgum);

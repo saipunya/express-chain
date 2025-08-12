@@ -129,7 +129,8 @@ const uploadDirs = [
   'uploads/rabiab',
   'uploads/finance',
   'uploads/rule',
-  'uploads/business'
+  'uploads/business',
+  'uploads/project'
 ];
 
 uploadDirs.forEach(dir => {

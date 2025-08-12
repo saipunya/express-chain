@@ -1,0 +1,67 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <h3 class="mb-4">✏️ แก้ไขกิจกรรม</h3>
+
+  <form action="/gitgum/edit/<%= record.git_id %>" method="POST" class="row g-3">
+    <div class="col-md-4">
+      <label for="git_date" class="form-label">วันที่</label>
+      <input type="date" class="form-control" id="git_date" name="git_date" value="<%= (record.git_date && record.git_date.toISOString) ? record.git_date.toISOString().slice(0,10) : (record.git_date || '') %>" required />
+    </div>
+
+    <div class="col-md-4">
+      <label for="git_time" class="form-label">เวลา</label>
+      <% 
+        let tVal = '';
+        if (record.git_time) {
+          const t = record.git_time.toString();
+          if (/^\d{2}:\d{2}$/.test(t)) tVal = t;
+          else if (/^\d{2}:\d{2}:\d{2}$/.test(t)) tVal = t.substring(0,5);
+        }
+      %>
+      <input type="time" class="form-control" id="git_time" name="git_time" value="<%= tVal %>" required />
+    </div>
+
+    <div class="col-md-12">
+      <label for="git_act" class="form-label">กิจกรรม</label>
+      <input type="text" class="form-control" id="git_act" name="git_act" value="<%= record.git_act %>" required />
+    </div>
+
+    <div class="col-md-6">
+      <label for="git_place" class="form-label">สถานที่</label>
+      <input type="text" class="form-control" id="git_place" name="git_place" value="<%= record.git_place %>" />
+    </div>
+
+    <div class="col-md-6">
+      <label for="git_goto" class="form-label">ผู้รับผิดชอบ/ผู้ไป</label>
+      <input type="text" class="form-control" id="git_goto" name="git_goto" value="<%= record.git_goto %>" />
+    </div>
+
+    <div class="col-md-6">
+      <label for="git_respon" class="form-label">ผู้รับผิดชอบหลัก</label>
+      <input type="text" class="form-control" id="git_respon" name="git_respon" value="<%= record.git_respon %>" />
+    </div>
+
+    <div class="col-md-6">
+      <label for="git_group" class="form-label">กลุ่ม/หน่วยงาน</label>
+      <input type="text" class="form-control" id="git_group" name="git_group" value="<%= record.git_group %>" />
+    </div>
+
+    <div class="col-md-12">
+      <label for="git_maihed" class="form-label">หมายเหตุ</label>
+      <textarea class="form-control" id="git_maihed" name="git_maihed" rows="3"><%= record.git_maihed || '' %></textarea>
+    </div>
+
+    <!-- Hidden meta fields -->
+    <input type="hidden" name="git_saveby" value="<%= (user && user.fullname) ? user.fullname : 'guest' %>" />
+    <input type="hidden" name="git_savedate" value="<%= new Date().toISOString().slice(0,19).replace('T',' ') %>" />
+
+    <div class="col-12 d-flex gap-2">
+      <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+      <a href="/gitgum/list" class="btn btn-secondary">ย้อนกลับ</a>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/footer') %>
+

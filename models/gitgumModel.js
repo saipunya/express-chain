@@ -62,3 +62,12 @@ exports.findToday = async () => {
 exports.findByDate = (date) => {
   return db.query('SELECT * FROM tbl_gitgum WHERE git_date = ?', [date]);
 };
+
+// 5 รายการล่าสุด (รวมอดีต-อนาคต หรือจะใช้เฉพาะวันนี้และอนาคตตามต้องการ)
+exports.getLast = async (limit = 5) => {
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_date >= CURDATE() ORDER BY git_date DESC, git_time DESC LIMIT ?',
+    [Number(limit)]
+  );
+  return rows;
+};

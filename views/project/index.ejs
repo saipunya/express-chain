@@ -1,0 +1,59 @@
+<%- include('../partials/header', { title: 'Projects' }) %>
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>โครงการ</h3>
+    <form class="d-flex" method="GET" action="">
+      <input type="text" class="form-control me-2" name="search" placeholder="ค้นหาชื่อเรื่อง" value="<%= search || '' %>">
+      <button class="btn btn-outline-primary" type="submit">ค้นหา</button>
+      <a href="/project" class="btn btn-outline-secondary ms-2">ล้าง</a>
+    </form>
+    <% if(user && (user.mClass=='admin' || user.mClass=='pbt')){ %>
+    <a href="/project/create" class="btn btn-primary">Add</a>
+    <% } %>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Year</th>
+        <th>Date</th>
+        <th>Story</th>
+        <th>File</th>
+        <% if(user && (user.mClass=='admin' || user.mClass=='pbt')){ %>
+        <th>Actions</th>
+        <% } %>
+      </tr>
+    </thead>
+    <tbody>
+      <% projects.forEach(p => { %>
+        <tr>
+         
+          <td><%= p.pro_no %></td>
+          <td><%= p.pro_year %></td>
+          <!-- thai fulldate -->
+
+          <% const thaiDate = new Date(p.pro_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+          <td class="text-nowrap"><%= thaiDate %></td>
+          <td><%= p.pro_story %></td>
+          <td>
+            <% if (user) { %>
+              <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank"> <i class="bi bi-file-pdf-fill"></i> </a>
+            <% }else{ %>
+              <a href="/auth/login" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-pdf-fill"></i></a>
+            <% } %>
+          </td>
+          <% if(user && (user.mClass=='pbt' || user.mClass=='admin')){ %>
+          <td class="text-nowrap">
+            <a href="/project/edit/<%= p.pro_id %>" class="btn btn-warning btn-sm">Edit</a>
+            <form action="/project/delete/<%= p.pro_id %>" method="POST" style="display:inline" onsubmit="return confirm('Delete?')">
+              <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+            </form>
+          </td>
+          <% } %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<script src="/js/project-search.js"></script>
+<%- include('../partials/footer') %>

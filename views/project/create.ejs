@@ -1,0 +1,53 @@
+<%- include('../partials/header', { title: 'Create Project' }) %>
+<div class="container my-4">
+  <h3>Create Project</h3>
+  <div class="mb-3">
+    <p class="text-danger">เลขลำดับล่าสุดของโครงการคือ <strong><%= lastOrder %></strong></p>
+  </div>
+  <form action="/project/create" method="POST" enctype="multipart/form-data" class="row g-3" oninput="updateProNo()">
+    <div class="col-md-3">
+      <label class="form-label">Order (ลำดับ)</label>
+      <input type="number" name="pro_order" id="pro_order" class="form-control" value="<%= (lastOrder||0) + 1 %>" required readonly>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Year (ปี)</label>
+      <select name="pro_year" id="pro_year" class="form-select" required>
+        <% const nowYear = new Date().getFullYear()+543; %>
+        <option value="<%= nowYear %>"><%= nowYear %></option>
+        <option value="<%= nowYear-1 %>"><%= nowYear-1 %></option>
+      </select>
+    </div>
+    <input type="hidden" name="pro_no" id="pro_no" value="">
+    <div class="col-md-4">
+      <label class="form-label">Date</label>
+      <input type="date" name="pro_date" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">From</label>
+      <input type="text" name="pro_from" class="form-control" required>
+    </div>
+    <div class="col-md-8">
+      <label class="form-label">Story</label>
+      <input type="text" name="pro_story" id="pro_story" class="form-control" required>
+    </div>
+    <script>
+      function updateProNo(){
+        const order = document.getElementById('pro_order').value;
+        const year = document.getElementById('pro_year').value;
+        const proNo = `${order}/${year}`;
+        document.getElementById('pro_no').value = proNo;
+      }
+      // init on load
+      document.addEventListener('DOMContentLoaded', updateProNo);
+    </script>
+    <div class="col-md-6">
+      <label class="form-label">File</label>
+      <input type="file" name="file" class="form-control">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="/project" class="btn btn-secondary">Back</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/footer') %>

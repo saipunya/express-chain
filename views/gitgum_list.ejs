@@ -3,6 +3,15 @@
 
  <div class="container mt-4">
     <h3 class="mb-4">📋 รายการกิจกรรม</h3> 
+    <!-- add button -->
+     <div class="mb-3 text-end">
+      <% if(user && user.mClass=='kjs'){ %>
+        <a href="/gitgum/add" class="btn btn-success mb-3">
+          <i class="bi bi-plus-circle"></i> เพิ่มรายการ
+          </a>
+        <% } %>
+     </div>
+   
      
       <!-- รับข้อมูลจาก db มาแสดง -->
        <table class="table table-bordered table-striped">
@@ -13,7 +22,7 @@
             <th>กิจกรรม</th>
             <th>สถานที่</th>
             <th>ผู้รับผิดชอบ</th>
-            <% if(user && user.mClass=='admin'){ %>
+            <% if(user && user.mClass=='kjs'){ %>
             <th>Manage</th>
             <% } %>
           </tr>
@@ -30,8 +39,10 @@
               <td><%= gitgum.git_act %></td>
               <td><%= gitgum.git_place %></td>
               <td><%= gitgum.git_goto %></td>
-              <% if(user && user.mClass=='admin'){ %>
+            
+              <% if(user && user.mClass=='kjs'){ %>
               <td>
+                <a href="/gitgum/view/<%= gitgum.git_id %>" class="btn btn-info btn-sm">View</a>
                 <a href="/gitgum/edit/<%= gitgum.git_id %>" class="btn btn-warning btn-sm">Edit</a>
                 <a href="/gitgum/delete/<%= gitgum.git_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ลบข้อมูล?')">Delete</a>
               </td>

@@ -38,6 +38,13 @@ exports.saveGitgum = async (req, res) => {
   res.redirect('/gitgum/list');
 };
 
+// แสดงรายละเอียด
+exports.viewOne = async (req, res) => {
+  const record = await gitgumModel.findById(req.params.id);
+  if (!record) return res.status(404).send('ไม่พบข้อมูล');
+  res.render('gitgum_view', { title: 'รายละเอียดกิจกรรม', record });
+};
+
 // แสดงฟอร์มแก้ไข
 exports.showEditForm = async (req, res) => {
   const record = await gitgumModel.findById(req.params.id);

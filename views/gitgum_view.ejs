@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <h3 class="mb-4">
+    <i class="bi bi-calendar-event text-primary"></i> รายละเอียดกิจกรรม
+  </h3>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-calendar-check me-1"></i> วันที่
+        </dt>
+        <dd class="col-sm-9">
+          <% const d = new Date(record.git_date); const thai = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+          <%= thai %>
+        </dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-clock me-1"></i> เวลา
+        </dt>
+        <dd class="col-sm-9"><%= record.git_time %> น.</dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-flag me-1"></i> กิจกรรม
+        </dt>
+        <dd class="col-sm-9"><%= record.git_act %></dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-geo-alt me-1"></i> สถานที่
+        </dt>
+        <dd class="col-sm-9"><%= record.git_place || '-' %></dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-person-check me-1"></i> ผู้รับผิดชอบ/ผู้ไป
+        </dt>
+        <dd class="col-sm-9"><%= record.git_goto || '-' %></dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-person-badge me-1"></i> ผู้รับผิดชอบหลัก
+        </dt>
+        <dd class="col-sm-9"><%= record.git_respon || '-' %></dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-people me-1"></i> กลุ่ม/หน่วยงาน
+        </dt>
+        <dd class="col-sm-9"><%= record.git_group || '-' %></dd>
+
+        <dt class="col-sm-3 fw-bold text-secondary">
+          <i class="bi bi-journal-text me-1"></i> หมายเหตุ
+        </dt>
+        <dd class="col-sm-9"><%= record.git_maihed || '-' %></dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex gap-2">
+    <a href="/gitgum/list" class="btn btn-secondary">
+      <i class="bi bi-arrow-left-circle"></i> ย้อนกลับ
+    </a>
+    <% if(user && user.mClass=='kjs'){ %>
+      <a href="/gitgum/edit/<%= record.git_id %>" class="btn btn-warning text-white">
+        <i class="bi bi-pencil-square"></i> แก้ไข
+      </a>
+      <a href="/gitgum/delete/<%= record.git_id %>" class="btn btn-danger"
+         onclick="return confirm('ลบข้อมูล?')">
+        <i class="bi bi-trash"></i> ลบ
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

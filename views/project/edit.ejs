@@ -1,0 +1,42 @@
+<%- include('../partials/header', { title: 'Edit Project' }) %>
+<div class="container my-4">
+  <h3>Edit Project</h3>
+  <form action="/project/edit/<%= project.pro_id %>" method="POST" enctype="multipart/form-data" class="row g-3">
+    <div class="col-md-2">
+      <label class="form-label">Order</label>
+      <input type="number" name="pro_order" class="form-control" value="<%= project.pro_order %>" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Year</label>
+      <input type="number" name="pro_year" class="form-control" value="<%= project.pro_year %>" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">No</label>
+      <input type="text" name="pro_no" class="form-control" value="<%= project.pro_no %>" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Date</label>
+      <input type="date" name="pro_date" class="form-control" value="<%= project.pro_date.toISOString().slice(0,10) %>" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">From</label>
+      <input type="text" name="pro_from" class="form-control" value="<%= project.pro_from %>" required>
+    </div>
+    <div class="col-md-8">
+      <label class="form-label">Story</label>
+      <input type="text" name="pro_story" class="form-control" value="<%= project.pro_story %>" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">File</label>
+      <% if (project.pro_filename) { %>
+        <p>Current: <a href="/uploads/project/<%= project.pro_filename %>" target="_blank"><%= project.pro_filename %></a></p>
+      <% } %>
+      <input type="file" name="file" class="form-control">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-success" type="submit">Update</button>
+      <a href="/project" class="btn btn-secondary">Back</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/footer') %>

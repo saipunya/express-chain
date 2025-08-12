@@ -29,6 +29,11 @@
                     style="width: 120px; height: 120px; object-fit: cover;" />
                     <h4 class="text-success mb-0 mt-2"><%= user.fullname %></h4>
                     <p class="text-muted mb-0"><%= user.position %></p>
+                    <% if (user && user.mClass === 'kjs') { %>
+                      <a href="/account/list" class="btn btn-primary mt-3">
+                         <i class="bi bi-wallet2"></i> เงินกลุ่ม กจส
+                      </a>
+                    <% } %>
                 </div>
               </div>
             </div>
@@ -39,6 +44,7 @@
       <!-- Quick Stats Cards -->
       <div class="row mb-4">
         <div class="col-md-3 mb-3">
+          <a href="/project" class="text-decoration-none">
           <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #FF6B6B, #FF8E8E);">
             <div class="card-body text-white text-center">
               <i class="bi bi-file-earmark-text display-4 mb-3"></i>
@@ -46,6 +52,7 @@
               <p class="mb-0">กิจกรรมต่างๆ</p>
             </div>
           </div>
+          </a>
         </div>
         <div class="col-md-3 mb-3">
           <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(45deg, #4ECDC4, #44A08D);">
@@ -244,6 +251,34 @@
 
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last 5 Gitgum events -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i> กิจกรรมล่าสุด (5 รายการ)</h5>
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% (lastGitgums || []).forEach((g) => { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <strong><%= new Date(g.git_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
+                    <span class="text-muted ms-2"><i class="bi bi-clock"></i> <%= g.git_time + ' น.' %></span>
+                    — <%= g.git_act %> @ <%= g.git_place %>
+                  </span>
+                  <a href="/gitgum/list" class="btn btn-sm btn-outline-primary">ทั้งหมด</a>
+                </li>
+              <% }) %>
+              <% if (!lastGitgums || lastGitgums.length === 0) { %>
+                <li class="list-group-item text-muted">ไม่มีรายการ</li>
+              <% } %>
+            </ul>
           </div>
         </div>
       </div>

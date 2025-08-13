@@ -92,3 +92,26 @@ exports.update = async (id, data) => {
 exports.remove = async (id) => {
   await pool.query('DELETE FROM active_coop WHERE c_id = ?', [id]);
 };
+
+// Simple list for selects
+exports.getAllSimple = async () => {
+  const [rows] = await pool.query('SELECT c_code, c_name FROM active_coop ORDER BY c_name ASC');
+  return rows;
+};
+
+exports.getByCode = async (code) => {
+  const [rows] = await pool.query('SELECT c_code, c_name FROM active_coop WHERE c_code = ? LIMIT 1', [code]);
+  return rows[0];
+};
+
+
+exports.getGroups = async () => {
+  const [rows] = await pool.query('SELECT DISTINCT c_group FROM active_coop WHERE c_group IS NOT NULL AND c_group<>"" ORDER BY c_group ASC');
+  return rows.map(r => r.c_group);
+};
+
+exports.getByGroup = async (group) => {
+  const [rows] = await pool.query('SELECT c_code, c_name FROM active_coop WHERE c_group = ? ORDER BY c_name ASC', [group]);
+  return rows;
+};
+

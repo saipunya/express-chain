@@ -30,7 +30,7 @@
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
             <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ? 
+              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
               <a href="/auth/register" class="text-success">
                 สมัครสมาชิก
               </a>
@@ -195,7 +195,7 @@ new Chart(ctx2, {
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fas fa-file-alt me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= file.c_name %> 
+                  <strong><%= index + 1 %>.</strong> <%= file.c_name %>
                   <span>[ <%= file.end_date %> <%= file.end_year %> ]</span>
                   <%
                     const fileSavedDate = new Date(file.savedate);
@@ -207,10 +207,10 @@ new Chart(ctx2, {
                   <% } %>
                 </span>
                 <% if(user){ %>
-                  <a 
-                    href="/finance/download/<%= file.id %>" 
-                    class="btn btn-sm btn-outline-success" 
-                    target="_blank" 
+                  <a
+                    href="/finance/download/<%= file.id %>"
+                    class="btn btn-sm btn-outline-success"
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     ดาวน์โหลด
@@ -236,9 +236,9 @@ new Chart(ctx2, {
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fas fa-briefcase me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= business.bu_name %> 
+                  <strong><%= index + 1 %>.</strong> <%= business.bu_name %>
                   <span class="badge bg-info ms-2"><%= business.end_date  %> <%= business.bu_endyear %></span>
-                  <% 
+                  <%
                     const businessSavedDate = new Date(business.bu_savedate);
                     const currentDate = new Date();
                     const diffDays = Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24));
@@ -248,10 +248,10 @@ new Chart(ctx2, {
                   <% } %>
                 </span>
                 <% if(user){ %>
-                  <a 
-                    href="/business/download/<%= business.bu_id %>" 
-                    class="btn btn-sm btn-outline-info" 
-                    target="_blank" 
+                  <a
+                    href="/business/download/<%= business.bu_id %>"
+                    class="btn btn-sm btn-outline-info"
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     ดาวน์โหลด
@@ -267,7 +267,7 @@ new Chart(ctx2, {
           </div>
         </div>
       </div>
-      
+
     </div>
   </div>
 </section>
@@ -285,7 +285,7 @@ new Chart(ctx2, {
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fas fa-file-pdf me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= rule.rule_name %> 
+                  <strong><%= index + 1 %>.</strong> <%= rule.rule_name %>
                   <span class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
                     <% if (rule.rule_type === 'MR') { %>
                       ข้อกำหนด พ.ศ.<%= rule.rule_year %>
@@ -303,10 +303,10 @@ new Chart(ctx2, {
                   <% } %>
                 </span>
                 <% if(user){ %>
-                  <a 
-                    href="/rule/<%= rule.rule_id %>" 
-                    class="btn btn-sm btn-outline-success" 
-                    target="_blank" 
+                  <a
+                    href="/rule/<%= rule.rule_id %>"
+                    class="btn btn-sm btn-outline-success"
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     ดาวน์โหลด
@@ -331,8 +331,8 @@ new Chart(ctx2, {
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span>
                   <i class="fas fa-file-alt me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %> 
-                  <% 
+                  <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %>
+                  <%
                     const rabiabSavedDate = new Date(rabiab.ra_savedate);
                     const currentDate = new Date();
                     const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
@@ -342,10 +342,10 @@ new Chart(ctx2, {
                   <% } %>
                 </span>
                 <% if(user){ %>
-                  <a 
-                    href="/rabiab/download/<%= rabiab.ra_id %>" 
-                    class="btn btn-sm btn-outline-warning" 
-                    target="_blank" 
+                  <a
+                    href="/rabiab/download/<%= rabiab.ra_id %>"
+                    class="btn btn-sm btn-outline-warning"
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     ดาวน์โหลด
@@ -362,7 +362,7 @@ new Chart(ctx2, {
         </div>
       </div>
 
-      
+
     </div>
   </div>
 </section>
@@ -441,6 +441,37 @@ new Chart(ctx2, {
         </div>
       </div>
     </div>
+    <div class="row mt-4">
+      <div class="col-12">
+       
+          <h2 class="mb-4 text-center text-primary">
+            <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
+          </h2>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <% (lastRq2 || []).forEach((r, idx) => { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                      <strong><%= idx + 1 %>.</strong>
+                      <%= r.rq_name %>
+                      <span class="badge bg-secondary ms-2"><%= r.rq_year %></span>
+                    </span>
+                    <% if(user){ %>
+                      <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-file-pdf-fill"></i>
+                      </a>
+                    <% } %>
+                  </li>
+                <% }) %>
+              </ul>
+              <div class="text-end mt-2">
+                <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -477,17 +508,17 @@ new Chart(ctx2, {
       </div>
       <div class="col-md-8 mt-4 mt-md-0">
         <h2 class="mb-4 text-center text-success">🟢 Members Online</h2>
-        
+
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <div class="row">
               <% onlineUsers.forEach((user, index) => { %>
                 <div class="col-md-6 mb-3">
                   <div class="d-flex align-items-center">
-                    <img 
-                      src="<%= user.m_img || '/images/default-avatar.png' %>" 
-                      alt="Avatar" 
-                      class="rounded-circle me-3" 
+                    <img
+                      src="<%= user.m_img || '/images/default-avatar.png' %>"
+                      alt="Avatar"
+                      class="rounded-circle me-3"
                       style="width: 40px; height: 40px; object-fit: cover;"
                     >
                     <div>
@@ -501,7 +532,7 @@ new Chart(ctx2, {
                 </div>
               <% }); %>
             </div>
-            
+
             <% if (onlineUsers.length === 0) { %>
               <div class="text-center text-muted">
                 <i class="fas fa-users fa-3x mb-3"></i>

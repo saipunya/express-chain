@@ -1,0 +1,35 @@
+<%- include('../partials/header', { title: 'Edit RQ2' }) %>
+<div class="container my-4">
+  <h3>Edit RQ2</h3>
+  <form action="/rq2/edit/<%= item.rq_id %>" method="POST" enctype="multipart/form-data" class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Code</label>
+      <input type="text" name="rq_code" class="form-control" value="<%= item.rq_code %>" required readonly>
+    </div>
+    <div class="col-md-8">
+      <label class="form-label">Name (สหกรณ์)</label>
+      <select name="rq_name" class="form-select" required>
+        <% (coops || []).forEach(c => { %>
+          <option value="<%= c.c_code %>" <%= c.c_code === item.rq_code ? 'selected' : '' %>><%= c.c_name %></option>
+        <% }) %>
+      </select>
+      <small class="text-muted">label = c_name, value = c_code</small>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Year</label>
+      <input type="text" name="rq_year" class="form-control" value="<%= item.rq_year %>" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">File</label>
+      <% if (item.rq_file) { %>
+        <p>Current: <a href="/rq2/download/<%= item.rq_id %>" target="_blank"><%= item.rq_file %></a></p>
+      <% } %>
+      <input type="file" name="file" class="form-control">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-success" type="submit">Update</button>
+      <a href="/rq2" class="btn btn-secondary">Back</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/footer') %>

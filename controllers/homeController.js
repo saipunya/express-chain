@@ -13,6 +13,7 @@ const onlineModel = require('../models/onlineModel');
 const rabiabModel = require('../models/rabiabModel');
 const businessModel = require('../models/businessModel');
 const Project = require('../models/projectModel');
+const Rq2 = require('../models/rq2Model');
 
 // controllers/homeController.js
 
@@ -28,6 +29,7 @@ const homeController = {
       const businessFiles = await businessModel.getLastUploads(10);
       const usecars = await UseCar.getAll();
       const lastProjects = await Project.getLast(5);
+      const lastRq2 = await Rq2.getLast(10);
 
       // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
@@ -54,6 +56,7 @@ const homeController = {
         businessFiles,
         usecars,
         lastProjects,
+        lastRq2,
         stats,
         onlineUsers,
         onlineCount,

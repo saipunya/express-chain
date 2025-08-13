@@ -1,0 +1,57 @@
+<%- include('../partials/header', { title: 'Create RQ2' }) %>
+<div class="container my-4">
+  <h3>Create RQ2</h3>
+  <form action="/rq2/create" method="POST" enctype="multipart/form-data" class="row g-3">
+    <div class="col-md-8">
+      <label class="form-label">กลุ่มสหกรณ์ (c_group)</label>
+      <select id="c_group" class="form-select" required>
+        <option value="">-- เลือกกลุ่ม --</option>
+        <% (groups || []).forEach(g => { %>
+          <option value="<%= g %>"><%= g %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-8">
+      <label class="form-label">สหกรณ์ (Name)</label>
+      <select name="rq_name" id="rq_name" class="form-select" required>
+        <option value="">-- เลือกสหกรณ์ --</option>
+      </select>
+      <small class="text-muted">value จะเป็น c_code และระบบจะบันทึกชื่อ (c_name) ให้อัตโนมัติ</small>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Year</label>
+      <input type="text" name="rq_year" class="form-control" required>
+    </div>
+    <script>
+      (function(){
+        const selGroup = document.getElementById('c_group');
+        const selCoop = document.getElementById('rq_name');
+        selGroup.addEventListener('change', async function(){
+          const g = selGroup.value;
+          selCoop.innerHTML = '<option value="">-- เลือกสหกรณ์ --</option>';
+          if (!g) return;
+          try {
+            const res = await fetch('/rq2/api/coops?group=' + encodeURIComponent(g));
+            const items = await res.json();
+            items.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = c.c_code;
+              opt.textContent = c.c_name;
+              selCoop.appendChild(opt);
+            });
+          } catch(e) { console.error(e); }
+        });
+      })();
+    </script>
+    <div class="col-md-6">
+      <label class="form-label">File</label>
+      <input type="file" name="file" class="form-control">
+    </div>
+    <div class="col-12">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="/rq2" class="btn btn-secondary">Back</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/footer') %>

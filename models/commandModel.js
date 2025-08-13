@@ -4,9 +4,9 @@ const Command = {
   getAll: async (search = '') => {
     let where = '';
     const params = [];
-    if (search) { 
-      where = 'WHERE com_story LIKE ? OR com_from LIKE ?'; 
-      params.push(`%${search}%`, `%${search}%`); 
+    if (search) {
+      where = 'WHERE com_story LIKE ? OR com_from LIKE ?';
+      params.push(`%${search}%`, `%${search}%`);
     }
     const [rows] = await db.query(`SELECT * FROM pt_command ${where} ORDER BY com_date DESC, command_id DESC`, params);
     return rows;
@@ -40,9 +40,19 @@ const Command = {
   getLastOrder: async () => {
     const [rows] = await db.query('SELECT * FROM pt_command ORDER BY com_year DESC , com_no DESC LIMIT 1');
     const lastOrder = rows[0]?.last_no
-    
+
     return lastOrder || 0;
   }
+,
+
+  getLast: async (limit = 10) => {
+    const [rows] = await db.query(
+      'SELECT * FROM pt_command ORDER BY com_date DESC, command_id DESC LIMIT ?',
+      [Number(limit)]
+    );
+    return rows;
+  }
+
 };
 
 module.exports = Command;

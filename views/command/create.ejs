@@ -4,16 +4,16 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-header">
-          <h4><lemma่มคำ<lemma่ง</h4>
+          <h4>การบันทึกข้อมูลคำสั่งสำนักงาน</h4>
         </div>
         <div class="card-body">
           <form action="/command/create" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-              <label for="cmd_no" class="form-label">เลข<lemma่</label>
-              <input type="text" class="form-control" id="cmd_no" name="cmd_no" value="<%= (lastOrder + 1) %>" required>
+              <label for="cmd_no" class="form-label">เลขที่คำสั่ง</label>
+              <input type="text" class="form-control" id="cmd_no" name="cmd_no" value="" required>
             </div>
             <div class="mb-3">
-              <label for="cmd_date" class="form-label"><lemma<|im_start|>่</label>
+              <label for="cmd_date" class="form-label">วันที่</label>
               <input type="date" class="form-control" id="cmd_date" name="cmd_date" required>
             </div>
             <div class="mb-3">
@@ -27,11 +27,12 @@
             <div class="mb-3">
               <label for="file" class="form-label">ไฟล์</label>
               <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-              <div class="form-text"><lemmaไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่<lemma 10MB)</div>
+              <div class="form-text">ขนาดไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่เกิน 10MB)</div>
             </div>
             <div class="d-flex justify-content-between">
-              <a href="/command" class="btn btn-secondary">ยก<lemma</a>
-              <button type="submit" class="btn btn-primary"><lemma</button>
+              <a href="/command" class="btn btn-secondary">กลับหน้าหลัก</a>
+              <button type="submit" class="btn btn-primary">บันทึก</button>
+
             </div>
           </form>
         </div>

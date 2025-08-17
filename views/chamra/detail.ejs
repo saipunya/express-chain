@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>รายละเอียดข้อมูล Chamra</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>รายละเอียดข้อมูล Chamra</h1>
+
+  <% if (data) { %>
+    <table>
+      <tr><th>รหัส</th><td><%= data.de_code %></td></tr>
+      <tr><th>กรณี</th><td><%= data.de_case %></td></tr>
+      <tr><th>ชื่อสหกรณ์</th><td><%= data.c_name %></td></tr>
+      <tr><th>สถานะ</th><td><%= data.c_status %></td></tr>
+      <tr><th>กลุ่ม</th><td><%= data.c_group %></td></tr>
+      <tr><th>ผู้รับผิดชอบ</th><td><%= data.c_person %></td></tr>
+      <tr><th>ผู้รับผิดชอบรอง</th><td><%= data.c_person2 %></td></tr>
+      <!-- เพิ่ม field อื่น ๆ ตามต้องการ -->
+    </table>
+  <% } else { %>
+    <p>ไม่พบข้อมูล</p>
+  <% } %>
+
+  <a href="/chamra">← กลับหน้ารายการ</a>
+</body>
+</html>

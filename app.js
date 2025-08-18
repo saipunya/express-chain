@@ -64,23 +64,7 @@ app.use((req, res) => {
 });
 
 // อย่าง cron job ส่ง Telegram
-app.get('/run-cron', async (req, res) => {
-  try {
-    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-    const message = `แจ้งเวลา ${new Date().toLocaleString('th-TH')}`;
-
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-    });
-
-    res.send('ส่งข้อความแจ้งแล้ว');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('ข้อผิดพลาดในการส่งแจ้ง');
-  }
-});
+require('./cron/gitgumNotifier');
 
 // สร้าง http server แทน app.listen
 const server = http.createServer(app);

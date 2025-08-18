@@ -1,74 +1,38 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>รายการสหกรณ์ (Chamra Detail)</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <h1>📋 รายการสหกรณ์ / กลุ่มเกษตรกร</h1>
+<%- include('../partials/header') %>
 
-  <form method="GET" action="/chamra">
-    <input type="text" name="search" placeholder="ค้นหาชื่อสหกรณ์" value="<%= search %>">
-    <select name="c_status">
-      <option value="">-- สถานะ --</option>
-      <option value="ดำเนินการ" <%= c_status === 'ดำเนินการ' ? 'selected' : '' %>>ดำเนินการ</option>
-      <option value="เลิก" <%= c_status === 'เลิก' ? 'selected' : '' %>>เลิก</option>
-      <option value="ถอนชื่อ" <%= c_status === 'ถอนชื่อ' ? 'selected' : '' %>>ถอนชื่อ</option>
-    </select>
-    <select name="gr_step">
-      <option value="">-- ขั้นตอน --</option>
-      <% for (let i = 0; i <= 6; i++) { %>
-        <option value="<%= i %>" <%= gr_step == i ? 'selected' : '' %>>ขั้นตอน <%= i %></option>
-      <% } %>
-    </select>
-    <button type="submit">🔍 ค้นหา</button>
-  </form>
+<h3>Active Coop List</h3>
+<a href="/coop/form" class="btn btn-primary">Add New</a>
 
-  <table border="1" cellpadding="6" cellspacing="0">
-    <thead>
+<table class="table table-bordered mt-3">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Detail</th>
+      <th>Process</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% data.forEach(d => { %>
       <tr>
-        <th>รหัส</th>
-        <th>ชื่อสหกรณ์</th>
-        <th>สถานะ</th>
-        <th>ผู้รับผิดชอบ</th>
-        <th>มาตรา</th>
-        <th>เป้าหมาย</th>
-        <th>จัดการ</th>
+        <td><%= d.c_code %></td>
+        <td><%= d.c_name %></td>
+        <td>
+          <% if(d.de_id) { %>
+            <%= d.de_case %> / <%= d.de_person %>
+          <% } %>
+        </td>
+        <td>
+          <% if(d.pr_id) { %>
+            <%= d.pr_s1 %> - <%= d.pr_s10 %>
+          <% } %>
+        </td>
+        <td>
+          <a href="/coop/form/<%= d.c_code %>" class="btn btn-sm btn-warning">Edit</a>
+          <a href="/coop/delete/<%= d.c_code %>" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">Delete</a>
+        </td>
       </tr>
-    </thead>
-    <tbody>
-      <% if (data.length === 0) { %>
-        <tr><td colspan="7">ไม่พบข้อมูล</td></tr>
-      <% } else { %>
-        <% data.forEach(item => { %>
-          <tr>
-            <td><%= item.de_code %></td>
-            <td><%= item.c_name %></td>
-            <td><%= item.c_status %></td>
-            <td><%= item.c_person %></td>
-            <td><%= item.de_case %></td>
-            <td><%= item.de_target1 %> / <%= item.de_target2 %></td>
-            <td>
-              <a href="/chamra/<%= item.de_code %>/view">ดู</a> |
-              <a href="/chamra/<%= item.de_code %>/edit">แก้ไข</a> |
-              <form method="POST" action="/chamra/<%= item.de_code %>?_method=DELETE" style="display:inline;">
-                <button type="submit" onclick="return confirm('ยืนยันการลบ?')">ลบ</button>
-              </form>
-            </td>
-          </tr>
-        <% }) %>
-      <% } %>
-    </tbody>
-  </table>
-
-  <div class="pagination">
-    <% for (let i = 1; i <= Math.ceil(pagination.total_records / pagination.page_size); i++) { %>
-      <a href="?search=<%= search %>&c_status=<%= c_status %>&gr_step=<%= gr_step %>&page=<%= i %>&page_size=<%= pagination.page_size %>"
-         class="<%= i === pagination.page ? 'active' : '' %>">
-        หน้า <%= i %>
-      </a>
-    <% } %>
-  </div>
-</body>
-</html>
+    <% }) %>
+  </tbody>
+</table>

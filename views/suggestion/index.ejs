@@ -16,7 +16,6 @@
     <thead>
       <tr>
         <th>หัวข้อ</th>
-        <th>คำ<lemma</th>
         <th>ไฟล์</th>
 
    
@@ -26,10 +25,10 @@
       </tr>
     </thead>
     <tbody>
-      <% suggestions.forEach(s => { %>
+      <% suggestions.forEach((s , index) => { %>
         <tr>
-          <td><%= s.fi_subject %></td>
-          <td><%= s.fi_keyword %></td>
+          <td><%= (index +1) + ". "  %><%= s.fi_subject %></td>
+  
       
           <td>
             <% if (user && s.fi_file) { %>

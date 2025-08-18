@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title: 'Suggestions' }) %>
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>ข้อเสนอแนะ/เอกสาร</h3>
+    <form class="d-flex" method="GET" action="">
+      <input type="text" class="form-control me-2" name="search" placeholder="ระบุคำค้นหา" value="<%= search || '' %>">
+      <button class="btn btn-outline-primary" type="submit">ค้นหา</button>
+      <a href="/suggestion" class="btn btn-outline-secondary ms-2">ล้าง</a>
+    </form>
+    <a href="/suggestion/create" class="btn btn-primary">เพิ่มข้อมูล</a>
+    <% if(user && (user.mClass=='admin' || user.mClass=='kjs')){ %>
+   
+    <% } %>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>หัวข้อ</th>
+        <th>ไฟล์</th>
+
+   
+        <% if(user && (user.mClass=='kjs' || user.mClass=='admin')){ %>
+        <th>Manage</th>
+        <% } %>
+      </tr>
+    </thead>
+    <tbody>
+      <% suggestions.forEach((s , index) => { %>
+        <tr>
+          <td><%= (index +1) + ". "  %><%= s.fi_subject %></td>
+  
+      
+          <td>
+            <% if (user && s.fi_file) { %>
+              <a href="/suggestion/download/<%= s.fi_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                <i class="bi bi-file-earmark-arrow-down"></i> ดาวน์โหลด
+              </a>
+            <% } else if (!user) { %>
+              <a href="/auth/login" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-file-earmark-arrow-down"></i> ดาวน์โหลด
+              </a>
+            <% } %>
+          </td>
+         
+          <% if(user && (user.mClass=='kjs' || user.mClass=='admin')){ %>
+          <td class="text-nowrap">
+            <a href="/suggestion/edit/<%= s.fi_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
+            <form action="/suggestion/delete/<%= s.fi_id %>" method="POST" style="display:inline" onsubmit="return confirm('ต้องการลบหรือไม่?')">
+              <button class="btn btn-danger btn-sm" type="submit">ลบ</button>
+            </form>
+          </td>
+          <% } %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/footer') %>

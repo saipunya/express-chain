@@ -38,7 +38,7 @@ exports.store = async (req, res) => {
 
 exports.update = async (req, res) => {
   await activeCoopModel.update(req.params.id, req.body);
-  res.redirect('/active-coop');
+  res.redirect('/activeCoop');
 };
 
 exports.delete = async (req, res) => {

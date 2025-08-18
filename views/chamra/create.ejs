@@ -1,0 +1,50 @@
+<%- include('../partials/header.ejs') %>
+  <h1>➕ เพิ่มข้อมูล Chamra</h1>
+
+  <form method="POST" action="/chamra">
+    <table>
+      <tr>
+        <th>รหัส</th>
+        <td><input type="text" name="de_code" required></td>
+      </tr>
+      <tr>
+        <th>กรณี</th>
+        <td><input type="text" name="de_case" required></td>
+      </tr>
+      <tr>
+        <th>เลขคำสั่ง</th>
+        <td><input type="text" name="de_comno"></td>
+      </tr>
+      <tr>
+        <th>วันที่คำสั่ง</th>
+        <td><input type="date" name="de_comdate"></td>
+      </tr>
+      <tr>
+        <th>ผู้รับผิดชอบ</th>
+        <td><input type="text" name="de_person"></td>
+      </tr>
+      <tr>
+        <th>เป้าหมาย</th>
+        <td>
+          <input type="text" name="de_target1" placeholder="เป้าหมาย 1">
+          <input type="text" name="de_target2" placeholder="เป้าหมาย 2">
+        </td>
+      </tr>
+      <tr>
+        <th>หมายเหตุ</th>
+        <td><textarea name="de_maihed"></textarea></td>
+      </tr>
+      <tr>
+        <th>ผู้บันทึก</th>
+        <td><input type="text" name="de_saveby" value="admin"></td>
+      </tr>
+      <tr>
+        <th>วันที่บันทึก</th>
+        <td><input type="date" name="de_savedate" value="<%= new Date().toISOString().slice(0,10) %>"></td>
+      </tr>
+    </table>
+
+    <button type="submit">💾 บันทึกข้อมูล</button>
+    <a href="/chamra">← กลับหน้ารายการ</a>
+  </form>
+<%- include('../partials/footer.ejs') %>

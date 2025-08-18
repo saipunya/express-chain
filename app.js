@@ -4,8 +4,8 @@ const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
 const morgan = require('morgan');
-const http = require('http');               // เพิ่ม
-const { Server } = require('socket.io');   // เพิ่ม
+const http = require('http');               // เล่ม
+const { Server } = require('socket.io');   // เล่ม
 const onlineModel = require('./models/onlineModel');
 const fs = require('fs');
 const axios = require('axios');
@@ -63,24 +63,8 @@ app.use((req, res) => {
   });
 });
 
-// ตัวอย่าง cron job ส่ง Telegram
-app.get('/run-cron', async (req, res) => {
-  try {
-    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-    const message = `แจ้งเตือนกิจกรรมวันนี้เวลา ${new Date().toLocaleString('th-TH')}`;
-
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-    });
-
-    res.send('ส่งข้อความแจ้งเตือนเรียบร้อยแล้ว');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน');
-  }
-});
+// อย่าง cron job ส่ง Telegram
+require('./cron/gitgumNotifier');
 
 // สร้าง http server แทน app.listen
 const server = http.createServer(app);
@@ -107,13 +91,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// เริ่ม server
+// เล่ม server
 const PORT = 5500;
 server.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
 
-// ทำความสะอาดข้อมูลออนไลน์เก่า (เหมือนเดิม)
+// ทำความสะอาดข้อมูลออนไลน์เก่า (5 นาที)
 setInterval(async () => {
   try {
     await onlineModel.cleanupOldOnlineData();
@@ -123,7 +107,7 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000);
 
-// สร้างโฟลเดอร์ uploads หากยังไม่มี (เหมือนเดิม)
+// สร้างโฟลเดอร์ uploads หากไม่ (5 นาที)
 const uploadDirs = [
   'uploads',
   'uploads/rabiab',
@@ -132,7 +116,8 @@ const uploadDirs = [
   'uploads/business',
   'uploads/project',
   'uploads/rq2',
-  'uploads/command'
+  'uploads/command',
+  'uploads/suggestion'
 ];
 
 uploadDirs.forEach(dir => {
@@ -141,3 +126,7 @@ uploadDirs.forEach(dir => {
     console.log(`✅ Created directory: ${dir}`);
   }
 });
+
+
+
+

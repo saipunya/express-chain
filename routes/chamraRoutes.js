@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/chamraController');
+const chamraController = require('../controllers/chamraController');
 
-router.get('/', controller.renderIndex);
-router.get('/:code', controller.getByCode);
-router.get('/:code/view', controller.renderDetail);
-router.get('/:code/edit', controller.renderEdit);
+// List
+router.get('/', chamraController.list);
 
-router.post('/', controller.create);
-router.put('/:code', controller.update);
-router.delete('/:code', controller.remove);
+// Add
+router.get('/add', chamraController.addForm);
+router.post('/add', chamraController.create);
+
+// Edit
+router.get('/edit/:c_code', chamraController.editForm);
+router.post('/edit/:c_code', chamraController.update);
+
+// Delete
+router.post('/delete/:c_code', chamraController.delete);
 
 module.exports = router;

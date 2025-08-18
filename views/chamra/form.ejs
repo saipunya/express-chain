@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <h2 class="mb-4"><%= chamra ? '✏️ แก้ไข Chamra' : '➕ เพิ่ม Chamra' %></h2>
+  
+  <form action="<%= chamra ? '/chamra/edit/' + chamra.c_code : '/chamra/add' %>" method="POST">
+    
+    <!-- Active Chamra -->
+    <div class="mb-3">
+      <label class="form-label">รหัส Chamra</label>
+      <input type="text" name="active[c_code]" class="form-control" value="<%= chamra ? chamra.c_code : '' %>" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">ชื่อ</label>
+      <input type="text" name="active[c_name]" class="form-control" value="<%= chamra ? chamra.c_name : '' %>" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">ตำแหน่ง</label>
+      <input type="text" name="active[c_position]" class="form-control" value="<%= chamra ? chamra.c_position : '' %>">
+    </div>
+
+    <!-- Chamra Detail -->
+    <div class="mb-3">
+      <label class="form-label">รายละเอียด</label>
+      <input type="text" name="detail[de_detail]" class="form-control" value="<%= chamra ? chamra.de_detail : '' %>">
+    </div>
+
+    <!-- Chamra Process -->
+    <div class="mb-3">
+      <label class="form-label">S1</label>
+      <input type="date" name="process[pr_s1]" class="form-control" value="<%= chamra ? chamra.pr_s1 : '' %>">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">S2</label>
+      <input type="date" name="process[pr_s2]" class="form-control" value="<%= chamra ? chamra.pr_s2 : '' %>">
+    </div>
+    <% /* ใส่ S3-S10 ตามต้องการ */ %>
+
+    <button type="submit" class="btn btn-primary mt-3"><%= chamra ? '💾 บันทึกแก้ไข' : '💾 เพิ่ม Chamra' %></button>
+    <a href="/chamra" class="btn btn-secondary mt-3">↩️ ย้อนกลับ</a>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

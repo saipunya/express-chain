@@ -35,7 +35,7 @@ async function notifyGitgum() {
 }
 
 // ตั้ง cron schedule ทุกวัน 04:00
-cron.schedule('0 4 * * *', notifyGitgum, {
+cron.schedule('0 6 * * *', notifyGitgum, {
   timezone: 'Asia/Bangkok'
 });
 

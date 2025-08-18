@@ -32,7 +32,7 @@ const Project = {
   delete: async (id) => {
     await db.query('DELETE FROM pt_project WHERE pro_id = ?', [id]);
   },
-  getLast: async (limit = 5) => {
+  getLast: async (limit = 10) => {
     const [rows] = await db.query(
       'SELECT * FROM pt_project ORDER BY pro_savedate DESC, pro_year DESC, pro_order DESC LIMIT ?',
       [Number(limit)]

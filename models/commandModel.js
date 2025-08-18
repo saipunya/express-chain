@@ -4,43 +4,55 @@ const Command = {
   getAll: async (search = '') => {
     let where = '';
     const params = [];
-    if (search) { 
-      where = 'WHERE cmd_title LIKE ? OR cmd_from LIKE ?'; 
-      params.push(`%${search}%`, `%${search}%`); 
+    if (search) {
+      where = 'WHERE com_story LIKE ? OR com_from LIKE ?';
+      params.push(`%${search}%`, `%${search}%`);
     }
-    const [rows] = await db.query(`SELECT * FROM pt_command ${where} ORDER BY cmd_date DESC, cmd_id DESC`, params);
+    const [rows] = await db.query(`SELECT * FROM pt_command ${where} ORDER BY com_date DESC, command_id DESC`, params);
     return rows;
   },
 
   getById: async (id) => {
-    const [rows] = await db.query('SELECT * FROM pt_command WHERE cmd_id = ?', [id]);
+    const [rows] = await db.query('SELECT * FROM pt_command WHERE command_id = ?', [id]);
     return rows[0];
   },
 
   create: async (data) => {
-    const { cmd_no, cmd_date, cmd_from, cmd_title, cmd_filename, cmd_saveby, cmd_savedate } = data;
+    const { com_no, com_date, com_from, com_story, com_filename, com_saveby, com_savedate } = data;
     await db.query(
-      'INSERT INTO pt_command (cmd_no, cmd_date, cmd_from, cmd_title, cmd_filename, cmd_saveby, cmd_savedate) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [cmd_no, cmd_date, cmd_from, cmd_title, cmd_filename, cmd_saveby, cmd_savedate]
+      'INSERT INTO pt_command (com_no, com_date, com_from, com_story, com_filename, com_saveby, com_savedate) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [com_no, com_date, com_from, com_story, com_filename, com_saveby, com_savedate]
     );
   },
 
   update: async (id, data) => {
-    const { cmd_no, cmd_date, cmd_from, cmd_title, cmd_filename } = data;
+    const { com_no, com_date, com_from, com_story, com_filename } = data;
     await db.query(
-      'UPDATE pt_command SET cmd_no = ?, cmd_date = ?, cmd_from = ?, cmd_title = ?, cmd_filename = ? WHERE cmd_id = ?',
-      [cmd_no, cmd_date, cmd_from, cmd_title, cmd_filename, id]
+      'UPDATE pt_command SET com_no = ?, com_date = ?, com_from = ?, com_story = ?, com_filename = ? WHERE command_id = ?',
+      [com_no, com_date, com_from, com_story, com_filename, id]
     );
   },
 
   delete: async (id) => {
-    await db.query('DELETE FROM pt_command WHERE cmd_id = ?', [id]);
+    await db.query('DELETE FROM pt_command WHERE command_id = ?', [id]);
   },
 
   getLastOrder: async () => {
-    const [rows] = await db.query('SELECT MAX(cmd_no) as last_no FROM pt_command');
-    return rows[0]?.last_no || 0;
+    const [rows] = await db.query('SELECT * FROM pt_command ORDER BY com_year DESC , com_no DESC LIMIT 1');
+    const lastOrder = rows[0]?.last_no
+
+    return lastOrder || 0;
   }
+,
+
+  getLast: async (limit = 10) => {
+    const [rows] = await db.query(
+      'SELECT * FROM pt_command ORDER BY com_date DESC, command_id DESC LIMIT ?',
+      [Number(limit)]
+    );
+    return rows;
+  }
+
 };
 
 module.exports = Command;

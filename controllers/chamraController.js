@@ -1,5 +1,6 @@
 const ChamraDetail = require('../models/chamraModel');
 
+
 exports.getAll = async (req, res, next) => {
     try {
       const {
@@ -129,4 +130,32 @@ exports.renderIndex = async (req, res, next) => {
     }
   };
   
+  const chamraModel = require('../models/chamraModel');
+
+exports.create = async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { de_code, de_case, de_saveby, ...rest } = req.body;
+
+    await chamraModel.insertChamraDetail(connection, {
+      de_code,
+      de_case,
+      de_saveby,
+      ...rest
+    });
+
+    await chamraModel.createDefaultRows(connection, de_code, de_saveby);
+
+    await connection.commit();
+    res.redirect(`/chamra/${de_code}/view`);
+  } catch (err) {
+    await connection.rollback();
+    next(err);
+  } finally {
+    connection.release();
+  }
+};
+
   

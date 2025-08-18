@@ -18,4 +18,3 @@ module.exports = (app) => {
     app.use(baseRoute, route);
   });
 };
-app.use('/command', require('./commandRoutes'));

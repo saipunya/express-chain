@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Add Suggestion' }) %>
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4>คำแนะนำ คำสั่ง นายทะเบียนสหกรณ์</h4>
+        </div>
+        <div class="card-body">
+          <form action="/suggestion/create" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="fi_subject" class="form-label">หัวข้อ</label>
+              <input type="text" class="form-control" id="fi_subject" name="fi_subject" required>
+            </div>
+            <div class="mb-3">
+              <label for="fi_keyword" class="form-label">คำค้นหา</label>
+              <input type="text" class="form-control" id="fi_keyword" name="fi_keyword" required>
+            </div>
+            <div class="mb-3">
+              <label for="fi_type" class="form-label">ประเภท</label>
+              <select class="form-select" id="fi_type" name="fi_type" required>
+                <option >++ โปรดเลือกประเภท ++</option>
+                <option value="ข้อเสนอแนะ">ข้อเสนอแนะ</option>
+                <option value="คู่มือ">คู่มือ</option>
+                <option value="แบบฟอร์ม">แบบฟอร์ม</option>
+                <option value="เอกสารอ้างอิง">เอกสารอ้างอิง</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="file" class="form-label">ไฟล์</label>
+              <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.xls,.xlsx">
+              <div class="form-text">อัปโหลดไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG, TXT, XLS, XLSX (ขนาดไม่เกิน 10MB)</div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="/suggestion" class="btn btn-secondary">กลับหน้าหลัก</a>
+              <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

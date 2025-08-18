@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: 'Edit Suggestion' }) %>
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4>แก้ไขข้อเสนอแนะ/เอกสาร</h4>
+        </div>
+        <div class="card-body">
+          <form action="/suggestion/edit/<%= suggestion.fi_id %>" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="fi_subject" class="form-label">หัวข้อ</label>
+              <input type="text" class="form-control" id="fi_subject" name="fi_subject" value="<%= suggestion.fi_subject %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="fi_keyword" class="form-label">คำค้นหา</label>
+              <input type="text" class="form-control" id="fi_keyword" name="fi_keyword" value="<%= suggestion.fi_keyword %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="fi_type" class="form-label">ประเภท</label>
+              <select class="form-select" id="fi_type" name="fi_type" required>
+                <option value="">ประเภท</option>
+                <option value="ข้อเสนอแนะ" <%= suggestion.fi_type === 'ข้อเสนอแนะ' ? 'selected' : '' %>>ข้อเสนอแนะ</option>
+                <option value="คู่มือ" <%= suggestion.fi_type === 'คู่มือ' ? 'selected' : '' %>>คู่มือ</option>
+                <option value="แบบฟอร์ม" <%= suggestion.fi_type === 'แบบฟอร์ม' ? 'selected' : '' %>>แบบฟอร์ม</option>
+                <option value="เอกสารอ้างอิง" <%= suggestion.fi_type === 'เอกสารอ้างอิง' ? 'selected' : '' %>>เอกสารอ้างอิง</option>
+                <option value="อื่นๆ" <%= suggestion.fi_type === 'อื่นๆ' ? 'selected' : '' %>>อื่นๆ</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="file" class="form-label">ไฟล์</label>
+              <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.xls,.xlsx">
+              <div class="form-text">
+                ปโหลดไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG, TXT, XLS, XLSX (ขนาดไม่ 10MB)
+                <% if (suggestion.fi_file) { %>
+                  <br>ไฟล์ปัจจุบัน: <%= suggestion.fi_file %>
+                <% } %>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="/suggestion" class="btn btn-secondary">ย้อนกลับ</a>
+              <button type="submit" class="btn btn-primary">บันทึก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -53,10 +53,37 @@ exports.delete = async (id) => {
 };
 
 // หาเฉพาะกิจกรรมของวันนี้
+// หาเฉพาะกิจกรรมของวันนี้ (ปรับให้ ignore เวลา)
+// models/gitgumModel.js
+// model/gitgumModel.js
 exports.findToday = async () => {
-  const [rows] = await db.query(`SELECT * FROM tbl_gitgum WHERE git_date = CURDATE()`);
+// เอาวันที่ปัจจุบันตาม timezone Bangkok
+const options = { timeZone: "Asia/Bangkok" };
+const formatter = new Intl.DateTimeFormat("en-CA", options); // ได้ YYYY-MM-DD
+const bangkokDate = formatter.format(new Date());
+
+console.log("Bangkok date:", bangkokDate); // เช่น 2025-08-19
+
+// Query โดยส่งเป็น parameter
+const [rows] = await db.query(
+  `SELECT * 
+   FROM tbl_gitgum
+   WHERE git_date = ?
+   ORDER BY git_date ASC`,
+  [bangkokDate]  // ส่งค่ามาแทน ? อย่างปลอดภัย
+);
+
+
+  console.log("📌 Last 5 rows in DB:", rows.slice(-5));
   return rows;
 };
+
+
+
+
+
+
+
 
 // หมายเหตุ: findByDate เดิมอ้างอิง pool ซึ่งไม่มีในโมดูลนี้ จึงยังไม่แก้เพื่อไม่กระทบส่วนอื่น
 exports.findByDate = (date) => {

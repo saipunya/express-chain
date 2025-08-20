@@ -28,7 +28,11 @@ exports.createUser = async (userData) => {
 
 exports.findUserByUsername = async (username) => {
   try {
-    const [rows] = await db.query('SELECT * FROM member3 WHERE m_user = ? AND m_status = "active"', [username]);
+    const [rows] = await db.query(
+      'SELECT * FROM member3 WHERE m_user = ? AND m_status = "active"',
+      [username]
+    );
+    
     return rows[0];
   } catch (err) {
     console.error('Database error:', err);

@@ -10,7 +10,7 @@ exports.login = async (req, res) => {
 
     if (!user) {
       // user wrong
-      res.render('login_error', { error: 'ชื่อใช้งานหรือรหัสผ่านไม่ถูกต้อง' });
+      res.render('login_error', { error: 'ชื่อใช้งาน /รหัสผ่านไม่ถูกต้อง หรือ username ของท่านถูกแบน' });
       return;
     }
 

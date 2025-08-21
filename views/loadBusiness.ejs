@@ -43,8 +43,13 @@
                       <div>
                         <strong>ปีบัญชี:</strong> <%= file.end_date  %> <%= file.bu_endyear %>
                       </div>
+                   
                       <div class="btn-group btn-group-sm">
+                        <% if(user){ %>
                         <a href="/business/download/<%= file.bu_id %>" class="btn btn-outline-primary">ดาวน์โหลด</a>
+                        <% }else{ %>
+                          <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+                          <% } %>
                         <% if(user && (user.mClass === 'admin' || user.mClass === 'kbs')) { %>
                           <a href="/business/delete/<%= file.bu_id %>" class="btn btn-outline-danger" onclick="return confirm('ต้องการลบไฟล์นี้?')">ลบ</a>
                         <% } %>

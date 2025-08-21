@@ -64,3 +64,24 @@ exports.getLastUploads = async (limit = 10) => {
 };
 
 exports.ITEMS_PER_PAGE = ITEMS_PER_PAGE;
+
+exports.getBusinessFilesGrouped = async (search = '', page = 1) => {
+  const offset = (page - 1) * ITEMS_PER_PAGE;
+  const [rows] = await db.query(
+    `SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date 
+     FROM kb_allbusiness 
+     LEFT JOIN active_coop ON kb_allbusiness.bu_code = active_coop.c_code
+     WHERE kb_allbusiness.bu_name LIKE ?
+     ORDER BY kb_allbusiness.bu_name, kb_allbusiness.bu_endyear DESC`,
+    [`%${search}%`]
+  );
+
+  // จัดกลุ่มตาม bu_name
+  const grouped = {};
+  rows.forEach(row => {
+    if (!grouped[row.bu_name]) grouped[row.bu_name] = [];
+    grouped[row.bu_name].push(row);
+  });
+
+  return grouped;
+};

@@ -68,27 +68,27 @@ const getCoopsByGroup = async (req, res) => {
   }
 };
 
-const loadBusiness = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const search = req.query.search || '';
+// const loadBusiness = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const search = req.query.search || '';
 
-    const totalFiles = await businessModel.countBusinessFiles(search);
-    const totalPages = Math.ceil(totalFiles / businessModel.ITEMS_PER_PAGE);
-    const fileAll = await businessModel.getBusinessFiles(search, page);
+//     const totalFiles = await businessModel.countBusinessFiles(search);
+//     const totalPages = Math.ceil(totalFiles / businessModel.ITEMS_PER_PAGE);
+//     const fileAll = await businessModel.getBusinessFiles(search, page);
 
-    res.render('loadBusiness', {
-      title: 'ไฟล์ ทั้งหมด',
-      fileAll,
-      currentPage: page,
-      totalPages,
-      search
-    });
-  } catch (err) {
-    console.error('Error loading business files:', err);
-    res.status(500).send('พลาดในการโหลดข้อมูล');
-  }
-};
+//     res.render('loadBusiness', {
+//       title: 'ไฟล์ ทั้งหมด',
+//       fileAll,
+//       currentPage: page,
+//       totalPages,
+//       search
+//     });
+//   } catch (err) {
+//     console.error('Error loading business files:', err);
+//     res.status(500).send('พลาดในการโหลดข้อมูล');
+//   }
+// };
 
 const deleteBusiness = async (req, res) => {
   try {
@@ -162,6 +162,30 @@ const downloadFile = async (req, res) => {
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).send('พลาดในการดาวน์โหลด');
+  }
+};
+const loadBusiness = async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    const page = parseInt(req.query.page) || 1;
+
+    // ดึงข้อมูล grouped
+    const fileGrouped = await businessModel.getBusinessFilesGrouped(search, page);
+
+    // นับจำนวนแถวเพื่อทำ pagination
+    const totalFiles = await businessModel.countBusinessFiles(search);
+    const totalPages = Math.ceil(totalFiles / businessModel.ITEMS_PER_PAGE);
+
+    res.render('loadBusiness', {
+      fileGrouped,        // ชื่อเดียวกับใน EJS
+      search,
+      currentPage: page,
+      totalPages,
+      user: req.session.user
+    });
+  } catch (err) {
+    console.error('Error loading business files:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดไฟล์ธุรกิจ');
   }
 };
 

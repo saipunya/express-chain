@@ -46,14 +46,25 @@ exports.showEditForm = async (req, res) => {
   }
 };
 
+exports.editActivityPage = async (req, res) => {
+  const activity = await activityModel.getActivityById(req.params.id);
+  res.render('activities/edit', { activity }); // ไม่ต้องส่ง user ถ้าใช้ setUserLocals
+};
+
 exports.updateActivity = async (req, res) => {
-  try {
-    await activityModel.updateActivity(req.params.id, req.body);
-    res.redirect('/activities');
-  } catch (error) {
-    console.error('Error updating activity:', error.message);
-    res.status(500).send('Error updating activity');
-  }
+  // รับค่าจาก req.body
+  const data = {
+    date_act: req.body.date_act,
+    act_time: req.body.act_time,
+    activity: req.body.activity,
+    place: req.body.place,
+    co_person: req.body.co_person,
+    comment: req.body.comment,
+    saveby: req.body.saveby,
+    savedate: req.body.savedate
+  };
+  await activityModel.updateActivity(req.params.id, data);
+  res.redirect('/activities');
 };
 
 exports.deleteActivity = async (req, res) => {

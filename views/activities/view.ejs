@@ -11,7 +11,19 @@
     <h1 class="mb-4">รายละเอียดกิจกรรม</h1>
     <div class="card">
       <div class="card-body">
-        <p><strong>วันที่:</strong> <%= activity.date_act %></p>
+        <% function formatThaiDate(dateStr) {
+             const months = [
+               "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+               "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+             ];
+             const d = new Date(dateStr);
+             if (isNaN(d)) return dateStr;
+             return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+           }
+        %>
+        <!-- thaidate -->
+        <p><strong>วันที่:</strong> <%= formatThaiDate(activity.date_act) %></p>
+
         <p><strong>เวลา:</strong> <%= activity.act_time %></p>
         <p><strong>กิจกรรม:</strong> <%= activity.activity %></p>
         <p><strong>สถานที่:</strong> <%= activity.place %></p>

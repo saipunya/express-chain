@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 exports.getAllActivities = async () => {
-  const [rows] = await db.query('SELECT * FROM pt_activity ORDER BY date_act DESC');
+  const [rows] = await db.query('SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act DESC');
   return rows;
 };
 
@@ -21,12 +21,12 @@ exports.createActivity = async (data) => {
 };
 
 exports.updateActivity = async (id, data) => {
-  const { date_act, act_time, activity, place, co_person, comment, saveby, savedate } = data;
+  const {  act_time, activity, place, co_person, comment} = data;
   const [result] = await db.query(
     `UPDATE pt_activity 
-     SET date_act = ?, act_time = ?, activity = ?, place = ?, co_person = ?, comment = ?, saveby = ?, savedate = ?
+     SET  act_time = ?, activity = ?, place = ?, co_person = ?, comment = ?
      WHERE act_id = ?`,
-    [date_act, act_time, activity, place, co_person, comment, saveby, savedate, id]
+    [ act_time, activity, place, co_person, comment, id]
   );
   return result.affectedRows;
 };

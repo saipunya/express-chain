@@ -13,23 +13,30 @@
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
         <tr>
-          <th>#</th>
           <th>วันที่</th>
-          <th>เวลา</th>
           <th>กิจกรรม</th>
           <th>สถานที่</th>
           <th>จัดการ</th>
         </tr>
       </thead>
       <tbody>
+        <% function formatThaiDate(dateStr) {
+             const months = [
+               "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+               "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+             ];
+             const d = new Date(dateStr);
+             if (isNaN(d)) return dateStr;
+             return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+           }
+        %>
         <% activities.forEach(activity => { %>
           <tr>
-            <td><%= activity.act_id %></td>
-            <td><%= activity.date_act %></td>
-            <td><%= activity.act_time %></td>
+            <!-- thaidate -->
+            <td><%= formatThaiDate(activity.date_act) %> <span class="text-danger">[<%= activity.act_time + ' น.'  %>]</span></td>
             <td><%= activity.activity %></td>
             <td><%= activity.place %></td>
-            <td>
+            <td class="text-nowrap">
               <a href="/activities/view/<%= activity.act_id %>" class="btn btn-info btn-sm">ดู</a>
               <a href="/activities/edit/<%= activity.act_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
               <a href="/activities/delete/<%= activity.act_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ยืนยันการลบ?')">ลบ</a>

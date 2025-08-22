@@ -268,35 +268,52 @@
       </div>
     </div>
 
-    <!-- Last 5 Gitgum events -->
-     <% if(!user && user.mClass==='kjs' ){ %>
+    <!-- Last 10 Activities -->
     <div class="row mt-4">
       <div class="col-12">
         <div class="card border-0 shadow-sm">
           <div class="card-header bg-white border-0">
-            <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i> กิจกรรมล่าสุด (5 รายการ)</h5>
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด (10 รายการ)</h5>
           </div>
           <div class="card-body">
             <ul class="list-group list-group-flush">
-              <% (lastGitgums || []).forEach((g) => { %>
+              <% (activity || []).forEach((act, idx) => { %>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <span>
-                    <strong><%= new Date(g.git_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></strong>
-                    <span class="text-muted ms-2"><i class="bi bi-clock"></i> <%= g.git_time + ' น.' %></span>
-                    — <%= g.git_act %> @ <%= g.git_place %>
+                    <strong>
+                      <%
+                        let thaiDate = '-';
+                        if (act.date_act) {
+                          const dateObj = new Date(act.date_act);
+                          if (!isNaN(dateObj)) {
+                            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                            thaiDate = dateObj.toLocaleDateString('th-TH', options);
+                          }
+                        }
+                      %>
+                      <%= thaiDate %>
+                    </strong>
+                    <span class="text-muted ms-2"><i class="bi bi-clock"></i> <%= act.act_time || '-' %> น.</span>
+                    — <%= act.activity %>
+                    <% if (act.place) { %>
+                      @ <%= act.place %>
+                    <% } %>
                   </span>
-                  <a href="/gitgum/list" class="btn btn-sm btn-outline-primary">ทั้งหมด</a>
+                  <% if (user) { %>
+                    <a href="/activities/view/<%= act.act_id %>" class="btn btn-sm btn-success">ดูรายละเอียด</a>
+                  <% } else { %>
+                    <a href="/auth/login" class="btn btn-sm btn-outline-secondary">เข้าสู่ระบบ</a>
+                  <% } %>
                 </li>
               <% }) %>
-              <% if (!lastGitgums || lastGitgums.length === 0) { %>
-                <li class="list-group-item text-muted">ไม่มีรายการ</li>
+              <% if (!activity || activity.length === 0) { %>
+                <li class="list-group-item text-muted">ไม่มีรายการกิจกรรม</li>
               <% } %>
             </ul>
           </div>
         </div>
       </div>
     </div>
-    <% } %>
   </div>
 
   <!-- Custom CSS -->

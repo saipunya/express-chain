@@ -15,6 +15,7 @@ const businessModel = require('../models/businessModel');
 const Project = require('../models/projectModel');
 const Rq2 = require('../models/rq2Model');
 const Command = require('../models/commandModel');
+const activityModel = require('../models/activityModel'); // เพิ่มบรรทัดนี้
 
 // controllers/homeController.js
 
@@ -41,7 +42,7 @@ const homeController = {
       const coopGroupChart = await coopModel.getByCoopGroup();
       const cGroupChart = await coopModel.getByGroup();
       
-      // ข้อมูล<lemma้ใช้ออนไลน์
+      // ข้อมูลการใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
       const onlineCount = await onlineModel.getOnlineCount();
       
@@ -50,6 +51,9 @@ const homeController = {
         farmer: coopStats.find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
         closing: closingCount
       };
+
+      // ดึงข้อมูล activity จาก model
+      const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
       
       res.render('home', { 
         finances, 
@@ -64,7 +68,8 @@ const homeController = {
         onlineUsers,
         onlineCount,
         coopGroupChart,
-        cGroupChart
+        cGroupChart,
+        activity // ส่งไปที่ view
       });
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -134,6 +139,19 @@ exports.downloadById = async (req, res) => {
     res.status(500).send('ข้อพลาดในการแสดงไฟล์');
   }
 };
+
+exports.home = async (req, res) => {
+  try {
+    const activity = await getActivity(); // ดึงข้อมูล activity จาก model หรือ service
+    res.render('home', {
+      activity, // เพิ่มบรรทัดนี้
+    });
+  } catch (err) {
+    console.error('Error fetching home data:', err);
+    res.status(500).send('Server Error');
+  }
+};
+
 exports.loadFinance = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -156,8 +174,6 @@ exports.loadFinance = async (req, res) => {
     res.status(500).send('ข้อพลาดในการโหลดข้อมูล');
   }
 };
-
-
 
 exports.showDashboard = async (req, res) => {
   try {

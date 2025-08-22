@@ -35,3 +35,10 @@ exports.deleteActivity = async (id) => {
   const [result] = await db.query('DELETE FROM pt_activity WHERE act_id = ?', [id]);
   return result.affectedRows;
 };
+
+exports.getLastActivities = async (limit = 10) => {
+  const [rows] = await db.query(
+    'SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act DESC LIMIT ?', [limit]
+  );
+  return rows;
+};

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แก้ไขกิจกรรม</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="mb-4">แก้ไขกิจกรรม</h1>
+    <form action="/activities/edit/<%= activity.act_id %>" method="POST">
+      <div class="mb-3">
+        <label class="form-label">วันที่:</label>
+        <input type="date" name="date_act" class="form-control" value="<%= activity.date_act %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">เวลา:</label>
+        <input type="text" name="act_time" class="form-control" value="<%= activity.act_time %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">กิจกรรม:</label>
+        <textarea name="activity" class="form-control" required><%= activity.activity %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">สถานที่:</label>
+        <input type="text" name="place" class="form-control" value="<%= activity.place %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">ผู้รับผิดชอบ:</label>
+        <input type="text" name="co_person" class="form-control" value="<%= activity.co_person %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">ความคิดเห็น:</label>
+        <textarea name="comment" class="form-control"><%= activity.comment %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">บันทึกโดย:</label>
+        <input type="text" name="saveby" class="form-control" value="<%= activity.saveby %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">วันที่บันทึก:</label>
+        <input type="date" name="savedate" class="form-control" value="<%= activity.savedate %>" required>
+      </div>
+      <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+      <a href="/activities" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

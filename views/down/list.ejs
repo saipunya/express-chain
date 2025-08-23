@@ -1,0 +1,115 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-download me-2"></i> รายการดาวน์โหลด</h2>
+    <% if(user && user.mClass === 'admin') { %>
+      <a href="/down/create" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> เพิ่มข้อมูล
+      </a>
+    <% } %>
+  </div>
+  <form class="row mb-3">
+    <div class="col-md-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาเรื่อง...">
+    </div>
+  </form>
+  <div class="table-responsive">
+    <table class="table table-hover table-bordered align-middle">
+      <thead class="table-success">
+        <tr>
+          <th>#</th>
+          <th>เรื่อง</th>
+     
+         
+        
+          <th>ไฟล์</th>
+          <th>ลิงก์</th>
+          <% if(user && user.mClass === 'admin') { %>
+          <th>จัดการ</th>
+          <% } %>
+        </tr>
+      </thead>
+      <tbody>
+        <% downs.forEach((d, idx) => { %>
+          <tr>
+            <td><%= idx + 1 %></td>
+            <td><%= d.down_subject %></td>
+           
+          
+           
+            <td class="text-nowrap">
+              <% if(user) { %>
+                <% if (d.down_file && d.down_file !== '-') { %>
+                  <a href="/down/download/<%= d.down_id %>" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                  </a>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              <% } else { %>
+                <!-- link login -->
+                <a href="/login" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-lock"></i> เข้าสู่ระบบ
+                </a>
+              <% } %>
+            </td>
+            <td class="text-center">
+              <% if (d.down_link && d.down_link !== '-') { %>
+                <a href="<%= d.down_link %>" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-link-45deg"></i> ลิงก์
+                </a>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            
+            <% if(user && user.mClass==='admin') { %>
+            <td>
+              <a href="/down/edit/<%= d.down_id %>" class="btn btn-sm btn-warning mb-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="/down/delete/<%= d.down_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
+                <button type="submit" class="btn btn-sm btn-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+            <% }%>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+  const keyword = this.value;
+  fetch(`/down/search?keyword=${encodeURIComponent(keyword)}`)
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector('table tbody');
+      tbody.innerHTML = '';
+      data.forEach((d, idx) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${d.down_subject}</td>
+            <td class="text-nowrap">
+              ${d.down_file && d.down_file !== '-' ? 
+                `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
+                  <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                </a>` : `<span class="text-muted">-</span>`}
+            </td>
+            <td class="text-center">
+              ${d.down_link && d.down_link !== '-' ?
+                `<a href="${d.down_link}" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-link-45deg"></i> ลิงก์
+                </a>` : `<span class="text-muted">-</span>`}
+            </td>
+          </tr>
+        `;
+      });
+    });
+});
+</script>

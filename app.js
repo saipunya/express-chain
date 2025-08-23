@@ -117,7 +117,9 @@ const uploadDirs = [
   'uploads/project',
   'uploads/rq2',
   'uploads/command',
-  'uploads/suggestion'
+  'uploads/suggestion',
+  'uploads/activity',
+  'uploads/down',
 ];
 
 uploadDirs.forEach(dir => {

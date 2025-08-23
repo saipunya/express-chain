@@ -523,14 +523,14 @@ new Chart(ctx2, {
   </div>
 </section>
 
-<section class="py-5 bg-light">
+
+<% if ((activity || []).length > 0) { %>
+<section class="py-2 bg-light">
   <div class="container-lg">
-    <h2 class="mb-5 text-center text-primary fw-bold">
+    <h2 class="mb-2 text-center text-primary fw-bold">
       <i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด
     </h2>
-
-    <% if ((activity || []).length > 0) { %>
-      <div class="row g-4">
+      <div class="row g-2">
         <% activity.forEach((act) => { %>
           <div class="col-12">
             <div class="card shadow-sm border-0 h-100 hover-shadow">
@@ -587,15 +587,9 @@ new Chart(ctx2, {
           </div>
         <% }) %>
       </div>
-    <% } else { %>
-      <div class="text-center text-muted py-5">
-        <i class="bi bi-emoji-frown fa-3x mb-3"></i>
-        <p class="fs-5">ไม่มีข้อมูลกิจกรรมล่าสุด</p>
-      </div>
-    <% } %>
   </div>
 </section>
-
+<% } %>
 <style>
   .hover-shadow:hover {
     box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;

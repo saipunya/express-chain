@@ -110,75 +110,65 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
-// กราฟแยกตาม coop_group
-const coopGroupData = <%- JSON.stringify(coopGroupChart) %>;
-const ctx1 = document.getElementById('coopGroupChart').getContext('2d');
-new Chart(ctx1, {
-  type: 'pie',
-  data: {
-    labels: coopGroupData.map(item => item.label),
-    datasets: [{
-      data: coopGroupData.map(item => item.count),
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom'
-      },
-      datalabels: {
-        display: true,
-        color: 'white',
-        font: {
-          weight: 'bold',
-          size: 12
-        },
-        formatter: function(value, context) {
-          const label = context.chart.data.labels[context.dataIndex];
-          return label + '\n' + value + ' แห่ง';
+  // กราฟแยกตาม coop_group
+  const coopGroupData = <%- JSON.stringify(coopGroupChart || []) %>;
+  const ctx1 = document.getElementById('coopGroupChart').getContext('2d');
+  new Chart(ctx1, {
+    type: 'pie',
+    data: {
+      labels: coopGroupData.map(item => item.label),
+      datasets: [{
+        data: coopGroupData.map(item => item.count),
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          display: true,
+          color: 'white',
+          font: { weight: 'bold', size: 12 },
+          formatter: function(value, context) {
+            const label = context.chart.data.labels[context.dataIndex];
+            return label + '\n' + value + ' แห่ง';
+          }
         }
       }
-    }
-  },
-  plugins: [ChartDataLabels]
-});
+    },
+    plugins: [ChartDataLabels]
+  });
 
-// กราฟแยกตาม c_group
-const cGroupData = <%- JSON.stringify(cGroupChart) %>;
-const ctx2 = document.getElementById('cGroupChart').getContext('2d');
-new Chart(ctx2, {
-  type: 'doughnut',
-  data: {
-    labels: cGroupData.map(item => item.label),
-    datasets: [{
-      data: cGroupData.map(item => item.count),
-      backgroundColor: ['#FF9F40', '#FF6384', '#4BC0C0', '#9966FF', '#36A2EB']
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom'
-      },
-      datalabels: {
-        display: true,
-        color: 'white',
-        font: {
-          weight: 'bold',
-          size: 12
-        },
-        formatter: function(value, context) {
-          const label = context.chart.data.labels[context.dataIndex];
-          return label + '\n' + value + ' แห่ง';
+  // กราฟแยกตาม c_group
+  const cGroupData = <%- JSON.stringify(cGroupChart || []) %>;
+  const ctx2 = document.getElementById('cGroupChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: cGroupData.map(item => item.label),
+      datasets: [{
+        data: cGroupData.map(item => item.count),
+        backgroundColor: ['#FF9F40', '#FF6384', '#4BC0C0', '#9966FF', '#36A2EB']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          display: true,
+          color: 'white',
+          font: { weight: 'bold', size: 12 },
+          formatter: function(value, context) {
+            const label = context.chart.data.labels[context.dataIndex];
+            return label + '\n' + value + ' แห่ง';
+          }
         }
       }
-    }
-  },
-  plugins: [ChartDataLabels]
-});
+    },
+    plugins: [ChartDataLabels]
+  });
 </script>
 
 <section class="py-2 bg-white">

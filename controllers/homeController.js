@@ -67,9 +67,9 @@ const homeController = {
         stats,
         onlineUsers,
         onlineCount,
-        coopGroupChart,
-        cGroupChart,
-        activity // ส่งไปที่ view
+        coopGroupChart, // ✅ ส่งไปที่ view
+        cGroupChart,    // ✅ ส่งไปที่ view
+        activity
       });
     } catch (error) {
       console.error('Error fetching data:', error);

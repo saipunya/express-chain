@@ -99,7 +99,7 @@ exports.download = async (req, res) => {
       page.drawText(watermarkText, {
         x: width / 2 - 100,
         y: height / 2,
-        size: 40,
+        size: 25,
         font: customFont,
         color: rgb(0.92, 0.61, 0.61), // ✅ ใช้ค่าสีระหว่าง 0-1
         opacity: 0.5,

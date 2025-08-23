@@ -4,16 +4,15 @@
   <form action="/rq2/edit/<%= item.rq_id %>" method="POST" enctype="multipart/form-data" class="row g-3">
     <div class="col-md-4">
       <label class="form-label">Code</label>
-      <input type="text" name="rq_code" class="form-control" value="<%= item.rq_code %>" required readonly>
+      <input type="text" name="rq_code" class="form-control" value="<%= item.rq_code %>" required disabled>
     </div>
     <div class="col-md-8">
       <label class="form-label">Name (สหกรณ์)</label>
-      <select name="rq_name" class="form-select" required>
-        <% (coops || []).forEach(c => { %>
-          <option value="<%= c.c_code %>" <%= c.c_code === item.rq_code ? 'selected' : '' %>><%= c.c_name %></option>
-        <% }) %>
-      </select>
-      <small class="text-muted">label = c_name, value = c_code</small>
+      <input type="text" name="" id="" value="<%= item.rq_name %>" class="form-control" disabled>
+      <!-- <input type="text" name="rq_name" class="form-control" value="<%= item.rq_name %>" required> -->
+      <!-- <select name="rq_name" class="form-select" required> --- IGNORE --->
+      
+      
     </div>
     <div class="col-md-3">
       <label class="form-label">Year</label>

@@ -23,10 +23,10 @@ const Rq2 = {
   },
 
   update: async (id, data) => {
-    const { rq_code, rq_name, rq_year, rq_file } = data;
+    const { rq_year, rq_file } = data;
     await db.query(
-      'UPDATE tbl_rq2 SET rq_code=?, rq_name=?, rq_year=?, rq_file=? WHERE rq_id=?',
-      [rq_code, rq_name, rq_year, rq_file, id]
+      'UPDATE tbl_rq2 SET  rq_year=?, rq_file=? WHERE rq_id=?',
+      [rq_year, rq_file, id]
     );
   },
 

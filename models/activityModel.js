@@ -38,7 +38,7 @@ exports.deleteActivity = async (id) => {
 
 exports.getLastActivities = async (limit = 10) => {
   const [rows] = await db.query(
-    'SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act DESC LIMIT ?', [limit]
+    'SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act ASC LIMIT ?', [limit]
   );
   return rows;
 };

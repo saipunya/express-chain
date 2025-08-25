@@ -16,6 +16,7 @@ const Project = require('../models/projectModel');
 const Rq2 = require('../models/rq2Model');
 const Command = require('../models/commandModel');
 const activityModel = require('../models/activityModel'); // เพิ่มบรรทัดนี้
+const articleModel = require('../models/articleModel'); // เพิ่มบรรทัดนี้
 
 // controllers/homeController.js
 
@@ -54,7 +55,7 @@ const homeController = {
 
       // ดึงข้อมูล activity จาก model
       const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
-      
+      const lastArticles = await articleModel.getLast(2);
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -69,7 +70,8 @@ const homeController = {
         onlineCount,
         coopGroupChart, // ✅ ส่งไปที่ view
         cGroupChart,    // ✅ ส่งไปที่ view
-        activity
+        activity,
+        lastArticles  // ✅ ส่งไปที่ view
       });
     } catch (error) {
       console.error('Error fetching data:', error);

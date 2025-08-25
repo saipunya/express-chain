@@ -1,0 +1,37 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width:700px;">
+    <div class="card-body">
+      <h3 class="mb-4"><i class="bi bi-file-earmark-plus me-2"></i> เพิ่มบทความใหม่</h3>
+      <form action="/article/create" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="ar_subject" class="form-label">หัวข้อบทความ <span class="text-danger">*</span></label>
+          <input type="text" name="ar_subject" id="ar_subject" class="form-control" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label for="ar_detail" class="form-label">รายละเอียด <span class="text-danger">*</span></label>
+          <textarea name="ar_detail" id="ar_detail" rows="5" class="form-control" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="ar_keyword" class="form-label">คีย์เวิร์ด</label>
+          <input type="text" name="ar_keyword" id="ar_keyword" class="form-control" placeholder="เช่น สหกรณ์, การเงิน">
+        </div>
+        <div class="mb-3">
+          <label for="ar_link" class="form-label">ลิงก์ (ถ้ามี)</label>
+          <input type="url" name="ar_link" id="ar_link" class="form-control" placeholder="https://example.com">
+        </div>
+        <div class="mb-3">
+          <label for="ar_img" class="form-label">อัปโหลดรูปภาพ <span class="text-muted">(เลือกได้หลายไฟล์)</span></label>
+          <input type="file" name="ar_img" id="ar_img" class="form-control" multiple accept="image/*">
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-save me-1"></i> บันทึกบทความ
+          </button>
+          <a href="/article" class="btn btn-secondary">กลับ</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

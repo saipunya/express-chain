@@ -512,11 +512,39 @@
     
   </div>
 </section>
-
+<section class="py-4 bg-white">
+  <div class="mb-4">
+    <h4 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i> บทความล่าสุด</h4>
+    <div class="row">
+      <% (lastArticles || []).forEach(article => { %>
+        <div class="col-md-3 mb-3">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">
+                <a href="/article/view/<%= article.ar_id %>"><%= article.ar_subject %></a>
+              </h5>
+              <p class="card-text text-truncate"><%= article.ar_detail.substring(0, 80) %>...</p>
+              <div class="mb-2 text-center">
+                <% try { 
+                  const imgs = JSON.parse(article.ar_img || '[]');
+                  if (imgs.length) { %>
+                    <img src="/uploads/article/<%= imgs[0] %>" alt="img" style="height:100px;" class="rounded border">
+                <% } } catch(e) {} %>
+              </div>
+              <div class="text-center mt-2">
+                <a href="/article/view/<%= article.ar_id %>" class="btn btn-primary">อ่านเพิ่มเติม</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
 
 <% if ((activity || []).length > 0) { %>
-<section class="py-2 bg-light">
-  <div class="container-lg">
+  <section class="py-4 bg-light">
+    <div class="container-lg">
     <h2 class="mb-2 text-center text-primary fw-bold">
       <i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด
     </h2>
@@ -586,7 +614,6 @@
 <section class="py-4 bg-light">
   <div class="container-lg">
     <div class="row">
-      <!-- ข้อมูลสหกรณ์ -->
       <div class="col-md-4">
         <div class="card shadow-sm border-0 h-100">
           <div class="card-body text-center">
@@ -653,6 +680,11 @@
     </div>
   </div>
 </section>
+
+
+ 
+
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script>

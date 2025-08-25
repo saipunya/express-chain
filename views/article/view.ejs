@@ -1,0 +1,89 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width:700px;">
+    <div class="card-body">
+      <h3 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i> <%= article.ar_subject %></h3>
+      <div class="mb-3">
+        <strong>รูปภาพ:</strong>
+        <div>
+          <% try { 
+            const imgs = JSON.parse(article.ar_img || '[]');
+            imgs.forEach((img, i) => { %>
+              <img src="/uploads/article/<%= img %>" alt="img" style="height:120px;cursor:pointer;" class="me-2 mb-2 rounded border preview-img" data-img="/uploads/article/<%= img %>">
+          <% }) } catch(e) { %>
+            <span class="text-muted">-</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="mb-3">
+        <strong>รายละเอียด:</strong>
+        <div class="border rounded p-2 bg-light"><%= article.ar_detail %></div>
+      </div>
+      <div class="mb-3">
+        <strong>ลิงก์:</strong>
+        <% if (article.ar_link && article.ar_link !== '-') { %>
+          <a href="<%= article.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info">
+            <i class="bi bi-link-45deg"></i> เปิดลิงก์
+          </a>
+        <% } else { %>
+          <span class="text-muted">-</span>
+        <% } %>
+      </div>
+   
+    
+      
+      <div class="mb-3">
+        <strong>วันที่บันทึก:</strong> <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
+      </div>
+      <div class="mb-3">
+        <strong>โดย:</strong> <%= article.ar_saveby %>
+      </div>
+      <div class="d-flex justify-content-end gap-2">
+        <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">
+          <i class="bi bi-pencil"></i> แก้ไข
+        </a>
+        <a href="/article" class="btn btn-secondary">กลับ</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal สำหรับแสดงรูปภาพ -->
+<div class="modal fade" id="imgModal" tabindex="-1" aria-labelledby="imgModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imgModalLabel">ดูรูปภาพ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImg" src="" alt="img" style="max-width:100%;max-height:70vh;" class="rounded border">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const articleModel = require('../models/articleModel');
+
+  exports.getLast = async (limit = 2) => {
+    const [rows] = await db.query('SELECT * FROM tbl_article ORDER BY ar_savedate DESC LIMIT ?', [limit]);
+    return rows;
+  };
+
+  const lastArticles = await articleModel.getLast(2); // ดึง 2 บทความล่าสุด
+
+  res.render('home', {
+    ...,
+    lastArticles, // ส่งไปที่ view
+  });
+
+  document.querySelectorAll('.preview-img').forEach(img => {
+    img.addEventListener('click', function() {
+      document.getElementById('modalImg').src = this.dataset.img;
+      var modal = new bootstrap.Modal(document.getElementById('imgModal'));
+      modal.show();
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

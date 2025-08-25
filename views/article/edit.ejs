@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width:700px;">
+    <div class="card-body">
+      <h3 class="mb-4"><i class="bi bi-pencil-square me-2"></i> แก้ไขบทความ</h3>
+      <form action="/article/edit/<%= article.ar_id %>" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="ar_subject" class="form-label">หัวข้อบทความ <span class="text-danger">*</span></label>
+          <input type="text" name="ar_subject" id="ar_subject" class="form-control" required value="<%= article.ar_subject %>">
+        </div>
+        <div class="mb-3">
+          <label for="ar_detail" class="form-label">รายละเอียด <span class="text-danger">*</span></label>
+          <textarea name="ar_detail" id="ar_detail" rows="5" class="form-control" required><%= article.ar_detail %></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="ar_keyword" class="form-label">คีย์เวิร์ด</label>
+          <input type="text" name="ar_keyword" id="ar_keyword" class="form-control" value="<%= article.ar_keyword %>">
+        </div>
+        <div class="mb-3">
+          <label for="ar_link" class="form-label">ลิงก์ (ถ้ามี)</label>
+          <input type="url" name="ar_link" id="ar_link" class="form-control" value="<%= article.ar_link %>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">รูปภาพเดิม</label>
+          <div>
+            <% try { 
+              const imgs = JSON.parse(article.ar_img || '[]');
+              imgs.forEach(img => { %>
+                <img src="/uploads/article/<%= img %>" alt="img" style="height:60px;" class="me-2 mb-2 rounded border">
+            <% }) } catch(e) { %>
+              <span class="text-muted">-</span>
+            <% } %>
+          </div>
+          <input type="hidden" name="old_img" value='<%= article.ar_img %>'>
+        </div>
+        <div class="mb-3">
+          <label for="ar_img" class="form-label">อัปโหลดรูปภาพใหม่ (เลือกได้หลายไฟล์)</label>
+          <input type="file" name="ar_img" id="ar_img" class="form-control" multiple accept="image/*">
+          <div class="form-text">หากไม่เลือก จะใช้รูปเดิม</div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-save me-1"></i> บันทึกการแก้ไข
+          </button>
+          <a href="/article/view/<%= article.ar_id %>" class="btn btn-secondary">กลับ</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

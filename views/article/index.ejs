@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="bi bi-file-earmark-text me-2"></i> บทความทั้งหมด</h2>
+    <a href="/article/create" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> เพิ่มบทความ
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-success">
+        <tr>
+          <th>#</th>
+          <th>หัวข้อ</th>
+          <th>รายละเอียด</th>
+          <th>คีย์เวิร์ด</th>
+          <th>รูปภาพ</th>
+          <th>วันที่</th>
+          <th>โดย</th>
+          <th>ลิงก์</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% articles.forEach((ar, idx) => { %>
+          <tr>
+            <td><%= idx + 1 %></td>
+            <td><a href="/article/view/<%= ar.ar_id %>"><%= ar.ar_subject %></a></td>
+            <td><%= ar.ar_detail.substring(0, 80) %>...</td>
+            <td><%= ar.ar_keyword %></td>
+            <td>
+              <% try { 
+                const imgs = JSON.parse(ar.ar_img || '[]');
+                imgs.forEach(img => { %>
+                  <img src="/uploads/article/<%= img %>" alt="img" style="height:40px;" class="me-1 mb-1 rounded border">
+              <% }) } catch(e) { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td><%= ar.ar_savedate %></td>
+            <td><%= ar.ar_saveby %></td>
+            <td>
+              <% if (ar.ar_link && ar.ar_link !== '-') { %>
+                <a href="<%= ar.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-link-45deg"></i> ลิงก์
+                </a>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td>
+              <a href="/article/view/<%= ar.ar_id %>" class="btn btn-sm btn-primary mb-1">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="/article/edit/<%= ar.ar_id %>" class="btn btn-sm btn-warning mb-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form action="/article/delete/<%= ar.ar_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบบทความนี้?');">
+                <button type="submit" class="btn btn-sm btn-danger">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>

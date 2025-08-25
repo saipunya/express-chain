@@ -104,7 +104,6 @@ exports.getByCode = async (code) => {
   return rows[0];
 };
 
-
 exports.getGroups = async () => {
   const [rows] = await pool.query('SELECT DISTINCT c_group FROM active_coop WHERE c_group IS NOT NULL AND c_group<>"" ORDER BY c_group ASC');
   return rows.map(r => r.c_group);
@@ -112,6 +111,13 @@ exports.getGroups = async () => {
 
 exports.getByGroup = async (group) => {
   const [rows] = await pool.query('SELECT c_code, c_name FROM active_coop WHERE c_group = ? ORDER BY c_name ASC', [group]);
+  return rows;
+};
+
+exports.getClosedCoops = async () => {
+  const [rows] = await pool.query(
+    "SELECT * FROM active_coop WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY coop_group DESC , c_name ASC"
+  );
   return rows;
 };
 

@@ -23,6 +23,8 @@ const articleModel = require('../models/articleModel'); // เพิ่มบร
 const allfiles2 = require('../models/allfilesModel');
 const Finance = require('../models/financeModel');
 
+const activeCoopModel = require('../models/activeCoopModel');
+
 const homeController = {
   index: async (req, res) => {
     try {
@@ -34,6 +36,7 @@ const homeController = {
       const lastProjects = await Project.getLast(10);
       const lastRq2 = await Rq2.getLast(10);
       const lastCommands = await Command.getLast(10);
+      const closedCoops = await activeCoopModel.getClosedCoops();
 
       // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
@@ -71,7 +74,8 @@ const homeController = {
         coopGroupChart, // ✅ ส่งไปที่ view
         cGroupChart,    // ✅ ส่งไปที่ view
         activity,
-        lastArticles  // ✅ ส่งไปที่ view
+        lastArticles,    // ✅ ส่งไปที่ view
+        closedCoops      // ✅ ส่ง closed coops to view
       });
     } catch (error) {
       console.error('Error fetching data:', error);

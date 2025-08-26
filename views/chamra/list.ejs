@@ -10,7 +10,7 @@
         <th>#</th>
         <th>รหัส</th>
         <th>ชื่อ</th>
-        <th>ตำแหน่ง</th>
+        <th>ผู้ชำระบัญชี</th>
         <th>วันที่กระบวนการ</th>
         <th>จัดการ</th>
       </tr>
@@ -21,7 +21,7 @@
           <td><%= index + 1 %></td>
           <td><%= c.c_code %></td>
           <td><%= c.c_name %></td>
-          <td><%= c.c_position %></td>
+          <td><%= c.de_person %></td>
           <td>
             <% if(c.pr_s1) { %>
               S1: <%= c.pr_s1 %><br>

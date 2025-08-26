@@ -78,3 +78,8 @@ exports.getByCode = (code) => {
   `;
   return db.query(sql, [code]);
 };
+exports.getAll = async () =>{
+ const [rows] = await db.query("SELECT * FROM chamra_detail LEFT JOIN active_coop ON chamra_detail.de_code = active_coop.c_code");
+ return rows;
+
+}

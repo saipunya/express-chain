@@ -22,23 +22,38 @@ const commandController = {
 
   createForm: async (req, res) => {
     const lastOrder = await Command.getLastOrder();
-    res.render('command/create', { lastOrder });
+    res.render('command/create', { lastOrder, error: null }); // Pass error as null initially
   },
 
   create: async (req, res) => {
     try {
       const com_filename = req.file ? req.file.filename : '';
+      const com_no = req.body.com_no?.trim();
+
+      if (!com_no) {
+        // Render the form again with an error message
+        const lastOrder = await Command.getLastOrder();
+        return res.status(400).render('command/create', {
+          lastOrder,
+          error: "The 'com_no' field is required and cannot be empty."
+        });
+      }
+
       const data = {
         ...req.body,
+        com_no, // Ensure com_no is included
         com_filename,
         com_saveby: req.session.user?.fullname || 'unknown',
         com_savedate: new Date()
       };
+
+      console.log('Creating command with data:', data); // Log the data being saved
+
       await Command.create(data);
       res.redirect('/command');
     } catch (e) {
-      console.error('Create command error:', e);
-      res.status(500).send('Error creating command');
+      console.error('Create command error:', e.message, e.stack); // Log detailed error information
+      res.status(500).send(`Error creating command: ${e.message}`);
     }
   },
 

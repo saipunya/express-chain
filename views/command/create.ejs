@@ -7,22 +7,26 @@
           <h4>การบันทึกข้อมูลคำสั่งสำนักงาน</h4>
         </div>
         <div class="card-body">
+          <% if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+          <% } %>
           <form action="/command/create" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-              <label for="cmd_no" class="form-label">เลขที่คำสั่ง</label>
-              <input type="text" class="form-control" id="cmd_no" name="cmd_no" value="" required>
+              <label for="com_no" class="form-label">เลขที่คำสั่ง</label>
+              <input type="text" class="form-control" id="com_no" name="com_no" value="" required>
+            </div>
+        
+            <div class="mb-3">
+              <label for="com_date" class="form-label">วันที่</label>
+              <input type="date" class="form-control" id="com_date" name="com_date" required>
             </div>
             <div class="mb-3">
-              <label for="cmd_date" class="form-label">วันที่</label>
-              <input type="date" class="form-control" id="cmd_date" name="cmd_date" required>
+              <label for="com_from" class="form-label">จาก</label>
+              <input type="text" class="form-control" id="com_from" name="com_from" required>
             </div>
             <div class="mb-3">
-              <label for="cmd_from" class="form-label">จาก</label>
-              <input type="text" class="form-control" id="cmd_from" name="cmd_from" required>
-            </div>
-            <div class="mb-3">
-              <label for="cmd_title" class="form-label">เรื่อง</label>
-              <textarea class="form-control" id="cmd_title" name="cmd_title" rows="3" required></textarea>
+              <label for="com_story" class="form-label">เรื่อง</label>
+              <textarea class="form-control" id="com_story" name="com_story" rows="3" required></textarea>
             </div>
             <div class="mb-3">
               <label for="file" class="form-label">ไฟล์</label>
@@ -43,7 +47,7 @@
 
 <script>
 // ตั้งค่า<lemma<lemmaเป็น<lemma
-document.getElementById('cmd_date').value = new Date().toISOString().split('T')[0];
+document.getElementById('com_date').value = new Date().toISOString().split('T')[0];
 </script>
 
 <%- include('../partials/footer') %>

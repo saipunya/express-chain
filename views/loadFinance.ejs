@@ -2,7 +2,6 @@
 
 <div class="container mt-4">
   <div class="mb-4 d-flex justify-content-between align-items-center">
-
     <h3><%= title %></h3>
     <% if(user && user.mClass=='kts'){ %>
     <a href="/finance/upload" class="btn btn-success mb-3">
@@ -11,41 +10,56 @@
     <% } %>
   </div>
 
+  <!-- ช่องค้นหา -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน">
+        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
+      </div>
+    </div>
+  </div>
 
-  <input type="text" id="searchInput" class="form-control mb-3" placeholder="ระบุชื่อที่ต้องการค้นหา">
+  <% 
+    // Group by c_name
+    const grouped = {};
+    fileAll.forEach(file => {
+      const name = file.c_name || 'ไม่ระบุชื่อสถาบัน';
+      if (!grouped[name]) grouped[name] = [];
+      grouped[name].push(file);
+    });
 
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>ชื่อไฟล์</th>
-        <th>ไฟล์</th>
-        <th>ดาวน์โหลด</th>
-      </tr>
-    </thead>
-    <tbody id="fileTable">
-      <% fileAll.forEach(file => { %>
-        <tr>
-          <td><%= file.c_name %></td>
-          <td><%= file.end_date + " " + file.end_year  %></td>
-          <td>
-            <% if(user){ %>
-            <a href="/finance/download/<%= file.id %>" target="_blank" class="btn btn-primary btn-sm">
-              ไฟล์
-            </a>
-            <% }else{ %>
-            <a href="/auth/login" class="btn btn-primary btn-sm">
-              ไฟล์
-            </a>
+    // Sort groups by max end_year DESC
+    const sortedGroups = Object.entries(grouped).sort((a, b) => {
+      const maxYearA = Math.max(...a[1].map(f => f.end_year));
+      const maxYearB = Math.max(...b[1].map(f => f.end_year));
+      return maxYearB - maxYearA;
+    });
+
+    sortedGroups.forEach(([cName, files]) => {
+  %>
+    <h5 class="mt-4 text-primary"><%= cName %></h5>
+    <ul class="list-group mb-3">
+      <% files
+        .sort((a, b) => b.end_year - a.end_year) // Sort by end_year DESC
+        .forEach(file => { 
+      %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span><%= file.end_date + " " + file.end_year %></span>
+          <div>
+            <% if(!user){ %>
+              <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
+            <% } else { %>
+              <a href="/finance/download/<%= file.id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
             <% } %>
-           
-          </td>
-        </tr>
+          </div>
+        </li>
       <% }) %>
-    </tbody>
-  </table>
+    </ul>
+  <% }) %>
 
   <!-- Pagination -->
-  <nav>
+  <nav class="mt-4">
     <ul class="pagination justify-content-center">
       <% for (let i = 1; i <= totalPages; i++) { %>
         <li class="page-item <%= currentPage === i ? 'active' : '' %>">
@@ -58,17 +72,34 @@
 
 <script>
   const searchInput = document.getElementById('searchInput');
-  const fileTable = document.getElementById('fileTable');
+  let searchTimeout;
 
-  searchInput.addEventListener('input', () => {
-    const keyword = searchInput.value.toLowerCase();
-    const rows = fileTable.querySelectorAll('tr');
+  searchInput.addEventListener('keyup', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const keyword = searchInput.value.toLowerCase();
+      document.querySelectorAll('h5').forEach(title => {
+        const group = title.nextElementSibling; // ul
+        const groupName = title.innerText.toLowerCase();
+        let hasMatch = groupName.includes(keyword);
 
-    rows.forEach(row => {
-      const fileName = row.children[0].innerText.toLowerCase();
-      row.style.display = fileName.includes(keyword) ? '' : 'none';
-    });
+        if (!hasMatch) {
+          const items = group.querySelectorAll('li');
+          items.forEach(li => {
+            if (li.innerText.toLowerCase().includes(keyword)) hasMatch = true;
+          });
+        }
+
+        title.style.display = hasMatch ? '' : 'none';
+        group.style.display = hasMatch ? '' : 'none';
+      });
+    }, 300);
   });
+
+  function clearSearch() {
+    searchInput.value = '';
+    document.querySelectorAll('h5, ul.list-group').forEach(el => el.style.display = '');
+  }
 </script>
 
 <%- include('partials/footer') %>

@@ -1,59 +1,82 @@
 <%- include('../partials/header') %>
 
 <div class="container my-5">
-  <!-- หัวข้อบทความ -->
-  <div class="text-center mb-4">
-    <h1 class="fw-bold display-5"><%= article.ar_subject %></h1>
+
+  <!-- หัวข้อข่าว -->
+  <div class="mb-3">
+    <h1 class="fw-bold display-5 mb-3"><%= article.ar_subject %></h1>
     <div class="text-muted small">
-      📅 <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %> | ✍️ <%= article.ar_saveby %>
+      <i class="bi bi-calendar-event"></i> <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
+      &nbsp; | &nbsp;
+      <i class="bi bi-person-circle"></i> <%= article.ar_saveby %>
     </div>
   </div>
 
-  <!-- Hero Image (ภาพหลัก) -->
+  <!-- Hero Image -->
   <% try {
     const imgs = JSON.parse(article.ar_img || '[]');
     if(imgs.length > 0) { %>
-      <div class="mb-4 text-center">
+      <figure class="mb-4 text-center">
         <img src="/uploads/article/<%= imgs[0] %>" 
-             class="img-fluid rounded shadow-sm" 
+             class="img-fluid rounded shadow-sm w-100" 
              alt="cover"
-             style="max-height:400px;object-fit:cover;width:100%;">
-      </div>
+             style="max-height:500px;object-fit:cover;">
+        <figcaption class="text-muted small mt-2">ภาพประกอบข่าว</figcaption>
+      </figure>
   <% } %> <% } catch(e) {} %>
 
-  <!-- รายละเอียด -->
+  <!-- เนื้อหา -->
   <article class="mb-5 fs-5 lh-lg">
     <%- article.ar_detail.replace(/\n/g, '<br>') %>
   </article>
 
-  <!-- แกลเลอรีรูปภาพ (ถ้ามีมากกว่า 1 รูป) -->
+  <!-- แกลเลอรีรูปภาพ -->
   <% try {
     const imgs = JSON.parse(article.ar_img || '[]');
     if(imgs.length > 1) { %>
     <div class="mb-5">
-      <h5 class="fw-bold mb-3">📷 แกลเลอรี</h5>
-      <div class="d-flex flex-wrap gap-2">
+      <h5 class="fw-bold border-bottom pb-2 mb-3">📸 ภาพเพิ่มเติม</h5>
+      <div class="row g-2">
         <% imgs.forEach((img, i) => { if(i > 0){ %>
-          <img src="/uploads/article/<%= img %>" 
-               class="rounded shadow-sm border preview-img"
-               style="width:160px;height:120px;object-fit:cover;cursor:pointer;"
-               data-img="/uploads/article/<%= img %>" 
-               data-index="<%= i %>">
+          <div class="col-6 col-md-3">
+            <img src="/uploads/article/<%= img %>" 
+                 class="img-fluid rounded shadow-sm preview-img"
+                 style="height:140px;object-fit:cover;cursor:pointer;"
+                 data-img="/uploads/article/<%= img %>" 
+                 data-index="<%= i %>">
+          </div>
         <% } }) %>
       </div>
     </div>
   <% } } catch(e) {} %>
 
-  <!-- ลิงก์ -->
+  <!-- ลิงก์ที่เกี่ยวข้อง -->
   <div class="mb-5">
-    <h5 class="fw-bold mb-2">🔗 ลิงก์ที่เกี่ยวข้อง</h5>
+    <h5 class="fw-bold border-bottom pb-2 mb-3">🔗 ลิงก์ที่เกี่ยวข้อง</h5>
     <% if (article.ar_link && article.ar_link !== '-') { %>
       <a href="<%= article.ar_link %>" target="_blank" class="btn btn-outline-primary">
         <i class="bi bi-link-45deg"></i> เปิดลิงก์
       </a>
     <% } else { %>
-      <span class="text-muted">ไม่มี</span>
+      <span class="text-muted">ไม่มีลิงก์เพิ่มเติม</span>
     <% } %>
+  </div>
+
+  <!-- ปุ่มแชร์ -->
+  <div class="mb-5">
+    <h6 class="fw-bold mb-3">แชร์ข่าวนี้</h6>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(req.protocol + '://' + req.get('host') + req.originalUrl) %>"
+       target="_blank" class="btn btn-sm btn-primary me-2">
+      <i class="bi bi-facebook"></i> Facebook
+    </a>
+    <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent(req.protocol + '://' + req.get('host') + req.originalUrl) %>&text=<%= encodeURIComponent(article.ar_subject) %>"
+       target="_blank" class="btn btn-sm btn-info text-white me-2">
+      <i class="bi bi-twitter-x"></i> Twitter
+    </a>
+    <a href="https://line.me/R/msg/text/?<%= encodeURIComponent(article.ar_subject + ' ' + req.protocol + '://' + req.get('host') + req.originalUrl) %>"
+       target="_blank" class="btn btn-sm btn-success">
+      <i class="bi bi-line"></i> LINE
+    </a>
   </div>
 
   <!-- ปุ่มจัดการ -->
@@ -67,7 +90,7 @@
   </div>
 </div>
 
-<!-- Modal สำหรับแสดงรูปภาพ -->
+<!-- Modal ดูภาพ -->
 <div class="modal fade" id="imgModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">

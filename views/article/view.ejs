@@ -62,24 +62,9 @@
     <% } %>
   </div>
 
-  <!-- ปุ่มแชร์ -->
-  <div class="mb-5">
-    <h6 class="fw-bold mb-3">แชร์ข่าวนี้</h6>
-    <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(req.protocol + '://' + req.get('host') + req.originalUrl) %>"
-       target="_blank" class="btn btn-sm btn-primary me-2">
-      <i class="bi bi-facebook"></i> Facebook
-    </a>
-    <a href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent(req.protocol + '://' + req.get('host') + req.originalUrl) %>&text=<%= encodeURIComponent(article.ar_subject) %>"
-       target="_blank" class="btn btn-sm btn-info text-white me-2">
-      <i class="bi bi-twitter-x"></i> Twitter
-    </a>
-    <a href="https://line.me/R/msg/text/?<%= encodeURIComponent(article.ar_subject + ' ' + req.protocol + '://' + req.get('host') + req.originalUrl) %>"
-       target="_blank" class="btn btn-sm btn-success">
-      <i class="bi bi-line"></i> LINE
-    </a>
-  </div>
 
-  <!-- ปุ่มจัดการ -->
+
+
   <div class="d-flex justify-content-end gap-2">
     <% if(user && user.mClass === 'admin'){ %>
       <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">

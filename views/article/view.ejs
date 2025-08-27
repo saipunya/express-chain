@@ -1,26 +1,47 @@
 <%- include('../partials/header') %>
 <div class="container py-4">
-  <div class="card shadow-sm border-0 mx-auto" style="max-width:700px;">
+  <div class="card shadow-lg border-0 mx-auto rounded-3">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <i class="bi bi-file-earmark-text me-2"></i>
+      <h5 class="mb-0"><%= article.ar_subject %></h5>
+    </div>
     <div class="card-body">
-      <h3 class="mb-3"><i class="bi bi-file-earmark-text me-2"></i> <%= article.ar_subject %></h3>
-      <div class="mb-3">
-        <strong>รูปภาพ:</strong>
+      
+      <!-- รูปภาพ -->
+      <div class="mb-4">
+        <h6 class="fw-bold mb-2">📷 รูปภาพ</h6>
         <div>
           <% try { 
             const imgs = JSON.parse(article.ar_img || '[]');
-            imgs.forEach((img, i) => { %>
-              <img src="/uploads/article/<%= img %>" alt="img" style="height:120px;cursor:pointer;" class="me-2 mb-2 rounded border preview-img" data-img="/uploads/article/<%= img %>">
-          <% }) } catch(e) { %>
+            if(imgs.length > 0) { 
+              imgs.forEach((img, i) => { %>
+                <img src="/uploads/article/<%= img %>" 
+                     alt="img" 
+                     class="me-2 mb-2 rounded shadow-sm border preview-img"
+                     style="height:180px;object-fit:cover;cursor:pointer;transition:transform .2s;" 
+                     data-img="/uploads/article/<%= img %>" 
+                     data-index="<%= i %>"
+                     onmouseover="this.style.transform='scale(1.05)'" 
+                     onmouseout="this.style.transform='scale(1)'">
+          <% }) } else { %>
+            <span class="text-muted">ไม่มีรูปภาพ</span>
+          <% } } catch(e) { %>
             <span class="text-muted">-</span>
           <% } %>
         </div>
       </div>
-      <div class="mb-3">
-        <strong>รายละเอียด:</strong>
-        <div class="border rounded p-2 bg-light"><%= article.ar_detail %></div>
+
+      <!-- รายละเอียด -->
+      <div class="mb-4">
+        <h6 class="fw-bold mb-2">📝 รายละเอียด</h6>
+        <div class="border rounded p-3 bg-light">
+          <%- article.ar_detail.replace(/\n/g, '<br>') %>
+        </div>
       </div>
-      <div class="mb-3">
-        <strong>ลิงก์:</strong>
+
+      <!-- ลิงก์ -->
+      <div class="mb-4">
+        <h6 class="fw-bold mb-2">🔗 ลิงก์</h6>
         <% if (article.ar_link && article.ar_link !== '-') { %>
           <a href="<%= article.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info">
             <i class="bi bi-link-45deg"></i> เปิดลิงก์
@@ -29,19 +50,27 @@
           <span class="text-muted">-</span>
         <% } %>
       </div>
-   
-    
-      
-      <div class="mb-3">
-        <strong>วันที่บันทึก:</strong> <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
+
+      <!-- Metadata -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <span class="badge bg-secondary">
+            📅 วันที่บันทึก: <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
+          </span>
+        </div>
+        <div class="col-md-6 text-md-end mt-2 mt-md-0">
+          <span class="badge bg-success">✍️ โดย: <%= article.ar_saveby %></span>
+        </div>
       </div>
-      <div class="mb-3">
-        <strong>โดย:</strong> <%= article.ar_saveby %>
-      </div>
+
+     
+
       <div class="d-flex justify-content-end gap-2">
+        <% if(user && user.mClass === 'admin'){ %>
         <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">
           <i class="bi bi-pencil"></i> แก้ไข
         </a>
+        <% } %>
         <a href="/article" class="btn btn-secondary">กลับ</a>
       </div>
     </div>
@@ -50,40 +79,53 @@
 
 <!-- Modal สำหรับแสดงรูปภาพ -->
 <div class="modal fade" id="imgModal" tabindex="-1" aria-labelledby="imgModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">
       <div class="modal-header">
         <h5 class="modal-title" id="imgModalLabel">ดูรูปภาพ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
       </div>
       <div class="modal-body text-center">
-        <img id="modalImg" src="" alt="img" style="max-width:100%;max-height:70vh;" class="rounded border">
+        <button id="prevImg" class="btn btn-outline-secondary me-2">ก่อนหน้า</button>
+        <img id="modalImg" src="" alt="img" class="rounded border shadow-sm" style="max-width:100%;max-height:70vh;object-fit:contain;">
+        <button id="nextImg" class="btn btn-outline-secondary ms-2">ถัดไป</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  const articleModel = require('../models/articleModel');
+  const images = Array.from(document.querySelectorAll('.preview-img'));
+  let currentIndex = 0;
 
-  exports.getLast = async (limit = 2) => {
-    const [rows] = await db.query('SELECT * FROM tbl_article ORDER BY ar_savedate DESC LIMIT ?', [limit]);
-    return rows;
-  };
+  function showImage(index) {
+    const img = images[index];
+    if (img) {
+      document.getElementById('modalImg').src = img.dataset.img;
+      currentIndex = index;
+    }
+  }
 
-  const lastArticles = await articleModel.getLast(2); // ดึง 2 บทความล่าสุด
-
-  res.render('home', {
-    ...,
-    lastArticles, // ส่งไปที่ view
+  images.forEach((img, index) => {
+    img.addEventListener('click', function() {
+      showImage(index);
+      new bootstrap.Modal(document.getElementById('imgModal')).show();
+    });
   });
 
-  document.querySelectorAll('.preview-img').forEach(img => {
-    img.addEventListener('click', function() {
-      document.getElementById('modalImg').src = this.dataset.img;
-      var modal = new bootstrap.Modal(document.getElementById('imgModal'));
-      modal.show();
-    });
+  document.getElementById('prevImg').addEventListener('click', () => {
+    if (currentIndex > 0) showImage(currentIndex - 1);
+  });
+
+  document.getElementById('nextImg').addEventListener('click', () => {
+    if (currentIndex < images.length - 1) showImage(currentIndex + 1);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (document.getElementById('imgModal').classList.contains('show')) {
+      if (event.key === 'ArrowLeft' && currentIndex > 0) showImage(currentIndex - 1);
+      else if (event.key === 'ArrowRight' && currentIndex < images.length - 1) showImage(currentIndex + 1);
+    }
   });
 </script>
 <%- include('../partials/footer') %>

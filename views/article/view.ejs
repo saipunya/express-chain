@@ -1,94 +1,84 @@
 <%- include('../partials/header') %>
-<div class="container py-4">
-  <div class="card shadow-lg border-0 mx-auto rounded-3">
-    <div class="card-header bg-primary text-white d-flex align-items-center">
-      <i class="bi bi-file-earmark-text me-2"></i>
-      <h5 class="mb-0"><%= article.ar_subject %></h5>
+
+<div class="container my-5">
+  <!-- หัวข้อบทความ -->
+  <div class="text-center mb-4">
+    <h1 class="fw-bold display-5"><%= article.ar_subject %></h1>
+    <div class="text-muted small">
+      📅 <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %> | ✍️ <%= article.ar_saveby %>
     </div>
-    <div class="card-body">
-      
-      <!-- รูปภาพ -->
-      <div class="mb-4">
-        <h6 class="fw-bold mb-2">📷 รูปภาพ</h6>
-        <div>
-          <% try { 
-            const imgs = JSON.parse(article.ar_img || '[]');
-            if(imgs.length > 0) { 
-              imgs.forEach((img, i) => { %>
-                <img src="/uploads/article/<%= img %>" 
-                     alt="img" 
-                     class="me-2 mb-2 rounded shadow-sm border preview-img"
-                     style="height:180px;object-fit:cover;cursor:pointer;transition:transform .2s;" 
-                     data-img="/uploads/article/<%= img %>" 
-                     data-index="<%= i %>"
-                     onmouseover="this.style.transform='scale(1.05)'" 
-                     onmouseout="this.style.transform='scale(1)'">
-          <% }) } else { %>
-            <span class="text-muted">ไม่มีรูปภาพ</span>
-          <% } } catch(e) { %>
-            <span class="text-muted">-</span>
-          <% } %>
-        </div>
+  </div>
+
+  <!-- Hero Image (ภาพหลัก) -->
+  <% try {
+    const imgs = JSON.parse(article.ar_img || '[]');
+    if(imgs.length > 0) { %>
+      <div class="mb-4 text-center">
+        <img src="/uploads/article/<%= imgs[0] %>" 
+             class="img-fluid rounded shadow-sm" 
+             alt="cover"
+             style="max-height:400px;object-fit:cover;width:100%;">
       </div>
+  <% } %> <% } catch(e) {} %>
 
-      <!-- รายละเอียด -->
-      <div class="mb-4">
-        <h6 class="fw-bold mb-2">📝 รายละเอียด</h6>
-        <div class="border rounded p-3 bg-light">
-          <%- article.ar_detail.replace(/\n/g, '<br>') %>
-        </div>
-      </div>
+  <!-- รายละเอียด -->
+  <article class="mb-5 fs-5 lh-lg">
+    <%- article.ar_detail.replace(/\n/g, '<br>') %>
+  </article>
 
-      <!-- ลิงก์ -->
-      <div class="mb-4">
-        <h6 class="fw-bold mb-2">🔗 ลิงก์</h6>
-        <% if (article.ar_link && article.ar_link !== '-') { %>
-          <a href="<%= article.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info">
-            <i class="bi bi-link-45deg"></i> เปิดลิงก์
-          </a>
-        <% } else { %>
-          <span class="text-muted">-</span>
-        <% } %>
-      </div>
-
-      <!-- Metadata -->
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <span class="badge bg-secondary">
-            📅 วันที่บันทึก: <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
-          </span>
-        </div>
-        <div class="col-md-6 text-md-end mt-2 mt-md-0">
-          <span class="badge bg-success">✍️ โดย: <%= article.ar_saveby %></span>
-        </div>
-      </div>
-
-     
-
-      <div class="d-flex justify-content-end gap-2">
-        <% if(user && user.mClass === 'admin'){ %>
-        <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">
-          <i class="bi bi-pencil"></i> แก้ไข
-        </a>
-        <% } %>
-        <a href="/article" class="btn btn-secondary">กลับ</a>
+  <!-- แกลเลอรีรูปภาพ (ถ้ามีมากกว่า 1 รูป) -->
+  <% try {
+    const imgs = JSON.parse(article.ar_img || '[]');
+    if(imgs.length > 1) { %>
+    <div class="mb-5">
+      <h5 class="fw-bold mb-3">📷 แกลเลอรี</h5>
+      <div class="d-flex flex-wrap gap-2">
+        <% imgs.forEach((img, i) => { if(i > 0){ %>
+          <img src="/uploads/article/<%= img %>" 
+               class="rounded shadow-sm border preview-img"
+               style="width:160px;height:120px;object-fit:cover;cursor:pointer;"
+               data-img="/uploads/article/<%= img %>" 
+               data-index="<%= i %>">
+        <% } }) %>
       </div>
     </div>
+  <% } } catch(e) {} %>
+
+  <!-- ลิงก์ -->
+  <div class="mb-5">
+    <h5 class="fw-bold mb-2">🔗 ลิงก์ที่เกี่ยวข้อง</h5>
+    <% if (article.ar_link && article.ar_link !== '-') { %>
+      <a href="<%= article.ar_link %>" target="_blank" class="btn btn-outline-primary">
+        <i class="bi bi-link-45deg"></i> เปิดลิงก์
+      </a>
+    <% } else { %>
+      <span class="text-muted">ไม่มี</span>
+    <% } %>
+  </div>
+
+  <!-- ปุ่มจัดการ -->
+  <div class="d-flex justify-content-end gap-2">
+    <% if(user && user.mClass === 'admin'){ %>
+      <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">
+        <i class="bi bi-pencil"></i> แก้ไข
+      </a>
+    <% } %>
+    <a href="/article" class="btn btn-secondary">กลับ</a>
   </div>
 </div>
 
 <!-- Modal สำหรับแสดงรูปภาพ -->
-<div class="modal fade" id="imgModal" tabindex="-1" aria-labelledby="imgModalLabel" aria-hidden="true">
+<div class="modal fade" id="imgModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">
-      <div class="modal-header">
-        <h5 class="modal-title" id="imgModalLabel">ดูรูปภาพ</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      <div class="modal-body text-center p-0">
+        <img id="modalImg" src="" alt="img" 
+             class="w-100 rounded-top" 
+             style="max-height:75vh;object-fit:contain;">
       </div>
-      <div class="modal-body text-center">
-        <button id="prevImg" class="btn btn-outline-secondary me-2">ก่อนหน้า</button>
-        <img id="modalImg" src="" alt="img" class="rounded border shadow-sm" style="max-width:100%;max-height:70vh;object-fit:contain;">
-        <button id="nextImg" class="btn btn-outline-secondary ms-2">ถัดไป</button>
+      <div class="modal-footer d-flex justify-content-between">
+        <button id="prevImg" class="btn btn-outline-secondary">ก่อนหน้า</button>
+        <button id="nextImg" class="btn btn-outline-secondary">ถัดไป</button>
       </div>
     </div>
   </div>
@@ -116,7 +106,6 @@
   document.getElementById('prevImg').addEventListener('click', () => {
     if (currentIndex > 0) showImage(currentIndex - 1);
   });
-
   document.getElementById('nextImg').addEventListener('click', () => {
     if (currentIndex < images.length - 1) showImage(currentIndex + 1);
   });
@@ -128,4 +117,5 @@
     }
   });
 </script>
+
 <%- include('../partials/footer') %>

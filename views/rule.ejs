@@ -11,14 +11,13 @@
   </div>
 
   <!-- ช่องค้นหา -->
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <div class="input-group">
-        <input type="text" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน" value="<%= search %>">
-        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
-      </div>
+  <form method="get" action="/rule" class="mb-3">
+    <div class="input-group">
+      <input type="text" name="search" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน" value="<%= search || '' %>">
+      <button class="btn btn-outline-secondary" type="submit">ค้นหา</button>
+      <button class="btn btn-outline-secondary" type="button" onclick="window.location='/rule'">ล้าง</button>
     </div>
-  </div>
+  </form>
 
   <% 
     // Group by c_name
@@ -77,43 +76,13 @@
     <ul class="pagination justify-content-center">
       <% for (let i = 1; i <= totalPages; i++) { %>
         <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-          <a class="page-link" href="/rule?page=<%= i %><%= search ? '&search=' + search : '' %>"><%= i %></a>
+          <a class="page-link" href="/rule?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
         </li>
       <% } %>
     </ul>
   </nav>
 </div>
 
-<script>
-  const searchInput = document.getElementById('searchInput');
-  let searchTimeout;
 
-  searchInput.addEventListener('keyup', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const keyword = searchInput.value.toLowerCase();
-      document.querySelectorAll('h5').forEach(title => {
-        const group = title.nextElementSibling; // ul
-        const groupName = title.innerText.toLowerCase();
-        let hasMatch = groupName.includes(keyword);
-
-        if (!hasMatch) {
-          const items = group.querySelectorAll('li');
-          items.forEach(li => {
-            if (li.innerText.toLowerCase().includes(keyword)) hasMatch = true;
-          });
-        }
-
-        title.style.display = hasMatch ? '' : 'none';
-        group.style.display = hasMatch ? '' : 'none';
-      });
-    }, 300);
-  });
-
-  function clearSearch() {
-    searchInput.value = '';
-    document.querySelectorAll('h5, ul.list-group').forEach(el => el.style.display = '');
-  }
-</script>
 
 <%- include('partials/footer') %>

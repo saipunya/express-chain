@@ -181,3 +181,36 @@ exports.getCoopsByGroup = async (req, res) => {
     res.status(500).json({ error: 'Error fetching coops by group' });
   }
 };
+
+const getAllRules = async () => {
+  // ดึงข้อมูลทั้งหมดจากฐานข้อมูล
+  const [rows] = await db.query('SELECT * FROM rule_table');
+  return rows;
+};
+
+exports.index = async (req, res) => {
+  const search = (req.query.search || '').trim();
+  let alls = await getAllRules();
+
+  if (search) {
+    const keyword = search.toLowerCase();
+    alls = alls.filter(item =>
+      (item.c_name || '').toLowerCase().includes(keyword) ||
+      (item.rule_year + '').includes(keyword) ||
+      (item.er_no + '').includes(keyword)
+    );
+  }
+
+  // Pagination
+  const pageSize = 20;
+  const totalPages = Math.ceil(alls.length / pageSize);
+  const currentPage = parseInt(req.query.page || 1, 10);
+  const pagedAlls = alls.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  res.render('rule', {
+    alls: pagedAlls,
+    totalPages,
+    currentPage,
+    search
+  });
+};

@@ -63,11 +63,14 @@
         </div>
       </div>
 
-      <!-- ปุ่ม -->
+     
+
       <div class="d-flex justify-content-end gap-2">
+        <% if(user && user.mClass === 'admin'){ %>
         <a href="/article/edit/<%= article.ar_id %>" class="btn btn-warning">
           <i class="bi bi-pencil"></i> แก้ไข
         </a>
+        <% } %>
         <a href="/article" class="btn btn-secondary">กลับ</a>
       </div>
     </div>

@@ -101,11 +101,11 @@
                 <%= stats.closing + ' แห่ง' %>
               </p>
               <span class="d-block">
-                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" data-bs-placement="top"
+                <a href="/closecoop"><button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" data-bs-placement="top"
                   title="สหกรณ์/กลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี">
                   <i class="bi bi-info-circle" style="cursor: pointer;"></i>
                   รายละเอียด
-                </button>
+                </button></a>
               </span>
 
             </div>
@@ -141,38 +141,46 @@
     </div>
   </section>
 
+  <% function displayGroupName(code) {
+    switch(code) {
+      case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+      case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+      case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+      case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+      case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+      default: return code;
+    }
+  } %>
 
   <section class="py-2 bg-white">
     <div class="container-lg">
       <div class="card mb-4">
-        <div class="card-header bg-danger text-white">
-          <i class="bi bi-exclamation-circle me-2"></i> สหกรณ์/กลุ่มเกษตรกรที่สถานะ "เลิก" หรือ "ชำระบัญชี"
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่ม
         </div>
         <div class="card-body">
-          <% if (closedCoops && closedCoops.length> 0) { %>
-            <div class="row">
-              <% closedCoops.forEach((coop, idx)=> { %>
-                <div class="col-md-6 mb-2">
-                  <div class="list-group">
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                      <span>
-                        <%= coop.c_name %>
-                      </span>
-                      <span class="badge bg-danger">
-                        <%= coop.c_status %>
-                      </span>
+          <div class="row">
+            <% coopGroupStats.forEach(group => { %>
+              <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                  <div class="card-body text-center">
+                    <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
+                    <div class="mb-2">
+                      <span class="badge bg-success fs-6">สหกรณ์: <%= group.coop %></span>
+                    </div>
+                    <div>
+                      <span class="badge bg-info fs-6">กลุ่มเกษตรกร: <%= group.farmer %></span>
                     </div>
                   </div>
                 </div>
-                <% }) %>
-            </div>
-            <% } else { %>
-              <div class="text-muted">ไม่มีข้อมูลสหกรณ์ที่เลิกหรือเลิก/ชำระบัญชี</div>
-              <% } %>
+              </div>
+            <% }) %>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
 
   <section class="py-2 bg-white">
     <div class="container-lg">

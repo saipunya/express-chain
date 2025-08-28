@@ -52,6 +52,7 @@
               <a href="/article/view/<%= ar.ar_id %>" class="btn btn-sm btn-primary mb-1">
                 <i class="bi bi-eye"></i>
               </a>
+              <% if (user && user.mClass === 'admin') { %>
               <a href="/article/edit/<%= ar.ar_id %>" class="btn btn-sm btn-warning mb-1">
                 <i class="bi bi-pencil"></i>
               </a>
@@ -60,6 +61,7 @@
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
+              <% } %>
             </td>
           </tr>
         <% }) %>

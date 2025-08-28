@@ -71,7 +71,9 @@
         <i class="bi bi-pencil"></i> แก้ไข
       </a>
     <% } %>
-    <a href="/article" class="btn btn-secondary">กลับ</a>
+    <% if(user) { %>
+      <a href="/article" class="btn btn-secondary">กลับ</a>
+    <% } %>
   </div>
 </div>
 

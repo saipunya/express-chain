@@ -78,7 +78,7 @@ const homeController = {
         closedCoops,     // ✅ ส่ง closed coops to view
         coopGroupStats   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
       });
-      console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้
+      //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้
     } catch (error) {
       console.error('Error fetching data:', error);
       res.status(500).send('Error fetching data');

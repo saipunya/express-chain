@@ -45,7 +45,7 @@ app.use(morgan('dev'));
 const onlineStatus = require('./middlewares/onlineMiddleware');
 
 app.use((req, res, next) => {
-  res.locals.title = 'CoopChainReport';
+  res.locals.title = '++ CoopChain : ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ';
   next();
 });
 

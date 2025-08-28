@@ -24,7 +24,6 @@ const allfiles2 = require('../models/allfilesModel');
 const Finance = require('../models/financeModel');
 
 const activeCoopModel = require('../models/activeCoopModel');
-
 const homeController = {
   index: async (req, res) => {
     try {
@@ -45,6 +44,7 @@ const homeController = {
       // ข้อมูลกราฟ
       const coopGroupChart = await coopModel.getByCoopGroup();
       const cGroupChart = await coopModel.getByGroup();
+      const coopGroupStats = await activeCoopModel.getGroupStats();
       
       // ข้อมูลการใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
@@ -75,8 +75,10 @@ const homeController = {
         cGroupChart,    // ✅ ส่งไปที่ view
         activity,
         lastArticles,    // ✅ ส่งไปที่ view
-        closedCoops      // ✅ ส่ง closed coops to view
+        closedCoops,     // ✅ ส่ง closed coops to view
+        coopGroupStats   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
       });
+      console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้
     } catch (error) {
       console.error('Error fetching data:', error);
       res.status(500).send('Error fetching data');

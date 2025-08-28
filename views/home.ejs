@@ -1,754 +1,830 @@
-<%- include('partials/header',{title : 'coop chain'}) %>
-
- 
-
-<div class="container my-5">
-  <div class="card shadow-lg rounded overflow-hidden">
-    <div class="row g-0">
-      <div class="col-md-6">
-        <img src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg" alt="Coop Image" class="img-fluid h-100 w-100 object-fit-cover">
-      </div>
-
-      <div class="col-md-6 d-flex align-items-center p-4">
-        <% if (!user) { %>
-          <div class="w-100">
-            <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
-            <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
-
-            <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
-            <form action="/auth/login" method="POST">
-              <div class="mb-3">
-                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
-                <input type="text" class="form-control" id="username" name="username" required />
-              </div>
-              <div class="mb-3">
-                <label for="password" class="form-label">รหัสผ่าน</label>
-                <input type="password" class="form-control" id="password" name="password" required />
-              </div>
-              <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
-            </form>
-            <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
-              <a href="/auth/register" class="text-success">
-                สมัครสมาชิก
-              </a>
-            </p>
-          </div>
-        <% } else { %>
-          <div class="w-100 text-center">
-            <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
-            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
-            <p class="lead mb-4"><%= user.fullname %></p>
-            <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
-            <% if(user.mClass === 'kjs') { %>
-              <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
-            <% } %>
-            <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
-          </div>
-        <% } %>
-      </div>
-    </div>
-  </div>
-</div>
-
-<section>
-  <div class="container">
-    <h2 class="my-3 text-center text-primary">📊 ข้อมูลสหกรณ์</h2>
-    <div class="row">
-      <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title">จำนวนสหกรณ์</h5>
-            <p class="card-text display-6 text-success"><%= stats.coop %></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title">จำนวนกลุ่มเกษตรกร</h5>
-            <p class="card-text display-6 text-info"><%= stats.farmer %></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
-            <p class="card-text display-6 text-warning"><%= stats.closing %></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="py-4">
-  <div class="container">
-    <h2 class="my-3 text-center text-primary">📊 กราฟข้อมูลสหกรณ์</h2>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title text-center">แยกตามประเภท</h5>
-            <canvas id="coopGroupChart" width="400" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <h5 class="card-title text-center">แยกตามกลุ่มส่งสหกรณ์</h5>
-            <canvas id="cGroupChart" width="400" height="200"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<%- include('partials/header',{title : 'coop chain' }) %>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-<script>
-  // กราฟแยกตาม coop_group
-  const coopGroupData = <%- JSON.stringify(coopGroupChart || []) %>;
-  const ctx1 = document.getElementById('coopGroupChart').getContext('2d');
-  new Chart(ctx1, {
-    type: 'pie',
-    data: {
-      labels: coopGroupData.map(item => item.label),
-      datasets: [{
-        data: coopGroupData.map(item => item.count),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom' },
-        datalabels: {
-          display: true,
-          color: 'white',
-          font: { weight: 'bold', size: 12 },
-          formatter: function(value, context) {
-            const label = context.chart.data.labels[context.dataIndex];
-            return label + '\n' + value + ' แห่ง';
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
 
-  // กราฟแยกตาม c_group
-  const cGroupData = <%- JSON.stringify(cGroupChart || []) %>;
-  const ctx2 = document.getElementById('cGroupChart').getContext('2d');
-  new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels: cGroupData.map(item => item.label),
-      datasets: [{
-        data: cGroupData.map(item => item.count),
-        backgroundColor: ['#FF9F40', '#FF6384', '#4BC0C0', '#9966FF', '#36A2EB']
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom' },
-        datalabels: {
-          display: true,
-          color: 'white',
-          font: { weight: 'bold', size: 12 },
-          formatter: function(value, context) {
-            const label = context.chart.data.labels[context.dataIndex];
-            return label + '\n' + value + ' แห่ง';
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-</script>
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="card mb-4">
-      <div class="card-header bg-danger text-white">
-        <i class="bi bi-exclamation-circle me-2"></i> สหกรณ์/กลุ่มเกษตรกรที่สถานะ "เลิก" หรือ "ชำระบัญชี"
-      </div>
-      <div class="card-body">
-        <% if (closedCoops && closedCoops.length > 0) { %>
-          <div class="row">
-            <% closedCoops.forEach((coop, idx) => { %>
-              <div class="col-md-6 mb-2">
-                <div class="list-group">
-                  <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><%= coop.c_name %></span>
-                    <span class="badge bg-danger"><%= coop.c_status %></span>
-                  </div>
+
+  <div class="container my-5">
+    <div class="card shadow-lg rounded overflow-hidden">
+      <div class="row g-0">
+        <div class="col-md-6">
+          <img src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg" alt="Coop Image"
+            class="img-fluid h-100 w-100 object-fit-cover">
+        </div>
+
+        <div class="col-md-6 d-flex align-items-center p-4">
+          <% if (!user) { %>
+            <div class="w-100">
+              <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
+              <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
+
+              <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
+              <form action="/auth/login" method="POST">
+                <div class="mb-3">
+                  <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+                  <input type="text" class="form-control" id="username" name="username" required />
                 </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">รหัสผ่าน</label>
+                  <input type="password" class="form-control" id="password" name="password" required />
+                </div>
+                <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
+              </form>
+              <p class="text-center mt-2">
+                <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
+                <a href="/auth/register" class="text-success">
+                  สมัครสมาชิก
+                </a>
+              </p>
+            </div>
+            <% } else { %>
+              <div class="w-100 text-center">
+                <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
+                <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
+                <p class="lead mb-4">
+                  <%= user.fullname %>
+                </p>
+                <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
+                <% if(user.mClass==='kjs' ) { %>
+                  <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
+                  <% } %>
+                    <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
               </div>
-            <% }) %>
-          </div>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูลสหกรณ์ที่เลิกหรือเลิก/ชำระบัญชี</div>
-        <% } %>
+              <% } %>
+        </div>
       </div>
     </div>
   </div>
-</section>
 
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="row">
-      <!-- 📂 รายงานงบ -->
-      <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
-          <ul class="list-group list-group-flush">
-            <% finances.slice(0, 10).forEach((file, index) => { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <i class="fas fa-file-alt me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= file.c_name %>
-                  <span>[ <%= file.end_date %> <%= file.end_year %> ]</span>
-                  <%
-                    const fileSavedDate = new Date(file.savedate);
-                    const currentDate = new Date();
-                    const diffDays = Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24));
-                  %>
-                  <% if (diffDays <= 7) { %>
-                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 40px; height: 35px;" />
-                  <% } %>
-                </span>
-                <% if(user){ %>
-                  <a
-                    href="/finance/download/<%= file.id %>"
-                    class="btn btn-sm btn-outline-success"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ดาวน์โหลด
-                  </a>
-                <% } %>
-              </li>
-            <% }); %>
-          </ul>
-          <div class="text-end mt-2">
-            <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
-              📂 ดูทั้งหมด
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- 💼 รายงานกิจการสหกรณ์/กลุ่มเกษตรกร -->
-      <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
-          <ul class="list-group list-group-flush">
-            <% businessFiles.slice(0, 10).forEach((business, index) => { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <i class="fas fa-briefcase me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= business.bu_name %>
-                  <span class="badge bg-info ms-2"><%= business.end_date  %> <%= business.bu_endyear %></span>
-                  <%
-                    const businessSavedDate = new Date(business.bu_savedate);
-                    const currentDate = new Date();
-                    const diffDays = Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24));
-                  %>
-                  <% if (diffDays <= 7) { %>
-                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
-                  <% } %>
-                </span>
-                <% if(user){ %>
-                  <a
-                    href="/business/download/<%= business.bu_id %>"
-                    class="btn btn-sm btn-outline-info"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ดาวน์โหลด
-                  </a>
-                <% } %>
-              </li>
-            <% }); %>
-          </ul>
-          <div class="text-end mt-2">
-            <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
-              💼 ดูทั้งหมด
-            </a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="row">
-
-      <!-- 📋 ข้อบังคับสหกรณ์ -->
-      <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
-          <ul class="list-group list-group-flush">
-            <% ruleFiles.slice(0, 10).forEach((rule, index) => { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <i class="fas fa-file-pdf me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= rule.rule_name %>
-                  <span class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
-                    <% if (rule.rule_type === 'MR') { %>
-                      ข้อกำหนด พ.ศ.<%= rule.rule_year %>
-                    <% } else if (rule.rule_type === 'ER') { %>
-                      แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
-                    <% } %>
-                  </span>
-                  <%
-                    const ruleSavedDate = new Date(rule.rule_savedate);
-                    const currentDate = new Date();
-                    const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24));
-                  %>
-                  <% if (diffDays <= 7) { %>
-                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
-                  <% } %>
-                </span>
-                <% if(user){ %>
-                  <a
-                    href="/rule/<%= rule.rule_id %>"
-                    class="btn btn-sm btn-outline-success"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ดาวน์โหลด
-                  </a>
-                <% } %>
-              </li>
-            <% }); %>
-          </ul>
-          <div class="text-end mt-2">
-            <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
-              📋 ดูทั้งหมด
-            </a>
-          </div>
-        </div>
-      </div>
-      <!-- 📄 ระเบียบสหกรณ์ -->
-      <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100">
-          <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
-          <ul class="list-group list-group-flush">
-            <% rabiabFiles.slice(0, 10).forEach((rabiab, index) => { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <i class="fas fa-file-alt me-2 text-secondary"></i>
-                  <strong><%= index + 1 %>.</strong> <%= rabiab.ra_name %>
-                  <%
-                    const rabiabSavedDate = new Date(rabiab.ra_savedate);
-                    const currentDate = new Date();
-                    const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24));
-                  %>
-                  <% if (diffDays <= 7) { %>
-                    <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New" class="ms-2" style="width: 45px; height: 32px;" />
-                  <% } %>
-                </span>
-                <% if(user){ %>
-                  <a
-                    href="/rabiab/download/<%= rabiab.ra_id %>"
-                    class="btn btn-sm btn-outline-warning"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ดาวน์โหลด
-                  </a>
-                <% } %>
-              </li>
-            <% }); %>
-          </ul>
-          <div class="text-end mt-2">
-            <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
-              📄 ดูทั้งหมด
-            </a>
-          </div>
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-</section>
-
-<section class="py-4 bg-light">
-  <div class="container-lg">
-    <div class="row">
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary">
-          <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
-        </h2>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastProjects || []).forEach((p, idx) => { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>
-                    <strong><%= idx + 1 %>.</strong>
-                    <%= p.pro_story %>
-                    <span class="badge bg-secondary ms-2"><%= p.pro_no %></span>
-                  </span>
-                  <% if(user){ %>
-                    <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                      <i class="bi bi-file-pdf-fill"></i>
-                    </a>
-                  <% } %>
-                </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+  <section>
+    <div class="container">
+      <h2 class="my-3 text-center text-primary">📊 ข้อมูลสหกรณ์</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+              <h5 class="card-title">จำนวนสหกรณ์</h5>
+              <p class="card-text display-6 text-success">
+                <%= stats.coop + ' แห่ง' %>
+              </p>
+              <span class="d-block">
+                <button class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="สหกรณ์ที่จดทะเบียนกับกรมส่งเสริมสหกรณ์">
+                  <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                  รายละเอียด
+                </button>
+              </span>
             </div>
           </div>
         </div>
-      </div>
+        <div class="col-md-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+              <h5 class="card-title">จำนวนกลุ่มเกษตรกร</h5>
+              <p class="card-text display-6 text-info">
+                <%= stats.farmer + ' แห่ง' %>
+              </p>
+              <span class="d-block">
+                <button class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="กลุ่มเกษตรกรที่จดทะเบียนกับกรมส่งเสริมสหกรณ์">
+                  <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                  รายละเอียด
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+              <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
+              <p class="card-text display-6 text-warning">
+                <%= stats.closing + ' แห่ง' %>
+              </p>
+              <span class="d-block">
+                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" data-bs-placement="top"
+                  title="สหกรณ์/กลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี">
+                  <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                  รายละเอียด
+                </button>
+              </span>
 
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary">
-          <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
-        </h2>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastCommands  || []).forEach((c, idx) => { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>
-                    <strong><%= idx + 1 %>.</strong>
-                    <%= c.com_story %>
-                    <span class="badge bg-secondary ms-2"><%= c.com_no %></span>
-                  </span>
-                  <% if(user){ %>
-                    <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                      <i class="bi bi-file-earmark-arrow-down"></i>
-                    </a>
-                  <% } %>
-                </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="row mt-4">
-      <div class="col-12">
-        <h2 class="mb-4 text-center text-primary">
-          <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
-        </h2>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
+  </section>
+
+  <section class="py-2 bg-white">
+    <div class="container-lg">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+              <h4 class="mb-4 text-center text-primary">
+                <i class="bi bi-bar-chart-fill me-2"></i> กราฟแสดงจำนวนสหกรณ์/กลุ่มเกษตรกร
+              </h4>
+              <canvas id="coopChart" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+              <h4 class="mb-4 text-center text-primary">
+                <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
+              </h4>
+              <canvas id="coopPieChart" height="120"></canvas>
+            </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="py-2 bg-white">
+    <div class="container-lg">
+      <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+          <i class="bi bi-exclamation-circle me-2"></i> สหกรณ์/กลุ่มเกษตรกรที่สถานะ "เลิก" หรือ "ชำระบัญชี"
+        </div>
+        <div class="card-body">
+          <% if (closedCoops && closedCoops.length> 0) { %>
             <div class="row">
-              <% (lastRq2 || []).forEach((r, idx) => { %>
-                <div class="col-md-6 mb-3">
+              <% closedCoops.forEach((coop, idx)=> { %>
+                <div class="col-md-6 mb-2">
                   <div class="list-group">
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                       <span>
-                        <strong><%= idx + 1 %>.</strong>
-                        <%= r.rq_name %>
-                        <span class="badge bg-secondary ms-2"><%= r.rq_year %></span>
+                        <%= coop.c_name %>
                       </span>
-                      <% if(user){ %>
-                        <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                          <i class="bi bi-file-pdf-fill"></i>
-                        </a>
-                      <% } %>
+                      <span class="badge bg-danger">
+                        <%= coop.c_status %>
+                      </span>
                     </div>
                   </div>
                 </div>
-              <% }) %>
+                <% }) %>
             </div>
-            <div class="text-end mt-2">
-              <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row mt-4">
-      <div class="col-12">
-        <h2 class="mb-4 text-center text-primary">
-          <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
-        </h2>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <div class="row">
-              <% usecars.forEach((usecar) => { %>
-                <div class="col-12 col-md-6 mb-3">
-                  <div class="list-group">
-                    <div class="list-group-item">
-                      <div class="d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                          <%
-                            const date = new Date(usecar.date_car);
-                            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                            const thaiDate = date.toLocaleDateString('th-TH', options);
-                            const today = new Date();
-                            const isToday = today.toLocaleDateString('th-TH') === date.toLocaleDateString('th-TH');
-                          %>
-                          <div class="fw-bold text-success mb-1">
-                            <i class="bi bi-calendar-event me-1"></i> <%= thaiDate %>
-                            <span class="text-muted">(<i class="bi bi-clock"></i> <%= usecar.time_car + ' น.' %>)</span>
-                            <% if (isToday) { %>
-                              <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-                            <% } %>
-                          </div>
-                          <div class="text-dark mb-1">
-                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> <%= usecar.place_car %>
-                          </div>
-                          <small class="text-muted d-block mb-2">
-                            <i class="bi bi-clipboard2-check me-1"></i> <%= usecar.act_car %>
-                          </small>
-    
-                          <a href="/usecar/view/<%= usecar.id_usecar %>" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
-                          </a>
-                        </div>
-    
-                        <% if(user && user.mClass === 'admin'){ %>
-                          <div class="d-flex align-items-center ms-3">
-                            <a href="/usecar/edit/<%= usecar.id_usecar %>" class="btn btn-outline-warning btn-sm me-2">
-                              <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST" style="display: inline;">
-                              <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash3"></i>
-                              </button>
-                            </form>
-                          </div>
-                        <% } %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-  </div>
-</section>
-
-<section class="py-5 bg-light">
-  <div class="container">
-    <div class="mb-4 text-center">
-      <h4 class="fw-bold mb-3">
-        <i class="bi bi-file-earmark-text me-2"></i> บทความล่าสุด
-      </h4>
-      <hr class="w-25 mx-auto text-primary opacity-75">
-    </div>
-
-    <div class="row g-4">
-      <% (lastArticles || []).forEach(article => { %>
-        <div class="col-md-3 col-sm-6">
-          <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-            
-            <!-- รูป -->
-            <% try { 
-              const imgs = JSON.parse(article.ar_img || '[]');
-              if (imgs.length) { %>
-                <img src="/uploads/article/<%= imgs[0] %>" 
-                     alt="img" 
-                     class="card-img-top"
-                     style="height:180px;object-fit:cover;">
             <% } else { %>
-                <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
-                  <i class="bi bi-image text-muted fs-1"></i>
-                </div>
-            <% } } catch(e) {} %>
+              <div class="text-muted">ไม่มีข้อมูลสหกรณ์ที่เลิกหรือเลิก/ชำระบัญชี</div>
+              <% } %>
+        </div>
+      </div>
+    </div>
+  </section>
 
-            <div class="card-body d-flex flex-column h-100">
-              <h6 class="card-title fw-bold mb-2 text-truncate">
-                <a href="/article/view/<%= article.ar_id %>" class="stretched-link text-decoration-none text-dark">
-                  <%= article.ar_subject %>
-                </a>
-              </h6>
-              <p class="card-text small text-muted mb-3 flex-grow-1" 
-                 style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                <%= article.ar_detail.substring(0, 100) %>
-              </p>
-              <div class="text-center mt-auto">
-                <a href="/article/view/<%= article.ar_id %>" class="btn btn-sm btn-primary w-100">
-                  อ่านเพิ่มเติม
-                </a>
-              </div>
+  <section class="py-2 bg-white">
+    <div class="container-lg">
+      <div class="row">
+        <!-- 📂 รายงานงบ -->
+        <div class="col-md-6 mb-4">
+          <div class="bg-light p-4 rounded shadow-sm h-100">
+            <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
+            <ul class="list-group list-group-flush">
+              <% finances.slice(0, 10).forEach((file, index)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="fas fa-file-alt me-2 text-secondary"></i>
+                    <strong>
+                      <%= index + 1 %>.
+                    </strong>
+                    <%= file.c_name %>
+                      <span>[ <%= file.end_date %>
+                          <%= file.end_year %> ]</span>
+                      <% const fileSavedDate=new Date(file.savedate); const currentDate=new Date(); const
+                        diffDays=Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24)); %>
+                        <% if (diffDays <=7) { %>
+                          <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                            class="ms-2" style="width: 40px; height: 35px;" />
+                          <% } %>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/finance/download/<%= file.id %>" class="btn btn-sm btn-outline-success" target="_blank"
+                      rel="noopener noreferrer">
+                      ดาวน์โหลด
+                    </a>
+                    <% } %>
+                </li>
+                <% }); %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
+                📂 ดูทั้งหมด
+              </a>
             </div>
           </div>
         </div>
-      <% }) %>
+
+        <!-- 💼 รายงานกิจการสหกรณ์/กลุ่มเกษตรกร -->
+        <div class="col-md-6 mb-4">
+          <div class="bg-light p-4 rounded shadow-sm h-100">
+            <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
+            <ul class="list-group list-group-flush">
+              <% businessFiles.slice(0, 10).forEach((business, index)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="fas fa-briefcase me-2 text-secondary"></i>
+                    <strong>
+                      <%= index + 1 %>.
+                    </strong>
+                    <%= business.bu_name %>
+                      <span class="badge bg-info ms-2">
+                        <%= business.end_date %>
+                          <%= business.bu_endyear %>
+                      </span>
+                      <% const businessSavedDate=new Date(business.bu_savedate); const currentDate=new Date(); const
+                        diffDays=Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24)); %>
+                        <% if (diffDays <=7) { %>
+                          <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                            class="ms-2" style="width: 45px; height: 32px;" />
+                          <% } %>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/business/download/<%= business.bu_id %>" class="btn btn-sm btn-outline-info"
+                      target="_blank" rel="noopener noreferrer">
+                      ดาวน์โหลด
+                    </a>
+                    <% } %>
+                </li>
+                <% }); %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
+                💼 ดูทั้งหมด
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <section class="py-2 bg-white">
+    <div class="container-lg">
+      <div class="row">
 
+        <!-- 📋 ข้อบังคับสหกรณ์ -->
+        <div class="col-md-6 mb-4">
+          <div class="bg-light p-4 rounded shadow-sm h-100">
+            <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
+            <ul class="list-group list-group-flush">
+              <% ruleFiles.slice(0, 10).forEach((rule, index)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="fas fa-file-pdf me-2 text-secondary"></i>
+                    <strong>
+                      <%= index + 1 %>.
+                    </strong>
+                    <%= rule.rule_name %>
+                      <span
+                        class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
+                        <% if (rule.rule_type==='MR' ) { %>
+                          ข้อกำหนด พ.ศ.<%= rule.rule_year %>
+                            <% } else if (rule.rule_type==='ER' ) { %>
+                              แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
+                                  <% } %>
+                      </span>
+                      <% const ruleSavedDate = new Date(rule.rule_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
+                      <% if (diffDays <= 7) { %>
+                        <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                          class="ms-2" style="width: 45px; height: 32px;" />
+                      <% } %>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-success" target="_blank"
+                      rel="noopener noreferrer">
+                      ดาวน์โหลด
+                    </a>
+                    <% } %>
+                </li>
+                <% }); %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
+                📋 ดูทั้งหมด
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- 📄 ระเบียบสหกรณ์ -->
+        <div class="col-md-6 mb-4">
+          <div class="bg-light p-4 rounded shadow-sm h-100">
+            <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
+            <ul class="list-group list-group-flush">
+              <% rabiabFiles.slice(0, 10).forEach((rabiab, index)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="fas fa-file-alt me-2 text-secondary"></i>
+                    <strong>
+                      <%= index + 1 %>.
+                    </strong>
+                    <%= rabiab.ra_name %>
+                      <% const rabiabSavedDate = new Date(rabiab.ra_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24)); %>
+                      <% if (diffDays <= 7) { %>
+                        <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                          class="ms-2" style="width: 45px; height: 32px;" />
+                      <% } %>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-warning"
+                      target="_blank" rel="noopener noreferrer">
+                      ดาวน์โหลด
+                    </a>
+                    <% } %>
+                </li>
+                <% }); %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
+                📄 ดูทั้งหมด
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<% if ((activity || []).length > 0) { %>
   <section class="py-4 bg-light">
     <div class="container-lg">
-    <h2 class="mb-2 text-center text-primary fw-bold">
-      <i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด
-    </h2>
-      <div class="row g-2">
-        <% activity.forEach((act) => { %>
-          <div class="col-12">
-            <div class="card shadow-sm border-0 h-100 hover-shadow">
-              <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-                
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-                  <span class="badge bg-info text-dark me-3 mb-2 mb-md-0 py-2 px-3 fs-6">
-                    <% 
-                      let thaiDate = '-';
-                      if (act.date_act) {
-                        let dateObj;
-                        if (typeof act.date_act === 'string') {
-                          dateObj = new Date(act.date_act);
-                        } else {
-                          dateObj = act.date_act;
-                        }
-                        if (!isNaN(dateObj)) {
-                          const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                          thaiDate = dateObj.toLocaleDateString('th-TH', options);
-                        } else if (typeof act.date_act === 'string') {
-                          thaiDate = act.date_act;
-                        }
-                      }
-                    %>
-                    <i class="bi bi-calendar-event me-1"></i> <%= thaiDate %>
-                    <span class="ms-2"><i class="bi bi-clock"></i> <%= act.act_time || '-' %> น.</span>
-                  </span>
-
-                  <span class="fw-semibold text-dark">
-                    <i class="bi bi-stars me-1"></i> <%= act.activity %>
-                  </span>
-                </div>
-
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
-
-                  <% if (user) { %>
-                    <a href="/activities/view/<%= act.act_id %>" class="btn btn-sm btn-success ms-md-3 mt-2 mt-md-0">
-                      <i class="bi bi-eye-fill me-1"></i> ดูรายละเอียด
-                    </a>
-                  <% } else { %>
-                    <a href="/auth/login" class="btn btn-sm btn-outline-secondary ms-md-3 mt-2 mt-md-0">
-                      <i class="bi bi-lock-fill me-1"></i> เข้าสู่ระบบ
-                    </a>
-                  <% } %>
-                </div>
-
+      <div class="row">
+        <div class="col-md-6">
+          <h2 class="mb-4 text-center text-primary">
+            <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
+          </h2>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <% (lastProjects || []).forEach((p, idx)=> { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                      <strong>
+                        <%= idx + 1 %>.
+                      </strong>
+                      <%= p.pro_story %>
+                        <span class="badge bg-secondary ms-2">
+                          <%= p.pro_no %>
+                        </span>
+                    </span>
+                    <% if(user){ %>
+                      <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary"
+                        target="_blank">
+                        <i class="bi bi-file-pdf-fill"></i>
+                      </a>
+                      <% } %>
+                  </li>
+                  <% }) %>
+              </ul>
+              <div class="text-end mt-2">
+                <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
               </div>
             </div>
           </div>
-        <% }) %>
-      </div>
-  </div>
-</section>
-<% } %>
-<style>
-  .hover-shadow:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
-    transition: 0.3s;
-  }
-</style>
+        </div>
 
-
-<section class="py-4 bg-light">
-  <div class="container-lg">
-    <div class="row">
-      <div class="col-md-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-body text-center">
-            <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
-            <div class="mb-3">
-              <div class="display-4 text-success"><%= onlineCount %></div>
-              <small class="text-muted">กำลังใช้ออนไลน์</small>
-            </div>
-            <hr>
-            <div class="row text-center">
-              <h4 class="col-12 text-center">จำนวน</h4>
-              <div class="col-md-4">
-                <div class="h4 text-primary"><%= stats.coop  %></div>
-                <small>สหกรณ์</small>
-              </div>
-              <div class="col-md-4">
-                <div class="h4 text-success"><%=  stats.farmer %></div>
-                <small>กลุ่มเกษตรกร</small>
-              </div>
-              <div class="col-md-4">
-                <div class="h4 text-warning"><%= stats.closing %></div>
-                <small>ชำระบัญชี</small>
+        <div class="col-md-6">
+          <h2 class="mb-4 text-center text-primary">
+            <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
+          </h2>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <% (lastCommands || []).forEach((c, idx)=> { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                      <strong>
+                        <%= idx + 1 %>.
+                      </strong>
+                      <%= c.com_story %>
+                        <span class="badge bg-secondary ms-2">
+                          <%= c.com_no %>
+                        </span>
+                    </span>
+                    <% if(user){ %>
+                      <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary"
+                        target="_blank">
+                        <i class="bi bi-file-earmark-arrow-down"></i>
+                      </a>
+                      <% } %>
+                  </li>
+                  <% }) %>
+              </ul>
+              <div class="text-end mt-2">
+                <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-md-8 mt-4 mt-md-0">
-        <h2 class="mb-4 text-center text-success">🟢 Members Online</h2>
-
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <div class="row">
-              <% onlineUsers.forEach((user, index) => { %>
-                <div class="col-md-6 mb-3">
-                  <div class="d-flex align-items-center">
-                    <img
-                      src="<%= user.m_img || '/images/default-avatar.png' %>"
-                      alt="Avatar"
-                      class="rounded-circle me-3"
-                      style="width: 40px; height: 40px; object-fit: cover;"
-                    >
-                    <div>
-                      <div class="fw-bold text-success"><%= user.on_name %></div>
-                      <small class="text-muted"><%= user.m_position || '32ใช้' %></small>
-                      <div class="badge bg-success ms-2">
-                        <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
+      <div class="row mt-4">
+        <div class="col-12">
+          <h2 class="mb-4 text-center text-primary">
+            <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
+          </h2>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <div class="row">
+                <% (lastRq2 || []).forEach((r, idx)=> { %>
+                  <div class="col-md-6 mb-3">
+                    <div class="list-group">
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                          <strong>
+                            <%= idx + 1 %>.
+                          </strong>
+                          <%= r.rq_name %>
+                            <span class="badge bg-secondary ms-2">
+                              <%= r.rq_year %>
+                            </span>
+                        </span>
+                        <% if(user){ %>
+                          <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="bi bi-file-pdf-fill"></i>
+                          </a>
+                          <% } %>
                       </div>
                     </div>
                   </div>
-                </div>
-              <% }); %>
-            </div>
-
-            <% if (onlineUsers.length === 0) { %>
-              <div class="text-center text-muted">
-                <i class="fas fa-users fa-3x mb-3"></i>
-                <p>ไม่มีผู้ใช้งานออนไลน์ในขณะนี้</p>
+                  <% }) %>
               </div>
-            <% } %>
+              <div class="text-end mt-2">
+                <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <div class="row mt-4">
+        <div class="col-12">
+          <h2 class="mb-4 text-center text-primary">
+            <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
+          </h2>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <div class="row">
+                <% usecars.forEach((usecar)=> { %>
+                  <div class="col-12 col-md-6 mb-3">
+                    <div class="list-group">
+                      <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div class="ms-2 me-auto">
+                            <% const date=new Date(usecar.date_car); const options={ year: 'numeric' , month: 'long' ,
+                              day: 'numeric' }; const thaiDate=date.toLocaleDateString('th-TH', options); const
+                              today=new Date(); const
+                              isToday=today.toLocaleDateString('th-TH')===date.toLocaleDateString('th-TH'); %>
+                              <div class="fw-bold text-success mb-1">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                <%= thaiDate %>
+                                  <span class="text-muted">(<i class="bi bi-clock"></i>
+                                    <%= usecar.time_car + ' น.' %>)
+                                  </span>
+                                  <% if (isToday) { %>
+                                    <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+                                    <% } %>
+                              </div>
+                              <div class="text-dark mb-1">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                                <%= usecar.place_car %>
+                              </div>
+                              <small class="text-muted d-block mb-2">
+                                <i class="bi bi-clipboard2-check me-1"></i>
+                                <%= usecar.act_car %>
+                              </small>
+
+                              <a href="/usecar/view/<%= usecar.id_usecar %>" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
+                              </a>
+                          </div>
+
+                          <% if(user && user.mClass==='admin' ){ %>
+                            <div class="d-flex align-items-center ms-3">
+                              <a href="/usecar/edit/<%= usecar.id_usecar %>"
+                                class="btn btn-outline-warning btn-sm me-2">
+                                <i class="bi bi-pencil-square"></i>
+                              </a>
+                              <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST"
+                                style="display: inline;">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                  <i class="bi bi-trash3"></i>
+                                </button>
+                              </form>
+                            </div>
+                            <% } %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <% }); %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-  </div>
-</section>
+  </section>
+
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="mb-4 text-center">
+        <h4 class="fw-bold mb-3">
+          <i class="bi bi-file-earmark-text me-2"></i> บทความล่าสุด
+        </h4>
+        <hr class="w-25 mx-auto text-primary opacity-75">
+      </div>
+
+      <div class="row g-4">
+        <% (lastArticles || []).forEach(article=> { %>
+          <div class="col-md-3 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+
+              <!-- รูป -->
+              <% try { const imgs=JSON.parse(article.ar_img || '[]' ); if (imgs.length) { %>
+                <img src="/uploads/article/<%= imgs[0] %>" alt="img" class="card-img-top"
+                  style="height:180px;object-fit:cover;">
+                <% } else { %>
+                  <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
+                    <i class="bi bi-image text-muted fs-1"></i>
+                  </div>
+                  <% } } catch(e) {} %>
+
+                    <div class="card-body d-flex flex-column h-100">
+                      <h6 class="card-title fw-bold mb-2 text-truncate">
+                        <a href="/article/view/<%= article.ar_id %>"
+                          class="stretched-link text-decoration-none text-dark">
+                          <%= article.ar_subject %>
+                        </a>
+                      </h6>
+                      <p class="card-text small text-muted mb-3 flex-grow-1"
+                        style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                        <%= article.ar_detail.substring(0, 100) %>
+                      </p>
+                      <div class="text-center mt-auto">
+                        <a href="/article/view/<%= article.ar_id %>" class="btn btn-sm btn-primary w-100">
+                          อ่านเพิ่มเติม
+                        </a>
+                      </div>
+                    </div>
+            </div>
+          </div>
+          <% }) %>
+      </div>
+    </div>
+  </section>
 
 
- 
+
+  <% if ((activity || []).length> 0) { %>
+    <section class="py-4 bg-light">
+      <div class="container-lg">
+        <h2 class="mb-2 text-center text-primary fw-bold">
+          <i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด
+        </h2>
+        <div class="row g-2">
+          <% activity.forEach((act)=> { %>
+            <div class="col-12">
+              <div class="card shadow-sm border-0 h-100 hover-shadow">
+                <div
+                  class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+
+                  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                    <span class="badge bg-info text-dark me-3 mb-2 mb-md-0 py-2 px-3 fs-6">
+                      <% let thaiDate='-' ; if (act.date_act) { let dateObj; if (typeof act.date_act==='string' ) {
+                        dateObj=new Date(act.date_act); } else { dateObj=act.date_act; } if (!isNaN(dateObj)) { const
+                        options={ year: 'numeric' , month: 'long' , day: 'numeric' };
+                        thaiDate=dateObj.toLocaleDateString('th-TH', options); } else if (typeof act.date_act==='string'
+                        ) { thaiDate=act.date_act; } } %>
+                        <i class="bi bi-calendar-event me-1"></i>
+                        <%= thaiDate %>
+                          <span class="ms-2"><i class="bi bi-clock"></i>
+                            <%= act.act_time || '-' %> น.
+                          </span>
+                    </span>
+
+                    <span class="fw-semibold text-dark">
+                      <i class="bi bi-stars me-1"></i>
+                      <%= act.activity %>
+                    </span>
+                  </div>
+
+                  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
+
+                    <% if (user) { %>
+                      <a href="/activities/view/<%= act.act_id %>" class="btn btn-sm btn-success ms-md-3 mt-2 mt-md-0">
+                        <i class="bi bi-eye-fill me-1"></i> ดูรายละเอียด
+                      </a>
+                      <% } else { %>
+                        <a href="/auth/login" class="btn btn-sm btn-outline-secondary ms-md-3 mt-2 mt-md-0">
+                          <i class="bi bi-lock-fill me-1"></i> เข้าสู่ระบบ
+                        </a>
+                        <% } %>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            <% }) %>
+        </div>
+      </div>
+    </section>
+    <% } %>
+      <style>
+        .hover-shadow:hover {
+          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+          transition: 0.3s;
+        }
+      </style>
+
+
+      <section class="py-4 bg-light">
+        <div class="container-lg">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                  <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
+                  <div class="mb-3">
+                    <div class="display-4 text-success">
+                      <%= onlineCount %>
+                    </div>
+                    <small class="text-muted">กำลังใช้ออนไลน์</small>
+                  </div>
+                  <hr>
+                  <div class="row text-center">
+                    <h4 class="col-12 text-center">จำนวน</h4>
+                    <div class="col-md-4">
+                      <div class="h4 text-primary">
+                        <%= stats.coop %>
+                      </div>
+                      <small>สหกรณ์</small>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="h4 text-success">
+                        <%= stats.farmer %>
+                      </div>
+                      <small>กลุ่มเกษตรกร</small>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="h4 text-warning">
+                        <%= stats.closing %>
+                      </div>
+                      <small>ชำระบัญชี</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8 mt-4 mt-md-0">
+              <h2 class="mb-4 text-center text-success">🟢 Members Online</h2>
+
+              <div class="card shadow-sm border-0">
+                <div class="card-body">
+                  <div class="row">
+                    <% onlineUsers.forEach((user, index)=> { %>
+                      <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center">
+                          <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
+                            class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                          <div>
+                            <div class="fw-bold text-success">
+                              <%= user.on_name %>
+                            </div>
+                            <small class="text-muted">
+                              <%= user.m_position || '32ใช้' %>
+                            </small>
+                            <div class="badge bg-success ms-2">
+                              <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <% }); %>
+                  </div>
+
+                  <% if (onlineUsers.length===0) { %>
+                    <div class="text-center text-muted">
+                      <i class="fas fa-users fa-3x mb-3"></i>
+                      <p>ไม่มีผู้ใช้งานออนไลน์ในขณะนี้</p>
+                    </div>
+                    <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script src="/socket.io/socket.io.js"></script>
+      <script>
+        const socket = io();
+
+        socket.on('onlineUsers', (count) => {
+          const onlineCountDiv = document.querySelector('.display-4.text-success');
+          if (onlineCountDiv) {
+            onlineCountDiv.textContent = count;
+          }
+        });
+      </script>
+      <script>
+        const ctx = document.getElementById('coopChart').getContext('2d');
+        const coopChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['สหกรณ์', 'กลุ่มเกษตรกร', 'ชำระบัญชี'],
+            datasets: [{
+              label: 'จำนวน',
+              data: [
+                <%= stats.coop %>,
+                <%= stats.farmer %>,
+                <%= stats.closing %>
+              ],
+              backgroundColor: [
+                'rgba(25, 135, 84, 0.7)',
+                'rgba(13, 202, 240, 0.7)',
+                'rgba(255, 193, 7, 0.7)'
+              ],
+              borderColor: [
+                'rgba(25, 135, 84, 1)',
+                'rgba(13, 202, 240, 1)',
+                'rgba(255, 193, 7, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: '#000',
+                font: { weight: 'bold' },
+                formatter: function(value) {
+                  return value;
+                }
+              }
+            },
+            scales: {
+              y: { beginAtZero: true }
+            }
+          },
+          
+          plugins: [ChartDataLabels] // Added plugin for data labels
+        });
+      </script>
 
 
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io();
+      <script>
+const coopData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.coop))) %>;
+const farmerData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.farmer))) %>;
+const totalCoop = coopData.reduce((a, b) => a + b, 0);
+const totalFarmer = farmerData.reduce((a, b) => a + b, 0);
 
-  socket.on('onlineUsers', (count) => {
-    const onlineCountDiv = document.querySelector('.display-4.text-success');
-    if (onlineCountDiv) {
-      onlineCountDiv.textContent = count;
+console.log('Pie chart data:', totalCoop, totalFarmer); // ตรวจสอบค่าที่จะใช้
+
+const ctxPie = document.getElementById('coopPieChart').getContext('2d');
+const coopPieChart = new Chart(ctxPie, {
+  type: 'pie',
+  data: {
+    labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
+    datasets: [{
+      data: [totalCoop, totalFarmer],
+      backgroundColor: [
+        'rgba(25, 135, 84, 0.7)',
+        'rgba(13, 202, 240, 0.7)'
+      ],
+      borderColor: [
+        'rgba(25, 135, 84, 1)',
+        'rgba(13, 202, 240, 1)'
+      ],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom' },
+      datalabels: {
+        color: '#000',
+        font: { weight: 'bold', size: 16 },
+        formatter: function(value, context) {
+          return context.chart.data.labels[context.dataIndex] + ': ' + value;
+        }
+      }
     }
-  });
+  },
+  plugins: [ChartDataLabels]
+});
 </script>
-<%- include('partials/footer') %>
+
+<script>
+  // Additional script to handle coopGroupStats if needed
+  const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
+  // You can add more logic here to utilize coopGroupStats
+</script>
+
+      <%- include('partials/footer') %>

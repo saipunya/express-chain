@@ -120,4 +120,18 @@ exports.getClosedCoops = async () => {
   );
   return rows;
 };
+exports.getGroupStats = async () => {
+  // ดึงข้อมูลจำนวนสหกรณ์และกลุ่มเกษตรกรในแต่ละ c_group
+  const [rows] = await pool.query(`
+    SELECT 
+      c_group,
+      SUM(CASE WHEN coop_group = 'สหกรณ์' THEN 1 ELSE 0 END) AS coop,
+      SUM(CASE WHEN coop_group = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmer
+    FROM active_coop WHERE c_status = 'ดำเนินการ'
+    GROUP BY c_group
+    ORDER BY c_group
+  `);
+  console.log('Group stats:', rows);
+  return rows;
+};
 

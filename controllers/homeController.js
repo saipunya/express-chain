@@ -58,7 +58,7 @@ const homeController = {
 
       // ดึงข้อมูล activity จาก model
       const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
-      const lastArticles = await articleModel.getLast(2);
+      const lastArticles = await articleModel.getLast(4);
       res.render('home', { 
         finances, 
         ruleFiles,

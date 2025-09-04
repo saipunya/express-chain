@@ -1,5 +1,27 @@
 <%- include('../partials/header') %>
 
+<%
+  function formatThaiDate(dateStr) {
+    if (
+      !dateStr ||
+      dateStr === '0000-00-00' ||
+      dateStr === '0000-00-00 00:00:00' ||
+      dateStr === 'Invalid date'
+    ) return '-';
+    const d = new Date(dateStr);
+    // ป้องกันปี 1899 หรือปีที่ไม่ถูกต้อง
+    if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
+    const months = [
+      '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const day = d.getDate();
+    const month = months[d.getMonth() + 1];
+    const year = d.getFullYear() + 543;
+    return `${day} ${month} ${year}`;
+  }
+%>
+
 <div class="container mt-4">
   <h2 class="mb-4">📋 รายการ Chamra</h2>
   <a href="/chamra/add" class="btn btn-success mb-3">➕ เพิ่ม Chamra</a>
@@ -10,6 +32,7 @@
         <th>#</th>
         <th>รหัส</th>
         <th>ชื่อ</th>
+       
         <th>ผู้ชำระบัญชี</th>
         <th>วันที่กระบวนการ</th>
         <th>จัดการ</th>
@@ -20,16 +43,39 @@
         <tr>
           <td><%= index + 1 %></td>
           <td><%= c.c_code %></td>
-          <td><%= c.c_name %></td>
-          <td><%= c.de_person %></td>
           <td>
-            <% if(c.pr_s1) { %>
-              S1: <%= c.pr_s1 %><br>
+            <%= c.c_name %>
+            <% if(c.c_status === 'ถอนชื่อ'){ %>
+              <button class="btn btn-sm btn-outline-success">ถอนชื่อแล้ว</button>
+            <% }else{ %>
+              <button class="btn btn-sm btn-outline-danger">กำลังชำระบัญชี</button>
             <% } %>
-            <% if(c.pr_s2) { %>
-              S2: <%= c.pr_s2 %><br>
-            <% } %>
-            <% /* ใส่ S3-S10 ตามต้องการ */ %>
+
+          </td>
+          
+          <td><%= c.de_person %></td>
+          <td class="text-nowrap">
+            <%
+              function showStep(label, value) {
+                if (!value || value === '0000-00-00' || value === '' || value === null) {
+                  return `${label}: -`;
+                }
+                const formatted = formatThaiDate(value);
+                return `${label}: ${formatted}`;
+              }
+              const steps = [];
+              steps.push(showStep('S1', c.pr_s1));
+              steps.push(showStep('S2', c.pr_s2));
+              steps.push(showStep('S3', c.pr_s3));
+              steps.push(showStep('S4', c.pr_s4));
+              steps.push(showStep('S5', c.pr_s5));
+              steps.push(showStep('S6', c.pr_s6));
+              steps.push(showStep('S7', c.pr_s7));
+              steps.push(showStep('S8', c.pr_s8));
+              steps.push(showStep('S9', c.pr_s9));
+              steps.push(showStep('S10', c.pr_s10));
+            %>
+            <%- steps.join('<br>') %>
           </td>
           <td>
             <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️ แก้ไข</a>

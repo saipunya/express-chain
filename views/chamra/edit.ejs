@@ -8,43 +8,43 @@
 <body>
   <h1>✏️ แก้ไขข้อมูล Chamra</h1>
 
-  <form method="POST" action="/chamra/<%= data.de_code %>?_method=PUT">
+  <form method="POST" action="/chamra/<%= chamra.de_code %>?_method=PUT">
     <table>
       <tr>
         <th>รหัส</th>
-        <td><input type="text" name="de_code" value="<%= data.de_code %>" readonly></td>
+        <td><input type="text" name="de_code" value="<%= chamra.de_code %>" readonly></td>
       </tr>
       <tr>
         <th>กรณี</th>
-        <td><input type="text" name="de_case" value="<%= data.de_case %>" required></td>
+        <td><input type="text" name="de_case" value="<%= chamra.de_case %>" required></td>
       </tr>
       <tr>
         <th>เลขคำสั่ง</th>
-        <td><input type="text" name="de_comno" value="<%= data.de_comno %>"></td>
+        <td><input type="text" name="de_comno" value="<%= chamra.de_comno %>"></td>
       </tr>
       <tr>
         <th>วันที่คำสั่ง</th>
-        <td><input type="date" name="de_comdate" value="<%= data.de_comdate %>"></td>
+        <td><input type="date" name="de_comdate" value="<%= chamra.de_comdate %>"></td>
       </tr>
       <tr>
         <th>ผู้รับผิดชอบ</th>
-        <td><input type="text" name="de_person" value="<%= data.de_person %>"></td>
+        <td><input type="text" name="de_person" value="<%= chamra.de_person %>"></td>
       </tr>
       <tr>
         <th>เป้าหมาย</th>
         <td>
-          <input type="text" name="de_target1" value="<%= data.de_target1 %>" placeholder="เป้าหมาย 1">
-          <input type="text" name="de_target2" value="<%= data.de_target2 %>" placeholder="เป้าหมาย 2">
+          <input type="text" name="de_target1" value="<%= chamra.de_target1 %>" placeholder="เป้าหมาย 1">
+          <input type="text" name="de_target2" value="<%= chamra.de_target2 %>" placeholder="เป้าหมาย 2">
         </td>
       </tr>
       <tr>
         <th>หมายเหตุ</th>
-        <td><textarea name="de_maihed"><%= data.de_maihed %></textarea></td>
+        <td><textarea name="de_maihed"><%= chamra.de_maihed %></textarea></td>
       </tr>
     </table>
 
     <button type="submit">💾 บันทึกการแก้ไข</button>
-    <a href="/chamra/<%= data.de_code %>/view">← ย้อนกลับ</a>
+    <a href="/chamra/<%= chamra.de_code %>/view">← ย้อนกลับ</a>
   </form>
 </body>
 </html>

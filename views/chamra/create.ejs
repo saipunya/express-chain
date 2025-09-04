@@ -5,7 +5,13 @@
     <table>
       <tr>
         <th>รหัส</th>
-        <td><input type="text" name="de_code" required></td>
+        <td>
+          <select name="de_code" required>
+            <% coopList.forEach(coop => { %>
+              <option value="<%= coop.c_code %>"><%= coop.c_code %> - <%= coop.c_name %></option>
+            <% }) %>
+          </select>
+        </td>
       </tr>
       <tr>
         <th>กรณี</th>
@@ -42,6 +48,7 @@
         <th>วันที่บันทึก</th>
         <td><input type="date" name="de_savedate" value="<%= new Date().toISOString().slice(0,10) %>"></td>
       </tr>
+     
     </table>
 
     <button type="submit">💾 บันทึกข้อมูล</button>

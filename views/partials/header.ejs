@@ -28,8 +28,9 @@
             <li class="nav-item"><a class="nav-link" href="/business">รายงานกิจการ</a></li>
 
               <li class="nav-item"><a href="/rule" class="nav-link">ข้อบังคับ</a></li>
-            
+               <% if(user && user.mClass=='kjs'){ %>
               <li class="nav-item"><a class="nav-link" href="/rabiab">ระเบียบ</a></li>
+               <% } %>
               <li class="nav-item"><a class="nav-link" href="/vong">วงเงินกู้ยืม</a></li>
               <li class="nav-item"><a class="nav-link" href="/rq2">รายงาน RQ2</a></li>
             <!-- ตรวจสอบ login -->

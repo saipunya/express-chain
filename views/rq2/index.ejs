@@ -11,7 +11,7 @@
     <a href="/rq2/create" class="btn btn-primary">Add</a>
     <% } %>
   </div>
-  <table class="table table-bordered table-striped">
+  <table class="table table-bordered">
     <thead>
       <tr>
         <th>Name</th>
@@ -25,7 +25,14 @@
     <tbody>
       <% items.forEach(p => { %>
         <tr>
-          <td><%= p.rq_name %></td>
+          <td>
+            <%= p.rq_name %>
+            <% const pSavedDate = new Date(p.rq_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - pSavedDate) / (1000 * 60 * 60 * 24)); %>
+                      <% if (diffDays <= 7) { %>
+                        <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                          class="ms-2" style="width: 45px; height: 32px;" />
+                      <% } %>
+          </td>
           <td><%= p.rq_year %></td>
           <td>
             <% if (user) { %>

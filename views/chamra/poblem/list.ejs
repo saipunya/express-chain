@@ -1,0 +1,45 @@
+<%- include('../../partials/header.ejs') %>
+<div class="container mt-4">
+  <h2 class="mb-4">📋 รายการปัญหา Chamra</h2>
+  <a href="/chamra/poblem/add" class="btn btn-success mb-3">➕ เพิ่มปัญหา</a>
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>#</th>
+        <th>ชื่อสถาบัน</th>
+        <th>ปี</th>
+        <th>ครั้งที่ประชุม</th>
+        <th>รายละเอียด</th>
+        <th>ปัญหา</th>
+        <th>ผู้บันทึก</th>
+        <th>วันที่บันทึก</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% poblems.forEach((p, idx) => { %>
+        <tr>
+          <td><%= idx + 1 %></td>
+          <td><%= p.c_name %></td>
+          <td><%= p.po_year %></td>
+          <td><%= p.po_meeting %></td>
+          <td><%= p.po_detail %></td>
+          <td><%= p.po_problem %></td>
+          <td><%= p.po_saveby %></td>
+          <td><%= p.po_savedate ? new Date(p.po_savedate).toLocaleDateString('th-TH') : '' %></td>
+          <td>
+            <!-- เพิ่มปุ่มแก้ไข/ลบได้ตามต้องการ -->
+           <a href="/chamra/poblem/edit/<%= p.po_id %>" class="btn btn-primary btn-sm">✏️</a>
+            <form action="/chamra/poblem/delete/<%= p.po_id %>" method="POST" style="display:inline;" onsubmit="return confirm('ยืนยันลบ?');">
+              <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        
+
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../../partials/footer.ejs') %>

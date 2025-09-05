@@ -1,0 +1,101 @@
+<%- include('../../partials/header.ejs') %>
+<div class="container mt-4">
+  <h2 class="mb-4">➕ เพิ่มปัญหา Chamra</h2>
+  <form method="POST" action="/chamra/poblem/add">
+    <table class="table">
+       
+        <th>ปี</th>
+        <td><input type="number" name="po_year" required></td>
+      </tr>
+      <tr>
+        <th>ครั้งที่ประชุม</th>
+        <td><input type="number" name="po_meeting" required></td>
+      </tr>
+      <tr>
+        <% if (!exist) { %>
+            <tr>
+              <th>ชื่อสถาบัน</th>
+              <td>
+                <select name="po_code" required>
+                    <option value="">++โปรดเลือก++</option>
+                  <% coopList.forEach(coop => { %>
+                    <option value="<%= coop.c_code %>"><%= coop.c_name %></option>
+                  <% }) %>
+                </select>
+              </td>
+            </tr>
+            <% } else { %>
+            <tr>
+              <th>ชื่อสถาบัน</th>
+              <td>
+                <span class="text-danger">มีข้อมูลปีและครั้งประชุมนี้แล้ว</span>
+              </td>
+            </tr>
+            <% } %>
+        <th>รายละเอียด</th>
+        <td><textarea name="po_detail" rows="3" required></textarea></td>
+      </tr>
+      <tr>
+        <th>ปัญหา</th>
+        <td><textarea name="po_problem" rows="3" required></textarea></td>
+      </tr>
+      <tr>
+        <th>ผู้บันทึก</th>
+        <td><input type="text" name="po_saveby" value="<%= user ? user.fullname : 'ผู้ใช้ทั่วไป' %>" required></td>
+      </tr>
+      <tr>
+        <th>วันที่บันทึก</th>
+        <td><input type="date" name="po_savedate" value="<%= new Date().toISOString().slice(0,10) %>" required></td>
+      </tr>
+    </table>
+    <button type="submit" class="btn btn-primary">💾 บันทึกข้อมูล</button>
+    <a href="/chamra/poblem" class="btn btn-secondary">← กลับหน้ารายการ</a>
+  </form>
+  <span id="exist-warning" class="text-danger" style="display:none;">มีข้อมูลปีและครั้งประชุมนี้แล้ว</span>
+</div>
+<script>
+function checkPoblemExist() {
+  const po_code = document.querySelector('[name="po_code"]').value;
+  const po_year = document.querySelector('[name="po_year"]').value;
+  const po_meeting = document.querySelector('[name="po_meeting"]').value;
+  if (!po_code || !po_year || !po_meeting) return;
+
+  fetch(`/chamra/poblem/check-exist?po_code=${po_code}&po_year=${po_year}&po_meeting=${po_meeting}`)
+    .then(res => res.json())
+    .then(data => {
+      const warn = document.getElementById('exist-warning');
+      if (data.exist) {
+        warn.style.display = 'block';
+        document.querySelector('button[type="submit"]').disabled = true;
+      } else {
+        warn.style.display = 'none';
+        document.querySelector('button[type="submit"]').disabled = false;
+      }
+    });
+}
+
+function updateCoopList() {
+  const po_year = document.querySelector('[name="po_year"]').value;
+  const po_meeting = document.querySelector('[name="po_meeting"]').value;
+  const select = document.querySelector('[name="po_code"]');
+  if (!po_year || !po_meeting) return;
+
+  fetch(`/chamra/poblem/available-coop?po_year=${po_year}&po_meeting=${po_meeting}`)
+    .then(res => res.json())
+    .then(list => {
+      select.innerHTML = '<option value="">++โปรดเลือก++</option>';
+      list.forEach(coop => {
+        select.innerHTML += `<option value="${coop.c_code}">${coop.c_name}</option>`;
+      });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelector('[name="po_code"]').addEventListener('change', checkPoblemExist);
+  document.querySelector('[name="po_year"]').addEventListener('input', checkPoblemExist);
+  document.querySelector('[name="po_meeting"]').addEventListener('input', checkPoblemExist);
+  document.querySelector('[name="po_year"]').addEventListener('input', updateCoopList);
+  document.querySelector('[name="po_meeting"]').addEventListener('input', updateCoopList);
+});
+</script>
+<%- include('../../partials/footer.ejs') %>

@@ -96,4 +96,14 @@ exports.getAll = async () => {
   return rows;
 };
 
+exports.getAllPob = async () =>{
+  const sql = `
+  SELECT p.*, ac.c_name
+FROM chamra_poblem p
+LEFT JOIN active_coop ac ON p.po_code = ac.c_code
+  `;
+  const [rows] = await db.query(sql);
+  return rows;
+}
+
 

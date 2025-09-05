@@ -25,6 +25,7 @@
 <div class="container mt-4">
   <h2 class="mb-4">📋 รายการ Chamra</h2>
   <a href="/chamra/add" class="btn btn-success mb-3">➕ เพิ่ม Chamra</a>
+  <a href="/chamra/poblem" class="btn btn-warning mb-3">📋 รายการปัญหา Chamra</a>
 
   <table class="table table-bordered table-striped">
     <thead class="table-dark">
@@ -35,9 +36,13 @@
        
         <th>ผู้ชำระบัญชี</th>
         <th>วันที่กระบวนการ</th>
+        <% if(user && user.mClass === 'kjs'){  %>
+
         <th>จัดการ</th>
+        <% } %>
       </tr>
     </thead>
+    
     <tbody>
       <% data.forEach((c, index) => { %>
         <tr>
@@ -77,12 +82,14 @@
             %>
             <%- steps.join('<br>') %>
           </td>
+          <% if(user && user.mClass === 'kjs'){  %>
           <td>
             <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️ แก้ไข</a>
             <form action="/chamra/delete/<%= c.c_code %>" method="POST" style="display:inline;" onsubmit="return confirm('ยืนยันลบ Chamra?');">
               <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบ</button>
             </form>
           </td>
+          <% } %>
         </tr>
       <% }) %>
     </tbody>

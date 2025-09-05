@@ -91,6 +91,7 @@ exports.getAll = async () => {
     FROM chamra_detail d
     LEFT JOIN active_coop ac ON d.de_code = ac.c_code
     LEFT JOIN chamra_process cp ON d.de_code = cp.pr_code
+    ORDER BY ac.c_status DESC , ac.c_name DESC
   `;
   const [rows] = await db.query(sql);
   return rows;

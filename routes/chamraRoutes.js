@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const chamraController = require('../controllers/chamraController');
+const { requireLogin } = require('../middlewares/authMiddleware');
 
 // List
 router.get('/', chamraController.list);
@@ -29,8 +30,12 @@ router.get('/poblem/check-exist', chamraController.checkPoblemExist);
 // get available coop
 router.get('/poblem/available-coop', chamraController.getAvailableCoop);
 
-
-
+// ---- chamra_process routes ----
+router.get('/process',requireLogin, chamraController.processList);
+router.post('/process/:pr_id/update', chamraController.processUpdate);
+router.post('/process/:pr_id/delete', chamraController.processDelete);
+// (optional separate edit page)
+// router.get('/process/edit/:pr_id', chamraController.processEdit);
 
 router.post('/poblem/delete/:po_id', chamraController.deletePoblem);
 

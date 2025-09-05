@@ -1,5 +1,9 @@
 const db = require('../config/db');
 
+// Helper to normalize empty string -> null
+const nz = v => (v === '' || typeof v === 'undefined' ? null : v);
+
+// --- existing query functions kept ---
 exports.getFiltered = ({ search, c_status, gr_step, page, page_size }) => {
   const sql = `
     SELECT d.*, ac.c_name, ac.c_status, ac.c_group, ac.c_person, ac.c_person2, cg.gr_step,
@@ -105,6 +109,97 @@ LEFT JOIN active_coop ac ON p.po_code = ac.c_code
   `;
   const [rows] = await db.query(sql);
   return rows;
+};
+
+// Create (insert) into chamra_detail (NOT non-existent 'chamra')
+async function create(data) {
+  const savedate = (data.de_savedate && /^\d{4}-\d{2}-\d{2}$/.test(data.de_savedate))
+    ? data.de_savedate
+    : new Date();
+  const sql = `
+    INSERT INTO chamra_detail
+      (de_code, de_case, de_comno, de_comdate, de_person,
+       de_maihed, de_saveby, de_savedate)
+    VALUES (?,?,?,?,?,?,?,?)
+  `;
+  const params = [
+    nz(data.de_code),
+    nz(data.de_case),
+    nz(data.de_comno),
+    nz(data.de_comdate),
+    nz(data.de_person),
+    (data.de_maihed == null ? '' : data.de_maihed),
+    (data.de_saveby == null || data.de_saveby === '' ? 'system' : data.de_saveby),
+    savedate
+  ];
+  await db.query(sql, params);
+  return true;
 }
+
+// Update stub (extend as needed)
+async function update(c_code, { active, detail, process }) {
+  // Without full schema details, provide no-op or minimal update logic.
+  // Example (uncomment and adjust when columns defined):
+  // await db.query('UPDATE chamra_detail SET de_case=? WHERE de_code=?', [detail.de_case, c_code]);
+  return true;
+}
+
+// Delete by code (remove all rows for code)
+async function remove(c_code) {
+  await db.query('DELETE FROM chamra_detail WHERE de_code = ?', [c_code]);
+  return true;
+}
+
+// ---- chamra_process helpers ----
+async function getAllProcess() {
+  const [rows] = await db.query(`
+    SELECT cp.*, ac.c_name
+    FROM chamra_process cp
+    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
+    ORDER BY cp.pr_code
+  `);
+  return rows;
+}
+
+async function getProcessById(pr_id) {
+  const [rows] = await db.query(`
+    SELECT cp.*, ac.c_name
+    FROM chamra_process cp
+    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
+    WHERE cp.pr_id = ?
+  `, [pr_id]);
+  return rows[0] || null;
+}
+
+async function updateProcess(pr_id, data) {
+  const fields = ['pr_s1','pr_s2','pr_s3','pr_s4','pr_s5','pr_s6','pr_s7','pr_s8','pr_s9','pr_s10'];
+  const setSql = fields.map(f => `${f}=?`).join(',');
+  const params = fields.map(f => (data[f] && data[f] !== '' ? data[f] : '0000-00-00'));
+  params.push(pr_id);
+  await db.query(`UPDATE chamra_process SET ${setSql} WHERE pr_id = ?`, params);
+  return true;
+}
+
+async function deleteProcess(pr_id) {
+  await db.query('DELETE FROM chamra_process WHERE pr_id = ?', [pr_id]);
+  return true;
+}
+
+// Export unified API object (avoid shape confusion)
+module.exports = {
+  getFiltered: exports.getFiltered,
+  countFiltered: exports.countFiltered,
+  getByCode: exports.getByCode,
+  getAll: exports.getAll,
+  getAllPob: exports.getAllPob,
+  create,
+  update,
+  delete: remove,
+  // process exports
+  getAllProcess,
+  getProcessById,
+  updateProcess,
+  deleteProcess
+};
 
 

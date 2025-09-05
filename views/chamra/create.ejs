@@ -1,57 +1,96 @@
 <%- include('../partials/header.ejs') %>
-  <h1>➕ เพิ่มข้อมูล Chamra</h1>
-
-  <form method="POST" action="/chamra">
-    <table>
-      <tr>
-        <th>รหัส</th>
-        <td>
-          <select name="de_code" required>
-            <% coopList.forEach(coop => { %>
-              <option value="<%= coop.c_code %>"><%= coop.c_code %> - <%= coop.c_name %></option>
-            <% }) %>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <th>กรณี</th>
-        <td><input type="text" name="de_case" required></td>
-      </tr>
-      <tr>
-        <th>เลขคำสั่ง</th>
-        <td><input type="text" name="de_comno"></td>
-      </tr>
-      <tr>
-        <th>วันที่คำสั่ง</th>
-        <td><input type="date" name="de_comdate"></td>
-      </tr>
-      <tr>
-        <th>ผู้รับผิดชอบ</th>
-        <td><input type="text" name="de_person"></td>
-      </tr>
-      <tr>
-        <th>เป้าหมาย</th>
-        <td>
-          <input type="text" name="de_target1" placeholder="เป้าหมาย 1">
-          <input type="text" name="de_target2" placeholder="เป้าหมาย 2">
-        </td>
-      </tr>
-      <tr>
-        <th>หมายเหตุ</th>
-        <td><textarea name="de_maihed"></textarea></td>
-      </tr>
-      <tr>
-        <th>ผู้บันทึก</th>
-        <td><input type="text" name="de_saveby" value="admin"></td>
-      </tr>
-      <tr>
-        <th>วันที่บันทึก</th>
-        <td><input type="date" name="de_savedate" value="<%= new Date().toISOString().slice(0,10) %>"></td>
-      </tr>
-     
-    </table>
-
-    <button type="submit">💾 บันทึกข้อมูล</button>
-    <a href="/chamra">← กลับหน้ารายการ</a>
-  </form>
+<!-- ใช้ Bootstrap 5.3 layout -->
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+          <h5 class="mb-0 d-flex align-items-center gap-2">
+            <span class="fs-4">➕</span> เพิ่มข้อมูล Chamra
+          </h5>
+        </div>
+        <form method="POST" action="/chamra/add" novalidate>
+          <div class="card-body">
+            <!-- รหัส -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label required fw-semibold">รหัส <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
+                <select name="de_code" class="form-select form-select-sm" required>
+                  <% coopList.forEach(coop => { %>
+                    <option value="<%= coop.c_code %>"><%= coop.c_code %> - <%= coop.c_name %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+            <!-- กรณี -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">กรณี <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
+                <input type="text" name="de_case" class="form-control form-control-sm" placeholder="มาตรา 32(3) หรือ มาตรา 70(3)" required>
+              </div>
+            </div>
+            <!-- เลขคำสั่ง -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">เลขคำสั่ง</label>
+              <div class="col-sm-9">
+                <input type="text" name="de_comno" class="form-control form-control-sm" placeholder="เช่น 123/2567 / กรณีประกาศเลิกให้ขีด -">
+              </div>
+            </div>
+            <!-- วันที่คำสั่ง -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">ลงวันที่</label>
+              <div class="col-sm-9">
+                <input type="date" name="de_comdate" class="form-control form-control-sm">
+              </div>
+            </div>
+            <!-- ผู้ชำระบัญชี -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">ผู้ชำระบัญชี</label>
+              <div class="col-sm-9">
+                <input type="text" name="de_person" class="form-control form-control-sm" placeholder="ชื่อผู้ชำระบัญชี หลายคนให้ใส่ลำดับด้วย" required>
+              </div>
+            </div>
+            <!-- หมายเหตุ -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">หมายเหตุ <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
+                <textarea name="de_maihed" class="form-control form-control-sm" rows="4" placeholder="รายละเอียดเพิ่มเติม / หมายเหตุ" required></textarea>
+                <div class="form-text">กรอกสั้น ๆ กระชับ เพื่อให้ง่ายต่อการตรวจสอบภายหลัง</div>
+              </div>
+            </div>
+            <!-- ผู้บันทึก -->
+            <div class="mb-3 row">
+              <label class="col-sm-3 col-form-label fw-semibold">ผู้บันทึก</label>
+              <div class="col-sm-9">
+                <input type="text" class="form-control form-control-sm bg-light" value="<%= (user && (user.fullname || user.username)) || 'ผู้ใช้งานทั่วไป' %>" disabled>
+                <input type="hidden" name="de_saveby" value="<%= (user && (user.fullname || user.username)) || 'ผู้ใช้งานทั่วไป' %>">
+                <div class="form-text">ระบบกำหนดตามผู้ใช้งานอัตโนมัติ</div>
+              </div>
+            </div>
+            <!-- วันที่บันทึก -->
+            <div class="mb-2 row">
+              <label class="col-sm-3 col-form-label fw-semibold">วันที่บันทึก <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
+                <input type="date" name="de_savedate" class="form-control form-control-sm" value="<%= new Date().toISOString().slice(0,10) %>" readonly>
+              </div>
+            </div>
+            <hr class="my-4">
+            <!-- ปุ่ม -->
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-2 px-3">
+                💾 <span>บันทึกข้อมูล</span>
+              </button>
+              <a href="/chamra" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 px-3">
+                ← <span>กลับหน้ารายการ</span>
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="text-center small text-muted mt-3">
+        ระบบบันทึกข้อมูล Chamra
+      </div>
+    </div>
+  </div>
+</div>
 <%- include('../partials/footer.ejs') %>

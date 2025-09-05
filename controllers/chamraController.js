@@ -1,4 +1,4 @@
-const Chamra = require('../models/chamraModel');
+const Chamra = require('../models/chamraModel'); // unified model
 const db = require('../config/db');
 
 const chamraController = {};
@@ -19,7 +19,7 @@ chamraController.addForm = async (req, res) => {
   const [rows] = await db.query(
     "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก'"
   );
-  res.render('chamra/create', { coopList: rows });
+  res.render('chamra/create', { coopList: rows, user: req.user || null });
 };
 
 // แสดง form แก้ไข
@@ -43,14 +43,48 @@ chamraController.createForm = async (req, res) => {
   const [rows] = await db.query(
     "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก'"
   );
-  res.render('chamra/create', { coopList: rows });
+  res.render('chamra/create', { coopList: rows, user: req.user || null });
 };
 
 // บันทึกเพิ่ม
-chamraController.create = async (req, res) => {
-  const { active, detail, process } = req.body;
-  await Chamra.create({ active, detail, process });
-  res.redirect('/chamra');
+chamraController.create = async (req, res, next) => {
+  try {
+    const {
+      de_code,
+      de_case,
+      de_comno,
+      de_comdate,
+      de_person,
+      de_maihed,
+      de_saveby,
+      de_savedate
+    } = req.body;
+
+    if (!de_code || !de_case) {
+      return res.status(400).send('de_code and de_case are required');
+    }
+
+    const normalizedDate = (de_savedate && /^\d{4}-\d{2}-\d{2}$/.test(de_savedate)) ? de_savedate : new Date();
+
+    await Chamra.create({
+      de_code,
+      de_case,
+      de_comno,
+      de_comdate,
+      de_person,
+      de_maihed,
+      de_saveby: de_saveby || (req.user && (req.user.fullname || req.user.username)) || 'system',
+      de_savedate: normalizedDate
+    });
+
+    return res.redirect('/chamra');
+  } catch (err) {
+    console.error('Create Chamra failed:', err);
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      return res.status(500).send('Table chamra_detail not found. Please create it.');
+    }
+    return res.status(500).send('Internal Server Error');
+  }
 };
 
 // บันทึกแก้ไข
@@ -67,7 +101,6 @@ chamraController.delete = async (req, res) => {
   await Chamra.delete(c_code);
   res.redirect('/chamra');
 };
-
 
 // แสดงฟอร์มเพิ่มปัญหา
 chamraController.createFormPob = async (req, res) => {
@@ -127,6 +160,7 @@ chamraController.createPob = async (req, res) => {
       `INSERT INTO chamra_poblem 
         (po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+
       [po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate]
     );
     res.redirect('/chamra/poblem');
@@ -170,6 +204,31 @@ chamraController.deletePoblem = async (req, res) => {
     console.error('Error deleting Chamra Poblem:', error);
     res.status(500).send('Internal Server Error');
   }
+};
+
+// แสดงรายการกระบวนการ
+chamraController.processList = async (req, res) => {
+  const processes = await Chamra.getAllProcess();
+  res.render('chamra/process/list', { processes });
+};
+
+// แสดงฟอร์มแก้ไข (ถ้าต้องการหน้าแยก; ที่นี่ใช้ในหน้า list ก็ได้)
+chamraController.processEdit = async (req, res) => {
+  const pr = await Chamra.getProcessById(req.params.pr_id);
+  if (!pr) return res.status(404).send('ไม่พบรายการ');
+  res.render('chamra/process/edit', { process: pr }); // สร้างไฟล์นี้หากต้องการใช้หน้าแยก
+};
+
+// อัปเดต (inline submit)
+chamraController.processUpdate = async (req, res) => {
+  await Chamra.updateProcess(req.params.pr_id, req.body);
+  res.redirect('/chamra/process');
+};
+
+// ลบ
+chamraController.processDelete = async (req, res) => {
+  await Chamra.deleteProcess(req.params.pr_id);
+  res.redirect('/chamra/process');
 };
 
 module.exports = chamraController;

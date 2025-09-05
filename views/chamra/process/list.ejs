@@ -1,0 +1,221 @@
+<%- include('../../partials/header.ejs') %>
+<style>
+  :root{
+    --fs-base:15px;
+    --fs-table:14px;
+    --fs-badge:12px;
+  }
+  .page-wrap{max-width:1400px;margin:0 auto;padding:1.2rem;font-family:system-ui,Arial,sans-serif;font-size:var(--fs-base);}
+  h1{margin:0 0 .8rem;font-size:1.4rem;display:flex;align-items:center;gap:.5rem;}
+  h1:before{content:"📄";}
+  .table-box{background:#fff;border:1px solid #dcdfe6;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.05);padding:1rem;}
+  .table-scroll{overflow:auto;max-height:70vh;}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:1100px;font-size:var(--fs-table);}
+  thead th{position:sticky;top:0;background:#2f4050;color:#fff;font-weight:600;padding:.55rem .6rem;text-align:center;z-index:5;}
+  tbody td{padding:.45rem .55rem;border-top:1px solid #eee;vertical-align:middle;text-align:center;}
+  tbody tr:nth-child(even){background:#fafafa;}
+  tbody tr:hover{background:#f2f8ff;}
+  .code{font-weight:600;color:#2c3e50;letter-spacing:.5px;}
+  .status-badge{display:inline-block;padding:2px 6px;border-radius:14px;font-size:calc(var(--fs-badge) * 1);font-weight:600;letter-spacing:.5px;}
+  .status-badge.done{background:#e6f9ed;color:#1d7a35;border:1px solid #b6ecc8;}
+  .status-badge.empty{background:#f6f7f9;color:#999;border:1px solid #e2e4e7;}
+  .actions{display:flex;gap:.35rem;justify-content:center;}
+  .btn-sm{border:0;background:#3a7afe;color:#fff;padding:.35rem .55rem;border-radius:6px;cursor:pointer;font-size:.65rem;font-weight:600;display:inline-flex;align-items:center;gap:2px;transition:.15s;}
+  .btn-sm:hover{background:#2365ef;}
+  .btn-del{background:#ec4d4d;}
+  .btn-del:hover{background:#d63838;}
+  form.inline{display:inline;}
+  .edit-row{background:#fff6e5 !important;}
+  .edit-panel{padding:.6rem .8rem;border:1px solid #f5d7a4;border-radius:8px;margin-top:.4rem;}
+  .dates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.45rem;margin-bottom:.5rem;}
+  .dates-grid label{font-size:.6rem;font-weight:600;display:flex;flex-direction:column;gap:2px;text-align:left;color:#555;}
+  .dates-grid input{font-size:.63rem;padding:.25rem .3rem;border:1px solid #cdd3da;border-radius:4px;}
+  .panel-actions{display:flex;gap:.4rem;}
+  .btn-secondary{background:#909daf;}
+  .btn-secondary:hover{background:#7d8897;}
+  .legend{display:flex;gap:.6rem;font-size:.6rem;margin:.4rem 0 .2rem;}
+  .legend span{display:inline-flex;align-items:center;gap:4px;}
+  .legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .lg-done i{background:#1d7a35;}
+  .lg-empty i{background:#999;}
+  .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem;}
+  .back-link{font-size:.7rem;text-decoration:none;background:#eee;padding:.35rem .6rem;border-radius:6px;color:#333;font-weight:600;}
+  .back-link:hover{background:#ddd;}
+  .font-size-controls{
+    display:flex;gap:.4rem;align-items:center;
+  }
+  .font-size-controls button{
+    background:#444;color:#fff;border:0;border-radius:6px;
+    padding:.35rem .55rem;cursor:pointer;font-size:.75rem;font-weight:600;
+  }
+  .font-size-controls button:hover{background:#222;}
+</style>
+
+<div class="page-wrap">
+  <div class="top-bar">
+    <h1>รายการ Chamra Process</h1>
+    <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+      <div class="font-size-controls">
+        <button type="button" onclick="adjFont(-1)">A-</button>
+        <button type="button" onclick="adjFont(1)">A+</button>
+        <button type="button" onclick="resetFont()">รีเซ็ต</button>
+      </div>
+      <a href="/chamra" class="back-link">← กลับ</a>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="lg-done"><i></i> มีวันที่</span>
+    <span class="lg-empty"><i></i> ยังไม่ดำเนินการ</span>
+  </div>
+
+  <div class="table-box">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>รหัส</th>
+            <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
+            <th>S6</th><th>S7</th><th>S8</th><th>S9</th><th>S10</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% 
+          const isEmptyDate = (v) => {
+            if (!v) return true;
+            if (typeof v === 'string') {
+              if (v === '0000-00-00') return true;
+              // บางครั้ง MySQL อาจส่ง '1899-11-30' เมื่อ parse ผิด
+              if (/^1899-11-30/.test(v)) return true;
+            }
+            if (v instanceof Date) {
+              const y = v.getFullYear();
+              if (y < 1950) return true;
+            }
+            return false;
+          };
+          const normalizeForDisplay = (v) => isEmptyDate(v) ? null : v;
+          const formatThai = (v) => {
+            const raw = normalizeForDisplay(v);
+            if (!raw) return '-';
+            const d = raw instanceof Date ? raw : new Date(raw);
+            if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+          };
+          const formatLocalDateInput = (rv) => {
+            if (!rv) return '';
+            if (typeof rv === 'string') return rv; // assume already yyyy-mm-dd
+            if (rv instanceof Date && !isNaN(rv.getTime())) {
+              const y = rv.getFullYear();
+              const m = String(rv.getMonth() + 1).padStart(2,'0');
+              const d = String(rv.getDate()).padStart(2,'0');
+              return `${y}-${m}-${d}`;
+            }
+            return '';
+          };
+        %>
+        <% processes.forEach(p => { %>
+          <tr>
+            <td class="code">
+             
+              <div style="font-size:15px;color:#666;font-weight:400;" class="text-start"><%= p.c_name || '-' %></div>
+            </td>
+            <% for (let i=1;i<=10;i++){ 
+                 const key='pr_s'+i; 
+                 const raw = p[key];
+                 const showDash = isEmptyDate(raw);
+            %>
+              <td>
+                <% if (showDash) { %>
+                  <span class="status-badge empty">-</span>
+                <% } else { %>
+                  <span class="status-badge done"><%= formatThai(raw) %></span>
+                <% } %>
+              </td>
+            <% } %>
+            <td>
+              <div class="actions">
+                <button type="button" class="btn-sm" onclick="toggleEdit('<%= p.pr_id %>')">แก้ไข</button>
+                <form class="inline" method="POST" action="/chamra/process/<%= p.pr_id %>/delete" onsubmit="return confirm('ยืนยันลบรายการนี้?');">
+                  <button type="submit" class="btn-sm btn-del">ลบ</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr id="edit-row-<%= p.pr_id %>" class="edit-row" style="display:none;">
+            <td colspan="12">
+              <form method="POST" action="/chamra/process/<%= p.pr_id %>/update" class="edit-panel">
+                <div class="dates-grid">
+                  <% for (let i=1;i<=10;i++){ 
+                       const key='pr_s'+i; 
+                       const rv = p[key];
+                       const inputVal = (!isEmptyDate(rv)) ? formatLocalDateInput(rv) : '';
+                  %>
+                    <label>S<%= i %>
+                      <input type="date" name="pr_s<%= i %>" value="<%= inputVal %>">
+                    </label>
+                  <% } %>
+                </div>
+                <div class="panel-actions">
+                  <button type="submit" class="btn-sm">บันทึก</button>
+                  <button type="button" class="btn-sm btn-secondary" onclick="toggleEdit('<%= p.pr_id %>')">ยกเลิก</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleEdit(id){
+  const row = document.getElementById('edit-row-'+id);
+  if(row){
+    const isHidden = row.style.display === 'none';
+    // close others
+    document.querySelectorAll('[id^="edit-row-"]').forEach(r => r.style.display='none');
+    row.style.display = isHidden ? '' : 'none';
+    if(isHidden){
+      row.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+}
+
+const fsState = {
+  base: 15,
+  table: 14,
+  badge: 12
+};
+function applyFS(){
+  document.documentElement.style.setProperty('--fs-base', fsState.base + 'px');
+  document.documentElement.style.setProperty('--fs-table', fsState.table + 'px');
+  document.documentElement.style.setProperty('--fs-badge', fsState.badge + 'px');
+  localStorage.setItem('chamraFS', JSON.stringify(fsState));
+}
+function adjFont(delta){
+  fsState.base = Math.min(20, Math.max(12, fsState.base + delta));
+  fsState.table = Math.min(19, Math.max(11, fsState.table + delta));
+  fsState.badge = Math.min(17, Math.max(10, fsState.badge + delta));
+  applyFS();
+}
+function resetFont(){
+  fsState.base = 15; fsState.table = 14; fsState.badge = 12;
+  applyFS();
+}
+(function initFS(){
+  const saved = localStorage.getItem('chamraFS');
+  if(saved){
+    try{
+      const obj = JSON.parse(saved);
+      Object.assign(fsState, obj);
+    }catch(e){}
+  }
+  applyFS();
+})();
+</script>
+<%- include('../../partials/footer.ejs') %>

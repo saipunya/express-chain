@@ -76,7 +76,8 @@ const homeController = {
         activity,
         lastArticles,    // ✅ ส่งไปที่ view
         closedCoops,     // ✅ ส่ง closed coops to view
-        coopGroupStats   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+        coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+        title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้
     } catch (error) {

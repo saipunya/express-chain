@@ -132,7 +132,7 @@ exports.getGroupStats = async () => {
     GROUP BY c_group
     ORDER BY c_group
   `);
-  console.log('Group stats:', rows);
+  // console.log('Group stats:', rows);
   return rows;
 };
 

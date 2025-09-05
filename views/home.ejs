@@ -115,8 +115,10 @@
                 <%= user.fullname %>
               </p>
               <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
-              <% if(user.mClass==='kjs' ) { %>
+              <% if(user && (user.mClass==='kjs' || user.mClass==='admin')) { %>
                 <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
+              
+                <a href="/chamra" class="btn btn-outline-secondary me-2">ชำระบัญชี</a>
                 <% } %>
                   <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
             </div>

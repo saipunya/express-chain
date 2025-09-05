@@ -16,6 +16,7 @@
               <label class="col-sm-3 col-form-label required fw-semibold">รหัส <span class="text-danger">*</span></label>
               <div class="col-sm-9">
                 <select name="de_code" class="form-select form-select-sm" required>
+                  <option value="" disabled selected>-- เลือกรหัสสถาบัน --</option>
                   <% coopList.forEach(coop => { %>
                     <option value="<%= coop.c_code %>"><%= coop.c_code %> - <%= coop.c_name %></option>
                   <% }) %>

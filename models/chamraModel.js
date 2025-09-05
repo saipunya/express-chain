@@ -156,7 +156,7 @@ async function getAllProcess() {
     SELECT cp.*, ac.c_name
     FROM chamra_process cp
     LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
-    ORDER BY cp.pr_code
+    ORDER BY ac.c_status DESC , ac.c_name DESC
   `);
   return rows;
 }
@@ -185,6 +185,29 @@ async function deleteProcess(pr_id) {
   return true;
 }
 
+async function createProcess(data) {
+  // Check duplicate pr_code
+  const [dup] = await db.query('SELECT COUNT(*) AS total FROM chamra_process WHERE pr_code = ?', [data.pr_code]);
+  if (dup[0].total > 0) {
+    const err = new Error('DUPLICATE_CODE');
+    err.code = 'DUPLICATE_CODE';
+    throw err;
+  }
+  const f = (v) => (v && v !== '' ? v : '0000-00-00');
+  const sql = `
+    INSERT INTO chamra_process
+      (pr_code, pr_s1, pr_s2, pr_s3, pr_s4, pr_s5, pr_s6, pr_s7, pr_s8, pr_s9, pr_s10)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+  `;
+  const params = [
+    data.pr_code,
+    f(data.pr_s1), f(data.pr_s2), f(data.pr_s3), f(data.pr_s4), f(data.pr_s5),
+    f(data.pr_s6), f(data.pr_s7), f(data.pr_s8), f(data.pr_s9), f(data.pr_s10)
+  ];
+  await db.query(sql, params);
+  return true;
+}
+
 // Export unified API object (avoid shape confusion)
 module.exports = {
   getFiltered: exports.getFiltered,
@@ -199,7 +222,8 @@ module.exports = {
   getAllProcess,
   getProcessById,
   updateProcess,
-  deleteProcess
+  deleteProcess,
+  createProcess
 };
 
 

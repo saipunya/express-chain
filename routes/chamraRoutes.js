@@ -37,6 +37,9 @@ router.post('/process/:pr_id/delete', chamraController.processDelete);
 // (optional separate edit page)
 // router.get('/process/edit/:pr_id', chamraController.processEdit);
 
+router.get('/process/add', requireLogin, chamraController.processCreateForm);
+router.post('/process/add', requireLogin, chamraController.processCreate);
+
 router.post('/poblem/delete/:po_id', chamraController.deletePoblem);
 
 module.exports = router;

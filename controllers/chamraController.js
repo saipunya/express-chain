@@ -231,4 +231,38 @@ chamraController.processDelete = async (req, res) => {
   res.redirect('/chamra/process');
 };
 
+// ฟอร์มเพิ่มกระบวนการ
+chamraController.processCreateForm = async (req, res) => {
+  const [coopList] = await db.query('SELECT c_code, c_name FROM active_coop ORDER BY c_name');
+  res.render('chamra/process/create', { coopList, error: null, old: {} });
+};
+
+// บันทึกเพิ่มกระบวนการ
+chamraController.processCreate = async (req, res) => {
+  const {
+    pr_code,
+    pr_s1, pr_s2, pr_s3, pr_s4, pr_s5,
+    pr_s6, pr_s7, pr_s8, pr_s9, pr_s10
+  } = req.body;
+  if (!pr_code) {
+    const [coopList] = await db.query('SELECT c_code, c_name FROM active_coop ORDER BY c_name');
+    return res.render('chamra/process/create', { coopList, error: 'กรุณาเลือกรหัสสถาบัน', old: req.body });
+  }
+  try {
+    await Chamra.createProcess({
+      pr_code,
+      pr_s1, pr_s2, pr_s3, pr_s4, pr_s5,
+      pr_s6, pr_s7, pr_s8, pr_s9, pr_s10
+    });
+    return res.redirect('/chamra/process');
+  } catch (e) {
+    const [coopList] = await db.query('SELECT c_code, c_name FROM active_coop ORDER BY c_name');
+    if (e.code === 'DUPLICATE_CODE') {
+      return res.render('chamra/process/create', { coopList, error: 'มีรหัสนี้อยู่แล้ว', old: req.body });
+    }
+    console.error(e);
+    return res.render('chamra/process/create', { coopList, error: 'เกิดข้อผิดพลาด', old: req.body });
+  }
+};
+
 module.exports = chamraController;

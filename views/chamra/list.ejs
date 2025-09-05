@@ -61,32 +61,42 @@
     </thead>
     
     <tbody>
+      <% 
+        // เพิ่มฟังก์ชันช่วยตรวจสอบความถูกต้องของวันที่ (ให้สอดคล้องกับหน้า process)
+        const isValidProcessDate = (v) => {
+          if(!v) return false;
+          if(v === '0000-00-00') return false;
+          if(/^1899-11-30/.test(v)) return false;
+          const d = new Date(v);
+          if(isNaN(d.getTime())) return false;
+          if(d.getFullYear() < 1950) return false;
+          return true;
+        };
+      %>
       <% data.forEach((c, index) => { 
-          // Pre-compute step info BEFORE <tr> so we can expose latestStepNumber in data attribute
           const processDates = [
             c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5,
             c.pr_s6, c.pr_s7, c.pr_s8, c.pr_s9, c.pr_s10
           ];
-          const validDates = processDates
-            .map((d,i)=>({raw:d, idx:i}))
-            .filter(o => o.raw && o.raw !== '0000-00-00' && o.raw !== '' && o.raw !== null);
-
+          // NEW LOGIC: หา "หมายเลขขั้นสูงสุด" ที่มีวันที่ valid โดยไม่อิงวันที่ล่าสุดเชิงเวลา
           let latestStepNumber = 0;
-          let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
-          if (validDates.length > 0) {
-            const maxTime = Math.max(...validDates.map(o => new Date(o.raw).getTime()));
-            const latest = validDates.find(o => new Date(o.raw).getTime() === maxTime);
-            latestStepNumber = latest.idx + 1;
-            const formattedMaxDate = formatThaiDate(latest.raw);
-            latestBadgeHtml = `
-              <span class="badge latest-step-badge text-dark">
-                📈 ขั้นที่${latestStepNumber} : ${formattedMaxDate}
-              </span>`;
+          for (let i = processDates.length - 1; i >= 0; i--) {
+            if (isValidProcessDate(processDates[i])) { latestStepNumber = i + 1; break; }
           }
           const totalSteps = 10;
           const percent = Math.round((latestStepNumber / totalSteps) * 100);
+
+          // ป้ายแสดงขั้นล่าสุด
+          let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
+          if(latestStepNumber > 0){
+            latestBadgeHtml = `
+              <span class="badge latest-step-badge text-dark">
+                📈 ขั้นที่ ${latestStepNumber} : ${formatThaiDate(processDates[latestStepNumber-1])}
+              </span>`;
+          }
+
           function showStep(label, value) {
-            if (!value || value === '0000-00-00' || value === '' || value === null) return `${label}: -`;
+            if (!isValidProcessDate(value)) return `${label}: -`;
             return `${label}: ${formatThaiDate(value)}`;
           }
           const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));

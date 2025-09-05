@@ -1,5 +1,6 @@
 const pool = require('../config/db'); 
 const activeCoopModel = require('../models/activeCoopModel');
+const puppeteer = require('puppeteer');
 
 exports.index = async (req, res) => {
   const search = req.query.search || '';
@@ -51,5 +52,42 @@ exports.listByEndDate = async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).send('Error loading data');
+  }
+};
+
+exports.exportEndDatePdf = async (req, res) => {
+  try {
+    const groups = await activeCoopModel.getAllGroupedByEndDate();
+
+    const html = await new Promise((resolve, reject) => {
+      res.render('activeCoop/list-pdf', { groups }, (err, rendered) => {
+        if (err) return reject(err);
+        resolve(rendered);
+      });
+    });
+
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox','--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '12mm', right: '10mm', bottom: '12mm', left: '10mm' }
+    });
+
+    await browser.close();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    // ใช้ inline เพื่อให้เปิดในแท็บ ไม่บังคับโหลด
+    res.setHeader('Content-Disposition', 'inline; filename="active_coop_enddate.pdf"');
+    res.send(pdfBuffer);
+  } catch (e) {
+    console.error('PDF export error:', e);
+    res.status(500).send('ไม่สามารถสร้าง PDF ได้');
   }
 };

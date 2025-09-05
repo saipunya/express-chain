@@ -2,6 +2,9 @@
 <div class="container py-4">
   <h2 class="mb-4 text-primary">
     <i class="bi bi-archive me-2"></i> สรุปสหกรณ์ / กลุ่มเกษตรกร แยกตามปีสิ้นสุด (end_date)
+    <a href="/activeCoop/by-end-date/pdf" target="_blank" class="btn btn-sm btn-outline-danger">
+      เปิด PDF
+    </a>
   </h2>
 
   <% const years = Object.keys(groups).sort((a,b)=> b - a); if (years.length === 0) { %>
@@ -50,7 +53,21 @@
                     <td><%= idx + 1 %></td>
                     <td><%= row.c_code %></td>
                     <td><%= row.c_name %></td>
-                    <td><%= row.c_group %></td>
+                    <td>
+                      <% if(row.c_group ==='group1') {%>
+                        <span class="badge bg-success">กลุ่มส่งเสริมสหกรณ์ 1</span>
+                      <% } else if(row.c_group === 'group2') { %>
+                        <span class="badge bg-warning">กลุ่มส่งเสริมสหกรณ์ 2</span>
+                      <% } else if(row.c_group === 'group3') { %>
+                        <span class="badge bg-info">กลุ่มส่งเสริมสหกรณ์ 3</span>
+                      <% } else if(row.c_group === 'group4') { %>
+                        <span class="badge bg-danger">กลุ่มส่งเสริมสหกรณ์ 4</span>
+                      <% } else if(row.c_group === 'group5') { %>
+                        <span class="badge bg-primary">กลุ่มส่งเสริมสหกรณ์ 5</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">กลุ่มส่งเสริมสหกรณ์อื่น</span>
+                      <% } %>
+                    </td>
                     <td>
                       <span class="badge <%= row.c_status === 'ดำเนินการ' ? 'bg-primary' : 'bg-secondary' %>">
                         <%= row.c_status %>
@@ -97,7 +114,21 @@
                     <td><%= idx + 1 %></td>
                     <td><%= row.c_code %></td>
                     <td><%= row.c_name %></td>
-                    <td><%= row.c_group %></td>
+                    <td>
+                      <% if(row.c_group ==='group1') {%>
+                        <span class="badge bg-success">กลุ่มส่งเสริมสหกรณ์ 1</span>
+                      <% } else if(row.c_group === 'group2') { %>
+                        <span class="badge bg-warning">กลุ่มส่งเสริมสหกรณ์ 2</span>
+                      <% } else if(row.c_group === 'group3') { %>
+                        <span class="badge bg-info">กลุ่มส่งเสริมสหกรณ์ 3</span>
+                      <% } else if(row.c_group === 'group4') { %>
+                        <span class="badge bg-danger">กลุ่มส่งเสริมสหกรณ์ 4</span>
+                      <% } else if(row.c_group === 'group5') { %>
+                        <span class="badge bg-primary">กลุ่มส่งเสริมสหกรณ์ 5</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">กลุ่มส่งเสริมสหกรณ์อื่น</span>
+                      <% } %>
+                    </td>
                     <td>
                       <span class="badge <%= row.c_status === 'ดำเนินการ' ? 'bg-primary' : 'bg-secondary' %>">
                         <%= row.c_status %>

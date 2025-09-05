@@ -9,5 +9,6 @@ router.post('/create', activeCoopController.store);
 router.get('/edit/:id',requireLogin, activeCoopController.editForm);
 router.post('/edit/:id',requireLogin, activeCoopController.update);
 router.get('/delete/:id', activeCoopController.delete);
+router.get('/by-end-date', activeCoopController.listByEndDate);
 
 module.exports = router;

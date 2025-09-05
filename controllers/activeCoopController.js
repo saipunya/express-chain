@@ -25,16 +25,14 @@ exports.store = async (req, res) => {
   res.redirect('/active-coop');
 };
 
+exports.editForm = async (req, res) => {
+  const coop = await activeCoopModel.getById(req.params.id);
 
+  // ดึงรายชื่อสมาชิก member3
+  const [members] = await pool.query('SELECT m_name FROM member3 ORDER BY m_name ASC');
 
-  exports.editForm = async (req, res) => {
-    const coop = await activeCoopModel.getById(req.params.id);
-  
-    // ดึงรายชื่อสมาชิก member3
-    const [members] = await pool.query('SELECT m_name FROM member3 ORDER BY m_name ASC');
-  
-    res.render('activeCoop/edit', { coop, members });
-  };
+  res.render('activeCoop/edit', { coop, members });
+};
 
 exports.update = async (req, res) => {
   await activeCoopModel.update(req.params.id, req.body);
@@ -44,4 +42,14 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   await activeCoopModel.remove(req.params.id);
   res.redirect('/active-coop');
+};
+
+exports.listByEndDate = async (req, res) => {
+  try {
+    const groups = await activeCoopModel.getAllGroupedByEndDate();
+    res.render('activeCoop/list', { groups });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading data');
+  }
 };

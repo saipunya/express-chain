@@ -120,6 +120,7 @@ exports.getClosedCoops = async () => {
   );
   return rows;
 };
+
 exports.getGroupStats = async () => {
   // ดึงข้อมูลจำนวนสหกรณ์และกลุ่มเกษตรกรในแต่ละ c_group
   const [rows] = await pool.query(`
@@ -133,5 +134,31 @@ exports.getGroupStats = async () => {
   `);
   console.log('Group stats:', rows);
   return rows;
+};
+
+exports.getAllGroupedByEndDate = async () => {
+  const t0 = Date.now();
+  const [rows] = await pool.query(
+    `SELECT 
+       c_id,
+       c_code,
+       c_name,
+       c_group,
+       coop_group,
+       c_status,
+       end_date,
+       end_day,
+       DATE_FORMAT(end_date,'%Y-%m-%d') AS end_date_fmt,
+       YEAR(end_date) AS end_year
+     FROM active_coop
+     WHERE end_date IS NOT NULL AND c_status = 'ดำเนินการ'
+     ORDER BY end_day DESC, coop_group DESC, c_name ASC`
+  );
+  console.log('getAllGroupedByEndDate rows:', rows.length, 'in', Date.now() - t0, 'ms');
+  return rows.reduce((acc, r) => {
+    const key = r.end_year || 'ไม่ระบุปี';
+    (acc[key] ||= []).push(r);
+    return acc;
+  }, {});
 };
 

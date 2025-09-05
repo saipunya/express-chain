@@ -1,0 +1,36 @@
+<%- include('../partials/header.ejs') %>
+<div class="container mt-4">
+  <h2 class="mb-4">📚 รายการบทความ</h2>
+  <div class="row">
+    <% articles.forEach((article, idx) => { %>
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title"><%= article.ar_subject %></h5>
+            <div>
+                <% 
+                    const imgs = JSON.parse(article.ar_img || '[]');
+                %>  
+                <img src="/uploads/article/<%= imgs[0] %>" alt="img" style="height:40px;" class="me-1 mb-1 rounded border">
+                  
+            </div>
+            <p class="card-text"><%= article.ar_detail.substring(0, 120) + '...' %></p>
+            <span class="d-flex justify-content-end">
+                <a href="/article/view/<%= article.ar_id %>" class="btn btn-sm btn-primary mb-1">
+                    <i class="bi bi-eye"></i> อ่านต่อที่นี่
+                </a>
+            </span>
+           
+          </div>
+          <div class="card-footer text-muted">
+            <%= article.ar_saveby %> | <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
+          </div>
+        </div>
+      </div>
+      <% if ((idx + 1) % 2 === 0) { %>
+        </div><div class="row">
+      <% } %>
+    <% }) %>
+  </div>
+</div>
+<%- include('../partials/footer.ejs') %>

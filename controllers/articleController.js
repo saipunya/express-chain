@@ -4,7 +4,7 @@ const articleModel = require('../models/articleModel');
 
 exports.list = async (req, res) => {
   const articles = await articleModel.getAll();
-  res.render('article/index', { articles });
+  res.render('article/list', { articles });
 };
 
 exports.view = async (req, res) => {

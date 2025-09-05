@@ -54,7 +54,13 @@
           <tr>
             <td><%= idx + 1 %></td>
             <td><%= row.c_code %></td>
-            <td><%= row.c_name %></td>
+            <td>
+                <% if(row.coop_group === 'สหกรณ์'){ %>
+                  <%= row.c_name + ' จำกัด' %>
+                <% } else{ %>
+                  <%= row.c_name %>
+                <% } %>
+            </td>
             <td> <% if(row.c_group ==='group1') {%>
                 <span class="badge bg-success">กลุ่มส่งเสริมสหกรณ์ 1</span>
               <% } else if(row.c_group === 'group2') { %>

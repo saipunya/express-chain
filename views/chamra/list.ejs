@@ -32,22 +32,26 @@
   .progress.step-progress .progress-bar { transition:width .4s ease; }
   td .badge + .badge { margin-left:.25rem; }
   .steps-modal-line { font-size:.8rem; border-left:3px solid #0d6efd; padding:.25rem .5rem; margin-bottom:.25rem; background:#f8f9fa; }
+  tr[data-latest-step="10"] { background:#eefdf5; }
 </style>
 
 <div class="container mt-4">
-  <h2 class="mb-4">📋 รายการ Chamra</h2>
-  <a href="/chamra/add" class="btn btn-success mb-3">➕ เพิ่ม Chamra</a>
-  <a href="/chamra/poblem" class="btn btn-warning mb-3">📋 รายการปัญหา Chamra</a>
+  <h2 class="mb-4">📋 รายการชำระบัญชี</h2>
+  <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+    <a href="/chamra/add" class="btn btn-success mb-3">➕ เพิ่ม Chamra</a>
+    <a href="/chamra/poblem" class="btn btn-warning mb-3">📋 รายการปัญหา Chamra</a>
+  <% } %>
 
   <table class="table chamra-table table-hover align-middle mb-0">
     <thead class="table-dark">
       <tr>
         <th>#</th>
+        <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
         <th>รหัส</th>
+        <% } %>
         <th>ชื่อ</th>
        
         <th>ผู้ชำระบัญชี</th>
-        <th>วันที่กระบวนการ</th>
         <% if(user && user.mClass === 'kjs'){  %>
 
         <th>จัดการ</th>
@@ -56,89 +60,82 @@
     </thead>
     
     <tbody>
-      <% data.forEach((c, index) => { %>
-        <tr>
-          <td><%= index + 1 %></td>
-          <td><%= c.c_code %></td>
-          <td>
-            <div class="fw-semibold"><%= c.c_name %></div>
-            <% if(c.c_status === 'ถอนชื่อ'){ %>
-              <span class="badge bg-success status-pill">ถอนชื่อแล้ว</span>
-            <% } else { %>
-              <span class="badge bg-danger status-pill">กำลังชำระบัญชี</span>
-            <% } %>
-            <br>
-            <%
-              // Collect all step dates (raw)
-              const processDates = [
-                c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5,
-                c.pr_s6, c.pr_s7, c.pr_s8, c.pr_s9, c.pr_s10
-              ];
-              const validDates = processDates
-                .map((d,i)=>({raw:d, idx:i}))
-                .filter(o => o.raw && o.raw !== '0000-00-00' && o.raw !== '' && o.raw !== null);
+      <% data.forEach((c, index) => { 
+          // Pre-compute step info BEFORE <tr> so we can expose latestStepNumber in data attribute
+          const processDates = [
+            c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5,
+            c.pr_s6, c.pr_s7, c.pr_s8, c.pr_s9, c.pr_s10
+          ];
+          const validDates = processDates
+            .map((d,i)=>({raw:d, idx:i}))
+            .filter(o => o.raw && o.raw !== '0000-00-00' && o.raw !== '' && o.raw !== null);
 
-              let latestStepNumber = 0;
-              let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
-              if (validDates.length > 0) {
-                const maxTime = Math.max(...validDates.map(o => new Date(o.raw).getTime()));
-                const latest = validDates.find(o => new Date(o.raw).getTime() === maxTime);
-                latestStepNumber = latest.idx + 1;
-                const formattedMaxDate = formatThaiDate(latest.raw);
-                latestBadgeHtml = `
-                  <span class="badge latest-step-badge text-dark">
-                    📈 ขั้นที่${latestStepNumber} : ${formattedMaxDate}
-                  </span>`;
-              }
-
-              const totalSteps = 10;
-              const percent = Math.round((latestStepNumber / totalSteps) * 100);
-
-              function showStep(label, value) {
-                if (!value || value === '0000-00-00' || value === '' || value === null) return `${label}: -`;
-                return `${label}: ${formatThaiDate(value)}`;
-              }
-              const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
-            %>
-            <div class="mt-2">
-              <%- latestBadgeHtml %>
-            </div>
-            <div class="progress step-progress mt-2" aria-label="Progress">
-              <div class="progress-bar bg-success" role="progressbar"
-                   style="width:<%= percent %>%"
-                   aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
-
-            <button type="button"
-                    class="btn btn-sm btn-outline-secondary mt-2 btn-show-steps"
-                    data-code="<%= c.c_code %>"
-                    data-name="<%= c.c_name %>"
-                    data-steps='<%- JSON.stringify(stepLines) %>'>
-              รายละเอียดขั้นตอน
-            </button>
-          </td>
-          
-          <td><%= c.de_person %></td>
-          <td class="text-nowrap">
-            <small class="text-muted">กด "รายละเอียดขั้นตอน"</small>
-          </td>
-          <% if(user && user.mClass === 'kjs'){  %>
-          <td>
-            <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️ แก้ไข</a>
-            <form action="/chamra/delete/<%= c.c_code %>" method="POST" style="display:inline;" onsubmit="return confirm('ยืนยันลบ Chamra?');">
-              <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบ</button>
-            </form>
-          </td>
+          let latestStepNumber = 0;
+          let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
+          if (validDates.length > 0) {
+            const maxTime = Math.max(...validDates.map(o => new Date(o.raw).getTime()));
+            const latest = validDates.find(o => new Date(o.raw).getTime() === maxTime);
+            latestStepNumber = latest.idx + 1;
+            const formattedMaxDate = formatThaiDate(latest.raw);
+            latestBadgeHtml = `
+              <span class="badge latest-step-badge text-dark">
+                📈 ขั้นที่${latestStepNumber} : ${formattedMaxDate}
+              </span>`;
+          }
+          const totalSteps = 10;
+          const percent = Math.round((latestStepNumber / totalSteps) * 100);
+          function showStep(label, value) {
+            if (!value || value === '0000-00-00' || value === '' || value === null) return `${label}: -`;
+            return `${label}: ${formatThaiDate(value)}`;
+          }
+          const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
+      %>
+      <tr data-latest-step="<%= latestStepNumber %>">
+        <td><%= index + 1 %></td>
+        <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+        <td><%= c.c_code %></td>
+        <% } %>
+        <td>
+          <div class="fw-semibold"><%= c.c_name %></div>
+          <% if(c.c_status === 'ถอนชื่อ'){ %>
+            <span class="badge bg-success status-pill">ถอนชื่อแล้ว</span>
+          <% } else { %>
+            <span class="badge bg-danger status-pill">กำลังชำระบัญชี</span>
           <% } %>
-        </tr>
+          <div class="mt-2"><%- latestBadgeHtml %></div>
+          <div class="progress step-progress mt-2" aria-label="Progress">
+            <div class="progress-bar bg-success" role="progressbar"
+                 style="width:<%= percent %>%"
+                 aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
+          <button type="button"
+                  class="btn btn-sm btn-outline-secondary mt-2 btn-show-steps"
+                  data-code="<%= c.c_code %>"
+                  data-name="<%= c.c_name %>"
+                  data-steps='<%- JSON.stringify(stepLines) %>'>
+            รายละเอียดขั้นตอน
+          </button>
+        </td>
+        
+        <td><%= c.de_person %></td>
+     
+        <% if(user && user.mClass === 'kjs'){  %>
+        <td>
+          <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️ แก้ไข</a>
+          <form action="/chamra/delete/<%= c.c_code %>" method="POST" style="display:inline;" onsubmit="return confirm('ยืนยันลบ Chamra?');">
+            <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบ</button>
+          </form>
+        </td>
+        <% } %>
+      </tr>
       <% }) %>
     </tbody>
   </table>
 </div>
 
 <div class="modal fade" id="stepsModal" tabindex="-1" aria-labelledby="stepsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-sm">
+  <div class="modal-dialog modal-dialog-scrollable modal-md">
     <div class="modal-content">
       <div class="modal-header py-2">
         <h6 class="modal-title mb-0" id="stepsModalLabel">รายละเอียดขั้นตอน</h6>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const activeCoopController = require('../controllers/activeCoopController');
 const { requireLogin } = require('../middlewares/authMiddleware');
+const activeCoopModel = require('../models/activeCoopModel'); // <- เพิ่มบรรทัดนี้
 
 router.get('/', activeCoopController.index);
 router.get('/create', activeCoopController.createForm);
@@ -13,5 +14,13 @@ router.get('/by-end-date', activeCoopController.listByEndDate);
 router.get('/by-end-date/pdf', activeCoopController.exportEndDatePdf);
 router.get('/by-end-date/pdf-wk', activeCoopController.exportEndDatePdfWk);
 router.get('/by-end-date/pdf-make', activeCoopController.exportEndDatePdfMake);
+router.get('/by-end-date/preview', async (req, res, next) => {
+  try {
+    const groups = await activeCoopModel.getAllGroupedByEndDate();
+    res.render('activeCoop/list', { groups });
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;

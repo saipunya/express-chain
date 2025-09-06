@@ -78,7 +78,7 @@ exports.exportEndDatePdf = async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: ['domcontentloaded', 'networkidle0'] });
+    await page.setContent(html, { waitUntil: ['domcontentloaded', 'networkidle0'], timeout: 60000 });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',

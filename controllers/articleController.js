@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const articleModel = require('../models/articleModel');
+const { sanitize } = require('../utils/sanitize');
 
 exports.list = async (req, res) => {
   const articles = await articleModel.getAll();
@@ -60,4 +61,28 @@ exports.delete = async (req, res) => {
   }
   await articleModel.delete(req.params.id);
   res.redirect('/article');
+};
+
+exports.store = async (req, res) => {
+  try {
+    const { ar_subject, ar_detail, ar_keyword, ar_link } = req.body;
+
+    const cleanHtml = sanitize(ar_detail);
+    const plain = cleanHtml.replace(/<[^>]+>/g, '').trim();
+    if (!plain) {
+      return res.status(400).render('article/create', { error: 'กรุณากรอกรายละเอียด' });
+    }
+
+    await articleModel.create({
+      ar_subject,
+      ar_detail: cleanHtml,
+      ar_keyword,
+      ar_link
+    });
+
+    res.redirect('/article');
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('article/create', { error: 'บันทึกไม่สำเร็จ' });
+  }
 };

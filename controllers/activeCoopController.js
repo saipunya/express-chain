@@ -1,6 +1,7 @@
 const pool = require('../config/db'); 
 const activeCoopModel = require('../models/activeCoopModel');
 const puppeteer = require('puppeteer');
+const wkhtmltopdf = require('wkhtmltopdf');
 
 exports.index = async (req, res) => {
   const search = req.query.search || '';
@@ -93,6 +94,62 @@ exports.exportEndDatePdf = async (req, res) => {
     res.send(pdfBuffer);
   } catch (e) {
     console.error('PDF export error:', e && e.stack || e);
+    res.status(500).send('ไม่สามารถสร้าง PDF ได้');
+  }
+};
+
+exports.exportEndDatePdfWk = async (req, res) => {
+  try {
+    const groups = await activeCoopModel.getAllGroupedByEndDate();
+
+    const html = await new Promise((resolve, reject) => {
+      res.render('activeCoop/list-pdf', { groups }, (err, rendered) => {
+        if (err) return reject(err);
+        resolve(rendered);
+      });
+    });
+
+    if (process.env.WKHTMLTOPDF_PATH) {
+      wkhtmltopdf.command = process.env.WKHTMLTOPDF_PATH; // e.g. /usr/bin/wkhtmltopdf
+    }
+
+    res.setTimeout(120000);
+
+    // สร้างสตรีมแล้วเก็บเป็นบัฟเฟอร์
+    const pdfStream = wkhtmltopdf(html, {
+      pageSize: 'A4',
+      marginTop: '12mm',
+      marginRight: '10mm',
+      marginBottom: '12mm',
+      marginLeft: '10mm',
+      printMediaType: true,
+      enableLocalFileAccess: true,
+      disableSmartShrinking: true
+    });
+
+    const chunks = [];
+    let aborted = false;
+
+    req.on('aborted', () => {
+      aborted = true;
+      try { pdfStream.destroy(new Error('client aborted')); } catch {}
+    });
+
+    pdfStream.on('data', c => chunks.push(c));
+    pdfStream.on('error', err => {
+      console.error('wkhtmltopdf stream error:', err);
+      if (!res.headersSent) res.status(500).send('ไม่สามารถสร้าง PDF ได้');
+    });
+    pdfStream.on('end', () => {
+      if (aborted) return;
+      const buf = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', buf.length);
+      res.setHeader('Content-Disposition', 'inline; filename="active_coop_enddate.pdf"');
+      res.end(buf);
+    });
+  } catch (e) {
+    console.error('WK PDF error:', e);
     res.status(500).send('ไม่สามารถสร้าง PDF ได้');
   }
 };

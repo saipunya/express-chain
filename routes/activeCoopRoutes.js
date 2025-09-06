@@ -11,5 +11,6 @@ router.post('/edit/:id',requireLogin, activeCoopController.update);
 router.get('/delete/:id', activeCoopController.delete);
 router.get('/by-end-date', activeCoopController.listByEndDate);
 router.get('/by-end-date/pdf', activeCoopController.exportEndDatePdf);
+router.get('/by-end-date/pdf-wk', activeCoopController.exportEndDatePdfWk);
 
 module.exports = router;

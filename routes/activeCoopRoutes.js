@@ -12,5 +12,6 @@ router.get('/delete/:id', activeCoopController.delete);
 router.get('/by-end-date', activeCoopController.listByEndDate);
 router.get('/by-end-date/pdf', activeCoopController.exportEndDatePdf);
 router.get('/by-end-date/pdf-wk', activeCoopController.exportEndDatePdfWk);
+router.get('/by-end-date/pdf-make', activeCoopController.exportEndDatePdfMake);
 
 module.exports = router;

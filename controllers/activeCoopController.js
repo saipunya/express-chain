@@ -2,6 +2,7 @@ const pool = require('../config/db');
 const activeCoopModel = require('../models/activeCoopModel');
 const puppeteer = require('puppeteer');
 const wkhtmltopdf = require('wkhtmltopdf');
+const path = require('path');
 
 exports.index = async (req, res) => {
   const search = req.query.search || '';
@@ -150,6 +151,124 @@ exports.exportEndDatePdfWk = async (req, res) => {
     });
   } catch (e) {
     console.error('WK PDF error:', e);
+    res.status(500).send('ไม่สามารถสร้าง PDF ได้');
+  }
+};
+
+exports.exportEndDatePdfMake = async (req, res) => {
+  try {
+    const groups = await activeCoopModel.getAllGroupedByEndDate();
+
+    // เตรียมฟอนต์ให้ pdfmake
+    const PdfPrinter = require('pdfmake');
+    const fonts = {
+      THSarabun: {
+        normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
+        bold: path.join(__dirname, '../fonts/THSarabunNew-Bold.ttf'),
+        italics: path.join(__dirname, '../fonts/THSarabunNew-Italic.ttf'),
+        bolditalics: path.join(__dirname, '../fonts/THSarabunNew-BoldItalic.ttf'),
+      },
+    };
+    const printer = new PdfPrinter(fonts);
+
+    // helper แปลงชื่อกลุ่ม
+    const displayGroupName = (code) => {
+      switch (code) {
+        case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+        case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+        case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+        case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+        case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+        default: return code || '-';
+      }
+    };
+
+    // แยกข้อมูล สหกรณ์ / กลุ่มเกษตรกร ตามปี
+    const years = Object.keys(groups || {}).sort((a, b) => b - a);
+    const coopByYear = {};
+    const farmerByYear = {};
+    years.forEach((y) => {
+      (groups[y] || []).forEach((r) => {
+        if (r.coop_group === 'สหกรณ์') (coopByYear[y] ||= []).push(r);
+        else if (r.coop_group === 'กลุ่มเกษตรกร') (farmerByYear[y] ||= []).push(r);
+      });
+    });
+
+    const makeYearTable = (year, list) => ({
+      stack: [
+        { text: `ปี ${year} (ทั้งหมด ${list.length} แห่ง)`, style: 'h2', margin: [0, 12, 0, 6] },
+        {
+          table: {
+            headerRows: 1,
+            widths: [20, 60, '*', 120, 70, 70],
+            body: [
+              [
+                { text: '#', style: 'th' },
+                { text: 'รหัส', style: 'th' },
+                { text: 'ชื่อ', style: 'th' },
+                { text: 'กลุ่ม (c_group)', style: 'th' },
+                { text: 'สถานะ', style: 'th' },
+                { text: 'End Date', style: 'th' },
+              ],
+              ...list.map((row, idx) => ([
+                { text: String(idx + 1) },
+                { text: row.c_code || '-' },
+                { text: row.coop_group === 'สหกรณ์' ? `${row.c_name} จำกัด` : (row.c_name || '-') },
+                { text: displayGroupName(row.c_group) },
+                { text: row.c_status || '-' },
+                { text: row.end_date_fmt || '-' },
+              ])),
+            ],
+          },
+          layout: 'lightHorizontalLines',
+          fontSize: 10,
+        },
+      ],
+      pageBreak: 'auto',
+    });
+
+    const content = [
+      { text: 'สรุปสหกรณ์ / กลุ่มเกษตรกร แยกตามปีสิ้นสุด (end_date)', style: 'title', margin: [0, 0, 0, 10] },
+
+      { text: 'ส่วนที่ 1: สหกรณ์', style: 'h1', margin: [0, 6, 0, 0] },
+      ...Object.keys(coopByYear).sort((a, b) => b - a).flatMap((y, i) => {
+        const list = coopByYear[y] || [];
+        if (!list.length) return [];
+        return [makeYearTable(y, list)];
+      }),
+
+      { text: 'ส่วนที่ 2: กลุ่มเกษตรกร', style: 'h1', margin: [0, 16, 0, 0], pageBreak: 'before' },
+      ...Object.keys(farmerByYear).sort((a, b) => b - a).flatMap((y, i) => {
+        const list = farmerByYear[y] || [];
+        if (!list.length) return [];
+        return [makeYearTable(y, list)];
+      }),
+    ];
+
+    const docDefinition = {
+      pageSize: 'A4',
+      pageMargins: [20, 20, 20, 24],
+      defaultStyle: { font: 'THSarabun', fontSize: 12 },
+      styles: {
+        title: { fontSize: 16, bold: true, alignment: 'center' },
+        h1: { fontSize: 14, bold: true },
+        h2: { fontSize: 12, bold: true },
+        th: { bold: true },
+      },
+      content,
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="active_coop_enddate.pdf"');
+    pdfDoc.on('error', (err) => {
+      console.error('pdfmake error:', err);
+      if (!res.headersSent) res.status(500).send('ไม่สามารถสร้าง PDF ได้');
+    });
+    pdfDoc.pipe(res);
+    pdfDoc.end();
+  } catch (e) {
+    console.error('pdfmake export error:', e);
     res.status(500).send('ไม่สามารถสร้าง PDF ได้');
   }
 };

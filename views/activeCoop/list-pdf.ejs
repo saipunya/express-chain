@@ -24,11 +24,11 @@
   <h1>สรุปสหกรณ์ / กลุ่มเกษตรกร แยกตามปีสิ้นสุด (end_date)</h1>
 
   <% 
-    const years = Object.keys(groups).sort((a,b)=> b - a);
+    const years = Object.keys(groups || {}).sort((a,b)=> b - a);
     const coopByYear = {};
     const farmerByYear = {};
     years.forEach(y => {
-      groups[y].forEach(r => {
+      (groups[y] || []).forEach(r => {
         if (r.coop_group === 'สหกรณ์') (coopByYear[y] ||= []).push(r);
         else if (r.coop_group === 'กลุ่มเกษตรกร') (farmerByYear[y] ||= []).push(r);
       });

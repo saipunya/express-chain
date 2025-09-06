@@ -155,7 +155,7 @@ exports.getAllGroupedByEndDate = async () => {
   return rows.reduce((acc, r) => {
     const key = r.end_year || 'ไม่ระบุปี';
     (acc[key] ||= []).push(r);
-    return acc;
+    return acc; // ต้องมีบรรทัดนี้
   }, {});
 };
 

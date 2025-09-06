@@ -67,12 +67,18 @@ exports.exportEndDatePdf = async (req, res) => {
     });
 
     const puppeteer = require('puppeteer');
+
+    // ใช้ Chromium ที่ระบบ ถ้ามี (ตั้งผ่าน ENV), ไม่งั้นใช้ตัวที่ Puppeteer ดาวน์โหลดไว้
+    const executablePath = process.env.CHROMIUM_PATH || undefined;
+
     const browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox','--disable-setuid-sandbox']
+      executablePath,                // ถ้า undefined Puppeteer จะเลือกของตัวเอง
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: ['domcontentloaded', 'networkidle0'] });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -83,11 +89,10 @@ exports.exportEndDatePdf = async (req, res) => {
     await browser.close();
 
     res.setHeader('Content-Type', 'application/pdf');
-    // ใช้ inline เพื่อให้เปิดในแท็บ ไม่บังคับโหลด
     res.setHeader('Content-Disposition', 'inline; filename="active_coop_enddate.pdf"');
     res.send(pdfBuffer);
   } catch (e) {
-    console.error('PDF export error:', e);
+    console.error('PDF export error:', e && e.stack || e);
     res.status(500).send('ไม่สามารถสร้าง PDF ได้');
   }
 };

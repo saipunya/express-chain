@@ -259,6 +259,43 @@
     </div>
   </div>
 </section>
+<section class="my-2">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-8 text-center">
+        <img src="/images/jk.jpg" alt="Description of the image" class="img-fluid shadow-sm rounded">
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+        <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
+        <ul class="list-group list-group-flush">
+          <% activity.forEach(acti => { %>
+            <li class="list-group-item">
+          <i class="bi bi-calendar-event me-2 text-success"></i>
+            <!-- check if date_act == today show icon today -->
+            <% const today = new Date(); %>
+            <% const actDate = new Date(acti.date_act); %>
+            <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
+            <%= acti.activity %>
+            <% if (actDate.toDateString() === today.toDateString()) { %>
+            <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+            <% } %>
+            </li>
+          <% }) %>
+        </ul>
+          </div>
+        </div>
+        <!-- add more button -->
+        <div class="text-end mt-2">
+          <a href="/activities" class="btn btn-primary btn-sm px-4 shadow-sm">
+            ดูทั้งหมด
+          </a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="py-2 bg-white">
   <div class="container-lg">
@@ -773,62 +810,6 @@
   </div>
 </section>
 <!-- ...existing code... -->
-
-<% if ((activity || []).length> 0) { %>
-  <section class="py-2 bg-light ">
-    <div class="container-lg">
-      <h2 class="mb-2 text-center text-primary fw-bold section-title">
-        <i class="bi bi-clock-history me-2"></i> กิจกรรมล่าสุด
-      </h2>
-      <div class="row g-2">
-        <% activity.forEach((act)=> { %>
-          <div class="col-12">
-            <div class="card modern-card shadow-sm border-0 h-100 hover-shadow">
-              <div class="card-gradient-bar"></div>
-              <div
-                class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-                  <span class="badge bg-info text-dark me-3 mb-2 mb-md-0 py-2 px-3 fs-6">
-                    <% let thaiDate='-' ; if (act.date_act) { let dateObj; if (typeof act.date_act==='string' ) {
-                      dateObj=new Date(act.date_act); } else { dateObj=act.date_act; } if (!isNaN(dateObj)) { const
-                      options={ year: 'numeric' , month: 'long' , day: 'numeric' };
-                      thaiDate=dateObj.toLocaleDateString('th-TH', options); } else if (typeof act.date_act==='string'
-                      ) { thaiDate=act.date_act; } } %>
-                      <i class="bi bi-calendar-event me-1"></i>
-                      <%= thaiDate %>
-                        <span class="ms-2"><i class="bi bi-clock"></i>
-                          <%= act.act_time || '-' %> น.
-                        </span>
-                  </span>
-
-                  <span class="fw-semibold text-dark">
-                    <i class="bi bi-stars me-1"></i>
-                    <%= act.activity %>
-                  </span>
-                </div>
-
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
-
-                  <% if (user) { %>
-                    <a href="/activities/view/<%= act.act_id %>" class="btn btn-sm btn-success ms-md-3 mt-2 mt-md-0">
-                      <i class="bi bi-eye-fill me-1"></i> ดูรายละเอียด
-                    </a>
-                    <% } else { %>
-                      <a href="/auth/login" class="btn btn-sm btn-outline-secondary ms-md-3 mt-2 mt-md-0">
-                        <i class="bi bi-lock-fill me-1"></i> เข้าสู่ระบบ
-                      </a>
-                      <% } %>
-                </div>
-
-              </div>
-            </div>
-          </div>
-          <% }) %>
-      </div>
-    </div>
-  </section>
-  <% } %>
     <style>
       .hover-shadow:hover {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
@@ -848,7 +829,7 @@
                   <div class="display-4 text-success">
                     <%= onlineCount %>
                   </div>
-                  <small class="text-muted">กำลังใช้ออนไลน์</small>
+                  <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
                 </div>
                 <hr>
                 <div class="row text-center">
@@ -906,7 +887,7 @@
                 <% if (onlineUsers.length===0) { %>
                   <div class="text-center text-muted">
                     <i class="fas fa-users fa-3x mb-3"></i>
-                    <p>ไม่มีผู้ใช้งานออนไลน์ในขณะนี้</p>
+                    <p>ไม่มีสมาชิกออนไลน์ในขณะนี้</p>
                   </div>
                   <% } %>
               </div>

@@ -15,6 +15,20 @@
   .dates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:.5rem;}
   .dates-grid label{font-size:.65rem;font-weight:600;}
   .dates-grid input{font-size:.7rem;}
+  .table-responsive.sticky-header {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .table-responsive{
+    position: sticky;
+    top: 0;             /* ปรับเป็น 56px ถ้ามี navbar fixed-top สูง 56px */
+    z-index: 3;
+    background-color: #212529; /* ให้ทับสีพื้นหลังแน่นอน (เทียบ table-dark) */
+    color: #fff;
+  }
+  .table-group-divider tr {
+    border-top: 2px solid #dee2e6; /* Add a border to group dividers */
+  }
 </style>
 
 <div class="page-wrap container-fluid py-3">
@@ -41,9 +55,10 @@
     </span>
   </div>
 
-  <div class="table-responsive">
+ 
     <table class="table table-bordered table-sm align-middle">
-      <thead class="table-dark text-center">
+        <!-- freeze top row -->
+      <thead class="table-dark text-center table-responsive sticky-header ">
         <tr>
           <th>รหัส</th>
           <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
@@ -51,7 +66,7 @@
           <th>จัดการ</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="table-group-divider">
         <% 
           const isEmptyDate = (v) => {
             if (!v) return true;
@@ -142,7 +157,9 @@
         <% }) %>
       </tbody>
     </table>
-  </div>
+
+  
+
   <div class="text-center mt-3">
     <a href="/chamra" class="btn btn-primary btn-sm">กลับไปยังหน้าหลัก</a>
   </div>

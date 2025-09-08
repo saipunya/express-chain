@@ -216,6 +216,7 @@ exports.getRecentProcesses = async (limit = 8) => {
            ac.c_name
     FROM chamra_process cp
     LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
+    WHERE ac.c_status = 'เลิก'
     ORDER BY cp.pr_id DESC
     LIMIT ?
   `;

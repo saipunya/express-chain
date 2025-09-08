@@ -208,6 +208,21 @@ async function createProcess(data) {
   return true;
 }
 
+exports.getRecentProcesses = async (limit = 8) => {
+  const sql = `
+    SELECT cp.pr_id, cp.pr_code,
+           cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
+           cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10,
+           ac.c_name
+    FROM chamra_process cp
+    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
+    ORDER BY cp.pr_id DESC
+    LIMIT ?
+  `;
+  const [rows] = await db.query(sql, [Number(limit)]);
+  return rows;
+};
+
 // Export unified API object (avoid shape confusion)
 module.exports = {
   getFiltered: exports.getFiltered,
@@ -223,7 +238,9 @@ module.exports = {
   getProcessById,
   updateProcess,
   deleteProcess,
-  createProcess
+  createProcess,
+  // ก่อนหน้าเขียนเป็น getRecentProcesses (ทำให้หา symbol ไม่พบ)
+  getRecentProcesses: exports.getRecentProcesses
 };
 
 

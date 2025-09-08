@@ -504,6 +504,98 @@
         </div>
       </div>
     </div>
+
+    <section class="py-2">
+      <div class="container">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
+            </h6>
+          </div>
+    
+          <% if ((homeProcesses || []).length) { %>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-3">สถาบัน</th>
+                      <th class="text-center">S1</th>
+                      <th class="text-center">S2</th>
+                      <th class="text-center">S3</th>
+                      <th class="text-center">S4</th>
+                      <th class="text-center">S5</th>
+                      <th class="text-center">S6</th>
+                      <th class="text-center">S7</th>
+                      <th class="text-center">S8</th>
+                      <th class="text-center">S9</th>
+                      <th class="text-center">S10</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%
+                      const isEmptyDate = (v) => {
+                        if (!v) return true;
+                        if (typeof v === 'string') {
+                          if (v === '0000-00-00') return true;
+                          if (/^1899-11-30/.test(v)) return true;
+                        }
+                        const d = new Date(v);
+                        return isNaN(d.getTime()) || d.getFullYear() < 1950;
+                      };
+                      const formatThai = (v) => {
+                        const d = new Date(v);
+                        if (isNaN(d.getTime())) return '-';
+                        const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
+                        return `${d.getDate()} ${m} ${d.getFullYear()+543}`;
+                      };
+                    %>
+                    <% homeProcesses.forEach(p => { %>
+                      <tr>
+                        <td class="ps-3 small fw-semibold text-dark">
+                          <i class="bi bi-building me-1 text-primary"></i>
+                          <%= p.c_name || p.pr_code %>
+                        </td>
+                        <% for (let i=1;i<=10;i++){ const key='pr_s'+i; const raw=p[key]; %>
+                          <td class="text-center">
+                            <% if (isEmptyDate(raw)) { %>
+                              <span class="badge rounded-pill bg-secondary hp-badge px-2">-</span>
+                            <% } else { %>
+                              <span class="badge rounded-pill bg-success hp-badge px-2"><%= formatThai(raw) %></span>
+                            <% } %>
+                          </td>
+                        <% } %>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+    
+            <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                สีเขียว = มีวันที่ | สีเทา = ยังไม่มีข้อมูล
+              </small>
+              <a href="/chamra/process" class="btn btn-primary btn-sm">
+                ดูเพิ่มเติม
+              </a>
+            </div>
+          <% } else { %>
+            <div class="card-body">
+              <div class="text-center text-muted py-3">
+                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                ไม่มีข้อมูลสำหรับแสดง
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+
+
     <div class="row mt-4">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">
@@ -548,6 +640,12 @@
         </div>
       </div>
     </div>
+
+  
+
+
+
+
     <div class="row mt-4">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">

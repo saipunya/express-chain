@@ -17,6 +17,7 @@ const Rq2 = require('../models/rq2Model');
 const Command = require('../models/commandModel');
 const activityModel = require('../models/activityModel'); // เพิ่มบรรทัดนี้
 const articleModel = require('../models/articleModel'); // เพิ่มบรรทัดนี้
+const Chamra = require('../models/chamraModel');
 
 // controllers/homeController.js
 
@@ -59,6 +60,7 @@ const homeController = {
       // ดึงข้อมูล activity จาก model
       const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
       const lastArticles = await articleModel.getLast(4);
+      const homeProcesses = await Chamra.getRecentProcesses(8);
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -77,6 +79,7 @@ const homeController = {
         lastArticles,    // ✅ ส่งไปที่ view
         closedCoops,     // ✅ ส่ง closed coops to view
         coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+        homeProcesses,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

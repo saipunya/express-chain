@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 exports.findByUser = async (m_user) => {
-  const [rows] = await db.query('SELECT * FROM member3 WHERE m_user = ?', [m_user]);
+  const [rows] = await db.query('SELECT m_id FROM member3 WHERE m_user = ?', [m_user]);
   return rows[0];
 };
 
@@ -13,8 +13,19 @@ exports.create = async (m) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const params = [
-    m.m_user, m.m_pass, m.m_group, m.m_name, m.m_position, m.m_head, m.m_usersystem,
-    m.m_type, m.m_org, m.m_class, m.m_pic || '', m.m_status || 'wait', m.m_img || ''
+    m.m_user,
+    m.m_pass,               // hashed
+    m.m_group ?? '',        // enum: 'cpd','coop','group','' — ค่าเริ่มต้น ''
+    m.m_name,
+    m.m_position,
+    m.m_head ?? '',
+    m.m_usersystem ?? '',
+    m.m_type ?? 'จ้างเหมาบริการ',
+    m.m_org ?? '',
+    m.m_class,              // มาจาก select “group” ในฟอร์ม
+    m.m_pic ?? '',
+    m.m_status ?? 'wait',
+    m.m_img ?? ''
   ];
   const [result] = await db.query(sql, params);
   return result.insertId;

@@ -34,26 +34,36 @@
             <div class="mb-3">
               <label for="group" class="form-label">สังกัด</label>
               <div class="mb-3">
-                <select
-                    class="form-select form-select-lg"
-                    name="group"
-                    id=""
-                >
-                    <option selected>++โปรดเลือก++</option>
-                    <option value="kjs">กลุ่มจัดตั้งฯ</option>
-                    <option value="kps">กลุ่ม กพส</option>
-                    <option value="kbs">กลุ่ม กบส</option>
-                    <option value="kts">กลุ่ม กตส</option>
-                    <option value="pbt">ฝ่ายบริหารทั่วไป</option>
-                    <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
-                    <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
-                    <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
-                    <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
-                    <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
+                <select class="form-select form-select-lg" name="group" id="group" required>
+                  <option value="" selected>++โปรดเลือก++</option>
+                  <option value="kjs">กลุ่มจัดตั้งฯ</option>
+                  <option value="kps">กลุ่ม กพส</option>
+                  <option value="kbs">กลุ่ม กบส</option>
+                  <option value="kts">กลุ่ม กตส</option>
+                  <option value="pbt">ฝ่ายบริหารทั่วไป</option>
+                  <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
+                  <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
+                  <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
+                  <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
+                  <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
                 </select>
               </div>
-              
+            </div>
 
+              <div class="mb-3">
+                <label for="group" class="form-label">ประเภท</label>
+                <div class="mb-3">
+                  <select class="form-select form-select-lg" name="m_type" id="m_type" required>
+                    <option value="" selected>++โปรดเลือก++</option>
+                    <option value="ข้าราชการ">ข้าราชการ</option>
+                    <option value="พนักงานราชการ">พนักงานราชการ</option>
+                    <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
+                    <option value="จ้างเหมาบริการ">จ้างเหมาบริการ</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                  </select>
+                </div>
+              </div>
+              <input type="hidden" name="m_org" value="สำนักงานสหกรณ์จังหวัดชัยภูมิ">
             <div class="mb-4">
               <label for="password" class="form-label">รหัสผ่าน</label>
               <input type="password" name="password" id="password" class="form-control" required>

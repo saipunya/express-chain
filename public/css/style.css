@@ -80,3 +80,13 @@ body {
 .card {
   animation: fadeInUp 0.6s ease-out;
 }
+/* Marquee slider for last articles */
+.marquee { overflow: hidden; position: relative; }
+.marquee__track { display: flex; gap: 1rem; align-items: stretch; animation: marquee 35s linear infinite; }
+.marquee:hover .marquee__track { animation-play-state: paused; }
+.marquee .article-card { flex: 0 0 280px; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track { animation: none; }
+}

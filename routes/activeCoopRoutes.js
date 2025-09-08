@@ -11,8 +11,7 @@ router.get('/edit/:id',requireLogin, activeCoopController.editForm);
 router.post('/edit/:id',requireLogin, activeCoopController.update);
 router.get('/delete/:id', activeCoopController.delete);
 router.get('/by-end-date', activeCoopController.listByEndDate);
-router.get('/by-end-date/pdf', activeCoopController.exportEndDatePdf);
-router.get('/by-end-date/pdf-wk', activeCoopController.exportEndDatePdfWk);
+
 router.get('/by-end-date/pdf-make', activeCoopController.exportEndDatePdfMake);
 router.get('/by-end-date/preview', async (req, res, next) => {
   try {

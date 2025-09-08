@@ -264,7 +264,7 @@
   <div class="container-lg">
     <div class="row">
       <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100 modern-card">
+        <div class="p-4 rounded shadow-sm h-100 modern-card">
           <div class="card-gradient-bar"></div>
           <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
           <ul class="list-group list-group-flush">
@@ -281,7 +281,8 @@
                     <% const fileSavedDate=new Date(file.savedate); const currentDate=new Date(); const
                       diffDays=Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24)); %>
                       <% if (diffDays <=7) { %>
-                        <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
+                       
+                        <img src="/icon/seal.gif" alt="New"
                           class="ms-2" style="width: 40px; height: 35px;" />
                         <% } %>
                 </span>
@@ -303,7 +304,7 @@
       </div>
 
       <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100 modern-card">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
           <div class="card-gradient-bar"></div>
           <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
           <ul class="list-group list-group-flush">
@@ -322,8 +323,10 @@
                     <% const businessSavedDate=new Date(business.bu_savedate); const currentDate=new Date(); const
                       diffDays=Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24)); %>
                       <% if (diffDays <=7) { %>
-                        <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
-                          class="ms-2" style="width: 45px; height: 32px;" />
+                        <!-- insert icon for public/icon/seal.gif -->
+
+                        <img src="/icon/seal.gif" alt="New"
+                          class="ms-2" style="width: 40px; height: 35px;" />
                         <% } %>
                 </span>
                 <% if(user){ %>
@@ -350,7 +353,7 @@
   <div class="container-lg">
     <div class="row">
       <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100 modern-card">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
           <div class="card-gradient-bar"></div>
           <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
           <ul class="list-group list-group-flush">
@@ -372,8 +375,8 @@
                     </span>
                     <% const ruleSavedDate = new Date(rule.rule_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
                     <% if (diffDays <= 7) { %>
-                      <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
-                        class="ms-2" style="width: 45px; height: 32px;" />
+                      <img src="/icon/seal.gif" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
                     <% } %>
                 </span>
                 <% if(user){ %>
@@ -393,7 +396,7 @@
         </div>
       </div>
       <div class="col-md-6 mb-4">
-        <div class="bg-light p-4 rounded shadow-sm h-100 modern-card">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
           <div class="card-gradient-bar"></div>
           <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
           <ul class="list-group list-group-flush">
@@ -407,8 +410,8 @@
                   <%= rabiab.ra_name %>
                     <% const rabiabSavedDate = new Date(rabiab.ra_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24)); %>
                     <% if (diffDays <= 7) { %>
-                      <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
-                        class="ms-2" style="width: 45px; height: 32px;" />
+                      <img src="/icon/seal.gif" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
                     <% } %>
                 </span>
                 <% if(user){ %>
@@ -619,8 +622,8 @@
                           </span>
                           <% const rqSavedDate = new Date(r.rq_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rqSavedDate) / (1000 * 60 * 60 * 24)); %>
                     <% if (diffDays <= 7) { %>
-                      <img src="https://websitearchive2020.nepa.gov.jm/new/images/gif/new-star.gif" alt="New"
-                        class="ms-2" style="width: 45px; height: 32px;" />
+                      <img src="/icon/seal.gif" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
                     <% } %>
                       </span>
                       <% if(user){ %>
@@ -736,7 +739,7 @@
                 <% try { const imgs = JSON.parse(article.ar_img || '[]'); if (imgs.length) { %>
                   <img src="/uploads/article/<%= imgs[0] %>" alt="img" class="card-img-top" style="height:180px;object-fit:cover;">
                 <% } else { %>
-                  <div class="bg-light d-flex align-items-center justify-content-center" style="height:180px;">
+                  <div class="d-flex align-items-center justify-content-center" style="height:180px;">
                     <i class="bi bi-image text-muted fs-1"></i>
                   </div>
                 <% } } catch(e) {} %>

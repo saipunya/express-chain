@@ -107,7 +107,7 @@
         <td><%= c.c_code %></td>
         <% } %>
         <td>
-          <div class="fw-semibold"><%= c.c_name %></div>
+          <div class="fw-semibold"><a href="/chamra/detail/<%= c.c_code %>"><%= c.c_name %></a></div>
           <% if(c.c_status === 'ถอนชื่อ'){ %>
             <span class="badge bg-success status-pill">ถอนชื่อแล้ว</span>
           <% } else { %>

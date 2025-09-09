@@ -42,4 +42,7 @@ router.post('/process/add', requireLogin, chamraController.processCreate);
 
 router.post('/poblem/delete/:po_id', chamraController.deletePoblem);
 
+// Detail (new)
+router.get('/detail/:c_code', chamraController.detail);
+
 module.exports = router;

@@ -224,6 +224,17 @@ exports.getRecentProcesses = async (limit = 8) => {
   return rows;
 };
 
+async function getPoblemsByCode(code) {
+  const [rows] = await db.query(`
+    SELECT p.*, ac.c_name
+    FROM chamra_poblem p
+    LEFT JOIN active_coop ac ON p.po_code = ac.c_code
+    WHERE p.po_code = ?
+    ORDER BY p.po_year DESC, p.po_meeting DESC, p.po_id DESC
+  `, [code]);
+  return rows;
+}
+
 // Export unified API object (avoid shape confusion)
 module.exports = {
   getFiltered: exports.getFiltered,
@@ -240,8 +251,8 @@ module.exports = {
   updateProcess,
   deleteProcess,
   createProcess,
-  // ก่อนหน้าเขียนเป็น getRecentProcesses (ทำให้หา symbol ไม่พบ)
-  getRecentProcesses: exports.getRecentProcesses
+  getRecentProcesses: exports.getRecentProcesses,
+  getPoblemsByCode
 };
 
 

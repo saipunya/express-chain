@@ -206,6 +206,23 @@ chamraController.deletePoblem = async (req, res) => {
   }
 };
 
+// แสดงรายละเอียดรวมทุกตาราง
+chamraController.detail = async (req, res) => {
+  const code = req.params.c_code;
+  try {
+    const record = await Chamra.getByCode(code); // detail + process + coop
+    if (!record) return res.status(404).send('ไม่พบข้อมูล');
+    const poblems = await Chamra.getPoblemsByCode(code);
+    res.render('chamra/detail', {
+      data: record,
+      poblems
+    });
+  } catch (e) {
+    console.error('detail error:', e);
+    res.status(500).send('Internal Server Error');
+  }
+};
+
 // แสดงรายการกระบวนการ
 chamraController.processList = async (req, res) => {
   const processes = await Chamra.getAllProcess();

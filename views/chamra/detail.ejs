@@ -1,28 +1,136 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>รายละเอียดข้อมูล Chamra</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <h1>รายละเอียดข้อมูล Chamra</h1>
+<%- include('../partials/header.ejs') %>
+<%
+  // --- Date helpers (safe parsing + Thai format) ---
+  function parseDateSafe(raw){
+    if(!raw) return null;
+    if(typeof raw === 'object' && raw.toISOString){
+      raw = raw.toISOString().substring(0,19).replace('T',' ');
+    } else {
+      raw = String(raw).trim();
+    }
+    if(
+      raw === '0000-00-00' ||
+      raw === '0000-00-00 00:00:00' ||
+      /^1899-11-30/.test(raw) ||
+      raw === 'Invalid date'
+    ) return null;
+    const datePart = raw.split(' ')[0];
+    const seg = datePart.split('-');
+    if(seg.length < 3) return null;
+    const y = +seg[0], m = +seg[1], d = +seg[2];
+    if(y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+    return new Date(y, m - 1, d);
+  }
+  function formatThaiDate(v){
+    const d = parseDateSafe(v);
+    if(!d) return '-';
+    const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    return d.getDate() + ' ' + months[d.getMonth()+1] + ' ' + (d.getFullYear() + 543);
+  }
+  function isValidDate(v){ return !!parseDateSafe(v); }
+
+  let latestProcessStep = 0;
+  const processSteps = [];
+  if (typeof data !== 'undefined' && data){
+    for(let i=1;i<=10;i++){
+      const raw = data['pr_s'+i];
+      if(isValidDate(raw)) latestProcessStep = i;
+      processSteps.push({ step: i, raw, formatted: formatThaiDate(raw) });
+    }
+  }
+%>
+<div class="container py-4">
+  <h1 class="h4 mb-3">รายละเอียดข้อมูล Chamra</h1>
 
   <% if (data) { %>
-    <table>
-      <tr><th>รหัส</th><td><%= data.de_code %></td></tr>
-      <tr><th>กรณี</th><td><%= data.de_case %></td></tr>
-      <tr><th>ชื่อสหกรณ์</th><td><%= data.c_name %></td></tr>
-      <tr><th>สถานะ</th><td><%= data.c_status %></td></tr>
-      <tr><th>กลุ่ม</th><td><%= data.c_group %></td></tr>
-      <tr><th>ผู้รับผิดชอบ</th><td><%= data.c_person %></td></tr>
-      <tr><th>ผู้รับผิดชอบรอง</th><td><%= data.c_person2 %></td></tr>
-      <!-- เพิ่ม field อื่น ๆ ตามต้องการ -->
+    <div class="card mb-4">
+      <div class="card-body small">
+        <span class="me-2 fw-semibold">สถานะ:</span>
+        <% if(data.c_status === 'ถอนชื่อ'){ %>
+          <span class="badge text-bg-success">ถอนชื่อแล้ว</span>
+        <% } else { %>
+          <span class="badge text-bg-danger">กำลังชำระบัญชี</span>
+        <% } %>
+        <% if(latestProcessStep){ %>
+          <span class="ms-3 text-primary fw-semibold">ขั้นล่าสุด S<%= latestProcessStep %> (<%= formatThaiDate(data['pr_s'+latestProcessStep]) %>)</span>
+        <% } else { %>
+          <span class="ms-3 text-muted">ยังไม่มีขั้นตอนที่สมบูรณ์</span>
+        <% } %>
+      </div>
+    </div>
+
+    <table class="table table-bordered table-striped table-sm align-middle bg-white">
+      <tbody>
+        <tr><th class="w-25">รหัส</th><td><%= data.de_code %></td></tr>
+        <tr><th>กรณี</th><td><%= data.de_case %></td></tr>
+        <tr><th>คำสั่งเลขที่</th><td><%= data.de_comno || '-' %></td></tr>
+        <tr><th>วันที่คำสั่ง</th><td><%= formatThaiDate(data.de_comdate) %></td></tr>
+        <tr><th>ผู้เกี่ยวข้อง</th><td><%= data.de_person || '-' %></td></tr>
+        <tr><th>หมายเหตุ</th><td><%= data.de_maihed || '-' %></td></tr>
+        <tr><th>บันทึกโดย</th><td><%= data.de_saveby || '-' %></td></tr>
+        <tr><th>บันทึกวันที่</th><td><%= formatThaiDate(data.de_savedate) %></td></tr>
+        <tr><th>ชื่อสหกรณ์</th><td><%= data.c_name %></td></tr>
+        <tr><th>สถานะ</th><td><%= data.c_status %></td></tr>
+        <tr><th>กลุ่ม</th><td><%= data.c_group || '-' %></td></tr>
+        <tr><th>ผู้รับผิดชอบ</th><td><%= data.c_person || '-' %></td></tr>
+        <tr><th>ผู้รับผิดชอบรอง</th><td><%= data.c_person2 || '-' %></td></tr>
+      </tbody>
     </table>
+
+    <h2 class="h6 mt-4 mb-2">กระบวนการ (Process)</h2>
+    <% if (processSteps.some(s => s.raw)) { %>
+      <table class="table table-bordered table-sm align-middle bg-white mb-4">
+        <thead class="table-light">
+          <tr><th class="text-center">ขั้นที่</th><th class="text-center">วันที่ (พ.ศ.)</th></tr>
+        </thead>
+        <tbody>
+        <% processSteps.forEach(s => { %>
+          <tr>
+            <td class="text-center">S<%= s.step %></td>
+            <td class="text-center"><%= s.formatted %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p class="text-muted small mb-4">ยังไม่มีข้อมูลกระบวนการ</p>
+    <% } %>
+
+    <h2 class="h6 mt-4 mb-2">รายการปัญหา (Problems)</h2>
+    <% if (poblems && poblems.length) { %>
+      <table class="table table-bordered table-striped table-sm align-middle bg-white">
+        <thead class="table-light">
+          <tr>
+            <th>ปี</th>
+            <th>ครั้งประชุม</th>
+            <th>รายละเอียด</th>
+            <th>ปัญหา</th>
+            <th>บันทึกโดย</th>
+            <th>วันที่บันทึก</th>
+          </tr>
+        </thead>
+        <tbody>
+        <% poblems.forEach(p => { %>
+          <tr>
+            <td><%= p.po_year %></td>
+            <td><%= p.po_meeting %></td>
+            <td><%= p.po_detail || '-' %></td>
+            <td><%= p.po_problem || '-' %></td>
+            <td><%= p.po_saveby || '-' %></td>
+            <td><%= formatThaiDate(p.po_savedate) %></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p class="text-muted small">ยังไม่มีรายการปัญหา</p>
+    <% } %>
   <% } else { %>
-    <p>ไม่พบข้อมูล</p>
+    <p class="text-muted">ไม่พบข้อมูล</p>
   <% } %>
 
-  <a href="/chamra">← กลับหน้ารายการ</a>
-</body>
-</html>
+  <a href="/chamra" class="btn btn-outline-secondary btn-sm mt-3">← กลับหน้ารายการ</a>
+</div>
+
+<%- include('../partials/footer.ejs') %>

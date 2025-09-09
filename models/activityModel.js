@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 exports.getAllActivities = async () => {
-  const [rows] = await db.query('SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act DESC');
+  const [rows] = await db.query('SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act ASC');
   return rows;
 };
 

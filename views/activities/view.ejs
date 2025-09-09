@@ -22,6 +22,10 @@
         <li class="list-group-item d-flex align-items-center">
           <i class="bi bi-calendar-event text-primary me-2"></i>
           <strong class="me-2">วันที่:</strong> <%= formatThaiDate(activity.date_act) %>
+          <% if (new Date().toDateString() === new Date(activity.date_act).toDateString()) { %>
+            
+            <span class="badge bg-danger ms-2">วันนี้</span>
+          <% } %>
         </li>
         <li class="list-group-item d-flex align-items-center">
           <i class="bi bi-clock text-primary me-2"></i>
@@ -30,6 +34,7 @@
         <li class="list-group-item d-flex align-items-center">
           <i class="bi bi-stars text-warning me-2"></i>
           <strong class="me-2">กิจกรรม:</strong> <%= activity.activity %>
+        
         </li>
         <li class="list-group-item d-flex align-items-center">
           <i class="bi bi-geo-alt-fill text-danger me-2"></i>

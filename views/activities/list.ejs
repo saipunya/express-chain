@@ -45,6 +45,9 @@
               </td>
               <td class="fw-bold text-primary">
                 <%= activity.activity %>
+                <% if (new Date().toDateString() === new Date(activity.date_act).toDateString()) { %>
+                  <span class="badge bg-danger ms-2">วันนี้</span>
+                <% } %>
               </td>
               <td>
                 <i class="bi bi-geo-alt text-danger me-1"></i>
@@ -52,7 +55,7 @@
               </td>
               <td class="text-center text-nowrap">
                 <a href="/activities/view/<%= activity.act_id %>" class="btn btn-info btn-sm me-1">
-                  <i class="bi bi-eye"></i> ดู
+                  <i class="bi bi-eye"></i> view
                 </a>
                 <% if(user && (user.mClass==='pbt' || user.mClass==='admin')) { %>
                   <a href="/activities/edit/<%= activity.act_id %>" class="btn btn-warning btn-sm me-1">

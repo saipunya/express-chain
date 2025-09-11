@@ -1,8 +1,7 @@
 const downModel = require('../models/downModel');
 const path = require('path');
 const fs = require('fs');
-const fontkit = require('@pdf-lib/fontkit');
-const { PDFDocument, rgb, degrees } = require('pdf-lib');
+const fileService = require('../services/fileService');
 
 exports.list = async (req, res) => {
   const search = req.query.search || '';
@@ -12,46 +11,98 @@ exports.list = async (req, res) => {
 
 exports.view = async (req, res) => {
   const down = await downModel.getById(req.params.id);
-  res.render('down/view', { down });
+  res.render('down/view', { down, user: req.session.user });
 };
 
 exports.createForm = (req, res) => {
-  res.render('down/create');
+  res.render('down/create', { user: req.session.user, error: null });
 };
 
 exports.create = async (req, res) => {
-  let down_file = '-';
-  if (req.file) {
-    down_file = req.file.filename;
+  try {
+    const { down_subject, down_link } = req.body;
+    if (!down_subject) throw new Error('ต้องระบุเรื่อง');
+
+    const hasFile = !!req.file;
+    const hasLink = !!(down_link && down_link.trim() !== '');
+
+    if (!hasFile && !hasLink) throw new Error('ต้องแนบไฟล์หรือกรอกลิงก์อย่างน้อย 1 อย่าง');
+    if (hasFile && hasLink) {
+      // If both provided, prefer validation error; clean up uploaded file
+      if (req.file) {
+        fileService.deleteIfExists(fileService.getDownFilePath(req.file.filename));
+      }
+      throw new Error('เลือกได้อย่างใดอย่างหนึ่งระหว่างไฟล์ หรือ ลิงก์');
+    }
+
+    const down_file = hasFile ? req.file.filename : '-';
+    const safe_group = req.body.down_group && req.body.down_group !== '' ? req.body.down_group : '-';
+    const safe_type = req.body.down_type && req.body.down_type !== '' ? req.body.down_type : '-';
+    const safe_for = req.body.down_for && req.body.down_for !== '' ? req.body.down_for : '-';
+
+    await downModel.create({
+      ...req.body,
+      down_group: safe_group,
+      down_type: safe_type,
+      down_for: safe_for,
+      down_file,
+      down_link: hasLink ? down_link.trim() : '-',
+      down_savedate: req.body.down_savedate || new Date().toISOString().slice(0, 10)
+    });
+
+    res.redirect('/down');
+  } catch (err) {
+    return res.status(400).render('down/create', { user: req.session.user, error: err.message });
   }
-  await downModel.create({
-    ...req.body,
-    down_file,
-    down_savedate: req.body.down_savedate || new Date().toISOString().slice(0, 10)
-  });
-  res.redirect('/down');
 };
 
 exports.editForm = async (req, res) => {
   const down = await downModel.getById(req.params.id);
-  res.render('down/edit', { down });
+  res.render('down/edit', { down, user: req.session.user });
 };
 
 exports.update = async (req, res) => {
-  let down_file = req.body.down_file || '-';
-  if (req.file) {
-    down_file = req.file.filename;
+  const current = await downModel.getById(req.params.id);
+  let down_file = current?.down_file || '-';
+
+  const bodyLink = req.body.down_link ? req.body.down_link.trim() : '';
+  const hasNewFile = !!req.file;
+  const hasLink = !!(bodyLink);
+
+  if (hasNewFile && hasLink) {
+    // both provided -> reject and clean uploaded file
+    if (req.file) fileService.deleteIfExists(fileService.getDownFilePath(req.file.filename));
+    return res.status(400).render('down/edit', { down: current, user: req.session.user, error: 'เลือกได้อย่างใดอย่างหนึ่งระหว่างไฟล์ หรือ ลิงก์' });
   }
+
+  if (hasNewFile) {
+    if (down_file && down_file !== '-') {
+      fileService.deleteIfExists(fileService.getDownFilePath(down_file));
+    }
+    down_file = req.file.filename;
+  } else if (!hasLink && !down_file) {
+    down_file = '-';
+  }
+
   await downModel.update(req.params.id, {
     ...req.body,
+    down_group: req.body.down_group && req.body.down_group !== '' ? req.body.down_group : '-',
+    down_type: req.body.down_type && req.body.down_type !== '' ? req.body.down_type : '-',
+    down_for: req.body.down_for && req.body.down_for !== '' ? req.body.down_for : '-',
     down_file,
+    down_link: hasLink ? bodyLink : '-',
     down_savedate: req.body.down_savedate || new Date().toISOString().slice(0, 10)
   });
+
   res.redirect('/down');
 };
 
 exports.delete = async (req, res) => {
+  const current = await downModel.getById(req.params.id);
   await downModel.delete(req.params.id);
+  if (current?.down_file && current.down_file !== '-') {
+    fileService.deleteIfExists(fileService.getDownFilePath(current.down_file));
+  }
   res.redirect('/down');
 };
 
@@ -60,57 +111,11 @@ exports.download = async (req, res) => {
   if (!down || !down.down_file || down.down_file === '-') {
     return res.status(404).send('ไม่พบไฟล์');
   }
+  return fileService.streamDownloadOrWatermarked(req, res, down.down_file);
+};
 
-  const filePath = path.join(__dirname, '..', 'uploads', 'down', down.down_file);
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send('ไม่พบไฟล์ในระบบ');
-  }
-
-  // ตรวจสอบนามสกุลไฟล์
-  if (!down.down_file.toLowerCase().endsWith('.pdf')) {
-    // ไม่ใช่ PDF ส่งไฟล์ตรง ๆ
-    return res.download(filePath, down.down_file);
-  }
-
-  const isAdmin = req.session?.user?.mClass === 'admin';
-  const pdfBytes = fs.readFileSync(filePath);
-  let finalPdfBytes;
-
-  if (isAdmin) {
-    finalPdfBytes = pdfBytes;
-  } else {
-    // ใส่ลายน้ำ
-    const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
-    if (!fs.existsSync(fontPath)) {
-      return res.status(500).send('ไม่พบฟอนต์สำหรับลายน้ำ');
-    }
-    const fontBytes = fs.readFileSync(fontPath);
-
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    pdfDoc.registerFontkit(fontkit);
-
-    const customFont = await pdfDoc.embedFont(fontBytes);
-    const pages = pdfDoc.getPages();
-
-    const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิเท่านั้น';
-
-    pages.forEach(page => {
-      const { width, height } = page.getSize();
-      page.drawText(watermarkText, {
-        x: width / 2 - 100,
-        y: height / 2,
-        size: 25,
-        font: customFont,
-        color: rgb(0.92, 0.61, 0.61), // ✅ ใช้ค่าสีระหว่าง 0-1
-        opacity: 0.5,
-        rotate: degrees(45)
-      });
-    });
-
-    finalPdfBytes = await pdfDoc.save();
-  }
-
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename="${down.down_file}"`);
-  res.send(Buffer.from(finalPdfBytes));
+exports.search = async (req, res) => {
+  const keyword = req.query.keyword || '';
+  const results = await downModel.searchBySubject(keyword);
+  res.json(results);
 };

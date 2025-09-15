@@ -43,6 +43,28 @@
     <a href="/chamra/process" class="btn btn-info mb-3">📊 รายการกระบวนการ Chamra</a>
   <% } %>
 
+  <!-- Search form: searches by c_name and active_coop name (if provided from join) -->
+  <form id="searchForm" class="row g-2 align-items-center mb-3" method="get" action="">
+    <div class="col-sm-8 col-md-6">
+      <input
+        type="search"
+        class="form-control"
+        id="searchInput"
+        name="q"
+        value="<%= typeof q !== 'undefined' ? q : '' %>"
+        placeholder="ค้นหาด้วยชื่อสหกรณ์ (c_name) หรือชื่อจาก active_coop" />
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary btn-sm">ค้นหา</button>
+    </div>
+    <div class="col-auto">
+      <a href="" id="resetSearch" class="btn btn-outline-secondary btn-sm">ล้าง</a>
+    </div>
+    <div class="col-12">
+      <small id="searchSummary" class="text-muted"></small>
+    </div>
+  </form>
+
   <table class="table chamra-table table-hover align-middle mb-0">
     <thead class="table-dark">
       <tr>
@@ -101,7 +123,9 @@
           }
           const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
       %>
-      <tr data-latest-step="<%= latestStepNumber %>">
+      <tr
+        data-latest-step="<%= latestStepNumber %>"
+        data-search="<%= [ (c.c_name||''), (c.active_name||c.ac_name||c.coop_name||c.a_name||'') ].join(' ').toLowerCase() %>">
         <td><%= index + 1 %></td>
         <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
         <td><%= c.c_code %></td>
@@ -163,6 +187,42 @@
 </div>
 
 <script>
+  // Client-side filtering by c_name and active_coop name (if provided)
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('searchInput');
+    const summary = document.getElementById('searchSummary');
+    const rows = Array.from(document.querySelectorAll('.chamra-table tbody tr'));
+
+    // Initialize from URL (?q=)
+    const urlQ = new URLSearchParams(location.search).get('q') || '';
+    if (input && !input.value) input.value = urlQ;
+
+    const applyFilter = () => {
+      const q = (input?.value || '').toLowerCase().trim();
+      let visible = 0;
+      rows.forEach(row => {
+        const hay = row.dataset.search || '';
+        const show = !q || hay.includes(q);
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      if (summary) {
+        summary.textContent = q
+          ? `ผลการค้นหา "${q}" - พบ ${visible} รายการ`
+          : `ทั้งหมด ${rows.length} รายการ`;
+      }
+    };
+
+    applyFilter();
+    input?.addEventListener('input', applyFilter);
+    document.getElementById('resetSearch')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (input) input.value = '';
+      history.replaceState(null, '', location.pathname);
+      applyFilter();
+    });
+  });
+
   document.addEventListener('click', e => {
     const btn = e.target.closest('.btn-show-steps');
     if (!btn) return;

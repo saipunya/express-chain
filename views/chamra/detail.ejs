@@ -1,32 +1,45 @@
 <%- include('../partials/header.ejs') %>
 <%
-  // --- Date helpers (safe parsing + Thai format) ---
+  // --- Date helpers (no Date object to UTC; use local parts) ---
   function parseDateSafe(raw){
-    if(!raw) return null;
-    if(typeof raw === 'object' && raw.toISOString){
-      raw = raw.toISOString().substring(0,19).replace('T',' ');
-    } else {
-      raw = String(raw).trim();
+    if(raw == null) return null;
+
+    // If Date object: use local components to avoid UTC shift
+    if (raw instanceof Date && !isNaN(raw)) {
+      const y = raw.getFullYear();
+      const m = raw.getMonth() + 1;
+      const d = raw.getDate();
+      if (y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+      return { y, m, d };
     }
+
+    // Normalize string inputs, including ISO with 'T' and '/' separators
+    let s = String(raw).trim();
     if(
-      raw === '0000-00-00' ||
-      raw === '0000-00-00 00:00:00' ||
-      /^1899-11-30/.test(raw) ||
-      raw === 'Invalid date'
+      !s ||
+      s === '0000-00-00' ||
+      s === '0000-00-00 00:00:00' ||
+      /^1899-11-30/.test(s) ||
+      s === 'Invalid date'
     ) return null;
-    const datePart = raw.split(' ')[0];
+
+    s = s.replace('T', ' ').replace(/\//g, '-');
+    const datePart = s.split(' ')[0];
     const seg = datePart.split('-');
     if(seg.length < 3) return null;
+
     const y = +seg[0], m = +seg[1], d = +seg[2];
+    if(!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
     if(y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
-    return new Date(y, m - 1, d);
+    return { y, m, d };
   }
+
   function formatThaiDate(v){
-    const d = parseDateSafe(v);
-    if(!d) return '-';
+    const p = parseDateSafe(v);
+    if(!p) return '-';
     const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-    return d.getDate() + ' ' + months[d.getMonth()+1] + ' ' + (d.getFullYear() + 543);
+    return p.d + ' ' + months[p.m] + ' ' + (p.y + 543);
   }
   function isValidDate(v){ return !!parseDateSafe(v); }
 
@@ -41,9 +54,10 @@
   }
 %>
 <div class="container py-4">
-  <h1 class="h4 mb-3">รายละเอียดข้อมูล Chamra</h1>
-
   <% if (data) { %>
+  <h1 class="h4 mb-3"><%= data.c_name || 'ข้อมูลไม่ระบุ' %></h1>
+
+  
     <div class="card mb-4">
       <div class="card-body small">
         <span class="me-2 fw-semibold">สถานะ:</span>
@@ -62,20 +76,88 @@
 
     <table class="table table-bordered table-striped table-sm align-middle bg-white">
       <tbody>
-        <tr><th class="w-25">รหัส</th><td><%= data.de_code %></td></tr>
-        <tr><th>กรณี</th><td><%= data.de_case %></td></tr>
-        <tr><th>คำสั่งเลขที่</th><td><%= data.de_comno || '-' %></td></tr>
-        <tr><th>วันที่คำสั่ง</th><td><%= formatThaiDate(data.de_comdate) %></td></tr>
-        <tr><th>ผู้เกี่ยวข้อง</th><td><%= data.de_person || '-' %></td></tr>
-        <tr><th>หมายเหตุ</th><td><%= data.de_maihed || '-' %></td></tr>
-        <tr><th>บันทึกโดย</th><td><%= data.de_saveby || '-' %></td></tr>
-        <tr><th>บันทึกวันที่</th><td><%= formatThaiDate(data.de_savedate) %></td></tr>
-        <tr><th>ชื่อสหกรณ์</th><td><%= data.c_name %></td></tr>
-        <tr><th>สถานะ</th><td><%= data.c_status %></td></tr>
-        <tr><th>กลุ่ม</th><td><%= data.c_group || '-' %></td></tr>
-        <tr><th>ผู้รับผิดชอบ</th><td><%= data.c_person || '-' %></td></tr>
-        <tr><th>ผู้รับผิดชอบรอง</th><td><%= data.c_person2 || '-' %></td></tr>
-      </tbody>
+        <tr>
+          <th>ชื่อสถาบัน</th>
+          <td class="fw-bold">
+            <%= data.c_name || '-' %>
+          </td>
+        </tr>
+        <tr>
+          <th>กรณี</th>
+          <td>
+            <%= data.de_case %>
+          </td>
+        </tr>
+        
+        <% if(data.de_comno==='-' ) { %>
+          <tr>
+            <th>ประกาศเลิก</th>
+            <td>-</td>
+          </tr>
+          <% } else { %>
+            <tr>
+              <th>คำสั่งเลขที่</th>
+              <td>
+                <%= data.de_comno %>
+              </td>
+            </tr>
+            <% } %>
+        
+              <tr>
+                <% if(data.de_comno==='-' ) { %>
+                  <th>วันที่ประกาศ</th>
+                  <% } else { %>
+                    <th>วันที่คำสั่ง</th>
+                    <% } %>
+                      <td>
+                        <%= formatThaiDate(data.de_comdate) %>
+                      </td>
+              </tr>
+              <tr>
+                <th>ผู้รับผิดชอบ</th>
+                <td>
+                  <%= data.de_person || '-' %>
+                </td>
+              </tr>
+              <tr>
+                <th>หมายเหตุ</th>
+                <td>
+                  <%= data.de_maihed || '-' %>
+                </td>
+              </tr>
+              <tr>
+                <th>บันทึกโดย</th>
+                <td>
+                  <%= data.de_saveby || '-' %>
+                </td>
+              </tr>
+              <tr>
+                <th>บันทึกวันที่</th>
+                <td>
+                  <%= formatThaiDate(data.de_savedate) %>
+                </td>
+              </tr>
+              <tr>
+                <th>ชื่อสหกรณ์</th>
+                <td>
+                  <%= data.c_name %>
+                </td>
+              </tr>
+              
+              <tr>
+                <th>กลุ่มส่งเสริม</th>
+                <td>
+                  <% switch (data.c_group) { case 'group1' : %>กลุ่มส่งเสริมสหกรณ์ 1<% break; case 'group2' : %>
+                      กลุ่มส่งเสริมสหกรณ์ 2<% break; case 'group3' : %>กลุ่มส่งเสริมสหกรณ์ 3<% break; case 'group4' : %>
+                          กลุ่มส่งเสริมสหกรณ์ 4<% break; case 'group5' : %>กลุ่มส่งเสริมสหกรณ์ 5<% break; default: %>
+                              กลุ่มไม่ระบุ<% break; } %>
+                </td>
+              </tr>
+        
+        
+              </tr>
+        
+              </tbody>
     </table>
 
     <h2 class="h6 mt-4 mb-2">กระบวนการ (Process)</h2>
@@ -87,7 +169,7 @@
         <tbody>
         <% processSteps.forEach(s => { %>
           <tr>
-            <td class="text-center">S<%= s.step %></td>
+            <td class="text-center">ขั้นที่ <%= s.step %></td>
             <td class="text-center"><%= s.formatted %></td>
           </tr>
         <% }) %>
@@ -130,7 +212,7 @@
     <p class="text-muted">ไม่พบข้อมูล</p>
   <% } %>
 
-  <a href="/chamra" class="btn btn-outline-secondary btn-sm mt-3">← กลับหน้ารายการ</a>
+  <a href="../../chamra" class="btn btn-outline-secondary btn-sm mt-3">← กลับหน้ารายการ</a>
 </div>
 
 <%- include('../partials/footer.ejs') %>

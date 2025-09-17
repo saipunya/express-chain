@@ -6,6 +6,10 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 async function sendMessage(message) {
+  if (!TOKEN || !CHAT_ID) {
+    console.error('❌ TELEGRAM config missing: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
+    return;
+  }
   try {
     await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       chat_id: CHAT_ID,

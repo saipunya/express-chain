@@ -55,12 +55,14 @@ require('./routes/index')(app);
 const lineWebhook = require('./routes/lineWebhook');
 const notifyTest = require('./routes/notifyTest'); // route ทดสอบแจ้งเตือน
 const gitgumTest = require('./routes/gitgumTest'); // ทดสอบดึงข้อมูล gitgum
+const linePush = require('./routes/linePush'); // ส่ง LINE โดยตรง
 
 // online member
 app.use(onlineStatus);
 app.use(lineWebhook);
 app.use(notifyTest); // ใช้งานเส้นทางทดสอบ
 app.use(gitgumTest); // ใช้งานเส้นทางทดสอบ gitgum
+app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 
 // 404 handler
 app.use((req, res) => {

@@ -2,12 +2,24 @@
 const cron = require('node-cron');
 const { notifyGitgum } = require('../services/gitgumNotificationService');
 
-// ตั้ง cron schedule ทุกวัน 04:00
-cron.schedule('0 4 * * *', notifyGitgum, {
-  timezone: 'Asia/Bangkok'
-});
+const TZ = process.env.TZ || 'Asia/Bangkok';
 
-// สำหรับทดสอบสามารถเรียก run ตอนนี้เลย
-// notifyGitgum();
+console.log(`⏰ ตั้งเวลาแจ้งเตือน GitGum ทุกวัน 04:00 น. (timezone: ${TZ})`);
 
-module.exports = notifyGitgum;
+const job = cron.schedule(
+  '0 4 * * *',
+  async () => {
+    const start = new Date();
+    console.log(`🚀 [Cron] เริ่มส่งแจ้งเตือน GitGum: ${start.toISOString()}`);
+    try {
+      await notifyGitgum();
+      console.log('✅ [Cron] ส่งแจ้งเตือน GitGum เสร็จสมบูรณ์');
+    } catch (e) {
+      console.error('❌ [Cron] ส่งแจ้งเตือน GitGum ล้มเหลว:', e);
+    }
+  },
+  { timezone: TZ } // รันตามเขตเวลาไทย
+);
+
+// เริ่มทำงานอัตโนมัติเมื่อถูก require จาก app.js
+module.exports = job;

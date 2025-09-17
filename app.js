@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 // เรียกใช้ routes/index.js
 require('./routes/index')(app);
 
-const lineWebhook = require('./routes/lineWebhook');
+const lineWebhook = require('./routes/lineWebhook'); // route รับข้อความจาก LINE
 const notifyTest = require('./routes/notifyTest'); // route ทดสอบแจ้งเตือน
 const gitgumTest = require('./routes/gitgumTest'); // ทดสอบดึงข้อมูล gitgum
 const linePush = require('./routes/linePush'); // ส่ง LINE โดยตรง

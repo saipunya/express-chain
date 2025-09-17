@@ -12,7 +12,7 @@ function stripHtml(html = '') {
 }
 
 async function broadcast(message) {
-  let html, text;
+  let html, text, channels, lineTo;
 
   if (typeof message === 'string') {
     html = message;
@@ -20,14 +20,22 @@ async function broadcast(message) {
   } else if (message && typeof message === 'object') {
     html = message.html;
     text = message.text || (message.html ? stripHtml(message.html) : undefined);
+    channels = message.channels;   // ['telegram','line']
+    lineTo = message.lineTo;       // override LINE_TO
   }
 
-  const tasks = [];
-  if (html) tasks.push(telegram.sendMessage(html));
-  if (text) tasks.push(line.pushText(text));
+  const use = Array.isArray(channels) && channels.length ? channels : ['telegram', 'line'];
 
-  if (tasks.length === 0) return;
+  const tasks = [];
+  if (use.includes('telegram') && html) tasks.push(telegram.sendMessage(html));
+  if (use.includes('line') && text) tasks.push(line.pushText(text, lineTo));
+
+  if (!tasks.length) return;
   await Promise.allSettled(tasks);
 }
 
-module.exports = { broadcast, stripHtml };
+async function broadcastLine(text, to) {
+  return line.pushText(text, to);
+}
+
+module.exports = { broadcast, broadcastLine, stripHtml };

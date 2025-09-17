@@ -52,9 +52,11 @@ app.use((req, res, next) => {
 // เรียกใช้ routes/index.js
 require('./routes/index')(app);
 
+const lineWebhook = require('./routes/lineWebhook');
 
 // online member
 app.use(onlineStatus);
+app.use(lineWebhook);
 
 // 404 handler
 app.use((req, res) => {

@@ -1,5 +1,6 @@
 const gitgumModel = require('../models/gitgumModel');
 const telegram = require('./telegramService');
+const line = require('./lineService'); // เพิ่ม LINE service
 
 // ฟังก์ชันส่งข้อความกิจกรรมวันนี้
 async function notifyGitgum() {
@@ -26,7 +27,20 @@ async function notifyGitgum() {
 👥 ผู้ไป: ${g.git_goto || '-'}
 ผู้รับผิดชอบ: ${g.git_respon || '-'}
     `;
+
+    // ข้อความสำหรับ LINE (plain text, ไม่รองรับ HTML)
+    const lineMsg = [
+      `📌 ${g.git_act}`,
+      `🗓 วันที่: ${dateTH}`,
+      '',
+      `⏰ เวลา: ${g.git_time}`,
+      `📍 สถานที่: ${g.git_place}`,
+      `👥 ผู้ไป: ${g.git_goto || '-'}`,
+      `ผู้รับผิดชอบ: ${g.git_respon || '-'}`,
+    ].join('\n');
+
     await telegram.sendMessage(msg);
+    await line.pushText(lineMsg); // ส่งไป LINE
     console.log('✅ ส่งแล้ว:', g.git_act);
   }
 }

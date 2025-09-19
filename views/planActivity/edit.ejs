@@ -1,0 +1,16 @@
+<h1>Edit Plan Activity</h1>
+<form action="/planActivity/<%= activity.ac_id %>/update" method="post">
+  <label>Number: <input name="ac_number" type="number" value="<%= activity.ac_number %>" required></label><br>
+  <label>Subject: <input name="ac_subject" value="<%= activity.ac_subject %>" required></label><br>
+  <label>Status: <input name="ac_status" type="number" value="<%= activity.ac_status %>" required></label><br>
+  <label>Project Code:
+    <select name="ac_procode" required>
+      <% projects.forEach(p => { %>
+        <option value="<%= p.pro_code %>" <%= activity.ac_procode === p.pro_code ? 'selected' : '' %>><%= p.pro_code %></option>
+      <% }) %>
+    </select>
+  </label><br>
+  <label>Save By: <input name="ac_saveby" value="<%= activity.ac_saveby %>" required></label><br>
+  <label>Save Date: <input name="ac_savedate" type="date" value="<%= activity.ac_savedate.toISOString().slice(0,10) %>" required></label><br>
+  <button type="submit">Update</button>
+</form>

@@ -1,0 +1,11 @@
+<h1>Plan Activity Detail</h1>
+<ul>
+  <li>ID: <%= activity.ac_id %></li>
+  <li>Number: <%= activity.ac_number %></li>
+  <li>Subject: <%= activity.ac_subject %></li>
+  <li>Status: <%= activity.ac_status %></li>
+  <li>Project Code: <%= activity.ac_procode %></li>
+  <li>Save By: <%= activity.ac_saveby %></li>
+  <li>Save Date: <%= activity.ac_savedate.toISOString().slice(0,10) %></li>
+</ul>
+<a href="/planActivity">Back</a>

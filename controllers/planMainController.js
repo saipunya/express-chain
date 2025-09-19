@@ -1,9 +1,10 @@
 const planModel = require('../models/planMainModel');
+const thaiDate = require('../utils/thaiDate');
 
 exports.listPage = async (req, res) => {
   try {
     const plans = await planModel.getAll();
-    res.render('plan/index', { plans, title: 'แผนงานหลัก' });
+    res.render('plan/index', { plans, title: 'แผนงานหลัก', thaiDate });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading plans');
@@ -25,7 +26,7 @@ exports.create = async (req, res) => {
       ma_savedate: req.body.ma_savedate || new Date().toISOString().slice(0,10)
     };
     await planModel.create(payload);
-    res.redirect('/plan'); // redirect to list page
+    res.redirect('/planMain'); // redirect to list page
   } catch (err) {
     console.error(err);
     res.status(500).send('Error creating plan');

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0"><%= title %></h1>
+      <a href="/planProject/new" class="btn btn-primary">เพิ่มโครงการ</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>รหัสโครงการ</th>
+            <th>ชื่อโครงการ</th>
+            <th>เป้าหมาย</th>
+            <th>งบประมาณ</th>
+            <th>กลุ่ม</th>
+            <th>ผู้รับผิดชอบ</th>
+            <th>แผนงานหลัก</th>
+            <th>บันทึกโดย</th>
+            <th>วันที่</th>
+            <th>การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% projects.forEach(p => { %>
+            <tr>
+              <td><%= p.pro_id %></td>
+              <td><%= p.pro_code %></td>
+              <td><%= p.pro_subject %></td>
+              <td><%= p.pro_target %></td>
+              <td><%= p.pro_budget %></td>
+              <td><%= p.pro_group %></td>
+              <td><%= p.pro_respon %></td>
+              <td><%= p.pro_macode %></td>
+              <td><%= p.pro_saveby %></td>
+              <td><%= thaiDate(p.pro_savedate) %></td>
+              <td>
+                <a href="/plan_project/edit/<%= p.pro_id %>" class="btn btn-sm btn-warning">แก้ไข</a>
+                <form action="/plan_project/delete/<%= p.pro_id %>" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบรายการ?')">ลบ</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container py-4">
+    <h1 class="h4 mb-4"><%= title %></h1>
+    <form action="/planProject/edit/<%= project.pro_id %>" method="post" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">รหัสโครงการ</label>
+        <input type="text" name="pro_code" class="form-control" value="<%= project.pro_code %>" required>
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">ชื่อโครงการ</label>
+        <input type="text" name="pro_subject" class="form-control" value="<%= project.pro_subject %>" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">เป้าหมาย</label>
+        <input type="text" name="pro_target" class="form-control" value="<%= project.pro_target %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">งบประมาณ</label>
+        <input type="number" step="0.01" name="pro_budget" class="form-control" value="<%= project.pro_budget %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">กลุ่ม</label>
+        <input type="text" name="pro_group" class="form-control" value="<%= project.pro_group %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">ผู้รับผิดชอบ</label>
+        <input type="text" name="pro_respon" class="form-control" value="<%= project.pro_respon %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">แผนงานหลัก</label>
+        <select name="pro_macode" class="form-select" required>
+          <option value="">-- เลือกแผนงานหลัก --</option>
+          <% plans.forEach(plan => { %>
+            <option value="<%= plan.ma_code %>" <%= plan.ma_code === project.pro_macode ? 'selected' : '' %>><%= plan.ma_code %> - <%= plan.ma_subject %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <input type="hidden" name="pro_saveby" value="<%= project.pro_saveby %>">
+        <button type="submit" class="btn btn-success">บันทึก</button>
+        <a href="/plan_project" class="btn btn-secondary">ยกเลิก</a>
+      </div>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

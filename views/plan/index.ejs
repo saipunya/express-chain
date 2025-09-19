@@ -3,40 +3,53 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title %></title>
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <h1><%= title %></h1>
-  <p><a href="/plan/new">เพิ่มแผนงานหลัก</a></p>
-  <table border="1" cellpadding="6">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>รหัส</th>
-        <th>หัวข้อ</th>
-        <th>บันทึกโดย</th>
-        <th>วันที่</th>
-        <th>การจัดการ</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% plans.forEach(p => { %>
-        <tr>
-          <td><%= p.ma_id %></td>
-          <td><%= p.ma_code %></td>
-          <td><%= p.ma_subject %></td>
-          <td><%= p.ma_saveby %></td>
-          <td><%= p.ma_savedate %></td>
-          <td>
-            <!-- submit POST with hidden _method so method-override turns it into DELETE -->
-            <form action="/plan/api/<%= p.ma_id %>" method="post" style="display:inline">
-              <input type="hidden" name="_method" value="DELETE">
-              <button type="submit" onclick="return confirm('ลบรายการ?')">ลบ</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0"><%= title %></h1>
+      <a href="/plan/new" class="btn btn-primary">เพิ่มแผนงานหลัก</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">รหัส</th>
+            <th scope="col">หัวข้อ</th>
+            <th scope="col">บันทึกโดย</th>
+            <th scope="col">วันที่</th>
+            <th scope="col">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% plans.forEach(p => { %>
+            <tr>
+              <td><%= p.ma_id %></td>
+              <td><%= p.ma_code %></td>
+              <td><%= p.ma_subject %></td>
+              <td><%= p.ma_saveby %></td>
+              <td><%= thaiDate(p.ma_savedate) %></td>
+              <td>
+                <!-- submit POST with hidden _method so method-override turns it into DELETE -->
+                <form action="/plan/api/<%= p.ma_id %>" method="post" class="d-inline">
+                  <input type="hidden" name="_method" value="DELETE">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบรายการ?')">ลบ</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5.3 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

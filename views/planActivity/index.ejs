@@ -1,0 +1,23 @@
+<h1>Plan Activities</h1>
+<a href="/planActivity/create">Create New</a>
+<table>
+  <tr>
+    <th>ID</th><th>Number</th><th>Subject</th><th>Status</th><th>Project Code</th><th>Actions</th>
+  </tr>
+  <% activities.forEach(a => { %>
+    <tr>
+      <td><%= a.ac_id %></td>
+      <td><%= a.ac_number %></td>
+      <td><%= a.ac_subject %></td>
+      <td><%= a.ac_status %></td>
+      <td><%= a.ac_procode %></td>
+      <td>
+        <a href="/planActivity/<%= a.ac_id %>">View</a>
+        <a href="/planActivity/<%= a.ac_id %>/edit">Edit</a>
+        <form action="/planActivity/<%= a.ac_id %>/delete" method="post" style="display:inline;">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</table>

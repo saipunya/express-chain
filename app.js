@@ -9,6 +9,7 @@ const { Server } = require('socket.io');   // เล่ม
 const onlineModel = require('./models/onlineModel');
 const fs = require('fs');
 const axios = require('axios');
+// const methodOverride = require('method-override'); // replaced by safe loader below
 
 require('dotenv').config();
 
@@ -36,6 +37,31 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// method-override: prefer installed package, otherwise use lightweight fallback
+let methodOverridePkg = null;
+try {
+  methodOverridePkg = require('method-override');
+} catch (e) {
+  console.warn('method-override not installed — using fallback middleware. To use official package run: npm install method-override');
+}
+
+if (methodOverridePkg) {
+  app.use(methodOverridePkg('_method'));
+  app.use(methodOverridePkg((req) => req.query._method));
+} else {
+  // Fallback: look for _method in body or query and override req.method
+  app.use((req, res, next) => {
+    // body parser runs before this, so req.body is available
+    const fromBody = req.body && req.body._method;
+    const fromQuery = req.query && req.query._method;
+    const method = (fromBody || fromQuery || '').toString().toUpperCase();
+    if (method && ['DELETE', 'PUT', 'PATCH'].includes(method)) {
+      req.method = method;
+    }
+    next();
+  });
+}
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(setUserLocals);
@@ -57,6 +83,7 @@ const notifyTest = require('./routes/notifyTest'); // route ทดสอบแ�
 const gitgumTest = require('./routes/gitgumTest'); // ทดสอบดึงข้อมูล gitgum
 const linePush = require('./routes/linePush'); // ส่ง LINE โดยตรง
 const memberRoutes = require('./routes/memberRoutes'); // route สมาชิก
+const planMainRoutes = require('./routes/planMainRoutes'); // add this near other route requires
 
 // online member
 app.use(onlineStatus);
@@ -65,6 +92,7 @@ app.use(notifyTest); // ใช้งานเส้นทางทดสอบ
 app.use(gitgumTest); // ใช้งานเส้นทางทดสอบ gitgum
 app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
+app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
 
 // 404 handler
 app.use((req, res) => {

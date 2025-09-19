@@ -1,0 +1,42 @@
+<!— list of main plans —>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><%= title %></title>
+</head>
+<body>
+  <h1><%= title %></h1>
+  <p><a href="/plan/new">เพิ่มแผนงานหลัก</a></p>
+  <table border="1" cellpadding="6">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>รหัส</th>
+        <th>หัวข้อ</th>
+        <th>บันทึกโดย</th>
+        <th>วันที่</th>
+        <th>การจัดการ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% plans.forEach(p => { %>
+        <tr>
+          <td><%= p.ma_id %></td>
+          <td><%= p.ma_code %></td>
+          <td><%= p.ma_subject %></td>
+          <td><%= p.ma_saveby %></td>
+          <td><%= p.ma_savedate %></td>
+          <td>
+            <!-- submit POST with hidden _method so method-override turns it into DELETE -->
+            <form action="/plan/api/<%= p.ma_id %>" method="post" style="display:inline">
+              <input type="hidden" name="_method" value="DELETE">
+              <button type="submit" onclick="return confirm('ลบรายการ?')">ลบ</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

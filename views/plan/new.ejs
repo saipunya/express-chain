@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><%= title %></title>
+</head>
+<body>
+  <h1><%= title %></h1>
+  <form action="/plan" method="post">
+    <div>
+      <label>รหัสแผนงาน</label><br>
+      
+      <input type="text" name="ma_code" required>
+    </div>
+    <div>
+      <label>หัวข้อ</label><br>
+      <input type="text" name="ma_subject" required>
+    </div>
+    <div>
+      <label>รายละเอียด</label><br>
+      <textarea name="ma_detail" rows="6" cols="60"></textarea>
+    </div>
+    <div>
+      <input type="hidden" name="ma_saveby" value="<%= ma_saveby %>">
+      <button type="submit">บันทึก</button>
+      <a href="/plan">ยกเลิก</a>
+    </div>
+  </form>
+</body>
+</html>

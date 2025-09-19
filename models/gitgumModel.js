@@ -12,7 +12,7 @@ exports.insert = async (data) => {
 
 // ดึงข้อมูลทั้งหมด
 exports.findAll = async () => {
-  const [rows] = await db.query('SELECT * FROM tbl_gitgum  WHERE git_date >= CURDATE() ORDER BY git_date DESC');
+  const [rows] = await db.query('SELECT * FROM tbl_gitgum  WHERE git_date >= CURDATE() ORDER BY git_date ASC , git_time ASC');
   return rows;
 };
 
@@ -25,7 +25,7 @@ exports.countAll = async () => {
 // ดึงตามหน้า (limit/offset)
 exports.findPage = async (limit, offset) => {
   const [rows] = await db.query(
-    'SELECT * FROM tbl_gitgum WHERE git_date >= CURDATE() ORDER BY git_date DESC LIMIT ? OFFSET ?',
+    'SELECT * FROM tbl_gitgum WHERE git_date >= CURDATE() ORDER BY git_date ASC, git_time ASC LIMIT ? OFFSET ?',
     [Number(limit), Number(offset)]
   );
   return rows;

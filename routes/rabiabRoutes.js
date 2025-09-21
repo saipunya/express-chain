@@ -23,7 +23,7 @@ const upload = multer({
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
-      cb(new Error('<|im_start|>ปโหลดได้เฉพาะไฟล์ PDF เท่า<|im_start|>้น'), false);
+      cb(new Error('upload เฉพาะไฟล์ pdf เท่านั้น'), false);
     }
   }
 });

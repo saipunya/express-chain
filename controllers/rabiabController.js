@@ -64,7 +64,7 @@ exports.uploadRabiab = async (req, res) => {
     
     // หา c_name จาก c_code
     const selectedCoop = await rabiabModel.getCoopByCode(ra_code);
-    const actualRaName = selectedCoop ? selectedCoop.c_name : ra_name;
+    
     
     const user = req.session.user?.fullname || 'unknown';
     const file = req.file;
@@ -73,7 +73,7 @@ exports.uploadRabiab = async (req, res) => {
     
     const data = {
       ra_code,
-      ra_name: actualRaName,
+      ra_name,
       ra_year,
       ra_approvedate,
       ra_filename: file.filename,

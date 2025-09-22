@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: 'รายละเอียดสหกรณ์' }) %>
+
+<div class="container my-4">
+  <h1 class="mb-3">รายละเอียดสหกรณ์</h1>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h4 class="card-title"><%= item['ชื่อสหกรณ์'] %></h4>
+      <p class="mb-1"><strong>พ.ศ.:</strong> <%= item['พ.ศ.'] %></p>
+      <p class="mb-1"><strong>อำเภอ:</strong> <%= item['อำเภอ'] %></p>
+
+      <ul class="list-unstyled mt-3">
+        <li>สามัญชาย: <strong><%= item['สามัญชาย'] %></strong></li>
+        <li>สามัญหญิง: <strong><%= item['สามัญหญิง'] %></strong></li>
+        <li>สมทบชาย: <strong><%= item['สมทบชาย'] %></strong></li>
+        <li>สมทบหญิง: <strong><%= item['สมทบหญิง'] %></strong></li>
+      </ul>
+
+      <p class="mt-3">รวมสมาชิกทั้งหมด: <strong><%= Number(item.total).toLocaleString() %></strong></p>
+
+      <div class="mt-3">
+        <a href="/members" class="btn btn-secondary">กลับรายการ</a>
+        <a href="/" class="btn btn-outline-primary">กลับหน้าแรก</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

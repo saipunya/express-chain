@@ -190,6 +190,96 @@
   </div>
 </section>
 
+<section class="py-2 bg-light">
+  <div class="container">
+    <div class="mb-3 text-center">
+      <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (ราย)</h2>
+    </div>
+
+    <% const hasSummary = (typeof summaryByYear !== 'undefined' && summaryByYear); %>
+    <% const hasTop = (typeof top !== 'undefined' && Array.isArray(top)); %>
+    <% const yearEntries = hasSummary ? Object.entries(summaryByYear).sort((a,b)=> Number(b[0]) - Number(a[0])) : []; %>
+
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card modern-card h-100">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h5 class="card-title text-success mb-3">
+              <i class="bi bi-calendar3 me-2"></i> รวมสมาชิกตามปี
+            </h5>
+            <% if (yearEntries.length) { %>
+              <ul class="list-group list-group-flush">
+                <% yearEntries.forEach(([y,total]) => { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><%= y %></span>
+                    <span class="badge bg-success rounded-pill"><%= Number(total).toLocaleString() %></span>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <div class="text-muted">ไม่มีข้อมูลสรุปตามปี</div>
+            <% } %>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-end">
+            <a href="/members" class="btn btn-sm btn-success">
+              ดูข้อมูลเพิ่มเติม
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card modern-card h-100">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h5 class="card-title text-primary mb-3">
+              <i class="bi bi-trophy me-2"></i> Top สหกรณ์ (ตามจำนวนสมาชิกรวม)
+            </h5>
+            <% if (hasTop && top.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-center">อันดับ</th>
+                      <th>ชื่อสหกรณ์</th>
+                      <th>พ.ศ.</th>
+                      <th>อำเภอ</th>
+                      <th class="text-end">สมาชิกรวม(ราย)</th>
+                      <th class="text-center">view</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <% top.forEach((t,i)=>{ %>
+                    <tr>
+                      <td class="text-center"><%= i+1 %></td>
+                      <td><%= t.name %></td>
+                      <td><%= t.year || 'N/A' %></td> <!-- insert พ.ศ. -->
+                      <td><%= t.อำเภอ %></td>
+                      <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
+                      <td class="text-center">
+                        <a href="/members/<%= t.idx %>" class="btn btn-sm btn-outline-info">รายละเอียด</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="text-muted">ไม่มีข้อมูลรายการ Top</div>
+            <% } %>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between">
+            <a href="/" class="btn btn-sm btn-outline-secondary">หน้าแรก</a>
+            <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <section class="py-2 bg-white">
   <div class="container-lg">
     <div class="row justify-content-center">
@@ -755,61 +845,8 @@
     </div>
   </div>
 </section>
-<!-- ...existing code... -->
-<section class="py-2 bg-light">
-  <div class="container ">
-    <div class="mb-4 text-center">
-      <h4 class="fw-bold mb-3 section-title">
-        <i class="bi bi-file-earmark-text me-2"></i> บทความล่าสุด
-      </h4>
-      <hr class="w-25 mx-auto text-primary opacity-75">
-    </div>
 
-    <!-- Slider marquee -->
-    <div class="marquee">
-      <div class="marquee__track">
-        <% for (let loop = 0; loop < 2; loop++) { %>
-          <% (lastArticles || []).forEach(article => { %>
-            <div class="article-card">
-              <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden modern-card">
-                <div class="card-gradient-bar"></div>
-                <% try { const imgs = JSON.parse(article.ar_img || '[]'); if (imgs.length) { %>
-                  <img src="/uploads/article/<%= imgs[0] %>" alt="img" class="card-img-top" style="height:180px;object-fit:cover;">
-                <% } else { %>
-                  <div class="d-flex align-items-center justify-content-center" style="height:180px;">
-                    <i class="bi bi-image text-muted fs-1"></i>
-                  </div>
-                <% } } catch(e) {} %>
 
-                <div class="card-body d-flex flex-column h-100">
-                  <h6 class="card-title fw-bold mb-2 text-truncate">
-                    <a href="/article/view/<%= article.ar_id %>" class="stretched-link text-decoration-none text-dark">
-                      <%= article.ar_subject %>
-                    </a>
-                  </h6>
-                  <p class="card-text small text-muted mb-3 flex-grow-1"
-                    style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                    <%= (article.ar_detail || '').substring(0, 100) + "..." %>
-                  </p>
-                  <div class="text-center mt-auto">
-                    <a href="/article/view/<%= article.ar_id %>" class="btn btn-sm btn-primary w-100">อ่านเพิ่มเติม</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }) %>
-        <% } %>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-end mt-2">
-      <a href="/article" class="btn btn-sm btn-primary mb-1">
-        <i class="bi bi-eye"></i> ดูทั้งหมด
-      </a>
-    </div>
-  </div>
-</section>
-<!-- ...existing code... -->
     <style>
       .hover-shadow:hover {
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;

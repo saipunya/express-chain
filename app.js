@@ -66,6 +66,10 @@ if (methodOverridePkg) {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(setUserLocals);
 app.use(updateOnlineTime); 
+
+// เพิ่มบรรทัดนี้เพื่อเตรียม summaryByYear/top ให้ทุก view (อ่าน member6667.json)
+app.use(require('./middlewares/memberCoopLocals'));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(morgan('dev'));
 const onlineStatus = require('./middlewares/onlineMiddleware');
@@ -84,6 +88,7 @@ const gitgumTest = require('./routes/gitgumTest'); // ทดสอบดึง�
 const linePush = require('./routes/linePush'); // ส่ง LINE โดยตรง
 const memberRoutes = require('./routes/memberRoutes'); // route สมาชิก
 const planMainRoutes = require('./routes/planMainRoutes'); // add this near other route requires
+const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
 
 // online member
 app.use(onlineStatus);
@@ -93,6 +98,7 @@ app.use(gitgumTest); // ใช้งานเส้นทางทดสอบ g
 app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
 app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
+app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
 
 // 404 handler
 app.use((req, res) => {

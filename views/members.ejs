@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: 'รายการสหกรณ์ / ค้นหา' }) %>
+
+<div class="container my-4">
+  <h1 class="mb-3">รายการสหกรณ์ / ค้นหา</h1>
+
+  <form class="mb-3" method="get" action="/members">
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="ค้นหาชื่อ, อำเภอ หรือ ปี" value="<%= q %>">
+      <button class="btn btn-primary" type="submit">ค้นหา</button>
+      <a href="/members" class="btn btn-outline-secondary">ล้าง</a>
+    </div>
+  </form>
+
+  <p>ผลลัพธ์: <strong><%= results.length %></strong></p>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>#</th><th>พ.ศ.</th><th>ชื่อสหกรณ์</th><th>อำเภอ</th>
+          <th>สามัญชาย</th><th>สามัญหญิง</th><th>สมทบชาย</th><th>สมทบหญิง</th><th>รวม</th><th>ดู</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% results.forEach(r => { %>
+          <tr>
+            <td><%= r.idx %></td>
+            <td><%= r['พ.ศ.'] %></td>
+            <td><%= r['ชื่อสหกรณ์'] %></td>
+            <td><%= r['อำเภอ'] %></td>
+            <td><%= r['สามัญชาย'] %></td>
+            <td><%= r['สามัญหญิง'] %></td>
+            <td><%= r['สมทบชาย'] %></td>
+            <td><%= r['สมทบหญิง'] %></td>
+            <td><%= Number(r.total).toLocaleString() %></td>
+            <td><a class="btn btn-sm btn-outline-info" href="/members/<%= r.idx %>">รายละเอียด</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-3">
+    <a href="/" class="btn btn-secondary">กลับหน้าแรก</a>
+  </p>
+</div>
+
+<%- include('partials/footer') %>

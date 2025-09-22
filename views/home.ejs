@@ -193,7 +193,7 @@
 <section class="py-2 bg-light">
   <div class="container">
     <div class="mb-3 text-center">
-      <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (ราย)</h2>
+      <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (สหกรณ์)</h2>
     </div>
 
     <% const hasSummary = (typeof summaryByYear !== 'undefined' && summaryByYear); %>
@@ -561,6 +561,7 @@
   </div>
 </section>
 
+
 <section class="py-4 bg-light">
   <div class="container-lg">
     <div class="row">
@@ -726,6 +727,107 @@
 
 
 
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="width:56px;">#</th>
+                <th>เรื่อง</th>
+                <th class="text-nowrap">ไฟล์</th>
+                <th class="text-center">ลิงก์</th>
+                <th class="text-nowrap">วันที่</th>
+              </tr>
+            </thead>
+            <tbody id="topDownloadsTbody">
+              <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-light text-end">
+        <a href="/down" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(() => {
+  const loggedIn = <%= !!user %>;
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, s => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
+    ));
+  }
+  function fmtDate(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt)) return escapeHtml(d);
+    const pad = n => String(n).padStart(2,'0');
+    return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+  }
+
+  fetch('/down/top10')
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById('topDownloadsTbody');
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map((d, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(d.down_subject || '-')}</td>
+          <td class="text-nowrap">
+            ${
+              d.down_file && d.down_file !== '-' ? (
+                loggedIn
+                  ? `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
+                       <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                     </a>`
+                  : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary">
+                       <i class="bi bi-lock"></i> เข้าสู่ระบบ
+                     </a>`
+              ) : '<span class="text-muted">-</span>'
+            }
+          </td>
+          <td class="text-center">
+            ${
+              d.down_link && d.down_link !== '-'
+                ? `<a href="${escapeHtml(d.down_link)}" target="_blank" class="btn btn-sm btn-outline-info">
+                     <i class="bi bi-link-45deg"></i> ลิงก์
+                   </a>`
+                : '<span class="text-muted">-</span>'
+            }
+          </td>
+          <td>${fmtDate(d.down_savedate)}</td>
+        </tr>
+      `).join('');
+    })
+    .catch(() => {
+      const tbody = document.getElementById('topDownloadsTbody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    });
+})();
+</script>
+
+
+
+
+
+
+
+
     <div class="row mt-4">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">
@@ -774,9 +876,27 @@
   
 
 
+    <section class="py-2 bg-light">
+      <div class="container">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
+            <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
+          </div>
+          <div class="card-body">
+            <!-- ใช้ partial เดียวกับหน้า list เพื่อเรนเดอร์บนหน้า home -->
+            <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
+          </div>
+          <div class="card-footer bg-light text-end">
+            <a href="/article" class="btn btn-sm btn-primary">ไปที่หน้าบทความทั้งหมด</a>
+          </div>
+        </div>
+      </div>
+    </section>
 
 
-    <div class="row mt-4">
+    <div class="row mt-4" id="usecarSection">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">
           <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
@@ -814,9 +934,20 @@
                               <%= usecar.act_car %>
                             </small>
 
-                            <a href="/usecar/view/<%= usecar.id_usecar %>" class="btn btn-outline-primary btn-sm">
+                            <!-- เปลี่ยนเป็นปุ่มเปิด Modal -->
+                            <button
+                              type="button"
+                              class="btn btn-outline-primary btn-sm js-open-usecar"
+                              data-bs-toggle="modal"
+                              data-bs-target="#usecarModal"
+                              data-id="<%= usecar.id_usecar %>"
+                              data-date="<%= thaiDate %>"
+                              data-time="<%= usecar.time_car %>"
+                              data-place="<%= usecar.place_car %>"
+                              data-act="<%= usecar.act_car %>"
+                            >
                               <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
-                            </a>
+                            </button>
                         </div>
 
                         <% if(user && user.mClass==='admin' ){ %>
@@ -845,6 +976,9 @@
     </div>
   </div>
 </section>
+
+
+
 
 
     <style>
@@ -1041,4 +1175,57 @@
       const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
     </script>
 
-    <%- include('partials/footer') %>
+    <!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
+<div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="card-gradient-bar"></div>
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i> รายละเอียดการใช้รถ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row mb-0">
+          <dt class="col-4 col-md-3">วันที่</dt>
+          <dd class="col-8 col-md-9" id="uc-date">-</dd>
+
+          <dt class="col-4 col-md-3">เวลา</dt>
+          <dd class="col-8 col-md-9" id="uc-time">-</dd>
+
+          <dt class="col-4 col-md-3">สถานที่</dt>
+          <dd class="col-8 col-md-9" id="uc-place">-</dd>
+
+          <dt class="col-4 col-md-3">กิจกรรม</dt>
+          <dd class="col-8 col-md-9" id="uc-act">-</dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <a id="uc-view-link" href="#" class="btn btn-primary" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-1"></i> เปิดหน้ารายละเอียด
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // เติมข้อมูลลง Modal เมื่อกดปุ่ม
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-open-usecar');
+    if (!btn) return;
+
+    const get = (k) => btn.dataset[k] || '-';
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    setText('uc-date', get('date'));
+    setText('uc-time', get('time') + ' น.');
+    setText('uc-place', get('place'));
+    setText('uc-act', get('act'));
+
+    const link = document.getElementById('uc-view-link');
+    if (link) link.href = '/usecar/view/' + get('id');
+  });
+</script>
+
+<%- include('partials/footer') %>

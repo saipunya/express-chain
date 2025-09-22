@@ -9,5 +9,6 @@ router.post('/create', activityController.createActivity);
 router.get('/edit/:id', activityController.showEditForm);
 router.post('/edit/:id', activityController.updateActivity);
 router.get('/delete/:id', activityController.deleteActivity);
+// ...existing code...
 
 module.exports = router;

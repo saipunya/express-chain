@@ -1,4 +1,5 @@
 const downModel = require('../models/downModel');
+const db = require('../config/db');
 const path = require('path');
 const fs = require('fs');
 const fileService = require('../services/fileService');
@@ -118,4 +119,19 @@ exports.search = async (req, res) => {
   const keyword = req.query.keyword || '';
   const results = await downModel.searchBySubject(keyword);
   res.json(results);
+};
+
+exports.top10 = async (req, res, next) => {
+  try {
+    // ดึง 10 รายการล่าสุดตามวันที่บันทึก (ไม่มีคอลัมน์นับจำนวนดาวน์โหลด)
+    const [rows] = await db.query(
+      `SELECT down_id, down_subject, down_file, down_link, down_savedate
+       FROM download
+       ORDER BY down_savedate DESC, down_id DESC
+       LIMIT 10`
+    );
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
 };

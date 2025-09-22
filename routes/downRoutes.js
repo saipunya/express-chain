@@ -18,5 +18,6 @@ router.post('/delete/:id', authorizeRoles('admin', 'kts'), downController.delete
 router.get('/download/:id', downController.download);
 
 router.get('/search', downController.search);
+router.get('/top10', downController.top10);
 
 module.exports = router;

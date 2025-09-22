@@ -1,36 +1,25 @@
 <%- include('../partials/header.ejs') %>
+<style>
+  .article-card { transition: .25s ease; }
+  .article-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px -10px rgba(0,0,0,.2)!important; }
+  .line-clamp-2 {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .gradient-bar {
+    position:absolute; top:0; left:0; height:4px; width:100%;
+    background: linear-gradient(90deg,#0ea5e9,#6366f1,#8b5cf6);
+    border-top-left-radius:.5rem; border-top-right-radius:.5rem;
+  }
+</style>
+
 <div class="container mt-4">
-  <h2 class="mb-4">📚 รายการบทความ</h2>
-  <div class="row">
-    <% articles.forEach((article, idx) => { %>
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title"><%= article.ar_subject %></h5>
-            <div class="d-flex justify-content-center">
-                <% 
-                    const imgs = JSON.parse(article.ar_img || '[]');
-                %>  
-                <img src="/uploads/article/<%= imgs[0] %>" alt="img" style="height:250px;" class="me-1 mb-1 rounded border">
-                  
-            </div>
-            <p class="card-text"><%= article.ar_detail.substring(0, 100) + '...' %></p>
-            <span class="d-flex justify-content-end">
-                <a href="/article/view/<%= article.ar_id %>" class="btn btn-sm btn-primary mb-1">
-                    <i class="bi bi-eye"></i> อ่านต่อที่นี่
-                </a>
-            </span>
-           
-          </div>
-          <div class="card-footer text-muted">
-            <%= article.ar_saveby %> | <%= new Date(article.ar_savedate).toLocaleDateString('th-TH') %>
-          </div>
-        </div>
-      </div>
-      <% if ((idx + 1) % 2 === 0) { %>
-        </div><div class="row">
-      <% } %>
-    <% }) %>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">📚 รายการบทความ</h2>
+    <a href="/article" class="btn btn-sm btn-outline-primary">รีเฟรช</a>
   </div>
+  <p class="text-muted mb-3">อัปเดตล่าสุด • เรียงลำดับตามวันที่บันทึก</p>
+
+  <!-- ใช้ partial รวมรายการบทความ -->
+  <%- include('./partials/list-body.ejs', { articles }) %>
 </div>
 <%- include('../partials/footer.ejs') %>

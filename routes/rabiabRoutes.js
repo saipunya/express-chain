@@ -32,7 +32,8 @@ const upload = multer({
 router.get('/coops/:group', rabiabController.getCoopsByGroup);
 
 // Routes อื่นๆ
-router.get('/', requireLevel(['admin', 'kjs']), rabiabController.index);
+router.get('/', requireLogin, rabiabController.index);
+// router.get('/', requireLevel(['admin', 'kjs']), rabiabController.index);
 router.get('/upload', requireLogin, rabiabController.uploadForm);
 router.post('/upload', requireLogin, upload.single('file'), rabiabController.uploadRabiab);
 router.get('/download/:id', requireLogin, rabiabController.downloadRabiab);

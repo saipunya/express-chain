@@ -45,4 +45,7 @@ router.post('/poblem/delete/:po_id', chamraController.deletePoblem);
 // Detail (new)
 router.get('/detail/:c_code', chamraController.detail);
 
+// Export PDF
+router.post('/export/pdf', chamraController.exportChamraPdf);
+
 module.exports = router;

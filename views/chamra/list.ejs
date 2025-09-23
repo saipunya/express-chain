@@ -20,6 +20,11 @@
     const year = d.getFullYear() + 543;
     return `${day} ${month} ${year}`;
   }
+
+  function safeDate(dateStr) {
+    if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00' || dateStr === 'Invalid date') return '';
+    return dateStr;
+  }
 %>
 
 <style>
@@ -41,6 +46,7 @@
     <a href="/chamra/add" class="btn btn-success mb-3">➕ เพิ่ม Chamra</a>
     <a href="/chamra/poblem" class="btn btn-warning mb-3">📋 รายการปัญหา Chamra</a>
     <a href="/chamra/process" class="btn btn-info mb-3">📊 รายการกระบวนการ Chamra</a>
+    <button id="exportChamraBtn" class="btn btn-outline-primary mb-3">⬇️ Export Chamra</button>
   <% } %>
 
   <!-- Search form: searches by c_name and active_coop name (if provided from join) -->
@@ -102,8 +108,13 @@
           ];
           // NEW LOGIC: หา "หมายเลขขั้นสูงสุด" ที่มีวันที่ valid โดยไม่อิงวันที่ล่าสุดเชิงเวลา
           let latestStepNumber = 0;
+          let latestStepDate = '';
           for (let i = processDates.length - 1; i >= 0; i--) {
-            if (isValidProcessDate(processDates[i])) { latestStepNumber = i + 1; break; }
+            if (isValidProcessDate(processDates[i])) { 
+              latestStepNumber = i + 1; 
+              latestStepDate = safeDate(processDates[i]);
+              break; 
+            }
           }
           const totalSteps = 10;
           const percent = Math.round((latestStepNumber / totalSteps) * 100);
@@ -113,13 +124,13 @@
           if(latestStepNumber > 0){
             latestBadgeHtml = `
               <span class="badge latest-step-badge text-dark">
-                📈 ขั้นที่ ${latestStepNumber} : ${formatThaiDate(processDates[latestStepNumber-1])}
+                📈 ขั้นที่ ${latestStepNumber} : ${formatThaiDate(latestStepDate)}
               </span>`;
           }
 
           function showStep(label, value) {
             if (!isValidProcessDate(value)) return `${label}: -`;
-            return `${label}: ${formatThaiDate(value)}`;
+            return `${label}: ${formatThaiDate(safeDate(value))}`;
           }
           const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
       %>
@@ -236,6 +247,27 @@
       `รายละเอียดขั้นตอน - ${btn.dataset.code} (${btn.dataset.name})`;
     const modal = new bootstrap.Modal(document.getElementById('stepsModal'));
     modal.show();
+  });
+
+  // Export Chamra PDF
+  document.getElementById('exportChamraBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('exportChamraBtn');
+    btn.disabled = true;
+    btn.textContent = 'กำลังส่งออก...';
+    try {
+      // Open in new tab for inline PDF viewing
+      const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
+      if (!resp.ok) throw new Error('Export failed');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+      alert('ไม่สามารถส่งออกข้อมูลได้');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⬇️ Export Chamra';
+    }
   });
 </script>
 

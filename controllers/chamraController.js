@@ -1,5 +1,8 @@
 const Chamra = require('../models/chamraModel'); // unified model
 const db = require('../config/db');
+const PdfPrinter = require('pdfmake');
+const fs = require('fs');
+const path = require('path');
 
 const chamraController = {};
 
@@ -279,6 +282,244 @@ chamraController.processCreate = async (req, res) => {
     }
     console.error(e);
     return res.render('chamra/process/create', { coopList, error: 'เกิดข้อผิดพลาด', old: req.body });
+  }
+};
+
+// Helper: try multiple sources to find current user's display name
+const getUserDisplayName = async (req) => {
+  try {
+    // 1. Passport sets req.user
+    if (req.user) {
+      return (req.user.fullname || req.user.username || String(req.user));
+    }
+
+    // 2. Some apps store user in req.session.user
+    if (req.session && req.session.user) {
+      const su = req.session.user;
+      return (su.fullname || su.username || String(su));
+    }
+
+    // 3. Passport may store user id in req.session.passport.user
+    if (req.session && req.session.passport && req.session.passport.user) {
+      const pu = req.session.passport.user;
+      // if it's an object with fields
+      if (typeof pu === 'object') {
+        return (pu.fullname || pu.username || JSON.stringify(pu));
+      }
+      // if it's an id (number/string) try to fetch from users table (best-effort)
+      try {
+        const [rows] = await db.query('SELECT fullname, username FROM users WHERE id = ? LIMIT 1', [pu]);
+        if (rows && rows[0]) {
+          return (rows[0].fullname || rows[0].username || String(pu));
+        }
+      } catch (e) {
+        // ignore DB errors (table may not exist); continue to fallback
+        console.debug('getUserDisplayName: users table not found or query failed', e.message || e);
+      }
+      return String(pu);
+    }
+
+    // fallback: no user info
+    console.debug('getUserDisplayName: no user info found on request (req.user / req.session.user / session.passport.user)');
+    return null;
+  } catch (err) {
+    console.error('getUserDisplayName error:', err);
+    return null;
+  }
+};
+
+chamraController.exportChamraPdf = async (req, res) => {
+  try {
+    const data = await Chamra.getAll();
+
+    // Use THSarabunNew font from local fonts directory
+    const fonts = {
+      THSarabunNew: {
+        normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
+        bold: path.join(__dirname, '../fonts/THSarabunNew-Bold.ttf'),
+        italics: path.join(__dirname, '../fonts/THSarabunNew-Italic.ttf'),
+        bolditalics: path.join(__dirname, '../fonts/THSarabunNew-BoldItalic.ttf')
+      }
+    };
+
+    const printer = new PdfPrinter(fonts);
+
+    // Helper: validate process date
+    const isValidProcessDate = (v) => {
+      if (!v) return false;
+      if (typeof v === 'string') {
+        if (v === '0000-00-00' || v === '0000-00-00 00:00:00' || v === 'Invalid date') return false;
+        if (/^1899-11-30/.test(v)) return false;
+        // basic parse
+        const parts = v.slice(0,10).split('-');
+        if (parts.length !== 3) return false;
+        const d = new Date(parts[0], parts[1]-1, parts[2]);
+        if (isNaN(d.getTime())) return false;
+        if (d.getFullYear() < 1950) return false;
+        return true;
+      }
+      if (v instanceof Date) {
+        if (isNaN(v.getTime())) return false;
+        if (v.getFullYear() < 1950) return false;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper: format date to Thai short form e.g. "1 ม.ค. 2568"
+    const formatThaiDate = (v) => {
+      if (!isValidProcessDate(v)) return '';
+      let d;
+      if (typeof v === 'string') {
+        const [y, m, day] = v.slice(0,10).split('-');
+        d = new Date(Number(y), Number(m) - 1, Number(day));
+      } else {
+        d = v;
+      }
+      return new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+    };
+
+    // Helper: format datetime to Thai long form e.g. "1 มกราคม 2568 10:30:00"
+    const formatThaiDateTime = (d) => {
+      const dt = d instanceof Date ? d : new Date(d);
+      return new Intl.DateTimeFormat('th-TH', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      }).format(dt);
+    };
+
+    // Table header
+    const tableBody = [];
+
+    data.forEach((row, idx) => {
+      // Build process array and find latest valid step (scan from S10 -> S1)
+      const processDates = [
+        row.pr_s1, row.pr_s2, row.pr_s3, row.pr_s4, row.pr_s5,
+        row.pr_s6, row.pr_s7, row.pr_s8, row.pr_s9, row.pr_s10
+      ];
+      let latestStepNumber = 0;
+      let latestStepDate = '';
+      for (let i = processDates.length - 1; i >= 0; i--) {
+        if (isValidProcessDate(processDates[i])) {
+          latestStepNumber = i + 1;
+          latestStepDate = processDates[i];
+          break;
+        }
+      }
+      const lastStep = latestStepNumber ? `ขั้นที่ ${latestStepNumber}` : '-';
+
+      // Replace any '/' (with optional surrounding spaces) with newline for display
+      const personCell = (row.de_person || '').replace(/\s*\/\s*/g, '\n');
+
+      tableBody.push([
+        idx + 1,
+        row.c_name || '',
+        row.de_case || '',
+        lastStep,
+        formatThaiDate(latestStepDate),         // <-- show Thai date
+        personCell,
+        row.de_maihed || ''
+      ]);
+    });
+
+    // Use display name resolved from helper
+    const printedByRaw = await getUserDisplayName(req);
+    const printedBy = printedByRaw || 'ผู้ใช้งานทั่วไป';
+
+    const docDefinition = {
+      // Header function: top-right page number in Thai (smaller gap)
+      header: (currentPage, pageCount) => {
+        return {
+          text: `หน้า ${currentPage} / ${pageCount}`,
+          alignment: 'right',
+          margin: [0, 4, 12, 0],
+          fontSize: 10,
+          font: 'THSarabunNew'
+        };
+      },
+      pageMargins: [40, 50, 40, 90],
+      // Footer: compact certifier block only on last page (re-organized; removed the previous explicit date column)
+      footer: (currentPage, pageCount) => {
+        if (currentPage !== pageCount) return { text: '', margin: [0,0,0,0] };
+        return {
+          columns: [
+            { width: '*', text: '' }, // left spacer
+            {
+              width: 360,
+              stack: [
+                { text: 'ผู้รับรองข้อมูล', fontSize: 14, bold: true, margin: [0, 0, 0, 6], font: 'THSarabunNew' },
+                {
+                  // one row with two columns: signature (left) and date (right)
+                  columns: [
+                    { width: '60%', text: 'ลงชื่อ ___________________________', fontSize: 12, font: 'THSarabunNew' },
+                    { width: '40%', text: 'วันที่ ___________________', fontSize: 12, alignment: 'right', font: 'THSarabunNew' }
+                  ],
+                  columnGap: 10,
+                  margin: [0, 2, 0, 6]
+                },
+                { text: 'ชื่อ-สกุล (........................................................)', fontSize: 12, margin: [0, 2, 0, 4], font: 'THSarabunNew' },
+                { text: 'ตำแหน่ง ________________________________', fontSize: 12, font: 'THSarabunNew' }
+              ],
+              alignment: 'left',
+              margin: [0, 6, 40, 0]
+            }
+          ],
+          margin: [0, 6, 0, 0]
+        };
+      },
+
+      content: [
+        { text: 'ทะเบียนคุมชำระบัญชีสหกรณ์และกลุ่มเกษตรกร', style: 'header', alignment: 'center', margin: [0, 0, 0, 2],},
+        { text: `สำนักงานสหกรณ์จังหวัดชัยภูมิ`, alignment: 'center', margin: [0, 0, 0, 1], fontSize: 18 },
+        { text: `วันที่พิมพ์รายงาน: ${formatThaiDateTime(new Date())}`, alignment: 'right', margin: [0, 0, 0, 4], fontSize: 14 },
+        { text: `พิมพ์โดย: ${printedBy}`, alignment: 'right', margin: [0, 0, 0, 10], fontSize: 14 },
+        // insert text
+
+        {
+          table: {
+            headerRows: 1,
+            widths: [25, 'auto', 60, 40, '*', '*', 'auto'],
+            body: [
+              [
+                { text: '#', bold: true },
+                { text: 'ชื่อ', bold: true },
+                { text: 'กรณี', bold: true },
+                { text: 'ขั้นล่าสุด', bold: true },
+                { text: 'วันที่ล่าสุด', bold: true },
+          
+                { text: 'ผู้ชำระบัญชี', bold: true },
+                { text: 'หมายเหตุ', bold: true }
+              ],
+              ...tableBody
+            ]
+          },
+          fontSize: 16
+        }
+      ],
+      defaultStyle: {
+        font: 'THSarabunNew',
+        fontSize: 16
+      },
+      styles: {
+        header: { fontSize: 24, bold: true }
+      },
+      pageOrientation: 'landscape'
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    let chunks = [];
+    pdfDoc.on('data', chunk => chunks.push(chunk));
+    pdfDoc.on('end', () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="chamra-list.pdf"');
+      res.send(pdfBuffer);
+    });
+    pdfDoc.end();
+  } catch (e) {
+    console.error('Export PDF error:', e);
+    res.status(500).send('Export PDF failed');
   }
 };
 

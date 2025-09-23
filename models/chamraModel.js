@@ -1,259 +1,201 @@
 const db = require('../config/db');
 
-// Helper to normalize empty string -> null
-const nz = v => (v === '' || typeof v === 'undefined' ? null : v);
+const Chamra = {
+  // List with coop + detail + process progress
+  async getAll() {
+    const [rows] = await db.query(
+      `SELECT 
+         ac.c_code, ac.c_name, ac.c_status,
+         cd.de_code, cd.de_case, cd.de_person, cd.de_comno, cd.de_comdate, cd.de_maihed,
+         cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
+         cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
+       FROM active_coop ac
+       LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code
+       LEFT JOIN chamra_process cp ON cp.pr_code = ac.c_code
+       WHERE ac.c_status IN ('เลิก')
+       ORDER BY ac.c_name DESC`
+    );
+    return rows;
+  },
 
-// --- existing query functions kept ---
-exports.getFiltered = ({ search, c_status, gr_step, page, page_size }) => {
-  const sql = `
-    SELECT d.*, ac.c_name, ac.c_status, ac.c_group, ac.c_person, ac.c_person2, cg.gr_step,
-           cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5, cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
-    FROM chamra_detail d
-    LEFT JOIN active_coop ac ON d.de_code = ac.c_code
-    LEFT JOIN (
-      SELECT gr_code, gr_step
-      FROM chamra_growth cg1
-      WHERE gr_id = (
-        SELECT MAX(gr_id)
-        FROM chamra_growth cg2
-        WHERE cg2.gr_code = cg1.gr_code
-      )
-    ) cg ON d.de_code = cg.gr_code
-    LEFT JOIN chamra_process cp ON d.de_code = cp.pr_code
-    WHERE 1=1
-      ${search ? 'AND ac.c_name LIKE ?' : ''}
-      ${c_status ? 'AND ac.c_status = ?' : ''}
-      ${gr_step ? 'AND cg.gr_step = ?' : ''}
-    ORDER BY d.de_id DESC
-    LIMIT ? OFFSET ?
-  `;
+  // Fetch for edit/detail by coop code
+  async getByCode(code) {
+    const [rows] = await db.query(
+      `SELECT 
+         cd.*,
+         ac.c_name
+       FROM chamra_detail cd
+       LEFT JOIN active_coop ac ON ac.c_code = cd.de_code
+       WHERE cd.de_code = ?
+       LIMIT 1`,
+      [code]
+    );
+    return rows[0] || null;
+  },
 
-  const params = [];
-  if (search) params.push(`%${search}%`);
-  if (c_status) params.push(c_status);
-  if (gr_step) params.push(gr_step);
-  params.push(Number(page_size), (Number(page) - 1) * Number(page_size));
+  async create(data) {
+    const {
+      de_code,
+      de_case,
+      de_comno = null,
+      de_comdate = null,
+      de_person = null,
+      de_maihed = null,
+      de_saveby = 'system',
+      de_savedate = new Date()
+    } = data;
 
-  return db.query(sql, params);
-};
+    await db.query(
+      `INSERT INTO chamra_detail
+        (de_code, de_case, de_comno, de_comdate, de_person, de_maihed, de_saveby, de_savedate)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        de_code,
+        de_case,
+        de_comno || null,
+        de_comdate || null,
+        de_person || null,
+        de_maihed || null,
+        de_saveby,
+        de_savedate
+      ]
+    );
+    return true;
+  },
 
-exports.countFiltered = ({ search, c_status, gr_step }) => {
-  const sql = `
-    SELECT COUNT(*) as total
-    FROM chamra_detail d
-    LEFT JOIN active_coop ac ON d.de_code = ac.c_code
-    LEFT JOIN (
-      SELECT gr_code, gr_step
-      FROM chamra_growth cg1
-      WHERE gr_id = (
-        SELECT MAX(gr_id)
-        FROM chamra_growth cg2
-        WHERE cg2.gr_code = cg1.gr_code
-      )
-    ) cg ON d.de_code = cg.gr_code
-    WHERE 1=1
-      ${search ? 'AND ac.c_name LIKE ?' : ''}
-      ${c_status ? 'AND ac.c_status = ?' : ''}
-      ${gr_step ? 'AND cg.gr_step = ?' : ''}
-  `;
+  // Dynamic column update for chamra_detail
+  async update(code, payload) {
+    if (!code) return false;
+    const allowed = new Set([
+      'de_case',
+      'de_comno',
+      'de_comdate',
+      'de_person',
+      'de_maihed',
+      'de_saveby',
+      'de_savedate'
+    ]);
 
-  const params = [];
-  if (search) params.push(`%${search}%`);
-  if (c_status) params.push(c_status);
-  if (gr_step) params.push(gr_step);
+    const keys = Object.keys(payload).filter(k => allowed.has(k));
+    if (keys.length === 0) return false;
 
-  return db.query(sql, params);
-};
+    const sets = keys.map(k => `${k} = ?`).join(', ');
+    const values = keys.map(k => {
+      if (k === 'de_comdate' && (payload[k] === '' || payload[k] == null)) return null;
+      return payload[k];
+    });
 
-exports.getByCode = async (code) => {
-  const sql = `
-    SELECT d.*, ac.c_name, ac.c_status, ac.c_group, ac.c_person, ac.c_person2, cg.gr_step,
-           cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5, cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
-    FROM chamra_detail d
-    LEFT JOIN active_coop ac ON d.de_code = ac.c_code
-    LEFT JOIN (
-      SELECT gr_code, gr_step
-      FROM chamra_growth cg1
-      WHERE gr_id = (
-        SELECT MAX(gr_id)
-        FROM chamra_growth cg2
-        WHERE cg2.gr_code = cg1.gr_code
-      )
-    ) cg ON d.de_code = cg.gr_code
-    LEFT JOIN chamra_process cp ON d.de_code = cp.pr_code
-    WHERE d.de_code = ?
-    LIMIT 1
-  `;
-  const [rows] = await db.query(sql, [code]);
-  return rows[0]; // คืนค่า object แถวเดียว
-};
+    const [result] = await db.query(
+      `UPDATE chamra_detail SET ${sets} WHERE de_code = ?`,
+      [...values, code]
+    );
+    return result.affectedRows > 0;
+  },
 
-exports.getAll = async () => {
-  const sql = `
-    SELECT d.*, ac.c_code AS c_code, ac.c_name, ac.c_status, ac.c_group, ac.c_person, ac.c_person2,
-           cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5, cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
-    FROM chamra_detail d
-    LEFT JOIN active_coop ac ON d.de_code = ac.c_code
-    LEFT JOIN chamra_process cp ON d.de_code = cp.pr_code
-    WHERE ac.c_status = 'เลิก'
-    ORDER BY ac.c_status DESC , ac.c_name DESC
-  `;
-  const [rows] = await db.query(sql);
-  return rows;
-};
+  async delete(code) {
+    if (!code) return false;
+    const [result] = await db.query('DELETE FROM chamra_detail WHERE de_code = ?', [code]);
+    return result.affectedRows > 0;
+  },
 
-exports.getAllPob = async () =>{
-  const sql = `
-  SELECT p.*, ac.c_name
-FROM chamra_poblem p
-LEFT JOIN active_coop ac ON p.po_code = ac.c_code
-  `;
-  const [rows] = await db.query(sql);
-  return rows;
-};
+  // Poblem
+  async getAllPob() {
+    const [rows] = await db.query(
+      `SELECT p.*, ac.c_name 
+         FROM chamra_poblem p
+         LEFT JOIN active_coop ac ON ac.c_code = p.po_code
+         ORDER BY p.po_year DESC, p.po_meeting DESC, ac.c_name`
+    );
+    return rows;
+  },
 
-// Create (insert) into chamra_detail (NOT non-existent 'chamra')
-async function create(data) {
-  const savedate = (data.de_savedate && /^\d{4}-\d{2}-\d{2}$/.test(data.de_savedate))
-    ? data.de_savedate
-    : new Date();
-  const sql = `
-    INSERT INTO chamra_detail
-      (de_code, de_case, de_comno, de_comdate, de_person,
-       de_maihed, de_saveby, de_savedate)
-    VALUES (?,?,?,?,?,?,?,?)
-  `;
-  const params = [
-    nz(data.de_code),
-    nz(data.de_case),
-    nz(data.de_comno),
-    nz(data.de_comdate),
-    nz(data.de_person),
-    (data.de_maihed == null ? '' : data.de_maihed),
-    (data.de_saveby == null || data.de_saveby === '' ? 'system' : data.de_saveby),
-    savedate
-  ];
-  await db.query(sql, params);
-  return true;
-}
+  async getPoblemsByCode(code) {
+    const [rows] = await db.query(
+      `SELECT p.* FROM chamra_poblem p WHERE p.po_code = ? ORDER BY p.po_year DESC, p.po_meeting DESC`,
+      [code]
+    );
+    return rows;
+  },
 
-// Update stub (extend as needed)
-async function update(c_code, { active, detail, process }) {
-  // Without full schema details, provide no-op or minimal update logic.
-  // Example (uncomment and adjust when columns defined):
-  // await db.query('UPDATE chamra_detail SET de_case=? WHERE de_code=?', [detail.de_case, c_code]);
-  return true;
-}
+  // Process
+  async getAllProcess() {
+    const [rows] = await db.query(
+      `SELECT pr.*, ac.c_name
+         FROM chamra_process pr
+         LEFT JOIN active_coop ac ON ac.c_code = pr.pr_code
+         ORDER BY ac.c_name`
+    );
+    return rows;
+  },
 
-// Delete by code (remove all rows for code)
-async function remove(c_code) {
-  await db.query('DELETE FROM chamra_detail WHERE de_code = ?', [c_code]);
-  return true;
-}
+  async getProcessById(pr_id) {
+    const [rows] = await db.query(`SELECT * FROM chamra_process WHERE pr_id = ?`, [pr_id]);
+    return rows[0] || null;
+  },
 
-// ---- chamra_process helpers ----
-async function getAllProcess() {
-  const [rows] = await db.query(`
-    SELECT cp.*, ac.c_name
-    FROM chamra_process cp
-    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
-    ORDER BY ac.c_status DESC , ac.c_name DESC
-  `);
-  return rows;
-}
+  async updateProcess(pr_id, data) {
+    const fields = ['pr_s1','pr_s2','pr_s3','pr_s4','pr_s5','pr_s6','pr_s7','pr_s8','pr_s9','pr_s10'];
+    const keys = fields.filter(k => k in data);
+    if (keys.length === 0) return false;
+    const sets = keys.map(k => `${k} = ?`).join(', ');
+    const values = keys.map(k => (data[k] || null));
+    const [result] = await db.query(`UPDATE chamra_process SET ${sets} WHERE pr_id = ?`, [...values, pr_id]);
+    return result.affectedRows > 0;
+  },
 
-async function getProcessById(pr_id) {
-  const [rows] = await db.query(`
-    SELECT cp.*, ac.c_name
-    FROM chamra_process cp
-    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
-    WHERE cp.pr_id = ?
-  `, [pr_id]);
-  return rows[0] || null;
-}
+  async deleteProcess(pr_id) {
+    const [result] = await db.query(`DELETE FROM chamra_process WHERE pr_id = ?`, [pr_id]);
+    return result.affectedRows > 0;
+  },
 
-async function updateProcess(pr_id, data) {
-  const fields = ['pr_s1','pr_s2','pr_s3','pr_s4','pr_s5','pr_s6','pr_s7','pr_s8','pr_s9','pr_s10'];
-  const setSql = fields.map(f => `${f}=?`).join(',');
-  const params = fields.map(f => (data[f] && data[f] !== '' ? data[f] : '0000-00-00'));
-  params.push(pr_id);
-  await db.query(`UPDATE chamra_process SET ${setSql} WHERE pr_id = ?`, params);
-  return true;
-}
+  async createProcess(data) {
+    const {
+      pr_code,
+      pr_s1 = null, pr_s2 = null, pr_s3 = null, pr_s4 = null, pr_s5 = null,
+      pr_s6 = null, pr_s7 = null, pr_s8 = null, pr_s9 = null, pr_s10 = null
+    } = data;
+    try {
+      await db.query(
+        `INSERT INTO chamra_process
+          (pr_code, pr_s1, pr_s2, pr_s3, pr_s4, pr_s5, pr_s6, pr_s7, pr_s8, pr_s9, pr_s10)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [pr_code, pr_s1, pr_s2, pr_s3, pr_s4, pr_s5, pr_s6, pr_s7, pr_s8, pr_s9, pr_s10]
+      );
+      return true;
+    } catch (e) {
+      if (e && e.code === 'ER_DUP_ENTRY') {
+        const err = new Error('Duplicate pr_code');
+        err.code = 'DUPLICATE_CODE';
+        throw err;
+      }
+      throw e;
+    }
+  },
 
-async function deleteProcess(pr_id) {
-  await db.query('DELETE FROM chamra_process WHERE pr_id = ?', [pr_id]);
-  return true;
-}
-
-async function createProcess(data) {
-  // Check duplicate pr_code
-  const [dup] = await db.query('SELECT COUNT(*) AS total FROM chamra_process WHERE pr_code = ?', [data.pr_code]);
-  if (dup[0].total > 0) {
-    const err = new Error('DUPLICATE_CODE');
-    err.code = 'DUPLICATE_CODE';
-    throw err;
+  async getRecentProcesses(limit = 5) {
+    const [rows] = await db.query(
+      `SELECT pr.*, ac.c_name
+         FROM chamra_process pr
+         LEFT JOIN active_coop ac ON ac.c_code = pr.pr_code
+         ORDER BY GREATEST(
+           IFNULL(pr.pr_s10, '0000-00-00'),
+           IFNULL(pr.pr_s9, '0000-00-00'),
+           IFNULL(pr.pr_s8, '0000-00-00'),
+           IFNULL(pr.pr_s7, '0000-00-00'),
+           IFNULL(pr.pr_s6, '0000-00-00'),
+           IFNULL(pr.pr_s5, '0000-00-00'),
+           IFNULL(pr.pr_s4, '0000-00-00'),
+           IFNULL(pr.pr_s3, '0000-00-00'),
+           IFNULL(pr.pr_s2, '0000-00-00'),
+           IFNULL(pr.pr_s1, '0000-00-00')
+         ) DESC
+         LIMIT ?`,
+      [limit]
+    );
+    return rows;
   }
-  const f = (v) => (v && v !== '' ? v : '0000-00-00');
-  const sql = `
-    INSERT INTO chamra_process
-      (pr_code, pr_s1, pr_s2, pr_s3, pr_s4, pr_s5, pr_s6, pr_s7, pr_s8, pr_s9, pr_s10)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)
-  `;
-  const params = [
-    data.pr_code,
-    f(data.pr_s1), f(data.pr_s2), f(data.pr_s3), f(data.pr_s4), f(data.pr_s5),
-    f(data.pr_s6), f(data.pr_s7), f(data.pr_s8), f(data.pr_s9), f(data.pr_s10)
-  ];
-  await db.query(sql, params);
-  return true;
-}
-
-exports.getRecentProcesses = async (limit = 8) => {
-  const sql = `
-    SELECT cp.pr_id, cp.pr_code,
-           cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
-           cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10,
-           ac.c_name
-    FROM chamra_process cp
-    LEFT JOIN active_coop ac ON cp.pr_code = ac.c_code
-    WHERE ac.c_status = 'เลิก'
-    ORDER BY cp.pr_id DESC
-    LIMIT ?
-  `;
-  const [rows] = await db.query(sql, [Number(limit)]);
-  return rows;
 };
 
-async function getPoblemsByCode(code) {
-  const [rows] = await db.query(`
-    SELECT p.*, ac.c_name
-    FROM chamra_poblem p
-    LEFT JOIN active_coop ac ON p.po_code = ac.c_code
-    WHERE p.po_code = ?
-    ORDER BY p.po_year DESC, p.po_meeting DESC, p.po_id DESC
-  `, [code]);
-  return rows;
-}
-
-// Export unified API object (avoid shape confusion)
-module.exports = {
-  getFiltered: exports.getFiltered,
-  countFiltered: exports.countFiltered,
-  getByCode: exports.getByCode,
-  getAll: exports.getAll,
-  getAllPob: exports.getAllPob,
-  create,
-  update,
-  delete: remove,
-  // process exports
-  getAllProcess,
-  getProcessById,
-  updateProcess,
-  deleteProcess,
-  createProcess,
-  getRecentProcesses: exports.getRecentProcesses,
-  getPoblemsByCode
-};
+module.exports = Chamra;
 
 

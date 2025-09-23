@@ -1,50 +1,203 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>แก้ไขข้อมูล Chamra</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  <h1>✏️ แก้ไขข้อมูล Chamra</h1>
+<%- include('../partials/header') %>
 
-  <form method="POST" action="/chamra/<%= chamra.de_code %>?_method=PUT">
-    <table>
-      <tr>
-        <th>รหัส</th>
-        <td><input type="text" name="de_code" value="<%= chamra.de_code %>" readonly></td>
-      </tr>
-      <tr>
-        <th>กรณี</th>
-        <td><input type="text" name="de_case" value="<%= chamra.de_case %>" required></td>
-      </tr>
-      <tr>
-        <th>เลขคำสั่ง</th>
-        <td><input type="text" name="de_comno" value="<%= chamra.de_comno %>"></td>
-      </tr>
-      <tr>
-        <th>วันที่คำสั่ง</th>
-        <td><input type="date" name="de_comdate" value="<%= chamra.de_comdate %>"></td>
-      </tr>
-      <tr>
-        <th>ผู้รับผิดชอบ</th>
-        <td><input type="text" name="de_person" value="<%= chamra.de_person %>"></td>
-      </tr>
-      <tr>
-        <th>เป้าหมาย</th>
-        <td>
-          <input type="text" name="de_target1" value="<%= chamra.de_target1 %>" placeholder="เป้าหมาย 1">
-          <input type="text" name="de_target2" value="<%= chamra.de_target2 %>" placeholder="เป้าหมาย 2">
-        </td>
-      </tr>
-      <tr>
-        <th>หมายเหตุ</th>
-        <td><textarea name="de_maihed"><%= chamra.de_maihed %></textarea></td>
-      </tr>
-    </table>
+<%
+  // Safe date formatter for <input type="date">
+  function safeDateInput(dateStr) {
+    if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00' || dateStr === 'Invalid date') return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+%>
 
-    <button type="submit">💾 บันทึกการแก้ไข</button>
-    <a href="/chamra/<%= chamra.de_code %>/view">← ย้อนกลับ</a>
-  </form>
-</body>
-</html>
+<style>
+  .form-help { font-size: .8rem; color: #6c757d; }
+  .dirty-badge { font-size: .75rem; }
+</style>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">✏️ แก้ไขข้อมูล Chamra</h3>
+    <div>
+      <span id="dirtyBadge" class="badge bg-secondary dirty-badge d-none">ไม่มีการแก้ไข</span>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form id="chamraForm" method="POST" action="/chamra/<%= chamra.de_code %>">
+        <input type="hidden" name="_method" value="PUT">
+        <input type="hidden" name="_dirtyFields" id="dirtyFields">
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">รหัส</label>
+            <input type="text" class="form-control" name="de_code" value="<%= chamra.de_code %>" readonly>
+            <div class="form-help">ไม่สามารถแก้ไขได้</div>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">กรณี <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="de_case" value="<%= chamra.de_case %>" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">เลขคำสั่ง</label>
+            <input type="text" class="form-control" name="de_comno" value="<%= chamra.de_comno %>">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">วันที่คำสั่ง</label>
+            <input type="date" class="form-control" name="de_comdate" value="<%= safeDateInput(chamra.de_comdate) %>">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">ผู้รับผิดชอบ</label>
+            <input type="text" class="form-control" name="de_person" value="<%= chamra.de_person %>">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label d-block">เป้าหมาย</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="text" class="form-control" name="de_target1" value="<%= chamra.de_target1 %>" placeholder="เป้าหมาย 1">
+              </div>
+              <div class="col-6">
+                <input type="text" class="form-control" name="de_target2" value="<%= chamra.de_target2 %>" placeholder="เป้าหมาย 2">
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea class="form-control" name="de_maihed" rows="4"><%= chamra.de_maihed %></textarea>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button id="saveBtn" type="submit" class="btn btn-primary" disabled>
+            <span class="save-text">💾 บันทึกการแก้ไข</span>
+            <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+          <button id="resetBtn" type="button" class="btn btn-outline-secondary">ล้างการแก้ไข</button>
+          <a href="/chamra/<%= chamra.de_code %>/view" class="btn btn-light">← ย้อนกลับ</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+  <div id="toast" class="toast align-items-center text-bg-secondary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div id="toastMsg" class="toast-body">พร้อม</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const form = document.getElementById('chamraForm');
+    const inputs = Array.from(form.querySelectorAll('input[name], textarea[name], select[name]'))
+      .filter(el => el.name && el.name !== '_method' && el.name !== '_dirtyFields');
+    const saveBtn = document.getElementById('saveBtn');
+    const spinner = saveBtn.querySelector('.spinner-border');
+    const dirtyBadge = document.getElementById('dirtyBadge');
+    const dirtyFieldsInput = document.getElementById('dirtyFields');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const normalize = (el) => {
+      const v = (el.value ?? '').trim();
+      if (el.type === 'date') return v; // already yyyy-mm-dd
+      return v;
+    };
+
+    const initial = new Map(inputs.map(el => [el.name, normalize(el)]));
+
+    const getChanged = () => {
+      const changed = {};
+      inputs.forEach(el => {
+        const now = normalize(el);
+        const init = initial.get(el.name) ?? '';
+        if (now !== init) changed[el.name] = now;
+      });
+      return changed;
+    };
+
+    const updateUI = () => {
+      const changed = getChanged();
+      const names = Object.keys(changed);
+      const hasChanges = names.length > 0;
+      saveBtn.disabled = !hasChanges;
+      if (hasChanges) {
+        dirtyBadge.classList.remove('bg-secondary', 'd-none');
+        dirtyBadge.classList.add('bg-warning');
+        dirtyBadge.textContent = `แก้ไขแล้ว ${names.length} ช่อง`;
+      } else {
+        dirtyBadge.classList.remove('bg-warning');
+        dirtyBadge.classList.add('bg-secondary');
+        dirtyBadge.textContent = 'ไม่มีการแก้ไข';
+      }
+      return names;
+    };
+
+    inputs.forEach(el => el.addEventListener('input', updateUI));
+    updateUI();
+
+    window.addEventListener('beforeunload', (e) => {
+      if (Object.keys(getChanged()).length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    const showToast = (msg, variant = 'secondary') => {
+      const toastEl = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMsg');
+      msgEl.textContent = msg;
+      toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
+      const t = new bootstrap.Toast(toastEl, { delay: 2000 });
+      t.show();
+    };
+
+    // Submit
+    form.addEventListener('submit', (e) => {
+      const names = updateUI();
+      if (names.length === 0) {
+        e.preventDefault();
+        showToast('ไม่มีการแก้ไขที่จะบันทึก', 'warning');
+        return;
+      }
+      // add changed field names for server-side awareness (non-breaking)
+      dirtyFieldsInput.value = JSON.stringify(names);
+
+      // loading state
+      saveBtn.disabled = true;
+      spinner.classList.remove('d-none');
+    });
+
+    // Reset to initial values
+    resetBtn.addEventListener('click', () => {
+      inputs.forEach(el => {
+        const init = initial.get(el.name) ?? '';
+        el.value = init;
+      });
+      updateUI();
+      showToast('คืนค่าเดิมแล้ว', 'info');
+    });
+
+    // Ctrl+S to save
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        if (!saveBtn.disabled) form.requestSubmit();
+      }
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

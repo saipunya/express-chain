@@ -9,6 +9,7 @@ const { Server } = require('socket.io');   // เล่ม
 const onlineModel = require('./models/onlineModel');
 const fs = require('fs');
 const axios = require('axios');
+const chamraExportRoute = require('./routes/chamraExport');
 // const methodOverride = require('method-override'); // replaced by safe loader below
 
 require('dotenv').config();
@@ -35,7 +36,7 @@ app.use(cors({
 }));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 // method-override: prefer installed package, otherwise use lightweight fallback
 let methodOverridePkg = null;
@@ -99,6 +100,7 @@ app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
 app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
 app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
+app.use('/chamra', chamraExportRoute);
 
 // 404 handler
 app.use((req, res) => {

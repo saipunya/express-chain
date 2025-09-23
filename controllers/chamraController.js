@@ -3,6 +3,8 @@ const db = require('../config/db');
 const PdfPrinter = require('pdfmake');
 const fs = require('fs');
 const path = require('path');
+const fontkit = require('@pdf-lib/fontkit');
+const { PDFDocument, rgb, degrees } = require('pdf-lib');
 
 const chamraController = {};
 
@@ -319,13 +321,24 @@ const getUserDisplayName = async (req) => {
       return String(pu);
     }
 
-    // fallback: no user info
-    console.debug('getUserDisplayName: no user info found on request (req.user / req.session.user / session.passport.user)');
+    // fallback: no user info — log short session info to help debug
+    if (process && process.env && process.env.NODE_ENV !== 'production') {
+      console.debug('getUserDisplayName: no user info; sessionKeys=', req.session ? Object.keys(req.session) : null);
+    }
+
     return null;
   } catch (err) {
     console.error('getUserDisplayName error:', err);
     return null;
   }
+};
+
+// New helper: determine whether request is authenticated (any user)
+const isRequestAuthenticated = (req) => {
+  if (req.user) return true;
+  if (req.session && req.session.user) return true;
+  if (req.session && req.session.passport && req.session.passport.user) return true;
+  return false;
 };
 
 chamraController.exportChamraPdf = async (req, res) => {
@@ -427,6 +440,9 @@ chamraController.exportChamraPdf = async (req, res) => {
     const printedByRaw = await getUserDisplayName(req);
     const printedBy = printedByRaw || 'ผู้ใช้งานทั่วไป';
 
+    // determine if we should add watermark (add watermark only for non-authenticated viewers)
+    const viewerIsAuthenticated = isRequestAuthenticated(req);
+
     const docDefinition = {
       // Header function: show page number on every page except page 1
       header: (currentPage, pageCount) => {
@@ -440,6 +456,8 @@ chamraController.exportChamraPdf = async (req, res) => {
         };
       },
       pageMargins: [40, 50, 40, 90],
+      // no pdfmake background watermark here - we'll post-process with pdf-lib for reliable rotation
+
       // Footer: compact certifier block only on last page (re-organized; removed the previous explicit date column)
       footer: (currentPage, pageCount) => {
         if (currentPage !== pageCount) return { text: '', margin: [0,0,0,0] };
@@ -453,14 +471,12 @@ chamraController.exportChamraPdf = async (req, res) => {
                 {
                   // one row with two columns: signature (left) and date (right)
                   columns: [
-                    { width: '60%', text: 'ลงชื่อ ___________________________', fontSize: 12, font: 'THSarabunNew' },
-                    { width: '40%', text: 'วันที่ ___________________', fontSize: 12, alignment: 'right', font: 'THSarabunNew' }
+                    { width: '40%', text: 'ลงชื่อ ___________________________', fontSize: 14, font: 'THSarabunNew' },
+                    { width: '60%', text: `วันที่ ${formatThaiDateTime(new Date())}`, fontSize: 14, alignment: 'right', font: 'THSarabunNew' }
                   ],
                   columnGap: 10,
                   margin: [0, 2, 0, 6]
                 },
-                { text: 'ชื่อ-สกุล (........................................................)', fontSize: 12, margin: [0, 2, 0, 4], font: 'THSarabunNew' },
-                { text: 'ตำแหน่ง ________________________________', fontSize: 12, font: 'THSarabunNew' }
               ],
               alignment: 'left',
               margin: [0, 6, 40, 0]
@@ -511,11 +527,58 @@ chamraController.exportChamraPdf = async (req, res) => {
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
     let chunks = [];
     pdfDoc.on('data', chunk => chunks.push(chunk));
-    pdfDoc.on('end', () => {
-      const pdfBuffer = Buffer.concat(chunks);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline; filename="chamra-list.pdf"');
-      res.send(pdfBuffer);
+    pdfDoc.on('end', async () => {
+      try {
+        const pdfBuffer = Buffer.concat(chunks);
+        // if viewer authenticated, send raw pdf
+        if (viewerIsAuthenticated) {
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="chamra-list.pdf"');
+          return res.send(pdfBuffer);
+        }
+
+        // otherwise post-process with pdf-lib to draw rotated watermark (45deg) on each page
+        const fontPath = path.join(__dirname, '../fonts/THSarabunNew.ttf');
+        const fontBytes = fs.readFileSync(fontPath);
+
+        const pdfLibDoc = await PDFDocument.load(pdfBuffer);
+        pdfLibDoc.registerFontkit(fontkit);
+        const customFont = await pdfLibDoc.embedFont(fontBytes);
+        const pages = pdfLibDoc.getPages();
+
+        const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
+        const size = 30;
+        const color = rgb(1, 0, 0);
+        const opacity = 0.12;
+        const angle = 45; // degrees
+
+        pages.forEach(page => {
+          const { width, height } = page.getSize();
+          const textWidth = customFont.widthOfTextAtSize(watermarkText, size);
+          const x = (width - textWidth) / 2;
+          const y = (height / 2) - (size / 2);
+          page.drawText(watermarkText, {
+            x,
+            y,
+            size,
+            font: customFont,
+            color,
+            opacity,
+            rotate: degrees(angle)
+          });
+        });
+
+        const finalPdfBytes = await pdfLibDoc.save();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="chamra-list.pdf"');
+        res.send(Buffer.from(finalPdfBytes));
+      } catch (err) {
+        console.error('Post-process watermark error:', err);
+        // fallback: try to send original pdfBuffer
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="chamra-list.pdf"');
+        return res.send(Buffer.concat(chunks));
+      }
     });
     pdfDoc.end();
   } catch (e) {

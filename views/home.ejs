@@ -100,6 +100,9 @@
               </div>
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
+
+          
+
             <p class="text-center mt-2">
               <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
               <a href="/auth/register" class="text-success">
@@ -120,7 +123,11 @@
               
                 <a href="/chamra" class="btn btn-outline-secondary me-2">ชำระบัญชี</a>
                 <% } %>
-                  <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
+
+              <!-- เพิ่มปุ่ม Export Chamra สำหรับผู้ล็อกอิน (จะไม่มีลายน้ำ) -->
+              <button id="exportChamraBtnHome" class="btn btn-outline-primary me-2">⬇️ Export Chamra</button>
+
+              <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
             </div>
             <% } %>
       </div>
@@ -269,7 +276,7 @@
               <div class="text-muted">ไม่มีข้อมูลรายการ Top</div>
             <% } %>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between">
+          <div class="card-footer bg-light d-flex justify-content-between"></div>
             <a href="/" class="btn btn-sm btn-outline-secondary">หน้าแรก</a>
             <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
           </div>
@@ -297,7 +304,7 @@
       <div class="col-md-4">
         <div class="card modern-card shadow-sm border-0 mb-4">
           <div class="card-gradient-bar"></div>
-          <div class="card-body">
+          <div class="card-body"></div>
             <h4 class="mb-4 text-center text-primary">
               <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
             </h4>
@@ -465,7 +472,7 @@
               </li>
               <% }); %>
           </ul>
-          <div class="text-end mt-2">
+          <div class="text-end mt-2"></div>
             <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
               💼 ดูทั้งหมด
             </a>
@@ -550,7 +557,7 @@
               </li>
               <% }); %>
           </ul>
-          <div class="text-end mt-2">
+          <div class="text-end mt-2"></div>
             <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
               📄 ดูทั้งหมด
             </a>
@@ -643,6 +650,10 @@
             <h6 class="mb-0">
               <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
             </h6>
+              <!-- เพิ่มปุ่ม Export Chamra ให้ผู้ใช้ทั่วไป (จะมีลายน้ำ) -->
+            
+                <button id="exportChamraBtnHome" class="btn btn-danger">⬇️ Export Chamra</button>
+              
           </div>
     
           <% if ((homeProcesses || []).length) { %>
@@ -712,10 +723,11 @@
               <a href="/chamra/process" class="btn btn-primary btn-sm">
                 ดูเพิ่มเติม
               </a>
+         
             </div>
           <% } else { %>
-            <div class="card-body">
-              <div class="text-center text-muted py-3">
+            <div class="card-body"></div>
+              <div class="text-center text-muted py-3"></div>
                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                 ไม่มีข้อมูลสำหรับแสดง
               </div>
@@ -752,7 +764,7 @@
           </table>
         </div>
       </div>
-      <div class="card-footer bg-light text-end">
+      <div class="card-footer bg-light text-end"></div>
         <a href="/down" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
       </div>
     </div>
@@ -771,9 +783,13 @@
   function fmtDate(d) {
     if (!d) return '-';
     const dt = new Date(d);
-    if (isNaN(dt)) return escapeHtml(d);
-    const pad = n => String(n).padStart(2,'0');
-    return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+    if (isNaN(dt)) return escapeHtml(String(d));
+    try {
+      return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+    }
   }
 
   fetch('/down/top10')
@@ -865,7 +881,7 @@
                 </div>
                 <% }) %>
             </div>
-            <div class="text-end mt-2">
+            <div class="text-end mt-2"></div>
               <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
             </div>
           </div>
@@ -884,7 +900,7 @@
             <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
             <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
           </div>
-          <div class="card-body">
+          <div class="card-body"></div>
             <!-- ใช้ partial เดียวกับหน้า list เพื่อเรนเดอร์บนหน้า home -->
             <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
           </div>
@@ -1178,13 +1194,13 @@
     <!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
 <div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
+    <div class="modal-content"></div>
       <div class="card-gradient-bar"></div>
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i> รายละเอียดการใช้รถ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body"></div>
         <dl class="row mb-0">
           <dt class="col-4 col-md-3">วันที่</dt>
           <dd class="col-8 col-md-9" id="uc-date">-</dd>
@@ -1226,6 +1242,31 @@
     const link = document.getElementById('uc-view-link');
     if (link) link.href = '/usecar/view/' + get('id');
   });
+</script>
+
+<script>
+  (function() {
+    const btn = document.getElementById('exportChamraBtnHome');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = 'กำลังส่งออก...';
+      try {
+        const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
+        if (!resp.ok) throw new Error('Export failed');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (e) {
+        alert('ไม่สามารถส่งออกข้อมูลได้');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  })();
 </script>
 
 <%- include('partials/footer') %>

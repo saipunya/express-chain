@@ -428,8 +428,9 @@ chamraController.exportChamraPdf = async (req, res) => {
     const printedBy = printedByRaw || 'ผู้ใช้งานทั่วไป';
 
     const docDefinition = {
-      // Header function: top-right page number in Thai (smaller gap)
+      // Header function: show page number on every page except page 1
       header: (currentPage, pageCount) => {
+        if (currentPage === 1) return null;
         return {
           text: `หน้า ${currentPage} / ${pageCount}`,
           alignment: 'right',

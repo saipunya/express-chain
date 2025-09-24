@@ -125,7 +125,6 @@
                 <% } %>
 
               <!-- เพิ่มปุ่ม Export Chamra สำหรับผู้ล็อกอิน (จะไม่มีลายน้ำ) -->
-              <button id="exportChamraBtnHome" class="btn btn-outline-primary me-2">⬇️ Export Chamra</button>
 
               <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
             </div>
@@ -507,7 +506,8 @@
                             แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
                                 <% } %>
                     </span>
-                    <% const ruleSavedDate = new Date(rule.rule_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
+                    <% const ruleSavedDate = new Date(rule.rule_savedate); 
+                    const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
                     <% if (diffDays <= 7) { %>
                       <img src="/images/newpng.png" alt="New"
                       class="ms-2" style="width: 40px; height: 35px;" />
@@ -651,9 +651,13 @@
               <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
             </h6>
               <!-- เพิ่มปุ่ม Export Chamra ให้ผู้ใช้ทั่วไป (จะมีลายน้ำ) -->
-            
-                <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
+            <% if(user) { %>
+                
+                <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ Export Chamra</button>
               
+            <% } else { %>
+                <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
+            <% } %>
           </div>
     
           <% if ((homeProcesses || []).length) { %>
@@ -1191,13 +1195,15 @@
     <!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
 <div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content"></div>
+    <div class="modal-content">
       <div class="card-gradient-bar"></div>
+
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i> รายละเอียดการใช้รถ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
       </div>
-      <div class="modal-body"></div>
+
+      <div class="modal-body">
         <dl class="row mb-0">
           <dt class="col-4 col-md-3">วันที่</dt>
           <dd class="col-8 col-md-9" id="uc-date">-</dd>
@@ -1212,6 +1218,7 @@
           <dd class="col-8 col-md-9" id="uc-act">-</dd>
         </dl>
       </div>
+
       <div class="modal-footer">
         <a id="uc-view-link" href="#" class="btn btn-primary" target="_blank" rel="noopener">
           <i class="bi bi-box-arrow-up-right me-1"></i> เปิดหน้ารายละเอียด

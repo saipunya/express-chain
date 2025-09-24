@@ -1,5 +1,12 @@
 const activityModel = require('../models/activityModel');
 
+function normalizeActfor(req) {
+  const raw = req.body.actfor || req.body['actfor[]'];
+  if (!raw) return '';
+  if (Array.isArray(raw)) return raw.join(',');
+  return String(raw);
+}
+
 exports.listActivities = async (req, res) => {
   try {
     const activities = await activityModel.getAllActivities();
@@ -27,7 +34,9 @@ exports.showCreateForm = (req, res) => {
 
 exports.createActivity = async (req, res) => {
   try {
-    await activityModel.createActivity(req.body);
+    const actfor = normalizeActfor(req);
+    const data = { ...req.body, actfor };
+    await activityModel.createActivity(data);
     res.redirect('/activities');
   } catch (error) {
     console.error('Error creating activity:', error.message);
@@ -52,19 +61,26 @@ exports.editActivityPage = async (req, res) => {
 };
 
 exports.updateActivity = async (req, res) => {
-  // รับค่าจาก req.body
-  const data = {
-    date_act: req.body.date_act,
-    act_time: req.body.act_time,
-    activity: req.body.activity,
-    place: req.body.place,
-    co_person: req.body.co_person,
-    comment: req.body.comment,
-    saveby: req.body.saveby,
-    savedate: req.body.savedate
-  };
-  await activityModel.updateActivity(req.params.id, data);
-  res.redirect('/activities');
+  try {
+    // รับค่าจาก req.body
+    const actfor = normalizeActfor(req);
+    const data = {
+      date_act: req.body.date_act,
+      act_time: req.body.act_time,
+      activity: req.body.activity,
+      place: req.body.place,
+      co_person: req.body.co_person,
+      comment: req.body.comment,
+      saveby: req.body.saveby,
+      savedate: req.body.savedate,
+      actfor
+    };
+    await activityModel.updateActivity(req.params.id, data);
+    res.redirect('/activities');
+  } catch (error) {
+    console.error('Error updating activity:', error.message);
+    res.status(500).send('Error updating activity');
+  }
 };
 
 exports.deleteActivity = async (req, res) => {

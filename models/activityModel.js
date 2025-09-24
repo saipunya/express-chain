@@ -11,22 +11,22 @@ exports.getActivityById = async (id) => {
 };
 
 exports.createActivity = async (data) => {
-  const { date_act, act_time, activity, place, co_person, comment, saveby, savedate } = data;
+  const { date_act, act_time, activity, place, co_person, comment, actfor, saveby, savedate } = data;
   const [result] = await db.query(
-    `INSERT INTO pt_activity (date_act, act_time, activity, place, co_person, comment, saveby, savedate)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [date_act, act_time, activity, place, co_person, comment, saveby, savedate]
+    `INSERT INTO pt_activity (date_act, act_time, activity, place, co_person, comment, actfor, saveby, savedate)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [date_act, act_time, activity, place, co_person, comment, actfor, saveby, savedate]
   );
   return result.insertId;
 };
 
 exports.updateActivity = async (id, data) => {
-  const {  act_time, activity, place, co_person, comment} = data;
+  const { act_time, activity, place, co_person, comment, actfor } = data;
   const [result] = await db.query(
     `UPDATE pt_activity 
-     SET  act_time = ?, activity = ?, place = ?, co_person = ?, comment = ?
+     SET act_time = ?, activity = ?, place = ?, co_person = ?, comment = ?, actfor = ?
      WHERE act_id = ?`,
-    [ act_time, activity, place, co_person, comment, id]
+    [act_time, activity, place, co_person, comment, actfor, id]
   );
   return result.affectedRows;
 };

@@ -37,20 +37,19 @@
       boxShadow:'0 8px 30px rgba(0,0,0,0.3)', fontFamily:'Arial, sans-serif'
     });
 
+    // two-column table: Step | วันที่ (ไทย)
     box.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-weight:600;font-size:16px">รายละเอียดขั้นตอน</div>
         <div><button class="steps-close-btn" style="padding:6px 10px">ปิด</button></div>
       </div>
-      <div style="margin-bottom:8px;color:#444;font-size:13px">แสดงวันที่ดิบ (Raw) / ISO / วันที่แบบไทย</div>
+      <div style="margin-bottom:8px;color:#444;font-size:13px">แสดงขั้นตอน และวันที่ (พ.ศ.)</div>
       <div style="overflow:auto">
         <table class="steps-table" style="width:100%;border-collapse:collapse;font-size:14px">
           <thead>
             <tr style="background:#f5f5f5">
-              <th style="padding:8px;border:1px solid #e5e5e5;text-align:center;width:60px">ขั้นที่</th>
-              <th style="padding:8px;border:1px solid #e5e5e5;text-align:left">Raw</th>
-              <th style="padding:8px;border:1px solid #e5e5e5;text-align:left;width:160px">ISO</th>
-              <th style="padding:8px;border:1px solid #e5e5e5;text-align:left;width:200px">วันที่ (ไทย)</th>
+              <th style="padding:8px;border:1px solid #e5e5e5;text-align:left;width:320px">ขั้นที่</th>
+              <th style="padding:8px;border:1px solid #e5e5e5;text-align:left">วันที่ (ไทย)</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -72,6 +71,24 @@
     return `${String(p.y).padStart(4,'0')}-${String(p.m).padStart(2,'0')}-${String(p.d).padStart(2,'0')}`;
   }
 
+  // return human-friendly label for step (accept number or string)
+  function showStep(v){
+    const n = Number(v);
+    switch(n){
+      case 1: return 'ประกาศผู้ชำระบัญชี';
+      case 2: return 'รับมอบทรัพย์สิน';
+      case 3: return 'ส่งงบ ม.80';
+      case 4: return 'ผู้สอบบัญชีรับรองงบการเงิน';
+      case 5: return 'ประชุมใหญ่อนุมัติงบ ม.80';
+      case 6: return 'จัดการทรัพย์สิน / หนี้สิน';
+      case 7: return 'ส่งรายงานย่อ / รายงานชำระบัญชี';
+      case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
+      case 9: return 'ถอนชื่อออกจากทะเบียน';
+      case 10: return 'ส่งมอบเอกสารหลักฐาน';
+      default: return n ? ('ขั้นที่ ' + n) : '-';
+    }
+  }
+
   function populateAndShowModal(modal, steps, highlightStep){
     const tbody = modal.querySelector('tbody');
     tbody.innerHTML = '';
@@ -81,10 +98,11 @@
       if(Number(s.step) === Number(highlightStep)) {
         tr.style.background = '#fff8e1';
       }
+      // render only two columns: Step label and Thai formatted date
+      const stepLabel = s.label || showStep(s.step);
+      const firstCell = `ขั้นที่ ${s.step} ${stepLabel}`;
       tr.innerHTML = `
-        <td style="padding:8px;border:1px solid #e5e5e5;text-align:center">S${s.step}</td>
-        <td style="padding:8px;border:1px solid #e5e5e5;white-space:pre-wrap">${s.raw || '-'}</td>
-        <td style="padding:8px;border:1px solid #e5e5e5">${s.iso || '-'}</td>
+        <td style="padding:8px;border:1px solid #e5e5e5;text-align:left;white-space:nowrap">${firstCell}</td>
         <td style="padding:8px;border:1px solid #e5e5e5">${s.thai || '-'}</td>
       `;
       tbody.appendChild(tr);
@@ -104,8 +122,10 @@
       const raw = el.dataset.raw || '';
       const step = el.dataset.step || '';
       const parsed = parseDateSafe(raw);
+      const label = showStep(step); // ensure label comes from showStep()
       return {
         step,
+        label,
         raw: raw || '-',
         iso: parsed ? isoFromParsed(parsed) : (raw || '-'),
         thai: parsed ? formatThaiFull(parsed) : '-'

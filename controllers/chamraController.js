@@ -341,6 +341,24 @@ const isRequestAuthenticated = (req) => {
   return false;
 };
 
+// helper: step label for server-side exports
+function showStepServer(n) {
+  const num = Number(n);
+  switch (num) {
+    case 1: return 'ประกาศผู้ชำระบัญชี';
+    case 2: return 'รับมอบทรัพย์สิน';
+    case 3: return 'ส่งงบ ม.80';
+    case 4: return 'ผู้สอบบัญชีรับรองงบการเงิน';
+    case 5: return 'ประชุมใหญ่อนุมัติงบ ม.80';
+    case 6: return 'จัดการทรัพย์สิน / หนี้สิน';
+    case 7: return 'ส่งรายงานย่อ / รายงานชำระบัญชี';
+    case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
+    case 9: return 'ถอนชื่อออกจากทะเบียน';
+    case 10: return 'ส่งมอบเอกสารหลักฐาน';
+    default: return num ? ('ขั้นที่ ' + num) : '-';
+  }
+}
+
 chamraController.exportChamraPdf = async (req, res) => {
   try {
     const data = await Chamra.getAll();
@@ -420,7 +438,7 @@ chamraController.exportChamraPdf = async (req, res) => {
           break;
         }
       }
-      const lastStep = latestStepNumber ? `ขั้นที่ ${latestStepNumber}` : '-';
+      const lastStep = latestStepNumber ? `ขั้นที่ ${latestStepNumber} ${showStepServer(latestStepNumber)}` : '-';
 
       // Replace any '/' (with optional surrounding spaces) with newline for display
       const personCell = (row.de_person || '').replace(/\s*\/\s*/g, '\n');
@@ -632,7 +650,8 @@ chamraController.exportDetailPdf = async (req, res) => {
     for (let i = 1; i <= 10; i++) {
       const key = `pr_s${i}`;
       const raw = record[key] || '';
-      procRows.push([{ text: `S${i}`, bold: false, margin:[2,2]}, raw, fmtThai(raw)]);
+      const label = showStepServer(i);
+      procRows.push([{ text: `ขั้นที่ ${i} ${label}`, bold: false, margin:[2,2]}, raw, fmtThai(raw)]);
     }
 
     // problems table rows

@@ -53,6 +53,7 @@
     }
   }
 %>
+
 <div class="container py-4">
   <% if (data) { %>
   <h1 class="h4 mb-3"><%= data.c_name || 'ข้อมูลไม่ระบุ' %></h1>
@@ -67,7 +68,7 @@
           <span class="badge text-bg-danger">กำลังชำระบัญชี</span>
         <% } %>
         <% if(latestProcessStep){ %>
-          <span class="ms-3 text-primary fw-semibold">ขั้นล่าสุด S<%= latestProcessStep %> (<%= formatThaiDate(data['pr_s'+latestProcessStep]) %>)</span>
+          <span class="ms-3 text-primary fw-semibold">ขั้นล่าสุด ขั้นที่ <%= latestProcessStep %> (<%= formatThaiDate(data['pr_s'+latestProcessStep]) %>)</span>
         <% } else { %>
           <span class="ms-3 text-muted">ยังไม่มีขั้นตอนที่สมบูรณ์</span>
         <% } %>
@@ -125,24 +126,8 @@
                   <%= data.de_maihed || '-' %>
                 </td>
               </tr>
-              <tr>
-                <th>บันทึกโดย</th>
-                <td>
-                  <%= data.de_saveby || '-' %>
-                </td>
-              </tr>
-              <tr>
-                <th>บันทึกวันที่</th>
-                <td>
-                  <%= formatThaiDate(data.de_savedate) %>
-                </td>
-              </tr>
-              <tr>
-                <th>ชื่อสหกรณ์</th>
-                <td>
-                  <%= data.c_name %>
-                </td>
-              </tr>
+              
+              
               
               <tr>
                 <th>กลุ่มส่งเสริม</th>
@@ -167,10 +152,31 @@
           <tr><th class="text-center">ขั้นที่</th><th class="text-center">วันที่ (พ.ศ.)</th></tr>
         </thead>
         <tbody>
+          <% 
+            function showStep(s){
+              const n = Number(s);
+              switch(n){
+                case 1: return 'ประกาศผู้ชำระบัญชี';
+                case 2: return 'รับมอบทรัพย์สิน';
+                case 3: return 'ส่งงบ ม.80';
+                case 4: return 'ผู้สอบบัญชีรับรองงบการเงิน';
+                case 5: return 'ประชุมใหญ่อนุมัติงบ ม.80';
+                case 6: return 'จัดการทรัพย์สิน / หนี้สิน';
+                case 7: return 'ส่งรายงานย่อ / รายงานชำระบัญชี';
+                case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
+                case 9: return 'ถอนชื่อออกจากทะเบียน';
+                case 10: return 'ส่งมอบเอกสารหลักฐาน';
+                default:
+                  return n ? ('S' + n) : '-';
+              }
+            }
+            
+          %>
         <% processSteps.forEach(s => { %>
           <tr>
-            <td class="text-center">ขั้นที่ <%= s.step %></td>
-            <td class="text-center"><%= s.formatted %></td>
+            <td class="text-start">ขั้นที่ <%= s.step + ' ' + showStep(s.step) %></td>
+            <!-- expose raw value and step for client script -->
+            <td class="text-center process-step" data-step="<%= s.step %>" data-raw="<%= s.raw || '' %>"><%= s.formatted %></td>
           </tr>
         <% }) %>
         </tbody>
@@ -213,6 +219,14 @@
   <% } %>
 
   <a href="../../chamra" class="btn btn-outline-secondary btn-sm mt-3">← กลับหน้ารายการ</a>
+  <!-- Export PDF button -->
+  <button id="exportPdfBtn" class="btn btn-primary btn-sm mt-3 ms-2"
+    data-code="<%= data && (data.de_code || data.c_code) %>">Export PDF</button>
 </div>
+
+<!-- include export script (make sure /public is served by express.static) -->
+<script src="/js/export-pdf.js"></script>
+<!-- include detail helper script -->
+<script src="/js/detail.js"></script>
 
 <%- include('../partials/footer.ejs') %>

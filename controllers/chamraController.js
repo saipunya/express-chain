@@ -587,4 +587,175 @@ chamraController.exportChamraPdf = async (req, res) => {
   }
 };
 
+// Export single detail PDF (server-side with pdfmake)
+chamraController.exportDetailPdf = async (req, res) => {
+  try {
+    const code = req.params.c_code;
+    const record = await Chamra.getByCode(code);
+    if (!record) return res.status(404).send('ไม่พบข้อมูล');
+
+    const poblems = await Chamra.getPoblemsByCode(code);
+
+    // fonts (same folder as other export)
+    const fonts = {
+      THSarabunNew: {
+        normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
+        bold: path.join(__dirname, '../fonts/THSarabunNew-Bold.ttf'),
+        italics: path.join(__dirname, '../fonts/THSarabunNew-Italic.ttf'),
+        bolditalics: path.join(__dirname, '../fonts/THSarabunNew-BoldItalic.ttf')
+      }
+    };
+    const printer = new PdfPrinter(fonts);
+
+    // small date helpers
+    const isValid = (v) => {
+      if (!v) return false;
+      if (typeof v === 'string') {
+        if (v === '0000-00-00' || v === '0000-00-00 00:00:00' || /^1899-11-30/.test(v) || v === 'Invalid date') return false;
+        const parts = v.slice(0,10).split('-');
+        if (parts.length !== 3) return false;
+        const d = new Date(parts[0], parts[1]-1, parts[2]);
+        if (isNaN(d.getTime()) || d.getFullYear() < 1950) return false;
+        return true;
+      }
+      if (v instanceof Date) return !isNaN(v.getTime()) && v.getFullYear() >= 1950;
+      return false;
+    };
+    const fmtThai = (v) => {
+      if (!isValid(v)) return '-';
+      const d = (typeof v === 'string') ? new Date(...v.slice(0,10).split('-').map((x,i)=> i===1? Number(x)-1:Number(x))) : v;
+      return new Intl.DateTimeFormat('th-TH', { day:'numeric', month:'long', year:'numeric' }).format(d);
+    };
+
+    // build process table rows S1..S10
+    const procRows = [];
+    for (let i = 1; i <= 10; i++) {
+      const key = `pr_s${i}`;
+      const raw = record[key] || '';
+      procRows.push([{ text: `S${i}`, bold: false, margin:[2,2]}, raw, fmtThai(raw)]);
+    }
+
+    // problems table rows
+    const pobRows = poblems && poblems.length ? poblems.map(p => [
+      p.po_year || '-', p.po_meeting || '-', p.po_detail || '-', p.po_problem || '-', (p.po_saveby||'-'), (fmtThai(p.po_savedate)||'-')
+    ]) : [];
+
+    // doc definition
+    const docDefinition = {
+      pageOrientation: 'landscape',
+      pageMargins: [36, 52, 36, 48],
+      defaultStyle: { font: 'THSarabunNew', fontSize: 16 },
+      content: [
+        { text: 'รายละเอียดการชำระบัญชี', style: 'title', alignment: 'center', margin: [0,0,0,6], fontSize: 20 },
+        { text: record.c_name || '-', alignment: 'center', fontSize: 18, margin: [0,0,0,10] },
+
+        {
+          columns: [
+            { width: '50%', stack: [
+                { text: 'ข้อมูลทั่วไป', bold: true, margin: [0,0,0,6] },
+                { text: `กรณี: ${record.de_case || '-'}` },
+                { text: `คำสั่งเลขที่: ${record.de_comno || '-'}` },
+                { text: `วันที่คำสั่ง/ประกาศ: ${fmtThai(record.de_comdate)}` },
+                { text: `ผู้รับผิดชอบ: ${record.de_person || '-'}` },
+                { text: `หมายเหตุ: ${record.de_maihed || '-'}` }
+            ]},
+            { width: '50%', stack: [
+                { text: 'บันทึก', bold: true, margin: [0,0,0,6] },
+                { text: `บันทึกโดย: ${record.de_saveby || '-'}` },
+                { text: `บันทึกวันที่: ${fmtThai(record.de_savedate)}` },
+                { text: `สถานะ: ${record.c_status || '-'}` },
+                { text: `กลุ่ม: ${record.c_group || '-'}` }
+            ]}
+          ],
+          columnGap: 20,
+          margin: [0,0,0,14]
+        },
+
+        { text: 'กระบวนการ (Process)', bold: true, margin: [0,0,0,6] },
+        {
+          table: {
+            widths: [60, '*', 180],
+            body: [
+              [{ text: 'ขั้น', bold: true }, { text: 'Raw', bold: true }, { text: 'วันที่ (ไทย)', bold: true }],
+              ...procRows
+            ]
+          },
+          layout: 'lightHorizontalLines',
+          margin: [0,0,0,12]
+        },
+
+        { text: 'รายการปัญหา (Problems)', bold: true, margin: [0,0,0,6] },
+        pobRows.length ? {
+          table: {
+            headerRows: 1,
+            widths: [60, 80, '*', '*', 80, 120],
+            body: [
+              [ { text: 'ปี', bold: true }, { text: 'ครั้ง', bold:true }, { text: 'รายละเอียด', bold:true }, { text: 'ปัญหา', bold:true }, { text: 'บันทึกโดย', bold:true }, { text: 'วันที่บันทึก', bold:true } ],
+              ...pobRows
+            ]
+          },
+          layout: 'lightHorizontalLines'
+        } : { text: 'ไม่มีรายการปัญหา', italics: true }
+      ],
+      styles: {
+        title: { fontSize: 22, bold: true }
+      }
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const chunks = [];
+    pdfDoc.on('data', c => chunks.push(c));
+    pdfDoc.on('end', async () => {
+      try {
+        const pdfBuffer = Buffer.concat(chunks);
+
+        // If request is authenticated, stream inline directly
+        const viewerIsAuthenticated = isRequestAuthenticated(req);
+        if (viewerIsAuthenticated) {
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="chamra-detail.pdf"');
+          return res.send(pdfBuffer);
+        }
+
+        // otherwise optionally add watermark using pdf-lib for better rotated text
+        try {
+          const pdfLibDoc = await PDFDocument.load(pdfBuffer);
+          pdfLibDoc.registerFontkit(fontkit);
+          const fontBytes = fs.readFileSync(path.join(__dirname, '../fonts/THSarabunNew.ttf'));
+          const customFont = await pdfLibDoc.embedFont(fontBytes);
+          const pages = pdfLibDoc.getPages();
+          const wmText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
+          const size = 36;
+          const color = rgb(0.6,0,0);
+          const opacity = 0.12;
+          const angle = 45;
+          pages.forEach(page => {
+            const { width, height } = page.getSize();
+            const textWidth = customFont.widthOfTextAtSize(wmText, size);
+            const x = (width - textWidth) / 2;
+            const y = (height / 2) - (size / 2);
+            page.drawText(wmText, { x, y, size, font: customFont, color, opacity, rotate: degrees(angle) });
+          });
+          const finalBytes = await pdfLibDoc.save();
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="chamra-detail.pdf"');
+          return res.send(Buffer.from(finalBytes));
+        } catch (err) {
+          // on any post-process failure, send original pdf
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', 'inline; filename="chamra-detail.pdf"');
+          return res.send(pdfBuffer);
+        }
+      } catch (err) {
+        console.error('Detail PDF send error:', err);
+        res.status(500).send('เกิดข้อผิดพลาดขณะส่ง PDF');
+      }
+    });
+    pdfDoc.end();
+  } catch (err) {
+    console.error('exportDetailPdf error:', err);
+    res.status(500).send('Export PDF failed');
+  }
+};
+
 module.exports = chamraController;

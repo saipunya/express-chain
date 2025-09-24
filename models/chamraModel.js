@@ -23,9 +23,12 @@ const Chamra = {
     const [rows] = await db.query(
       `SELECT 
          cd.*,
-         ac.c_name
+         ac.c_name,ac.c_group,
+         cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
+         cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
        FROM chamra_detail cd
        LEFT JOIN active_coop ac ON ac.c_code = cd.de_code
+       LEFT JOIN chamra_process cp ON cp.pr_code = cd.de_code
        WHERE cd.de_code = ?
        LIMIT 1`,
       [code]

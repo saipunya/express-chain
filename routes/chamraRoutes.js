@@ -45,7 +45,10 @@ router.post('/poblem/delete/:po_id', chamraController.deletePoblem);
 // Detail (new)
 router.get('/detail/:c_code', chamraController.detail);
 
-// Export PDF
+// Export PDF for detail (server-side pdfmake)
+router.get('/detail/:c_code/export/pdf', chamraController.exportDetailPdf);
+
+// Export PDF (list)
 router.post('/export/pdf', chamraController.exportChamraPdf);
 
 module.exports = router;

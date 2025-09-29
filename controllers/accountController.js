@@ -5,6 +5,7 @@ exports.index = async (req, res) => {
     try {
         const results = await Account.getAll();
 
+        // summary (unchanged)
         const totalIncome = results
             .filter(r => r.type === 'income')
             .reduce((sum, r) => sum + Number(r.amount), 0);
@@ -19,8 +20,25 @@ exports.index = async (req, res) => {
             ? results.reduce((max, r) => (r.date > max ? r.date : max), results[0].date)
             : null;
 
+        // NEW: prepare running balance list (ascending by date)
+        let running = 0;
+        const processed = results
+            .slice()
+            .sort((a,b)=> new Date(a.date) - new Date(b.date))
+            .map(r => {
+                const amt = Number(r.amount);
+                if (r.type === 'income') running += amt;
+                else if (r.type === 'expense') running -= amt;
+                return {
+                    ...r,
+                    income: r.type === 'income' ? amt : null,
+                    expense: r.type === 'expense' ? amt : null,
+                    running
+                };
+            });
+
         res.render('account/list', {
-            accounts: results,
+            accounts: processed,          // use processed list
             totalIncome,
             totalExpense,
             balance,

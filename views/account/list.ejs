@@ -51,51 +51,39 @@
 
     <!-- ตารางรายการ -->
     <table class="table table-striped table-bordered bg-white">
-        <thead class="table-dark">
-            <tr>
-                <th>วันที่</th>
-                <th>รายละเอียด</th>
-                <th class="text-end">จำนวนเงิน</th>
-                <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
-                    <th class="text-center">การจัดการ</th>
+      <thead class="table-dark">
+        <tr>
+           <th style="width:180px">วันที่</th>
+          <th>รายการ</th>
+          <th class="text-end" style="width:140px">รายได้</th>
+          <th class="text-end" style="width:140px">ค่าใช้จ่าย</th>
+            <th class="text-end" style="width:140px">คงเหลือ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% accounts.forEach(acc => { 
+             const thaiDateItem = new Date(acc.date).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+             const incomeTxt = acc.income != null ? acc.income.toLocaleString() : '-';
+             const expenseTxt = acc.expense != null ? acc.expense.toLocaleString() : '-';
+             const runningTxt = (acc.running ?? 0).toLocaleString();
+        %>
+          <tr>
+            <td><%= thaiDateItem %></td>
+            <td>
+                <%= acc.description %>
+                <% if (acc.income != null) { %>
+                    <span class="badge bg-success me-2">รายได้</span>
+                <% } else if (acc.expense != null) { %>
+                    <span class="badge bg-danger me-2">ค่าใช้จ่าย</span>
                 <% } %>
-            </tr>
-        </thead>
-        <tbody>
-            <% accounts.forEach(account => { %>
-                <tr>
-                    <!-- วันที่ -->
-                    <% const thaiDateItem = new Date(account.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-                    <td><%= thaiDateItem %></td>
-                    
-                    <!-- รายละเอียด + ประเภท -->
-                    <td>
-                        <%= account.description %>
-                        <% if (account.type === 'income') { %>
-                            <span class="badge bg-success">รายได้</span>
-                        <% } else { %>
-                            <span class="badge bg-danger">ค่าใช้จ่าย</span>
-                        <% } %>
-                    </td>
-                   
-                    <!-- จำนวนเงิน -->
-                    <% const formattedAmount = account.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
-                    <td class="text-end"><%= formattedAmount %></td>
-
-                    <!-- ปุ่มแก้ไข/ลบ -->
-                    <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
-                        <td class="text-center">
-                            <a href="/account/edit/<%= account.id %>" class="btn btn-warning btn-sm">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a href="/account/delete/<%= account.id %>" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบรายการนี้หรือไม่?');">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    <% } %>
-                </tr>
-            <% }) %>
-        </tbody>
+                
+            </td>
+            <td class="text-end text-success"><%= incomeTxt %></td>
+            <td class="text-end text-danger"><%= expenseTxt %></td>
+            <td class="text-end fw-semibold"><%= runningTxt %></td>
+          </tr>
+        <% }) %>
+      </tbody>
     </table>
 
     <div class="text-center">

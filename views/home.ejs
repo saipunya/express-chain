@@ -1,91 +1,329 @@
 <%- include('partials/header',{title : 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ' }) %>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Added: Required Chart.js + plugin (fix graphs not showing) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
+<!-- ================= Modern Global Styles (Refactored) ================ -->
 <style>
   :root {
-    --grad-hero: linear-gradient(135deg,#0f766e,#0d9488,#0ea5e9);
-    --grad-accent: linear-gradient(90deg,#2563eb,#6366f1,#8b5cf6);
+    --color-bg: #f5f7fa;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text: #1e293b;
+    --color-muted: #64748b;
+    --color-accent: #0d9488;
+    --color-accent-grad: linear-gradient(135deg,#0f766e,#0d9488,#0ea5e9);
+    --color-focus: #2563eb;
+    --radius-sm: .5rem;
+    --radius: 1rem;
+    --radius-lg: 1.5rem;
+    --shadow-sm: 0 4px 10px -2px rgba(0,0,0,.08);
+    --shadow: 0 8px 24px -6px rgba(0,0,0,.16);
+    --shadow-hover: 0 14px 38px -8px rgba(0,0,0,.28);
     --glass: rgba(255,255,255,0.68);
+    --grad-accent: linear-gradient(90deg,#2563eb,#6366f1,#8b5cf6);
+    --transition: .4s cubic-bezier(.4,.2,.2,1);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #0f172a;
+      --color-surface: #1e293b;
+      --color-border: #334155;
+      --color-text: #e2e8f0;
+      --color-muted: #94a3b8;
+      --glass: rgba(30,41,59,0.75);
+      --shadow-sm: 0 4px 10px -2px rgba(0,0,0,.55);
+      --shadow: 0 8px 28px -6px rgba(0,0,0,.65);
+      --shadow-hover: 0 16px 44px -10px rgba(0,0,0,.85);
+    }
+    .modern-card, .hero-shell { border:1px solid var(--color-border); }
+    .quick-nav a { color: var(--color-muted); }
+    .quick-nav a.active { color: #fff; }
+  }
+
+  body { background: var(--color-bg); color: var(--color-text); }
+
+  /* Hero */
   .hero-shell {
-    background: var(--grad-hero);
-    border-radius: 1.5rem;
+    background: var(--color-accent-grad);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     position: relative;
-    box-shadow: 0 18px 40px -10px rgba(14,74,90,.45);
+    box-shadow: var(--shadow);
+    min-height: 360px;
   }
   .hero-shell:before {
     content:"";
-    position:absolute;
-    inset:0;
+    position:absolute; inset:0;
     background:
-      radial-gradient(circle at 25% 30%,rgba(255,255,255,.35),transparent 60%),
-      radial-gradient(circle at 80% 70%,rgba(255,255,255,.25),transparent 65%);
+      radial-gradient(circle at 22% 30%,rgba(255,255,255,.35),transparent 60%),
+      radial-gradient(circle at 75% 70%,rgba(255,255,255,.25),transparent 65%);
     mix-blend-mode: overlay;
     pointer-events:none;
   }
+  .hero-img-wrap {
+    position:relative;
+    height:100%;
+  }
+  .hero-img-wrap img {
+    object-fit:cover;
+    width:100%; height:100%;
+    aspect-ratio: 4/3;
+  }
+  @media (min-width: 992px){
+    .hero-img-wrap img { aspect-ratio: unset; }
+  }
   .glass-pane {
-    background: var(--glass);
+    background: #b0b5bd;
     backdrop-filter: blur(18px) saturate(160%);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
+
+  /* Hero image full cover override (added) */
+  .hero-img-wrap { min-height:360px; }
+  .hero-img-wrap > img.hero-cover-img {
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
+  /* Cards / Sections */
   .modern-card {
     border:0;
-    border-radius:1rem;
-    background:#ffffff;
-    box-shadow:0 6px 18px -6px rgba(0,0,0,.12);
-    transition:.35s cubic-bezier(.4,.2,.2,1);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
     position:relative;
   }
   .modern-card:hover {
-    transform:translateY(-4px);
-    box-shadow:0 14px 30px -8px rgba(0,0,0,.22);
-  }
-  .section-title {
-    font-weight:700;
-    letter-spacing:.7px;
-    position:relative;
-    display:inline-block;
-  }
-  .section-title:after {
-    content:"";
-    position:absolute;
-    left:50%;transform:translateX(-50%);
-    bottom:-6px;
-    width:60%;height:3px;
-    border-radius:2px;
-    background:var(--grad-accent);
-  }
-  .fade-in { animation:fadeIn .55s ease both; }
-  @keyframes fadeIn { from {opacity:0; transform:translateY(14px);} to {opacity:1; transform:translateY(0);} }
-  .list-group-item { border:0; border-bottom:1px solid #eef1f5; background:transparent; }
-  .list-group-item:last-child { border-bottom:0; }
-  .soft-badge {
-    background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
-    color:#334155; border:1px solid #cbd5e1; font-weight:500;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
   }
   .card-gradient-bar {
     position:absolute; top:0; left:0; width:100%; height:4px;
-    background:linear-gradient(90deg,#0ea5e9,#6366f1,#8b5cf6); opacity:.85;
-    border-top-left-radius:1rem; border-top-right-radius:1rem;
+    background:var(--grad-accent); opacity:.85;
+    border-top-left-radius:inherit;
+    border-top-right-radius:inherit;
   }
-  .hover-link { transition:.25s; }
-  .hover-link:hover { color:#0d9488 !important; }
+
+  /* Section layout */
+  .section-block {
+    padding-block: 2.2rem;
+  }
+  .section-block.compact { padding-block: 1.4rem; }
+  .section-heading {
+    font-weight:700;
+    letter-spacing:.6px;
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    position:relative;
+    margin-bottom:1.25rem;
+  }
+  .section-heading:after {
+    content:"";
+    height:3px;
+    width:60%;
+    background: var(--grad-accent);
+    position:absolute;
+    left:50%; bottom:-6px;
+    transform:translateX(-50%);
+    border-radius:3px;
+  }
+
+  /* Lists */
+  .list-group-item {
+    border:0;
+    border-bottom:1px solid var(--color-border);
+    background:transparent;
+  }
+  .list-group-item:last-child { border-bottom:0; }
+
+  /* Quick Nav */
+  .quick-nav-wrapper {
+    margin-top:-1rem;
+    margin-bottom:1.5rem;
+  }
+  .quick-nav {
+    display:flex;
+    gap:.5rem;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding:.75rem 1rem;
+    background: var(--color-surface);
+    border:1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .quick-nav::-webkit-scrollbar { display:none; }
+  .quick-nav a {
+    white-space:nowrap;
+    font-size:.85rem;
+    padding:.55rem .95rem;
+    border-radius: 2rem;
+    text-decoration:none;
+    background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
+    color:#334155;
+    border:1px solid #dbe1e7;
+    transition:.25s;
+    display:inline-flex;
+    align-items:center;
+    gap:.35rem;
+  }
+  .quick-nav a:hover { background:#e2e8f0; }
+  .quick-nav a.active {
+    background:var(--color-accent-grad);
+    color:#fff;
+    border-color:transparent;
+    box-shadow:0 4px 14px -4px rgba(13,148,136,.5);
+  }
+
+  /* Animations */
+  .reveal {
+    opacity:0;
+    transform:translateY(22px);
+    transition: .85s cubic-bezier(.16,.8,.28,.96);
+  }
+  .reveal.in {
+    opacity:1;
+    transform:none;
+  }
+
+  .soft-badge {
+    background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
+    color:#334155;
+    border:1px solid #cbd5e1;
+    font-weight:500;
+  }
+
+  .activity-list li {
+    position:relative;
+    padding-left:1.4rem;
+  }
+  .activity-list li:before {
+    content:"";
+    position:absolute;
+    left:.35rem;
+    top:1.05rem;
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--color-accent);
+    box-shadow:0 0 0 4px rgba(13,148,136,.15);
+  }
+
+  /* Utility */
+  .text-gradient {
+    background:var(--grad-accent);
+    -webkit-background-clip:text;
+    color:transparent;
+  }
+  .shadow-focus:focus-visible {
+    outline:2px solid var(--color-focus);
+    outline-offset:2px;
+  }
+  .divider {
+    height:1px;
+    background:var(--color-border);
+    margin:1.5rem 0;
+  }
+
+  @media (max-width: 575.98px) {
+    .hero-shell { min-height: auto; }
+    .section-heading { font-size:1.15rem; }
+  }
 </style>
 
-<div class="container my-5 fade-in">
-  <div class="hero-shell">
-    <div class="row g-0">
-      <div class="col-md-6">
-        <img src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg" alt="Coop Image"
-          class="img-fluid h-100 w-100 object-fit-cover">
-      </div>
+<!-- Added: Light theme & contrast fixes -->
+<style>
+  /* Force light theme to avoid unreadable dark auto-scheme */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg:#ffffff !important;
+      --color-surface:#ffffff !important;
+      --color-text:#1e293b !important;
+      --color-border:#e2e8f0 !important;
+    }
+    body { background:#ffffff !important; color:#1e293b !important; }
+  }
+  body { background:#ffffff !important; color:#1e293b !important; }
 
-      <div class="col-md-6 glass-pane d-flex align-items-center p-4">
+  /* Ensure primary containers stay light */
+  .hero-shell,
+  .modern-card,
+  .quick-nav,
+  .card,
+  .table,
+  .table thead th,
+  .table tbody td {
+    background:#ffffff !important;
+  }
+
+  /* Text visibility */
+  .text-dark,
+  .card .text-dark,
+  .table,
+  .table td,
+  .table th { color:#1e293b !important; }
+
+  /* Table borders / striping */
+  .table-bordered> :not(caption)>* { border-color:#dbe3ea !important; }
+  .table thead th { background:#f1f5f9 !important; font-weight:600; }
+  .table-striped>tbody>tr:nth-of-type(odd){
+    --bs-table-accent-bg:#f8fafc;
+    background:#f8fafc;
+  }
+
+  /* Chamra status badges readability */
+  .hp-badge { font-size:.7rem; letter-spacing:.3px; }
+
+  /* Badges general contrast */
+  .badge.bg-secondary { background:#64748b !important; }
+  .badge.bg-success { background:#15803d !important; }
+  .badge.bg-info { background:#0284c7 !important; }
+  .badge.bg-warning { background:#d97706 !important; color:#fff !important; }
+
+  /* Quick nav active clarity */
+  .quick-nav a { color:#334155 !important; }
+  .quick-nav a.active { color:#fff !important; }
+
+  /* Remove any accidental dark backgrounds from Bootstrap utilities */
+  [class*="bg-dark"] { background:#1e293b !important; }
+</style>
+
+<%
+// Helper: map backend c_group codes to readable Thai names
+function displayGroupName(code){
+  switch(code){
+    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+    default: return code || '-';
+  }
+}
+%>
+
+<!-- ================= Hero ================= -->
+<div class="container my-5 reveal" id="top">
+  <div class="hero-shell">
+    <div class="row g-0 h-100">
+       
+      <div class="col-md-6 hero-img-wrap p-0 position-relative">
+        <img
+          src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg"
+          alt="Coop Image"
+          class="hero-cover-img"
+          loading="lazy"
+        />
+      </div>
+      <div class="col-md-6 glass-pane d-flex align-items-center p-md-4">
         <% if (!user) { %>
           <div class="w-100">
-            <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
             <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
 
             <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
@@ -101,8 +339,6 @@
               <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
             </form>
 
-          
-
             <p class="text-center mt-2">
               <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
               <a href="/auth/register" class="text-success">
@@ -110,31 +346,51 @@
               </a>
             </p>
           </div>
-          <% } else { %>
-            <div class="w-100 text-center">
-              <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
-              <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
-              <p class="lead mb-4">
-                <%= user.fullname %>
-              </p>
-              <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
-              <% if(user && (user.mClass==='kjs' || user.mClass==='admin')) { %>
-                <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
-              
-                <a href="/chamra" class="btn btn-outline-secondary me-2">ชำระบัญชี</a>
-                <% } %>
-
-              <!-- เพิ่มปุ่ม Export Chamra สำหรับผู้ล็อกอิน (จะไม่มีลายน้ำ) -->
-
-              <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
-            </div>
+        <% } else { %>
+          <div class="w-100 text-center">
+            <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
+            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
+            <p class="lead mb-4">
+              <%= user.fullname %>
+            </p>
+            <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
+            <% if(user && (user.mClass==='kjs' || user.mClass==='admin')) { %>
+              <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
+              <a href="/chamra" class="btn btn-outline-secondary me-2">ชำระบัญชี</a>
             <% } %>
+            <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 </div>
 
-<section>
+<!-- ================= Quick Navigation ================= -->
+<div class="container quick-nav-wrapper reveal" aria-label="Quick section navigation">
+  <nav class="quick-nav" id="quickNav">
+    <a href="#stats"><i class="bi bi-collection"></i>สถิติ</a>
+    <a href="#charts"><i class="bi bi-bar-chart"></i>กราฟ</a>
+    <a href="#groups"><i class="bi bi-diagram-3"></i>กลุ่ม</a>
+    <a href="#members"><i class="bi bi-people"></i>สมาชิก</a>
+    <a href="#activities"><i class="bi bi-calendar-event"></i>กิจกรรม</a>
+    <a href="#finance"><i class="bi bi-cash-coin"></i>งบการเงิน</a>
+    <a href="#business"><i class="bi bi-briefcase"></i>กิจการ</a>
+    <a href="#rules"><i class="bi bi-file-earmark-text"></i>ข้อบังคับ</a>
+    <a href="#rabiab"><i class="bi bi-file-earmark"></i>ระเบียบ</a>
+    <a href="#projects"><i class="bi bi-file-earmark-pdf"></i>โครงการ</a>
+    <a href="#commands"><i class="bi bi-megaphone"></i>คำสั่ง</a>
+    <a href="#chamra"><i class="bi bi-activity"></i>ชำระบัญชี</a>
+    <a href="#downloads"><i class="bi bi-download"></i>Top DL</a>
+    <a href="#rq2"><i class="bi bi-file-earmark-ruled"></i>RQ2</a>
+    <a href="#articles"><i class="bi bi-journal-text"></i>บทความ</a>
+    <a href="#usecar"><i class="bi bi-car-front"></i>ใช้รถ</a>
+    <a href="#online"><i class="bi bi-wifi"></i>ออนไลน์</a>
+  </nav>
+</div>
+
+<!-- ================= Stats ================= -->
+<section id="stats" class="section-block pt-0">
   <div class="container">
     <h2 class="my-3 text-center text-primary section-title">📊 ข้อมูลสหกรณ์</h2>
     <div class="row">
@@ -196,10 +452,8 @@
   </div>
 </section>
 
-
-
-
-<section class="py-2 bg-white">
+<!-- ================= Charts ================= -->
+<section id="charts" class="section-block bg-white">
   <div class="container-lg">
     <div class="row justify-content-center">
       <div class="col-md-8">
@@ -227,18 +481,8 @@
   </div>
 </section>
 
-<% function displayGroupName(code) {
-  switch(code) {
-    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
-    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
-    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
-    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
-    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
-    default: return code;
-  }
-} %>
-
-<section class="py-2 bg-white">
+<!-- ================= Coop Groups ================= -->
+<section id="groups" class="section-block bg-white">
   <div class="container-lg">
     <div class="card modern-card mb-4">
       <div class="card-gradient-bar"></div>
@@ -268,7 +512,9 @@
     </div>
   </div>
 </section>
-<section class="py-2 bg-light">
+
+<!-- ================= Member Summary ================= -->
+<section id="members" class="section-block bg-light">
   <div class="container">
     <div class="mb-3 text-center">
       <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (สหกรณ์)</h2>
@@ -316,7 +562,7 @@
             </h5>
             <% if (hasTop && top.length) { %>
               <div class="table-responsive">
-                <table class="table table-sm table-striped table-hover align-middle">
+                <table class="table table-sm table-bordered table-hover align-middle">
                   <thead class="table-light">
                     <tr>
                       <th class="text-center">อันดับ</th>
@@ -356,7 +602,9 @@
     </div>
   </div>
 </section>
-<section class="my-2">
+
+<!-- ================= Activities & Image ================= -->
+<section id="activities" class="section-block">
   <div class="container-lg">
     <div class="row">
       <div class="col-md-8 text-center">
@@ -366,35 +614,35 @@
         <div class="card modern-card shadow-sm border-0">
           <div class="card-gradient-bar"></div>
           <div class="card-body">
-        <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
-        <ul class="list-group list-group-flush">
-          <% activity.forEach(acti => { %>
-            <li class="list-group-item">
-          <i class="bi bi-calendar-event me-2 text-success"></i>
-            <!-- check if date_act == today show icon today -->
-            <% const today = new Date(); %>
-            <% const actDate = new Date(acti.date_act); %>
-            <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
-            <%= acti.activity %>
-            <% if (actDate.toDateString() === today.toDateString()) { %>
-            <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-            <% } %>
-            </li>
-          <% }) %>
-        </ul>
+            <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
+            <ul class="list-group list-group-flush">
+              <% activity.forEach(acti => { %>
+                <li class="list-group-item">
+                  <i class="bi bi-calendar-event me-2 text-success"></i>
+                  <% const today = new Date(); %>
+                  <% const actDate = new Date(acti.date_act); %>
+                  <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
+                  <%= acti.activity %>
+                  <% if (actDate.toDateString() === today.toDateString()) { %>
+                    <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+                  <% } %>
+                </li>
+              <% }) %>
+            </ul>
           </div>
         </div>
-        <!-- add more button -->
         <div class="text-end mt-2">
           <a href="/activities" class="btn btn-primary btn-sm px-4 shadow-sm">
             ดูทั้งหมด
           </a>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="py-2 bg-white">
+<!-- ================= Finance & Business ================= -->
+<section id="finance" class="section-block bg-white">
   <div class="container-lg">
     <div class="row">
       <div class="col-md-6 mb-4">
@@ -415,19 +663,18 @@
                     <% const fileSavedDate=new Date(file.savedate); const currentDate=new Date(); const
                       diffDays=Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24)); %>
                       <% if (diffDays <=7) { %>
-                       
                         <img src="/images/newpng.png" alt="New"
                           class="ms-2" style="width: 40px; height: 35px;" />
-                        <% } %>
+                      <% } %>
                 </span>
                 <% if(user){ %>
                   <a href="/finance/download/<%= file.id %>" class="btn btn-sm btn-outline-success" target="_blank"
                     rel="noopener noreferrer">
                     ดาวน์โหลด
                   </a>
-                  <% } %>
+                <% } %>
               </li>
-              <% }); %>
+            <% }); %>
           </ul>
           <div class="text-end mt-2">
             <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
@@ -457,22 +704,20 @@
                     <% const businessSavedDate=new Date(business.bu_savedate); const currentDate=new Date(); const
                       diffDays=Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24)); %>
                       <% if (diffDays <=7) { %>
-                        <!-- insert icon for public/images/newpng.png -->
-
                         <img src="/images/newpng.png" alt="New"
                           class="ms-2" style="width: 40px; height: 35px;" />
-                        <% } %>
+                      <% } %>
                 </span>
                 <% if(user){ %>
                   <a href="/business/download/<%= business.bu_id %>" class="btn btn-sm btn-outline-info"
                     target="_blank" rel="noopener noreferrer">
                     ดาวน์โหลด
                   </a>
-                  <% } %>
+                <% } %>
               </li>
-              <% }); %>
+            <% }); %>
           </ul>
-          <div class="text-end mt-2"></div>
+          <div class="text-end mt-2">
             <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
               💼 ดูทั้งหมด
             </a>
@@ -483,7 +728,7 @@
   </div>
 </section>
 
-<section class="py-2 bg-white">
+<section id="rules" class="section-block bg-white">
   <div class="container-lg">
     <div class="row">
       <div class="col-md-6 mb-4">
@@ -519,9 +764,9 @@
                     rel="noopener noreferrer">
                     ดาวน์โหลด
                   </a>
-                  <% } %>
+                <% } %>
               </li>
-              <% }); %>
+            <% }); %>
           </ul>
           <div class="text-end mt-2">
             <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
@@ -554,11 +799,11 @@
                     target="_blank" rel="noopener noreferrer">
                     ดาวน์โหลด
                   </a>
-                  <% } %>
+                <% } %>
               </li>
-              <% }); %>
+            <% }); %>
           </ul>
-          <div class="text-end mt-2"></div>
+          <div class="text-end mt-2">
             <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
               📄 ดูทั้งหมด
             </a>
@@ -569,8 +814,7 @@
   </div>
 </section>
 
-
-<section class="py-4 bg-light">
+<section id="projects" class="section-block bg-light">
   <div class="container-lg">
     <div class="row">
       <div class="col-md-6">
@@ -597,9 +841,9 @@
                       target="_blank">
                       <i class="bi bi-file-pdf-fill"></i>
                     </a>
-                    <% } %>
+                  <% } %>
                 </li>
-                <% }) %>
+              <% }) %>
             </ul>
             <div class="text-end mt-2">
               <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
@@ -632,9 +876,9 @@
                       target="_blank">
                       <i class="bi bi-file-earmark-arrow-down"></i>
                     </a>
-                    <% } %>
+                  <% } %>
                 </li>
-                <% }) %>
+              <% }) %>
             </ul>
             <div class="text-end mt-2">
               <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
@@ -643,117 +887,116 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
 
-    <section class="py-2">
-      <div class="container">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">
-              <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
-            </h6>
-              <!-- เพิ่มปุ่ม Export Chamra ให้ผู้ใช้ทั่วไป (จะมีลายน้ำ) -->
-            <% if(user) { %>
-                
-                <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ Export Chamra</button>
-              
-            <% } else { %>
-                <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
-            <% } %>
-          </div>
-    
-          <% if ((homeProcesses || []).length) { %>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-sm table-striped table-hover align-middle mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th class="ps-3">สถาบัน</th>
-                      <th class="text-center">S1</th>
-                      <th class="text-center">S2</th>
-                      <th class="text-center">S3</th>
-                      <th class="text-center">S4</th>
-                      <th class="text-center">S5</th>
-                      <th class="text-center">S6</th>
-                      <th class="text-center">S7</th>
-                      <th class="text-center">S8</th>
-                      <th class="text-center">S9</th>
-                      <th class="text-center">S10</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <%
-                      const isEmptyDate = (v) => {
-                        if (!v) return true;
-                        if (typeof v === 'string') {
-                          if (v === '0000-00-00') return true;
-                          if (/^1899-11-30/.test(v)) return true;
-                        }
-                        const d = new Date(v);
-                        return isNaN(d.getTime()) || d.getFullYear() < 1950;
-                      };
-                      const formatThai = (v) => {
-                        const d = new Date(v);
-                        if (isNaN(d.getTime())) return '-';
-                        const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
-                        return `${d.getDate()} ${m} ${d.getFullYear()+543}`;
-                      };
-                    %>
-                    <% homeProcesses.forEach(p => { %>
-                      <tr>
-                        <td class="ps-3 small fw-semibold text-dark">
-                          <i class="bi bi-building me-1 text-primary"></i>
-                          <%= p.c_name || p.pr_code %>
-                        </td>
-                        <% for (let i=1;i<=10;i++){ const key='pr_s'+i; const raw=p[key]; %>
-                          <td class="text-center">
-                            <% if (isEmptyDate(raw)) { %>
-                              <span class="badge rounded-pill bg-secondary hp-badge px-2">-</span>
-                            <% } else { %>
-                              <span class="badge rounded-pill bg-success hp-badge px-2"><%= formatThai(raw) %></span>
-                            <% } %>
-                          </td>
-                        <% } %>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-    
-            <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-              <small class="text-muted">
-                <i class="bi bi-info-circle me-1"></i>
-                สีเขียว = มีวันที่ | สีเทา = ยังไม่มีข้อมูล
-              </small>
-              <a href="/chamra/process" class="btn btn-primary btn-sm">
-                ดูเพิ่มเติม
-              </a>
-         
-            </div>
-          <% } else { %>
-            <div class="card-body"></div>
-              <div class="text-center text-muted py-3"></div>
-                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                ไม่มีข้อมูลสำหรับแสดง
-              </div>
-            </div>
-          <% } %>
-        </div>
+<section id="chamra" class="section-block">
+  <div class="container">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+          <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
+        </h6>
+        <% if(user) { %>
+          <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ Export Chamra</button>
+        <% } else { %>
+          <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
+        <% } %>
       </div>
-    </section>
 
-    <%- include('home/vong-latest') %>
+      <% if ((homeProcesses || []).length) { %>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">สถาบัน</th>
+                  <th class="text-center">S1</th>
+                  <th class="text-center">S2</th>
+                  <th class="text-center">S3</th>
+                  <th class="text-center">S4</th>
+                  <th class="text-center">S5</th>
+                  <th class="text-center">S6</th>
+                  <th class="text-center">S7</th>
+                  <th class="text-center">S8</th>
+                  <th class="text-center">S9</th>
+                  <th class="text-center">S10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%
+                  const isEmptyDate = (v) => {
+                    if (!v) return true;
+                    if (typeof v === 'string') {
+                      if (v === '0000-00-00') return true;
+                      if (/^1899-11-30/.test(v)) return true;
+                    }
+                    const d = new Date(v);
+                    return isNaN(d.getTime()) || d.getFullYear() < 1950;
+                  };
+                  const formatThai = (v) => {
+                    const d = new Date(v);
+                    if (isNaN(d.getTime())) return '-';
+                    const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
+                    return `${d.getDate()} ${m} ${d.getFullYear()+543}`;
+                  };
+                %>
+                <% homeProcesses.forEach(p => { %>
+                  <tr>
+                    <td class="ps-3 small fw-semibold text-dark">
+                      <i class="bi bi-building me-1 text-primary"></i>
+                      <%= p.c_name || p.pr_code %>
+                    </td>
+                    <% for (let i=1;i<=10;i++){ const key='pr_s'+i; const raw=p[key]; %>
+                      <td class="text-center">
+                        <% if (isEmptyDate(raw)) { %>
+                          <span class="badge rounded-pill bg-secondary hp-badge px-2">-</span>
+                        <% } else { %>
+                          <span class="badge rounded-pill bg-success hp-badge px-2"><%= formatThai(raw) %></span>
+                        <% } %>
+                      </td>
+                    <% } %>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-<section class="py-2 bg-white">
+        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            สีเขียว = มีวันที่ | สีเทา = ยังไม่มีข้อมูล
+          </small>
+          <a href="/chamra/process" class="btn btn-primary btn-sm">
+            ดูเพิ่มเติม
+          </a>
+        </div>
+      <% } else { %>
+        <div class="card-body">
+          <div class="text-center text-muted py-3">
+            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+            ไม่มีข้อมูลสำหรับแสดง
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('home/vong-latest.ejs') %>
+
+
+<section id="downloads" class="section-block bg-white">
   <div class="container-lg">
-    <div class="card modern-card mb-4">
+    <div class="card modern-card">
       <div class="card-gradient-bar"></div>
       <div class="card-header bg-success text-white">
         <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
       </div>
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-sm table-striped table-hover align-middle">
+          <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
                 <th style="width:56px;">#</th>
@@ -769,89 +1012,16 @@
           </table>
         </div>
       </div>
-      <div class="card-footer bg-light text-end"></div>
+      <div class="card-footer bg-light text-end">
         <a href="/down" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
       </div>
     </div>
   </div>
 </section>
 
-
-
-<script>
-(() => {
-  const loggedIn = <%= !!user %>;
-
-  function escapeHtml(str) {
-    return String(str ?? '').replace(/[&<>"']/g, s => (
-      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
-    ));
-  }
-  function fmtDate(d) {
-    if (!d) return '-';
-    const dt = new Date(d);
-    if (isNaN(dt)) return escapeHtml(String(d));
-    try {
-      return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch {
-      const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-      return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
-    }
-  }
-
-  fetch('/down/top10')
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.getElementById('topDownloadsTbody');
-      if (!Array.isArray(data) || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
-        return;
-      }
-      tbody.innerHTML = data.map((d, idx) => `
-        <tr>
-          <td>${idx + 1}</td>
-          <td>${escapeHtml(d.down_subject || '-')}</td>
-          <td class="text-nowrap">
-            ${
-              d.down_file && d.down_file !== '-' ? (
-                loggedIn
-                  ? `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
-                       <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
-                     </a>`
-                  : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary">
-                       <i class="bi bi-lock"></i> เข้าสู่ระบบ
-                     </a>`
-              ) : '<span class="text-muted">-</span>'
-            }
-          </td>
-          <td class="text-center">
-            ${
-              d.down_link && d.down_link !== '-'
-                ? `<a href="${escapeHtml(d.down_link)}" target="_blank" class="btn btn-sm btn-outline-info">
-                     <i class="bi bi-link-45deg"></i> ลิงก์
-                   </a>`
-                : '<span class="text-muted">-</span>'
-            }
-          </td>
-          <td>${fmtDate(d.down_savedate)}</td>
-        </tr>
-      `).join('');
-    })
-    .catch(() => {
-      const tbody = document.getElementById('topDownloadsTbody');
-      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
-    });
-})();
-</script>
-
-
-
-
-
-
-
-
-    <div class="row mt-4">
+<section id="rq2" class="section-block">
+  <div class="container-lg">
+    <div class="row mt-2">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">
           <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
@@ -873,49 +1043,49 @@
                             <%= r.rq_year %>
                           </span>
                           <% const rqSavedDate = new Date(r.rq_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rqSavedDate) / (1000 * 60 * 60 * 24)); %>
-                    <% if (diffDays <= 7) { %>
-                      <img src="/images/newpng.png" alt="New"
-                      class="ms-2" style="width: 40px; height: 35px;" />
-                    <% } %>
+                          <% if (diffDays <= 7) { %>
+                            <img src="/images/newpng.png" alt="New"
+                            class="ms-2" style="width: 40px; height: 35px;" />
+                          <% } %>
                       </span>
                       <% if(user){ %>
                         <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
                           <i class="bi bi-file-pdf-fill"></i>
                         </a>
-                        <% } %>
+                      <% } %>
                     </div>
                   </div>
                 </div>
-                <% }) %>
+              <% }) %>
             </div>
-            <div class="text-end mt-2"></div>
+            <div class="text-end mt-2">
               <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</section>
 
-  
-
-
-    <section class="py-2 bg-light">
-      <div class="container">
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
-            <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
-          </div>
-          <div class="card-body"></div>
-            <!-- ใช้ partial เดียวกับหน้า list เพื่อเรนเดอร์บนหน้า home -->
-            <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
-          </div>
-        </div>
+<section id="articles" class="section-block bg-light">
+  <div class="container">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
+        <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
       </div>
-    </section>
+      <div class="card-body">
+        <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
+      </div>
+    </div>
+  </div>
+</section>
 
 
+<section id="usecar" class="section-block">
+  <div class="container-lg">
     <div class="row mt-4" id="usecarSection">
       <div class="col-12">
         <h2 class="mb-4 text-center text-primary section-title">
@@ -943,7 +1113,7 @@
                                 </span>
                                 <% if (isToday) { %>
                                   <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-                                  <% } %>
+                                <% } %>
                             </div>
                             <div class="text-dark mb-1">
                               <i class="bi bi-geo-alt-fill text-danger me-1"></i>
@@ -954,7 +1124,6 @@
                               <%= usecar.act_car %>
                             </small>
 
-                            <!-- เปลี่ยนเป็นปุ่มเปิด Modal -->
                             <button
                               type="button"
                               class="btn btn-outline-primary btn-sm js-open-usecar"
@@ -983,12 +1152,12 @@
                               </button>
                             </form>
                           </div>
-                          <% } %>
+                        <% } %>
                       </div>
                     </div>
                   </div>
                 </div>
-                <% }); %>
+              <% }); %>
             </div>
           </div>
         </div>
@@ -997,206 +1166,237 @@
   </div>
 </section>
 
-
-
-
-
-    <style>
-      .hover-shadow:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        transition: 0.3s;
-      }
-    </style>
-
-    <section class="py-4 bg-light">
-      <div class="container-lg">
-        <div class="row">
-          <div class="col-md-4">
-            <div class="card modern-card shadow-sm border-0 h-100">
-              <div class="card-gradient-bar"></div>
-              <div class="card-body text-center">
-                <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
-                <div class="mb-3">
-                  <div class="display-4 text-success">
-                    <%= onlineCount %>
-                  </div>
-                  <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
+<section id="online" class="section-block bg-light">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 h-100">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body text-center">
+            <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
+            <div class="mb-3">
+              <div class="display-4 text-success">
+                <%= onlineCount %>
+              </div>
+              <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
+            </div>
+            <hr>
+            <div class="row text-center">
+              <h4 class="col-12 text-center">จำนวน</h4>
+              <div class="col-md-4">
+                <div class="h4 text-primary">
+                  <%= stats.coop %>
                 </div>
-                <hr>
-                <div class="row text-center">
-                  <h4 class="col-12 text-center">จำนวน</h4>
-                  <div class="col-md-4">
-                    <div class="h4 text-primary">
-                      <%= stats.coop %>
-                    </div>
-                    <small>สหกรณ์</small>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="h4 text-success">
-                      <%= stats.farmer %>
-                    </div>
-                    <small>กลุ่มเกษตรกร</small>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="h4 text-warning">
-                      <%= stats.closing %>
-                    </div>
-                    <small>ชำระบัญชี</small>
-                  </div>
+                <small>สหกรณ์</small>
+              </div>
+              <div class="col-md-4">
+                <div class="h4 text-success">
+                  <%= stats.farmer %>
                 </div>
+                <small>กลุ่มเกษตรกร</small>
+              </div>
+              <div class="col-md-4">
+                <div class="h4 text-warning">
+                  <%= stats.closing %>
+                </div>
+                <small>ชำระบัญชี</small>
               </div>
             </div>
-          </div>
-          <div class="col-md-8 mt-md-0">
-            <h2 class="mb-4 text-center text-success section-title">🟢 Members Online</h2>
-
-            <div class="card modern-card shadow-sm border-0">
-              <div class="card-gradient-bar"></div>
-              <div class="card-body">
-                <div class="row">
-                  <% onlineUsers.forEach((user, index)=> { %>
-                    <div class="col-md-6 mb-3">
-                      <div class="d-flex align-items-center">
-                        <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
-                          class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
-                        <div>
-                          <div class="fw-bold text-success">
-                            <%= user.on_name %>
-                          </div>
-                          <small class="text-muted">
-                            <%= user.m_position || '32ใช้' %>
-                          </small>
-                          <div class="badge bg-success ms-2">
-                            <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <% }); %>
-                </div>
-
-                <% if (onlineUsers.length===0) { %>
-                  <div class="text-center text-muted">
-                    <i class="fas fa-users fa-3x mb-3"></i>
-                    <p>ไม่มีสมาชิกออนไลน์ในขณะนี้</p>
-                  </div>
-                  <% } %>
-              </div>
-            </div>
-          </div>
           </div>
         </div>
       </div>
-    </section>
+      <div class="col-md-8 mt-md-0">
+        <h2 class="mb-4 text-center text-success section-title">🟢 Members Online</h2>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      const socket = io();
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <div class="row">
+              <% onlineUsers.forEach((user, index)=> { %>
+                <div class="col-md-6 mb-3">
+                  <div class="d-flex align-items-center">
+                    <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
+                      class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                    <div>
+                      <div class="fw-bold text-success">
+                        <%= user.on_name %>
+                      </div>
+                      <small class="text-muted">
+                        <%= user.m_position || '32ใช้' %>
+                      </small>
+                      <div class="badge bg-success ms-2">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
 
-      socket.on('onlineUsers', (count) => {
-        const onlineCountDiv = document.querySelector('.display-4.text-success');
-        if (onlineCountDiv) {
-          onlineCountDiv.textContent = count;
+            <% if (onlineUsers.length===0) { %>
+              <div class="text-center text-muted">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <p>ไม่มีสมาชิกออนไลน์ในขณะนี้</p>
+              <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCRIPTS (Enhancements added before existing scripts end) ================= -->
+<script>
+  // Quick Nav Active State + Smooth Scroll
+  (function(){
+    const links=[...document.querySelectorAll('#quickNav a')];
+    const sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    function activate(){
+      const y=window.scrollY + 120;
+      let cur=null;
+      sections.forEach(sec=>{
+        if(sec.offsetTop <= y) cur=sec;
+      });
+      if(!cur) return;
+      links.forEach(l=>l.classList.toggle('active', l.getAttribute('href') === '#'+cur.id));
+    }
+    links.forEach(l=> {
+      l.addEventListener('click', e=>{
+        const target=document.querySelector(l.getAttribute('href'));
+        if(target){
+          e.preventDefault();
+          window.scrollTo({ top: target.offsetTop - 70, behavior:'smooth' });
         }
       });
-    </script>
-    <script>
-      const ctx = document.getElementById('coopChart').getContext('2d');
-      const coopChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['สหกรณ์', 'กลุ่มเกษตรกร', 'ชำระบัญชี'],
-          datasets: [{
-            label: 'จำนวน',
-            data: [
-              <%= stats.coop %>,
-              <%= stats.farmer %>,
-              <%= stats.closing %>
-            ],
-            backgroundColor: [
-              'rgba(25, 135, 84, 0.7)',
-              'rgba(13, 202, 240, 0.7)',
-              'rgba(255, 193, 7, 0.7)'
-            ],
-            borderColor: [
-              'rgba(25, 135, 84, 1)',
-              'rgba(13, 202, 240, 1)',
-              'rgba(255, 193, 7, 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold' },
-              formatter: function(value) {
-                return value;
-              }
-            }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          }
-        },
-        
-        plugins: [ChartDataLabels] // Added plugin for data labels
+    });
+    window.addEventListener('scroll', activate,{passive:true});
+    activate();
+  })();
+
+  // Reveal on scroll
+  (function(){
+    const obs=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          e.target.classList.add('in');
+          obs.unobserve(e.target);
+        }
       });
-    </script>
+    },{threshold:.14});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+    document.querySelectorAll('.section-block').forEach(el=>{
+      el.classList.add('reveal');
+      obs.observe(el);
+    });
+  })();
+</script>
 
-    <script>
-      const coopData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.coop))) %>;
-      const farmerData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.farmer))) %>;
-      const totalCoop = coopData.reduce((a, b) => a + b, 0);
-      const totalFarmer = farmerData.reduce((a, b) => a + b, 0);
+<script>
+  const socket = io();
 
-      console.log('Pie chart data:', totalCoop, totalFarmer); // ตรวจสอบค่าที่จะใช้
-
-      const ctxPie = document.getElementById('coopPieChart').getContext('2d');
-      const coopPieChart = new Chart(ctxPie, {
-        type: 'pie',
-        data: {
-          labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
-          datasets: [{
-            data: [totalCoop, totalFarmer],
-            backgroundColor: [
-              'rgba(25, 135, 84, 0.7)',
-              'rgba(13, 202, 240, 0.7)'
-            ],
-            borderColor: [
-              'rgba(25, 135, 84, 1)',
-              'rgba(13, 202, 240, 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom' },
-            datalabels: {
-              color: '#000',
-              font: { weight: 'bold', size: 16 },
-              formatter: function(value, context) {
-                return context.chart.data.labels[context.dataIndex] + ': ' + value;
-              }
-            }
+  socket.on('onlineUsers', (count) => {
+    const onlineCountDiv = document.querySelector('.display-4.text-success');
+    if (onlineCountDiv) {
+      onlineCountDiv.textContent = count;
+    }
+  });
+</script>
+<script>
+  const ctx = document.getElementById('coopChart').getContext('2d');
+  const coopChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['สหกรณ์', 'กลุ่มเกษตรกร', 'ชำระบัญชี'],
+      datasets: [{
+        label: 'จำนวน',
+        data: [
+          <%= stats.coop %>,
+          <%= stats.farmer %>,
+          <%= stats.closing %>
+        ],
+        backgroundColor: [
+          'rgba(25, 135, 84, 0.7)',
+          'rgba(13, 202, 240, 0.7)',
+          'rgba(255, 193, 7, 0.7)'
+        ],
+        borderColor: [
+          'rgba(25, 135, 84, 1)',
+          'rgba(13, 202, 240, 1)',
+          'rgba(255, 193, 7, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#000',
+          font: { weight: 'bold' },
+          formatter: function(value) {
+            return value;
           }
-        },
-        plugins: [ChartDataLabels]
-      });
-    </script>
+        }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    },
+    plugins: [ChartDataLabels] // Added plugin for data labels
+  });
+</script>
 
-    <script>
-      const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
-    </script>
+<script>
+  const coopData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.coop))) %>;
+  const farmerData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.farmer))) %>;
+  const totalCoop = coopData.reduce((a, b) => a + b, 0);
+  const totalFarmer = farmerData.reduce((a, b) => a + b, 0);
 
-    <!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
+  console.log('Pie chart data:', totalCoop, totalFarmer); // ตรวจสอบค่าที่จะใช้
+
+  const ctxPie = document.getElementById('coopPieChart').getContext('2d');
+  const coopPieChart = new Chart(ctxPie, {
+    type: 'pie',
+    data: {
+      labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
+      datasets: [{
+        data: [totalCoop, totalFarmer],
+        backgroundColor: [
+          'rgba(25, 135, 84, 0.7)',
+          'rgba(13, 202, 240, 0.7)'
+        ],
+        borderColor: [
+          'rgba(25, 135, 84, 1)',
+          'rgba(13, 202, 240, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        datalabels: {
+          color: '#000',
+          font: { weight: 'bold', size: 16 },
+          formatter: function(value, context) {
+            return context.chart.data.labels[context.dataIndex] + ': ' + value;
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+</script>
+
+<script>
+  const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
+</script>
+
+<!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
 <div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -1274,6 +1474,72 @@
         btn.textContent = originalText;
       }
     });
+  })();
+</script>
+
+<script>
+  (function() {
+    const loggedIn = <%= !!user %>;
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, s => (
+        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
+      ));
+    }
+    function fmtDate(d) {
+      if (!d) return '-';
+      const dt = new Date(d);
+      if (isNaN(dt)) return escapeHtml(String(d));
+      try {
+        return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch {
+        const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+        return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+      }
+    }
+
+    fetch('/down/top10')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById('topDownloadsTbody');
+        if (!Array.isArray(data) || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map((d, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(d.down_subject || '-')}</td>
+            <td class="text-nowrap">
+              ${
+                d.down_file && d.down_file !== '-' ? (
+                  loggedIn
+                    ? `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
+                         <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                       </a>`
+                    : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary">
+                         <i class="bi bi-lock"></i> เข้าสู่ระบบ
+                       </a>`
+                ) : '<span class="text-muted">-</span>'
+              }
+            </td>
+            <td class="text-center">
+              ${
+                d.down_link && d.down_link !== '-'
+                  ? `<a href="${escapeHtml(d.down_link)}" target="_blank" class="btn btn-sm btn-outline-info">
+                       <i class="bi bi-link-45deg"></i> ลิงก์
+                     </a>`
+                  : '<span class="text-muted">-</span>'
+              }
+            </td>
+            <td>${fmtDate(d.down_savedate)}</td>
+          </tr>
+        `).join('');
+      })
+      .catch(() => {
+        const tbody = document.getElementById('topDownloadsTbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+      });
   })();
 </script>
 

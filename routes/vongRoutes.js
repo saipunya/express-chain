@@ -27,4 +27,7 @@ router.get('/download/:id', controller.downloadFile);
 // API ดึงสหกรณ์ตามกลุ่ม
 router.get('/coops/:group', controller.getCoopsByGroup);
 
+// NEW latest json
+router.get('/latest/json', controller.latestJson);
+
 module.exports = router;

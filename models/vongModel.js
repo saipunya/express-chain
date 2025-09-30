@@ -37,6 +37,7 @@ exports.create = async (data) => {
     `INSERT INTO vong_coop 
     (vong_code, vong_year, vong_money, vong_date, vong_filename, vong_saveby, vong_savedate)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+
     [vong_code, vong_year, vong_money, vong_date, vong_filename, vong_saveby, vong_savedate]
   );
   return result.insertId;
@@ -57,7 +58,7 @@ exports.delete = async (id) => {
   await db.query('DELETE FROM vong_coop WHERE vong_id = ?', [id]);
 };
 
-// สร้าง function สำหรับการสกัดสหกรณ์ตามกลุ่ม
+// สกัดสหกรณ์ตามกลุ่ม (เก็บเวอร์ชันเดียว)
 exports.getCoopsByGroup = async (group) => {
   const [rows] = await db.query(
     'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ? ORDER BY c_name',
@@ -66,10 +67,22 @@ exports.getCoopsByGroup = async (group) => {
   return rows;
 };
 
-exports.getCoopsByGroup = async (group) => {
+// NEW: ล่าสุดตามจำนวน limit
+exports.getLatest = async (limit = 10) => {
   const [rows] = await db.query(
-    'SELECT c_code, c_name FROM active_coop WHERE c_status = "ดำเนินการ" AND c_group = ?',
-    [group]
+    `SELECT vong_coop.vong_id,
+            vong_coop.vong_code,
+            vong_coop.vong_year,
+            vong_coop.vong_money,
+            vong_coop.vong_date,
+            vong_coop.vong_filename,
+            active_coop.c_name,
+            active_coop.end_date
+     FROM vong_coop
+     LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code
+     ORDER BY vong_coop.vong_id DESC
+     LIMIT ?`,
+    [Number(limit) || 10]
   );
   return rows;
 };

@@ -156,3 +156,26 @@ exports.getCoopsByGroup = async (req, res) => {
     res.status(500).json({ error: 'ไม่สามารถโหลดข้อมูลได้' });
   }
 };
+
+// NEW: JSON Top latest
+exports.latestJson = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '10', 10);
+    const rows = await Vong.getLatest(limit);
+    // Minimal field exposure
+    const data = rows.map(r => ({
+      id: r.vong_id,
+      code: r.vong_code,
+      name: r.c_name || r.vong_code,
+      year: r.vong_year,
+      end_date: r.end_date,
+      date: r.vong_date,
+      money: r.vong_money,
+      file: r.vong_filename
+    }));
+    res.json(data);
+  } catch (e) {
+    console.error('latestJson error:', e);
+    res.status(500).json({ error: 'fail' });
+  }
+};

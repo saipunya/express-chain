@@ -196,6 +196,78 @@
   </div>
 </section>
 
+
+
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card modern-card shadow-sm border-0 mb-4">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h4 class="mb-4 text-center text-primary">
+              <i class="bi bi-bar-chart-fill me-2"></i> กราฟแสดงจำนวนสหกรณ์/กลุ่มเกษตรกร
+            </h4>
+            <canvas id="coopChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 mb-4">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body"></div>
+            <h4 class="mb-4 text-center text-primary">
+              <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
+            </h4>
+            <canvas id="coopPieChart" height="120"></canvas>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<% function displayGroupName(code) {
+  switch(code) {
+    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+    default: return code;
+  }
+} %>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่ม
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <% coopGroupStats.forEach(group => { %>
+            <div class="col-md-4 mb-3">
+              <div class="card h-100 modern-card shadow-sm border-0">
+                <div class="card-gradient-bar"></div>
+                <div class="card-body text-center">
+                  <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
+                  <div class="mb-2">
+                    <span class="badge bg-success fs-6">สหกรณ์: <%= group.coop %></span>
+                  </div>
+                  <div>
+                    <span class="badge bg-info fs-6">กลุ่มเกษตรกร: <%= group.farmer %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="py-2 bg-light">
   <div class="container">
     <div class="mb-3 text-center">
@@ -279,77 +351,6 @@
             <a href="/" class="btn btn-sm btn-outline-secondary">หน้าแรก</a>
             <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card modern-card shadow-sm border-0 mb-4">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <h4 class="mb-4 text-center text-primary">
-              <i class="bi bi-bar-chart-fill me-2"></i> กราฟแสดงจำนวนสหกรณ์/กลุ่มเกษตรกร
-            </h4>
-            <canvas id="coopChart" height="120"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 mb-4">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body"></div>
-            <h4 class="mb-4 text-center text-primary">
-              <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
-            </h4>
-            <canvas id="coopPieChart" height="120"></canvas>
-          </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<% function displayGroupName(code) {
-  switch(code) {
-    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
-    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
-    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
-    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
-    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
-    default: return code;
-  }
-} %>
-
-<section class="py-2 bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-primary text-white">
-        <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่ม
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <% coopGroupStats.forEach(group => { %>
-            <div class="col-md-4 mb-3">
-              <div class="card h-100 modern-card shadow-sm border-0">
-                <div class="card-gradient-bar"></div>
-                <div class="card-body text-center">
-                  <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
-                  <div class="mb-2">
-                    <span class="badge bg-success fs-6">สหกรณ์: <%= group.coop %></span>
-                  </div>
-                  <div>
-                    <span class="badge bg-info fs-6">กลุ่มเกษตรกร: <%= group.farmer %></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }) %>
         </div>
       </div>
     </div>
@@ -741,7 +742,7 @@
       </div>
     </section>
 
-
+    <%- include('home/vong-latest') %>
 
 <section class="py-2 bg-white">
   <div class="container-lg">
@@ -774,6 +775,8 @@
     </div>
   </div>
 </section>
+
+
 
 <script>
 (() => {
@@ -1044,7 +1047,7 @@
               </div>
             </div>
           </div>
-          <div class="col-md-8 mt-4 mt-md-0">
+          <div class="col-md-8 mt-md-0">
             <h2 class="mb-4 text-center text-success section-title">🟢 Members Online</h2>
 
             <div class="card modern-card shadow-sm border-0">
@@ -1080,6 +1083,7 @@
                   <% } %>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

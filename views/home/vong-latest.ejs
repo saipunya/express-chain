@@ -1,0 +1,75 @@
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i> วงเงินกู้ยืมหรือค้ำประกัน (ล่าสุด 10)</h6>
+        <a href="/vong" class="btn btn-sm btn-outline-light">ทั้งหมด</a>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:46px;" class="text-center">#</th>
+                <th>สถาบัน</th>
+                <th class="text-nowrap">ปีบัญชี</th>
+                <th class="text-end text-nowrap">ยอดเงิน</th>
+                <th class="text-center text-nowrap">ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody id="vongLatestTbody">
+              <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-light small text-muted">
+        อัปเดตอัตโนมัติเมื่อเปิดหน้า | แสดงสูงสุด 10 รายการล่าสุด
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  const tbody = document.getElementById('vongLatestTbody');
+  if(!tbody) return;
+  const loggedIn = <%= !!user %>;
+  fetch('/vong/latest/json?limit=10')
+    .then(r=>r.json())
+    .then(rows=>{
+      if(!Array.isArray(rows) || !rows.length){
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+        return;
+      }
+      const fmtMoney = n=>{
+        if(n==null) return '-';
+        const num = Number(n);
+        if(isNaN(num)) return n;
+        return num.toLocaleString('th-TH',{minimumFractionDigits:0});
+      };
+      const fmtYear = (r)=> (r.end_date? (r.end_date+' ') : '') + (r.year||'-');
+      tbody.innerHTML = rows.map((r,i)=>`
+        <tr>
+          <td class="text-center">${i+1}</td>
+          <td>${(r.name||'').replace(/</g,'&lt;')}</td>
+          <td class="text-nowrap">${fmtYear(r)}</td>
+         
+          <td class="text-end">${ loggedIn ? fmtMoney(r.money) : '<span class="text-muted"><i class="bi bi-cash-coin"></i></span>' }</td>
+
+          <td class="text-center">${
+              r.file
+                ? (loggedIn
+                    ? `<a href="/vong/download/${r.id}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-pdf"></i></a>`
+                    : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary"><i class="bi bi-lock"></i></a>`
+                  )
+                : '<span class="text-muted">-</span>'
+            }</td>
+        </tr>`).join('');
+    })
+    .catch(err=>{
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    });
+})();
+</script>

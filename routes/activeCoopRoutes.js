@@ -33,4 +33,6 @@ router.get('/active-coop/:group', async (req, res) => {
   res.send(html);
 });
 
+router.get('/group/:group/items', activeCoopController.listGroupItems);
+
 module.exports = router;

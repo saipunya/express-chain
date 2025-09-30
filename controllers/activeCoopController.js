@@ -159,3 +159,23 @@ exports.exportEndDatePdfMake = async (req, res) => {
     res.status(500).send('ไม่สามารถสร้าง PDF ได้');
   }
 };
+
+// NEW: ดึงรายชื่อสหกรณ์หรือกลุ่มเกษตรกรตาม group (สำหรับ modal หน้าแรก)
+exports.listGroupItems = async (req, res) => {
+  try {
+    const group = req.params.group; // e.g. group1
+    const type = req.query.type; // 'สหกรณ์' หรือ 'กลุ่มเกษตรกร' หรือไม่ระบุ
+    let sql = `SELECT c_id, c_code, c_name, coop_group FROM active_coop WHERE c_group = ? AND c_status = 'ดำเนินการ'`;
+    const params = [group];
+    if (type && (type === 'สหกรณ์' || type === 'กลุ่มเกษตรกร')) {
+      sql += ' AND coop_group = ?';
+      params.push(type);
+    }
+    sql += ' ORDER BY c_name ASC';
+    const [rows] = await pool.query(sql, params);
+    res.json({ group, type: type || 'all', items: rows });
+  } catch (e) {
+    console.error('listGroupItems error:', e);
+    res.status(500).json({ error: 'server error' });
+  }
+};

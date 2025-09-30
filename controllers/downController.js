@@ -122,16 +122,35 @@ exports.search = async (req, res) => {
 };
 
 exports.top10 = async (req, res, next) => {
-  try {
-    // ดึง 10 รายการล่าสุดตามวันที่บันทึก (ไม่มีคอลัมน์นับจำนวนดาวน์โหลด)
-    const [rows] = await db.query(
-      `SELECT down_id, down_subject, down_file, down_link, down_savedate
+  // Added: more robust handling for intermittent ECONNRESET by using explicit connection + single retry
+  const sql = `SELECT down_id, down_subject, down_file, down_link, down_savedate
        FROM download
        ORDER BY down_savedate DESC, down_id DESC
-       LIMIT 10`
-    );
-    res.json(rows);
+       LIMIT 10`;
+  async function runQuery() {
+    const conn = await db.getConnection();
+    try {
+      const [rows] = await conn.query(sql);
+      return rows;
+    } finally {
+      conn.release();
+    }
+  }
+  try {
+    const rows = await runQuery();
+    return res.json(rows);
   } catch (err) {
-    next(err);
+    if (err && (err.code === 'ECONNRESET' || err.code === 'PROTOCOL_CONNECTION_LOST')) {
+      console.warn('top10 query connection reset, retrying once...');
+      try {
+        const rows = await runQuery();
+        return res.json(rows);
+      } catch (retryErr) {
+        console.error('top10 retry failed:', retryErr);
+        return res.status(500).json([]);
+      }
+    }
+    console.error('top10 error:', err);
+    return res.status(500).json([]);
   }
 };

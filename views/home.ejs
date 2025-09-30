@@ -218,6 +218,7 @@
   /* Utility */
   .text-gradient {
     background:var(--grad-accent);
+    background-clip:text; /* added standard property */
     -webkit-background-clip:text;
     color:transparent;
   }
@@ -235,6 +236,17 @@
     .hero-shell { min-height: auto; }
     .section-heading { font-size:1.15rem; }
   }
+
+  /* Extra polish */
+  .table-hover tbody tr:hover { background:#f1f5f9; }
+  .modern-card .card-header { border-top-left-radius:inherit; border-top-right-radius:inherit; }
+  .section-title { position:relative; }
+  .section-title:after { content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-10px; width:72px; height:4px; background:var(--grad-accent); border-radius:2px; opacity:.9; }
+  .back-to-top { position:fixed; right:1.25rem; bottom:1.25rem; z-index:1040; width:46px; height:46px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--grad-accent); color:#fff; box-shadow:0 6px 20px -4px rgba(0,0,0,.35); border:0; opacity:0; visibility:hidden; transition:.4s; }
+  .back-to-top.show { opacity:1; visibility:visible; }
+  .back-to-top:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+  .badge { letter-spacing:.3px; }
+  .hp-badge { font-size:.65rem; }
 </style>
 
 <!-- Added: Light theme & contrast fixes -->
@@ -470,12 +482,13 @@ function displayGroupName(code){
       <div class="col-md-4">
         <div class="card modern-card shadow-sm border-0 mb-4">
           <div class="card-gradient-bar"></div>
-          <div class="card-body"></div>
+          <div class="card-body">
             <h4 class="mb-4 text-center text-primary">
               <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
             </h4>
             <canvas id="coopPieChart" height="120"></canvas>
           </div>
+        </div>
       </div>
     </div>
   </div>
@@ -498,10 +511,14 @@ function displayGroupName(code){
                 <div class="card-body text-center">
                   <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
                   <div class="mb-2">
-                    <span class="badge bg-success fs-6">สหกรณ์: <%= group.coop %></span>
+                    <button type="button" class="badge bg-success fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="สหกรณ์" aria-label="ดูรายชื่อสหกรณ์ใน <%= displayGroupName(group.c_group) %>">
+                      สหกรณ์: <%= group.coop %>
+                    </button>
                   </div>
                   <div>
-                    <span class="badge bg-info fs-6">กลุ่มเกษตรกร: <%= group.farmer %></span>
+                    <button type="button" class="badge bg-info fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="กลุ่มเกษตรกร" aria-label="ดูรายชื่อกลุ่มเกษตรกรใน <%= displayGroupName(group.c_group) %>">
+                      กลุ่มเกษตรกร: <%= group.farmer %>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -512,6 +529,23 @@ function displayGroupName(code){
     </div>
   </div>
 </section>
+
+<!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->
+<div class="modal fade" id="groupItemsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="groupItemsModalLabel">...</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="groupItemsLoading" class="text-center text-muted py-3">กำลังโหลด...</div>
+        <ul id="groupItemsList" class="list-group d-none"></ul>
+        <div id="groupItemsError" class="alert alert-danger d-none mb-0"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ================= Member Summary ================= -->
 <section id="members" class="section-block bg-light">
@@ -593,7 +627,7 @@ function displayGroupName(code){
               <div class="text-muted">ไม่มีข้อมูลรายการ Top</div>
             <% } %>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between"></div>
+          <div class="card-footer bg-light d-flex justify-content-between">
             <a href="/" class="btn btn-sm btn-outline-secondary">หน้าแรก</a>
             <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
           </div>
@@ -1245,6 +1279,18 @@ function displayGroupName(code){
   </div>
 </section>
 
+<!-- Data container to hold serialized JSON (avoid inline EJS in JS code) -->
+<div id="template-data"
+  data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}'
+  data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'
+  data-logged-in="<%= user ? 'true' : 'false' %>">
+</div>
+
+<!-- Back To Top Button -->
+<button type="button" id="backToTop" aria-label="กลับขึ้นบน" class="back-to-top">
+  <i class="bi bi-arrow-up"></i>
+</button>
+
 <!-- ================= SCRIPTS (Enhancements added before existing scripts end) ================= -->
 <script>
   // Quick Nav Active State + Smooth Scroll
@@ -1302,18 +1348,19 @@ function displayGroupName(code){
   });
 </script>
 <script>
-  const ctx = document.getElementById('coopChart').getContext('2d');
-  const coopChart = new Chart(ctx, {
+  // Retrieve template serialized data
+  const _dataEl = document.getElementById('template-data');
+  const statsData = JSON.parse(_dataEl.getAttribute('data-stats'));
+  const coopGroupStatsData = JSON.parse(_dataEl.getAttribute('data-coop-group-stats'));
+
+  const ctxBar = document.getElementById('coopChart').getContext('2d');
+  const coopChart = new Chart(ctxBar, {
     type: 'bar',
     data: {
       labels: ['สหกรณ์', 'กลุ่มเกษตรกร', 'ชำระบัญชี'],
       datasets: [{
         label: 'จำนวน',
-        data: [
-          <%= stats.coop %>,
-          <%= stats.farmer %>,
-          <%= stats.closing %>
-        ],
+        data: [statsData.coop, statsData.farmer, statsData.closing],
         backgroundColor: [
           'rgba(25, 135, 84, 0.7)',
           'rgba(13, 202, 240, 0.7)',
@@ -1336,27 +1383,19 @@ function displayGroupName(code){
           align: 'top',
           color: '#000',
           font: { weight: 'bold' },
-          formatter: function(value) {
-            return value;
-          }
+          formatter: (value) => value
         }
       },
-      scales: {
-        y: { beginAtZero: true }
-      }
+      scales: { y: { beginAtZero: true } }
     },
-    plugins: [ChartDataLabels] // Added plugin for data labels
+    plugins: [ChartDataLabels]
   });
 </script>
 
 <script>
-  const coopData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.coop))) %>;
-  const farmerData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.farmer))) %>;
-  const totalCoop = coopData.reduce((a, b) => a + b, 0);
-  const totalFarmer = farmerData.reduce((a, b) => a + b, 0);
-
-  console.log('Pie chart data:', totalCoop, totalFarmer); // ตรวจสอบค่าที่จะใช้
-
+  // Pie chart using coopGroupStatsData from data attributes
+  const totalCoop = coopGroupStatsData.reduce((a,b)=> a + Number(b.coop||0),0);
+  const totalFarmer = coopGroupStatsData.reduce((a,b)=> a + Number(b.farmer||0),0);
   const ctxPie = document.getElementById('coopPieChart').getContext('2d');
   const coopPieChart = new Chart(ctxPie, {
     type: 'pie',
@@ -1382,74 +1421,13 @@ function displayGroupName(code){
         datalabels: {
           color: '#000',
           font: { weight: 'bold', size: 16 },
-          formatter: function(value, context) {
-            return context.chart.data.labels[context.dataIndex] + ': ' + value;
-          }
+          formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex] + ': ' + value
         }
       }
     },
     plugins: [ChartDataLabels]
   });
-</script>
-
-<script>
-  const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
-</script>
-
-<!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
-<div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="card-gradient-bar"></div>
-
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i> รายละเอียดการใช้รถ</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
-      </div>
-
-      <div class="modal-body">
-        <dl class="row mb-0">
-          <dt class="col-4 col-md-3">วันที่</dt>
-          <dd class="col-8 col-md-9" id="uc-date">-</dd>
-
-          <dt class="col-4 col-md-3">เวลา</dt>
-          <dd class="col-8 col-md-9" id="uc-time">-</dd>
-
-          <dt class="col-4 col-md-3">สถานที่</dt>
-          <dd class="col-8 col-md-9" id="uc-place">-</dd>
-
-          <dt class="col-4 col-md-3">กิจกรรม</dt>
-          <dd class="col-8 col-md-9" id="uc-act">-</dd>
-        </dl>
-      </div>
-
-      <div class="modal-footer">
-        <a id="uc-view-link" href="#" class="btn btn-primary" target="_blank" rel="noopener">
-          <i class="bi bi-box-arrow-up-right me-1"></i> เปิดหน้ารายละเอียด
-        </a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // เติมข้อมูลลง Modal เมื่อกดปุ่ม
-  document.addEventListener('click', function (e) {
-    const btn = e.target.closest('.js-open-usecar');
-    if (!btn) return;
-
-    const get = (k) => btn.dataset[k] || '-';
-    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-
-    setText('uc-date', get('date'));
-    setText('uc-time', get('time') + ' น.');
-    setText('uc-place', get('place'));
-    setText('uc-act', get('act'));
-
-    const link = document.getElementById('uc-view-link');
-    if (link) link.href = '/usecar/view/' + get('id');
-  });
+  window.coopGroupStats = coopGroupStatsData;
 </script>
 
 <script>
@@ -1479,7 +1457,7 @@ function displayGroupName(code){
 
 <script>
   (function() {
-    const loggedIn = <%= !!user %>;
+    const loggedIn = document.getElementById('template-data').getAttribute('data-logged-in') === 'true';
 
     function escapeHtml(str) {
       return String(str ?? '').replace(/[&<>"']/g, s => (
@@ -1540,6 +1518,57 @@ function displayGroupName(code){
         const tbody = document.getElementById('topDownloadsTbody');
         tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
       });
+  })();
+</script>
+
+<script>
+  (function(){
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('.js-show-group-items');
+      if(!btn) return;
+      const group = btn.getAttribute('data-group');
+      const type = btn.getAttribute('data-type');
+      const label = btn.getAttribute('data-group-label');
+
+      const modalEl = document.getElementById('groupItemsModal');
+      const titleEl = document.getElementById('groupItemsModalLabel');
+      const listEl = document.getElementById('groupItemsList');
+      const loadingEl = document.getElementById('groupItemsLoading');
+      const errorEl = document.getElementById('groupItemsError');
+
+      titleEl.textContent = label + ' - ' + type;
+      listEl.innerHTML = '';
+      listEl.classList.add('d-none');
+      errorEl.classList.add('d-none');
+      loadingEl.classList.remove('d-none');
+
+      fetch(`/activeCoop/group/${encodeURIComponent(group)}/items?type=${encodeURIComponent(type)}`)
+        .then(r => { if(!r.ok) throw new Error('network'); return r.json(); })
+        .then(data => {
+          loadingEl.classList.add('d-none');
+          if(!data.items || !data.items.length){
+            errorEl.textContent = 'ไม่มีข้อมูล';
+            errorEl.classList.remove('d-none');
+            return;
+          }
+          listEl.innerHTML = data.items.map((it,i)=>`<li class="list-group-item d-flex justify-content-between align-items-start">
+              <div>
+                <span class="fw-semibold">${i+1}. ${it.c_name}</span>
+                <small class="text-muted ms-1">(${it.c_code || '-'})</small>
+              </div>
+              <span class="badge bg-${it.coop_group==='สหกรณ์'?'success':'info'}">${it.coop_group}</span>
+            </li>`).join('');
+          listEl.classList.remove('d-none');
+        })
+        .catch(err => {
+          loadingEl.classList.add('d-none');
+          errorEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+          errorEl.classList.remove('d-none');
+        });
+
+      const bsModal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
+      if(bsModal) bsModal.show();
+    });
   })();
 </script>
 

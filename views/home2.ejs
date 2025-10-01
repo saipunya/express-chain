@@ -1,0 +1,1280 @@
+<%- include('partials/header',{title : 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ' }) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<style>
+  :root {
+    --grad-hero: linear-gradient(135deg,#0f766e,#0d9488,#0ea5e9);
+    --grad-accent: linear-gradient(90deg,#2563eb,#6366f1,#8b5cf6);
+    --glass: rgba(255,255,255,0.68);
+  }
+  .hero-shell {
+    background: var(--grad-hero);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 18px 40px -10px rgba(14,74,90,.45);
+  }
+  .hero-shell:before {
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 25% 30%,rgba(255,255,255,.35),transparent 60%),
+      radial-gradient(circle at 80% 70%,rgba(255,255,255,.25),transparent 65%);
+    mix-blend-mode: overlay;
+    pointer-events:none;
+  }
+  .glass-pane {
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+  .modern-card {
+    border:0;
+    border-radius:1rem;
+    background:#ffffff;
+    box-shadow:0 6px 18px -6px rgba(0,0,0,.12);
+    transition:.35s cubic-bezier(.4,.2,.2,1);
+    position:relative;
+  }
+  .modern-card:hover {
+    transform:translateY(-4px);
+    box-shadow:0 14px 30px -8px rgba(0,0,0,.22);
+  }
+  .section-title {
+    font-weight:700;
+    letter-spacing:.7px;
+    position:relative;
+    display:inline-block;
+  }
+  .section-title:after {
+    content:"";
+    position:absolute;
+    left:50%;transform:translateX(-50%);
+    bottom:-6px;
+    width:60%;height:3px;
+    border-radius:2px;
+    background:var(--grad-accent);
+  }
+  .fade-in { animation:fadeIn .55s ease both; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(14px);} to {opacity:1; transform:translateY(0);} }
+  .list-group-item { border:0; border-bottom:1px solid #eef1f5; background:transparent; }
+  .list-group-item:last-child { border-bottom:0; }
+  .soft-badge {
+    background:linear-gradient(135deg,#f1f5f9,#e2e8f0);
+    color:#334155; border:1px solid #cbd5e1; font-weight:500;
+  }
+  .card-gradient-bar {
+    position:absolute; top:0; left:0; width:100%; height:4px;
+    background:linear-gradient(90deg,#0ea5e9,#6366f1,#8b5cf6); opacity:.85;
+    border-top-left-radius:1rem; border-top-right-radius:1rem;
+  }
+  .hover-link { transition:.25s; }
+  .hover-link:hover { color:#0d9488 !important; }
+</style>
+
+<div class="container my-5 fade-in">
+  <div class="hero-shell">
+    <div class="row g-0">
+      <div class="col-md-6">
+        <img src="https://cdn.pixabay.com/photo/2024/03/26/11/14/ai-generated-8656542_1280.jpg" alt="Coop Image"
+          class="img-fluid h-100 w-100 object-fit-cover">
+      </div>
+
+      <div class="col-md-6 glass-pane d-flex align-items-center p-4">
+        <% if (!user) { %>
+          <div class="w-100">
+            <h1 class="display-6 mb-3 text-success text-center">CoopChainReport</h1>
+            <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
+
+            <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
+            <form action="/auth/login" method="POST">
+              <div class="mb-3 p-2">
+                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+                <input type="text" class="form-control" id="username" name="username" required />
+              </div>
+              <div class="mb-3 p-2">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <input type="password" class="form-control" id="password" name="password" required />
+              </div>
+              <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
+            </form>
+
+          
+
+            <p class="text-center mt-2">
+              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
+              <a href="/auth/register" class="text-success">
+                สมัครสมาชิก
+              </a>
+            </p>
+          </div>
+          <% } else { %>
+            <div class="w-100 text-center">
+              <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
+              <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
+              <p class="lead mb-4">
+                <%= user.fullname %>
+              </p>
+              <a href="/dashboard" class="btn btn-success me-2">แดชบอร์ด</a>
+              <% if(user && (user.mClass==='kjs' || user.mClass==='admin')) { %>
+                <a href="/account/list" class="btn btn-outline-secondary me-2">เงินกลุ่ม กจส.</a>
+              
+                <a href="/chamra" class="btn btn-outline-secondary me-2">ชำระบัญชี</a>
+                <% } %>
+
+              <!-- เพิ่มปุ่ม Export Chamra สำหรับผู้ล็อกอิน (จะไม่มีลายน้ำ) -->
+
+              <a href="/auth/logout" class="btn btn-outline-secondary">ออกจากระบบ</a>
+            </div>
+            <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2 class="my-3 text-center text-primary section-title">📊 ข้อมูลสหกรณ์</h2>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body text-center">
+            <h5 class="card-title">จำนวนสหกรณ์</h5>
+            <p class="card-text display-6 text-success">
+              <%= stats.coop + ' แห่ง' %>
+            </p>
+            <span class="d-block">
+              <a class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" data-bs-placement="top" href="/activeCoop/by-end-date" 
+                title="สหกรณ์ที่จดทะเบียนกับกรมส่งเสริมสหกรณ์">
+                <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                รายละเอียด
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body text-center">
+            <h5 class="card-title">จำนวนกลุ่มเกษตรกร</h5>
+            <p class="card-text display-6 text-info">
+              <%= stats.farmer + ' แห่ง' %>
+            </p>
+            <span class="d-block">
+              <a class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" data-bs-placement="top" href="/activeCoop/by-end-date" 
+                title="ข้อมูลเพิ่มเติมเกี่ยวกับกลุ่มเกษตรกร">
+                <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                รายละเอียด
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body text-center">
+            <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
+            <p class="card-text display-6 text-warning">
+              <%= stats.closing + ' แห่ง' %>
+            </p>
+            <span class="d-block">
+              <a href="/chamra"><button class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="สหกรณ์/กลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี">
+                <i class="bi bi-info-circle" style="cursor: pointer;"></i>
+                รายละเอียด
+              </button></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card modern-card shadow-sm border-0 mb-4">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h4 class="mb-4 text-center text-primary">
+              <i class="bi bi-bar-chart-fill me-2"></i> กราฟแสดงจำนวนสหกรณ์/กลุ่มเกษตรกร
+            </h4>
+            <canvas id="coopChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 mb-4">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body"></div>
+            <h4 class="mb-4 text-center text-primary">
+              <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วนสหกรณ์/กลุ่มเกษตรกร
+            </h4>
+            <canvas id="coopPieChart" height="120"></canvas>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<% function displayGroupName(code) {
+  switch(code) {
+    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+    default: return code;
+  }
+} %>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่ม
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <% coopGroupStats.forEach(group => { %>
+            <div class="col-md-4 mb-3">
+              <div class="card h-100 modern-card shadow-sm border-0">
+                <div class="card-gradient-bar"></div>
+                <div class="card-body text-center">
+                  <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
+                  <div class="mb-2">
+                    <span class="badge bg-success fs-6">สหกรณ์: <%= group.coop %></span>
+                  </div>
+                  <div>
+                    <span class="badge bg-info fs-6">กลุ่มเกษตรกร: <%= group.farmer %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="py-2 bg-light">
+  <div class="container">
+    <div class="mb-3 text-center">
+      <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (สหกรณ์)</h2>
+    </div>
+
+    <% const hasSummary = (typeof summaryByYear !== 'undefined' && summaryByYear); %>
+    <% const hasTop = (typeof top !== 'undefined' && Array.isArray(top)); %>
+    <% const yearEntries = hasSummary ? Object.entries(summaryByYear).sort((a,b)=> Number(b[0]) - Number(a[0])) : []; %>
+
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card modern-card h-100">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h5 class="card-title text-success mb-3">
+              <i class="bi bi-calendar3 me-2"></i> รวมสมาชิกตามปี
+            </h5>
+            <% if (yearEntries.length) { %>
+              <ul class="list-group list-group-flush">
+                <% yearEntries.forEach(([y,total]) => { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><%= y %></span>
+                    <span class="badge bg-success rounded-pill"><%= Number(total).toLocaleString() %></span>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <div class="text-muted">ไม่มีข้อมูลสรุปตามปี</div>
+            <% } %>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-end">
+            <a href="/members" class="btn btn-sm btn-success">
+              ดูข้อมูลเพิ่มเติม
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card modern-card h-100">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <h5 class="card-title text-primary mb-3">
+              <i class="bi bi-trophy me-2"></i> Top สหกรณ์ (ตามจำนวนสมาชิกรวม)
+            </h5>
+            <% if (hasTop && top.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-center">อันดับ</th>
+                      <th>ชื่อสหกรณ์</th>
+                      <th>พ.ศ.</th>
+                      <th>อำเภอ</th>
+                      <th class="text-end">สมาชิกรวม(ราย)</th>
+                      <th class="text-center">view</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  <% top.forEach((t,i)=>{ %>
+                    <tr>
+                      <td class="text-center"><%= i+1 %></td>
+                      <td><%= t.name %></td>
+                      <td><%= t.year || 'N/A' %></td> <!-- insert พ.ศ. -->
+                      <td><%= t.อำเภอ %></td>
+                      <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
+                      <td class="text-center">
+                        <a href="/members/<%= t.idx %>" class="btn btn-sm btn-outline-info">รายละเอียด</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="text-muted">ไม่มีข้อมูลรายการ Top</div>
+            <% } %>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between"></div>
+            <a href="/" class="btn btn-sm btn-outline-secondary">หน้าแรก</a>
+            <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="my-2">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-8 text-center">
+        <img src="/images/jk.jpg" alt="Description of the image" class="img-fluid shadow-sm rounded">
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+        <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
+        <ul class="list-group list-group-flush">
+          <% activity.forEach(acti => { %>
+            <li class="list-group-item">
+          <i class="bi bi-calendar-event me-2 text-success"></i>
+            <!-- check if date_act == today show icon today -->
+            <% const today = new Date(); %>
+            <% const actDate = new Date(acti.date_act); %>
+            <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
+            <%= acti.activity %>
+            <% if (actDate.toDateString() === today.toDateString()) { %>
+            <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+            <% } %>
+            </li>
+          <% }) %>
+        </ul>
+          </div>
+        </div>
+        <!-- add more button -->
+        <div class="text-end mt-2">
+          <a href="/activities" class="btn btn-primary btn-sm px-4 shadow-sm">
+            ดูทั้งหมด
+          </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <div class="p-4 rounded shadow-sm h-100 modern-card">
+          <div class="card-gradient-bar"></div>
+          <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
+          <ul class="list-group list-group-flush">
+            <% finances.slice(0, 10).forEach((file, index)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-alt me-2 text-secondary"></i>
+                  <strong>
+                    <%= index + 1 %>.
+                  </strong>
+                  <%= file.c_name %>
+                    <span>[ <%= file.end_date %>
+                        <%= file.end_year %> ]</span>
+                    <% const fileSavedDate=new Date(file.savedate); const currentDate=new Date(); const
+                      diffDays=Math.ceil((currentDate - fileSavedDate) / (1000 * 60 * 60 * 24)); %>
+                      <% if (diffDays <=7) { %>
+                       
+                        <img src="/images/newpng.png" alt="New"
+                          class="ms-2" style="width: 40px; height: 35px;" />
+                        <% } %>
+                </span>
+                <% if(user){ %>
+                  <a href="/finance/download/<%= file.id %>" class="btn btn-sm btn-outline-success" target="_blank"
+                    rel="noopener noreferrer">
+                    ดาวน์โหลด
+                  </a>
+                  <% } %>
+              </li>
+              <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/finance" class="btn btn-danger btn-sm px-4 shadow-sm">
+              📂 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-4">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
+          <div class="card-gradient-bar"></div>
+          <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
+          <ul class="list-group list-group-flush">
+            <% businessFiles.slice(0, 10).forEach((business, index)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-briefcase me-2 text-secondary"></i>
+                  <strong>
+                    <%= index + 1 %>.
+                  </strong>
+                  <%= business.bu_name %>
+                    <span class="badge bg-info ms-2">
+                      <%= business.end_date %>
+                        <%= business.bu_endyear %>
+                    </span>
+                    <% const businessSavedDate=new Date(business.bu_savedate); const currentDate=new Date(); const
+                      diffDays=Math.ceil((currentDate - businessSavedDate) / (1000 * 60 * 60 * 24)); %>
+                      <% if (diffDays <=7) { %>
+                        <!-- insert icon for public/images/newpng.png -->
+
+                        <img src="/images/newpng.png" alt="New"
+                          class="ms-2" style="width: 40px; height: 35px;" />
+                        <% } %>
+                </span>
+                <% if(user){ %>
+                  <a href="/business/download/<%= business.bu_id %>" class="btn btn-sm btn-outline-info"
+                    target="_blank" rel="noopener noreferrer">
+                    ดาวน์โหลด
+                  </a>
+                  <% } %>
+              </li>
+              <% }); %>
+          </ul>
+          <div class="text-end mt-2"></div>
+            <a href="/business" class="btn btn-info btn-sm px-4 shadow-sm">
+              💼 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
+          <div class="card-gradient-bar"></div>
+          <h2 class="mb-4 text-center text-success">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h2>
+          <ul class="list-group list-group-flush">
+            <% ruleFiles.slice(0, 10).forEach((rule, index)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-pdf me-2 text-secondary"></i>
+                  <strong>
+                    <%= index + 1 %>.
+                  </strong>
+                  <%= rule.rule_name %>
+                    <span
+                      class="badge ms-2 <% if (rule.rule_type === 'MR') { %>bg-dark<% } else { %>bg-primary<% } %>">
+                      <% if (rule.rule_type==='MR' ) { %>
+                        ข้อกำหนด พ.ศ.<%= rule.rule_year %>
+                          <% } else if (rule.rule_type==='ER' ) { %>
+                            แก้ไข <%= rule.er_no %> [พ.ศ. <%= rule.rule_year %>]
+                                <% } %>
+                    </span>
+                    <% const ruleSavedDate = new Date(rule.rule_savedate); 
+                    const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
+                    <% if (diffDays <= 7) { %>
+                      <img src="/images/newpng.png" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
+                    <% } %>
+                </span>
+                <% if(user){ %>
+                  <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-success" target="_blank"
+                    rel="noopener noreferrer">
+                    ดาวน์โหลด
+                  </a>
+                  <% } %>
+              </li>
+              <% }); %>
+          </ul>
+          <div class="text-end mt-2">
+            <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
+              📋 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-4">
+        <div class=" p-4 rounded shadow-sm h-100 modern-card">
+          <div class="card-gradient-bar"></div>
+          <h2 class="mb-4 text-center text-warning">📄 ระเบียบสหกรณ์/กลุ่มเกษตรกร</h2>
+          <ul class="list-group list-group-flush">
+            <% rabiabFiles.slice(0, 10).forEach((rabiab, index)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <i class="fas fa-file-alt me-2 text-secondary"></i>
+                  <strong>
+                    <%= index + 1 %>.
+                  </strong>
+                  <%= rabiab.ra_name %>
+                    <% const rabiabSavedDate = new Date(rabiab.ra_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rabiabSavedDate) / (1000 * 60 * 60 * 24)); %>
+                    <% if (diffDays <= 7) { %>
+                      <img src="/images/newpng.png" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
+                    <% } %>
+                </span>
+                <% if(user){ %>
+                  <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-warning"
+                    target="_blank" rel="noopener noreferrer">
+                    ดาวน์โหลด
+                  </a>
+                  <% } %>
+              </li>
+              <% }); %>
+          </ul>
+          <div class="text-end mt-2"></div>
+            <a href="/rabiab" class="btn btn-warning btn-sm px-4 shadow-sm">
+              📄 ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="py-4 bg-light">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% (lastProjects || []).forEach((p, idx)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <strong>
+                      <%= idx + 1 %>.
+                    </strong>
+                    <%= p.pro_story %>
+                      <span class="badge bg-secondary ms-2">
+                        <%= p.pro_no %>
+                      </span>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary"
+                      target="_blank">
+                      <i class="bi bi-file-pdf-fill"></i>
+                    </a>
+                    <% } %>
+                </li>
+                <% }) %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% (lastCommands || []).forEach((c, idx)=> { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <strong>
+                      <%= idx + 1 %>.
+                    </strong>
+                    <%= c.com_story %>
+                      <span class="badge bg-secondary ms-2">
+                        <%= c.com_no %>
+                      </span>
+                  </span>
+                  <% if(user){ %>
+                    <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary"
+                      target="_blank">
+                      <i class="bi bi-file-earmark-arrow-down"></i>
+                    </a>
+                    <% } %>
+                </li>
+                <% }) %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="py-2">
+      <div class="container">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
+            </h6>
+              <!-- เพิ่มปุ่ม Export Chamra ให้ผู้ใช้ทั่วไป (จะมีลายน้ำ) -->
+            <% if(user) { %>
+                
+                <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ Export Chamra</button>
+              
+            <% } else { %>
+                <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
+            <% } %>
+          </div>
+    
+          <% if ((homeProcesses || []).length) { %>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-3">สถาบัน</th>
+                      <th class="text-center">S1</th>
+                      <th class="text-center">S2</th>
+                      <th class="text-center">S3</th>
+                      <th class="text-center">S4</th>
+                      <th class="text-center">S5</th>
+                      <th class="text-center">S6</th>
+                      <th class="text-center">S7</th>
+                      <th class="text-center">S8</th>
+                      <th class="text-center">S9</th>
+                      <th class="text-center">S10</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%
+                      const isEmptyDate = (v) => {
+                        if (!v) return true;
+                        if (typeof v === 'string') {
+                          if (v === '0000-00-00') return true;
+                          if (/^1899-11-30/.test(v)) return true;
+                        }
+                        const d = new Date(v);
+                        return isNaN(d.getTime()) || d.getFullYear() < 1950;
+                      };
+                      const formatThai = (v) => {
+                        const d = new Date(v);
+                        if (isNaN(d.getTime())) return '-';
+                        const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][d.getMonth()];
+                        return `${d.getDate()} ${m} ${d.getFullYear()+543}`;
+                      };
+                    %>
+                    <% homeProcesses.forEach(p => { %>
+                      <tr>
+                        <td class="ps-3 small fw-semibold text-dark">
+                          <i class="bi bi-building me-1 text-primary"></i>
+                          <%= p.c_name || p.pr_code %>
+                        </td>
+                        <% for (let i=1;i<=10;i++){ const key='pr_s'+i; const raw=p[key]; %>
+                          <td class="text-center">
+                            <% if (isEmptyDate(raw)) { %>
+                              <span class="badge rounded-pill bg-secondary hp-badge px-2">-</span>
+                            <% } else { %>
+                              <span class="badge rounded-pill bg-success hp-badge px-2"><%= formatThai(raw) %></span>
+                            <% } %>
+                          </td>
+                        <% } %>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+    
+            <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                สีเขียว = มีวันที่ | สีเทา = ยังไม่มีข้อมูล
+              </small>
+              <a href="/chamra/process" class="btn btn-primary btn-sm">
+                ดูเพิ่มเติม
+              </a>
+         
+            </div>
+          <% } else { %>
+            <div class="card-body"></div>
+              <div class="text-center text-muted py-3"></div>
+                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                ไม่มีข้อมูลสำหรับแสดง
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+    <%- include('home/vong-latest') %>
+
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="width:56px;">#</th>
+                <th>เรื่อง</th>
+                <th class="text-nowrap">ไฟล์</th>
+                <th class="text-center">ลิงก์</th>
+                <th class="text-nowrap">วันที่</th>
+              </tr>
+            </thead>
+            <tbody id="topDownloadsTbody">
+              <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-light text-end"></div>
+        <a href="/down" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<script>
+(() => {
+  const loggedIn = <%= !!user %>;
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, s => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]
+    ));
+  }
+  function fmtDate(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt)) return escapeHtml(String(d));
+    try {
+      return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+    }
+  }
+
+  fetch('/down/top10')
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById('topDownloadsTbody');
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map((d, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(d.down_subject || '-')}</td>
+          <td class="text-nowrap">
+            ${
+              d.down_file && d.down_file !== '-' ? (
+                loggedIn
+                  ? `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
+                       <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                     </a>`
+                  : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary">
+                       <i class="bi bi-lock"></i> เข้าสู่ระบบ
+                     </a>`
+              ) : '<span class="text-muted">-</span>'
+            }
+          </td>
+          <td class="text-center">
+            ${
+              d.down_link && d.down_link !== '-'
+                ? `<a href="${escapeHtml(d.down_link)}" target="_blank" class="btn btn-sm btn-outline-info">
+                     <i class="bi bi-link-45deg"></i> ลิงก์
+                   </a>`
+                : '<span class="text-muted">-</span>'
+            }
+          </td>
+          <td>${fmtDate(d.down_savedate)}</td>
+        </tr>
+      `).join('');
+    })
+    .catch(() => {
+      const tbody = document.getElementById('topDownloadsTbody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    });
+})();
+</script>
+
+
+
+
+
+
+
+
+    <div class="row mt-4">
+      <div class="col-12">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <div class="row">
+              <% (lastRq2 || []).forEach((r, idx)=> { %>
+                <div class="col-md-6 mb-3">
+                  <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                      <span>
+                        <strong>
+                          <%= idx + 1 %>.
+                        </strong>
+                        <%= r.rq_name %>
+                          <span class="badge bg-secondary ms-2">
+                            <%= r.rq_year %>
+                          </span>
+                          <% const rqSavedDate = new Date(r.rq_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rqSavedDate) / (1000 * 60 * 60 * 24)); %>
+                    <% if (diffDays <= 7) { %>
+                      <img src="/images/newpng.png" alt="New"
+                      class="ms-2" style="width: 40px; height: 35px;" />
+                    <% } %>
+                      </span>
+                      <% if(user){ %>
+                        <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                          <i class="bi bi-file-pdf-fill"></i>
+                        </a>
+                        <% } %>
+                    </div>
+                  </div>
+                </div>
+                <% }) %>
+            </div>
+            <div class="text-end mt-2"></div>
+              <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  
+
+
+    <section class="py-2 bg-light">
+      <div class="container">
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
+            <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
+          </div>
+          <div class="card-body"></div>
+            <!-- ใช้ partial เดียวกับหน้า list เพื่อเรนเดอร์บนหน้า home -->
+            <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <div class="row mt-4" id="usecarSection">
+      <div class="col-12">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <div class="row">
+              <% usecars.forEach((usecar)=> { %>
+                <div class="col-12 col-md-6 mb-3">
+                  <div class="list-group">
+                    <div class="list-group-item">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                          <% const date=new Date(usecar.date_car); const options={ year: 'numeric' , month: 'long' ,
+                            day: 'numeric' }; const thaiDate=date.toLocaleDateString('th-TH', options); const
+                            today=new Date(); const
+                            isToday=today.toLocaleDateString('th-TH')===date.toLocaleDateString('th-TH'); %>
+                            <div class="fw-bold text-success mb-1">
+                              <i class="bi bi-calendar-event me-1"></i>
+                              <%= thaiDate %>
+                                <span class="text-muted">(<i class="bi bi-clock"></i>
+                                  <%= usecar.time_car + ' น.' %>)
+                                </span>
+                                <% if (isToday) { %>
+                                  <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+                                  <% } %>
+                            </div>
+                            <div class="text-dark mb-1">
+                              <i class="bi bi-geo-alt-fill text-danger me-1"></i>
+                              <%= usecar.place_car %>
+                            </div>
+                            <small class="text-muted d-block mb-2">
+                              <i class="bi bi-clipboard2-check me-1"></i>
+                              <%= usecar.act_car %>
+                            </small>
+
+                            <!-- เปลี่ยนเป็นปุ่มเปิด Modal -->
+                            <button
+                              type="button"
+                              class="btn btn-outline-primary btn-sm js-open-usecar"
+                              data-bs-toggle="modal"
+                              data-bs-target="#usecarModal"
+                              data-id="<%= usecar.id_usecar %>"
+                              data-date="<%= thaiDate %>"
+                              data-time="<%= usecar.time_car %>"
+                              data-place="<%= usecar.place_car %>"
+                              data-act="<%= usecar.act_car %>"
+                            >
+                              <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
+                            </button>
+                        </div>
+
+                        <% if(user && user.mClass==='admin' ){ %>
+                          <div class="d-flex align-items-center ms-3">
+                            <a href="/usecar/edit/<%= usecar.id_usecar %>"
+                              class="btn btn-outline-warning btn-sm me-2">
+                              <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <form action="/usecar/delete/<%= usecar.id_usecar %>" method="POST"
+                              style="display: inline;">
+                              <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash3"></i>
+                              </button>
+                            </form>
+                          </div>
+                          <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <% }); %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+    <style>
+      .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transition: 0.3s;
+      }
+    </style>
+
+    <section class="py-4 bg-light">
+      <div class="container-lg">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card modern-card shadow-sm border-0 h-100">
+              <div class="card-gradient-bar"></div>
+              <div class="card-body text-center">
+                <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
+                <div class="mb-3">
+                  <div class="display-4 text-success">
+                    <%= onlineCount %>
+                  </div>
+                  <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
+                </div>
+                <hr>
+                <div class="row text-center">
+                  <h4 class="col-12 text-center">จำนวน</h4>
+                  <div class="col-md-4">
+                    <div class="h4 text-primary">
+                      <%= stats.coop %>
+                    </div>
+                    <small>สหกรณ์</small>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="h4 text-success">
+                      <%= stats.farmer %>
+                    </div>
+                    <small>กลุ่มเกษตรกร</small>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="h4 text-warning">
+                      <%= stats.closing %>
+                    </div>
+                    <small>ชำระบัญชี</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8 mt-md-0">
+            <h2 class="mb-4 text-center text-success section-title">🟢 Members Online</h2>
+
+            <div class="card modern-card shadow-sm border-0">
+              <div class="card-gradient-bar"></div>
+              <div class="card-body">
+                <div class="row">
+                  <% onlineUsers.forEach((user, index)=> { %>
+                    <div class="col-md-6 mb-3">
+                      <div class="d-flex align-items-center">
+                        <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
+                          class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                          <div class="fw-bold text-success">
+                            <%= user.on_name %>
+                          </div>
+                          <small class="text-muted">
+                            <%= user.m_position || '32ใช้' %>
+                          </small>
+                          <div class="badge bg-success ms-2">
+                            <i class="fas fa-circle" style="font-size: 8px;"></i> ออนไลน์
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <% }); %>
+                </div>
+
+                <% if (onlineUsers.length===0) { %>
+                  <div class="text-center text-muted">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <p>ไม่มีสมาชิกออนไลน์ในขณะนี้</p>
+                  </div>
+                  <% } %>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      socket.on('onlineUsers', (count) => {
+        const onlineCountDiv = document.querySelector('.display-4.text-success');
+        if (onlineCountDiv) {
+          onlineCountDiv.textContent = count;
+        }
+      });
+    </script>
+    <script>
+      const ctx = document.getElementById('coopChart').getContext('2d');
+      const coopChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['สหกรณ์', 'กลุ่มเกษตรกร', 'ชำระบัญชี'],
+          datasets: [{
+            label: 'จำนวน',
+            data: [
+              <%= stats.coop %>,
+              <%= stats.farmer %>,
+              <%= stats.closing %>
+            ],
+            backgroundColor: [
+              'rgba(25, 135, 84, 0.7)',
+              'rgba(13, 202, 240, 0.7)',
+              'rgba(255, 193, 7, 0.7)'
+            ],
+            borderColor: [
+              'rgba(25, 135, 84, 1)',
+              'rgba(13, 202, 240, 1)',
+              'rgba(255, 193, 7, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { weight: 'bold' },
+              formatter: function(value) {
+                return value;
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        },
+        
+        plugins: [ChartDataLabels] // Added plugin for data labels
+      });
+    </script>
+
+    <script>
+      const coopData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.coop))) %>;
+      const farmerData = <%- JSON.stringify(coopGroupStats.map(g => Number(g.farmer))) %>;
+      const totalCoop = coopData.reduce((a, b) => a + b, 0);
+      const totalFarmer = farmerData.reduce((a, b) => a + b, 0);
+
+      console.log('Pie chart data:', totalCoop, totalFarmer); // ตรวจสอบค่าที่จะใช้
+
+      const ctxPie = document.getElementById('coopPieChart').getContext('2d');
+      const coopPieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+          labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
+          datasets: [{
+            data: [totalCoop, totalFarmer],
+            backgroundColor: [
+              'rgba(25, 135, 84, 0.7)',
+              'rgba(13, 202, 240, 0.7)'
+            ],
+            borderColor: [
+              'rgba(25, 135, 84, 1)',
+              'rgba(13, 202, 240, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            datalabels: {
+              color: '#000',
+              font: { weight: 'bold', size: 16 },
+              formatter: function(value, context) {
+                return context.chart.data.labels[context.dataIndex] + ': ' + value;
+              }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    </script>
+
+    <script>
+      const coopGroupStats = <%- JSON.stringify(coopGroupStats) %>;
+    </script>
+
+    <!-- วาง Modal ไว้ช่วงท้ายไฟล์ ก่อน include footer -->
+<div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="card-gradient-bar"></div>
+
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i> รายละเอียดการใช้รถ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+
+      <div class="modal-body">
+        <dl class="row mb-0">
+          <dt class="col-4 col-md-3">วันที่</dt>
+          <dd class="col-8 col-md-9" id="uc-date">-</dd>
+
+          <dt class="col-4 col-md-3">เวลา</dt>
+          <dd class="col-8 col-md-9" id="uc-time">-</dd>
+
+          <dt class="col-4 col-md-3">สถานที่</dt>
+          <dd class="col-8 col-md-9" id="uc-place">-</dd>
+
+          <dt class="col-4 col-md-3">กิจกรรม</dt>
+          <dd class="col-8 col-md-9" id="uc-act">-</dd>
+        </dl>
+      </div>
+
+      <div class="modal-footer">
+        <a id="uc-view-link" href="#" class="btn btn-primary" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right me-1"></i> เปิดหน้ารายละเอียด
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // เติมข้อมูลลง Modal เมื่อกดปุ่ม
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-open-usecar');
+    if (!btn) return;
+
+    const get = (k) => btn.dataset[k] || '-';
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    setText('uc-date', get('date'));
+    setText('uc-time', get('time') + ' น.');
+    setText('uc-place', get('place'));
+    setText('uc-act', get('act'));
+
+    const link = document.getElementById('uc-view-link');
+    if (link) link.href = '/usecar/view/' + get('id');
+  });
+</script>
+
+<script>
+  (function() {
+    const btn = document.getElementById('exportChamraBtnHome');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = 'กำลังส่งออก...';
+      try {
+        const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
+        if (!resp.ok) throw new Error('Export failed');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (e) {
+        alert('ไม่สามารถส่งออกข้อมูลได้');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

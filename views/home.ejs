@@ -338,13 +338,13 @@ function displayGroupName(code){
           <div class="w-100">
             <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
 
-            <h5 class="text-center mb-3">🔐 เข้าระบบ</h5>
+            <h5 class="text-center mb-3 p-2">🔐 เข้าระบบ</h5>
             <form action="/auth/login" method="POST">
-              <div class="mb-3">
+              <div class="mb-3 p-2">
                 <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
                 <input type="text" class="form-control" id="username" name="username" required />
               </div>
-              <div class="mb-3">
+              <div class="mb-3 p-2">
                 <label for="password" class="form-label">รหัสผ่าน</label>
                 <input type="password" class="form-control" id="password" name="password" required />
               </div>
@@ -601,8 +601,8 @@ function displayGroupName(code){
                     <tr>
                       <th class="text-center">อันดับ</th>
                       <th>ชื่อสหกรณ์</th>
-                      <th>พ.ศ.</th>
-                      <th>อำเภอ</th>
+                      <th class="d-none d-sm-table-cell">พ.ศ.</th>
+                      <th class="d-none d-sm-table-cell">อำเภอ</th>
                       <th class="text-end">สมาชิกรวม(ราย)</th>
                       <th class="text-center">view</th>
                     </tr>
@@ -612,8 +612,9 @@ function displayGroupName(code){
                     <tr>
                       <td class="text-center"><%= i+1 %></td>
                       <td><%= t.name %></td>
-                      <td><%= t.year || 'N/A' %></td> <!-- insert พ.ศ. -->
-                      <td><%= t.อำเภอ %></td>
+                      <!-- hide td when on sm  -->
+                      <td class="d-none d-sm-table-cell"><%= t.year || 'N/A' %></td> <!-- insert พ.ศ. -->
+                      <td class="d-none d-sm-table-cell"><%= t.อำเภอ %></td>
                       <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
                       <td class="text-center">
                         <a href="/members/<%= t.idx %>" class="btn btn-sm btn-outline-info">รายละเอียด</a>
@@ -932,7 +933,7 @@ function displayGroupName(code){
           <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
         </h6>
         <% if(user) { %>
-          <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ Export Chamra</button>
+          <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ ส่งออก pdf</button>
         <% } else { %>
           <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
         <% } %>
@@ -1033,7 +1034,7 @@ function displayGroupName(code){
           <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th style="width:56px;">#</th>
+                <th style="width:56px;" class="d-none d-sm-table-cell">#</th>
                 <th>เรื่อง</th>
                 <th class="text-nowrap">ไฟล์</th>
                 <th class="text-center">ลิงก์</th>
@@ -1053,54 +1054,87 @@ function displayGroupName(code){
   </div>
 </section>
 
-<section id="rq2" class="section-block">
+
+<section id="rq2" class="py-4">
   <div class="container-lg">
-    <div class="row mt-2">
-      <div class="col-12">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-file-earmark-ruled me-2"></i> RQ2 ล่าสุด
-        </h2>
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <div class="row">
-              <% (lastRq2 || []).forEach((r, idx)=> { %>
-                <div class="col-md-6 mb-3">
-                  <div class="list-group">
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                      <span>
-                        <strong>
-                          <%= idx + 1 %>.
-                        </strong>
-                        <%= r.rq_name %>
-                          <span class="badge bg-secondary ms-2">
-                            <%= r.rq_year %>
-                          </span>
-                          <% const rqSavedDate = new Date(r.rq_savedate); const currentDate = new Date(); const diffDays = Math.ceil((currentDate - rqSavedDate) / (1000 * 60 * 60 * 24)); %>
-                          <% if (diffDays <= 7) { %>
-                            <img src="/images/newpng.png" alt="New"
-                            class="ms-2" style="width: 40px; height: 35px;" />
-                          <% } %>
-                      </span>
-                      <% if(user){ %>
-                        <a href="/rq2/download/<%= r.rq_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                          <i class="bi bi-file-pdf-fill"></i>
-                        </a>
-                      <% } %>
-                    </div>
+    <div class="d-flex flex-wrap align-items-center mb-3">
+      <h2 class="h4 mb-2 mb-sm-0 text-primary">
+        <i class="bi bi-file-earmark-ruled me-2"></i>RQ2 ล่าสุด
+      </h2>
+      <a href="/rq2" class="btn btn-sm btn-outline-primary ms-auto d-none d-md-inline">
+        <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
+      </a>
+    </div>
+
+    <div class="row g-3">
+      <% (lastRq2 || []).forEach((r, idx)=> { 
+         const rqSavedDate = new Date(r.rq_savedate);
+         const diffDays = Math.ceil((Date.now() - rqSavedDate) / 86400000);
+      %>
+        <div class="col-12 col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-start mb-2">
+                <div class="me-3">
+                  <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                       style="width:46px;height:46px;font-weight:600;">
+                    <%= idx + 1 %>
                   </div>
                 </div>
-              <% }) %>
-            </div>
-            <div class="text-end mt-2">
-              <a href="/rq2" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+                <div class="flex-grow-1">
+                  <h6 class="mb-1 fw-semibold text-dark">
+                    <span class="text-truncate d-inline-block" style="max-width: 100%;">
+                      <%= r.rq_name %>
+                    </span>
+                  </h6>
+                  <div class="small text-muted">
+                    <i class="bi bi-clock-history me-1"></i>
+                    <%= rqSavedDate.toLocaleDateString('th-TH',{ day:'numeric', month:'short', year:'numeric' }) %>
+                  </div>
+                  <div class="mt-2 d-flex flex-wrap gap-2">
+                    <span class="badge text-bg-secondary">
+                      ปี <%= r.rq_year %>
+                    </span>
+                    <% if (diffDays <= 7) { %>
+                      <span class="badge text-bg-danger">
+                        <i class="bi bi-stars me-1"></i>NEW
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                <% if (user) { %>
+                  <a href="/rq2/download/<%= r.rq_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-file-pdf-fill me-1"></i> ไฟล์
+                  </a>
+                <% } else { %>
+                  <a href="/auth/login" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-lock me-1"></i> เข้าระบบ
+                  </a>
+                <% } %>
+                <a href="/rq2" class="btn btn-sm btn-link text-decoration-none d-inline d-md-none">
+                  ดูทั้งหมด <i class="bi bi-chevron-right small"></i>
+                </a>
+              </div>
+              </div>
+
+              
             </div>
           </div>
         </div>
-      </div>
+      <% }) %>
+
+      <% if (!(lastRq2||[]).length) { %>
+        <div class="col-12">
+          <div class="alert alert-light border text-center mb-0">
+            <i class="bi bi-inbox me-2"></i> ไม่มีข้อมูล RQ2
+          </div>
+        </div>
+      <% } %>
     </div>
   </div>
 </section>
+
 
 <section id="articles" class="section-block bg-light">
   <div class="container">
@@ -1486,7 +1520,7 @@ function displayGroupName(code){
         }
         tbody.innerHTML = data.map((d, idx) => `
           <tr>
-            <td>${idx + 1}</td>
+            <td class="d-none d-sm-table-cell">${idx + 1}</td>
             <td>${escapeHtml(d.down_subject || '-')}</td>
             <td class="text-nowrap">
               ${
@@ -1510,7 +1544,7 @@ function displayGroupName(code){
                   : '<span class="text-muted">-</span>'
               }
             </td>
-            <td>${fmtDate(d.down_savedate)}</td>
+            <td class="text-nowrap">${fmtDate(d.down_savedate)}</td>
           </tr>
         `).join('');
       })

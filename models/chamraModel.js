@@ -126,6 +126,7 @@ const Chamra = {
       `SELECT pr.*, ac.c_name
          FROM chamra_process pr
          LEFT JOIN active_coop ac ON ac.c_code = pr.pr_code
+         WHERE ac.c_status = 'เลิก'
          ORDER BY ac.c_name`
     );
     return rows;
@@ -180,6 +181,7 @@ const Chamra = {
       `SELECT pr.*, ac.c_name
          FROM chamra_process pr
          LEFT JOIN active_coop ac ON ac.c_code = pr.pr_code
+         WHERE ac.c_status = 'เลิก'
          ORDER BY GREATEST(
            IFNULL(pr.pr_s10, '0000-00-00'),
            IFNULL(pr.pr_s9, '0000-00-00'),

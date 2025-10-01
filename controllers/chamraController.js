@@ -387,9 +387,6 @@ function showStepServer(n) {
 chamraController.exportChamraPdf = async (req, res) => {
   try {
     const data = await Chamra.getAll();
-    // Flexible logo source (change here if want remote URL)
-    const logoSrc = process.env.CHAMRA_PDF_LOGO || 'public/images/jk.jpg';
-    const logoDataUrl = await fetchImageDataUrl(logoSrc);
     const fonts = {
       THSarabunNew: {
         normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
@@ -461,7 +458,7 @@ chamraController.exportChamraPdf = async (req, res) => {
     const headerRow = [
       { text:'#', bold:true, color:'#fff', alignment:'center' },
       { text:'ชื่อ', bold:true, color:'#fff' , alignment:'center' },
-      { text:'กรณี', bold:true, color:'#fff', alignment:'center' },
+      { text:'กรณี', bold:true, alignment:'center' },
       { text:'ขั้นล่าสุด', bold:true, color:'#fff', alignment:'center' },
       { text:'วันที่ล่าสุด', bold:true, color:'#fff', alignment:'center' },
       { text:'ผู้ชำระบัญชี', bold:true, color:'#fff' , alignment:'center' },
@@ -567,31 +564,38 @@ chamraController.exportDetailPdf = async (req, res) => {
     const record = await Chamra.getByCode(code);
     if (!record) return res.status(404).send('ไม่พบข้อมูล');
     const poblems = await Chamra.getPoblemsByCode(code);
-    // Flexible logo source (change here if want remote URL)
-    const logoSrc = process.env.CHAMRA_PDF_LOGO || 'public/images/jk.jpg';
-    const logoDataUrl = await fetchImageDataUrl(logoSrc);
     const fonts = { THSarabunNew:{ normal: path.join(__dirname,'../fonts/THSarabunNew.ttf'), bold: path.join(__dirname,'../fonts/THSarabunNew-Bold.ttf'), italics: path.join(__dirname,'../fonts/THSarabunNew-Italic.ttf'), bolditalics: path.join(__dirname,'../fonts/THSarabunNew-BoldItalic.ttf') } };
     const printer = new PdfPrinter(fonts);
     const isValid = (v) => { if(!v) return false; if (typeof v==='string'){ if(v==='0000-00-00'|| v==='0000-00-00 00:00:00'|| /^1899-11-30/.test(v)|| v==='Invalid date') return false; const [y,m,d]=v.slice(0,10).split('-'); const dt=new Date(+y,+m-1,+d); return !isNaN(dt.getTime()) && dt.getFullYear()>=1950;} if (v instanceof Date) return !isNaN(v.getTime()) && v.getFullYear()>=1950; return false; };
-    const fmtThai = (v) => { if(!isValid(v)) return '-'; const [y,m,d]=v.slice(0,10).split('-'); const dt=new Date(+y,+m-1,+d); return new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'long',year:'numeric'}).format(dt); };
+    const fmtThai = (v) => { 
+      if(!isValid(v)) return '-'; 
+      let dt; 
+      if (v instanceof Date) { 
+        dt = v; 
+      } else { 
+        const core = String(v).slice(0,10); 
+        const [y,m,d] = core.split('-'); 
+        dt = new Date(+y, +m - 1, +d); 
+      } 
+      if (isNaN(dt.getTime())) return '-'; 
+      return new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'long',year:'numeric'}).format(dt); 
+    }; 
     const procRows = []; const timeline = [];
-    for (let i=1;i<=10;i++){ const key=`pr_s${i}`; const raw=record[key]||''; const label= showStepServer(i); procRows.push([{ text:`ขั้น ${i} ${label}`, margin:[2,2,2,2]}, raw || '-', fmtThai(raw)]); timeline.push(`${isValid(raw)?'✅':'⬜️'} ขั้น ${i} ${label} ${isValid(raw)? '('+fmtThai(raw)+')':''}`); }
+    for (let i=1;i<=10;i++){ const key=`pr_s${i}`; const raw=record[key]||''; const label= showStepServer(i); procRows.push([{ text:`ขั้น ${i} ${label}`, margin:[2,2,2,2]}, fmtThai(raw)]); timeline.push(`${isValid(raw)?'✅':'⬜️'} ขั้น ${i} ${label} ${isValid(raw)? '('+fmtThai(raw)+')':''}`); }
     const pobRows = poblems && poblems.length ? poblems.map(p=> [p.po_year||'-', p.po_meeting||'-', p.po_detail||'-', p.po_problem||'-', (p.po_saveby||'-'), (fmtThai(p.po_savedate)||'-')]) : [];
     const docDefinition = {
       info:{ title:`Chamra Detail ${record.c_name||''}`, author:'Express Chain' },
-      images: logoDataUrl ? { logo: logoDataUrl } : {},
       pageOrientation:'landscape', pageMargins:[40,100,40,60],
-      header:(currentPage,pageCount)=>({ margin:[36,16,36,0], columns:[ logoDataUrl? { image:'logo', width:52 }:{ text:'', width:52 }, { stack:[ { text:'รายละเอียดการชำระบัญชี', bold:true, fontSize:18, alignment:'center' }, { text: record.c_name || '-', alignment:'center', fontSize:14 } ]}, { text:`หน้า ${currentPage}/${pageCount}`, alignment:'right', fontSize:10, margin:[0,6,0,0] } ] }),
+      header:(currentPage,pageCount)=>({ margin:[36,16,36,0], columns:[ { text:'', width:10 }, { stack:[ { text:'รายละเอียดการชำระบัญชี', bold:true, fontSize:18, alignment:'center' }, { text: record.c_name || '-', alignment:'center', fontSize:14 } ]}, { text:`หน้า ${currentPage}/${pageCount}`, alignment:'right', fontSize:10, margin:[0,6,0,0] } ] }),
       footer:(currentPage,pageCount)=>({ margin:[36,0,36,16], columns:[ { text:`รหัส: ${record.c_code||'-'}`, fontSize:10 }, { text: new Date().toLocaleString('th-TH'), alignment:'center', fontSize:10 }, { text: currentPage===pageCount? 'สิ้นสุดเอกสาร':'', alignment:'right', fontSize:10 } ] }),
       defaultStyle:{ font:'THSarabunNew', fontSize:14 },
       styles:{ title:{ fontSize:20, bold:true }, section:{ fontSize:16, bold:true, color:'#0d9488', margin:[0,8,0,4] } },
       content:[
         { text:'ข้อมูลทั่วไป', style:'section' },
         { columns:[ { width:'50%', stack:[ { text:`กรณี: ${record.de_case||'-'}` }, { text:`คำสั่งเลขที่: ${record.de_comno||'-'}` }, { text:`วันที่คำสั่ง: ${fmtThai(record.de_comdate)}` }, { text:`ผู้รับผิดชอบ: ${record.de_person||'-'}` }, { text:`หมายเหตุ: ${record.de_maihed||'-'}` } ] }, { width:'50%', stack:[ { text:`สถานะ: ${record.c_status||'-'}` }, { text:`กลุ่ม: ${record.c_group||'-'}` }, { text:`บันทึกโดย: ${record.de_saveby||'-'}` }, { text:`บันทึกวันที่: ${fmtThai(record.de_savedate)}` } ] } ], columnGap:24 },
-        { text:'แผนผังความคืบหน้า', style:'section' },
-        { ul: timeline, margin:[0,0,0,10] },
-        { text:'กระบวนการ (Process)', style:'section' },
-        { table:{ widths:[140,'*',160], headerRows:1, body:[ [{ text:'ขั้น', bold:true, color:'#fff' }, { text:'Raw', bold:true, color:'#fff' }, { text:'วันที่ (ไทย)', bold:true, color:'#fff' } ], ...procRows ] }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12, margin:[0,0,0,14] },
+      
+        
+        { table:{ widths:['*',160], headerRows:1, body:[ [{ text:'ขั้น', bold:true, color:'#fff' }, { text:'วันที่ (ไทย)', bold:true, color:'#fff' } ], ...procRows ] }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12, margin:[0,0,0,14] },
         { text:'รายการปัญหา (Problems)', style:'section' },
         pobRows.length ? { table:{ headerRows:1, widths:[50,50,'*','*',70,90], body:[ [ { text:'ปี', bold:true, color:'#fff' }, { text:'ครั้ง', bold:true, color:'#fff' }, { text:'รายละเอียด', bold:true, color:'#fff' }, { text:'ปัญหา', bold:true, color:'#fff' }, { text:'บันทึกโดย', bold:true, color:'#fff' }, { text:'วันที่บันทึก', bold:true, color:'#fff' } ], ...pobRows ], }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12 } : { text:'ไม่มีรายการปัญหา', italics:true }
       ]

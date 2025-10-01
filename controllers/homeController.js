@@ -41,6 +41,7 @@ const homeController = {
       // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
       const closingCount = await coopModel.getClosingStats();
+      const closingByGroup = await coopModel.getClosingStatsByGroup(); // NEW
       
       // ข้อมูลกราฟ
       const coopGroupChart = await coopModel.getByCoopGroup();
@@ -54,7 +55,9 @@ const homeController = {
       const stats = {
         coop: coopStats.find(item => item.coop_group === 'สหกรณ์')?.count || 0,
         farmer: coopStats.find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
-        closing: closingCount
+        closing: closingCount,
+        closingCoop: closingByGroup.coop,          // NEW
+        closingFarmer: closingByGroup.farmer       // NEW
       };
 
       // ดึงข้อมูล activity จาก model
@@ -80,6 +83,7 @@ const homeController = {
         closedCoops,     // ✅ ส่ง closed coops to view
         coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
         homeProcesses,
+        closingByGroup,   // NEW expose raw
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

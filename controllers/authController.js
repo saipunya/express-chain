@@ -33,6 +33,16 @@ exports.login = async (req, res) => {
       m_img: user.m_img
     };
 
+    // rememberMe support: หากเลือกให้จำไว้ -> อายุคุกกี้ 30 วัน, ไม่เช็ค -> session ชั่วคราว (ปิดเบราว์เซอร์หลุด)
+    if (req.body.rememberMe === 'on' || req.body.rememberMe === 'true' || req.body.rememberMe === true) {
+      // 30 days
+      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 วัน
+    } else {
+      // ทำให้เป็น session cookie (ไม่ตั้ง expires / maxAge)
+      req.session.cookie.expires = false; // browser session only
+      delete req.session.cookie.maxAge;
+    }
+
     // ข้อมูลออนไลน์
     await onlineModel.setUserOnline(user.m_id, user.m_name, req.sessionID);
 
@@ -57,7 +67,7 @@ exports.register = async (req, res) => {
       group
     });
 
-    res.redirect('auth/login'); //  เสร็จให้ไปล็อก
+    res.redirect('/auth/login');
   } catch (error) {
     console.error('ข้อพลาดระหว่าง:', error);
     res.status(500).send('ไม่สำเร็จ');

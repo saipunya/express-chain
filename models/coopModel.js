@@ -90,21 +90,6 @@ exports.getClosingStats = async () => {
 exports.getByGroupAndType = async () => {
   const [rows] = await db.query(`
     SELECT 
-      CONCAT(c_group, ' - ', coop_group) AS label,
-      COUNT(*) AS count,
-      c_group,
-      coop_group
-    FROM active_coop
-    WHERE c_status = "ดำเนินการ"
-    GROUP BY c_group, coop_group
-    ORDER BY c_group, coop_group
-  `);
-  return rows;
-};
-
-exports.getByGroupAndType = async () => {
-  const [rows] = await db.query(`
-    SELECT 
       c_group,
       coop_group,
       COUNT(*) AS count
@@ -114,5 +99,21 @@ exports.getByGroupAndType = async () => {
     ORDER BY c_group, coop_group
   `);
   return rows;
+};
+
+// NEW: จำนวนสหกรณ์ และ จำนวนกลุ่มเกษตรกร ที่อยู่ระหว่างการชำระบัญชี (c_status='เลิก')
+exports.getClosingStatsByGroup = async () => {
+  const [rows] = await db.query(`
+    SELECT coop_group, COUNT(*) AS count
+    FROM active_coop
+    WHERE c_status = 'เลิก'
+    GROUP BY coop_group
+  `);
+  const result = { coop: 0, farmer: 0, raw: rows };
+  rows.forEach(r => {
+    if (r.coop_group === 'สหกรณ์') result.coop = r.count;
+    if (r.coop_group === 'กลุ่มเกษตรกร') result.farmer = r.count;
+  });
+  return result;
 };
 

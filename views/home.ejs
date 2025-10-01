@@ -338,26 +338,58 @@ function displayGroupName(code){
           <div class="w-100">
             <p class="lead mb-4 text-center">ระบบสารสนเทศและเครือข่ายสหกรณ์ฯ</p>
 
-            <h5 class="text-center mb-3 p-2">🔐 เข้าระบบ</h5>
-            <form action="/auth/login" method="POST">
-              <div class="mb-3 p-2">
-                <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
-                <input type="text" class="form-control" id="username" name="username" required />
-              </div>
-              <div class="mb-3 p-2">
-                <label for="password" class="form-label">รหัสผ่าน</label>
-                <input type="password" class="form-control" id="password" name="password" required />
-              </div>
-              <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
-            </form>
+            <!-- Small screen toggle button (hidden on sm and up) -->
+            <button type="button" id="showLoginBtn" class="btn btn-success w-100 d-sm-none mb-3" aria-expanded="false" aria-controls="loginFormCollapsible">
+              🔐 เข้าระบบ
+            </button>
 
-            <p class="text-center mt-2">
-              <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
-              <a href="/auth/register" class="text-success">
-                สมัครสมาชิก
-              </a>
-            </p>
+            <!-- Wrapper gains d-none only on extra-small; visible on sm+ -->
+            <div id="loginFormCollapsible" class="login-form-wrapper d-none d-sm-block">
+              <h5 class="text-center mb-3 p-2 d-none d-sm-block">🔐 เข้าระบบ</h5>
+              <form action="/auth/login" method="POST">
+                <div class="mb-3 p-2">
+                  <label for="username" class="form-label">ชื่อผู้ใช้งาน</label>
+                  <input type="text" class="form-control" id="username" name="username" required />
+                </div>
+                <div class="mb-3 p-2">
+                  <label for="password" class="form-label">รหัสผ่าน</label>
+                  <input type="password" class="form-control" id="password" name="password" required />
+                </div>
+                <div class="mb-3 p-2">
+                  <input type="checkbox" id="rememberMe" name="rememberMe">
+                  <label for="rememberMe" class="form-label">จดจำฉัน</label>
+                </div>
+                <div class="p-2">
+                  <button type="submit" class="btn btn-success w-100">เข้าระบบ</button>
+                </div>
+              </form>
+
+              <p class="text-center mt-2">
+                <i class="bi bi-person-add"></i> ยังไม่มีบัญชี ?
+                <a href="/auth/register" class="text-success">สมัครสมาชิก</a>
+              </p>
+            </div>
           </div>
+          <script>
+            (function(){
+              const btn = document.getElementById('showLoginBtn');
+              const wrap = document.getElementById('loginFormCollapsible');
+              if(!btn || !wrap) return;
+              function toggle(){
+                const isHidden = wrap.classList.contains('d-none');
+                if(isHidden){
+                  wrap.classList.remove('d-none');
+                  btn.setAttribute('aria-expanded','true');
+                  btn.textContent = '⬆️ ซ่อนแบบฟอร์ม';
+                } else {
+                  wrap.classList.add('d-none');
+                  btn.setAttribute('aria-expanded','false');
+                  btn.textContent = '🔐 เข้าระบบ';
+                }
+              }
+              btn.addEventListener('click', toggle);
+            })();
+          </script>
         <% } else { %>
           <div class="w-100 text-center">
             <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>

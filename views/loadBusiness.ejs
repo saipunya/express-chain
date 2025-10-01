@@ -1,102 +1,195 @@
 <%- include('./partials/header') %>
 
-<div class="container mt-2 shadow-lg p-4 bg-white rounded">
-  <h3 class="mb-4">📋 รายงานกิจการทั้งหมด</h3>
+<% /* ฟังก์ชันแปลงรหัสกลุ่มเป็นชื่อภาษาไทย */ %>
+<% function displayGroupName(code){
+     if(!code) return '-';
+     const map = {
+       group1: 'กลุ่มส่งเสริมสหกรณ์ 1',
+       group2: 'กลุ่มส่งเสริมสหกรณ์ 2',
+       group3: 'กลุ่มส่งเสริมสหกรณ์ 3',
+       group4: 'กลุ่มส่งเสริมสหกรณ์ 4',
+       group5: 'กลุ่มส่งเสริมสหกรณ์ 5'
+     };
+     return map[code] || code;
+} %>
 
-  <!-- ช่องค้นหา + ปุ่มอัพโหลด -->
-  <div class="row mb-3 align-items-center">
-    <div class="col-md-6">
-      <form method="GET" action="/business">
-        <div class="input-group">
-
-          <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อสหกรณ์" value="<%= search %>">
-          <button class="btn btn-outline-secondary" type="submit">ค้นหา</button>
-          <a href="/business" class="btn btn-outline-danger">ล้าง</a>
-        </div>
-      </form>
+<div class="container py-4">
+  <!-- Page Header -->
+  <div class="row align-items-center g-3 mb-3">
+    <div class="col-lg-8">
+      <h3 class="fw-bold mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-clipboard-data text-primary"></i>
+        รายงานกิจการทั้งหมด
+      </h3>
     </div>
-    <div class="col-md-6 text-end">
+    <div class="col-lg-4 text-lg-end">
       <% if(user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
-        <a href="/business/upload" class="btn btn-success">
-          <i class="bi bi-plus-circle"></i> อัพโหลดรายงานกิจการ
+        <a href="/business/upload" class="btn btn-primary shadow-sm btn-lg d-inline-flex align-items-center gap-2">
+          <i class="bi bi-cloud-arrow-up"></i>
+          <span>อัพโหลดรายงาน</span>
         </a>
       <% } %>
     </div>
   </div>
 
-  <!-- Updated styles for grouped display -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <% if(typeof newUploadCount !== 'undefined') { %>
+        <div class="alert alert-info py-2 px-3 shadow-sm d-inline-flex align-items-center gap-2 mb-0">
+          <i class="bi bi-lightning-charge-fill text-warning"></i>
+          <span class="fw-semibold">ไฟล์ใหม่ 7 วันล่าสุด:</span>
+          <span class="badge bg-primary"><%= newUploadCount %> </span> รายการ
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Search & Actions Card -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3 p-md-4">
+      <form method="GET" action="/business" class="row g-2 g-md-3 align-items-center">
+        <div class="col-md-7 col-lg-8">
+          <div class="input-group input-group-lg shadow-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
+            <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="ค้นหาชื่อสหกรณ์..." value="<%= search %>">
+            <% if(search){ %>
+              <a href="/business" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="ล้างการค้นหา"><i class="bi bi-x-circle"></i></a>
+            <% } %>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>ค้นหา</button>
+          </div>
+        </div>
+        <div class="col-md-5 col-lg-4 text-md-end">
+          <div class="d-flex justify-content-md-end gap-2 flex-wrap">
+            <a href="/business" class="btn btn-outline-secondary btn-lg"><i class="bi bi-arrow-counterclockwise me-1"></i>เริ่มใหม่</a>
+            <% if(user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
+              <a href="/business/upload" class="btn btn-outline-primary btn-lg"><i class="bi bi-plus-circle me-1"></i>อัพโหลด</a>
+            <% } %>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Inline Styles (could migrate to separate stylesheet) -->
   <style>
-    .business-group-title {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: .35rem;
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .business-card p {
-      font-size: 1rem;
-      text-align: center; /* Centering the text */
-    }
-    .business-card .btn {
-      font-size: .65rem;
-      padding: .25rem .45rem;
+    .business-group-wrapper + .business-group-wrapper { margin-top: 2rem; }
+    .business-group-header { display:flex; align-items:center; gap:.65rem; margin-bottom:.75rem; }
+    .business-group-header h6 { margin:0; font-weight:700; letter-spacing:.5px; }
+    .business-card { transition: .25s ease; border: 1px solid #eef0f3; position:relative; }
+    .business-card:hover { transform: translateY(-4px); box-shadow:0 0.65rem 1.25rem rgba(0,0,0,.07); border-color:#dce2e8; }
+    .business-card .period-badge { font-size:.7rem; letter-spacing:.5px; }
+    .business-card .year-badge { font-size:.65rem; }
+    .business-card .btn { font-size:.7rem; }
+    .empty-state { padding:4rem 1rem; }
+    .empty-icon { font-size:3.5rem; opacity:.25; }
+    .pagination .page-link { border-radius:.5rem !important; }
+    .sticky-actions { position:sticky; bottom:0; background:linear-gradient(to top,#ffffff 75%,rgba(255,255,255,0)); padding-top:.25rem; }
+    @media (max-width: 575.98px) {
+      .business-card .btn { font-size:.65rem; padding:.35rem .4rem; }
+      .business-card p { font-size:1rem; }
     }
   </style>
 
-  <!-- Replaced flat grid with grouped sections -->
+  <!-- Grouped Results -->
   <% if(fileGrouped && Object.keys(fileGrouped).length > 0) { %>
-    <% Object.keys(fileGrouped).forEach(buName => { %>
-      <div class="mb-4">
-        <div class="business-group-title">
-          <i class="bi bi-building"></i> <span><%= buName %></span>
-        </div>
-        <div class="row g-3">
-          <% fileGrouped[buName].forEach(file => { %>
-            <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-              <div class="card business-card h-100 shadow-sm">
-                <div class="card-body p-2 d-flex flex-column">
-                  <p class="mb-2 text-center">
+    <div class="business-groups">
+      <% Object.keys(fileGrouped).forEach(buName => { const first = fileGrouped[buName][0]; %>
+        <section class="business-group-wrapper">
+          <div class="business-group-header">
+            <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle" style="width:40px;height:40px;">
+              <i class="bi bi-building fs-4"></i>
+            </div>
+            <h6 class="text-uppercase text-dark">
+              <%= buName %>
+              <small class="text-muted fw-normal">( <%= displayGroupName(first?.c_group) %> )</small>
+            </h6>
+            <span class="badge bg-secondary-subtle text-secondary"><%= fileGrouped[buName].length %> รายการ</span>
+          </div>
+          <div class="row g-3">
+            <% fileGrouped[buName].forEach(file => { %>
+              <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="card business-card h-100 shadow-sm rounded-3">
+                  <div class="card-body p-2 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                      <span class="badge text-bg-light border period-badge"><i class="bi bi-calendar-week me-1"></i><%= file.end_date %></span>
+                      <span class="badge bg-primary-subtle text-primary year-badge"><%= file.bu_endyear %></span>
+                    </div>
                    
-                    <%= file.end_date %> <%= file.bu_endyear %>
-                  </p>
-                  <div class="mt-auto">
-                    <% if(!user){ %>
-                      <a href="/auth/login" class="btn btn-outline-primary w-100 mb-1">ดาวน์โหลด</a>
-                    <% } else { %>
-                      <div class="d-flex flex-wrap gap-1">
-                        <a href="/business/download/<%= file.bu_id %>" class="btn btn-outline-primary flex-grow-1">ดาวน์โหลด</a>
-                        <% if(user && (user.mClass === 'admin' || user.mClass === 'kbs')) { %>
-                          <a href="/business/delete/<%= file.bu_id %>" class="btn btn-outline-danger" onclick="return confirm('ต้องการลบไฟล์นี้?')">ลบ</a>
-                        <% } %>
-                      </div>
-                    <% } %>
+                    <div class="mt-auto pt-1">
+                      <% if(!user){ %>
+                        <a href="/auth/login" class="btn btn-outline-primary w-100" data-bs-toggle="tooltip" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-box-arrow-in-right me-1"></i>ดาวน์โหลด</a>
+                      <% } else { %>
+                        <div class="d-flex flex-wrap gap-1">
+                          <a href="/business/download/<%= file.bu_id %>" class="btn btn-outline-primary flex-grow-1" data-bs-toggle="tooltip" title="ดาวน์โหลดไฟล์">
+                            <i class="bi bi-download"></i>
+                          </a>
+                          <% if(user && (user.mClass === 'admin' || user.mClass === 'kbs')) { %>
+                            <a href="/business/delete/<%= file.bu_id %>" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="ลบไฟล์" onclick="return confirm('ต้องการลบไฟล์นี้?')">
+                              <i class="bi bi-trash"></i>
+                            </a>
+                          <% } %>
+                        </div>
+                      <% } %>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          <% }) %>
-        </div>
-      </div>
-    <% }) %>
+            <% }) %>
+          </div>
+        </section>
+      <% }) %>
+    </div>
   <% } else { %>
-    <div class="alert alert-warning text-center">ไม่พบข้อมูล</div>
+    <div class="card border-0 shadow-sm empty-state text-center">
+      <div class="card-body">
+        <div class="empty-icon text-primary mb-3"><i class="bi bi-folder-x"></i></div>
+        <h5 class="fw-bold mb-2">ไม่พบข้อมูล</h5>
+        <p class="text-secondary mb-3 small">ไม่มีรายการตรงกับเงื่อนไขที่ค้นหา ลองเปลี่ยนคำค้นหาใหม่อีกครั้ง</p>
+        <a href="/business" class="btn btn-primary"><i class="bi bi-arrow-counterclockwise me-1"></i>แสดงทั้งหมด</a>
+      </div>
+    </div>
   <% } %>
 
   <!-- Pagination -->
   <% if(totalPages > 1) { %>
-    <nav class="mt-4">
-      <ul class="pagination justify-content-center">
+    <nav class="mt-4" aria-label="หน้ารายงานกิจการ">
+      <ul class="pagination justify-content-center flex-wrap gap-1">
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="/business?page=1<%= search ? '&search=' + encodeURIComponent(search) : '' %>" aria-label="หน้าแรก">
+            <i class="bi bi-chevron-double-left"></i>
+          </a>
+        </li>
+        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+          <a class="page-link" href="/business?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" aria-label="ก่อนหน้า">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
         <% for (let i = 1; i <= totalPages; i++) { %>
           <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-            <a class="page-link" href="/business?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">
-              <%= i %>
-            </a>
+            <a class="page-link" href="/business?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
           </li>
         <% } %>
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="/business?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" aria-label="ถัดไป">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+          <a class="page-link" href="/business?page=<%= totalPages %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" aria-label="หน้าสุดท้าย">
+            <i class="bi bi-chevron-double-right"></i>
+          </a>
+        </li>
       </ul>
     </nav>
   <% } %>
 </div>
+
+<script>
+  // Enable Bootstrap tooltips
+  document.addEventListener('DOMContentLoaded', () => {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+  });
+</script>
 
 <%- include('./partials/footer') %>

@@ -1,24 +1,72 @@
 <%- include('partials/header') %>
 
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center">
-    <h3 class="mb-4">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h3>
+<style>
+/* Page specific modern styling */
+.rule-page-header h3 { font-weight:600; }
+.rule-search-wrapper { position:relative; }
+.rule-search-wrapper .bi-search { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#6c757d; }
+.rule-search-wrapper input { padding-left:38px; }
+.rule-stats { background:linear-gradient(135deg,#f8f9fa,#eef4ff); border:1px solid #e1e7ef; border-radius:12px; }
+.rule-stats .stat { text-align:center; padding:8px 0; }
+.rule-stats .stat h4 { margin:0; font-size:1.4rem; font-weight:600; }
+.rule-stats .stat small { color:#6c757d; letter-spacing:.5px; }
+.accordion-button:not(.collapsed){ background:#f0f6ff; color:#0d6efd; }
+.accordion-button:focus { box-shadow:none; }
+.rule-item { transition:background .15s; }
+.rule-item:hover { background:#f8fbff; }
+.badge-main { background:#0d6efd; }
+.badge-er { background:#6610f2; }
+.rule-year { font-weight:500; color:#0d6efd; }
+.rule-actions a { margin-left:4px; }
+.highlight { background: #ffe69c; padding:0 2px; border-radius:4px; }
+@media (max-width:576px){ .rule-actions{ margin-top:6px; } }
+</style>
+
+<div class="container mt-4" id="rulePage">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center rule-page-header gap-3">
+    <h3 class="mb-0">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h3>
     <% if(user && user.mClass=='kjs'){ %> 
-      <a href="/rule/upload" class="btn btn-success mb-3">
-        <i class="bi bi-plus-circle"></i> อัปโหลดข้อบังคับ
+      <a href="/rule/upload" class="btn btn-primary shadow-sm">
+        <i class="bi bi-cloud-upload"></i> อัปโหลดข้อบังคับ
       </a>
     <% } %>
   </div>
 
-  <!-- ช่องค้นหา -->
-  <form method="get" action="/rule" class="mb-3">
-    <div class="input-group">
-      <input type="text" name="search" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน" value="<%= search || '' %>">
-      <button class="btn btn-outline-secondary" type="submit">ค้นหา</button>
+  <!-- Stats -->
+  <% 
+    const totalRules = alls.length; 
+    const institutionSet = new Set(alls.map(r=> r.c_name || 'ไม่ระบุชื่อสถาบัน'));
+    const totalInstitutions = institutionSet.size;
+  %>
+  <div class="rule-stats mt-4 p-3 row g-3">
+    <div class="col-6 col-md-4 stat">
+      <h4><%= totalInstitutions %></h4>
+      <small>สถาบัน</small>
+    </div>
+    <div class="col-6 col-md-4 stat">
+      <h4><%= totalRules %></h4>
+      <small>ไฟล์ข้อบังคับ</small>
+    </div>
+    <div class="col-12 col-md-4 stat">
+      <h4><%= totalPages %></h4>
+      <small>หน้าทั้งหมด</small>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <form method="get" action="/rule" class="mt-4" autocomplete="off">
+    <div class="input-group rule-search-wrapper shadow-sm">
+      <i class="bi bi-search"></i>
+      <input type="text" name="search" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสถาบัน..." value="<%= search || '' %>">
+      <button class="btn btn-outline-primary" type="submit"><i class="bi bi-filter"></i> ค้นหา</button>
       <button class="btn btn-outline-secondary" type="button" onclick="window.location='/rule'">ล้าง</button>
     </div>
+    <% if(search){ %>
+      <div class="small text-muted mt-1">ผลการค้นหา: "<%= search %>"</div>
+    <% } %>
   </form>
 
+  <!-- Grouping & Accordion -->
   <% 
     // Group by c_name
     const grouped = {};
@@ -34,46 +82,60 @@
       const maxIdB = Math.max(...b[1].map(r => r.rule_id));
       return maxIdB - maxIdA;
     });
-
-    sortedGroups.forEach(([cName, rules]) => {
   %>
-    <h5 class="mt-4 text-primary"><%= cName %></h5>
-    <ul class="list-group mb-3">
-      <% rules
-        .sort((a, b) => {
-          // ข้อบังคับหลักมาก่อน
-          if (a.rule_type !== b.rule_type) {
-            return a.rule_type === 'ER' ? 1 : -1;
-          }
-          // ถ้าประเภทเดียวกันให้เรียงตามปี
-          return a.rule_year - b.rule_year;
-        })
-        .forEach(rule => { 
-      %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <% if(rule.rule_type === 'ER'){ %>
-            แก้ไขเพิ่มเติม ฉบับที่ <%= rule.er_no %> พ.ศ. <%= rule.rule_year %>
-          <% } else { %>
-            ข้อบังคับหลัก ปี พ.ศ. <%= rule.rule_year %>
-          <% } %>
-          <div>
-            <% if(!user){ %>
-              <a href="/auth/login" class="btn btn-sm btn-outline-primary">ดาวน์โหลด</a>
-            <% } else { %>
-              <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank">ดาวน์โหลด</a>
-              <% if(user && user.mClass=='admin'){ %>
-                <a href="/rule/delete/<%= rule.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">ลบ</a>
-              <% } %>
-            <% } %>
+
+  <div class="accordion mt-4" id="ruleAccordion">
+    <% sortedGroups.forEach(([cName, rules], idx) => { %>
+      <div class="accordion-item shadow-sm mb-3 border-0">
+        <h2 class="accordion-header" id="heading-<%= idx %>">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= idx %>" aria-expanded="false" aria-controls="collapse-<%= idx %>">
+            <span class="me-2 text-primary"><i class="bi bi-building"></i></span>
+            <strong class="me-2 institution-name"><%= cName %></strong>
+            <span class="badge bg-secondary rounded-pill"><%= rules.length %> รายการ</span>
+          </button>
+        </h2>
+        <div id="collapse-<%= idx %>" class="accordion-collapse collapse" aria-labelledby="heading-<%= idx %>" data-bs-parent="#ruleAccordion">
+          <div class="accordion-body p-0">
+            <ul class="list-group list-group-flush">
+              <% rules
+                .sort((a, b) => {
+                  if (a.rule_type !== b.rule_type) { return a.rule_type === 'ER' ? 1 : -1; }
+                  return a.rule_year - b.rule_year; // ...existing code...
+                })
+                .forEach(rule => { 
+              %>
+                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center rule-item">
+                  <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+                    <% if(rule.rule_type === 'ER'){ %>
+                      <span class="badge badge-er">แก้ไขเพิ่มเติม</span>
+                      <span>ฉบับที่ <strong><%= rule.er_no %></strong> พ.ศ. <span class="rule-year"><%= rule.rule_year %></span></span>
+                    <% } else { %>
+                      <span class="badge badge-main">ข้อบังคับหลัก</span>
+                      <span>ปี พ.ศ. <span class="rule-year"><%= rule.rule_year %></span></span>
+                    <% } %>
+                  </div>
+                  <div class="rule-actions mt-2 mt-md-0">
+                    <% if(!user){ %>
+                      <a href="/auth/login" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-in-right"></i> ดาวน์โหลด</a>
+                    <% } else { %>
+                      <a href="/rule/<%= rule.rule_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="ดาวน์โหลด"><i class="bi bi-download"></i></a>
+                      <% if(user && user.mClass=='admin'){ %>
+                        <a href="/rule/delete/<%= rule.rule_id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')" title="ลบ"><i class="bi bi-trash"></i></a>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </li>
+              <% }) %>
+            </ul>
           </div>
-        </li>
-      <% }) %>
-    </ul>
-  <% }) %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
 
   <!-- Pagination -->
   <nav class="mt-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center mb-0">
       <% for (let i = 1; i <= totalPages; i++) { %>
         <li class="page-item <%= currentPage === i ? 'active' : '' %>">
           <a class="page-link" href="/rule?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
@@ -83,6 +145,17 @@
   </nav>
 </div>
 
-
+<script>
+// Highlight search keyword inside institution names
+(function(){
+  const kw = <%- JSON.stringify(search || '') %>.trim();
+  if(!kw) return;
+  const safe = kw.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');
+  const pattern = new RegExp('(' + safe + ')','gi');
+  document.querySelectorAll('#ruleAccordion .institution-name').forEach(el=>{
+    el.innerHTML = el.textContent.replace(pattern,'<span class="highlight">$1</span>');
+  });
+})();
+</script>
 
 <%- include('partials/footer') %>

@@ -15,7 +15,7 @@ exports.insertBusiness = async (data) => {
 exports.getBusinessFiles = async (search = '', page = 1) => {
   const offset = (page - 1) * ITEMS_PER_PAGE;
   const [rows] = await db.query(
-    `SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date 
+    `SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date, active_coop.c_group 
      FROM kb_allbusiness 
      LEFT JOIN active_coop ON kb_allbusiness.bu_code = active_coop.c_code
      WHERE kb_allbusiness.bu_name LIKE ? 
@@ -54,7 +54,7 @@ exports.deleteBusiness = async (id) => {
 
 exports.getLastUploads = async (limit = 10) => {
   const [rows] = await db.query(`
-    SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date 
+    SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date, active_coop.c_group 
     FROM kb_allbusiness
     LEFT JOIN active_coop ON kb_allbusiness.bu_code = active_coop.c_code 
     ORDER BY kb_allbusiness.bu_id DESC
@@ -68,7 +68,7 @@ exports.ITEMS_PER_PAGE = ITEMS_PER_PAGE;
 exports.getBusinessFilesGrouped = async (search = '', page = 1) => {
   const offset = (page - 1) * ITEMS_PER_PAGE;
   const [rows] = await db.query(
-    `SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date 
+    `SELECT kb_allbusiness.*, active_coop.c_name, active_coop.end_date, active_coop.c_group 
      FROM kb_allbusiness 
      LEFT JOIN active_coop ON kb_allbusiness.bu_code = active_coop.c_code
      WHERE kb_allbusiness.bu_name LIKE ?
@@ -84,4 +84,11 @@ exports.getBusinessFilesGrouped = async (search = '', page = 1) => {
   });
 
   return grouped;
+};
+
+exports.countNewBusinessLast7Days = async () => {
+  const [rows] = await db.query(
+    `SELECT COUNT(*) AS newCount FROM kb_allbusiness WHERE bu_savedate >= DATE_SUB(NOW(), INTERVAL 7 DAY)`
+  );
+  return rows[0].newCount || 0;
 };

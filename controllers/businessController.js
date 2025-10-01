@@ -168,20 +168,18 @@ const loadBusiness = async (req, res) => {
   try {
     const search = req.query.search || '';
     const page = parseInt(req.query.page) || 1;
-
-    // ดึงข้อมูล grouped
     const fileGrouped = await businessModel.getBusinessFilesGrouped(search, page);
-
-    // นับจำนวนแถวเพื่อทำ pagination
     const totalFiles = await businessModel.countBusinessFiles(search);
     const totalPages = Math.ceil(totalFiles / businessModel.ITEMS_PER_PAGE);
-
+    const newUploadCount = await businessModel.countNewBusinessLast7Days();
     res.render('loadBusiness', {
-      fileGrouped,        // ชื่อเดียวกับใน EJS
+      fileGrouped,
       search,
       currentPage: page,
       totalPages,
-      user: req.session.user
+      totalFiles,
+      user: req.session.user,
+      newUploadCount
     });
   } catch (err) {
     console.error('Error loading business files:', err);

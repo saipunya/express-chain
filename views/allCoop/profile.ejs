@@ -14,19 +14,35 @@
         <h4>ข้อมูลการเงิน (Finance)</h4>
         <% if (data.finance && data.finance.length) { %>
           <table class="table table-sm table-bordered">
-            <thead><tr><th>ปี</th><th>ไฟล์</th><th>บันทึกโดย</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>ปี</th>
+                    <th class="text-center">ไฟล์</th>
+                 
+                </tr>
+            </thead>
             <tbody>
               <% data.finance.forEach(f => { %>
                 <tr>
-                  <td><%= f.end_year %></td>
                   <td>
-                    <% if (f.id) { %>
-                      <a href="/finance/download/<%= f.id %>" target="_blank"><%= f.file_name %></a>
-                    <% } else if (f.link_file) { %>
-                      <a href="<%= f.link_file %>" target="_blank">เปิด</a>
+                    <% if (data.coop && data.coop.end_date && f.end_year) { %>
+                      <%= data.coop.end_date + ' '+ f.end_year %>
+                    <% } else if (f.end_year) { %>
+                      <%= f.end_year %>
                     <% } else { %>-<% } %>
                   </td>
-                  <td><%= f.saveby || '-' %></td>
+                  <td class="text-center">
+                    <% if (user) { %>
+                      <% if (f.id) { %>
+                        <a href="/finance/download/<%= f.id %>" target="_blank" class="text-center"><i class="bi bi-file-earmark-text"></i></a>
+                      <% } else if (f.link_file) { %>
+                        <a href="<%= f.link_file %>" target="_blank">เปิด</a>
+                      <% } else { %>-<% } %>
+                    <% } else { %>
+                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                    <% } %>
+                  </td>
+                
                 </tr>
               <% }) %>
             </tbody>
@@ -39,18 +55,34 @@
         <h4>ธุรกิจ (Business)</h4>
         <% if (data.business && data.business.length) { %>
           <table class="table table-sm table-bordered">
-            <thead><tr><th>ปี</th><th>ชื่อ</th><th>ไฟล์</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>ปี</th>
+              
+                    <th class="text-center">ไฟล์</th>
+                </tr>
+            </thead>
             <tbody>
               <% data.business.forEach(b => { %>
                 <tr>
-                  <td><%= b.bu_endyear || '-' %></td>
-                  <td><%= b.bu_name || '-' %></td>
                   <td>
-                    <% if (b.bu_id) { %>
-                      <a href="/business/download/<%= b.bu_id %>" target="_blank"><%= b.bu_filename %></a>
-                    <% } else if (b.bu_filename) { %>
-                      <a href="/uploads/business/<%= b.bu_filename %>" target="_blank"><%= b.bu_filename %></a>
+                    <% if (data.coop && data.coop.end_date && b.bu_endyear) { %>
+                      <%= data.coop.end_date + ' ' + b.bu_endyear %>
+                    <% } else if (b.bu_endyear) { %>
+                      <%= b.bu_endyear %>
                     <% } else { %>-<% } %>
+                  </td>
+                 
+                  <td class="text-center">
+                    <% if (user) { %>
+                      <% if (b.bu_id) { %>
+                        <a href="/business/download/<%= b.bu_id %>" target="_blank"><%= b.bu_filename %></a>
+                      <% } else if (b.bu_filename) { %>
+                        <a href="/uploads/business/<%= b.bu_filename %>" target="_blank"><%= b.bu_filename %></a>
+                      <% } else { %>-<% } %>
+                    <% } else { %>
+                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                    <% } %>
                   </td>
                 </tr>
               <% }) %>
@@ -66,19 +98,43 @@
         <h4>ระเบียบ / ข้อบังคับ (Rules)</h4>
         <% if (data.rules && data.rules.length) { %>
           <table class="table table-sm table-bordered">
-            <thead><tr><th>ปี</th><th>ชื่อ</th><th>ประเภท</th><th>ไฟล์</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>ปี</th>
+                   
+                    <th>ประเภท</th>
+                    <th class="text-center">ไฟล์</th>
+                </tr>
+            </thead>
             <tbody>
               <% data.rules.forEach(r => { %>
                 <tr>
-                  <td><%= r.rule_year || '-' %></td>
-                  <td><%= r.rule_name || '-' %></td>
-                  <td><%= r.rule_type || '-' %></td>
                   <td>
-                    <% if (r.rule_id) { %>
-                      <a href="/rule/<%= r.rule_id %>" target="_blank"><%= r.rule_file %></a>
-                    <% } else if (r.rule_file) { %>
-                      <a href="/uploads/rule/<%= r.rule_file %>" target="_blank"><%= r.rule_file %></a>
+                    <% if (data.coop && data.coop.end_date && r.rule_year) { %>
+                      <%= data.coop.end_date + ' ' + r.rule_year %>
+                    <% } else if (r.rule_year) { %>
+                      <%= r.rule_year %>
                     <% } else { %>-<% } %>
+                  </td>
+                  <td>
+                    <!-- if r.rule_type == 'MR'  -->
+                    <% if (r.rule_type === 'MR') { %>
+                      <span>ข้อบังคับหลัก</span>
+                    <% } %>
+                    <% if (r.rule_type === 'ER') { %>
+                      <span>แก้ไขเพิ่มเติม</span>
+                    <% } %>
+                </td>
+                  <td class="text-center">
+                    <% if (user) { %>
+                      <% if (r.rule_id) { %>
+                        <a href="/rule/<%= r.rule_id %>" target="_blank"><%= r.rule_file %></a>
+                      <% } else if (r.rule_file) { %>
+                        <a href="/uploads/rule/<%= r.rule_file %>" target="_blank"><%= r.rule_file %></a>
+                      <% } else { %>-<% } %>
+                    <% } else { %>
+                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                    <% } %>
                   </td>
                 </tr>
               <% }) %>
@@ -99,21 +155,82 @@
                 <th>ปี</th>
                 <th>จำนวนเงิน</th>
                 <th>วันที่</th>
-                <th>ไฟล์</th>
+                <th class="text-center">ไฟล์</th>
               </tr>
             </thead>
             <tbody>
               <% data.vong.forEach(v => { %>
                 <tr>
-                  <td><%= v.vong_year || '-' %></td>
-                  <td><%= v.vong_money ? v.vong_money.toLocaleString('th-TH') : '-' %></td>
-                  <td><%= v.vong_date ? (new Date(v.vong_date).toLocaleDateString('th-TH')) : '-' %></td>
                   <td>
-                    <% if (v.vong_id) { %>
-                      <a href="/vong/download/<%= v.vong_id %>" target="_blank"><%= v.vong_filename %></a>
-                    <% } else if (v.vong_filename) { %>
-                      <a href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><%= v.vong_filename %></a>
+                    <% if (data.coop && data.coop.end_date && v.vong_year) { %>
+                      <%= data.coop.end_date + ' ' + v.vong_year %>
+                    <% } else if (v.vong_year) { %>
+                      <%= v.vong_year %>
                     <% } else { %>-<% } %>
+                  </td>
+                <td><%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH') : '-' %></td>
+                  
+                
+                <!-- ใส่ bahttext ภาษาไทย -->
+                <td><%= v.vong_money ? bahtText(v.vong_money) : '-' %></td>
+                   
+                
+                
+                <td class="text-center">
+                    <% if (user) { %>
+                      <% if (v.vong_id) { %>
+                        <a href="/vong/download/<%= v.vong_id %>" target="_blank"><%= v.vong_filename %></a>
+                      <% } else if (v.vong_filename) { %>
+                        <a href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><%= v.vong_filename %></a>
+                      <% } else { %>-<% } %>
+                    <% } else { %>
+                      <span class="text-muted text-center" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-muted">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h4>ระเบียบ (Rabiab)</h4>
+        <% if (data.rabiab && data.rabiab.length) { %>
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>ปี</th>
+                <th>ชื่อ</th>
+                <th>วันที่อนุมัติ</th>
+                <th>ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% data.rabiab.forEach(r => { %>
+                <tr>
+                  <td>
+                    <% if (data.coop && data.coop.end_date && r.ra_year) { %>
+                      <%=  r.ra_year %>
+                    <% } else if (r.ra_year) { %>
+                      <%= r.ra_year %>
+                    <% } else { %>-<% } %>
+                  </td>
+                  <td><%= r.ra_name || '-' %></td>
+                  <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
+                  <td class="text-center">
+                    <% if (user) { %>
+                      <% if (r.ra_id) { %>
+                        <a href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                      <% } else if (r.ra_filename) { %>
+                        <a href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-download"></i></a>
+                      <% } else { %>-<% } %>
+                    <% } else { %>
+                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                    <% } %>
                   </td>
                 </tr>
               <% }) %>

@@ -74,9 +74,11 @@ app.use(require('./middlewares/memberCoopLocals'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(morgan('dev'));
 const onlineStatus = require('./middlewares/onlineMiddleware');
+const bahtText = require('./utils/bahtText');
 
 app.use((req, res, next) => {
   res.locals.title = '++ CoopChain : ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ';
+  res.locals.bahtText = bahtText; // make helper available in all views
   next();
 });
 
@@ -90,6 +92,7 @@ const linePush = require('./routes/linePush'); // ส่ง LINE โดยตร
 const memberRoutes = require('./routes/memberRoutes'); // route สมาชิก
 const planMainRoutes = require('./routes/planMainRoutes'); // add this near other route requires
 const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
+const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
 
 // online member
 app.use(onlineStatus);
@@ -100,6 +103,7 @@ app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
 app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
 app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
+app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rabiab (ดาวน์โหลดไฟล์ระเบียบ)
 app.use('/chamra', chamraExportRoute);
 
 // 404 handler

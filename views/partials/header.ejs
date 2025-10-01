@@ -6,11 +6,10 @@
     <title><%= title || 'CoopChainReport' %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@200;400;600;700&display=swap" rel="stylesheet" />
-    <!-- Bootstrap Icons CDN -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body class="d-flex flex-column min-vh-100 flex-grow-1">
@@ -26,7 +25,6 @@
             <li class="nav-item"><a class="nav-link" href="/plan">แผนงาน</a></li>
             <li class="nav-item"><a class="nav-link" href="/finance">รายงานงบการเงิน</a></li>
             <li class="nav-item"><a class="nav-link" href="/business">รายงานกิจการ</a></li>
-
               <li class="nav-item"><a href="/rule" class="nav-link">ข้อบังคับ</a></li>
                <% if(user && user.mClass=='kjs'){ %>
               <li class="nav-item"><a class="nav-link" href="/rabiab">ระเบียบ</a></li>

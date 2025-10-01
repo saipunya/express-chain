@@ -105,55 +105,52 @@ exports.downloadFile = async (req, res) => {
   try {
     const id = req.params.id;
     const vong = await Vong.getById(id);
-
-    if (!vong) {
-      return res.status(404).send('ไม่พบข้อมูล');
-    }
-
+    if (!vong) return res.status(404).send('ไม่พบข้อมูล');
     const filename = vong.vong_filename;
+    if (!filename) return res.status(404).send('ไม่มีไฟล์แนบ');
     const filePath = path.join(__dirname, '..', 'uploads', 'vong', filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).send('ไม่พบไฟล์');
-    }
-
+    if (!fs.existsSync(filePath)) return res.status(404).send('ไม่พบไฟล์');
+    const ext = path.extname(filename).toLowerCase();
+    const isPdf = ext === '.pdf';
     const isAdmin = req.session?.user?.mClass === 'admin';
-    const pdfBytes = fs.readFileSync(filePath);
-    let finalPdfBytes;
-
-    if (isAdmin) {
-      finalPdfBytes = pdfBytes;
-    } else {
-      const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
-      const fontBytes = fs.readFileSync(fontPath);
-
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-      pdfDoc.registerFontkit(fontkit);
-
-      const customFont = await pdfDoc.embedFont(fontBytes);
-      const pages = pdfDoc.getPages();
-
-      const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
-
-      pages.forEach(page => {
-        const { width, height } = page.getSize();
-        page.drawText(watermarkText, {
-          x: width / 4,
-          y: height / 2,
-          size: 30,
-          font: customFont,
-          color: rgb(1, 0, 0),
-          opacity: 0.3,
-          rotate: degrees(45)
-        });
-      });
-
-      finalPdfBytes = await pdfDoc.save();
+    // ถ้าไม่ใช่ PDF ส่งดาวน์โหลดตรง
+    if (!isPdf) {
+      return res.download(filePath, filename);
     }
-
+    // PDF: watermark เฉพาะ non-admin
+    const pdfBytes = fs.readFileSync(filePath);
+    let finalPdfBytes = pdfBytes;
+    if (!isAdmin) {
+      try {
+        const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
+        const fontBytes = fs.readFileSync(fontPath);
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const pages = pdfDoc.getPages();
+        const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดภูมิ';
+        pages.forEach(page => {
+          const { width, height } = page.getSize();
+            page.drawText(watermarkText, {
+              x: width / 4,
+              y: height / 2,
+              size: 30,
+              font: customFont,
+              color: rgb(1, 0, 0),
+              opacity: 0.3,
+              rotate: degrees(45)
+            });
+        });
+        finalPdfBytes = await pdfDoc.save();
+      } catch (wmErr) {
+        console.error('Watermark error, fallback original pdf:', wmErr);
+        finalPdfBytes = pdfBytes; // ส่งไฟล์ต้นฉบับหากทำ watermark ไม่สำเร็จ
+      }
+    }
     res.setHeader('Content-Type', 'application/pdf');
+    // inline เพื่อเปิดในเบราเซอร์; ถ้าต้อง force download เปลี่ยนเป็น attachment
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.send(Buffer.from(finalPdfBytes));
+    return res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).send('ข้อผิดพลาดในการดาวน์โหลด');

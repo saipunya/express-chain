@@ -1,0 +1,52 @@
+<%- include('../partials/header') %>
+<div class="container">
+  <h2>สหกรณ์ทั้งหมด <%= currentGroup ? ('กลุ่ม: ' + currentGroup) : '' %></h2>
+  <div class="row">
+    <div class="col-3">
+      <h4>กลุ่ม</h4>
+      <ul class="list-group mb-3">
+        <li class="list-group-item <%= !currentGroup ? 'active' : '' %>">
+          <a href="/allcoop/group" style="display:block; text-decoration:none; <%= !currentGroup ? 'color:#fff' : '' %>">ทั้งหมด</a>
+        </li>
+        <% if (groups && groups.length) { %>
+          <% groups.forEach(g => { %>
+            <% const gVal = (g.group || g.name || g.code || g).toString(); %>
+            <li class="list-group-item <%= currentGroup === gVal ? 'active' : '' %>">
+              <a href="/allcoop/group/<%= encodeURIComponent(gVal) %>" style="display:block; text-decoration:none; <%= currentGroup === gVal ? 'color:#fff' : '' %>"><%= gVal %></a>
+            </li>
+          <% }) %>
+        <% } else { %>
+          <li class="list-group-item">(ไม่มีข้อมูลกลุ่ม)</li>
+        <% } %>
+      </ul>
+    </div>
+    <div class="col-9">
+      <h4>รายการสหกรณ์</h4>
+      <% if (coops && coops.length) { %>
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>รหัส</th>
+              <th>ชื่อ</th>
+              <th>กลุ่ม</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% coops.forEach((c,i) => { %>
+              <tr>
+                <td><%= i+1 %></td>
+                <td><a href="/allcoop/profile/<%= c.c_code || c.code || '' %>"><%= c.c_code || c.code || '-' %></a></td>
+                <td><%= c.c_name || c.name || '-' %></td>
+                <td><%= c.c_group || c.coop_group || currentGroup || '' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div class="alert alert-info">ยังไม่มีข้อมูลสหกรณ์สำหรับเงื่อนไขนี้</div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

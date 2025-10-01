@@ -1,0 +1,132 @@
+<%- include('../partials/header') %>
+<div class="container">
+  <% if (!data || !data.coop) { %>
+    <div class="alert alert-danger">ไม่พบข้อมูล</div>
+  <% } else { %>
+    <h2>โปรไฟล์สหกรณ์: <%= data.coop.c_name %> (<%= data.coop.c_code %>)</h2>
+    <div class="mb-3">
+      <strong>สถานะ:</strong> <%= data.coop.c_status || '-' %> |
+      <strong>กลุ่ม:</strong> <%= data.coop.c_group || '-' %> |
+      <strong>ประเภท:</strong> <%= data.coop.coop_group || data.coop.c_type || '-' %>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <h4>ข้อมูลการเงิน (Finance)</h4>
+        <% if (data.finance && data.finance.length) { %>
+          <table class="table table-sm table-bordered">
+            <thead><tr><th>ปี</th><th>ไฟล์</th><th>บันทึกโดย</th></tr></thead>
+            <tbody>
+              <% data.finance.forEach(f => { %>
+                <tr>
+                  <td><%= f.end_year %></td>
+                  <td>
+                    <% if (f.id) { %>
+                      <a href="/finance/download/<%= f.id %>" target="_blank"><%= f.file_name %></a>
+                    <% } else if (f.link_file) { %>
+                      <a href="<%= f.link_file %>" target="_blank">เปิด</a>
+                    <% } else { %>-<% } %>
+                  </td>
+                  <td><%= f.saveby || '-' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-muted">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+      <div class="col-md-6">
+        <h4>ธุรกิจ (Business)</h4>
+        <% if (data.business && data.business.length) { %>
+          <table class="table table-sm table-bordered">
+            <thead><tr><th>ปี</th><th>ชื่อ</th><th>ไฟล์</th></tr></thead>
+            <tbody>
+              <% data.business.forEach(b => { %>
+                <tr>
+                  <td><%= b.bu_endyear || '-' %></td>
+                  <td><%= b.bu_name || '-' %></td>
+                  <td>
+                    <% if (b.bu_id) { %>
+                      <a href="/business/download/<%= b.bu_id %>" target="_blank"><%= b.bu_filename %></a>
+                    <% } else if (b.bu_filename) { %>
+                      <a href="/uploads/business/<%= b.bu_filename %>" target="_blank"><%= b.bu_filename %></a>
+                    <% } else { %>-<% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-muted">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h4>ระเบียบ / ข้อบังคับ (Rules)</h4>
+        <% if (data.rules && data.rules.length) { %>
+          <table class="table table-sm table-bordered">
+            <thead><tr><th>ปี</th><th>ชื่อ</th><th>ประเภท</th><th>ไฟล์</th></tr></thead>
+            <tbody>
+              <% data.rules.forEach(r => { %>
+                <tr>
+                  <td><%= r.rule_year || '-' %></td>
+                  <td><%= r.rule_name || '-' %></td>
+                  <td><%= r.rule_type || '-' %></td>
+                  <td>
+                    <% if (r.rule_id) { %>
+                      <a href="/rule/<%= r.rule_id %>" target="_blank"><%= r.rule_file %></a>
+                    <% } else if (r.rule_file) { %>
+                      <a href="/uploads/rule/<%= r.rule_file %>" target="_blank"><%= r.rule_file %></a>
+                    <% } else { %>-<% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-muted">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h4>เงินกองทุน (Vong)</h4>
+        <% if (data.vong && data.vong.length) { %>
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>ปี</th>
+                <th>จำนวนเงิน</th>
+                <th>วันที่</th>
+                <th>ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% data.vong.forEach(v => { %>
+                <tr>
+                  <td><%= v.vong_year || '-' %></td>
+                  <td><%= v.vong_money ? v.vong_money.toLocaleString('th-TH') : '-' %></td>
+                  <td><%= v.vong_date ? (new Date(v.vong_date).toLocaleDateString('th-TH')) : '-' %></td>
+                  <td>
+                    <% if (v.vong_id) { %>
+                      <a href="/vong/download/<%= v.vong_id %>" target="_blank"><%= v.vong_filename %></a>
+                    <% } else if (v.vong_filename) { %>
+                      <a href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><%= v.vong_filename %></a>
+                    <% } else { %>-<% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-muted">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+  <div class="mt-3">
+    <a href="/allcoop/group/<%= (data && data.coop && data.coop.c_group) ? encodeURIComponent(data.coop.c_group) : '' %>" class="btn btn-secondary btn-sm">ย้อนกลับ</a>
+  </div>
+</div>
+<%- include('../partials/footer') %>

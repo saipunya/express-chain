@@ -86,3 +86,22 @@ exports.getLatest = async (limit = 10) => {
   );
   return rows;
 };
+
+// NEW: count all rows for pagination
+exports.countAll = async () => {
+  const [rows] = await db.query('SELECT COUNT(*) AS total FROM vong_coop');
+  return rows[0].total;
+};
+
+// NEW: paged fetch with join ordering by id desc
+exports.getPaged = async (page = 1, pageSize = 20) => {
+  const offset = (page - 1) * pageSize;
+  const [rows] = await db.query(`
+    SELECT vong_coop.*, active_coop.c_name, active_coop.c_group, active_coop.c_code, active_coop.end_date
+    FROM vong_coop
+    LEFT JOIN active_coop ON vong_coop.vong_code = active_coop.c_code
+    ORDER BY vong_coop.vong_id DESC
+    LIMIT ? OFFSET ?
+  `, [Number(pageSize), Number(offset)]);
+  return rows;
+};

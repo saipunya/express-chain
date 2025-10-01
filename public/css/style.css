@@ -90,3 +90,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .marquee__track { animation: none; }
 }
+
+/* --- RQ2 Modern styles --- */
+.rq2-row { transition: background-color .25s ease, transform .25s ease; }
+.rq2-row:hover { background: linear-gradient(90deg, rgba(0,123,255,0.05), rgba(0,123,255,0)); }
+
+.new-badge { font-weight:600; font-size:.55rem; padding:.35rem .55rem; border-radius:50rem; letter-spacing:.5px; animation: newPing 1.8s infinite; box-shadow:0 0 0 0 rgba(220,53,69,.55); }
+@keyframes newPing { 0% { box-shadow:0 0 0 0 rgba(220,53,69,.55); transform:translateY(0);} 60% { box-shadow:0 0 0 8px rgba(220,53,69,0); } 100% { box-shadow:0 0 0 0 rgba(220,53,69,0); transform:translateY(-1px);} }
+
+.table-hover tbody tr { transition: background-color .25s ease; }
+.table-hover tbody tr:hover td { background-color: rgba(0,0,0,0.02); }
+
+.badge.bg-gradient-info { background: linear-gradient(45deg,#3498db,#2980b9) !important; }

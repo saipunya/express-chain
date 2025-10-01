@@ -1,92 +1,212 @@
 <%- include('../partials/header', { title: 'วงเงินกู้ยืมหรือค้ำประกัน' }) %>
 
-<div class="container my-5">
-  <h1 class="text-center mb-4">ข้อมูลวงเงินกู้ยืม/ค้ำประกันของสหกรณ์และกลุ่มเกษตรกร</h1>
+<style>
+  /* Modern enhancements */
+  .page-title {
+    font-weight: 400;
+    letter-spacing: .5px;
+    background: linear-gradient(90deg,#0d6efd,#6610f2);
+    background-clip: text; /* added standard property */
+    -webkit-background-clip: text;
+    color: transparent;
+    padding-bottom: 1rem;
+  }
+  .data-card { border: none; box-shadow: 0 4px 18px rgba(0,0,0,.06); border-radius: 1rem; }
+  .search-wrapper { position: relative; }
+  .search-wrapper .clear-btn { position:absolute; right:.5rem; top:50%; transform:translateY(-50%); border:none; background:transparent; color:#999; }
+  .search-wrapper .clear-btn:hover { color:#dc3545; }
+  table thead th { white-space: nowrap; }
+  table tbody tr { transition: background .25s, transform .25s; }
+  table tbody tr:hover { background:#f8f9fc; }
+  .money-cell { font-weight:600; font-variant-numeric: tabular-nums; }
+  .file-link i { transition: color .25s, transform .25s; }
+  .file-link:hover i { color:#d63384; transform: scale(1.15); }
+  .badge-year { background:#0d6efd; }
+  .highlight { background:#ffe58f; padding:0 .25rem; border-radius:.25rem; }
+  .stat-bar { display:flex; flex-wrap:wrap; gap:1rem; font-size:.9rem; }
+  .stat-bar .stat { background:#f1f5f9; padding:.5rem .85rem; border-radius:.75rem; display:flex; align-items:center; gap:.35rem; }
+  .stat i { color:#0d6efd; }
+  #noResults { display:none; }
+  .pagination-wrapper { padding: .85rem 1rem; display:flex; flex-direction:column; gap:.75rem; }
+  @media (min-width: 576px){ .pagination-wrapper { flex-direction:row; align-items:center; justify-content:space-between; } }
+  .page-size-select { width:auto; }
+  @media (max-width: 768px) {
+    .stat-bar { flex-direction:column; }
+    .search-wrapper { margin-bottom:1rem; }
+  }
+</style>
+
+<div id="vongRoot" class="container my-5" data-total-items="<%= pagination ? pagination.totalItems : (data ? data.length : 0) %>">
+  <h3 class="text-center mb-4 page-title mb-2 text-dark">ข้อมูลวงเงินกู้ยืม/ค้ำประกันของสหกรณ์และกลุ่มเกษตรกร</h3>
   <% if(user && user.mClass === 'kbs') { %>
-  <a href="/vong/create" class="btn btn-primary mb-3">เพิ่มข้อมูล</a>
+  <div class="mb-3 text-end">
+    <a href="/vong/create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-circle me-1"></i> เพิ่มข้อมูล</a>
+  </div>
   <% } %>
 
-  <!-- ช่องค้นหา -->
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <div class="input-group">
-        <input type="text" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน">
-        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">ล้าง</button>
+  <div class="card data-card">
+    <div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div class="search-wrapper flex-grow-1">
+        <input type="text" id="searchInput" class="form-control" placeholder="ระบุชื่อสถาบัน หรือปีบัญชี..." aria-label="ค้นหา">
+        <button class="clear-btn" type="button" onclick="clearSearch()" title="ล้างการค้นหา"><i class="bi bi-x-circle"></i></button>
+      </div>
+      <div class="stat-bar" id="statBar">
+        <div class="stat" id="statCount" title="จำนวนแถว"><i class="bi bi-list-ol"></i> <span>-</span></div>
+        <div class="stat" id="statSum" title="ยอดรวม"><i class="bi bi-currency-exchange"></i> <span>-</span></div>
       </div>
     </div>
-  </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle mb-0" id="vongDataTable">
+        <thead class="table-light">
+          <tr class="text-center">
+            <th>สถาบัน</th>
+            <th>ปีบัญชี</th>
+            <th class="text-end">ยอดเงิน</th>
+            <th>ไฟล์</th>
+            <% if(user && user.mClass === 'admin') { %>
+            <th>Manage</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody id="vongTable">
+        <% data.forEach(row => { %>
+          <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
+          <tr data-money="<%= row.vong_money %>">
+            <td data-label="สถาบัน"><%= row.c_name || row.vong_code %></td>
+            <td data-label="ปีบัญชี"><span class="badge badge-year p-2"><%= row.end_date %> <%= row.vong_year %></span></td>
+            <% if(user) { %>
+            <td class="text-end money-cell" data-label="ยอดเงิน">
+              <%= formatNumber(row.vong_money) %>
+            </td>
+            <td data-label="ไฟล์" class="text-center file-link"><a href="/vong/download/<%= row.vong_id %>" title="ดาวน์โหลดไฟล์"><i class="bi bi-file-pdf-fill fs-5"></i></a></td>
+            <% } else { %>
+            <td class="text-end" data-label="ยอดเงิน"> 
+              <!-- insert key icon -->  <i class="bi bi-lock-fill me-1 text-secondary"></i> <span class="text-muted">ดูข้อมูล</span>
 
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr class="text-center">
-        <th>สถาบัน</th>
-        <th>ปีบัญชี</th>
-        <th>ยอดเงิน</th>
-        <th>ไฟล์</th>
-        <% if(user && user.mClass === 'admin') { %>
-        <th>Manage</th>
-        <% } %>
-      </tr>
-    </thead>
-    <tbody id="vongTable">
-      <% data.forEach(row => { %>
-        <tr>
-          <td><%= row.c_name || row.vong_code %></td>
-          <td><%= row.end_date %> <%= row.vong_year %></td>
-          <!-- thai date -->
-          
-          <!-- ส่วน comma vong_money -->
-           <% const formattedMoney = row.vong_money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); %>
-           <% if(user) { %>
-           <td class="text-end"><%= formattedMoney %></td>
-          <td><a href="/vong/download/<%= row.vong_id %>"><i class="bi bi-file-pdf-fill fs-4"></i></a></td>
-
-           <% } else { %>
-           <td class="text-end"><button class="btn btn-primary" onclick="window.location.href='/auth/login'">เข้าสู่ระบบ</button></td>
-          <td class="text-center"><a href="/auth/login"><i class="bi bi-file-pdf fs-4"></i></a></td>
-           
-           <% } %>
-        
-        
-          <% if(user && user.mClass === 'admin') { %>
-          <td>
-            <a href="/vong/edit/<%= row.vong_id %>">แก้ไข</a> | 
-            <a href="/vong/delete/<%= row.vong_id %>" onclick="return confirm('ลบข้อมูล?')">ลบ</a>
-          </td>
+            </td>
+            <td class="text-center" data-label="ไฟล์"><a href="/auth/login" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-file-pdf fs-5"></i></a></td>
+            <% } %>
+            <% if(user && user.mClass === 'admin') { %>
+            <td data-label="จัดการ" class="text-center">
+              <a href="/vong/edit/<%= row.vong_id %>" class="me-1 text-decoration-none"><i class="bi bi-pencil-square"></i></a>
+              <a href="/vong/delete/<%= row.vong_id %>" onclick="return confirm('ลบข้อมูล?')" class="text-danger text-decoration-none"><i class="bi bi-trash"></i></a>
+            </td>
+            <% } %>
+          </tr>
+        <% }) %>
+        </tbody>
+        <tbody>
+          <tr id="noResults">
+            <td colspan="5" class="text-center text-muted py-4"><i class="bi bi-search me-2"></i>ไม่พบข้อมูลที่ตรงกับการค้นหา</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <% if (pagination && pagination.totalPages > 0) { %>
+    <div class="pagination-wrapper border-top">
+      <form method="get" class="d-flex align-items-center gap-2">
+        <input type="hidden" name="page" value="1">
+        <label class="form-label mb-0 small text-muted">แสดงต่อหน้า</label>
+        <select name="pageSize" class="form-select form-select-sm page-size-select" onchange="this.form.submit()">
+          <% [10,20,30,50,100].forEach(sz => { %>
+            <option value="<%= sz %>" <%= pagination.pageSize === sz ? 'selected' : '' %>><%= sz %></option>
+          <% }) %>
+        </select>
+        <span class="small text-muted">รายการ (รวมทั้งหมด <%= pagination.totalItems %>)</span>
+      </form>
+      <nav aria-label="pagination">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=1&pageSize=<%= pagination.pageSize %>" aria-label="First">«</a>
+          </li>
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=<%= Math.max(1, pagination.page - 1) %>&pageSize=<%= pagination.pageSize %>" aria-label="Previous">‹</a>
+          </li>
+          <% const windowSize = 5; const start = Math.max(1, pagination.page - Math.floor(windowSize/2)); const end = Math.min(pagination.totalPages, start + windowSize - 1); for (let p = start; p <= end; p++) { %>
+            <li class="page-item <%= p === pagination.page ? 'active' : '' %>"><a class="page-link" href="?page=<%= p %>&pageSize=<%= pagination.pageSize %>"><%= p %></a></li>
           <% } %>
-        </tr>
-      <% }) %>
-    </tbody>
-    </table>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=<%= Math.min(pagination.totalPages, pagination.page + 1) %>&pageSize=<%= pagination.pageSize %>" aria-label="Next">›</a>
+          </li>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+            <a class="page-link" href="?page=<%= pagination.totalPages %>&pageSize=<%= pagination.pageSize %>" aria-label="Last">»</a>
+          </li>
+        </ul>
+      </nav>
+      <div class="small text-muted">หน้า <strong><%= pagination.page %></strong> / <%= pagination.totalPages %></div>
+    </div>
+    <% } %>
+  </div>
 </div>
 
 <script>
   const searchInput = document.getElementById('searchInput');
   const vongTable = document.getElementById('vongTable');
+  const noResults = document.getElementById('noResults');
+  const statCount = document.querySelector('#statCount span');
+  const statSum = document.querySelector('#statSum span');
+  const rootEl = document.getElementById('vongRoot');
+  const totalItems = parseInt(rootEl?.dataset.totalItems || '0', 10);
   let searchTimeout;
+
+  function formatNumber(num) { return Number(num).toLocaleString('th-TH'); }
+
+  function updateStats() {
+    const rows = [...vongTable.querySelectorAll('tr')].filter(r => r.style.display !== 'none');
+    statCount.textContent = rows.length + ' รายการ (จากทั้งหมด ' + totalItems + ')';
+    const total = rows.reduce((acc, r) => acc + Number(r.dataset.money || 0), 0);
+    statSum.textContent = formatNumber(total) + ' บาท';
+  }
+
+  function clearHighlights(row) {
+    row.querySelectorAll('.highlight').forEach(el => {
+      el.outerHTML = el.textContent;
+    });
+  }
+
+  function highlight(text, keyword) {
+    if(!keyword) return text;
+    const regex = new RegExp('(' + keyword.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&') + ')', 'ig');
+    return text.replace(regex, '<span class="highlight">$1</span>');
+  }
+
+  function performSearch() {
+    const keyword = searchInput.value.trim().toLowerCase();
+    let visibleCount = 0;
+    const rows = vongTable.querySelectorAll('tr');
+    rows.forEach(row => {
+      clearHighlights(row);
+      const instituteCell = row.children[0];
+      const yearCell = row.children[1];
+      const instituteText = instituteCell.textContent.toLowerCase();
+      const yearText = yearCell.textContent.toLowerCase();
+      const match = !keyword || instituteText.includes(keyword) || yearText.includes(keyword);
+      row.style.display = match ? '' : 'none';
+      if(match) {
+        visibleCount++;
+        if(keyword) {
+          instituteCell.innerHTML = highlight(instituteCell.textContent, keyword);
+          yearCell.innerHTML = highlight(yearCell.innerHTML, keyword);
+        }
+      }
+    });
+    noResults.style.display = visibleCount === 0 ? '' : 'none';
+    updateStats();
+  }
 
   searchInput.addEventListener('keyup', () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const keyword = searchInput.value.toLowerCase();
-      const rows = vongTable.querySelectorAll('tr');
-
-      rows.forEach(row => {
-        const instituteName = row.children[0].innerText.toLowerCase();
-        const year = row.children[1].innerText.toLowerCase();
-        const shouldShow = instituteName.includes(keyword) || year.includes(keyword);
-        row.style.display = shouldShow ? '' : 'none';
-      });
-    }, 100); // รอ 300ms
+    searchTimeout = setTimeout(performSearch, 180);
   });
 
   function clearSearch() {
     searchInput.value = '';
-    const rows = vongTable.querySelectorAll('tr');
-    rows.forEach(row => {
-      row.style.display = '';
-    });
+    performSearch();
+    searchInput.focus();
   }
+
+  // Initial stats
+  updateStats();
 </script>
 
 <%- include('../partials/footer') %>

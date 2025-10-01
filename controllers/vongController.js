@@ -5,8 +5,22 @@ const { PDFDocument, rgb, degrees } = require('pdf-lib');
 const fontkit = require('@pdf-lib/fontkit');
 
 exports.index = async (req, res) => {
-  const data = await Vong.getAll();
-  res.render('vong/index', { data });
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const pageSize = Math.max(parseInt(req.query.pageSize || '20', 10), 1);
+  const [totalItems, data] = await Promise.all([
+    Vong.countAll(),
+    Vong.getPaged(page, pageSize)
+  ]);
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const pagination = {
+    page,
+    pageSize,
+    totalItems,
+    totalPages,
+    hasPrev: page > 1,
+    hasNext: page < totalPages
+  };
+  res.render('vong/index', { data, pagination });
 };
 
 exports.showForm = async (req, res) => {

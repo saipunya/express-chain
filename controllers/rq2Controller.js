@@ -5,8 +5,12 @@ const Rq2 = require('../models/rq2Model');
 const rq2Controller = {
   index: async (req, res) => {
     const search = req.query.search || '';
-    const items = await Rq2.getAll(search);
-    res.render('rq2/index', { items, search });
+    const page = parseInt(req.query.page || '1', 10);
+    const pageSize = parseInt(req.query.pageSize || '10', 10);
+    const { rows, total } = await Rq2.getPaged(search, page, pageSize);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const pagination = { page, pageSize, total, totalPages, hasPrev: page > 1, hasNext: page < totalPages };
+    res.render('rq2/index', { items: rows, search, pagination });
   },
   createForm: async (req, res) => {
     try {

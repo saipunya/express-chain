@@ -1,0 +1,57 @@
+<%- include('./partials/header') %>
+<div class="container mt-4">
+  <h3>📊 นำเข้าข้อมูลความเข้มแข็ง (tbl_strength)</h3>
+  <% if(msg){ %>
+    <div class="alert alert-info py-2"><%= msg %></div>
+  <% } %>
+  <div class="card mb-4">
+    <div class="card-body">
+      <form action="/strength/import" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">ไฟล์ CSV</label>
+          <input type="file" name="file" accept=".csv,text/csv" class="form-control" required>
+          <div class="form-text">ต้องมี header: st_code,st_fullname,st_year,st_no1,st_no2,st_no3,st_no4,st_cpd,st_cad,st_point,st_grade</div>
+        </div>
+        <button class="btn btn-primary">นำเข้า</button>
+      </form>
+    </div>
+  </div>
+  <h5>ข้อมูลล่าสุด (<%= rows.length %> แถว)</h5>
+  <div class="table-responsive" style="max-height:70vh;">
+    <table class="table table-sm table-bordered table-hover align-middle">
+      <thead class="table-light sticky-top">
+        <tr>
+          <th>รหัส</th>
+          <th>ชื่อสหกรณ์</th>
+          <th>ปี</th>
+          <th>no1</th><th>no2</th><th>no3</th><th>no4</th>
+          <th>cpd</th><th>cad</th><th>point</th><th>grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(r => { %>
+          <tr>
+            <td><%= r.st_code %></td>
+            <td><%= r.st_fullname %></td>
+            <td><%= r.st_year %></td>
+            <td><%= r.st_no1 %></td>
+            <td><%= r.st_no2 %></td>
+            <td><%= r.st_no3 %></td>
+            <td><%= r.st_no4 %></td>
+            <td><%= r.st_cpd %></td>
+            <td><%= r.st_cad %></td>
+            <td><%= r.st_point %></td>
+            <td><%= r.st_grade %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-3">
+    <details>
+      <summary class="fw-bold">ตัวอย่างไฟล์ CSV</summary>
+      <pre class="small bg-light p-2 border">st_code,st_fullname,st_year,st_no1,st_no2,st_no3,st_no4,st_cpd,st_cad,st_point,st_grade\nAa10201,ชุมนุมสหกรณ์การเกษตรจังหวัดชัยภูมิ จำกัด,2567,9,9.33,13.34,24,33,22.67,55.67,ชั้น3</pre>
+    </details>
+  </div>
+</div>
+<%- include('./partials/footer') %>

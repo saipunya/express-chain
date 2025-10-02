@@ -610,8 +610,6 @@ function displayGroupName(code){
       <% if (strengthYear && strengthYear !== '-') { %>
         <span class="badge bg-secondary">ปีข้อมูล: <%= strengthYear %></span>
       <% } %>
-      <button class="btn btn-sm btn-outline-success ms-2 js-strength-list" data-group="สหกรณ์" data-year="<%= strengthYear %>">ดูรายชื่อสหกรณ์</button>
-      <button class="btn btn-sm btn-outline-info ms-2 js-strength-list" data-group="กลุ่มเกษตรกร" data-year="<%= strengthYear %>">ดูรายชื่อกลุ่มเกษตรกร</button>
     </div>
     <% if (!grades.length) { %>
       <div class="alert alert-warning text-center">ไม่มีข้อมูลความเข้มแข็ง</div>
@@ -620,7 +618,11 @@ function displayGroupName(code){
         <div class="col-lg-6">
           <div class="card modern-card shadow-sm h-100">
             <div class="card-gradient-bar"></div>
-            <div class="card-header bg-success text-white fw-semibold">สหกรณ์</div>
+            <div class="d-flex justify-content-between bg-success">
+              <div class="card-header  text-white fw-semibold flex-grow-1">สหกรณ์</div>
+              <button class="btn btn-sm btn-outline-light m-2 ms-auto js-strength-list" data-group="สหกรณ์" data-year="<%= strengthYear %>">ดูรายชื่อสหกรณ์</button>
+            </div>
+           
             <div class="card-body p-2">
               <div class="table-responsive">
                 <table class="table table-sm table-bordered table-hover align-middle mb-0">
@@ -648,7 +650,10 @@ function displayGroupName(code){
         <div class="col-lg-6">
           <div class="card modern-card shadow-sm h-100">
             <div class="card-gradient-bar"></div>
-            <div class="card-header bg-info text-white fw-semibold">กลุ่มเกษตรกร</div>
+            <div class="d-flex justify-content-between bg-info">
+              <div class="card-header text-white fw-semibold flex-grow-1">กลุ่มเกษตรกร</div>
+              <button class="btn btn-sm btn-outline-light m-2 ms-auto js-strength-list" data-group="กลุ่มเกษตรกร" data-year="<%= strengthYear %>">ดูรายชื่อกลุ่มเกษตรกร</button>
+            </div>
             <div class="card-body p-2">
               <div class="table-responsive">
                 <table class="table table-sm table-bordered table-hover align-middle mb-0">
@@ -674,9 +679,7 @@ function displayGroupName(code){
           </div>
         </div>
       </div>
-      <div class="text-muted small mt-3 text-center">
-        รวมข้อมูลจากตาราง tbl_strength (แสดงเฉพาะที่มี st_grade) อัปเดตตามการนำเข้า CSV ล่าสุด
-      </div>
+      
     <% } %>
   </div>
 </section>
@@ -708,7 +711,7 @@ function displayGroupName(code){
                 <th style="width:56px;">#</th>
                 <th class="text-start">ชื่อ</th>
                 <th style="width:110px;">เกรด</th>
-                <th style="width:120px;">คะแนน</th>
+                <% if (user) { %><th style="width:120px;">คะแนน</th><% } %>
               </tr>
             </thead>
             <tbody id="strengthTbody"></tbody>
@@ -720,6 +723,7 @@ function displayGroupName(code){
 </div>
 
 <script>
+const STRENGTH_SHOW_POINT = <%= user ? 'true':'false' %>;
 (function(){
   document.addEventListener('click', async function(e){
     const btn = e.target.closest('.js-strength-list');
@@ -734,6 +738,7 @@ function displayGroupName(code){
     const tbody = document.getElementById('strengthTbody');
     const toolbar = document.getElementById('strengthToolbar');
     const countEl = document.getElementById('strengthCount');
+    const filterInput = document.getElementById('strengthFilter');
     titleEl.innerHTML = '<i class="bi bi-speedometer2 me-1"></i> รายชื่อ '+group+' (ปี '+year+')';
     loadingEl.classList.remove('d-none');
     errorEl.classList.add('d-none');
@@ -741,6 +746,7 @@ function displayGroupName(code){
     toolbar.classList.add('d-none');
     tbody.innerHTML='';
     countEl.textContent='';
+    if(filterInput){ filterInput.value=''; }
     try {
       const qs = new URLSearchParams({ group, year });
       const resp = await fetch('/strength/details?'+qs.toString());
@@ -751,15 +757,18 @@ function displayGroupName(code){
         errorEl.textContent = 'ไม่มีข้อมูล';
         errorEl.classList.remove('d-none');
       } else {
-        tbody.innerHTML = data.items.map((it,i)=> `<tr class='fade-in-row' data-name='${(it.st_fullname||'').toLowerCase()} ${it.st_code.toLowerCase()}'>
-          <td class='text-center'>${i+1}</td>
-          <td><a href='/strength/${it.st_code}' target='_blank' class='text-decoration-none fw-semibold'>${it.st_fullname}</a><br><small class='text-muted'>(${it.st_code})</small></td>
-          <td class='text-center'><span class='badge bg-primary rounded-pill px-3'>${it.st_grade||'-'}</span></td>
-          <td class='text-end fw-medium'>${Number(it.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-        </tr>`).join('');
+        tbody.innerHTML = data.items.map((it,i)=> {
+          const base = `<tr class='fade-in-row' data-name='${(it.st_fullname||'').toLowerCase()} ${(it.st_code||'').toLowerCase()}'>
+            <td class='text-center'>${i+1}</td>
+            <td><a href='/strength/${it.st_code}' target='_blank' class='text-decoration-none fw-semibold'>${it.st_fullname}</a><br><small class='text-muted'>(${it.st_code})</small></td>
+            <td class='text-center'><span class='badge bg-primary rounded-pill px-3'>${it.st_grade||'-'}</span></td>`;
+          const point = STRENGTH_SHOW_POINT ? `<td class='text-end fw-medium'>${Number(it.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>` : '';
+          return base + point + '</tr>';
+        }).join('');
         wrapEl.classList.remove('d-none');
         toolbar.classList.remove('d-none');
         if(countEl){ countEl.textContent = 'พบ '+ data.items.length.toLocaleString() +' รายการ'; }
+        if(filterInput){ setTimeout(()=> filterInput.focus(), 150); }
       }
     } catch(err){
       loadingEl.classList.add('d-none');
@@ -768,6 +777,31 @@ function displayGroupName(code){
     }
     const bsModal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
     if(bsModal) bsModal.show();
+  });
+})();
+</script>
+
+<script>
+// Strength modal client-side filter
+(function(){
+  const input = document.getElementById('strengthFilter');
+  if(!input) return;
+  const tbody = document.getElementById('strengthTbody');
+  const countEl = document.getElementById('strengthCount');
+  input.addEventListener('input', function(){
+    const q = this.value.trim().toLowerCase();
+    const rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+    let shown = 0;
+    rows.forEach(r=>{
+      const name = r.getAttribute('data-name')||'';
+      const match = !q || name.includes(q);
+      r.classList.toggle('d-none', !match);
+      if(match) shown++;
+    });
+    if(countEl){
+      const total = rows.length;
+      countEl.textContent = q ? `พบ ${shown.toLocaleString()} / ${total.toLocaleString()} รายการ` : `พบ ${total.toLocaleString()} รายการ`;
+    }
   });
 })();
 </script>
@@ -1540,7 +1574,7 @@ function displayGroupName(code){
   </div>
 </section>
 
-<!-- Data container to hold serialized JSON (avoid inline EJS in JS code) -->
+
 <div id="template-data"
   data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}'
   data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'

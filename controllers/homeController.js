@@ -19,6 +19,7 @@ const activityModel = require('../models/activityModel'); // เพิ่มบ�
 const articleModel = require('../models/articleModel'); // เพิ่มบรรทัดนี้
 const Chamra = require('../models/chamraModel');
 const strengthModel = require('../models/strengthModel'); // NEW strength summary
+const coopProfileModel = require('../models/coopProfileModel'); // NEW: for homepage mini list
 
 // controllers/homeController.js
 
@@ -79,6 +80,9 @@ const homeController = {
       const strengthGrades = Array.from(gradeSet).sort();
       const strengthYear = latestStrengthYear || '-';
 
+      // NEW: fetch small list of coops (mix of coop and farmer) for homepage showcase
+      const { rows: homeCoops } = await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 });
+
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -102,6 +106,7 @@ const homeController = {
         strengthGrades,   // NEW list of grade labels
         strengthData,     // NEW mapping { coop_group: { grade: count } }
         strengthYear,     // NEW selected year for display
+        homeCoops,        // NEW variable for view
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

@@ -4,6 +4,7 @@ const allCoopController = require('../controllers/allCoopController');
 
 // โปรไฟล์สหกรณ์ตามรหัส
 router.get('/profile/:c_code', allCoopController.profile);
+router.get('/', (req, res) => res.redirect('/allCoop/group'));
 
 // แสดงรายชื่อสหกรณ์ทั้งหมด (ไม่มี group ระบุ)
 router.get('/group', allCoopController.byGroup);

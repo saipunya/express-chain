@@ -1,249 +1,376 @@
 <%- include('../partials/header') %>
-<div class="container">
+<div class="container py-4">
   <% if (!data || !data.coop) { %>
-    <div class="alert alert-danger">ไม่พบข้อมูล</div>
+    <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
   <% } else { %>
-    <h2>โปรไฟล์สหกรณ์: <%= data.coop.c_name %> (<%= data.coop.c_code %>)</h2>
-    <div class="mb-3">
-      <strong>สถานะ:</strong> <%= data.coop.c_status || '-' %> |
-      <strong>กลุ่ม:</strong> <%= data.coop.c_group || '-' %> |
-      <strong>ประเภท:</strong> <%= data.coop.coop_group || data.coop.c_type || '-' %>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <h4>ข้อมูลการเงิน (Finance)</h4>
-        <% if (data.finance && data.finance.length) { %>
-          <table class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th>ปี</th>
-                    <th class="text-center">ไฟล์</th>
-                 
-                </tr>
-            </thead>
-            <tbody>
-              <% data.finance.forEach(f => { %>
-                <tr>
-                  <td>
-                    <% if (data.coop && data.coop.end_date && f.end_year) { %>
-                      <%= data.coop.end_date + ' '+ f.end_year %>
-                    <% } else if (f.end_year) { %>
-                      <%= f.end_year %>
-                    <% } else { %>-<% } %>
-                  </td>
-                  <td class="text-center">
-                    <% if (user) { %>
-                      <% if (f.id) { %>
-                        <a href="/finance/download/<%= f.id %>" target="_blank" class="text-center"><i class="bi bi-file-earmark-text"></i></a>
-                      <% } else if (f.link_file) { %>
-                        <a href="<%= f.link_file %>" target="_blank">เปิด</a>
-                      <% } else { %>-<% } %>
-                    <% } else { %>
-                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                    <% } %>
-                  </td>
-                
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูล</div>
-        <% } %>
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+      <div>
+        <h1 class="h4 mb-0"><i class="bi bi-building me-2 text-secondary"></i><%= data.coop.c_name %> <small class="text-muted">(<%= data.coop.c_code %>)</small></h1>
       </div>
-      <div class="col-md-6">
-        <h4>ธุรกิจ (Business)</h4>
-        <% if (data.business && data.business.length) { %>
-          <table class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th>ปี</th>
-              
-                    <th class="text-center">ไฟล์</th>
-                </tr>
-            </thead>
-            <tbody>
-              <% data.business.forEach(b => { %>
-                <tr>
-                  <td>
-                    <% if (data.coop && data.coop.end_date && b.bu_endyear) { %>
-                      <%= data.coop.end_date + ' ' + b.bu_endyear %>
-                    <% } else if (b.bu_endyear) { %>
-                      <%= b.bu_endyear %>
-                    <% } else { %>-<% } %>
-                  </td>
-                 
-                  <td class="text-center">
-                    <% if (user) { %>
-                      <% if (b.bu_id) { %>
-                        <a href="/business/download/<%= b.bu_id %>" target="_blank"><%= b.bu_filename %></a>
-                      <% } else if (b.bu_filename) { %>
-                        <a href="/uploads/business/<%= b.bu_filename %>" target="_blank"><%= b.bu_filename %></a>
-                      <% } else { %>-<% } %>
-                    <% } else { %>
-                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูล</div>
-        <% } %>
+      <div class="text-md-end">
+        <span class="badge rounded-pill bg-info-subtle text-info-emphasis me-1"><i class="bi bi-diagram-3 me-1"></i><%= data.coop.c_group || 'ไม่ระบุ' %></span>
+        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis me-1"><i class="bi bi-layers me-1"></i><%= data.coop.coop_group || data.coop.c_type || 'ไม่ระบุ' %></span>
+        <span class="badge rounded-pill <%= (data.coop.c_status||'')==='ดำเนินการ' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' %>"><i class="bi bi-activity me-1"></i><%= data.coop.c_status || 'ไม่ระบุ' %></span>
       </div>
     </div>
-    <div class="row mt-4">
-      <div class="col-md-12">
-        <h4>ระเบียบ / ข้อบังคับ (Rules)</h4>
-        <% if (data.rules && data.rules.length) { %>
-          <table class="table table-sm table-bordered">
-            <thead>
-                <tr>
-                    <th>ปี</th>
-                   
-                    <th>ประเภท</th>
-                    <th class="text-center">ไฟล์</th>
-                </tr>
-            </thead>
-            <tbody>
-              <% data.rules.forEach(r => { %>
-                <tr>
-                  <td>
-                    <% if (data.coop && data.coop.end_date && r.rule_year) { %>
-                      <%= data.coop.end_date + ' ' + r.rule_year %>
-                    <% } else if (r.rule_year) { %>
-                      <%= r.rule_year %>
-                    <% } else { %>-<% } %>
-                  </td>
-                  <td>
-                    <!-- if r.rule_type == 'MR'  -->
-                    <% if (r.rule_type === 'MR') { %>
-                      <span>ข้อบังคับหลัก</span>
-                    <% } %>
-                    <% if (r.rule_type === 'ER') { %>
-                      <span>แก้ไขเพิ่มเติม</span>
-                    <% } %>
-                </td>
-                  <td class="text-center">
-                    <% if (user) { %>
-                      <% if (r.rule_id) { %>
-                        <a href="/rule/<%= r.rule_id %>" target="_blank"><%= r.rule_file %></a>
-                      <% } else if (r.rule_file) { %>
-                        <a href="/uploads/rule/<%= r.rule_file %>" target="_blank"><%= r.rule_file %></a>
-                      <% } else { %>-<% } %>
-                    <% } else { %>
-                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูล</div>
-        <% } %>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3  active">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body py-3">
+            <div class="small text-uppercase text-muted mb-1">ผลความเข้มแข็ง (ปี)</div>
+            <div class="fw-bold fs-5 text-danger"><%= [...new Set((data.strength||[]).map(s=>s.st_year))].length %></div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="row mt-4">
-      <div class="col-md-12">
-        <h4>เงินกองทุน (Vong)</h4>
-        <% if (data.vong && data.vong.length) { %>
-          <table class="table table-sm table-bordered">
-            <thead>
-              <tr>
-                <th>ปี</th>
-                <th>จำนวนเงิน</th>
-                <th>วันที่</th>
-                <th class="text-center">ไฟล์</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% data.vong.forEach(v => { %>
-                <tr>
-                  <td>
-                    <% if (data.coop && data.coop.end_date && v.vong_year) { %>
-                      <%= data.coop.end_date + ' ' + v.vong_year %>
-                    <% } else if (v.vong_year) { %>
-                      <%= v.vong_year %>
-                    <% } else { %>-<% } %>
-                  </td>
-                <td><%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH') : '-' %></td>
-                  
-                
-                <!-- ใส่ bahttext ภาษาไทย -->
-                <td><%= v.vong_money ? bahtText(v.vong_money) : '-' %></td>
-                   
-                
-                
-                <td class="text-center">
-                    <% if (user) { %>
-                      <% if (v.vong_id) { %>
-                        <a href="/vong/download/<%= v.vong_id %>" target="_blank"><%= v.vong_filename %></a>
-                      <% } else if (v.vong_filename) { %>
-                        <a href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><%= v.vong_filename %></a>
-                      <% } else { %>-<% } %>
-                    <% } else { %>
-                      <span class="text-muted text-center" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูล</div>
-        <% } %>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body py-3">
+            <div class="small text-uppercase text-muted mb-1">รายงานกิจการประจำปี</div>
+            <div class="fw-bold fs-5 text-success"><%= (data.business||[]).length %></div>
+          </div>
+        </div>
       </div>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100 bg-gradient" style="--bs-bg-opacity:.08;">
+          <div class="card-body py-3">
+            <div class="small text-uppercase text-muted mb-1">จำนวนไฟล์การเงิน</div>
+            <div class="fw-bold fs-5 text-primary"><%= (data.finance||[]).length %></div>
+          </div>
+        </div>
+      </div>
+     
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body py-3">
+            <div class="small text-uppercase text-muted mb-1">ข้อบังคับ</div>
+            <div class="fw-bold fs-5 text-warning"><%= (data.rules||[]).length %></div>
+          </div>
+        </div>
+      </div>
+     
     </div>
-    <div class="row mt-4">
-      <div class="col-md-12">
-        <h4>ระเบียบ (Rabiab)</h4>
-        <% if (data.rabiab && data.rabiab.length) { %>
-          <table class="table table-sm table-bordered">
-            <thead>
-              <tr>
-                <th>ปี</th>
-                <th>ชื่อ</th>
-                <th>วันที่อนุมัติ</th>
-                <th>ไฟล์</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% data.rabiab.forEach(r => { %>
-                <tr>
-                  <td>
-                    <% if (data.coop && data.coop.end_date && r.ra_year) { %>
-                      <%=  r.ra_year %>
-                    <% } else if (r.ra_year) { %>
-                      <%= r.ra_year %>
-                    <% } else { %>-<% } %>
-                  </td>
-                  <td><%= r.ra_name || '-' %></td>
-                  <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
-                  <td class="text-center">
-                    <% if (user) { %>
-                      <% if (r.ra_id) { %>
-                        <a href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                      <% } else if (r.ra_filename) { %>
-                        <a href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-download"></i></a>
-                      <% } else { %>-<% } %>
-                    <% } else { %>
-                      <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        <% } else { %>
-          <div class="text-muted">ไม่มีข้อมูล</div>
-        <% } %>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#strength" type="button" role="tab"><i class="bi bi-graph-up-arrow me-1"></i>ศักยภาพ</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#finance" type="button" role="tab"><i class="bi bi-cash-stack me-1"></i>ข้อมูลการเงิน</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#business" type="button" role="tab"><i class="bi bi-briefcase me-1"></i>รายงานกิจการประจำปี</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rules" type="button" role="tab"><i class="bi bi-journal-text me-1"></i>ข้อบังคับ</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rabiab" type="button" role="tab"><i class="bi bi-file-earmark-medical me-1"></i>ระเบียบ</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#vong" type="button" role="tab"><i class="bi bi-piggy-bank me-1"></i>วงเงินกู้ยืม/ค้ำประกัน</button></li>
+    </ul>
+
+    <div class="tab-content" id="profileTabsContent">
+      <!-- Strength Tab (moved first & active) -->
+      <div class="tab-pane fade show active" id="strength" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-info"></i>ผลประเมินความเข้มแข็ง (Strength)</h5>
+            <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.strength||[]).length %> แถว</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.strength && data.strength.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+                  <thead class="table-light">
+                    <tr>
+                      <th>ปี</th>
+                      <th>สถาบัน</th>
+                      <th>เกณฑ์ข้อที่ 1</th>
+                      <th>เกณฑ์ข้อที่ 2</th>
+                      <th>เกณฑ์ข้อที่ 3</th>
+                      <th>เกณฑ์ข้อที่ 4</th>
+                      <th>คะแนนรวม</th>
+                      <th>ระดับ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.strength.forEach(s => { %>
+                      <tr>
+                        <td class="fw-medium"><%= s.st_year || '-' %></td>
+                       
+                        <td><%= s.st_fullname || '-' %></td>
+
+                        <% if(!user) { %>
+                          <td colspan="5" class="text-muted">ข้อมูลไม่สามารถแสดงได้ กรุณาเข้าสู่ระบบ</td>
+                          <% } else { %>
+                          <td><%= s.st_no1 || '-' %></td>
+                          <td><%= s.st_no2 || '-' %></td>
+                          <td><%= s.st_no3 || '-' %></td>
+                          <td><%= s.st_no4 || '-' %></td>
+                          <td><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
+                        
+                        
+                          <% } %>
+                        
+                        
+                        
+                        <td>
+                          <% if (s.st_grade) { %>
+                            <span class="p-2 badge bg-<%= s.st_grade==='ชั้น1' ? 'success' : (s.st_grade==='ชั้น2' ? 'warning' : (s.st_grade==='ชั้น3' ? 'danger text-white' : 'secondary')) %>"><%= s.st_grade %></span>
+                          <% } else { %>-<% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <!-- Finance Tab (remove active class) -->
+      <div class="tab-pane fade" id="finance" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-cash-stack me-2 text-primary"></i>ข้อมูลการเงิน</h5>
+            <span class="badge bg-primary-subtle text-primary-emphasis">รวม <%= (data.finance||[]).length %> รายการ</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.finance && data.finance.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:120px">ปี</th>
+                      <th class="text-center" style="width:80px">ไฟล์</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.finance.forEach(f => { %>
+                      <tr>
+                        <td class="fw-medium"><%= f.end_year || '-' %></td>
+                        <td class="text-center">
+                          <% if (user) { %>
+                            <% if (f.id) { %>
+                              <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <% } else if (f.link_file) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <% } else { %>-<% } %>
+                          <% } else { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Business Tab -->
+      <div class="tab-pane fade" id="business" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-briefcase me-2 text-success"></i>ข้อมูลธุรกิจ</h5>
+            <span class="badge bg-success-subtle text-success-emphasis">รวม <%= (data.business||[]).length %> รายการ</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.business && data.business.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:120px">ปี</th>
+                      <th class="text-center" style="width:80px">ไฟล์</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.business.forEach(b => { %>
+                      <tr>
+                        <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
+                        <td class="text-center">
+                          <% if (user) { %>
+                            <% if (b.bu_id) { %>
+                              <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <% } else if (b.bu_filename) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <% } else { %>-<% } %>
+                          <% } else { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules Tab -->
+      <div class="tab-pane fade" id="rules" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-journal-text me-2 text-warning"></i>ข้อบังคับ</h5>
+            <span class="badge bg-warning-subtle text-warning-emphasis">รวม <%= (data.rules||[]).length %> รายการ</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.rules && data.rules.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:120px">ปี</th>
+                      <th>ประเภท</th>
+                      <th class="text-center" style="width:80px">ไฟล์</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.rules.forEach(r => { %>
+                      <tr>
+                        <td class="fw-medium"><%= r.rule_year || '-' %></td>
+                        <td>
+                          <% if (r.rule_type === 'MR') { %><span class="badge bg-primary-subtle text-primary-emphasis">ข้อบังคับหลัก</span><% } %>
+                          <% if (r.rule_type === 'ER') { %><span class="badge bg-secondary-subtle text-secondary-emphasis">แก้ไขเพิ่มเติม</span><% } %>
+                        </td>
+                        <td class="text-center">
+                          <% if (user) { %>
+                            <% if (r.rule_id) { %>
+                              <a class="btn btn-sm btn-outline-warning" href="/rule/<%= r.rule_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <% } else if (r.rule_file) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/rule/<%= r.rule_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <% } else { %>-<% } %>
+                          <% } else { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rabiab Tab -->
+      <div class="tab-pane fade" id="rabiab" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-file-earmark-medical me-2 text-secondary"></i>ระเบียบ (Rabiab)</h5>
+            <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.rabiab||[]).length %> รายการ</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.rabiab && data.rabiab.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:100px">ปี</th>
+                      <th>ชื่อ</th>
+                      <th>วันที่อนุมัติ</th>
+                      <th class="text-center" style="width:80px">ไฟล์</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.rabiab.forEach(r => { %>
+                      <tr>
+                        <td class="fw-medium"><%= r.ra_year || '-' %></td>
+                        <td><%= r.ra_name || '-' %></td>
+                        <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
+                        <td class="text-center">
+                          <% if (user) { %>
+                            <% if (r.ra_id) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <% } else if (r.ra_filename) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <% } else { %>-<% } %>
+                          <% } else { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vong Tab -->
+      <div class="tab-pane fade" id="vong" role="tabpanel">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-2">
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-piggy-bank me-2 text-danger"></i>วงเงินกู้ยืม/ค้ำประกัน</h5>
+            <span class="badge bg-danger-subtle text-danger-emphasis">รวม <%= (data.vong||[]).length %> รายการ</span>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.vong && data.vong.length) { %>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:100px">ปี</th>
+                      <th>จำนวนเงิน</th>
+                      <th>จำนวนเงิน (ข้อความ)</th>
+                      <th class="text-center" style="width:80px">ไฟล์</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.vong.forEach(v => { %>
+                      <tr>
+                        <td class="fw-medium"><%= v.vong_year || '-' %></td>
+                        <td>
+                          <% if(!user) { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
+                          <% } else { %>
+                            <%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %>
+                            <% } %>
+                        </td>
+                        <td class="text-muted">
+                          <% if(!user) { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
+                          <% } else { %>
+                            <small><%= v.vong_money ? bahtText(v.vong_money) : '-' %></small>
+                          <% } %>
+                        </td>
+                        <td class="text-center">
+                          <% if (user) { %>
+                            <% if (v.vong_id) { %>
+                              <a class="btn btn-sm btn-outline-danger" href="/vong/download/<%= v.vong_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <% } else if (v.vong_filename) { %>
+                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <% } else { %>-<% } %>
+                          <% } else { %>
+                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
       </div>
     </div>
   <% } %>
-  <div class="mt-3">
-    <a href="/allcoop/group/<%= (data && data.coop && data.coop.c_group) ? encodeURIComponent(data.coop.c_group) : '' %>" class="btn btn-secondary btn-sm">ย้อนกลับ</a>
+  <div class="mt-2">
+    <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
   </div>
 </div>
 <%- include('../partials/footer') %>

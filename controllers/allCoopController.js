@@ -13,15 +13,26 @@ exports.profile = async (req, res) => {
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' });
   }
 };
-// List by group (optional group param) + search
+// List by group (optional group param) + search + pagination
 exports.byGroup = async (req, res) => {
   const { group } = req.params;
   const q = (req.query.q || '').trim();
+  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+  const pageSize = Math.min(Math.max(parseInt(req.query.pageSize || '25', 10), 5), 200); // clamp 5-200
   try {
     const groups = await coopProfileModel.getGroups();
-    // Use new unified search
-    const coops = await coopProfileModel.searchCoops({ group: group || null, q: q || null });
-    res.render('allCoop/group', { groups, currentGroup: group || null, coops, search: q });
+    const { rows, total } = await coopProfileModel.searchCoopsPaged({ group: group || null, q: q || null, page, pageSize });
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    res.render('allCoop/group', {
+      groups,
+      currentGroup: group || null,
+      coops: rows,
+      search: q,
+      page,
+      pageSize,
+      total,
+      totalPages
+    });
   } catch (e) {
     console.error('byGroup error', e);
     res.status(500).render('error_page', { message: 'โหลดกลุ่มไม่สำเร็จ' });

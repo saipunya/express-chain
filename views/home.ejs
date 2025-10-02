@@ -588,7 +588,8 @@ function displayGroupName(code){
 
     <% const hasSummary = (typeof summaryByYear !== 'undefined' && summaryByYear); %>
     <% const hasTop = (typeof top !== 'undefined' && Array.isArray(top)); %>
-    <% const yearEntries = hasSummary ? Object.entries(summaryByYear).sort((a,b)=> Number(b[0]) - Number(a[0])) : []; %>
+    <% let yearEntries = hasSummary ? Object.entries(summaryByYear).sort((a,b)=> Number(b[0]) - Number(a[0])) : []; %>
+    <% const targetYear = 2567; yearEntries = yearEntries.filter(([y]) => Number(y) === targetYear); %>
 
     <div class="row g-3">
       <div class="col-lg-4">
@@ -596,7 +597,7 @@ function displayGroupName(code){
           <div class="card-gradient-bar"></div>
           <div class="card-body">
             <h5 class="card-title text-success mb-3">
-              <i class="bi bi-calendar3 me-2"></i> รวมสมาชิกตามปี
+              <i class="bi bi-calendar3 me-2"></i> รวมสมาชิก (เฉพาะปี <%= targetYear %>)
             </h5>
             <% if (yearEntries.length) { %>
               <ul class="list-group list-group-flush">
@@ -608,7 +609,7 @@ function displayGroupName(code){
                 <% }) %>
               </ul>
             <% } else { %>
-              <div class="text-muted">ไม่มีข้อมูลสรุปตามปี</div>
+              <div class="text-muted">ไม่มีข้อมูลสำหรับปี <%= targetYear %></div>
             <% } %>
           </div>
           <div class="card-footer bg-light d-flex justify-content-end">
@@ -624,9 +625,10 @@ function displayGroupName(code){
           <div class="card-gradient-bar"></div>
           <div class="card-body">
             <h5 class="card-title text-primary mb-3">
-              <i class="bi bi-trophy me-2"></i> Top สหกรณ์ (ตามจำนวนสมาชิกรวม)
+              <i class="bi bi-trophy me-2"></i> Top สหกรณ์ (ตามจำนวนสมาชิกรวม ปี <%= targetYear %>)
             </h5>
-            <% if (hasTop && top.length) { %>
+            <% const filteredTop = (hasTop && Array.isArray(top)) ? top.filter(t => Number(t.year) === targetYear) : []; %>
+            <% if (filteredTop.length) { %>
               <div class="table-responsive">
                 <table class="table table-sm table-bordered table-hover align-middle">
                   <thead class="table-light">
@@ -640,12 +642,11 @@ function displayGroupName(code){
                     </tr>
                   </thead>
                   <tbody>
-                  <% top.forEach((t,i)=>{ %>
+                  <% filteredTop.forEach((t,i)=>{ %>
                     <tr>
                       <td class="text-center"><%= i+1 %></td>
                       <td><%= t.name %></td>
-                      <!-- hide td when on sm  -->
-                      <td class="d-none d-sm-table-cell"><%= t.year || 'N/A' %></td> <!-- insert พ.ศ. -->
+                      <td class="d-none d-sm-table-cell"><%= t.year || 'N/A' %></td>
                       <td class="d-none d-sm-table-cell"><%= t.อำเภอ %></td>
                       <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
                       <td class="text-center">
@@ -657,7 +658,7 @@ function displayGroupName(code){
                 </table>
               </div>
             <% } else { %>
-              <div class="text-muted">ไม่มีข้อมูลรายการ Top</div>
+              <div class="text-muted">ไม่มีข้อมูลรายการ Top สำหรับปี <%= targetYear %></div>
             <% } %>
           </div>
           <div class="card-footer bg-light d-flex justify-content-between">
@@ -820,7 +821,7 @@ function displayGroupName(code){
                                 <% } %>
                     </span>
                     <% const ruleSavedDate = new Date(rule.rule_savedate); 
-                    const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate) / (1000 * 60 * 60 * 24)); %>
+                    const currentDate = new Date(); const diffDays = Math.ceil((currentDate - ruleSavedDate ) / (1000 * 60 * 60 * 24)); %>
                     <% if (diffDays <= 7) { %>
                       <img src="/images/newpng.png" alt="New"
                       class="ms-2" style="width: 40px; height: 35px;" />
@@ -1141,12 +1142,10 @@ function displayGroupName(code){
                   </a>
                 <% } else { %>
                   <a href="/auth/login" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-lock me-1"></i> เข้าระบบ
+                    <i class="bi bi-lock me-1"></i> <span class="d-md-block d-none">เข้าระบบ</span>
                   </a>
                 <% } %>
-                <a href="/rq2" class="btn btn-sm btn-link text-decoration-none d-inline d-md-none">
-                  ดูทั้งหมด <i class="bi bi-chevron-right small"></i>
-                </a>
+                
               </div>
               </div>
 

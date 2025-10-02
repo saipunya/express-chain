@@ -128,7 +128,7 @@ exports.downloadById = async (req, res) => {
       const customFont = await pdfDoc.embedFont(fontBytes);
       const pages = pdfDoc.getPages();
 
-      const watermarkText = 'ใช้สหกรณ์เท่า้น !';
+      const watermarkText = 'ใช้สหกรณ์เท่านั้น !';
 
       pages.forEach(page => {
         const { width, height } = page.getSize();

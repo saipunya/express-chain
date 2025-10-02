@@ -11,5 +11,9 @@ router.use(requireLogin);
 router.get('/', strengthController.showPage);
 // นำเข้าไฟล์ CSV
 router.post('/import', csvUpload.single('file'), strengthController.importCsv);
+// API route for fetching per-institution strength list
+router.get('/details', strengthController.getDetailsApi);
+// Show per-institution strength detail by code
+router.get('/:code', strengthController.showInstitutionDetail);
 
 module.exports = router;

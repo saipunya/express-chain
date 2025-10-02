@@ -1,0 +1,102 @@
+<%- include('partials/header',{ title }) %>
+<div class="container py-4">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/strength">Strength</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= profile.c_name %> (<%= profile.c_code %>)</li>
+    </ol>
+  </nav>
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-building me-2"></i>ข้อมูลสถาบัน
+        </div>
+        <div class="card-body small">
+          <p class="mb-1"><strong>ชื่อ:</strong> <%= profile.c_name %></p>
+          <p class="mb-1"><strong>รหัส:</strong> <code><%= profile.c_code %></code></p>
+            <p class="mb-1"><strong>ประเภท:</strong> <%= profile.coop_group %></p>
+            <p class="mb-1"><strong>ชนิด:</strong> <%= profile.c_type || '-' %></p>
+            <p class="mb-1"><strong>อำเภอ:</strong> <%= profile.c_amp || '-' %></p>
+            <p class="mb-1"><strong>ตำบล:</strong> <%= profile.c_tambon || '-' %></p>
+        </div>
+        <div class="card-footer bg-light text-end">
+          <a href="/strength" class="btn btn-sm btn-outline-secondary">ย้อนกลับ</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-speedometer2 me-2"></i>ประวัติความเข้มแข็ง</span>
+          <div>
+            <button id="btnExportCSV" class="btn btn-sm btn-outline-light">CSV</button>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <% if (!(rows||[]).length) { %>
+            <div class="alert alert-warning mb-0 text-center">ไม่มีข้อมูล</div>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered table-hover align-middle mb-0" id="strengthHistoryTbl">
+                <thead class="table-light">
+                  <tr class="text-center">
+                    <th>ปี</th>
+                    <th>คะแนนรวม</th>
+                    <th>เกรด</th>
+                    <th>No1</th>
+                    <th>No2</th>
+                    <th>No3</th>
+                    <th>No4</th>
+                    <th>CPD</th>
+                    <th>CAD</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% rows.forEach(r => { %>
+                    <tr>
+                      <td class="text-center"><%= r.st_year %></td>
+                      <td class="text-end"><%= Number(r.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) %></td>
+                      <td class="text-center"><span class="badge bg-primary"><%= r.st_grade || '-' %></span></td>
+                      <td class="text-end"><%= r.st_no1 %></td>
+                      <td class="text-end"><%= r.st_no2 %></td>
+                      <td class="text-end"><%= r.st_no3 %></td>
+                      <td class="text-end"><%= r.st_no4 %></td>
+                      <td class="text-end"><%= r.st_cpd %></td>
+                      <td class="text-end"><%= r.st_cad %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function(){
+    const btn = document.getElementById('btnExportCSV');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const table = document.getElementById('strengthHistoryTbl');
+      if(!table) return;
+      let csv = [];
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(tr => {
+        const cells = [...tr.children].map(td => '"'+ (td.innerText||'').replace(/"/g,'""') +'"');
+        csv.push(cells.join(','));
+      });
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'strength_<%= profile.c_code %>.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    });
+  })();
+</script>
+<%- include('partials/footer') %>

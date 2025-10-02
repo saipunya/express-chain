@@ -124,3 +124,36 @@ exports.importCsv = async (req, res) => {
     res.redirect('/strength?msg=พลาดนำเข้า:'+short);
   }
 };
+
+exports.getDetailsApi = async (req, res) => {
+  try {
+    const group = req.query.group || 'สหกรณ์';
+    let year = parseInt(req.query.year, 10);
+    if (!year || isNaN(year)) {
+      if (strengthModel.getLatestYear) {
+        year = await strengthModel.getLatestYear();
+      }
+    }
+    if (!year) return res.json({ year: null, items: [] });
+    if (!['สหกรณ์','กลุ่มเกษตรกร'].includes(group)) return res.status(400).json({ error: 'กลุ่มไม่ถูกต้อง' });
+    const items = await strengthModel.getDetailsByGroupAndYear(group, year);
+    res.json({ year, group, count: items.length, items });
+  } catch (e) {
+    console.error('strength details api error', e);
+    res.status(500).json({ error: 'server error' });
+  }
+};
+
+exports.showInstitutionDetail = async (req, res) => {
+  try {
+    const code = req.params.code;
+    if (!code) return res.status(400).send('รหัสไม่ถูกต้อง');
+    const profile = await strengthModel.getInstitutionProfile(code);
+    if (!profile) return res.status(404).send('ไม่พบสหกรณ์/กลุ่มเกษตรกรนี้');
+    const rows = await strengthModel.getByCode(code);
+    res.render('strengthDetail', { title: 'รายละเอียดความเข้มแข็ง', profile, rows, user: req.session.user });
+  } catch (e) {
+    console.error('showInstitutionDetail error', e);
+    res.status(500).send('พลาดโหลดข้อมูล');
+  }
+};

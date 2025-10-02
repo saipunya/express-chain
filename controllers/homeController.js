@@ -18,6 +18,7 @@ const Command = require('../models/commandModel');
 const activityModel = require('../models/activityModel'); // เพิ่มบรรทัดนี้
 const articleModel = require('../models/articleModel'); // เพิ่มบรรทัดนี้
 const Chamra = require('../models/chamraModel');
+const strengthModel = require('../models/strengthModel'); // NEW strength summary
 
 // controllers/homeController.js
 
@@ -64,6 +65,20 @@ const homeController = {
       const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
       const lastArticles = await articleModel.getLast(4);
       const homeProcesses = await Chamra.getRecentProcesses(8);
+
+      // NEW strength grade aggregation
+      const latestStrengthYear = await strengthModel.getLatestYear();
+      const gradeCounts = latestStrengthYear ? await strengthModel.getGradeCounts(latestStrengthYear).catch(() => []) : [];
+      const gradeSet = new Set();
+      const strengthData = {};
+      gradeCounts.forEach(r => { 
+        gradeSet.add(r.st_grade); 
+        if (!strengthData[r.coop_group]) strengthData[r.coop_group] = {}; 
+        strengthData[r.coop_group][r.st_grade] = r.total; 
+      });
+      const strengthGrades = Array.from(gradeSet).sort();
+      const strengthYear = latestStrengthYear || '-';
+
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -84,6 +99,9 @@ const homeController = {
         coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
         homeProcesses,
         closingByGroup,   // NEW expose raw
+        strengthGrades,   // NEW list of grade labels
+        strengthData,     // NEW mapping { coop_group: { grade: count } }
+        strengthYear,     // NEW selected year for display
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

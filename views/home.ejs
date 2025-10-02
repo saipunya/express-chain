@@ -247,6 +247,22 @@
   .back-to-top:focus-visible { outline:3px solid #fff; outline-offset:2px; }
   .badge { letter-spacing:.3px; }
   .hp-badge { font-size:.65rem; }
+  /* === Enhanced Modal Styling === */
+  .modal-elevated .modal-content { border:0; border-radius:1.25rem; box-shadow:0 18px 48px -12px rgba(0,0,0,.35); overflow:hidden; }
+  .modal-gradient { background:linear-gradient(135deg,#2563eb,#6366f1,#8b5cf6); color:#fff; }
+  .modal-gradient .btn-close { filter:invert(1) contrast(200%); opacity:.85; }
+  .modal-gradient .btn-close:hover { opacity:1; }
+  .modal-body { background:var(--color-bg,#f5f7fa); }
+  .modal-section-divider { height:1px; background:rgba(255,255,255,.15); margin:.35rem 0 0; }
+  .table-modern thead th { position:sticky; top:0; background:#fff; z-index:5; font-weight:600; box-shadow:0 2px 0 0 #e2e8f0; }
+  .table-modern tbody tr { transition:.25s; }
+  .table-modern tbody tr:hover { background:#f1f5f9; }
+  .loading-fade { animation:fadePulse 1.6s ease-in-out infinite; }
+  @keyframes fadePulse { 0%,100% { opacity:.35;} 50% { opacity:1;} }
+  .badge-soft { background:linear-gradient(135deg,#e0f2fe,#f0f9ff); color:#0369a1; border:1px solid #bae6fd; }
+  .modal-search-bar { border-radius: 50px; padding:.55rem 1rem; border:1px solid #cbd5e1; background:#fff; }
+  .fade-in-row { animation:fadeInUp .45s cubic-bezier(.4,.8,.2,1); }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
 </style>
 
 <!-- Added: Light theme & contrast fixes -->
@@ -416,6 +432,7 @@ function displayGroupName(code){
     <a href="#stats"><i class="bi bi-collection"></i>สถิติ</a>
     <a href="#charts"><i class="bi bi-bar-chart"></i>กราฟ</a>
     <a href="#groups"><i class="bi bi-diagram-3"></i>กลุ่ม</a>
+    <a href="#strength"><i class="bi bi-speedometer2"></i>ความเข้มแข็ง</a>
     <a href="#members"><i class="bi bi-people"></i>สมาชิก</a>
     <a href="#activities"><i class="bi bi-calendar-event"></i>กิจกรรม</a>
     <a href="#finance"><i class="bi bi-cash-coin"></i>งบการเงิน</a>
@@ -563,21 +580,197 @@ function displayGroupName(code){
 </section>
 
 <!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->
-<div class="modal fade" id="groupItemsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade modal-elevated" id="groupItemsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="groupItemsModalLabel">...</h5>
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0 d-flex align-items-center gap-2" id="groupItemsModalLabel"><i class="bi bi-diagram-3"></i> รายชื่อ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div id="groupItemsLoading" class="text-center text-muted py-3">กำลังโหลด...</div>
+        <div id="groupItemsLoading" class="text-center py-5">
+          <div class="spinner-border text-light mb-3" role="status"></div>
+          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
+        </div>
+        <div id="groupItemsError" class="alert alert-danger d-none"></div>
         <ul id="groupItemsList" class="list-group d-none"></ul>
-        <div id="groupItemsError" class="alert alert-danger d-none mb-0"></div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- NEW Strength Summary Section -->
+<section id="strength" class="section-block bg-light">
+  <div class="container">
+    <h2 class="text-center text-primary section-title mb-4">📌 สรุประดับความเข้มแข็ง (ปี <%= strengthYear %>)</h2>
+    <% const grades = (strengthGrades||[]); const sData = (strengthData||{});
+       function rowTotal(group){ return grades.reduce((a,g)=> a + (sData[group] && sData[group][g] || 0),0); }
+    %>
+    <div class="text-center mb-3">
+      <% if (strengthYear && strengthYear !== '-') { %>
+        <span class="badge bg-secondary">ปีข้อมูล: <%= strengthYear %></span>
+      <% } %>
+      <button class="btn btn-sm btn-outline-success ms-2 js-strength-list" data-group="สหกรณ์" data-year="<%= strengthYear %>">ดูรายชื่อสหกรณ์</button>
+      <button class="btn btn-sm btn-outline-info ms-2 js-strength-list" data-group="กลุ่มเกษตรกร" data-year="<%= strengthYear %>">ดูรายชื่อกลุ่มเกษตรกร</button>
+    </div>
+    <% if (!grades.length) { %>
+      <div class="alert alert-warning text-center">ไม่มีข้อมูลความเข้มแข็ง</div>
+    <% } else { %>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card modern-card shadow-sm h-100">
+            <div class="card-gradient-bar"></div>
+            <div class="card-header bg-success text-white fw-semibold">สหกรณ์</div>
+            <div class="card-body p-2">
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-center">ระดับ</th>
+                      <% grades.forEach(g => { %><th class="text-center"><%= g %></th><% }); %>
+                      <th class="text-center bg-secondary text-white">รวม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="fw-semibold text-center">สหกรณ์</td>
+                      <% grades.forEach(g => { const v=(sData['สหกรณ์']&&sData['สหกรณ์'][g])||0; %>
+                        <td class="text-center"><%= v.toLocaleString() %></td>
+                      <% }); %>
+                      <td class="text-center fw-bold bg-secondary text-white"><%= rowTotal('สหกรณ์').toLocaleString() %></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card modern-card shadow-sm h-100">
+            <div class="card-gradient-bar"></div>
+            <div class="card-header bg-info text-white fw-semibold">กลุ่มเกษตรกร</div>
+            <div class="card-body p-2">
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-center">ระดับ</th>
+                      <% grades.forEach(g => { %><th class="text-center"><%= g %></th><% }); %>
+                      <th class="text-center bg-secondary text-white">รวม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="fw-semibold text-center">กลุ่มเกษตรกร</td>
+                      <% grades.forEach(g => { const v=(sData['กลุ่มเกษตรกร']&&sData['กลุ่มเกษตรกร'][g])||0; %>
+                        <td class="text-center"><%= v.toLocaleString() %></td>
+                      <% }); %>
+                      <td class="text-center fw-bold bg-secondary text-white"><%= rowTotal('กลุ่มเกษตรกร').toLocaleString() %></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-muted small mt-3 text-center">
+        รวมข้อมูลจากตาราง tbl_strength (แสดงเฉพาะที่มี st_grade) อัปเดตตามการนำเข้า CSV ล่าสุด
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Strength Modal -->
+<div class="modal fade modal-elevated" id="strengthModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="strengthModalLabel">
+          <i class="bi bi-speedometer2"></i> รายชื่อ
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="strengthLoading" class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status"></div>
+          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
+        </div>
+        <div id="strengthError" class="alert alert-danger d-none"></div>
+        <div class="d-flex justify-content-between align-items-center mb-2 d-none" id="strengthToolbar">
+          <input type="text" class="modal-search-bar" id="strengthFilter" placeholder="🔍 ค้นหา..."/>
+          <div class="small text-muted" id="strengthCount"></div>
+        </div>
+        <div class="table-responsive d-none" id="strengthTableWrap">
+          <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-center">
+                <th style="width:56px;">#</th>
+                <th class="text-start">ชื่อ</th>
+                <th style="width:110px;">เกรด</th>
+                <th style="width:120px;">คะแนน</th>
+              </tr>
+            </thead>
+            <tbody id="strengthTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest('.js-strength-list');
+    if(!btn) return;
+    const group = btn.getAttribute('data-group');
+    const year = btn.getAttribute('data-year');
+    const modalEl = document.getElementById('strengthModal');
+    const titleEl = document.getElementById('strengthModalLabel');
+    const loadingEl = document.getElementById('strengthLoading');
+    const errorEl = document.getElementById('strengthError');
+    const wrapEl = document.getElementById('strengthTableWrap');
+    const tbody = document.getElementById('strengthTbody');
+    const toolbar = document.getElementById('strengthToolbar');
+    const countEl = document.getElementById('strengthCount');
+    titleEl.innerHTML = '<i class="bi bi-speedometer2 me-1"></i> รายชื่อ '+group+' (ปี '+year+')';
+    loadingEl.classList.remove('d-none');
+    errorEl.classList.add('d-none');
+    wrapEl.classList.add('d-none');
+    toolbar.classList.add('d-none');
+    tbody.innerHTML='';
+    countEl.textContent='';
+    try {
+      const qs = new URLSearchParams({ group, year });
+      const resp = await fetch('/strength/details?'+qs.toString());
+      if(!resp.ok) throw new Error('network');
+      const data = await resp.json();
+      loadingEl.classList.add('d-none');
+      if(!data.items || !data.items.length){
+        errorEl.textContent = 'ไม่มีข้อมูล';
+        errorEl.classList.remove('d-none');
+      } else {
+        tbody.innerHTML = data.items.map((it,i)=> `<tr class='fade-in-row' data-name='${(it.st_fullname||'').toLowerCase()} ${it.st_code.toLowerCase()}'>
+          <td class='text-center'>${i+1}</td>
+          <td><a href='/strength/${it.st_code}' target='_blank' class='text-decoration-none fw-semibold'>${it.st_fullname}</a><br><small class='text-muted'>(${it.st_code})</small></td>
+          <td class='text-center'><span class='badge bg-primary rounded-pill px-3'>${it.st_grade||'-'}</span></td>
+          <td class='text-end fw-medium'>${Number(it.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        </tr>`).join('');
+        wrapEl.classList.remove('d-none');
+        toolbar.classList.remove('d-none');
+        if(countEl){ countEl.textContent = 'พบ '+ data.items.length.toLocaleString() +' รายการ'; }
+      }
+    } catch(err){
+      loadingEl.classList.add('d-none');
+      errorEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+      errorEl.classList.remove('d-none');
+    }
+    const bsModal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
+    if(bsModal) bsModal.show();
+  });
+})();
+</script>
 
 <!-- ================= Member Summary ================= -->
 <section id="members" class="section-block bg-light">
@@ -711,11 +904,11 @@ function displayGroupName(code){
 
 <!-- ================= Finance & Business ================= -->
 <section id="finance" class="section-block bg-white">
-  <div class="container-lg">
+  
     <div class="row">
-      <div class="col-md-6 mb-4">
+      <div class="col-md-6">
         <div class="p-4 rounded shadow-sm h-100 modern-card">
-          <div class="card-gradient-bar"></div>
+          
           <h2 class="mb-4 text-center text-success">📂 รายงานงบการเงิน</h2>
           <ul class="list-group list-group-flush">
             <% finances.slice(0, 10).forEach((file, index)=> { %>
@@ -751,10 +944,9 @@ function displayGroupName(code){
           </div>
         </div>
       </div>
-
-      <div class="col-md-6 mb-4">
+      <div class="col-md-6">
         <div class=" p-4 rounded shadow-sm h-100 modern-card">
-          <div class="card-gradient-bar"></div>
+         
           <h2 class="mb-4 text-center text-info">💼 รายงานกิจการ</h2>
           <ul class="list-group list-group-flush">
             <% businessFiles.slice(0, 10).forEach((business, index)=> { %>
@@ -797,7 +989,7 @@ function displayGroupName(code){
 </section>
 
 <section id="rules" class="section-block bg-white">
-  <div class="container-lg">
+  <div class="container">
     <div class="row">
       <div class="col-md-6 mb-4">
         <div class=" p-4 rounded shadow-sm h-100 modern-card">
@@ -836,12 +1028,11 @@ function displayGroupName(code){
               </li>
             <% }); %>
           </ul>
-          <div class="text-end mt-2">
+          <div class="text-end mt-2"></div>
             <a href="/rule" class="btn btn-danger btn-sm px-4 shadow-sm">
               📋 ดูทั้งหมด
             </a>
           </div>
-        </div>
       </div>
       <div class="col-md-6 mb-4">
         <div class=" p-4 rounded shadow-sm h-100 modern-card">
@@ -879,7 +1070,9 @@ function displayGroupName(code){
         </div>
       </div>
     </div>
+
   </div>
+</div>
 </section>
 
 <section id="projects" class="section-block bg-light">
@@ -1090,6 +1283,7 @@ function displayGroupName(code){
 
 <section id="rq2" class="py-4">
   <div class="container-lg">
+    <div class="row">
     <div class="d-flex flex-wrap align-items-center mb-3">
       <h2 class="h4 mb-2 mb-sm-0 text-primary">
         <i class="bi bi-file-earmark-ruled me-2"></i>RQ2 ล่าสุด
@@ -1099,12 +1293,12 @@ function displayGroupName(code){
       </a>
     </div>
 
-    <div class="row g-3">
+    <div class="row g-3"></div>
       <% (lastRq2 || []).forEach((r, idx)=> { 
          const rqSavedDate = new Date(r.rq_savedate);
          const diffDays = Math.ceil((Date.now() - rqSavedDate) / 86400000);
       %>
-        <div class="col-12 col-lg-6">
+        <div class="col-12 col-lg-6 mb-2">
           <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex flex-column">
               <div class="d-flex align-items-start mb-2">
@@ -1163,6 +1357,7 @@ function displayGroupName(code){
         </div>
       <% } %>
     </div>
+  </div>
   </div>
 </section>
 
@@ -1342,6 +1537,7 @@ function displayGroupName(code){
       </div>
     </div>
   </div>
+  </div>
 </section>
 
 <!-- Data container to hold serialized JSON (avoid inline EJS in JS code) -->
@@ -1458,40 +1654,51 @@ function displayGroupName(code){
 </script>
 
 <script>
-  // Pie chart using coopGroupStatsData from data attributes
-  const totalCoop = coopGroupStatsData.reduce((a,b)=> a + Number(b.coop||0),0);
-  const totalFarmer = coopGroupStatsData.reduce((a,b)=> a + Number(b.farmer||0),0);
-  const ctxPie = document.getElementById('coopPieChart').getContext('2d');
-  const coopPieChart = new Chart(ctxPie, {
-    type: 'pie',
-    data: {
-      labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
-      datasets: [{
-        data: [totalCoop, totalFarmer],
-        backgroundColor: [
-          'rgba(25, 135, 84, 0.7)',
-          'rgba(13, 202, 240, 0.7)'
-        ],
-        borderColor: [
-          'rgba(25, 135, 84, 1)',
-          'rgba(13, 202, 240, 1)'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom' },
-        datalabels: {
-          color: '#000',
-          font: { weight: 'bold', size: 16 },
-          formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex] + ': ' + value
+  // Pie chart using coopGroupStatsData from data attributes (fixed script tag)
+  (function(){
+    const totalCoop = coopGroupStatsData.reduce((a,b)=> a + Number(b.coop||0),0);
+    const totalFarmer = coopGroupStatsData.reduce((a,b)=> a + Number(b.farmer||0),0);
+    const totalAll = totalCoop + totalFarmer || 1;
+    const ctxPie = document.getElementById('coopPieChart').getContext('2d');
+    if(!ctxPie) return;
+    new Chart(ctxPie, {
+      type: 'pie',
+      data: {
+        labels: ['สหกรณ์', 'กลุ่มเกษตรกร'],
+        datasets: [{
+          data: [totalCoop, totalFarmer],
+          backgroundColor: [
+            'rgba(25, 135, 84, 0.75)',
+            'rgba(13, 202, 240, 0.75)'
+          ],
+          borderColor: [
+            'rgba(25, 135, 84, 1)',
+            'rgba(13, 202, 240, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { label: (ctx)=> {
+            const v = ctx.parsed; const p = (v/totalAll*100).toFixed(1);
+            return `${ctx.label}: ${v.toLocaleString()} (${p}%)`;
+          }}},
+          datalabels: {
+            color: '#000',
+            font: { weight: 'bold', size: 14 },
+            formatter: (value, ctx) => {
+              const p = (value/totalAll*100).toFixed(1);
+              return p+'%';
+            }
+          }
         }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
+      },
+      plugins: [ChartDataLabels]
+    });
+  })();
   window.coopGroupStats = coopGroupStatsData;
 </script>
 

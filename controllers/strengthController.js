@@ -58,6 +58,20 @@ exports.showPage = async (req, res) => {
   }
 };
 
+// Utility: normalize keys (handle BOM on first header) and trim
+function normalizeRecord(obj) {
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    let nk = k.replace(/^\uFEFF/, '').replace(/^\u00EF\u00BB\u00BF/, ''); // stray BOM
+    if (nk === 'ï»¿st_code') nk = 'st_code';
+    out[nk] = typeof obj[k] === 'string' ? obj[k].trim() : obj[k];
+  });
+  return out;
+}
+
+// Split array into chunks
+function chunk(arr, size) { const r=[]; for (let i=0;i<arr.length;i+=size) r.push(arr.slice(i,i+size)); return r; }
+
 // POST upload CSV
 exports.importCsv = async (req, res) => {
   try {
@@ -66,22 +80,17 @@ exports.importCsv = async (req, res) => {
     const { text: content, encoding } = decodeThai(raw);
     const records = [];
     await new Promise((resolve, reject) => {
-      parse(content, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true
-      })
-        .on('readable', function () {
-          let r; while ((r = this.read())) records.push(r);
-        })
+      parse(content, { columns: true, skip_empty_lines: true, trim: true })
+        .on('readable', function () { let r; while ((r = this.read())) records.push(r); })
         .on('error', reject)
         .on('end', resolve);
     });
-    const mapNumber = v => (v === '' || v == null ? 0 : Number(parseFloat(v).toFixed(2)));
-    const prepared = records.map(r => ({
-      st_code: r.st_code?.trim(),
-      st_fullname: r.st_fullname?.trim(),
-      st_year: parseInt(r.st_year, 10) || 0,
+    if (!records.length) return res.redirect('/strength?msg=ไฟล์ว่าง');
+    const mapNumber = v => { if (v === '' || v == null) return 0; const num = Number(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(num)?0:Number(num.toFixed(2)); };
+    const prepared = records.map(r => normalizeRecord(r)).map(r => ({
+      st_code: r.st_code,
+      st_fullname: r.st_fullname,
+      st_year: parseInt(r.st_year,10)||0,
       st_no1: mapNumber(r.st_no1),
       st_no2: mapNumber(r.st_no2),
       st_no3: mapNumber(r.st_no3),
@@ -89,13 +98,18 @@ exports.importCsv = async (req, res) => {
       st_cpd: mapNumber(r.st_cpd),
       st_cad: mapNumber(r.st_cad),
       st_point: mapNumber(r.st_point),
-      st_grade: r.st_grade?.trim() || ''
+      st_grade: r.st_grade||''
     })).filter(r => r.st_code && r.st_fullname);
-    if (!prepared.length) return res.redirect('/strength?msg=ไม่พบข้อมูล');
-    await strengthModel.bulkUpsert(prepared);
-    res.redirect('/strength?msg=นำเข้าแล้ว ' + prepared.length + ' แถว (enc=' + encoding + ')');
+    if (!prepared.length) return res.redirect('/strength?msg=หัวคอลัมน์ไม่ถูก (ตรวจ st_code...)');
+    // Insert in chunks (e.g., 200 rows) to avoid packet / placeholder issues
+    const batches = chunk(prepared, 200);
+    for (const b of batches) {
+      await strengthModel.bulkUpsert(b);
+    }
+    res.redirect('/strength?msg=สำเร็จ '+prepared.length+' แถว (enc='+encoding+')');
   } catch (e) {
     console.error('Import strength error', e);
-    res.redirect('/strength?msg=พลาดนำเข้า');
+    const short = encodeURIComponent(e.code || e.message.substring(0,120));
+    res.redirect('/strength?msg=พลาดนำเข้า:'+short);
   }
 };

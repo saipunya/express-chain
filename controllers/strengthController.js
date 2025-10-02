@@ -11,7 +11,18 @@ function decodeThai(buffer) {
   if (buffer.length >= 3 && buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
     return { text: buffer.toString('utf8'), encoding: 'UTF-8-BOM' };
   }
-  const detectedList = chardet.detectAll(buffer).slice(0, 3);
+  // Fallback-safe detection list
+  let detectedList = [];
+  try {
+    if (typeof chardet.detectAll === 'function') {
+      detectedList = chardet.detectAll(buffer).slice(0, 3);
+    } else {
+      const single = chardet.detect(buffer) || 'UTF-8';
+      detectedList = [{ name: single, confidence: 100 }];
+    }
+  } catch (e) {
+    detectedList = [{ name: 'UTF-8', confidence: 0 }];
+  }
   const primary = (detectedList[0] && detectedList[0].name) || 'UTF-8';
   // Try UTF-8 first
   let utf8Text = buffer.toString('utf8');

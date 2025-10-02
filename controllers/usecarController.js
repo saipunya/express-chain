@@ -9,6 +9,15 @@ const usecarController = {
       res.status(500).send('Error fetching data');
     }
   },
+  publicList: async (req, res) => {
+    try {
+      const usecars = await UseCar.getAll();
+      // Render minimalist mobile-friendly page without requiring auth / header / footer
+      res.render('usecar/mobile', { usecars });
+    } catch (error) {
+      res.status(500).send('Error fetching data');
+    }
+  },
   createForm: (req, res) => {
     res.render('usecar/create');
   },

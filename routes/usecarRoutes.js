@@ -4,6 +4,7 @@ const usecarController = require('../controllers/usecarController');
 
 // Routes
 router.get('/', usecarController.index);
+router.get('/mobile', usecarController.publicList);
 router.get('/create', usecarController.createForm);
 router.post('/create', usecarController.create);
 router.get('/view/:id', usecarController.viewOne);

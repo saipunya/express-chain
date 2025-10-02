@@ -14,7 +14,13 @@ const db = mysql.createPool({
   queueLimit: 0,
   connectTimeout: 15000,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  charset: 'utf8mb4' // ensure driver requests utf8mb4
+});
+
+// Force connection session to utf8mb4 every time
+db.on('connection', (conn) => {
+  conn.query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 });
 
 db.on('error', (err) => {

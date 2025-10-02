@@ -1524,6 +1524,55 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   </div>
 </section>
 
+<!-- Added: Usecar Detail Modal -->
+<div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-car-front-fill me-1"></i> รายละเอียดการใช้รถ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="usecarModalLoading" class="text-center d-none">
+          <div class="spinner-border text-primary mb-3" role="status"></div>
+          <div class="small text-muted">กำลังโหลด...</div>
+        </div>
+        <div id="usecarModalError" class="alert alert-danger d-none"></div>
+        <dl class="row mb-0" id="usecarModalContent">
+          <dt class="col-4">วันที่</dt><dd class="col-8" id="ucDate">-</dd>
+          <dt class="col-4">เวลา</dt><dd class="col-8" id="ucTime">-</dd>
+            <dt class="col-4">สถานที่</dt><dd class="col-8" id="ucPlace">-</dd>
+          <dt class="col-4">กิจกรรม</dt><dd class="col-8" id="ucAct">-</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Usecar modal populate (client-side only using data-* attributes)
+(function(){
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.js-open-usecar');
+    if(!btn) return;
+    const date = btn.getAttribute('data-date') || '-';
+    const time = btn.getAttribute('data-time') || '-';
+    const place = btn.getAttribute('data-place') || '-';
+    const act = btn.getAttribute('data-act') || '-';
+    document.getElementById('ucDate').textContent = date;
+    document.getElementById('ucTime').textContent = time + ' น.';
+    document.getElementById('ucPlace').textContent = place;
+    document.getElementById('ucAct').textContent = act;
+    // If Bootstrap auto trigger fails for some reason, ensure show programmatically
+    const modalEl = document.getElementById('usecarModal');
+    if(modalEl){
+      const instance = bootstrap && bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+      if(instance) instance.show();
+    }
+  });
+})();
+</script>
+
 <section id="online" class="section-block bg-light">
   <div class="container-lg">
     <div class="row">

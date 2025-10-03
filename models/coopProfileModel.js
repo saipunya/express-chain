@@ -1,6 +1,6 @@
 const db = require('../config/db');
 // Aggregate full profile of a cooperative / farmer group by c_code
-// Returns: { coop, finance:[], business:[], rules:[], vong:[], rabiab:[], strength:[] }
+// Returns: { coop, finance:[], business:[], rules:[], vong:[], rabiab:[], strength:[], rq2:[] }
 exports.getProfileByCode = async (c_code) => {
   // Parallel queries
   const coopPromise = db.query('SELECT * FROM active_coop WHERE c_code = ? LIMIT 1', [c_code]);
@@ -13,14 +13,17 @@ exports.getProfileByCode = async (c_code) => {
   const rabiabPromise = db.query('SELECT ra_id, ra_code, ra_name, ra_year, ra_approvedate, ra_filename, ra_saveby, ra_savedate FROM tbl_rabiab WHERE ra_code = ? AND ra_status = "active" ORDER BY ra_year DESC, ra_id DESC', [c_code]);
   // strength (ศักยภาพ) join active_coop just for data integrity (not selecting fields from active_coop here)
   const strengthPromise = db.query('SELECT s.st_code, s.st_fullname, s.st_year, s.st_no1, s.st_no2, s.st_no3, s.st_no4, s.st_cpd, s.st_cad, s.st_point, s.st_grade FROM tbl_strength s WHERE s.st_code = ? ORDER BY s.st_year DESC', [c_code]);
-  const [[coopRows], [financeRows], [businessRows], [ruleRows], [vongRows], [rabiabRows], [strengthRows]] = await Promise.all([
+  // rq2 (add)
+  const rq2Promise = db.query('SELECT rq_id, rq_code, rq_name, rq_year, rq_file, rq_saveby, rq_savedate FROM tbl_rq2 WHERE rq_code = ? ORDER BY rq_year DESC, rq_id DESC', [c_code]);
+  const [[coopRows], [financeRows], [businessRows], [ruleRows], [vongRows], [rabiabRows], [strengthRows], [rq2Rows]] = await Promise.all([
     coopPromise,
     financePromise,
     businessPromise,
     rulesPromise,
     vongPromise,
     rabiabPromise,
-    strengthPromise
+    strengthPromise,
+    rq2Promise
   ]);
   return {
     coop: coopRows[0] || null,
@@ -29,7 +32,8 @@ exports.getProfileByCode = async (c_code) => {
     rules: ruleRows,
     vong: vongRows,
     rabiab: rabiabRows,
-    strength: strengthRows
+    strength: strengthRows,
+    rq2: rq2Rows
   };
 };
 // List cooperatives by group for navigation (legacy)

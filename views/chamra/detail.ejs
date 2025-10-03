@@ -1,10 +1,22 @@
 <%- include('../partials/header.ejs') %>
+<style>
+  /* Local view enhancements */
+  .page-title { font-weight:600; }
+  .status-badge { font-size:.8rem; }
+  .process-table tbody tr.table-success td { font-weight:500; }
+  .process-step-latest { outline:2px solid #198754; background: #e8fff3 !important; }
+  .process-step[data-raw=''] { color:#999; font-style:italic; }
+  .card-section { border-left:4px solid #0d6efd; }
+  .problems-empty { background:#f8f9fa; border:1px dashed #ccc; padding:1rem; border-radius:.35rem; }
+  .mini-label { font-size:.7rem; letter-spacing:.5px; text-transform:uppercase; color:#6c757d; }
+  @media (max-width: 576px){
+    .table-responsive { font-size:.8rem; }
+  }
+</style>
 <%
   // --- Date helpers (no Date object to UTC; use local parts) ---
   function parseDateSafe(raw){
     if(raw == null) return null;
-
-    // If Date object: use local components to avoid UTC shift
     if (raw instanceof Date && !isNaN(raw)) {
       const y = raw.getFullYear();
       const m = raw.getMonth() + 1;
@@ -12,37 +24,33 @@
       if (y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
       return { y, m, d };
     }
-
-    // Normalize string inputs, including ISO with 'T' and '/' separators
     let s = String(raw).trim();
-    if(
-      !s ||
-      s === '0000-00-00' ||
-      s === '0000-00-00 00:00:00' ||
-      /^1899-11-30/.test(s) ||
-      s === 'Invalid date'
-    ) return null;
-
+    if(!s || s === '0000-00-00' || s === '0000-00-00 00:00:00' || /^1899-11-30/.test(s) || s === 'Invalid date') return null;
     s = s.replace('T', ' ').replace(/\//g, '-');
     const datePart = s.split(' ')[0];
     const seg = datePart.split('-');
     if(seg.length < 3) return null;
-
     const y = +seg[0], m = +seg[1], d = +seg[2];
     if(!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
     if(y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
     return { y, m, d };
   }
-
   function formatThaiDate(v){
     const p = parseDateSafe(v);
     if(!p) return '-';
-    const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     return p.d + ' ' + months[p.m] + ' ' + (p.y + 543);
   }
   function isValidDate(v){ return !!parseDateSafe(v); }
-
+  function normalizeRaw(r){
+    if(r instanceof Date && !isNaN(r)){
+      const y = r.getFullYear();
+      const m = String(r.getMonth()+1).padStart(2,'0');
+      const d = String(r.getDate()).padStart(2,'0');
+      return `${y}-${m}-${d}`;
+    }
+    return r;
+  }
   let latestProcessStep = 0;
   const processSteps = [];
   if (typeof data !== 'undefined' && data){
@@ -52,107 +60,95 @@
       processSteps.push({ step: i, raw, formatted: formatThaiDate(raw) });
     }
   }
+  const totalSteps = processSteps.length;
+  const completedSteps = latestProcessStep;
+  const progressPercent = totalSteps ? Math.round((completedSteps/ totalSteps) * 100) : 0;
 %>
-
 <div class="container py-4">
   <% if (data) { %>
-  <h1 class="h4 mb-3"><%= data.c_name || 'ข้อมูลไม่ระบุ' %></h1>
-
-  
-    <div class="card mb-4">
-      <div class="card-body small">
-        <span class="me-2 fw-semibold">สถานะ:</span>
-        <% if(data.c_status === 'ถอนชื่อ'){ %>
-          <span class="badge text-bg-success">ถอนชื่อแล้ว</span>
-        <% } else { %>
-          <span class="badge text-bg-danger">กำลังชำระบัญชี</span>
-        <% } %>
-        <% if(latestProcessStep){ %>
-          <span class="ms-3 text-primary fw-semibold">ขั้นล่าสุด ขั้นที่ <%= latestProcessStep %> (<%= formatThaiDate(data['pr_s'+latestProcessStep]) %>)</span>
-        <% } else { %>
-          <span class="ms-3 text-muted">ยังไม่มีขั้นตอนที่สมบูรณ์</span>
-        <% } %>
+  <div class="d-flex align-items-start flex-wrap gap-2 mb-3">
+    <h1 class="h4 page-title mb-0"><%= data.c_name || 'ข้อมูลไม่ระบุ' %></h1>
+    <% if(latestProcessStep){ %>
+      <span class="badge bg-success status-badge align-self-center">ขั้นล่าสุด: <strong><%= latestProcessStep %></strong> / 10</span>
+    <% } %>
+  </div>
+  <div class="card mb-4 card-section shadow-sm">
+    <div class="card-body small">
+      <div class="row g-3">
+        <div class="col-md-4 col-6">
+          <div class="mini-label">สถานะ</div>
+          <% if(data.c_status === 'ถอนชื่อ'){ %>
+            <span class="badge bg-success">ถอนชื่อแล้ว</span>
+          <% } else { %>
+            <span class="badge bg-danger">กำลังชำระบัญชี</span>
+          <% } %>
+        </div>
+        <div class="col-md-8 col-12">
+          <div class="mini-label">ความคืบหน้า</div>
+          <div class="progress mb-1" style="height:10px;">
+            <div class="progress-bar <% if(progressPercent===100){ %>bg-success<% } else { %>bg-primary<% } %>" role="progressbar" style="width:<%= progressPercent %>%" aria-valuenow="<%= progressPercent %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <small class="text-muted">ขั้นที่ <%= completedSteps %> จาก <%= totalSteps %> (<%= progressPercent %>%)<% if(latestProcessStep){ %> - วันที่ <%= formatThaiDate(data['pr_s'+latestProcessStep]) %><% } %></small>
+        </div>
       </div>
     </div>
-
-    <table class="table table-bordered table-striped table-sm align-middle bg-white">
+  </div>
+  <div class="table-responsive mb-4">
+    <table class="table table-bordered table-striped table-sm align-middle bg-white mb-0">
       <tbody>
         <tr>
-          <th>ชื่อสถาบัน</th>
-          <td class="fw-bold">
-            <%= data.c_name || '-' %>
-          </td>
+          <th style="width:170px;">ชื่อสถาบัน</th>
+          <td class="fw-bold"><%= data.c_name || '-' %></td>
         </tr>
         <tr>
           <th>กรณี</th>
-          <td>
-            <%= data.de_case %>
-          </td>
+          <td><%= data.de_case %></td>
         </tr>
-        
         <% if(data.de_comno==='-' ) { %>
           <tr>
             <th>ประกาศเลิก</th>
             <td>-</td>
           </tr>
+        <% } else { %>
+          <tr>
+            <th>คำสั่งเลขที่</th>
+            <td><%= data.de_comno %></td>
+          </tr>
+        <% } %>
+        <tr>
+          <% if(data.de_comno==='-' ) { %>
+            <th>วันที่ประกาศ</th>
           <% } else { %>
-            <tr>
-              <th>คำสั่งเลขที่</th>
-              <td>
-                <%= data.de_comno %>
-              </td>
-            </tr>
-            <% } %>
-        
-              <tr>
-                <% if(data.de_comno==='-' ) { %>
-                  <th>วันที่ประกาศ</th>
-                  <% } else { %>
-                    <th>วันที่คำสั่ง</th>
-                    <% } %>
-                      <td>
-                        <%= formatThaiDate(data.de_comdate) %>
-                      </td>
-              </tr>
-              <tr>
-                <th>ผู้รับผิดชอบ</th>
-                <td>
-                  <%= data.de_person || '-' %>
-                </td>
-              </tr>
-              <tr>
-                <th>หมายเหตุ</th>
-                <td>
-                  <%= data.de_maihed || '-' %>
-                </td>
-              </tr>
-              
-              
-              
-              <tr>
-                <th>กลุ่มส่งเสริม</th>
-                <td>
-                  <% switch (data.c_group) { case 'group1' : %>กลุ่มส่งเสริมสหกรณ์ 1<% break; case 'group2' : %>
-                      กลุ่มส่งเสริมสหกรณ์ 2<% break; case 'group3' : %>กลุ่มส่งเสริมสหกรณ์ 3<% break; case 'group4' : %>
-                          กลุ่มส่งเสริมสหกรณ์ 4<% break; case 'group5' : %>กลุ่มส่งเสริมสหกรณ์ 5<% break; default: %>
-                              กลุ่มไม่ระบุ<% break; } %>
-                </td>
-              </tr>
-        
-        
-              </tr>
-        
-              </tbody>
+            <th>วันที่คำสั่ง</th>
+          <% } %>
+          <td><%= formatThaiDate(data.de_comdate) %></td>
+        </tr>
+        <tr>
+          <th>ผู้รับผิดชอบ</th>
+          <td><%= data.de_person || '-' %></td>
+        </tr>
+        <tr>
+          <th>หมายเหตุ</th>
+          <td><%= data.de_maihed || '-' %></td>
+        </tr>
+        <tr>
+          <th>กลุ่มส่งเสริม</th>
+          <td>
+            <% switch (data.c_group) { case 'group1' : %>กลุ่มส่งเสริมสหกรณ์ 1<% break; case 'group2' : %>กลุ่มส่งเสริมสหกรณ์ 2<% break; case 'group3' : %>กลุ่มส่งเสริมสหกรณ์ 3<% break; case 'group4' : %>กลุ่มส่งเสริมสหกรณ์ 4<% break; case 'group5' : %>กลุ่มส่งเสริมสหกรณ์ 5<% break; default: %>กลุ่มไม่ระบุ<% break; } %>
+          </td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2 class="h6 mt-4 mb-2">กระบวนการ (Process)</h2>
-    <% if (processSteps.some(s => s.raw)) { %>
-      <table class="table table-bordered table-sm align-middle bg-white mb-4">
+  </div>
+  <h2 class="h6 mt-4 mb-2">กระบวนการ (Process)</h2>
+  <% if (processSteps.some(s => s.raw)) { %>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered table-sm align-middle bg-white process-table">
         <thead class="table-light">
-          <tr><th class="text-center">ขั้นที่</th><th class="text-center">วันที่ (พ.ศ.)</th></tr>
+          <tr><th class="text-center" style="width:220px;">ขั้นที่</th><th class="text-center">วันที่ (พ.ศ.)</th></tr>
         </thead>
         <tbody>
-          <% 
+          <%
             function showStep(s){
               const n = Number(s);
               switch(n){
@@ -166,67 +162,64 @@
                 case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
                 case 9: return 'ถอนชื่อออกจากทะเบียน';
                 case 10: return 'ส่งมอบเอกสารหลักฐาน';
-                default:
-                  return n ? ('S' + n) : '-';
+                default: return n ? ('S' + n) : '-';
               }
             }
-            
           %>
-        <% processSteps.forEach(s => { %>
-          <tr>
-            <td class="text-start">ขั้นที่ <%= s.step + ' ' + showStep(s.step) %></td>
-            <!-- expose raw value and step for client script -->
-            <td class="text-center process-step" data-step="<%= s.step %>" data-raw="<%= s.raw || '' %>"><%= s.formatted %></td>
-          </tr>
-        <% }) %>
+          <% processSteps.forEach(s => { const isCompleted = s.step <= latestProcessStep && s.raw; %>
+            <tr class="<%= isCompleted ? 'table-success' : (s.raw ? 'table-warning' : '') %>">
+              <td class="text-start fw-semibold text-nowrap">ขั้นที่ <%= s.step %> <span class="text-muted">- <%= showStep(s.step) %></span></td>
+              <td class="text-center process-step <%= s.step === latestProcessStep && s.raw ? 'process-step-latest' : '' %>" data-step="<%= s.step %>" data-raw="<%= normalizeRaw(s.raw) || '' %>">
+                <%= s.formatted %>
+                <% if(!s.raw){ %><span class="d-block text-muted small">(ยังไม่ระบุ)</span><% } %>
+              </td>
+            </tr>
+          <% }) %>
         </tbody>
       </table>
-    <% } else { %>
-      <p class="text-muted small mb-4">ยังไม่มีข้อมูลกระบวนการ</p>
-    <% } %>
-
-    <h2 class="h6 mt-4 mb-2">รายการปัญหา (Problems)</h2>
-    <% if (poblems && poblems.length) { %>
-      <table class="table table-bordered table-striped table-sm align-middle bg-white">
-        <thead class="table-light">
-          <tr>
-            <th>ปี</th>
-            <th>ครั้งประชุม</th>
-            <th>รายละเอียด</th>
-            <th>ปัญหา</th>
-            <th>บันทึกโดย</th>
-            <th>วันที่บันทึก</th>
-          </tr>
-        </thead>
-        <tbody>
-        <% poblems.forEach(p => { %>
-          <tr>
-            <td><%= p.po_year %></td>
-            <td><%= p.po_meeting %></td>
-            <td><%= p.po_detail || '-' %></td>
-            <td><%= p.po_problem || '-' %></td>
-            <td><%= p.po_saveby || '-' %></td>
-            <td><%= formatThaiDate(p.po_savedate) %></td>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <p class="text-muted small">ยังไม่มีรายการปัญหา</p>
-    <% } %>
+    </div>
+  <% } else { %>
+    <div class="problems-empty mb-4 small">ยังไม่มีข้อมูลกระบวนการ</div>
+  <% } %>
+  <h2 class="h6 mt-4 mb-2">รายการปัญหา (Problems)</h2>
+  <% if (poblems && poblems.length) { %>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body p-0">
+        <div class="table-responsive mb-0">
+          <table class="table table-bordered table-striped table-sm align-middle bg-white mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:80px;">ปี</th>
+                <th style="width:120px;">ครั้งประชุม</th>
+                <th>รายละเอียด</th>
+                <th style="width:220px;">ปัญหา</th>
+              </tr>
+            </thead>
+            <tbody>
+            <% poblems.forEach(p => { %>
+              <tr>
+                <td><%= p.po_year %></td>
+                <td><%= p.po_meeting %></td>
+                <td><%= p.po_detail || '-' %></td>
+                <td><%= p.po_problem || '-' %></td>
+              </tr>
+            <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="problems-empty small">ยังไม่มีรายการปัญหา</div>
+  <% } %>
   <% } else { %>
     <p class="text-muted">ไม่พบข้อมูล</p>
   <% } %>
-
-  <a href="../../chamra" class="btn btn-outline-secondary btn-sm mt-3">← กลับหน้ารายการ</a>
-  <!-- Export PDF button -->
-  <button id="exportPdfBtn" class="btn btn-primary btn-sm mt-3 ms-2"
-    data-code="<%= data && (data.de_code || data.c_code) %>">Export PDF</button>
+  <div class="d-flex gap-2 mt-3">
+    <a href="../../chamra" class="btn btn-outline-secondary btn-sm">← กลับหน้ารายการ</a>
+    <button id="exportPdfBtn" class="btn btn-primary btn-sm" data-code="<%= data && (data.de_code || data.c_code) %>">Export PDF</button>
+  </div>
 </div>
-
-<!-- include export script (make sure /public is served by express.static) -->
 <script src="/js/export-pdf.js"></script>
-<!-- include detail helper script -->
 <script src="/js/detail.js"></script>
-
 <%- include('../partials/footer.ejs') %>

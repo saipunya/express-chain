@@ -606,8 +606,9 @@ function displayGroupName(code){
   <div class="container">
     <h2 class="text-center text-primary section-title mb-4">🏢 ข้อมูลรายสถาบัน</h2>
     <% if ((homeCoops||[]).length) { %>
+      <% const _featuredCoops = (homeCoops||[]).slice().sort(()=> Math.random() - 0.5).slice(0,6); %>
       <div class="row g-3">
-        <% homeCoops.forEach(c => { %>
+        <% _featuredCoops.forEach(c => { %>
           <div class="col-12 col-sm-6 col-lg-4">
             <div class="card modern-card h-100 shadow-sm border-0">
               <div class="card-gradient-bar"></div>
@@ -637,6 +638,7 @@ function displayGroupName(code){
     <% } %>
   </div>
 </section>
+
 <!-- Modal for Coop Detail (added) -->
 <div class="modal fade modal-elevated" id="coopDetailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -1581,10 +1583,10 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
           <div class="card-body text-center">
             <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
             <div class="mb-3">
-              <div class="display-4 text-success" id="onlineCountValue" aria-live="polite" aria-label="จำนวนผู้ใช้งานออนไลน์">
+              <div class="display-4 text-success" id="onlineCountValue" aria-live="polite" aria-label="จำนวนสมาชิกออนไลน์">
                 <%= onlineCount %>
               </div>
-              <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
+              <small class="text-muted">สมาชิกออนไลน์ขณะนี้</small>
             </div>
             <hr>
             <div class="row text-center">
@@ -1863,7 +1865,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-      } catch (e) {
+      } catch (e){
         alert('ไม่สามารถส่งออกข้อมูลได้');
       } finally {
         btn.disabled = false;

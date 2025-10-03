@@ -801,7 +801,6 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
     loadingEl.classList.remove('d-none');
     errorEl.classList.add('d-none');
     wrapEl.classList.add('d-none');
-    toolbar.classList.add('d-none');
     tbody.innerHTML='';
     countEl.textContent='';
     if(filterInput){ filterInput.value=''; }
@@ -1582,7 +1581,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
           <div class="card-body text-center">
             <h5 class="card-title">📈 ข้อมูลการใช้งาน</h5>
             <div class="mb-3">
-              <div class="display-4 text-success">
+              <div class="display-4 text-success" id="onlineCountValue" aria-live="polite" aria-label="จำนวนผู้ใช้งานออนไลน์">
                 <%= onlineCount %>
               </div>
               <small class="text-muted">ผู้ใช้งานทั่วไปออนไลน์</small>
@@ -1657,6 +1656,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 <div id="template-data"
   data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}'
   data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'
+  data-online-count="<%= typeof onlineCount !== 'undefined' ? onlineCount : 0 %>"
   data-logged-in="<%= user ? 'true' : 'false' %>">
 </div>
 
@@ -1708,6 +1708,39 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
       el.classList.add('reveal');
       obs.observe(el);
     });
+  })();
+</script>
+
+<script>
+  // Socket: update onlineCount (ปรับให้ปลอดภัย + มี fallback)
+  (function(){
+    const el = document.getElementById('onlineCountValue');
+    if(!el) return;
+    let last = Number(el.textContent.trim()) || 0;
+    let updated = false;
+
+    try {
+      const socket = io(); // ใช้ค่า default; ถ้ากำหนด path ให้ตรงกับ server
+      socket.on('onlineUsers', (count) => {
+        if(typeof count === 'number') {
+          el.textContent = count;
+          last = count;
+          updated = true;
+        }
+      });
+      socket.on('disconnect', () => {
+        // ไม่เปลี่ยนค่า ให้ค้างไว้
+      });
+    } catch(e){
+      console.warn('Socket init failed:', e);
+    }
+
+    // Fallback: ถ้า 15s ไม่เคยอัปเดต แสดงค่าเดิมชัดเจน (ไม่กระทบ UX)
+    setTimeout(()=> {
+      if(!updated) {
+        el.textContent = last;
+      }
+    }, 15000);
   })();
 </script>
 

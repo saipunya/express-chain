@@ -76,7 +76,7 @@
             <td data-label="ปีบัญชี"><span class="badge badge-year p-2"><%= row.end_date %> <%= row.vong_year %></span></td>
             <% if(user) { %>
             <td class="text-end money-cell" data-label="ยอดเงิน">
-              <%= formatNumber(row.vong_money) %>
+              <%= formattedMoney %>
             </td>
             <td data-label="ไฟล์" class="text-center file-link"><a href="/vong/download/<%= row.vong_id %>" title="ดาวน์โหลดไฟล์"><i class="bi bi-file-pdf-fill fs-5"></i></a></td>
             <% } else { %>

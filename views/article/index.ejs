@@ -1,74 +1,104 @@
-<%- include('../partials/header') %>
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="bi bi-file-earmark-text me-2"></i> บทความทั้งหมด</h2>
+<%- include('../partials/header', { title: 'บทความ' }) %>
+<div class="container my-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i> บทความทั้งหมด</h2>
+      <span class="badge bg-secondary">รวม <%= (articles && articles.length) ? articles.length : 0 %> บทความ</span>
+    </div>
     <% if (user) { %>
-      <a href="/article/create" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> เพิ่มบทความ
-      </a>
+      <a href="/article/create" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i> เพิ่มบทความ</a>
     <% } %> 
   </div>
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover align-middle">
-      <thead class="table-success">
-        <tr>
-          <th>#</th>
-          <th>หัวข้อ</th>
-          <th>รายละเอียด</th>
-          <th>คีย์เวิร์ด</th>
-          <th>รูปภาพ</th>
-          <th>วันที่</th>
-          <th>โดย</th>
-          <th>ลิงก์</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% articles.forEach((ar, idx) => { %>
-          <tr>
-            <td><%= idx + 1 %></td>
-            <td><a href="/article/view/<%= ar.ar_id %>"><%= ar.ar_subject %></a></td>
-            <td><%= ar.ar_detail.substring(0, 80) %>...</td>
-            <td><%= ar.ar_keyword %></td>
-            <td>
-              <% try { 
-                const imgs = JSON.parse(ar.ar_img || '[]');
-                imgs.forEach(img => { %>
-                  <img src="/uploads/article/<%= img %>" alt="img" style="height:40px;" class="me-1 mb-1 rounded border">
-              <% }) } catch(e) { %>
-                <span class="text-muted">-</span>
-              <% } %>
-            </td>
-            <td><%= ar.ar_savedate %></td>
-            <td><%= ar.ar_saveby %></td>
-            <td>
-              <% if (ar.ar_link && ar.ar_link !== '-') { %>
-                <a href="<%= ar.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-link-45deg"></i> ลิงก์
-                </a>
-              <% } else { %>
-                <span class="text-muted">-</span>
-              <% } %>
-            </td>
-            <td>
-              <a href="/article/view/<%= ar.ar_id %>" class="btn btn-sm btn-primary mb-1">
-                <i class="bi bi-eye"></i>
-              </a>
-              <% if (user && user.mClass === 'admin') { %>
-              <a href="/article/edit/<%= ar.ar_id %>" class="btn btn-sm btn-warning mb-1">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <form action="/article/delete/<%= ar.ar_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบบทความนี้?');">
-                <button type="submit" class="btn btn-sm btn-danger">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
-              <% } %>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:56px">#</th>
+              <th>หัวข้อ</th>
+              <th style="min-width:300px">รายละเอียด</th>
+              <th>คีย์เวิร์ด</th>
+              <th style="width:220px">รูปภาพ</th>
+              <th style="width:150px">วันที่</th>
+              <th style="width:120px">โดย</th>
+              <th style="width:100px">ลิงก์</th>
+              <th style="width:140px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (articles && articles.length) { %>
+              <% articles.forEach((ar, idx) => { %>
+                <tr>
+                  <td><%= idx + 1 %></td>
+                  <td>
+                    <a href="/article/view/<%= ar.ar_id %>" class="fw-semibold" data-bs-toggle="tooltip" title="ดูบทความ">
+                      <%= ar.ar_subject %>
+                    </a>
+                  </td>
+                  <td class="text-truncate" style="max-width: 420px;" data-bs-toggle="tooltip" title="<%= (ar.ar_detail || '').replace(/\"/g, '&quot;') %>">
+                    <%= (ar.ar_detail || '').substring(0, 120) %><%= (ar.ar_detail && ar.ar_detail.length > 120) ? '…' : '' %>
+                  </td>
+                  <td class="text-ellipsis" style="max-width: 180px;" data-bs-toggle="tooltip" title="<%= ar.ar_keyword %>">
+                    <%= ar.ar_keyword %>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-2">
+                      <% try { 
+                        const imgs = JSON.parse(ar.ar_img || '[]');
+                        if (imgs.length) {
+                          imgs.forEach(img => { %>
+                            <img src="/uploads/article/<%= img %>" alt="img" style="height:40px; width:auto;" class="rounded border">
+                      <% }) } else { %>
+                        <span class="text-muted">-</span>
+                      <% } } catch(e) { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td><%= ar.ar_savedate %></td>
+                  <td><%= ar.ar_saveby %></td>
+                  <td>
+                    <% if (ar.ar_link && ar.ar_link !== '-') { %>
+                      <a href="<%= ar.ar_link %>" target="_blank" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="เปิดลิงก์ภายนอก">
+                        <i class="bi bi-link-45deg"></i> ลิงก์
+                      </a>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+                  <td class="text-nowrap">
+                    <a href="/article/view/<%= ar.ar_id %>" class="btn btn-sm btn-primary me-1" data-bs-toggle="tooltip" title="ดูรายละเอียด">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <% if (user && user.mClass === 'admin') { %>
+                      <a href="/article/edit/<%= ar.ar_id %>" class="btn btn-sm btn-warning me-1" data-bs-toggle="tooltip" title="แก้ไข">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <form action="/article/delete/<%= ar.ar_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบบทความนี้?');">
+                        <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="ลบ">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="9">
+                  <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                    ยังไม่มีบทความในระบบ
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 <%- include('../partials/footer') %>

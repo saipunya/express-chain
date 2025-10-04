@@ -7,18 +7,21 @@
       .quick-stats .card-body {padding:.65rem .65rem;}
       .quick-stats .stat-label {font-size:.62rem; letter-spacing:.5px; text-transform:uppercase;}
       .quick-stats .stat-value {font-size:1rem;}
-      .nav-pills .nav-link {padding:.35rem .6rem; font-size:.75rem; margin:.15rem 0;}
       .table thead th.small-hide, .table tbody td.small-hide {display:none;} /* Hide less important columns */
       .table thead th, .table tbody td {font-size:.72rem;}
       .card-header h5 {font-size:.9rem;}
       .badge {font-size:.6rem;}
       .mobile-scroll {overflow-x:auto; -webkit-overflow-scrolling:touch;}
-      .tab-content {margin-top:.75rem;}
+      .section-block {margin-top: 1rem;}
     }
     @media (min-width:576px) and (max-width: 767.98px) {
       .quick-stats .stat-label {font-size:.7rem;}
       .quick-stats .stat-value {font-size:1.05rem;}
     }
+
+    /* Stacked section layout */
+    .section-block {scroll-margin-top: 80px;}
+    .section-title {display:flex; align-items:center; gap:.5rem; margin: .75rem 0; color: var(--bs-secondary-color);}
   </style>
   <% if (!data || !data.coop) { %>
     <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
@@ -88,365 +91,355 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <ul class="nav nav-pills mb-3 mb-sm-3 flex-wrap gap-1" id="profileTabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#strength" type="button" role="tab"><i class="bi bi-graph-up-arrow me-1"></i>ศักยภาพ</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#finance" type="button" role="tab"><i class="bi bi-cash-stack me-1"></i>การเงิน</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#business" type="button" role="tab"><i class="bi bi-briefcase me-1"></i>กิจการ</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rules" type="button" role="tab"><i class="bi bi-journal-text me-1"></i>ข้อบังคับ</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rabiab" type="button" role="tab"><i class="bi bi-file-earmark-medical me-1"></i>ระเบียบ</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#vong" type="button" role="tab"><i class="bi bi-piggy-bank me-1"></i>วงเงิน</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#rq2" type="button" role="tab"><i class="bi bi-collection me-1"></i>RQ2</button></li>
-    </ul>
+    <!-- Stacked Sections -->
 
-    <div class="tab-content" id="profileTabsContent">
-      <!-- Strength Tab (moved first & active) -->
-      <div class="tab-pane fade show active" id="strength" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-info"></i>ผลประเมินความเข้มแข็ง (Strength)</h5>
-            <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.strength||[]).length %> แถว</span>
-          </div>
-          <div class="card-body p-0 mobile-scroll">
-            <% if (data.strength && data.strength.length) { %>
-              <div class="table-responsive mb-0">
-                <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
-                  <thead class="table-light">
+    <!-- Strength Section -->
+    <section class="section-block" id="strength-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-info"></i>ผลประเมินความเข้มแข็ง (Strength)</h5>
+          <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.strength||[]).length %> แถว</span>
+        </div>
+        <div class="card-body p-0 mobile-scroll">
+          <% if (data.strength && data.strength.length) { %>
+            <div class="table-responsive mb-0">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+                <thead class="table-light">
+                  <tr>
+                    <th>ปี</th>
+                    <th>สถาบัน</th>
+                    <th class="small-hide">เกณฑ์ข้อที่ 1</th>
+                    <th class="small-hide">เกณฑ์ข้อที่ 2</th>
+                    <th class="small-hide">เกณฑ์ข้อที่ 3</th>
+                    <th class="small-hide">เกณฑ์ข้อที่ 4</th>
+                    <th>รวม</th>
+                    <th>ระดับ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.strength.forEach(s => { %>
                     <tr>
-                      <th>ปี</th>
-                      <th>สถาบัน</th>
-                      <th class="small-hide">เกณฑ์ข้อที่ 1</th>
-                      <th class="small-hide">เกณฑ์ข้อที่ 2</th>
-                      <th class="small-hide">เกณฑ์ข้อที่ 3</th>
-                      <th class="small-hide">เกณฑ์ข้อที่ 4</th>
-                      <th>รวม</th>
-                      <th>ระดับ</th>
+                      <td class="fw-medium"><%= s.st_year || '-' %></td>
+                      <td><%= s.st_fullname || '-' %></td>
+                      <% if(!user) { %>
+                        <td colspan="5" class="text-muted small">ข้อมูลไม่สามารถแสดงได้ กรุณาเข้าสู่ระบบ</td>
+                      <% } else { %>
+                        <td class="small-hide"><%= s.st_no1 || '-' %></td>
+                        <td class="small-hide"><%= s.st_no2 || '-' %></td>
+                        <td class="small-hide"><%= s.st_no3 || '-' %></td>
+                        <td class="small-hide"><%= s.st_no4 || '-' %></td>
+                        <td><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
+                      <% } %>
+                      <td>
+                        <% if (s.st_grade) { %>
+                          <span class="p-2 badge bg-<%= s.st_grade==='ชั้น1' ? 'success' : (s.st_grade==='ชั้น2' ? 'warning' : (s.st_grade==='ชั้น3' ? 'danger text-white' : 'secondary')) %>"><%= s.st_grade %></span>
+                        <% } else { %>-<% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.strength.forEach(s => { %>
-                      <tr>
-                        <td class="fw-medium"><%= s.st_year || '-' %></td>
-                        <td><%= s.st_fullname || '-' %></td>
-                        <% if(!user) { %>
-                          <td colspan="5" class="text-muted small">ข้อมูลไม่สามารถแสดงได้ กรุณาเข้าสู่ระบบ</td>
-                        <% } else { %>
-                          <td class="small-hide"><%= s.st_no1 || '-' %></td>
-                          <td class="small-hide"><%= s.st_no2 || '-' %></td>
-                          <td class="small-hide"><%= s.st_no3 || '-' %></td>
-                          <td class="small-hide"><%= s.st_no4 || '-' %></td>
-                          <td><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
-                        <% } %>
-                        <td>
-                          <% if (s.st_grade) { %>
-                            <span class="p-2 badge bg-<%= s.st_grade==='ชั้น1' ? 'success' : (s.st_grade==='ชั้น2' ? 'warning' : (s.st_grade==='ชั้น3' ? 'danger text-white' : 'secondary')) %>"><%= s.st_grade %></span>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+    <!-- Finance Section -->
+    <section class="section-block" id="finance-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-cash-stack me-2 text-primary"></i>ข้อมูลการเงิน</h5>
+          <span class="badge bg-primary-subtle text-primary-emphasis">รวม <%= (data.finance||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.finance && data.finance.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:120px">ปี</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.finance.forEach(f => { %>
+                    <tr>
+                      <td class="fw-medium"><%= f.end_year || '-' %></td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (f.id) { %>
+                            <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (f.link_file) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
                           <% } else { %>-<% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-      <!-- Finance Tab (remove active class) -->
-      <div class="tab-pane fade" id="finance" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-cash-stack me-2 text-primary"></i>ข้อมูลการเงิน</h5>
-            <span class="badge bg-primary-subtle text-primary-emphasis">รวม <%= (data.finance||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.finance && data.finance.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th style="width:120px">ปี</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.finance.forEach(f => { %>
-                      <tr>
-                        <td class="fw-medium"><%= f.end_year || '-' %></td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (f.id) { %>
-                              <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (f.link_file) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
+    </section>
 
-      <!-- Business Tab -->
-      <div class="tab-pane fade" id="business" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-briefcase me-2 text-success"></i>ข้อมูลธุรกิจ</h5>
-            <span class="badge bg-success-subtle text-success-emphasis">รวม <%= (data.business||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.business && data.business.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0">
-                  <thead class="table-light">
+    <!-- Business Section -->
+    <section class="section-block" id="business-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-briefcase me-2 text-success"></i>ข้อมูลธุรกิจ</h5>
+          <span class="badge bg-success-subtle text-success-emphasis">รวม <%= (data.business||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.business && data.business.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:120px">ปี</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.business.forEach(b => { %>
                     <tr>
-                      <th style="width:120px">ปี</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                      <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (b.bu_id) { %>
+                            <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (b.bu_filename) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% } else { %>-<% } %>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.business.forEach(b => { %>
-                      <tr>
-                        <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (b.bu_id) { %>
-                              <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (b.bu_filename) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
+    </section>
 
-      <!-- Rules Tab -->
-      <div class="tab-pane fade" id="rules" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-journal-text me-2 text-warning"></i>ข้อบังคับ</h5>
-            <span class="badge bg-warning-subtle text-warning-emphasis">รวม <%= (data.rules||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.rules && data.rules.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0">
-                  <thead class="table-light">
+    <!-- Rules Section -->
+    <section class="section-block" id="rules-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-journal-text me-2 text-warning"></i>ข้อบังคับ</h5>
+          <span class="badge bg-warning-subtle text-warning-emphasis">รวม <%= (data.rules||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.rules && data.rules.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:120px">ปี</th>
+                    <th>ประเภท</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.rules.forEach(r => { %>
                     <tr>
-                      <th style="width:120px">ปี</th>
-                      <th>ประเภท</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                      <td class="fw-medium"><%= r.rule_year || '-' %></td>
+                      <td>
+                        <% if (r.rule_type === 'MR') { %>
+                          <span class="badge bg-primary-subtle text-primary-emphasis">ข้อบังคับหลัก</span>
+                        <% } else if (r.rule_type === 'ER') { %>
+                          <span class="badge bg-secondary-subtle text-secondary-emphasis">แก้ไขเพิ่มเติม <%= r.er_no || '' %></span>
+                        <% } %>
+                      </td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (r.rule_id) { %>
+                            <a class="btn btn-sm btn-outline-warning" href="/rule/<%= r.rule_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (r.rule_file) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rule/<%= r.rule_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% } else { %>-<% } %>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.rules.forEach(r => { %>
-                      <tr>
-                        <td class="fw-medium"><%= r.rule_year || '-' %></td>
-                        <td>
-                          <% if (r.rule_type === 'MR') { %>
-                            <span class="badge bg-primary-subtle text-primary-emphasis">ข้อบังคับหลัก</span>
-                          <% } else if (r.rule_type === 'ER') { %>
-                            <span class="badge bg-secondary-subtle text-secondary-emphasis">แก้ไขเพิ่มเติม <%= r.er_no || '' %></span>
-                          <% } %>
-                        </td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (r.rule_id) { %>
-                              <a class="btn btn-sm btn-outline-warning" href="/rule/<%= r.rule_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (r.rule_file) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/rule/<%= r.rule_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
+    </section>
 
-      <!-- Rabiab Tab -->
-      <div class="tab-pane fade" id="rabiab" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-file-earmark-medical me-2 text-secondary"></i>ระเบียบ (Rabiab)</h5>
-            <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.rabiab||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.rabiab && data.rabiab.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0">
-                  <thead class="table-light">
+    <!-- Rabiab Section -->
+    <section class="section-block" id="rabiab-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-file-earmark-medical me-2 text-secondary"></i>ระเบียบ (Rabiab)</h5>
+          <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.rabiab||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.rabiab && data.rabiab.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:100px">ปี</th>
+                    <th>ชื่อ</th>
+                    <th>วันที่อนุมัติ</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.rabiab.forEach(r => { %>
                     <tr>
-                      <th style="width:100px">ปี</th>
-                      <th>ชื่อ</th>
-                      <th>วันที่อนุมัติ</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                      <td class="fw-medium"><%= r.ra_year || '-' %></td>
+                      <td><%= r.ra_name || '-' %></td>
+                      <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (r.ra_id) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (r.ra_filename) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% } else { %>-<% } %>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.rabiab.forEach(r => { %>
-                      <tr>
-                        <td class="fw-medium"><%= r.ra_year || '-' %></td>
-                        <td><%= r.ra_name || '-' %></td>
-                        <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (r.ra_id) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (r.ra_filename) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
+    </section>
 
-      <!-- Vong Tab -->
-      <div class="tab-pane fade" id="vong" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-piggy-bank me-2 text-danger"></i>วงเงินกู้ยืม/ค้ำประกัน</h5>
-            <span class="badge bg-danger-subtle text-danger-emphasis">รวม <%= (data.vong||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.vong && data.vong.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0">
-                  <thead class="table-light">
+    <!-- Vong Section -->
+    <section class="section-block" id="vong-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-piggy-bank me-2 text-danger"></i>วงเงินกู้ยืม/ค้ำประกัน</h5>
+          <span class="badge bg-danger-subtle text-danger-emphasis">รวม <%= (data.vong||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.vong && data.vong.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:100px">ปี</th>
+                    <th>จำนวนเงิน</th>
+                    <th class="small-hide">จำนวนเงิน (ข้อความ)</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.vong.forEach(v => { %>
                     <tr>
-                      <th style="width:100px">ปี</th>
-                      <th>จำนวนเงิน</th>
-                      <th class="small-hide">จำนวนเงิน (ข้อความ)</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                      <td class="fw-medium"><%= v.vong_year || '-' %></td>
+                      <td>
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %>
+                        <% } %>
+                      </td>
+                      <td class="text-muted small-hide">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <small><%= v.vong_money ? bahtText(v.vong_money) : '-' %></small>
+                        <% } %>
+                      </td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (v.vong_id) { %>
+                            <a class="btn btn-sm btn-outline-danger" href="/vong/download/<%= v.vong_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (v.vong_filename) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% } else { %>-<% } %>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.vong.forEach(v => { %>
-                      <tr>
-                        <td class="fw-medium"><%= v.vong_year || '-' %></td>
-                        <td>
-                          <% if(!user) { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
-                          <% } else { %>
-                            <%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %>
-                          <% } %>
-                        </td>
-                        <td class="text-muted small-hide">
-                          <% if(!user) { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
-                          <% } else { %>
-                            <small><%= v.vong_money ? bahtText(v.vong_money) : '-' %></small>
-                          <% } %>
-                        </td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (v.vong_id) { %>
-                              <a class="btn btn-sm btn-outline-danger" href="/vong/download/<%= v.vong_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (v.vong_filename) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
+    </section>
 
-      <!-- RQ2 Tab -->
-      <div class="tab-pane fade" id="rq2" role="tabpanel">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-collection me-2 text-info"></i>RQ2</h5>
-            <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.rq2||[]).length %> รายการ</span>
-          </div>
-          <div class="card-body p-0">
-            <% if (data.rq2 && data.rq2.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
-                  <thead class="table-light">
+    <!-- RQ2 Section -->
+    <section class="section-block" id="rq2-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-collection me-2 text-info"></i>RQ2</h5>
+          <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.rq2||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.rq2 && data.rq2.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:100px">ปี</th>
+                    <th>ชื่อ</th>
+                    <th class="text-center" style="width:80px">ไฟล์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.rq2.forEach(r => { %>
                     <tr>
-                      <th style="width:100px">ปี</th>
-                      <th>ชื่อ</th>
-                      <th class="text-center" style="width:80px">ไฟล์</th>
+                      <td class="fw-medium"><%= r.rq_year || '-' %></td>
+                      <td><%= r.rq_name || '-' %></td>
+                      <td class="text-center">
+                        <% if (user) { %>
+                          <% if (r.rq_id) { %>
+                            <a class="btn btn-sm btn-outline-info" href="/rq2/download/<%= r.rq_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                          <% } else if (r.rq_file) { %>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rq2/<%= r.rq_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% } else { %>-<% } %>
+                        <% } else { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                        <% } %>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <% data.rq2.forEach(r => { %>
-                      <tr>
-                        <td class="fw-medium"><%= r.rq_year || '-' %></td>
-                        <td><%= r.rq_name || '-' %></td>
-                        <td class="text-center">
-                          <% if (user) { %>
-                            <% if (r.rq_id) { %>
-                              <a class="btn btn-sm btn-outline-info" href="/rq2/download/<%= r.rq_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                            <% } else if (r.rq_file) { %>
-                              <a class="btn btn-sm btn-outline-secondary" href="/uploads/rq2/<%= r.rq_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                            <% } else { %>-<% } %>
-                          <% } else { %>
-                            <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-            <% } %>
-          </div>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
         </div>
       </div>
-    </div>
+    </section>
   <% } %>
   <div class="mt-2">
     <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>

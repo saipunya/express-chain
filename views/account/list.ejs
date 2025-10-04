@@ -1,97 +1,88 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <title>รายการบัญชี</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css");
-    </style>
-</head>
-<body class="bg-light">
-
+<%- include('../partials/header', { title: 'รายการบัญชี' }) %>
 <div class="container py-4">
-    <h4 class="mb-4 text-center">📒 รายการบัญชีรายรับรายจ่าย กลุ่มจัดตั้งและส่งเสริมสหกรณ์</h4>
-
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+    <h4 class="mb-0">📒 รายการบัญชีรายรับรายจ่าย กลุ่มจัดตั้งและส่งเสริมสหกรณ์</h4>
     <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
-        <a href="/account/create" class="btn btn-success mb-3">
-            <i class="bi bi-plus-circle"></i> เพิ่มรายการ
-        </a>
+      <a href="/account/create" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> เพิ่มรายการ
+      </a>
     <% } %>
+  </div>
 
-    <!-- แสดงสรุปยอด -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">รวมรายได้</h5>
-                    <p class="card-text fs-4"><%= totalIncome.toLocaleString() %> บาท</p>
-                </div>
-            </div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card text-bg-success shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-1">รวมรายได้</h6>
+          <p class="card-text fs-4 mb-0"><%= totalIncome.toLocaleString() %> บาท</p>
         </div>
-        <div class="col-md-4">
-            <div class="card text-bg-danger">
-                <div class="card-body">
-                    <h5 class="card-title">รวมค่าใช้จ่าย</h5>
-                    <p class="card-text fs-4"><%= totalExpense.toLocaleString() %> บาท</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">ยอดคงเหลือ</h5>
-                    <p class="card-text fs-4"><%= balance.toLocaleString() %> บาท</p>
-                    <% const thaiDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-                    <small class="text-white">ณ วันที่ <%= thaiDate %></small>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-
-    <!-- ตารางรายการ -->
-    <table class="table table-striped table-bordered bg-white">
-      <thead class="table-dark">
-        <tr>
-           <th style="width:180px">วันที่</th>
-          <th>รายการ</th>
-          <th class="text-end" style="width:140px">รายได้</th>
-          <th class="text-end" style="width:140px">ค่าใช้จ่าย</th>
-            <th class="text-end" style="width:140px">คงเหลือ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% accounts.forEach(acc => { 
-             const thaiDateItem = new Date(acc.date).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
-             const incomeTxt = acc.income != null ? acc.income.toLocaleString() : '-';
-             const expenseTxt = acc.expense != null ? acc.expense.toLocaleString() : '-';
-             const runningTxt = (acc.running ?? 0).toLocaleString();
-        %>
-          <tr>
-            <td><%= thaiDateItem %></td>
-            <td>
-                <%= acc.description %>
-                <% if (acc.income != null) { %>
-                    <span class="badge bg-success me-2">รายได้</span>
-                <% } else if (acc.expense != null) { %>
-                    <span class="badge bg-danger me-2">ค่าใช้จ่าย</span>
-                <% } %>
-                
-            </td>
-            <td class="text-end text-success"><%= incomeTxt %></td>
-            <td class="text-end text-danger"><%= expenseTxt %></td>
-            <td class="text-end fw-semibold"><%= runningTxt %></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-
-    <div class="text-center">
-        <a href="/" class="btn btn-danger mb-3">
-            <i class="bi bi-arrow-left"></i> กลับหน้าหลัก
-        </a>
+    <div class="col-md-4">
+      <div class="card text-bg-danger shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-1">รวมค่าใช้จ่าย</h6>
+          <p class="card-text fs-4 mb-0"><%= totalExpense.toLocaleString() %> บาท</p>
+        </div>
+      </div>
     </div>
+    <div class="col-md-4">
+      <div class="card text-bg-primary shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-1">ยอดคงเหลือ</h6>
+          <p class="card-text fs-4 mb-1"><%= balance.toLocaleString() %> บาท</p>
+          <% const thaiDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+          <small class="text-white-50">ณ วันที่ <%= thaiDate %></small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:180px">วันที่</th>
+              <th>รายการ</th>
+              <th class="text-end" style="width:140px">รายได้</th>
+              <th class="text-end" style="width:140px">ค่าใช้จ่าย</th>
+              <th class="text-end" style="width:140px">คงเหลือ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% accounts.forEach(acc => { 
+              const thaiDateItem = new Date(acc.date).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+              const incomeTxt = acc.income != null ? acc.income.toLocaleString() : '-';
+              const expenseTxt = acc.expense != null ? acc.expense.toLocaleString() : '-';
+              const runningTxt = (acc.running ?? 0).toLocaleString();
+            %>
+              <tr>
+                <td><%= thaiDateItem %></td>
+                <td>
+                  <%= acc.description %>
+                  <% if (acc.income != null) { %>
+                    <span class="badge bg-success ms-2">รายได้</span>
+                  <% } else if (acc.expense != null) { %>
+                    <span class="badge bg-danger ms-2">ค่าใช้จ่าย</span>
+                  <% } %>
+                </td>
+                <td class="text-end text-success"><%= incomeTxt %></td>
+                <td class="text-end text-danger"><%= expenseTxt %></td>
+                <td class="text-end fw-semibold"><%= runningTxt %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-3">
+    <a href="/" class="btn btn-outline-danger">
+      <i class="bi bi-arrow-left"></i> กลับหน้าหลัก
+    </a>
+  </div>
 </div>
-
-</body>
-</html>
+<%- include('../partials/footer') %>

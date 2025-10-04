@@ -46,7 +46,13 @@ exports.login = async (req, res) => {
     // ข้อมูลออนไลน์
     await onlineModel.setUserOnline(user.m_id, user.m_name, req.sessionID);
 
-    res.redirect('/dashboard');
+    // Redirect to originally requested page if available and safe
+    let redirectTo = req.session.returnTo;
+    delete req.session.returnTo; // one-time use
+    if (typeof redirectTo !== 'string' || !redirectTo.startsWith('/') || redirectTo.startsWith('/auth')) {
+      redirectTo = '/dashboard';
+    }
+    return res.redirect(redirectTo);
   } catch (error) {
     console.error(error);
     res.status(500).send('error');

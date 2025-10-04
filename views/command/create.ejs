@@ -1,10 +1,10 @@
 <%- include('../partials/header', { title: 'Add Command' }) %>
 <div class="container my-4">
   <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h4>การบันทึกข้อมูลคำสั่งสำนักงาน</h4>
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light border-0">
+          <h4 class="mb-0">การบันทึกข้อมูลคำสั่งสำนักงาน</h4>
         </div>
         <div class="card-body">
           <% if (error) { %>
@@ -12,31 +12,43 @@
           <% } %>
           <form action="/command/create" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-              <label for="com_no" class="form-label">เลขที่คำสั่ง</label>
-              <input type="text" class="form-control" id="com_no" name="com_no" value="" required>
+              <label for="com_no" class="form-label">เลขที่คำสั่ง <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                <input type="text" class="form-control" id="com_no" name="com_no" placeholder="เช่น 123/2568" required>
+              </div>
             </div>
         
             <div class="mb-3">
-              <label for="com_date" class="form-label">วันที่</label>
-              <input type="date" class="form-control" id="com_date" name="com_date" required>
+              <label for="com_date" class="form-label">วันที่ <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                <input type="date" class="form-control" id="com_date" name="com_date" required>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="com_from" class="form-label">จาก</label>
-              <input type="text" class="form-control" id="com_from" name="com_from" required>
-            </div>
-            <div class="mb-3">
-              <label for="com_story" class="form-label">เรื่อง</label>
-              <textarea class="form-control" id="com_story" name="com_story" rows="3" required></textarea>
-            </div>
-            <div class="mb-3">
-              <label for="file" class="form-label">ไฟล์</label>
-              <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-              <div class="form-text">ขนาดไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่เกิน 10MB)</div>
-            </div>
-            <div class="d-flex justify-content-between">
-              <a href="/command" class="btn btn-secondary">กลับหน้าหลัก</a>
-              <button type="submit" class="btn btn-primary">บันทึก</button>
 
+            <div class="mb-3">
+              <label for="com_from" class="form-label">จาก <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person-square"></i></span>
+                <input type="text" class="form-control" id="com_from" name="com_from" placeholder="ชื่อผู้ลงนาม/หน่วยงาน" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="com_story" class="form-label">เรื่อง <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="com_story" name="com_story" rows="3" placeholder="สรุปย่อเนื้อหาคำสั่ง" required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="file" class="form-label">แนบไฟล์</label>
+              <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+              <div class="form-text">รองรับไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่เกิน 10MB)</div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="/command" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> กลับหน้าหลัก</a>
+              <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-1"></i> บันทึก</button>
             </div>
           </form>
         </div>
@@ -44,10 +56,13 @@
     </div>
   </div>
 </div>
-
 <script>
-// ตั้งค่า<lemma<lemmaเป็น<lemma
-document.getElementById('com_date').value = new Date().toISOString().split('T')[0];
+// ตั้งค่าวันที่เริ่มต้นเป็นวันนี้ (เฉพาะหน้าเพิ่มข้อมูล)
+(function(){
+  var el = document.getElementById('com_date');
+  if (el && !el.value) {
+    el.value = new Date().toISOString().split('T')[0];
+  }
+})();
 </script>
-
 <%- include('../partials/footer') %>

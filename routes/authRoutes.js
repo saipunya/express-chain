@@ -6,8 +6,25 @@ const onlineModel = require('../models/onlineModel');
 router.get('/register', (req, res) => res.render('register'));
 router.post('/register', authController.register);
 
-router.get('/login', (req, res) => res.render('login'));
+// Accept returnTo via query: /auth/login?returnTo=/some/path
+router.get('/login', (req, res) => {
+  const { returnTo } = req.query || {};
+  if (typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('/auth')) {
+    req.session.returnTo = returnTo;
+  }
+  // If user already logged in, redirect immediately
+  if (req.session.user) {
+    const redirectTo = (typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/') && !req.session.returnTo.startsWith('/auth'))
+      ? req.session.returnTo
+      : '/dashboard';
+    delete req.session.returnTo;
+    return res.redirect(redirectTo);
+  }
+  res.render('login');
+});
+
 router.post('/login', authController.login);
+
 router.get('/logout', async (req, res) => {
   try {
     // ลบข้อมูลออนไลน์ก่อน destroy session

@@ -1,43 +1,50 @@
 <%- include('../partials/header', { title: 'Edit Command' }) %>
 <div class="container my-4">
   <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h4>แก้ไขคำสั่งสำนักงาน</h4>
+    <div class="col-md-10 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light border-0">
+          <h4 class="mb-0">แก้ไขคำสั่งสำนักงาน</h4>
         </div>
         <div class="card-body">
           <form action="/command/edit/<%= command.command_id %>" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-              <label for="com_no" class="form-label">เลขที่คำสั่ง</label>
-              <input type="text" class="form-control" id="com_no" name="com_no" value="<%= command.com_no %>" required>
+              <label for="com_no" class="form-label">เลขที่คำสั่ง <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                <input type="text" class="form-control" id="com_no" name="com_no" value="<%= command.com_no %>" required>
+              </div>
             </div>
             <div class="mb-3">
-              <label for="com_date" class="form-label">วันที่</label>
-              <input type="date" class="form-control" id="com_date" name="com_date" 
-                     value="<%= new Date(command.com_date).toISOString().split('T')[0] %>" required>
+              <label for="com_date" class="form-label">วันที่ <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                <input type="date" class="form-control" id="com_date" name="com_date" 
+                       value="<%= new Date(command.com_date).toISOString().split('T')[0] %>" required>
+              </div>
             </div>
             <div class="mb-3">
-              <label for="com_from" class="form-label">จาก</label>
-              <input type="text" class="form-control" id="com_from" name="com_from" value="<%= command.com_from %>" required>
+              <label for="com_from" class="form-label">จาก <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person-square"></i></span>
+                <input type="text" class="form-control" id="com_from" name="com_from" value="<%= command.com_from %>" required>
+              </div>
             </div>
             <div class="mb-3">
-              <label for="com_story" class="form-label">เรื่อง</label>
+              <label for="com_story" class="form-label">เรื่อง <span class="text-danger">*</span></label>
               <textarea class="form-control" id="com_story" name="com_story" rows="3" required><%= command.com_story %></textarea>
             </div>
             <div class="mb-3">
-              <label for="file" class="form-label">ไฟล์</label>
+              <label for="file" class="form-label">แนบไฟล์ (อัปเดตได้)</label>
               <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
               <div class="form-text">
-                ขนาดไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่เกิน 10MB)
-              
-                  <br>ไฟล์ปัจจุบัน: <%= command.com_filename %>
-             
+                รองรับไฟล์: PDF, DOC, DOCX, JPG, JPEG, PNG (ขนาดไม่เกิน 10MB)<br>
+                ไฟล์ปัจจุบัน: <span class="text-muted"><%= command.com_filename %></span>
               </div>
             </div>
             <div class="d-flex justify-content-between">
-              <a href="/command" class="btn btn-secondary">ย้อนกลับ</a>
-              <button type="submit" class="btn btn-primary">บันทึก</button>
+              <a href="/command" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> ย้อนกลับ</a>
+              <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-1"></i> บันทึก</button>
             </div>
           </form>
         </div>

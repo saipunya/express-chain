@@ -1,115 +1,165 @@
 <%- include('../partials/header') %>
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+  <div class="d-flex align-items-center gap-2">
     <h2 class="mb-0"><i class="bi bi-download me-2"></i> รายการดาวน์โหลด</h2>
-    <% if(user && (user.mClass === 'admin' || user.mClass === 'kts')) { %>
-      <a href="/down/create" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> เพิ่มข้อมูล
-      </a>
-    <% } %>
+    <span class="badge bg-secondary">รวม <%= (downs && downs.length) ? downs.length : 0 %> รายการ</span>
   </div>
-  <form class="row mb-3">
-    <div class="col-md-4">
+  <% if(user && (user.mClass === 'admin' || user.mClass === 'kts')) { %>
+    <a href="/down/create" class="btn btn-success">
+      <i class="bi bi-plus-lg"></i> เพิ่มข้อมูล
+    </a>
+  <% } %>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-lg-4">
+    <div class="input-group">
+      <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
       <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาเรื่อง...">
     </div>
-  </form>
-  <div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle">
-      <thead class="table-success">
-        <tr>
-          <th>#</th>
-          <th>เรื่อง</th>
-     
-         
-        
-          <th>ไฟล์</th>
-          <th>ลิงก์</th>
-          <% if(user && user.mClass === 'admin') { %>
-          <th>จัดการ</th>
-          <% } %>
-        </tr>
-      </thead>
-      <tbody>
-        <% downs.forEach((d, idx) => { %>
-          <tr>
-            <td><%= idx + 1 %></td>
-            <td><%= d.down_subject %></td>
-           
-          
-           
-            <td class="text-nowrap">
-              <% if(user) { %>
-                <% if (d.down_file && d.down_file !== '-') { %>
-                  <a href="/down/download/<%= d.down_id %>" target="_blank" class="btn btn-sm btn-outline-success">
-                    <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
-                  </a>
-                <% } else { %>
-                  <span class="text-muted">-</span>
-                <% } %>
-              <% } else { %>
-                <!-- link login -->
-                <a href="/auth/login" class="btn btn-sm btn-outline-secondary">
-                  <i class="bi bi-lock"></i> เข้าสู่ระบบ
-                </a>
-              <% } %>
-            </td>
-            <td class="text-center">
-              <% if (d.down_link && d.down_link !== '-') { %>
-                <a href="<%= d.down_link %>" target="_blank" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-link-45deg"></i> ลิงก์
-                </a>
-              <% } else { %>
-                <span class="text-muted">-</span>
-              <% } %>
-            </td>
-            
-            <% if(user && user.mClass==='admin') { %>
-            <td>
-              <a href="/down/edit/<%= d.down_id %>" class="btn btn-sm btn-warning mb-1">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <form action="/down/delete/<%= d.down_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
-                <button type="submit" class="btn btn-sm btn-danger">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
-            </td>
-            <% }%>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
   </div>
 </div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:60px">#</th>
+            <th>เรื่อง</th>
+            <th style="width:140px">ไฟล์</th>
+            <th style="width:120px">ลิงก์</th>
+            <% if(user && user.mClass === 'admin') { %>
+              <th style="width:120px">จัดการ</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (downs && downs.length) { %>
+            <% downs.forEach((d, idx) => { %>
+              <tr>
+                <td><%= idx + 1 %></td>
+                <td class="text-truncate" style="max-width: 680px" title="<%= d.down_subject %>"><%= d.down_subject %></td>
+                <td class="text-nowrap">
+                  <% if(user) { %>
+                    <% if (d.down_file && d.down_file !== '-') { %>
+                      <a href="/down/download/<%= d.down_id %>" target="_blank" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="ดาวน์โหลดไฟล์">
+                        <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                      </a>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  <% } else { %>
+                    <a href="/auth/login" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="เข้าสู่ระบบเพื่อดาวน์โหลด">
+                      <i class="bi bi-lock"></i> เข้าสู่ระบบ
+                    </a>
+                  <% } %>
+                </td>
+                <td class="text-center">
+                  <% if (d.down_link && d.down_link !== '-') { %>
+                    <a href="<%= d.down_link %>" target="_blank" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="เปิดลิงก์ภายนอก">
+                      <i class="bi bi-link-45deg"></i> ลิงก์
+                    </a>
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <% if(user && user.mClass==='admin') { %>
+                <td class="text-nowrap">
+                  <a href="/down/edit/<%= d.down_id %>" class="btn btn-sm btn-warning me-1" data-bs-toggle="tooltip" title="แก้ไข">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form action="/down/delete/<%= d.down_id %>" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
+                    <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="ลบ">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+                <% }%>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="<%= (user && user.mClass==='admin') ? 5 : 4 %>">
+                <div class="text-center py-4 text-muted">
+                  <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                  ยังไม่มีรายการดาวน์โหลด
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <%- include('../partials/footer') %>
 <script>
-document.getElementById('searchInput').addEventListener('keyup', function() {
-  const keyword = this.value;
-  fetch(`/down/search?keyword=${encodeURIComponent(keyword)}`)
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector('table tbody');
-      tbody.innerHTML = '';
-      data.forEach((d, idx) => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${idx + 1}</td>
-            <td>${d.down_subject}</td>
-            <td class="text-nowrap">
-              ${d.down_file && d.down_file !== '-' ? 
-                `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success">
-                  <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
-                </a>` : `<span class="text-muted">-</span>`}
-            </td>
-            <td class="text-center">
-              ${d.down_link && d.down_link !== '-' ?
-                `<a href="${d.down_link}" target="_blank" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-link-45deg"></i> ลิงก์
-                </a>` : `<span class="text-muted">-</span>`}
-            </td>
-          </tr>
-        `;
-      });
+  (function(){
+    var searchEl = document.getElementById('searchInput');
+    var tbody = document.querySelector('table tbody');
+    function initTooltips(){
+      if (window.bootstrap && typeof bootstrap.Tooltip === 'function') {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){
+          new bootstrap.Tooltip(el);
+        });
+      }
+    }
+    searchEl && searchEl.addEventListener('keyup', function() {
+      const keyword = this.value;
+      fetch(`/down/search?keyword=${encodeURIComponent(keyword)}`)
+        .then(res => res.json())
+        .then(data => {
+          tbody.innerHTML = '';
+          if (!data || !data.length) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="<%= (user && user.mClass==='admin') ? 5 : 4 %>">
+                  <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                    ไม่พบผลลัพธ์ที่ค้นหา
+                  </div>
+                </td>
+              </tr>`;
+            initTooltips();
+            return;
+          }
+          data.forEach((d, idx) => {
+            tbody.insertAdjacentHTML('beforeend', `
+              <tr>
+                <td>${idx + 1}</td>
+                <td class="text-truncate" style="max-width: 680px" title="${d.down_subject}">${d.down_subject}</td>
+                <td class="text-nowrap">
+                  ${d.down_file && d.down_file !== '-' ?
+                    `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="ดาวน์โหลดไฟล์">
+                      <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
+                    </a>` : `<span class="text-muted">-</span>`}
+                </td>
+                <td class="text-center">
+                  ${d.down_link && d.down_link !== '-' ?
+                    `<a href="${d.down_link}" target="_blank" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="เปิดลิงก์ภายนอก">
+                      <i class="bi bi-link-45deg"></i> ลิงก์
+                    </a>` : `<span class="text-muted">-</span>`}
+                </td>
+                ${<%=(user && user.mClass==='admin') ? 'true' : 'false'%> ?
+                  `<td class="text-nowrap">
+                    <a href="/down/edit/${d.down_id}" class="btn btn-sm btn-warning me-1" data-bs-toggle="tooltip" title="แก้ไข">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="/down/delete/${d.down_id}" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
+                      <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="ลบ">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>` : ''}
+              </tr>
+            `);
+          });
+          initTooltips();
+        });
     });
-});
+    initTooltips();
+  })();
 </script>

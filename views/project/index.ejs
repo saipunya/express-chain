@@ -1,59 +1,96 @@
-<%- include('../partials/header', { title: 'Projects' }) %>
-<div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>โครงการ</h3>
-    <form class="d-flex" method="GET" action="">
-      <input type="text" class="form-control me-2" name="search" placeholder="ค้นหาชื่อเรื่อง" value="<%= search || '' %>">
-      <button class="btn btn-outline-primary" type="submit">ค้นหา</button>
-      <a href="/project" class="btn btn-outline-secondary ms-2">ล้าง</a>
-    </form>
-    <% if(user && (user.mClass=='admin' || user.mClass=='pbt')){ %>
-    <a href="/project/create" class="btn btn-primary">Add</a>
-    <% } %>
-  </div>
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Year</th>
-        <th>Date</th>
-        <th>Story</th>
-        <th>File</th>
-        <% if(user && (user.mClass=='admin' || user.mClass=='pbt')){ %>
-        <th>Actions</th>
+<%- include('../partials/header', { title: 'โครงการ' }) %>
+<% const canManage = user && (user.mClass=='admin' || user.mClass=='pbt'); %>
+<div class="card shadow-sm my-3">
+  <div class="card-header bg-white">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <h5 class="mb-0"><i class="bi bi-kanban me-2 text-primary"></i>โครงการ</h5>
+      </div>
+      <div class="col-12 col-md-7">
+        <form class="" method="GET" action="">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" name="search" placeholder="ค้นหาชื่อเรื่อง" value="<%= search || '' %>">
+            <a href="/project" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="ล้างการค้นหา"><i class="bi bi-x-lg"></i></a>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-return-left me-1"></i>ค้นหา</button>
+          </div>
+        </form>
+      </div>
+      <div class="col-12 col-md text-md-end">
+        <% if (canManage) { %>
+          <a href="/project/create" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>เพิ่ม</a>
         <% } %>
-      </tr>
-    </thead>
-    <tbody>
-      <% projects.forEach(p => { %>
-        <tr>
-         
-          <td><%= p.pro_no %></td>
-          <td><%= p.pro_year %></td>
-          <!-- thai fulldate -->
-
-          <% const thaiDate = new Date(p.pro_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-          <td class="text-nowrap"><%= thaiDate %></td>
-          <td><%= p.pro_story %></td>
-          <td>
-            <% if (user) { %>
-              <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank"> <i class="bi bi-file-pdf-fill"></i> </a>
-            <% }else{ %>
-              <a href="/auth/login" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-pdf-fill"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle table-bordered table-striped table-sticky mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="text-center" style="width: 80px;">เลขที่</th>
+            <th style="width: 110px;">ปี</th>
+            <th class="text-nowrap" style="width: 180px;">วันที่</th>
+            <th>เรื่อง</th>
+            <th style="width: 90px;">ไฟล์</th>
+            <% if (canManage) { %>
+              <th class="text-nowrap" style="width: 180px;">การจัดการ</th>
             <% } %>
-          </td>
-          <% if(user && (user.mClass=='pbt' || user.mClass=='admin')){ %>
-          <td class="text-nowrap">
-            <a href="/project/edit/<%= p.pro_id %>" class="btn btn-warning btn-sm">Edit</a>
-            <form action="/project/delete/<%= p.pro_id %>" method="POST" style="display:inline" onsubmit="return confirm('Delete?')">
-              <button class="btn btn-danger btn-sm" type="submit">Delete</button>
-            </form>
-          </td>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (projects && projects.length) { %>
+            <% projects.forEach(p => { %>
+              <tr>
+                <td class="text-center fw-semibold"><%= p.pro_no %></td>
+                <td>
+                  <span class="badge bg-light text-dark border"><%= p.pro_year %></span>
+                </td>
+                <!-- thai fulldate -->
+                <% const thaiDate = new Date(p.pro_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+                <td class="text-nowrap"><i class="bi bi-calendar-event me-1 text-secondary"></i><%= thaiDate %></td>
+                <td style="max-width: 520px;">
+                  <div class="text-truncate" title="<%= p.pro_story %>"><%= p.pro_story %></div>
+                </td>
+                <td>
+                  <% if (user) { %>
+                    <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank" data-bs-toggle="tooltip" title="ดาวน์โหลดเอกสาร">
+                      <i class="bi bi-file-pdf-fill"></i>
+                    </a>
+                  <% } else { %>
+                    <a href="/auth/login" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="เข้าสู่ระบบเพื่อดาวน์โหลด">
+                      <i class="bi bi-file-pdf-fill"></i>
+                    </a>
+                  <% } %>
+                </td>
+                <% if (canManage) { %>
+                  <td class="text-nowrap">
+                    <div class="d-flex gap-2">
+                      <a href="/project/edit/<%= p.pro_id %>" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="แก้ไข">
+                        <i class="bi bi-pencil-square me-1"></i>แก้ไข
+                      </a>
+                      <form action="/project/delete/<%= p.pro_id %>" method="POST" class="d-inline" onsubmit="return confirm('ต้องการลบรายการนี้หรือไม่?')">
+                        <button class="btn btn-outline-danger btn-sm" type="submit" data-bs-toggle="tooltip" title="ลบ">
+                          <i class="bi bi-trash"></i><span class="d-none d-lg-inline ms-1">ลบ</span>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                <% } %>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="<%= canManage ? 6 : 5 %>" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                ไม่พบโครงการ
+              </td>
+            </tr>
           <% } %>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 <script src="/js/project-search.js"></script>
 <%- include('../partials/footer') %>

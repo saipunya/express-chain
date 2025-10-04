@@ -156,3 +156,27 @@ footer { backdrop-filter: saturate(160%) blur(2px); }
 .text-muted-soft { color: #64748b !important; }
 .bg-surface { background-color: #ffffff; }
 .border-subtle { border-color: #e2e8f0 !important; }
+
+/* Navbar color improvements */
+.bg-gradient-success {
+  background: linear-gradient(135deg, #0f9d58 0%, #34a853 50%, #26c281 100%) !important;
+}
+.navbar.bg-gradient-success { box-shadow: 0 8px 24px rgba(16,185,129,.25); }
+.navbar-dark .navbar-nav .nav-link { color: rgba(255,255,255,.92); }
+.navbar-dark .navbar-nav .nav-link:hover, .navbar-dark .navbar-nav .nav-link:focus {
+  color: #fff;
+  text-shadow: 0 0 6px rgba(0,0,0,.15);
+}
+.navbar-dark .navbar-nav .nav-link.active, .navbar-dark .navbar-nav .show>.nav-link {
+  color: #fff;
+  position: relative;
+}
+.navbar-dark .navbar-nav .nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: .5rem; right: .5rem; bottom: .25rem;
+  height: 2px; background: rgba(255,255,255,.9); border-radius: 1px;
+}
+.navbar-dark .navbar-toggler { border-color: rgba(255,255,255,.35); }
+.navbar-dark .navbar-toggler:focus { box-shadow: 0 0 0 .2rem rgba(255,255,255,.25); }
+.navbar-dark .nav-link .bi { opacity: .95; }

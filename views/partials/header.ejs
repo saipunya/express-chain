@@ -20,23 +20,23 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="/">หน้าแรก</a></li>
-            <li class="nav-item"><a class="nav-link" href="/plan">แผนงาน</a></li>
-            <li class="nav-item"><a class="nav-link" href="/command">คำสั่งสำนักงาน</a></li> 
-            <li class="nav-item"><a class="nav-link" href="/project">โครงการ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1" aria-hidden="true"></i>หน้าแรก</a></li>
+            <li class="nav-item"><a class="nav-link" href="/plan"><i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>แผนงาน</a></li>
+            <li class="nav-item"><a class="nav-link" href="/command"><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>คำสั่งสำนักงาน</a></li> 
+            <li class="nav-item"><a class="nav-link" href="/project"><i class="bi bi-kanban me-1" aria-hidden="true"></i>โครงการ</a></li>
             <!-- <li class="nav-item"><a href="/rule" class="nav-link">ข้อบังคับ</a></li> --> 
                <% if(user && user.mClass=='kjs'){ %>
               <!-- <li class="nav-item"><a class="nav-link" href="/rabiab">ระเบียบ</a></li> -->
                <% } %>
-              <li class="nav-item"><a class="nav-link" href="/chamra">ผลการชำระบัญชี</a></li>
+              <li class="nav-item"><a class="nav-link" href="/chamra"><i class="bi bi-cash-coin me-1" aria-hidden="true"></i>ผลการชำระบัญชี</a></li>
               <!-- <li class="nav-item"><a class="nav-link" href="/vong">วงเงินกู้ยืม</a></li> -->
               <!-- <li class="nav-item"><a class="nav-link" href="/rq2">รายงาน RQ2</a></li> -->
             <!-- ตรวจสอบ login -->
               <% if (user) { %>
-              <li class="nav-item"><a class="nav-link" href="/dashboard">แดชบอร์ด</a></li>
-              <li class="nav-item"><a class="nav-link" href="/auth/logout">ออกจากระบบ</a></li>
+              <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>แดชบอร์ด</a></li>
+              <li class="nav-item"><a class="nav-link" href="/auth/logout"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>ออกจากระบบ</a></li>
             <% } else { %>
-            <li class="nav-item"><a class="nav-link" href="/auth/login">เข้าสู่ระบบ</a></li>
+            <li class="nav-item"><a class="nav-link" href="/auth/login"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>เข้าสู่ระบบ</a></li>
             <% } %>
           </ul>
         </div>

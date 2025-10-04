@@ -438,7 +438,7 @@ function displayGroupName(code){
 </div>
 
 <!-- ================= Quick Navigation ================= -->
-<div class="container quick-nav-wrapper reveal" aria-label="Quick section navigation">
+<div class="container quick-nav-wrapper reveal in" aria-label="Quick section navigation">
   <nav class="quick-nav" id="quickNav">
     <a href="#stats"><i class="bi bi-collection"></i>สถิติ</a>
     <a href="#charts"><i class="bi bi-bar-chart"></i>กราฟ</a>
@@ -448,7 +448,7 @@ function displayGroupName(code){
     <a href="/activities"><i class="bi bi-calendar-event"></i>กิจกรรม</a>
     <a href="/finance"><i class="bi bi-cash-coin"></i>งบการเงิน</a>
     <a href="/business"><i class="bi bi-briefcase"></i>กิจการ</a>
-    <a href="/rules"><i class="bi bi-file-earmark-text"></i>ข้อบังคับ</a>
+    <a href="/rule"><i class="bi bi-file-earmark-text"></i>ข้อบังคับ</a>
     <a href="/rabiab"><i class="bi bi-file-earmark"></i>ระเบียบ</a>
     <a href="#projects"><i class="bi bi-file-earmark-pdf"></i>โครงการ</a>
     <a href="#commands"><i class="bi bi-megaphone"></i>คำสั่ง</a>
@@ -1568,8 +1568,13 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
     activate();
   })();
 
-  // Reveal on scroll
+  // Reveal on scroll (with fallback when IntersectionObserver is unavailable)
   (function(){
+    const revealEls = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      revealEls.forEach(el=> el.classList.add('in'));
+      return;
+    }
     const obs=new IntersectionObserver(entries=>{
       entries.forEach(e=>{
         if(e.isIntersecting){
@@ -1578,7 +1583,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         }
       });
     },{threshold:.14});
-    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+    revealEls.forEach(el=>obs.observe(el));
     document.querySelectorAll('.section-block').forEach(el=>{
       el.classList.add('reveal');
       obs.observe(el);

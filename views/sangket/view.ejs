@@ -1,0 +1,130 @@
+<%- include('../partials/header', { title: 'รายละเอียด Sangket' }) %>
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle"></i> รายละเอียดสังเกต
+          </h5>
+          <div class="d-flex gap-2">
+            <a href="/sangket/edit/<%= item.sang_id %>" class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i> แก้ไข</a>
+            <a href="/sangket" class="btn btn-sm btn-outline-light">← กลับ</a>
+          </div>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">กลุ่ม</dt><dd class="col-sm-8"><span class="badge text-bg-secondary"><%= item.sang_group %></span></dd>
+            <dt class="col-sm-4">รหัส</dt><dd class="col-sm-8"><%= item.sang_code %></dd>
+            <dt class="col-sm-4">ชื่อ</dt><dd class="col-sm-8"><%= item.sang_name %></dd>
+            <dt class="col-sm-4">วันสิ้นปี</dt><dd class="col-sm-8"><%= item.sang_enddate ? new Date(item.sang_enddate).toLocaleDateString('th-TH') : '-' %></dd>
+            <dt class="col-sm-4">เลขรับหนังสือ</dt><dd class="col-sm-8"><%= item.sang_rabbook || '-' %></dd>
+            <dt class="col-sm-4">วันที่รับ</dt><dd class="col-sm-8"><%= item.sang_rabdate ? new Date(item.sang_rabdate).toLocaleDateString('th-TH') : '-' %></dd>
+            <dt class="col-sm-4">ผู้ตรวจบัญชี</dt><dd class="col-sm-8"><%= item.sang_accounter || '-' %></dd>
+            <dt class="col-sm-4">การตรวจ</dt><dd class="col-sm-8"><%= item.sang_check || '-' %></dd>
+
+            <!-- explode รายละเอียด-->
+            <!-- loop group รายละเอียด และ เงินที่เกี่ยวข้อง -->
+
+            <%
+                // helper: add commas only to numbers that follow the Thai words:
+                // "จำนวนเงิน", "จำนวน", "เป็นเงิน"
+                function formatNumbersInText(val) {
+                    if (val === undefined || val === null || val === '') return '-';
+                    var s = String(val);
+                    // match the keywords (prioritize "จำนวนเงิน" first) then an optional colon and the number
+                    // example matches: "จำนวน 1000", "เป็นเงิน1000.50", "จำนวนเงิน: 1234"
+                    return s.replace(/(จำนวนเงิน|จำนวน|เป็นเงิน)\s*[:：]?\s*(-?\d+(?:\.\d+)?)/g, function(_, kw, num) {
+                        // remove any existing commas before parsing
+                        var raw = num.replace(/,/g, '');
+                        var n = Number(raw);
+                        if (isNaN(n)) return kw + ' ' + num;
+                        return kw + ' ' + n.toLocaleString('en-US');
+                    });
+                }
+
+                // normalize sang_detail into an array (split by comma if string)
+                var detailArr = [];
+                if (Array.isArray(item.sang_detail)) {
+                    detailArr = item.sang_detail;
+                } else if (typeof item.sang_detail === 'string' && item.sang_detail.indexOf(',') !== -1) {
+                    detailArr = item.sang_detail.split(/\s*,\s*/).map(function(s){ return s.trim(); });
+                } else if (item.sang_detail != null) {
+                    detailArr = [item.sang_detail];
+                }
+
+                // normalize sang_money into an array (split by comma if string)
+                var moneyArr = [];
+                if (Array.isArray(item.sang_money)) {
+                    moneyArr = item.sang_money;
+                } else if (typeof item.sang_money === 'string' && item.sang_money.indexOf(',') !== -1) {
+                    moneyArr = item.sang_money.split(/\s*,\s*/).map(function(s){ return s.trim(); });
+                } else if (item.sang_money != null) {
+                    moneyArr = [item.sang_money];
+                }
+
+                // normalize sang_maihed (หมายเหตุ) into an array (split by comma if string)
+                var noteArr = [];
+                if (Array.isArray(item.sang_maihed)) {
+                    noteArr = item.sang_maihed;
+                } else if (typeof item.sang_maihed === 'string' && item.sang_maihed.indexOf(',') !== -1) {
+                    noteArr = item.sang_maihed.split(/\s*,\s*/).map(function(s){ return s.trim(); });
+                } else if (item.sang_maihed != null) {
+                    noteArr = [item.sang_maihed];
+                }
+
+                var maxLen = Math.max(detailArr.length, moneyArr.length, noteArr.length);
+            %>
+
+            <dt class="col-sm-4">รายละเอียดและเงินที่เกี่ยวข้อง</dt>
+            <dd class="col-sm-8">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:5%;">no.</th>
+                            <th>รายละเอียด</th>
+                            <th>เงินที่เกี่ยวข้อง</th>
+                            <th>หมายเหตุ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (maxLen > 0) { %>
+                            <% for (var i = 0; i < maxLen; i++) { %>
+                                <tr>
+                                    <td><%= i + 1 %></td>
+                                    <td style="white-space: pre-line"><%= (detailArr[i] !== undefined && detailArr[i] !== null && detailArr[i] !== '') ? formatNumbersInText(detailArr[i]) : '-' %></td>
+                                    <td style="white-space: pre-line"><%= (moneyArr[i] !== undefined && moneyArr[i] !== null && moneyArr[i] !== '') ? formatNumbersInText(moneyArr[i]) : '-' %></td>
+                                    <td style="white-space: pre-line"><%= (noteArr[i] !== undefined && noteArr[i] !== null && noteArr[i] !== '') ? formatNumbersInText(noteArr[i]) : '-' %></td>
+                                </tr>
+                            <% } %>
+                        <% } else { %>
+                            <tr>
+                                <td>1</td>
+                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_detail || '-') %></td>
+                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_money || '-') %></td>
+                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_maihed || '-') %></td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </dd>
+           
+
+            <dt class="col-sm-4">ประเภทกรณี</dt>
+            <dd class="col-sm-8"><%= item.sang_type || '-' %></dd>
+            <dt class="col-sm-4">เลขส่งหนังสือ</dt>
+            <dd class="col-sm-8"><%= item.sang_sentbook || '-' %></dd>
+            <dt class="col-sm-4">วันที่ส่ง</dt>
+            <dd class="col-sm-8"><%= item.sang_sentdate ? new Date(item.sang_sentdate).toLocaleDateString('th-TH') : '-' %></dd>
+            <dt class="col-sm-4">หมวด/ประเภท</dt>
+            <dd class="col-sm-8"><%= item.sang_category || '-' %></dd>
+            <!-- หมายเหตุ ถูกย้ายไปรวมในตารางด้านบนเป็นคอลัมน์ที่ 4 -->
+            <dt class="col-sm-4">สถานะ</dt>
+            <dd class="col-sm-8"><span class="badge <%= item.sang_status === 'yes' ? 'text-bg-success' : 'text-bg-secondary' %>"><%= item.sang_status || '-' %></span></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

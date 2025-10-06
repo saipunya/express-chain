@@ -142,10 +142,30 @@ io.on('connection', (socket) => {
 });
 
 // เล่ม server
-const PORT = 5500;
-server.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+const DEFAULT_PORT = parseInt(process.env.PORT || '5500', 10);
+let port = DEFAULT_PORT;
+let attempts = 0;
+const maxAttempts = 5;
+
+function start(p){
+  server.listen(p, () => {
+    console.log(`✅ Server is running on http://localhost:${p}`);
+  });
+}
+
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE' && attempts < maxAttempts) {
+    console.warn(`⚠️ Port ${port} is in use. Retrying on ${port + 1}...`);
+    attempts += 1;
+    port += 1;
+    setTimeout(() => start(port), 300);
+    return;
+  }
+  console.error('Server error:', err);
+  process.exit(1);
 });
+
+start(port);
 
 // ทำความสะอาดข้อมูลออนไลน์เก่า (5 นาที)
 setInterval(async () => {

@@ -560,6 +560,35 @@ function displayGroupName(code){
   </div>
 </section>
 
+<% // Precompute chamra stage counts once (S1..S10)
+  let __chamraCounts = null;
+  if ((homeProcesses||[]).length) {
+    __chamraCounts = {};
+    for (let i=1;i<=10;i++) __chamraCounts['S'+i] = 0;
+    const __isEmptyChamra = (v) => {
+      if (!v) return true;
+      if (typeof v === 'string') {
+        if (v === '0000-00-00') return true;
+        if (/^1899-11-30/.test(v)) return true;
+      }
+      const d = new Date(v);
+      return isNaN(d.getTime()) || d.getFullYear() < 1950;
+    };
+    // Count by highest achieved stage only
+    (homeProcesses||[]).forEach(p => {
+      let bucketed = false;
+      for (let i=10;i>=1;i--) {
+        const raw = p['pr_s'+i];
+        if (!__isEmptyChamra(raw)) {
+          __chamraCounts['S'+i]++;
+          bucketed = true;
+          break;
+        }
+      }
+      // If none of S1..S10 has a value, do not count this institution
+    });
+  }
+%>
 <!-- chamra section -->
 <section id="chamra" class="section-block">
   <div class="container">
@@ -652,6 +681,25 @@ function displayGroupName(code){
         </div>
       <% } %>
     </div>
+
+    <% if ((homeProcesses || []).length) { %>
+      <!-- Chamra stages chart -->
+      <div class="card modern-card shadow-sm border-0 mt-3">
+        <div class="card-gradient-bar"></div>
+        <div class="card-body">
+          <h6 class="mb-3 text-primary">
+            <i class="bi bi-graph-up-arrow me-2"></i> กราฟจำนวนสถาบันในแต่ละขั้นตอน (S1–S10)
+          </h6>
+          <div class="chart-container chart-container--sm">
+            <canvas id="chamraStageChart" height="120" aria-label="Chamra stages chart"></canvas>
+          </div>
+          <small class="text-muted d-block mt-2">นับจำนวนสถาบันตามขั้นสูงสุด (ขั้นสูงสุดของแต่ละสถาบัน)</small>
+        </div>
+      </div>
+
+      <!-- Use precomputed __chamraCounts -->
+      <div id="chamra-stage-data" data-stages='<%- JSON.stringify(__chamraCounts) %>' hidden></div>
+    <% } %>
   </div>
 </section>
 
@@ -849,7 +897,6 @@ function displayGroupName(code){
           </div>
         </div>
       </div>
-      
     <% } %>
   </div>
 </section>
@@ -1499,7 +1546,8 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}'
   data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'
   data-online-count="<%= typeof onlineCount !== 'undefined' ? onlineCount : 0 %>"
-  data-logged-in="<%= user ? 'true' : 'false' %>">
+  data-logged-in="<%= user ? 'true' : 'false' %>"
+  <% if ((homeProcesses||[]).length) { %> data-chamra-stages='<%- JSON.stringify(__chamraCounts) %>' <% } %>>
 </div>
 
 <!-- Back To Top Button -->
@@ -1903,6 +1951,58 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         }
       });
     }
+  });
+</script>
+
+<!-- Init Chamra stages chart -->
+<script>
+  window.addEventListener('load', function(){
+    const tdata = document.getElementById('template-data');
+    const canvas = document.getElementById('chamraStageChart');
+    if (!tdata || !canvas || typeof Chart === 'undefined') return;
+
+    let stages = null;
+    try {
+      const raw = tdata.getAttribute('data-chamra-stages');
+      stages = raw ? JSON.parse(raw) : null;
+    } catch {}
+    if (!stages) return;
+
+    const labels = Array.from({length:10}, (_,i)=> 'S'+(i+1));
+    const values = labels.map(k => Number(stages[k]||0));
+
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'จำนวนสถาบัน (แห่ง)',
+          data: values,
+          backgroundColor: '#6366f1',
+          borderWidth: 0,
+          borderRadius: 8,
+          maxBarThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true },
+          datalabels: typeof ChartDataLabels !== 'undefined' ? {
+            anchor: 'end', align: 'top', color: '#0f172a', font: { weight: '600' },
+            formatter: (v)=> Number(v).toLocaleString()
+          } : undefined
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+          x: { grid: { display:false } }
+        }
+      }
+    });
   });
 </script>
 

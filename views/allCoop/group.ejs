@@ -92,7 +92,10 @@
                       <td class="text-center text-muted"><%= ( (page - 1) * pageSize ) + i + 1 %></td>
                       <td><%= c.c_code || c.code || '-' %></td>
                       <td><%= c.c_name || c.name || '-' %></td>
-                      <td class="d-none d-md-table-cell"><span class="badge bg-info bg-opacity-75 text-dark"><%= c.c_group || c.coop_group || c.group || '' %></span></td>
+                      <td class="d-none d-md-table-cell"><span class="badge bg-info bg-opacity-75 text-dark">
+                        <!-- if value = group1 => 'กลุ่มส่งเสริมสหกรณ์ 1', if value = group2 => 'กลุ่มส่งเสริมสหกรณ์ 2', if value = group3 => 'กลุ่มส่งเสริมสหกรณ์ 3', if value = group4 => 'กลุ่มส่งเสริมสหกรณ์ 4' -->
+                        <%= c.c_group === 'group1' ? 'กลุ่มส่งเสริมสหกรณ์ 1' : c.c_group === 'group2' ? 'กลุ่มส่งเสริมสหกรณ์ 2' : c.c_group === 'group3' ? 'กลุ่มส่งเสริมสหกรณ์ 3' : c.c_group === 'group4' ? 'กลุ่มส่งเสริมสหกรณ์ 4' : c.c_group ==='group5' ? 'กลุ่มส่งเสริมสหกรณ์ 5': (c.c_group || c.coop_group || c.group || '') %>
+                      </span></td>
                       <td class="text-center">
                         <a href="/allCoop/profile/<%= c.c_code || c.code || '' %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i></a>
                       </td>

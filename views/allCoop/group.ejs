@@ -215,9 +215,11 @@
   function highlightCells(row, term){
     const t = term.trim();
     row.querySelectorAll('td').forEach(td => {
-      const original = td.getAttribute('data-original') || td.innerText;
+      const original = td.getAttribute('data-original') || td.innerHTML;
       if(!td.getAttribute('data-original')) td.setAttribute('data-original', original);
       if(!t){ td.innerHTML = original; return; }
+      // Skip action cells that contain buttons/links to avoid breaking them
+      if(td.querySelector('a, button, .btn')){ td.innerHTML = original; return; }
       const regex = new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
       td.innerHTML = original.replace(regex,'<span class="highlight">$1</span>');
     });

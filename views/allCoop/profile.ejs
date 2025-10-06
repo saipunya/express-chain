@@ -147,93 +147,103 @@
       </div>
     </section>
 
-    <!-- Finance Section -->
-    <section class="section-block" id="finance-section">
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-cash-stack me-2 text-primary"></i>ข้อมูลการเงิน</h5>
-          <span class="badge bg-primary-subtle text-primary-emphasis">รวม <%= (data.finance||[]).length %> รายการ</span>
-        </div>
-        <div class="card-body p-0">
-          <% if (data.finance && data.finance.length) { %>
-            <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width:120px">ปี</th>
-                    <th class="text-center" style="width:80px">ไฟล์</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% data.finance.forEach(f => { %>
-                    <tr>
-                      <td class="fw-medium"><%= f.end_year || '-' %></td>
-                      <td class="text-center">
-                        <% if (user) { %>
-                          <% if (f.id) { %>
-                            <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
-                          <% } else if (f.link_file) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                          <% } else { %>-<% } %>
-                        <% } else { %>
-                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                        <% } %>
-                      </td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
-          <% } else { %>
-            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-          <% } %>
-        </div>
-      </div>
-    </section>
 
-    <!-- Business Section -->
-    <section class="section-block" id="business-section">
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-briefcase me-2 text-success"></i>ข้อมูลธุรกิจ</h5>
-          <span class="badge bg-success-subtle text-success-emphasis">รวม <%= (data.business||[]).length %> รายการ</span>
-        </div>
-        <div class="card-body p-0">
-          <% if (data.business && data.business.length) { %>
-            <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width:120px">ปี</th>
-                    <th class="text-center" style="width:80px">ไฟล์</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% data.business.forEach(b => { %>
-                    <tr>
-                      <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
-                      <td class="text-center">
-                        <% if (user) { %>
-                          <% if (b.bu_id) { %>
-                            <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
-                          <% } else if (b.bu_filename) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
-                          <% } else { %>-<% } %>
-                        <% } else { %>
-                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
-                        <% } %>
-                      </td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
+    <div class="row my-2">
+      <div class="col-md-6">
+        <!-- Finance Section -->
+        <section class="section-block" id="finance-section">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+              <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-cash-stack me-2 text-primary"></i>ข้อมูลการเงิน</h5>
+              <span class="badge bg-primary-subtle text-primary-emphasis">รวม <%= (data.finance||[]).length %> รายการ</span>
             </div>
-          <% } else { %>
-            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
-          <% } %>
-        </div>
+            <div class="card-body p-0">
+              <% if (data.finance && data.finance.length) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width:120px">ปี</th>
+                        <th class="text-center" style="width:80px">ไฟล์</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.finance.forEach(f => { %>
+                        <tr>
+                          <td class="fw-medium"><%= f.end_year || '-' %></td>
+                          <td class="text-center">
+                            <% if (user) { %>
+                              <% if (f.id) { %>
+                                <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
+                              <% } else if (f.link_file) { %>
+                                <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                              <% } else { %>-<% } %>
+                            <% } else { %>
+                              <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+              <% } %>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+      <div class="col-md-6">
+        <!-- Business Section -->
+        <section class="section-block" id="business-section">
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+              <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-briefcase me-2 text-success"></i>ข้อมูลธุรกิจ</h5>
+              <span class="badge bg-success-subtle text-success-emphasis">รวม <%= (data.business||[]).length %> รายการ</span>
+            </div>
+            <div class="card-body p-0">
+              <% if (data.business && data.business.length) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width:120px">ปี</th>
+                        <th class="text-center" style="width:80px">ไฟล์</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.business.forEach(b => { %>
+                        <tr>
+                          <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
+                          <td class="text-center">
+                            <% if (user) { %>
+                              <% if (b.bu_id) { %>
+                                <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                              <% } else if (b.bu_filename) { %>
+                                <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                              <% } else { %>-<% } %>
+                            <% } else { %>
+                              <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+              <% } %>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+  
+
+   
 
     <!-- Rules Section -->
     <section class="section-block" id="rules-section">
@@ -440,9 +450,184 @@
         </div>
       </div>
     </section>
+
+    <!-- Assets Section -->
+    <section class="section-block" id="assets-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i>ทรัพย์สิน/ครุภัณฑ์ (cooperatives_assets)</h5>
+          <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.assets||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.assets && data.assets.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+                <thead class="table-light">
+                  <tr>
+                    <th>หมวดหมู่</th>
+                    <th>เครื่อง/อุปกรณ์</th>
+                    <th style="width:140px">จำนวน</th>
+                    <th class="small-hide" style="width:160px">สมรรถนะ</th>
+                    <th style="width:120px">สถานะ</th>
+                    <th style="width:120px">อัพเดต</th>
+                    <th class="text-end" style="width:110px">ดูข้อมูล</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.assets.forEach(a => { %>
+                    <tr>
+                      <td><%= a.category || '-' %></td>
+                      <td><%= a.machine_type || '-' %></td>
+                      <td>
+                        <% if (a.quantity !== null && a.quantity !== undefined && !isNaN(Number(a.quantity))) { %>
+                          <%= Number(a.quantity).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %>
+                        <% } else { %> - <% } %>
+                        <span class="text-muted"><%= a.quantity_unit || '' %></span>
+                      </td>
+                      <td class="small-hide">
+                        <% if (a.capacity_value) { %>
+                          <%= a.capacity_value %> <span class="text-muted"><%= a.capacity_unit || '' %></span>
+                        <% } else { %> - <% } %>
+                      </td>
+                      <td class="rounded p-2  bg-<%= (a.status==='ใช้งานไม่ได้' ? 'danger' : 'success') %> text-white">
+                        <!-- insert icon  -->
+                        <%= a.status || '-' %>
+                      </td>
+                      <td>
+                        <% if (a.updated_date) { %>
+                          <%= new Date(a.updated_date).toLocaleDateString('th-TH') %>
+                        <% } else { %> - <% } %>
+                      </td>
+                      <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-secondary btn-view-asset" data-id="<%= a.id %>"><i class="bi bi-eye"></i> ดูข้อมูล</button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
+        </div>
+      </div>
+    </section>
   <% } %>
   <div class="mt-2">
     <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
   </div>
 </div>
 <%- include('../partials/footer') %>
+
+<!-- Asset Detail Modal -->
+<div class="modal fade" id="assetModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i>รายละเอียดทรัพย์สิน/ครุภัณฑ์</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-2 small text-muted">
+          <div class="col-md-6"><strong>สถาบัน:</strong> <span id="am-coop_name" class="fs-6">-</span></div>
+          <div class="col-md-6"><strong>หมวดหมู่:</strong> <span id="am-category">-</span></div>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-md-6"><strong>เครื่อง/อุปกรณ์:</strong> <span id="am-machine_type" class="p-2 rounded" style="background-color: #fba9d9;">-</span></div>
+          <div class="col-md-6"><strong>รายละเอียด:</strong> <span id="am-description">-</span></div>
+        </div>
+        <div class="row g-2 mb-2 small">
+          <div class="col-md-4"><strong>จำนวน:</strong> <span id="am-quantity">-</span> <span class="text-muted" id="am-quantity_unit"></span></div>
+          <div class="col-md-4"><strong>สมรรถนะ:</strong> <span id="am-capacity_value">-</span> <span class="text-muted" id="am-capacity_unit"></span></div>
+          <div class="col-md-4"><strong>สถานะ:</strong> <span id="am-status">-</span></div>
+        </div>
+        <hr/>
+        <div class="row g-2 mb-2 small">
+          <div class="col-md-4"><strong>ปี (พ.ศ.):</strong> <span id="am-year_be">-</span></div>
+          <div class="col-md-4"><strong>พืช/สินค้า:</strong> <span id="am-crop">-</span></div>
+          <div class="col-md-4"><strong>สเปค:</strong> <span id="am-spec">-</span></div>
+        </div>
+        <div class="row g-2 mb-2 small">
+          <div class="col-md-4"><strong>งบรวม:</strong> <span id="am-price_total">-</span></div>
+          <div class="col-md-4"><strong>งบสนับสนุน:</strong> <span id="am-price_support">-</span></div>
+          <div class="col-md-4"><strong>เงินสหกรณ์:</strong> <span id="am-price_coop">-</span></div>
+        </div>
+        <div class="mb-2 small"><strong>โครงการ:</strong> <span id="am-project">-</span></div>
+        <div class="mb-2 small"><strong>หมายเหตุ:</strong> <span id="am-remark">-</span></div>
+        <hr/>
+        <div class="row g-2 mb-2 small text-muted">
+          
+          <div class="col-12"><strong>ที่อยู่:</strong> <span id="am-address">-</span></div>
+          <div class="col-md-6"><strong>ผู้ติดต่อ:</strong> <span id="am-contact">-</span></div>
+          <div class="col-md-6"><strong>พิกัด:</strong> <span id="am-geo">-</span> <a id="am-map" class="ms-1" target="_blank" rel="noopener"></a></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Build asset map for quick lookup
+  window.ASSET_MAP = Object.create(null);
+  <% (data.assets||[]).forEach(a => { %>
+    ASSET_MAP['<%= a.id %>'] = <%- JSON.stringify(a) %>;
+  <% }) %>
+  function fmtNumber(n){
+    const num = Number(n);
+    return isNaN(num) ? '-' : num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.btn-view-asset');
+    if(!btn) return;
+    const id = btn.getAttribute('data-id');
+    const a = ASSET_MAP[id];
+    if(!a) return;
+    const $ = (id)=>document.getElementById(id);
+    // Basic fields
+   
+    $('am-coop_name').textContent = a.coop_name || '-';
+    $('am-category').textContent = a.category || '-';
+    $('am-machine_type').textContent = a.machine_type || '-';
+    $('am-description').textContent = a.description || '-';
+    // Quantities/capacity
+    $('am-quantity').textContent = (a.quantity!==null && a.quantity!==undefined) ? fmtNumber(a.quantity) : '-';
+    $('am-quantity_unit').textContent = a.quantity_unit || '';
+    $('am-capacity_value').textContent = (a.capacity_value || a.capacity_value===0) ? a.capacity_value : '-';
+    $('am-capacity_unit').textContent = a.capacity_unit || '';
+    $('am-status').textContent = a.status || '-';
+    // Other specs
+    $('am-year_be').textContent = a.year_be || '-';
+    $('am-crop').textContent = a.crop || '-';
+    $('am-spec').textContent = a.spec_value ? (a.spec_value + ' ' + (a.spec_unit||'')) : '-';
+    $('am-project').textContent = a.project || '-';
+    $('am-remark').textContent = a.remark || '-';
+    // Prices
+    $('am-price_total').textContent = a.price_total ? Number(a.price_total).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-';
+    $('am-price_support').textContent = a.price_support ? Number(a.price_support).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-';
+    $('am-price_coop').textContent = a.price_coop ? Number(a.price_coop).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-';
+    // Coop and address
+   
+    const addr = [a.address, a.subdistrict, a.district, a.province, a.postcode].filter(Boolean).join(' ');
+    $('am-address').textContent = addr || '-';
+    $('am-contact').textContent = [a.contact_name, a.contact_phone].filter(Boolean).join(' / ') || '-';
+    // Geolocation
+    if (a.latitude && a.longitude) {
+      $('am-geo').textContent = `${a.latitude}, ${a.longitude}`;
+      const map = $('am-map');
+      map.textContent = '(เปิดแผนที่)';
+      map.href = `https://www.google.com/maps?q=${a.latitude},${a.longitude}`;
+    } else {
+      $('am-geo').textContent = '-';
+      const map = $('am-map');
+      map.textContent = '';
+      map.removeAttribute('href');
+    }
+    // Show modal
+    const modalEl = document.getElementById('assetModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  });
+</script>

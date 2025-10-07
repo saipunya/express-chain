@@ -1,0 +1,48 @@
+<%- include('../partials/header.ejs') %>
+  <div class="container my-5">
+    <h1 class="mb-4">เพิ่มการจองห้องประชุม</h1>
+
+    <form action="/meetingroom/create" method="POST" class="row g-3">
+      <div class="col-md-4">
+        <label for="mee_date" class="form-label">วันที่ประชุม</label>
+        <input type="date" id="mee_date" name="mee_date" class="form-control" required>
+      </div>
+      <div class="col-md-4">
+        <label for="mee_time" class="form-label">เวลา</label>
+        <input type="text" id="mee_time" name="mee_time" class="form-control" placeholder="เช่น 09.00-12.00 น." required>
+      </div>
+      <div class="col-md-4">
+        <!-- change select tag -->
+         <div class="mb-3">
+            <label for="mee_room" class="form-label">ห้องประชุม</label>
+            <select
+                class="form-select form-select-md"
+                name="mee_city"
+                id="mee_city"
+                required >
+                <option selected disabled>++โปรดเลือก++</option>
+                <option value="พิทยาลงกรณ์">ห้องประชุมพิทยาลงกรณ์</option>
+                <option value="ดอกกระเจียว">ห้องประชุมดอกกระเจียว</option>
+            </select>
+         </div>
+      </div>
+
+      <div class="col-12">
+        <label for="mee_subject" class="form-label">เรื่อง/วัตถุประสงค์</label>
+        <textarea id="mee_subject" name="mee_subject" class="form-control" rows="3" required></textarea>
+      </div>
+
+      <div class="col-md-4">
+        <label for="mee_respon" class="form-label">ผู้รับผิดชอบ</label>
+        <input type="text" id="mee_respon" name="mee_respon" class="form-control" required>
+      </div>
+      <input type="hidden" name="mee_saveby" value="<%= user ? user.name : '' %>">
+      <input type="hidden" name="mee_savedate" value="<%= new Date().toISOString().slice(0,10) %>">
+
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">บันทึก</button>
+        <a href="/meetingroom" class="btn btn-secondary">กลับหน้าหลัก</a>
+      </div>
+    </form>
+  </div>
+  <%- include('../partials/footer.ejs') %>

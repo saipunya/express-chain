@@ -4,6 +4,11 @@
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
+<!-- Added: FullCalendar (for Activities calendar) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
+
 <!-- ================= Modern Global Styles (Refactored) ================ -->
 <style>
   :root {
@@ -275,6 +280,9 @@
     .chart-container { height: 240px; }
     .chart-container--sm { height: 200px; }
   }
+
+  /* Calendar sizing */
+  #activitiesCalendar { min-height: 520px; }
 </style>
 
 <!-- Added: Light theme & contrast fixes -->
@@ -785,8 +793,7 @@ function displayGroupName(code){
       </div>
       <div class="text-center mt-4">
         <a href="/allCoop/group" class="btn btn-primary px-4"><i class="bi bi-grid-3x3-gap me-1"></i> ดูทั้งหมด</a>
-      </div>
-    <% } else { %>
+      <% } else { %>
       <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
     <% } %>
   </div>
@@ -934,7 +941,7 @@ function displayGroupName(code){
   </div>
 </div>
 
-<script>
+<script></script>
 const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribute('data-logged-in') === 'true';
 (function(){
   document.addEventListener('click', async function(e){
@@ -1081,43 +1088,123 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   </div>
 </section>
 
-<!-- ================= Activities & Image ================= -->
+<!-- ================= Activities & Image (replaced image with calendar) ================= -->
 <section id="activities" class="section-block">
   <div class="container-lg">
     <div class="row">
-      <div class="col-md-8 text-center">
-        <img src="/images/jk.jpg" alt="Description of the image" class="img-fluid shadow-sm rounded">
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0">
+      <div class="col-12 mb-3 mb-md-0">
+        <div class="card modern-card shadow-sm border-0 h-100">
           <div class="card-gradient-bar"></div>
           <div class="card-body">
-            <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
-            <ul class="list-group list-group-flush">
-              <% activity.forEach(acti => { %>
-                <li class="list-group-item">
-                  <i class="bi bi-calendar-event me-2 text-success"></i>
-                  <% const today = new Date(); %>
-                  <% const actDate = new Date(acti.date_act); %>
-                  <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
-                  <%= acti.activity %>
-                  <% if (actDate.toDateString() === today.toDateString()) { %>
-                    <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-                  <% } %>
-                </li>
-              <% }) %>
-            </ul>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="text-primary mb-0"><i class="bi bi-calendar-event me-2 text-success"></i> ปฏิทินกิจกรรม</h5>
+              <button id="openActivityListBtn" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-list-ul me-1"></i> แสดงข้อมูลรายละเอียด
+              </button>
+            </div>
+            <div id="activitiesCalendar"></div>
           </div>
-        </div>
-        <div class="text-end mt-2">
-          <a href="/activities" class="btn btn-primary btn-sm px-4 shadow-sm">
-            ดูทั้งหมด
-          </a>
         </div>
       </div>
     </div>
   </div>
 </section>
+<!-- List of activity -->
+<section>
+  <div class="container">
+    <div class="col-12">
+      <div class="card modern-card shadow-sm border-0">
+        <div class="card-gradient-bar"></div>
+        <div class="card-body">
+          <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
+          <ul class="list-group list-group-flush">
+            <% activity.forEach(acti => { %>
+              <li class="list-group-item">
+                <i class="bi bi-calendar-event me-2 text-success"></i>
+                <% const today = new Date(); %>
+                <% const actDate = new Date(acti.date_act); %>
+                <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
+                <%= acti.activity %>
+                <% if (actDate.toDateString() === today.toDateString()) { %>
+                  <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+                <% } %>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      </div>
+      <div class="text-end mt-2">
+        <a href="/activities" class="btn btn-primary btn-sm px-4 shadow-sm">
+          ดูทั้งหมด
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Activity single detail modal -->
+<div class="modal fade modal-elevated" id="activityModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-info-circle me-1"></i> รายละเอียดกิจกรรม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row mb-0">
+          <dt class="col-4">วันที่</dt><dd class="col-8" id="acDate">-</dd>
+          <dt class="col-4">เวลา</dt><dd class="col-8" id="acTime">-</dd>
+          <dt class="col-4">สถานที่</dt><dd class="col-8" id="acPlace">-</dd>
+          <dt class="col-4">กิจกรรม</dt><dd class="col-8" id="acTitle">-</dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity list modal -->
+<div class="modal fade modal-elevated" id="activityListModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-list-ul me-1"></i> รายการกิจกรรม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <input type="text" class="modal-search-bar" id="activityFilter" placeholder="🔍 ค้นหากิจกรรม..."/>
+          <div class="small text-muted" id="activityCount"></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-center">
+                <th style="width:56px;">#</th>
+                <th class="text-start">วันที่</th>
+                <th class="text-start">กิจกรรม</th>
+              </tr>
+            </thead>
+            <tbody id="activityTbody">
+              <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
+                <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
+                  <td class="text-center"><%= i+1 %></td>
+                  <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
+                  <td><%= a.activity %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ================= Latest Projects & Commands ================= -->
 <section id="projects" class="section-block bg-light">
@@ -1232,81 +1319,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
     </div>
   </div>
 </section>
-
-
-<section id="rq2" class="py-4">
-  <div class="container-lg">
-    <div class="d-flex flex-wrap align-items-center mb-3">
-      <h2 class="h4 mb-2 mb-sm-0 text-primary">
-        <i class="bi bi-file-earmark-ruled me-2"></i>RQ2 ล่าสุด
-      </h2>
-      <a href="/rq2" class="btn btn-sm btn-outline-primary ms-auto d-none d-md-inline">
-        <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
-      </a>
-    </div>
-
-    <div class="row g-3">
-      <% (lastRq2 || []).forEach((r, idx)=> { 
-         const rqSavedDate = new Date(r.rq_savedate);
-         const diffDays = Math.ceil((Date.now() - rqSavedDate) / 86400000);
-      %>
-        <div class="col-12 col-lg-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex flex-column">
-              <div class="d-flex align-items-start mb-2">
-                <div class="me-3">
-                  <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                       style="width:46px;height:46px;font-weight:600;">
-                    <%= idx + 1 %>
-                  </div>
-                </div>
-                <div class="flex-grow-1">
-                  <h6 class="mb-1 fw-semibold text-dark">
-                    <span class="text-truncate d-inline-block" style="max-width: 100%;">
-                      <%= r.rq_name %>
-                    </span>
-                  </h6>
-                  <div class="small text-muted">
-                    <i class="bi bi-clock-history me-1"></i>
-                    <%= rqSavedDate.toLocaleDateString('th-TH',{ day:'numeric', month:'short', year:'numeric' }) %>
-                  </div>
-                  <div class="mt-2 d-flex flex-wrap gap-2">
-                    <span class="badge text-bg-secondary">ปี <%= r.rq_year %></span>
-                    <% if (diffDays <= 7) { %>
-                      <span class="badge text-bg-danger">
-                        <i class="bi bi-stars me-1"></i>NEW
-                      </span>
-                    <% } %>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-auto d-flex justify-content-end align-items-center pt-2 border-top">
-                <% if (user) { %>
-                  <a href="/rq2/download/<%= r.rq_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-file-pdf-fill me-1"></i> ไฟล์
-                  </a>
-                <% } else { %>
-                  <a href="/auth/login" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-lock me-1"></i> <span class="d-md-block d-none">เข้าระบบ</span>
-                  </a>
-                <% } %>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }) %>
-
-      <% if (!(lastRq2||[]).length) { %>
-        <div class="col-12">
-          <div class="alert alert-light border text-center mb-0">
-            <i class="bi bi-inbox me-2"></i> ไม่มีข้อมูล RQ2
-          </div>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</section>
-
+<!-- ================= Articles (List View) ================= -->
 
 <section id="articles" class="section-block bg-light">
   <div class="container">
@@ -1541,7 +1554,9 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'
   data-online-count="<%= typeof onlineCount !== 'undefined' ? onlineCount : 0 %>"
   data-logged-in="<%= user ? 'true' : 'false' %>"
-  <% if ((chamraAllProcesses||[]).length) { %> data-chamra-stages='<%- JSON.stringify(__chamraCounts) %>' <% } %>>
+  <% if ((chamraAllProcesses||[]).length) { %> data-chamra-stages='<%- JSON.stringify(__chamraCounts) %>' <% } %>
+  data-activities='<%- JSON.stringify(activity || []) %>'
+>
 </div>
 
 <!-- Back To Top Button -->
@@ -1997,6 +2012,100 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         }
       }
     });
+  });
+</script>
+
+<!-- Init Activities calendar + modals -->
+<script>
+  window.addEventListener('load', function(){
+    const calEl = document.getElementById('activitiesCalendar');
+    if (!calEl || typeof FullCalendar === 'undefined') return;
+
+    function formatThaiDate(d){
+      try {
+        return d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
+      } catch {
+        return d.toISOString().slice(0,10);
+      }
+    }
+
+    const tDataEl = document.getElementById('template-data');
+    let activities = [];
+    try {
+      const raw = tDataEl ? tDataEl.getAttribute('data-activities') : '[]';
+      activities = raw ? JSON.parse(raw) : [];
+    } catch { activities = []; }
+
+    const events = (activities || []).map((a, idx) => ({
+      id: String(idx+1),
+      title: a.activity || '-',
+      start: a.date_act,
+      allDay: true,
+      extendedProps: { raw: a }
+    }));
+
+    const calendar = new FullCalendar.Calendar(calEl, {
+      initialView: 'dayGridMonth',
+      locale: 'th',
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: ''
+      },
+      events,
+      eventClick(info){
+        const ev = info.event;
+        const raw = ev.extendedProps?.raw || {};
+        const d = ev.start ? new Date(ev.start) : null;
+        const modalEl = document.getElementById('activityModal');
+        if (!modalEl) return;
+        document.getElementById('acDate').textContent = d ? formatThaiDate(d) : '-';
+        document.getElementById('acTitle').textContent = raw.activity || ev.title || '-';
+        document.getElementById('acTime').textContent = raw.act_time ? (raw.act_time + ' น.') : '-';
+        document.getElementById('acPlace').textContent = raw.place || '-';
+        const modal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
+        if (modal) modal.show();
+      }
+    });
+    calendar.render();
+
+    // List modal open button
+    const btnList = document.getElementById('openActivityListBtn');
+    if (btnList) {
+      btnList.addEventListener('click', function(){
+        const el = document.getElementById('activityListModal');
+        const m = bootstrap && bootstrap.Modal ? new bootstrap.Modal(el) : null;
+        if (m) m.show();
+        // Update count
+        const countEl = document.getElementById('activityCount');
+        const rows = document.querySelectorAll('#activityTbody tr');
+        if (countEl) countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';
+      });
+    }
+
+    // Filter in list modal
+    (function(){
+      const input = document.getElementById('activityFilter');
+      const tbody = document.getElementById('activityTbody');
+      const countEl = document.getElementById('activityCount');
+      if(!input || !tbody) return;
+      input.addEventListener('input', function(){
+        const q = this.value.trim().toLowerCase();
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let shown=0;
+        rows.forEach(r => {
+          const name = r.getAttribute('data-name')||'';
+          const match = !q || name.includes(q);
+          r.classList.toggle('d-none', !match);
+          if(match) shown++;
+        });
+        if (countEl) {
+          const total = rows.length;
+          countEl.textContent = q ? `พบ ${shown} / ${total} รายการ` : `ทั้งหมด ${total} รายการ`;
+        }
+      });
+    })();
   });
 </script>
 

@@ -22,6 +22,10 @@
                 <% } %>
                 <% if (user && user.mClass === 'admin') { %>
                   <a href="/member" class="btn btn-warning text-dark btn-action"><i class="bi bi-people me-1"></i> จัดการสมาชิก</a>
+                  <!-- add strength menu -->
+                  <a href="/strength" class="btn btn-outline-primary btn-action"><i class="bi bi-shield-lock me-1"></i> จัดการความเข้มแข็ง</a>
+                  <!-- จัดการ suggestion menu -->
+                  <a href="/suggestion" class="btn btn-outline-info btn-action"><i class="bi bi-lightbulb me-1"></i> คำแนะนำนายทะเบียนสหกรณ์</a>
                 <% } %>
                 <a href="/activities/create" class="btn btn-outline-secondary btn-action"><i class="bi bi-plus-circle me-1"></i> เพิ่มกิจกรรมสำนักงาน</a>
               </div>

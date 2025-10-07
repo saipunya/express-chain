@@ -1685,10 +1685,13 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
             tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
             return;
           }
-          tbody.innerHTML = data.map((d, idx) => `
+          tbody.innerHTML = data.map((d, idx) => {
+            const isNew = d.down_savedate && (Date.now() < new Date(d.down_savedate).getTime() + 7*24*60*60*1000);
+            const newBadge = isNew ? `<span class="badge bg-danger ms-2 p-2" title="ใหม่">new</span>` : '';
+            return `
           <tr>
             <td class="d-none d-sm-table-cell">${idx + 1}</td>
-            <td>${escapeHtml(d.down_subject || '-')}</td>
+            <td>${escapeHtml(d.down_subject || '-')} ${newBadge}</td>
             <td class="text-nowrap">
               ${
                 d.down_file && d.down_file !== '-' ? (
@@ -1713,7 +1716,8 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
             </td>
             <td class="text-nowrap">${fmtDate(d.down_savedate)}</td>
           </tr>
-        `).join('');
+        `;
+          }).join('');
         })
         .catch(() => {
           const tbody = document.getElementById('topDownloadsTbody');
@@ -2032,4 +2036,3 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 </script>
 
 <%- include('partials/footer') %>
-```

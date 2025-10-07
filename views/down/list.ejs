@@ -40,7 +40,16 @@
             <% downs.forEach((d, idx) => { %>
               <tr>
                 <td><%= idx + 1 %></td>
-                <td class="text-truncate" style="max-width: 680px" title="<%= d.down_subject %>"><%= d.down_subject %></td>
+                <td class="text-truncate" style="max-width: 680px" title="<%= d.down_subject %>">
+                  <%= d.down_subject %>
+                  <% if (d.down_savedate) {
+                       var savedTime = new Date(d.down_savedate).getTime();
+                       var nowTime = Date.now();
+                       if (nowTime < savedTime + 7*24*60*60*1000) { %>
+                        <span class="badge bg-danger ms-2">ใหม่</span>
+                  <%   }
+                     } %>
+                </td>
                 <td class="text-nowrap">
                   <% if(user) { %>
                     <% if (d.down_file && d.down_file !== '-') { %>
@@ -100,6 +109,9 @@
   (function(){
     var searchEl = document.getElementById('searchInput');
     var tbody = document.querySelector('table tbody');
+    // isAdmin flag rendered from server-side
+    var isAdmin = <%= (user && user.mClass==='admin') ? true : false %>;
+
     function initTooltips(){
       if (window.bootstrap && typeof bootstrap.Tooltip === 'function') {
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){
@@ -116,7 +128,7 @@
           if (!data || !data.length) {
             tbody.innerHTML = `
               <tr>
-                <td colspan="<%= (user && user.mClass==='admin') ? 5 : 4 %>">
+                <td colspan="${isAdmin ? 5 : 4}">
                   <div class="text-center py-4 text-muted">
                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                     ไม่พบผลลัพธ์ที่ค้นหา
@@ -127,10 +139,30 @@
             return;
           }
           data.forEach((d, idx) => {
+            // determine if this item is "new" (saved date within last 7 days)
+            const isNew = d.down_savedate && (Date.now() < new Date(d.down_savedate).getTime() + 7*24*60*60*1000);
+            const newBadge = isNew ? `<span class="badge bg-danger ms-2">ใหม่</span>` : '';
+
+            // build management cell only if admin
+            var managementCell = '';
+            if (isAdmin) {
+              managementCell = `
+                <td class="text-nowrap">
+                  <a href="/down/edit/${d.down_id}" class="btn btn-sm btn-warning me-1" data-bs-toggle="tooltip" title="แก้ไข">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form action="/down/delete/${d.down_id}" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
+                    <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="ลบ">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>`;
+            }
+
             tbody.insertAdjacentHTML('beforeend', `
               <tr>
                 <td>${idx + 1}</td>
-                <td class="text-truncate" style="max-width: 680px" title="${d.down_subject}">${d.down_subject}</td>
+                <td class="text-truncate" style="max-width: 680px" title="${d.down_subject}">${d.down_subject} ${newBadge}</td>
                 <td class="text-nowrap">
                   ${d.down_file && d.down_file !== '-' ?
                     `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip" title="ดาวน์โหลดไฟล์">
@@ -143,17 +175,7 @@
                       <i class="bi bi-link-45deg"></i> ลิงก์
                     </a>` : `<span class="text-muted">-</span>`}
                 </td>
-                ${<%=(user && user.mClass==='admin') ? 'true' : 'false'%> ?
-                  `<td class="text-nowrap">
-                    <a href="/down/edit/${d.down_id}" class="btn btn-sm btn-warning me-1" data-bs-toggle="tooltip" title="แก้ไข">
-                      <i class="bi bi-pencil"></i>
-                    </a>
-                    <form action="/down/delete/${d.down_id}" method="post" class="d-inline" onsubmit="return confirm('ลบข้อมูลนี้?');">
-                      <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="ลบ">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </form>
-                  </td>` : ''}
+                ${managementCell}
               </tr>
             `);
           });

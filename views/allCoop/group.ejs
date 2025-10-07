@@ -5,7 +5,7 @@
     <h2 class="mb-0 d-flex flex-wrap align-items-center gap-2">
       <span>สถาบันทั้งหมด</span>
       <% if (currentGroup) { %>
-        <span class="badge bg-primary fs-6">กลุ่ม: <%= currentGroup %></span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6"><i class="bi bi-collection me-1"></i>กลุ่ม: <%= currentGroup %></span>
       <% } %>
     </h2>
     <div class="d-flex gap-2">
@@ -16,17 +16,18 @@
     <div class="col-12 col-lg-3" id="groupPanelCol">
       <div class="card shadow-sm h-100">
         <div class="card-header py-2 d-flex align-items-center justify-content-between">
-          <h5 class="mb-0">กลุ่ม</h5>
-          <span class="badge rounded-pill bg-secondary"><%= groups ? groups.length : 0 %></span>
+          <h5 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-diagram-3 text-secondary"></i> กลุ่ม</h5>
+          <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"><%= groups ? groups.length : 0 %></span>
         </div>
         <div class="card-body p-2">
           <form class="mb-2" action="/allcoop/group" method="get">
             <div class="input-group input-group-sm mb-2">
+              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
               <input id="mainSearchInput" type="text" name="q" value="<%= search || '' %>" class="form-control" placeholder="ค้นหาชื่อ/รหัส/กลุ่ม (กด Enter)">
               <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i><span class="d-none d-xl-inline"> ค้นหา</span></button>
             </div>
             <% if (search) { %>
-              <a href="/allcoop/group" class="btn btn-link p-0 small">ล้างการค้นหา</a>
+              <a href="/allcoop/group" class="btn btn-link p-0 small"><i class="bi bi-x-circle"></i> ล้างการค้นหา</a>
             <% } %>
           </form>
           <div class="mb-2">
@@ -34,7 +35,7 @@
           </div>
           <ul id="groupList" class="list-group small mb-2" style="max-height:55vh; overflow:auto;">
             <li class="list-group-item p-1 <%= !currentGroup ? 'active' : '' %>">
-              <a href="/allcoop/group?<%= 'page=1&pageSize=' + pageSize + searchQueryBase %>" class="d-block text-decoration-none px-1">ทั้งหมด</a>
+              <a href="/allcoop/group?<%= 'page=1&pageSize=' + pageSize + searchQueryBase %>" class="d-block text-decoration-none px-1"><i class="bi bi-grid me-1 text-muted"></i>ทั้งหมด</a>
             </li>
             <% if (groups && groups.length) { %>
               <% groups.forEach(g => { %>
@@ -55,7 +56,7 @@
         <div class="card-header py-2">
           <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div class="d-flex flex-column">
-              <h5 class="mb-0">รายการสหกรณ์/กลุ่มเกษตรกร</h5>
+              <h5 class="mb-0"><i class="bi bi-people me-2 text-secondary"></i>รายการสหกรณ์/กลุ่มเกษตรกร</h5>
               <small class="text-muted">หน้า <%= page %>/<%= totalPages %> • ทั้งหมด <%= total %> รายการ (แสดง <%= coops.length %>/<%= pageSize %>) <%= search ? ('(ค้นหา: ' + search + ')') : '' %></small>
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -76,28 +77,27 @@
         <div class="card-body p-0">
           <% if (coops && coops.length) { %>
             <div class="table-responsive" style="max-height:65vh;">
-              <table class="table table-sm table-hover align-middle mb-0" id="coopTable">
+              <table class="table table-sm table-hover align-middle mb-0 responsive-table" id="coopTable">
                 <thead class="table-light position-sticky top-0" style="z-index:10;">
                   <tr class="text-nowrap">
                     <th style="width:50px;" class="text-center">#</th>
                     <th style="width:110px;">รหัส</th>
                     <th>ชื่อ</th>
-                    <th style="width:140px;" class="d-none d-md-table-cell">กลุ่ม</th>
+                    <th style="width:180px;">กลุ่ม</th>
                     <th style="width:110px;" class="text-center">ดูข้อมูล</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% coops.forEach((c,i) => { %>
                     <tr class="coop-row" data-code="<%= (c.c_code || c.code || '').toLowerCase() %>" data-name="<%= (c.c_name || c.name || '').toLowerCase() %>" data-group="<%= (c.c_group || c.coop_group || c.group || '').toLowerCase() %>">
-                      <td class="text-center text-muted"><%= ( (page - 1) * pageSize ) + i + 1 %></td>
-                      <td><%= c.c_code || c.code || '-' %></td>
-                      <td><%= c.c_name || c.name || '-' %></td>
-                      <td class="d-none d-md-table-cell"><span class="badge bg-info bg-opacity-75 text-dark">
-                        <!-- if value = group1 => 'กลุ่มส่งเสริมสหกรณ์ 1', if value = group2 => 'กลุ่มส่งเสริมสหกรณ์ 2', if value = group3 => 'กลุ่มส่งเสริมสหกรณ์ 3', if value = group4 => 'กลุ่มส่งเสริมสหกรณ์ 4' -->
+                      <td class="text-center text-muted" data-label="#"><%= ( (page - 1) * pageSize ) + i + 1 %></td>
+                      <td data-label="รหัส"><%= c.c_code || c.code || '-' %></td>
+                      <td data-label="ชื่อ"><%= c.c_name || c.name || '-' %></td>
+                      <td data-label="กลุ่ม"><span class="badge bg-info-subtle text-info-emphasis">
                         <%= c.c_group === 'group1' ? 'กลุ่มส่งเสริมสหกรณ์ 1' : c.c_group === 'group2' ? 'กลุ่มส่งเสริมสหกรณ์ 2' : c.c_group === 'group3' ? 'กลุ่มส่งเสริมสหกรณ์ 3' : c.c_group === 'group4' ? 'กลุ่มส่งเสริมสหกรณ์ 4' : c.c_group ==='group5' ? 'กลุ่มส่งเสริมสหกรณ์ 5': (c.c_group || c.coop_group || c.group || '') %>
                       </span></td>
-                      <td class="text-center">
-                        <a href="/allCoop/profile/<%= c.c_code || c.code || '' %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-up-right"></i></a>
+                      <td class="text-center row-actions" data-label="ดูข้อมูล">
+                        <a href="/allCoop/profile/<%= c.c_code || c.code || '' %>" class="btn btn-outline-primary btn-sm" aria-label="เปิดโปรไฟล์สหกรณ์"><i class="bi bi-box-arrow-up-right"></i></a>
                       </td>
                     </tr>
                   <% }) %>
@@ -146,6 +146,16 @@
   #allcoop-page #coopTable tbody tr:hover { background: #f6faff; }
   #allcoop-page .highlight { background: #ffe9a8; padding: 0 2px; border-radius: 2px; }
   #groupPanelCol.collapsed-placeholder { display:none !important; }
+
+  /* Mobile-first responsive stacked table */
+  @media (max-width: 575.98px) {
+    #coopTable thead { display: none; }
+    #coopTable tbody tr { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; padding: .5rem .75rem; }
+    #coopTable tbody td { display: flex; justify-content: space-between; align-items: center; border: none !important; padding: .25rem 0; }
+    #coopTable tbody tr + tr { border-top: 1px solid var(--bs-border-color); }
+    #coopTable tbody td::before { content: attr(data-label); font-size: .72rem; color: var(--bs-secondary-color); margin-right: .75rem; }
+    #coopTable tbody td.row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  }
 </style>
 
 <script>

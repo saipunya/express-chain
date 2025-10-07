@@ -66,7 +66,8 @@ const homeController = {
       const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
       const lastArticles = await articleModel.getLast(4);
       const homeProcesses = await Chamra.getRecentProcesses(8);
-
+      // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)
+      const chamraAllProcesses = await Chamra.getAllProcess();
       // NEW strength grade aggregation
       const latestStrengthYear = await strengthModel.getLatestYear();
       const gradeCounts = latestStrengthYear ? await strengthModel.getGradeCounts(latestStrengthYear).catch(() => []) : [];
@@ -79,10 +80,8 @@ const homeController = {
       });
       const strengthGrades = Array.from(gradeSet).sort();
       const strengthYear = latestStrengthYear || '-';
-
       // NEW: fetch small list of coops (mix of coop and farmer) for homepage showcase
       const { rows: homeCoops } = await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 });
-
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -102,6 +101,7 @@ const homeController = {
         closedCoops,     // ✅ ส่ง closed coops to view
         coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
         homeProcesses,
+        chamraAllProcesses, // NEW: all rows for chart
         closingByGroup,   // NEW expose raw
         strengthGrades,   // NEW list of grade labels
         strengthData,     // NEW mapping { coop_group: { grade: count } }

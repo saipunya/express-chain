@@ -21,7 +21,21 @@
 
     /* Stacked section layout */
     .section-block {scroll-margin-top: 80px;}
-    .section-title {display:flex; align-items:center; gap:.5rem; margin: .75rem 0; color: var(--bs-secondary-color);}
+    .section-title {display:flex; align-items:center; gap:.5rem; margin: .75rem 0; color: var(--bs-secondary-color);}    
+
+    /* Subtle card hover */
+    .quick-stats .card{transition: transform .15s ease, box-shadow .15s ease;}
+    .quick-stats .card:hover{transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08)!important;}
+
+    /* Responsive stacked tables */
+    @media (max-width: 575.98px) {
+      .responsive-table thead {display: none;}
+      .responsive-table tbody tr {display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; padding: .5rem .75rem;}
+      .responsive-table tbody td {display: flex; justify-content: space-between; align-items: center; border: none !important; padding: .25rem 0;}
+      .responsive-table tbody tr + tr {border-top: 1px solid var(--bs-border-color);}
+      .responsive-table tbody td::before {content: attr(data-label); font-size: .72rem; color: var(--bs-secondary-color); margin-right: .75rem;}
+      .responsive-table tbody td.row-actions {grid-column: 1 / -1; justify-content: flex-end;}
+    }
   </style>
   <% if (!data || !data.coop) { %>
     <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
@@ -103,7 +117,7 @@
         <div class="card-body p-0 mobile-scroll">
           <% if (data.strength && data.strength.length) { %>
             <div class="table-responsive mb-0">
-              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th>ปี</th>
@@ -119,18 +133,18 @@
                 <tbody>
                   <% data.strength.forEach(s => { %>
                     <tr>
-                      <td class="fw-medium"><%= s.st_year || '-' %></td>
-                      <td><%= s.st_fullname || '-' %></td>
+                      <td class="fw-medium" data-label="ปี"><%= s.st_year || '-' %></td>
+                      <td data-label="สถาบัน"><%= s.st_fullname || '-' %></td>
                       <% if(!user) { %>
                         <td colspan="5" class="text-muted small">ข้อมูลไม่สามารถแสดงได้ กรุณาเข้าสู่ระบบ</td>
                       <% } else { %>
-                        <td class="small-hide"><%= s.st_no1 || '-' %></td>
-                        <td class="small-hide"><%= s.st_no2 || '-' %></td>
-                        <td class="small-hide"><%= s.st_no3 || '-' %></td>
-                        <td class="small-hide"><%= s.st_no4 || '-' %></td>
-                        <td><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
+                        <td class="small-hide" data-label="เกณฑ์ข้อที่ 1"><%= s.st_no1 || '-' %></td>
+                        <td class="small-hide" data-label="เกณฑ์ข้อที่ 2"><%= s.st_no2 || '-' %></td>
+                        <td class="small-hide" data-label="เกณฑ์ข้อที่ 3"><%= s.st_no3 || '-' %></td>
+                        <td class="small-hide" data-label="เกณฑ์ข้อที่ 4"><%= s.st_no4 || '-' %></td>
+                        <td data-label="รวม"><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
                       <% } %>
-                      <td>
+                      <td data-label="ระดับ">
                         <% if (s.st_grade) { %>
                           <span class="p-2 badge bg-<%= s.st_grade==='ชั้น1' ? 'success' : (s.st_grade==='ชั้น2' ? 'warning' : (s.st_grade==='ชั้น3' ? 'danger text-white' : 'secondary')) %>"><%= s.st_grade %></span>
                         <% } else { %>-<% } %>
@@ -160,7 +174,7 @@
             <div class="card-body p-0">
               <% if (data.finance && data.finance.length) { %>
                 <div class="table-responsive">
-                  <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
                     <thead class="table-light">
                       <tr>
                         <th style="width:120px">ปี</th>
@@ -170,13 +184,13 @@
                     <tbody>
                       <% data.finance.forEach(f => { %>
                         <tr>
-                          <td class="fw-medium"><%= f.end_year || '-' %></td>
-                          <td class="text-center">
+                          <td class="fw-medium" data-label="ปี"><%= f.end_year || '-' %></td>
+                          <td class="text-center row-actions" data-label="ไฟล์">
                             <% if (user) { %>
                               <% if (f.id) { %>
-                                <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank"><i class="bi bi-download"></i></a>
+                                <a class="btn btn-sm btn-outline-primary" href="/finance/download/<%= f.id %>" target="_blank" aria-label="ดาวน์โหลดไฟล์การเงินปี <%= f.end_year %>"><i class="bi bi-download"></i></a>
                               <% } else if (f.link_file) { %>
-                                <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                                <a class="btn btn-sm btn-outline-secondary" href="<%= f.link_file %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์ภายนอกการเงินปี <%= f.end_year %>"><i class="bi bi-box-arrow-up-right"></i></a>
                               <% } else { %>-<% } %>
                             <% } else { %>
                               <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -205,7 +219,7 @@
             <div class="card-body p-0">
               <% if (data.business && data.business.length) { %>
                 <div class="table-responsive">
-                  <table class="table table-sm table-hover table-striped align-middle mb-0">
+                  <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
                     <thead class="table-light">
                       <tr>
                         <th style="width:120px">ปี</th>
@@ -215,13 +229,13 @@
                     <tbody>
                       <% data.business.forEach(b => { %>
                         <tr>
-                          <td class="fw-medium"><%= b.bu_endyear || '-' %></td>
-                          <td class="text-center">
+                          <td class="fw-medium" data-label="ปี"><%= b.bu_endyear || '-' %></td>
+                          <td class="text-center row-actions" data-label="ไฟล์">
                             <% if (user) { %>
                               <% if (b.bu_id) { %>
-                                <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                                <a class="btn btn-sm btn-outline-success" href="/business/download/<%= b.bu_id %>" target="_blank" aria-label="ดาวน์โหลดไฟล์ธุรกิจปี <%= b.bu_endyear %>"><i class="bi bi-download"></i></a>
                               <% } else if (b.bu_filename) { %>
-                                <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                                <a class="btn btn-sm btn-outline-secondary" href="/uploads/business/<%= b.bu_filename %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์ภายนอกธุรกิจปี <%= b.bu_endyear %>"><i class="bi bi-box-arrow-up-right"></i></a>
                               <% } else { %>-<% } %>
                             <% } else { %>
                               <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -255,7 +269,7 @@
         <div class="card-body p-0">
           <% if (data.rules && data.rules.length) { %>
             <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th style="width:120px">ปี</th>
@@ -266,20 +280,20 @@
                 <tbody>
                   <% data.rules.forEach(r => { %>
                     <tr>
-                      <td class="fw-medium"><%= r.rule_year || '-' %></td>
-                      <td>
+                      <td class="fw-medium" data-label="ปี"><%= r.rule_year || '-' %></td>
+                      <td data-label="ประเภท">
                         <% if (r.rule_type === 'MR') { %>
                           <span class="badge bg-primary-subtle text-primary-emphasis">ข้อบังคับหลัก</span>
                         <% } else if (r.rule_type === 'ER') { %>
                           <span class="badge bg-secondary-subtle text-secondary-emphasis">แก้ไขเพิ่มเติม <%= r.er_no || '' %></span>
                         <% } %>
                       </td>
-                      <td class="text-center">
+                      <td class="text-center row-actions" data-label="ไฟล์">
                         <% if (user) { %>
                           <% if (r.rule_id) { %>
-                            <a class="btn btn-sm btn-outline-warning" href="/rule/<%= r.rule_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <a class="btn btn-sm btn-outline-warning" href="/rule/<%= r.rule_id %>" target="_blank" aria-label="ดาวน์โหลดข้อบังคับปี <%= r.rule_year %>"><i class="bi bi-download"></i></a>
                           <% } else if (r.rule_file) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rule/<%= r.rule_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rule/<%= r.rule_file %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์ข้อบังคับปี <%= r.rule_year %>"><i class="bi bi-box-arrow-up-right"></i></a>
                           <% } else { %>-<% } %>
                         <% } else { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -307,7 +321,7 @@
         <div class="card-body p-0">
           <% if (data.rabiab && data.rabiab.length) { %>
             <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th style="width:100px">ปี</th>
@@ -319,15 +333,15 @@
                 <tbody>
                   <% data.rabiab.forEach(r => { %>
                     <tr>
-                      <td class="fw-medium"><%= r.ra_year || '-' %></td>
-                      <td><%= r.ra_name || '-' %></td>
-                      <td><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
-                      <td class="text-center">
+                      <td class="fw-medium" data-label="ปี"><%= r.ra_year || '-' %></td>
+                      <td data-label="ชื่อ"><%= r.ra_name || '-' %></td>
+                      <td data-label="วันที่อนุมัติ"><%= r.ra_approvedate ? new Date(r.ra_approvedate).toLocaleDateString('th-TH') : '-' %></td>
+                      <td class="text-center row-actions" data-label="ไฟล์">
                         <% if (user) { %>
                           <% if (r.ra_id) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/rabiab/download/<%= r.ra_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/rabiab/download/<%= r.ra_id %>" target="_blank" aria-label="ดาวน์โหลดระเบียบปี <%= r.ra_year %>"><i class="bi bi-download"></i></a>
                           <% } else if (r.ra_filename) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rabiab/<%= r.ra_filename %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์ระเบียบปี <%= r.ra_year %>"><i class="bi bi-box-arrow-up-right"></i></a>
                           <% } else { %>-<% } %>
                         <% } else { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -355,7 +369,7 @@
         <div class="card-body p-0">
           <% if (data.vong && data.vong.length) { %>
             <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th style="width:100px">ปี</th>
@@ -367,27 +381,27 @@
                 <tbody>
                   <% data.vong.forEach(v => { %>
                     <tr>
-                      <td class="fw-medium"><%= v.vong_year || '-' %></td>
-                      <td>
+                      <td class="fw-medium" data-label="ปี"><%= v.vong_year || '-' %></td>
+                      <td data-label="จำนวนเงิน">
                         <% if(!user) { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
                         <% } else { %>
                           <%= (v.vong_money !== null && v.vong_money !== undefined && !isNaN(Number(v.vong_money))) ? Number(v.vong_money).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %>
                         <% } %>
                       </td>
-                      <td class="text-muted small-hide">
+                      <td class="text-muted small-hide" data-label="จำนวนเงิน (ข้อความ)">
                         <% if(!user) { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดูจำนวนเงิน"><i class="bi bi-lock-fill"></i></span>
                         <% } else { %>
                           <small><%= v.vong_money ? bahtText(v.vong_money) : '-' %></small>
                         <% } %>
                       </td>
-                      <td class="text-center">
+                      <td class="text-center row-actions" data-label="ไฟล์">
                         <% if (user) { %>
                           <% if (v.vong_id) { %>
-                            <a class="btn btn-sm btn-outline-danger" href="/vong/download/<%= v.vong_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <a class="btn btn-sm btn-outline-danger" href="/vong/download/<%= v.vong_id %>" target="_blank" aria-label="ดาวน์โหลดวงเงินปี <%= v.vong_year %>"><i class="bi bi-download"></i></a>
                           <% } else if (v.vong_filename) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/vong/<%= v.vong_filename %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/vong/<%= v.vong_filename %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์วงเงินปี <%= v.vong_year %>"><i class="bi bi-box-arrow-up-right"></i></a>
                           <% } else { %>-<% } %>
                         <% } else { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -415,7 +429,7 @@
         <div class="card-body p-0">
           <% if (data.rq2 && data.rq2.length) { %>
             <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th style="width:100px">ปี</th>
@@ -426,14 +440,14 @@
                 <tbody>
                   <% data.rq2.forEach(r => { %>
                     <tr>
-                      <td class="fw-medium"><%= r.rq_year || '-' %></td>
-                      <td><%= r.rq_name || '-' %></td>
-                      <td class="text-center">
+                      <td class="fw-medium" data-label="ปี"><%= r.rq_year || '-' %></td>
+                      <td data-label="ชื่อ"><%= r.rq_name || '-' %></td>
+                      <td class="text-center row-actions" data-label="ไฟล์">
                         <% if (user) { %>
                           <% if (r.rq_id) { %>
-                            <a class="btn btn-sm btn-outline-info" href="/rq2/download/<%= r.rq_id %>" target="_blank"><i class="bi bi-download"></i></a>
+                            <a class="btn btn-sm btn-outline-info" href="/rq2/download/<%= r.rq_id %>" target="_blank" aria-label="ดาวน์โหลด RQ2 ปี <%= r.rq_year %>"><i class="bi bi-download"></i></a>
                           <% } else if (r.rq_file) { %>
-                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rq2/<%= r.rq_file %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/uploads/rq2/<%= r.rq_file %>" target="_blank" rel="noopener" aria-label="เปิดไฟล์ RQ2 ปี <%= r.rq_year %>"><i class="bi bi-box-arrow-up-right"></i></a>
                           <% } else { %>-<% } %>
                         <% } else { %>
                           <span class="text-muted" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-lock-fill"></i></span>
@@ -461,7 +475,7 @@
         <div class="card-body p-0">
           <% if (data.assets && data.assets.length) { %>
             <div class="table-responsive">
-              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 text-nowrap responsive-table">
                 <thead class="table-light">
                   <tr>
                     <th>หมวดหมู่</th>
@@ -476,29 +490,28 @@
                 <tbody>
                   <% data.assets.forEach(a => { %>
                     <tr>
-                      <td><%= a.category || '-' %></td>
-                      <td><%= a.machine_type || '-' %></td>
-                      <td>
+                      <td data-label="หมวดหมู่"><%= a.category || '-' %></td>
+                      <td data-label="เครื่อง/อุปกรณ์"><%= a.machine_type || '-' %></td>
+                      <td data-label="จำนวน">
                         <% if (a.quantity !== null && a.quantity !== undefined && !isNaN(Number(a.quantity))) { %>
                           <%= Number(a.quantity).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %>
                         <% } else { %> - <% } %>
                         <span class="text-muted"><%= a.quantity_unit || '' %></span>
                       </td>
-                      <td class="small-hide">
+                      <td class="small-hide" data-label="สมรรถนะ">
                         <% if (a.capacity_value) { %>
                           <%= a.capacity_value %> <span class="text-muted"><%= a.capacity_unit || '' %></span>
                         <% } else { %> - <% } %>
                       </td>
-                      <td class="rounded p-2  bg-<%= (a.status==='ใช้งานไม่ได้' ? 'danger' : 'success') %> text-white">
-                        <!-- insert icon  -->
-                        <%= a.status || '-' %>
+                      <td data-label="สถานะ">
+                        <span class="badge rounded-pill bg-<%= (a.status==='ใช้งานไม่ได้' ? 'danger' : 'success') %>"><%= a.status || '-' %></span>
                       </td>
-                      <td>
+                      <td data-label="อัพเดต">
                         <% if (a.updated_date) { %>
                           <%= new Date(a.updated_date).toLocaleDateString('th-TH') %>
                         <% } else { %> - <% } %>
                       </td>
-                      <td class="text-end">
+                      <td class="text-end row-actions" data-label="ดูข้อมูล">
                         <button type="button" class="btn btn-sm btn-outline-secondary btn-view-asset" data-id="<%= a.id %>"><i class="bi bi-eye"></i> ดูข้อมูล</button>
                       </td>
                     </tr>
@@ -533,7 +546,7 @@
           <div class="col-md-6"><strong>หมวดหมู่:</strong> <span id="am-category">-</span></div>
         </div>
         <div class="row g-2 mb-2">
-          <div class="col-md-6"><strong>เครื่อง/อุปกรณ์:</strong> <span id="am-machine_type" class="p-2 rounded" style="background-color: #fba9d9;">-</span></div>
+          <div class="col-md-6"><strong>เครื่อง/อุปกรณ์:</strong> <span id="am-machine_type" class="badge text-bg-pink-subtle" style="--bs-badge-font-size: .9rem; background:#fde3f2; color:#a60d64;">-</span></div>
           <div class="col-md-6"><strong>รายละเอียด:</strong> <span id="am-description">-</span></div>
         </div>
         <div class="row g-2 mb-2 small">
@@ -569,12 +582,15 @@
   </div>
 </div>
 
+<!-- Server-rendered assets JSON for client-side use -->
+<script id="assets-json" type="application/json"><%- JSON.stringify(data.assets || []) %></script>
+
 <script>
-  // Build asset map for quick lookup
-  window.ASSET_MAP = Object.create(null);
-  <% (data.assets||[]).forEach(a => { %>
-    ASSET_MAP['<%= a.id %>'] = <%- JSON.stringify(a) %>;
-  <% }) %>
+  // Build asset map for quick lookup without EJS inside JS
+  try {
+    window.ASSETS = JSON.parse(document.getElementById('assets-json')?.textContent || '[]');
+  } catch(e) { window.ASSETS = []; }
+  window.ASSET_MAP = Object.fromEntries((window.ASSETS || []).map(function(a){ return [String(a.id), a]; }));
   function fmtNumber(n){
     const num = Number(n);
     return isNaN(num) ? '-' : num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -587,7 +603,6 @@
     if(!a) return;
     const $ = (id)=>document.getElementById(id);
     // Basic fields
-   
     $('am-coop_name').textContent = a.coop_name || '-';
     $('am-category').textContent = a.category || '-';
     $('am-machine_type').textContent = a.machine_type || '-';
@@ -609,7 +624,6 @@
     $('am-price_support').textContent = a.price_support ? Number(a.price_support).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-';
     $('am-price_coop').textContent = a.price_coop ? Number(a.price_coop).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-';
     // Coop and address
-   
     const addr = [a.address, a.subdistrict, a.district, a.province, a.postcode].filter(Boolean).join(' ');
     $('am-address').textContent = addr || '-';
     $('am-contact').textContent = [a.contact_name, a.contact_phone].filter(Boolean).join(' / ') || '-';

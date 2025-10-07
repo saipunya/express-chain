@@ -172,7 +172,7 @@
           <td><span class="badge bg-secondary-subtle text-dark border" style="font-size:.7rem;">#<%= c.c_code %></span></td>
           <% } %>
           <td>
-            <div class="fw-semibold mb-1"><a href="/chamra/detail/<%= c.c_code %>" class="text-decoration-none"><%= c.c_name %></a></div>
+            <div class="fw-semibold mb-1"><%= c.c_name %></div>
             <% if(c.c_status === 'ถอนชื่อ'){ %>
               <span class="badge status-pill bg-success">ถอนชื่อแล้ว</span>
             <% } else { %>
@@ -183,9 +183,8 @@
               <div class="progress-bar" role="progressbar" style="width:<%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
             <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
-            <button type="button" class="btn btn-outline-secondary btn-sm mt-2 btn-show-steps" data-code="<%= c.c_code %>" data-name="<%= c.c_name %>" data-steps='<%- JSON.stringify(stepLines) %>'>
-              รายละเอียดขั้นตอน
-            </button>
+            <a href="/chamra/detail/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm mt-2">รายละเอียดขั้นตอน</a>
+           
           </td>
           <td><span class="small"><%= c.de_person %></span></td>
           <% if(user && user.mClass === 'kjs'){  %>

@@ -119,6 +119,9 @@
   /* Section layout */
   .section-block {
     padding-block: 2.2rem;
+    /* Performance: render only when visible to speed up initial load */
+    content-visibility: auto;
+    contain-intrinsic-size: 800px; /* reserve space to prevent layout shift */
   }
   .section-block.compact { padding-block: 1.4rem; }
   .section-heading {
@@ -366,7 +369,8 @@ function displayGroupName(code){
           src="/images/banner.png"
           alt="Coop Image"
           class="w-100 h-100 object-fit-cover d-block"
-          loading="lazy"
+          decoding="async"
+          fetchpriority="high"
         />
       </div>
       <div class="col-md-6 glass-pane d-flex align-items-center p-md-4 h-100">
@@ -428,7 +432,7 @@ function displayGroupName(code){
         <% } else { %>
           <div class="w-100 text-center">
             <h1 class="display-6 mb-3 text-success">ยินดีต้อนรับ!</h1>
-            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100">
+            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3" width="100" loading="lazy" decoding="async">
             <p class="lead mb-4">
               <%= user.fullname %>
             </p>
@@ -1518,7 +1522,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
                 <div class="col-md-6 mb-3">
                   <div class="d-flex align-items-center">
                     <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
-                      class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                      class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;" loading="lazy" decoding="async">
                     <div>
                       <div class="fw-bold text-success">
                         <%= user.on_name %>
@@ -1653,31 +1657,6 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 
 <script>
   (function() {
-    const btn = document.getElementById('exportChamraBtnHome');
-    if (!btn) return;
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const originalText = btn.textContent;
-      btn.textContent = 'กำลังส่งออก...';
-      try {
-        const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
-        if (!resp.ok) throw new Error('Export failed');
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-      } catch (e){
-        alert('ไม่สามารถส่งออกข้อมูลได้');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
-    });
-  })();
-</script>
-
-<script>
-  (function() {
     const loggedIn = document.getElementById('template-data').getAttribute('data-logged-in') === 'true';
 
     function escapeHtml(str) {
@@ -1697,15 +1676,16 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
       }
     }
 
-    fetch('/down/top10')
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById('topDownloadsTbody');
-        if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
-          return;
-        }
-        tbody.innerHTML = data.map((d, idx) => `
+    const run = () => {
+      fetch('/down/top10')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById('topDownloadsTbody');
+          if (!Array.isArray(data) || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+            return;
+          }
+          tbody.innerHTML = data.map((d, idx) => `
           <tr>
             <td class="d-none d-sm-table-cell">${idx + 1}</td>
             <td>${escapeHtml(d.down_subject || '-')}</td>
@@ -1734,11 +1714,29 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
             <td class="text-nowrap">${fmtDate(d.down_savedate)}</td>
           </tr>
         `).join('');
-      })
-      .catch(() => {
-        const tbody = document.getElementById('topDownloadsTbody');
-        tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
-      });
+        })
+        .catch(() => {
+          const tbody = document.getElementById('topDownloadsTbody');
+          tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+        });
+    };
+
+    const downloadsSection = document.getElementById('downloads');
+    if ('IntersectionObserver' in window && downloadsSection) {
+      let done = false;
+      const io = new IntersectionObserver((entries) => {
+        if (done) return;
+        if (entries.some(e => e.isIntersecting)) {
+          done = true;
+          io.disconnect();
+          run();
+        }
+      }, { rootMargin: '200px' });
+      io.observe(downloadsSection);
+    } else {
+      // Fallback
+      window.addEventListener('load', run);
+    }
   })();
 </script>
 
@@ -1861,106 +1859,84 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 </script>
 
 <script>
-  // Init Charts on home page (run after all deferred scripts loaded)
-  window.addEventListener('load', function(){
-    const barEl = document.getElementById('coopChart');
-    const pieEl = document.getElementById('coopPieChart');
-    const dataEl = document.getElementById('template-data');
-    if(!barEl && !pieEl) return;
-    if(!dataEl) return;
+  // Init Charts lazily when charts section becomes visible
+  (function(){
+    const chartsSection = document.getElementById('charts');
+    if (!chartsSection) return;
+    let inited = false;
+    const start = () => {
+      if (inited) return; inited = true;
+      const barEl = document.getElementById('coopChart');
+      const pieEl = document.getElementById('coopPieChart');
+      const dataEl = document.getElementById('template-data');
+      if(!barEl && !pieEl) return;
+      if(!dataEl) return;
+      let stats = { coop: 0, farmer: 0, closing: 0 };
+      try {
+        const raw = dataEl.getAttribute('data-stats');
+        stats = typeof raw === 'string' ? JSON.parse(raw) : (raw || stats);
+      } catch(e) {}
+      const coop = Number(stats.coop) || 0;
+      const farmer = Number(stats.farmer) || 0;
+      const closing = Number(stats.closing) || 0;
+      if (typeof Chart === 'undefined') return; // library not ready
+      // Global font to match site
+      try { Chart.defaults.font.family = 'Sarabun, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'; } catch {}
 
-    // Parse stats from data-* attribute
-    let stats = { coop: 0, farmer: 0, closing: 0 };
-    try {
-      const raw = dataEl.getAttribute('data-stats');
-      stats = typeof raw === 'string' ? JSON.parse(raw) : (raw || stats);
-    } catch(e) { /* ignore and use defaults */ }
-    const coop = Number(stats.coop) || 0;
-    const farmer = Number(stats.farmer) || 0;
-    const closing = Number(stats.closing) || 0;
-
-    // Ensure Chart.js exists
-    if (typeof Chart === 'undefined') return;
-    // Register plugin if available
-    if (typeof ChartDataLabels !== 'undefined') {
-      Chart.register(ChartDataLabels);
-    }
-    Chart.defaults.font.family = 'Sarabun, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-
-    // Bar chart
-    if (barEl) {
-      const ctx = barEl.getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['สหกรณ์','กลุ่มเกษตรกร','ชำระบัญชี'],
-          datasets: [{
-            label: 'จำนวน (แห่ง)',
-            data: [coop, farmer, closing],
-            backgroundColor: ['#16a34a','#0ea5e9','#f59e0b'],
-            borderWidth: 0,
-            borderRadius: 8,
-            maxBarThickness: 46
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 350, easing: 'easeOutQuart' },
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true },
-            datalabels: {
-              anchor: 'end', align: 'top',
-              color: '#0f172a',
-              formatter: (v) => Number(v).toLocaleString(),
-              font: { weight: '600' }
-            }
+      if (barEl) {
+        const ctx = barEl.getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['สหกรณ์','กลุ่มเกษตรกร','ชำระบัญชี'],
+            datasets: [{
+              label: 'จำนวน (แห่ง)',
+              data: [coop, farmer, closing],
+              backgroundColor: ['#16a34a','#0ea5e9','#f59e0b'],
+              borderWidth: 0,
+              borderRadius: 8,
+              maxBarThickness: 46
+            }]
           },
-          scales: {
-            y: { beginAtZero: true, ticks: { precision: 0 } },
-            x: { grid: { display:false } }
-          }
-        }
-      });
-    }
-
-    // Doughnut chart
-    if (pieEl) {
-      const ctxPie = pieEl.getContext('2d');
-      new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-          labels: ['สหกรณ์','กลุ่มเกษตรกร'],
-          datasets: [{
-            data: [coop, farmer],
-            backgroundColor: ['#16a34a','#0ea5e9'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          cutout: '58%',
-          animation: { duration: 350, easing: 'easeOutQuart' },
-          plugins: {
-            legend: { position: 'bottom' },
-            tooltip: { enabled: true },
-            datalabels: {
-              formatter: (v,ctx) => {
-                try {
-                  const ds = ctx.chart.data.datasets[0].data;
-                  const total = ds.reduce((a,b)=> a + Number(b||0), 0) || 1;
-                  const pct = Math.round((Number(v||0)/total)*100);
-                  return pct + '%';
-                } catch { return v; }
-              },
-              color: '#111827',
-              font: { weight: '600' }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 350, easing: 'easeOutQuart' },
+            plugins: { legend: { display: false }, tooltip: { enabled: true } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 } },
+              x: { grid: { display: false } }
             }
           }
-        }
-      });
+        });
+      }
+
+      if (pieEl) {
+        const ctxPie = pieEl.getContext('2d');
+        new Chart(ctxPie, {
+          type: 'doughnut',
+          data: {
+            labels: ['สหกรณ์','กลุ่มเกษตรกร'],
+            datasets: [{ data: [coop, farmer], backgroundColor: ['#16a34a','#0ea5e9'], borderWidth: 0 }]
+          },
+          options: {
+            cutout: '58%',
+            animation: { duration: 350, easing: 'easeOutQuart' },
+            plugins: { legend: { position: 'bottom' }, tooltip: { enabled: true } }
+          }
+        });
+      }
+    };
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries, obs)=>{
+        if (entries.some(e=>e.isIntersecting)) { obs.disconnect(); start(); }
+      }, { rootMargin: '200px' });
+      io.observe(chartsSection);
+    } else {
+      window.addEventListener('load', start);
     }
-  });
+  })();
 </script>
 
 <!-- Init Chamra stages chart -->
@@ -2000,11 +1976,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         animation: { duration: 350, easing: 'easeOutQuart' },
         plugins: {
           legend: { display: false },
-          tooltip: { enabled: true },
-          datalabels: typeof ChartDataLabels !== 'undefined' ? {
-            anchor: 'end', align: 'top', color: '#0f172a', font: { weight: '600' },
-            formatter: (v)=> Number(v).toLocaleString()
-          } : undefined
+          tooltip: { enabled: true }
         },
         scales: {
           y: { beginAtZero: true, ticks: { precision: 0 } },
@@ -2015,98 +1987,49 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   });
 </script>
 
-<!-- Init Activities calendar + modals -->
+<!-- Init Activities calendar lazily when visible -->
 <script>
-  window.addEventListener('load', function(){
+  (function(){
     const calEl = document.getElementById('activitiesCalendar');
-    if (!calEl || typeof FullCalendar === 'undefined') return;
-
-    function formatThaiDate(d){
-      try {
-        return d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
-      } catch {
-        return d.toISOString().slice(0,10);
+    if (!calEl) return;
+    let inited = false;
+    const start = () => {
+      if (inited) return; inited = true;
+      if (typeof FullCalendar === 'undefined') return; // library not ready
+      function formatThaiDate(d){
+        try { return d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' }); }
+        catch { return d.toISOString().slice(0,10); }
       }
-    }
+      const tDataEl = document.getElementById('template-data');
+      let activities = [];
+      try { const raw = tDataEl ? tDataEl.getAttribute('data-activities') : '[]'; activities = raw ? JSON.parse(raw) : []; } catch { activities = []; }
+      const events = (activities || []).map((a, idx) => ({ id: String(idx+1), title: a.activity || '-', start: a.date_act, allDay: true, extendedProps: { raw: a } }));
+      const calendar = new FullCalendar.Calendar(calEl, { initialView:'dayGridMonth', locale:'th', height:'auto', headerToolbar:{ left:'prev,next today', center:'title', right:'' }, events, eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
+      calendar.render();
 
-    const tDataEl = document.getElementById('template-data');
-    let activities = [];
-    try {
-      const raw = tDataEl ? tDataEl.getAttribute('data-activities') : '[]';
-      activities = raw ? JSON.parse(raw) : [];
-    } catch { activities = []; }
-
-    const events = (activities || []).map((a, idx) => ({
-      id: String(idx+1),
-      title: a.activity || '-',
-      start: a.date_act,
-      allDay: true,
-      extendedProps: { raw: a }
-    }));
-
-    const calendar = new FullCalendar.Calendar(calEl, {
-      initialView: 'dayGridMonth',
-      locale: 'th',
-      height: 'auto',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: ''
-      },
-      events,
-      eventClick(info){
-        const ev = info.event;
-        const raw = ev.extendedProps?.raw || {};
-        const d = ev.start ? new Date(ev.start) : null;
-        const modalEl = document.getElementById('activityModal');
-        if (!modalEl) return;
-        document.getElementById('acDate').textContent = d ? formatThaiDate(d) : '-';
-        document.getElementById('acTitle').textContent = raw.activity || ev.title || '-';
-        document.getElementById('acTime').textContent = raw.act_time ? (raw.act_time + ' น.') : '-';
-        document.getElementById('acPlace').textContent = raw.place || '-';
-        const modal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
-        if (modal) modal.show();
-      }
-    });
-    calendar.render();
-
-    // List modal open button
-    const btnList = document.getElementById('openActivityListBtn');
-    if (btnList) {
-      btnList.addEventListener('click', function(){
-        const el = document.getElementById('activityListModal');
-        const m = bootstrap && bootstrap.Modal ? new bootstrap.Modal(el) : null;
-        if (m) m.show();
-        // Update count
-        const countEl = document.getElementById('activityCount');
-        const rows = document.querySelectorAll('#activityTbody tr');
-        if (countEl) countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';
-      });
-    }
-
-    // Filter in list modal
-    (function(){
-      const input = document.getElementById('activityFilter');
-      const tbody = document.getElementById('activityTbody');
-      const countEl = document.getElementById('activityCount');
-      if(!input || !tbody) return;
-      input.addEventListener('input', function(){
-        const q = this.value.trim().toLowerCase();
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        let shown=0;
-        rows.forEach(r => {
-          const name = r.getAttribute('data-name')||'';
-          const match = !q || name.includes(q);
-          r.classList.toggle('d-none', !match);
-          if(match) shown++;
+      // List modal open button (unchanged)
+      const btnList = document.getElementById('openActivityListBtn');
+      if (btnList) {
+        btnList.addEventListener('click', function(){
+          const el = document.getElementById('activityListModal');
+          const m = bootstrap && bootstrap.Modal ? new bootstrap.Modal(el) : null;
+          if (m) m.show();
+          const countEl = document.getElementById('activityCount');
+          const rows = document.querySelectorAll('#activityTbody tr');
+          if (countEl) countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';
         });
-        if (countEl) {
-          const total = rows.length;
-          countEl.textContent = q ? `พบ ${shown} / ${total} รายการ` : `ทั้งหมด ${total} รายการ`;
-        }
-      });
-    })();
-  });
+      }
+    };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries, obs)=>{
+        if (entries.some(e=>e.isIntersecting)) { obs.disconnect(); start(); }
+      }, { rootMargin: '200px' });
+      io.observe(calEl);
+    } else {
+      window.addEventListener('load', start);
+    }
+  })();
 </script>
 
 <%- include('partials/footer') %>
+```

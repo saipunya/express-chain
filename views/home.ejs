@@ -1160,6 +1160,8 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
           <dt class="col-4">เวลา</dt><dd class="col-8" id="acTime">-</dd>
           <dt class="col-4">สถานที่</dt><dd class="col-8" id="acPlace">-</dd>
           <dt class="col-4">กิจกรรม</dt><dd class="col-8" id="acTitle">-</dd>
+          <!-- Added: show participants / co_person -->
+          <dt class="col-4">ผู้เข้าร่วม</dt><dd class="col-8" id="acParticipants">-</dd>
         </dl>
       </div>
       <div class="modal-footer">
@@ -2008,7 +2010,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
       let activities = [];
       try { const raw = tDataEl ? tDataEl.getAttribute('data-activities') : '[]'; activities = raw ? JSON.parse(raw) : []; } catch { activities = []; }
       const events = (activities || []).map((a, idx) => ({ id: String(idx+1), title: a.activity || '-', start: a.date_act, allDay: true, extendedProps: { raw: a } }));
-      const calendar = new FullCalendar.Calendar(calEl, { initialView:'dayGridMonth', locale:'th', height:'auto', headerToolbar:{ left:'prev,next today', center:'title', right:'' }, events, eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
+      const calendar = new FullCalendar.Calendar(calEl, { initialView:'dayGridMonth', locale:'th', height:'auto', headerToolbar:{ left:'prev,next today', center:'title', right:'' }, events, eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; document.getElementById('acParticipants').textContent = raw.co_person || '-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
       calendar.render();
 
       // List modal open button (unchanged)

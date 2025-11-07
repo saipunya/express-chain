@@ -2,14 +2,13 @@ const express = require('express');
 const router = express.Router();
 const meetingCtrl = require('../controllers/meetingRoomController');
 const { isAdmin } = require('../middleware/authMiddleware');
-const { validateCreate, handleValidation } = require('../validators/meetingRoomValidators'); // added
 
 // Public: list bookings
 router.get('/', meetingCtrl.list);
 
 // Admin only: create
-router.get('/create', isAdmin, meetingCtrl.createForm); // changed
-router.post('/create', isAdmin, validateCreate(), handleValidation, meetingCtrl.create); // changed
+router.get('/create', isAdmin, meetingCtrl.create);
+router.post('/create', isAdmin, meetingCtrl.create);
 
 // Admin only: edit
 router.get('/edit/:id', isAdmin, meetingCtrl.edit);

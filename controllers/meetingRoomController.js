@@ -1,4 +1,5 @@
 const meetingModel = require('../models/meetingRoomModel');
+const { matchedData } = require('express-validator'); // added
 
 // List all bookings
 exports.list = async (req, res) => {
@@ -11,26 +12,20 @@ exports.list = async (req, res) => {
   }
 };
 
-// Create booking (GET form + POST submit)
-exports.create = async (req, res) => {
-  if (req.method === 'GET') {
-    return res.render('meetingroom/create');
-  }
+// Create booking form
+exports.createForm = (req, res) => {
+  return res.render('meetingRooms/create', { title: 'Create Meeting Room' });
+};
+
+// Create booking (POST submit)
+exports.create = async (req, res, next) => {
   try {
-    const { mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate } = req.body;
-    await meetingModel.create({
-      mee_date,
-      mee_time,
-      mee_subject,
-      mee_room,
-      mee_respon,
-      mee_saveby,
-      mee_savedate
-    });
+    const data = matchedData(req, { locations: ['body'] }); // use validated/sanitized data
+    await meetingModel.create(data);
     res.redirect('/meetingroom');
   } catch (err) {
     console.error('Error creating meeting:', err);
-    res.status(500).render('error_page', { message: 'บันทึกข้อมูลไม่สำเร็จ' });
+    return next(err);
   }
 };
 

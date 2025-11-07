@@ -14,26 +14,18 @@ exports.list = async (req, res) => {
 
 // Create booking form
 exports.createForm = (req, res) => {
-  return res.render('meetingroom/create', { title: 'Create Meeting Room' }); // changed view path
+  return res.render('meetingRooms/create', { title: 'Create Meeting Room' });
 };
 
 // Create booking (POST submit)
 exports.create = async (req, res, next) => {
   try {
-    const data = matchedData(req, { locations: ['body'], includeOptionals: true }); // include optional fields
-    if (!data.mee_savedate) data.mee_savedate = new Date().toISOString(); // default savedate
+    const data = matchedData(req, { locations: ['body'] }); // use validated/sanitized data
     await meetingModel.create(data);
-    return res.redirect('/meetingroom');
+    res.redirect('/meetingroom');
   } catch (err) {
     console.error('Error creating meeting:', err);
-    if (req.accepts('html')) {
-      return res.status(500).render('meetingroom/create', {
-        title: 'Create Meeting Room',
-        error: 'บันทึกข้อมูลไม่สำเร็จ',
-        values: req.body,
-      });
-    }
-    return res.status(500).json({ message: 'บันทึกข้อมูลไม่สำเร็จ' });
+    return next(err);
   }
 };
 

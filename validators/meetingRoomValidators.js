@@ -1,43 +1,31 @@
 const { body, validationResult } = require('express-validator');
 
 const validateCreate = () => [
-	// required fields
-	body('mee_date')
+	body('name')
 		.trim()
-		.notEmpty().withMessage('กรุณาระบุวันที่')
-		.isISO8601({ strict: true }).withMessage('รูปแบบวันที่ไม่ถูกต้อง'),
-	body('mee_time')
+		.notEmpty().withMessage('Name is required')
+		.isLength({ max: 100 }).withMessage('Name must be at most 100 characters'),
+	body('capacity')
 		.trim()
-		.notEmpty().withMessage('กรุณาระบุเวลา')
-		.matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('รูปแบบเวลาไม่ถูกต้อง (HH:mm)'),
-	body('mee_subject')
-		.trim()
-		.notEmpty().withMessage('กรุณาระบุเรื่อง')
-		.isLength({ max: 255 }).withMessage('เรื่องยาวเกินกำหนด'),
-	body('mee_room')
-		.trim()
-		.notEmpty().withMessage('กรุณาระบุห้อง')
-		.isLength({ max: 100 }).withMessage('ชื่อห้องยาวเกินกำหนด'),
-	// optional fields
-	body('mee_respon')
+		.isInt({ min: 1 }).withMessage('Capacity must be a positive integer')
+		.toInt(),
+	body('location')
 		.optional({ nullable: true })
 		.trim()
-		.isLength({ max: 100 }).withMessage('ผู้รับผิดชอบยาวเกินกำหนด'),
-	body('mee_saveby')
+		.isLength({ max: 200 }).withMessage('Location must be at most 200 characters'),
+	body('available')
 		.optional({ nullable: true })
-		.trim()
-		.isLength({ max: 100 }).withMessage('ผู้บันทึกยาวเกินกำหนด'),
-	body('mee_savedate')
-		.optional({ checkFalsy: true })
-		.customSanitizer(v => v || new Date().toISOString()),
+		.isBoolean().withMessage('Available must be a boolean')
+		.toBoolean(),
 ];
 
 const handleValidation = (req, res, next) => {
 	const errors = validationResult(req);
 	if (errors.isEmpty()) return next();
 
+	// If HTML expected, re-render the form with errors; otherwise respond JSON
 	if (req.accepts('html')) {
-		return res.status(422).render('meetingroom/create', {
+		return res.status(422).render('meetingRooms/create', {
 			title: 'Create Meeting Room',
 			errors: errors.mapped(),
 			values: req.body,

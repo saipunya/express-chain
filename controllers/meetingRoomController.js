@@ -4,7 +4,7 @@ const meetingModel = require('../models/meetingRoomModel');
 exports.list = async (req, res) => {
   try {
     const meetings = await meetingModel.getAll();
-    res.render('meetingroom/list', { meetings: meetings || [] });
+    res.render('meetingroom/list', { meetings: meetings || [], user: req.user }); // added user
   } catch (err) {
     console.error('Error fetching meetings:', err);
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการดึงข้อมูลห้องประชุม' });

@@ -6,9 +6,9 @@ const { isAdmin } = require('../middleware/authMiddleware');
 // Public: list bookings
 router.get('/', meetingCtrl.list);
 
-// Admin only: create
-router.get('/create', isAdmin, meetingCtrl.create);
-router.post('/create', isAdmin, meetingCtrl.create);
+// Create (everyone)
+router.get('/create', meetingCtrl.create);
+router.post('/create', meetingCtrl.create);
 
 // Admin only: edit
 router.get('/edit/:id', isAdmin, meetingCtrl.edit);

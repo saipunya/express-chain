@@ -1,0 +1,45 @@
+<div class="container my-4">
+  <div class="row g-4">
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <strong>ข้อบังคับล่าสุด</strong>
+        </div>
+        <div class="card-body p-0">
+          <iframe
+            data-embed-id="rule"
+            src="/rule?embed=1&limit=5&embedId=rule"
+            style="width:100%; border:0; height:320px; overflow:hidden;"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <strong>ระเบืยบล่าสุด</strong>
+        </div>
+        <div class="card-body p-0">
+          <iframe
+            data-embed-id="rabiab"
+            src="/rabiab?embed=1&limit=5&embedId=rabiab"
+            style="width:100%; border:0; height:320px; overflow:hidden;"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-resize embedded previews
+window.addEventListener('message', function(e){
+  const data = e.data || {};
+  if (data.type !== 'resize-embed') return;
+  const iframe = document.querySelector('iframe[data-embed-id="'+ data.id +'"]');
+  if (!iframe || !data.height) return;
+  iframe.style.height = Math.min(Math.max(200, data.height), 1000) + 'px';
+});
+</script>

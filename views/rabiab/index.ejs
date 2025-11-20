@@ -19,6 +19,17 @@
   @keyframes fadeIn {from {opacity:0; transform: translateY(4px);} to {opacity:1; transform: translateY(0);} }
   .table td {vertical-align: middle;}
   .search-pill {background:#eef2ff; color:#4f46e5; font-size:.65rem; padding:.2rem .55rem; border-radius:20px; margin-right:.4rem;}
+
+  /* Embed mode: hide global chrome and page controls when embedded */
+  html.embedded body { background: transparent; }
+  html.embedded body > header,
+  html.embedded body > nav.navbar,
+  html.embedded body > footer,
+  html.embedded .site-footer,
+  html.embedded .app-footer { display: none !important; }
+  html.embedded .glass-card.p-4.mb-4,          /* top title card */
+  html.embedded .search-wrapper,               /* search card */
+  html.embedded nav[aria-label="Pagination"] { display: none !important; }
 </style>
 
 <div class="container py-4 fade-in">
@@ -174,5 +185,47 @@
   });
 </script>
 <script src="/js/rabiab-search.js"></script>
+<script>
+// Embed mode for homepage preview
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const isEmbed = params.get('embed') === '1';
+  if(!isEmbed) return;
+
+  document.documentElement.classList.add('embedded');
+  const limit = Math.max(1, parseInt(params.get('limit') || '5', 10));
+
+  // Trim table to latest N rows
+  const tbody = document.getElementById('rabiabTable');
+  if (tbody) {
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.slice(limit).forEach(tr => tr.remove());
+  }
+
+  // Add compact title and "ดูทั้งหมด" link
+  const container = document.querySelector('.container');
+  if (container) {
+    const title = document.createElement('div');
+    title.className = 'mb-3';
+    title.innerHTML = '<h5 class="m-0"><i class="fas fa-scroll text-primary me-2"></i>ระเบียบล่าสุด</h5>';
+    container.insertBefore(title, container.firstChild);
+
+    const more = document.createElement('div');
+    more.className = 'text-end mt-2';
+    more.innerHTML = '<a href="/rabiab" class="small text-decoration-none">ดูทั้งหมด</a>';
+    container.appendChild(more);
+  }
+
+  // Auto-resize iframe height
+  const embedId = params.get('embedId') || 'rabiab';
+  const postHeight = () => {
+    const h = document.body.scrollHeight;
+    try { window.parent.postMessage({ type: 'resize-embed', id: embedId, height: h }, '*'); } catch(_) {}
+  };
+  postHeight();
+  if ('ResizeObserver' in window) new ResizeObserver(postHeight).observe(document.body);
+  window.addEventListener('load', postHeight);
+})();
+</script>
 <%- include('../partials/footer') %>
 

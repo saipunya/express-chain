@@ -20,6 +20,18 @@
 .rule-actions a { margin-left:4px; }
 .highlight { background: #ffe69c; padding:0 2px; border-radius:4px; }
 @media (max-width:576px){ .rule-actions{ margin-top:6px; } }
+
+/* Embed mode: hide global chrome and page controls when embedded */
+html.embedded body { background: transparent; }
+html.embedded body > header,
+html.embedded body > nav.navbar,
+html.embedded body > footer,
+html.embedded .site-footer,
+html.embedded .app-footer { display: none !important; }
+html.embedded #rulePage .rule-stats,
+html.embedded #rulePage form,
+html.embedded #rulePage nav,
+html.embedded #rulePage .rule-page-header a { display: none !important; }
 </style>
 
 <div class="container mt-4" id="rulePage">
@@ -155,6 +167,61 @@
   document.querySelectorAll('#ruleAccordion .institution-name').forEach(el=>{
     el.innerHTML = el.textContent.replace(pattern,'<span class="highlight">$1</span>');
   });
+})();
+</script>
+<script>
+// Embed mode for homepage preview
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const isEmbed = params.get('embed') === '1';
+  if(!isEmbed) return;
+
+  document.documentElement.classList.add('embedded');
+  const limit = Math.max(1, parseInt(params.get('limit') || '5', 10));
+
+  // Use server-side data if present, otherwise empty array
+  const allRules = <%- JSON.stringify(alls || []) %>;
+  // Sort by latest rule_id desc and take top N
+  allRules.sort((a,b) => (b.rule_id||0) - (a.rule_id||0));
+  const items = allRules.slice(0, limit);
+
+  const container = document.getElementById('rulePage');
+  container.innerHTML = `
+    <div class="p-0">
+      <h5 class="mb-3"><i class="bi bi-journal-text text-primary me-2"></i>ข้อบังคับล่าสุด</h5>
+      <ul class="list-group list-group-flush">
+        ${items.map(item => `
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              ${item.rule_type === 'ER'
+                ? '<span class="badge badge-er">แก้ไขเพิ่มเติม</span>'
+                : '<span class="badge badge-main">ข้อบังคับหลัก</span>'}
+              <strong>${item.c_name || 'ไม่ระบุชื่อสถาบัน'}</strong>
+              <small class="text-muted ms-2">พ.ศ. ${item.rule_year || '-'}</small>
+            </div>
+            <div>
+              <a href="/rule/${item.rule_id}" class="btn btn-sm btn-outline-primary" target="_blank" title="ดาวน์โหลด">
+                <i class="bi bi-download"></i>
+              </a>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+      <div class="text-end mt-2">
+        <a href="/rule" class="small text-decoration-none">ดูทั้งหมด</a>
+      </div>
+    </div>
+  `;
+
+  // Auto-resize iframe height
+  const embedId = params.get('embedId') || 'rule';
+  const postHeight = () => {
+    const h = document.body.scrollHeight;
+    try { window.parent.postMessage({ type: 'resize-embed', id: embedId, height: h }, '*'); } catch(_) {}
+  };
+  postHeight();
+  if ('ResizeObserver' in window) new ResizeObserver(postHeight).observe(document.body);
+  window.addEventListener('load', postHeight);
 })();
 </script>
 

@@ -1,23 +1,29 @@
 const db = require('../config/db');
 
-// Auto-detect room column (mee_room preferred, fallback mee_city)
-let ROOM_COL = 'mee_room';
-(async () => {
+let ROOM_COL_CACHE = null;
+async function ensureRoomColumn() {
+  if (ROOM_COL_CACHE) return ROOM_COL_CACHE;
   try {
     const [cols] = await db.query('SHOW COLUMNS FROM tbl_meetingroom');
     const hasMeeRoom = cols.some(c => c.Field === 'mee_room');
     const hasMeeCity = cols.some(c => c.Field === 'mee_city');
-    if (!hasMeeRoom && hasMeeCity) ROOM_COL = 'mee_city';
+    ROOM_COL_CACHE = hasMeeRoom ? 'mee_room' : (hasMeeCity ? 'mee_city' : 'mee_room');
+    if (!hasMeeRoom && !hasMeeCity) {
+      console.warn('No mee_room or mee_city column found in tbl_meetingroom.');
+    }
   } catch (e) {
-    console.error('Room column detection failed:', e);
+    console.error('Failed to detect room column:', e);
+    ROOM_COL_CACHE = 'mee_room';
   }
-})();
+  return ROOM_COL_CACHE;
+}
 
 // Get all meeting room bookings (include past)
 exports.getAll = async () => {
+  const roomCol = await ensureRoomColumn();
   const [rows] = await db.query(
     `SELECT mee_id, mee_date, mee_time, mee_subject,
-            COALESCE(mee_room, mee_city) AS mee_room,
+            ${roomCol} AS mee_room,
             mee_respon, mee_saveby, mee_savedate
      FROM tbl_meetingroom
      ORDER BY mee_date DESC, mee_id DESC`
@@ -27,9 +33,10 @@ exports.getAll = async () => {
 
 // Get a booking by id (include past)
 exports.getById = async (id) => {
+  const roomCol = await ensureRoomColumn();
   const [rows] = await db.query(
     `SELECT mee_id, mee_date, mee_time, mee_subject,
-            COALESCE(mee_room, mee_city) AS mee_room,
+            ${roomCol} AS mee_room,
             mee_respon, mee_saveby, mee_savedate
      FROM tbl_meetingroom
      WHERE mee_id = ?`,
@@ -40,8 +47,9 @@ exports.getById = async (id) => {
 
 // Create a new booking (dynamic room column)
 exports.create = async (data) => {
+  const roomCol = await ensureRoomColumn();
   const { mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate } = data;
-  const sql = `INSERT INTO tbl_meetingroom (mee_date, mee_time, mee_subject, ${ROOM_COL}, mee_respon, mee_saveby, mee_savedate)
+  const sql = `INSERT INTO tbl_meetingroom (mee_date, mee_time, mee_subject, ${roomCol}, mee_respon, mee_saveby, mee_savedate)
                VALUES (?, ?, ?, ?, ?, ?, ?)`;
   const params = [mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate];
   const [result] = await db.query(sql, params);
@@ -50,9 +58,10 @@ exports.create = async (data) => {
 
 // Update a booking (dynamic room column)
 exports.update = async (id, data) => {
+  const roomCol = await ensureRoomColumn();
   const { mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate } = data;
   const sql = `UPDATE tbl_meetingroom
-               SET mee_date = ?, mee_time = ?, mee_subject = ?, ${ROOM_COL} = ?, mee_respon = ?, mee_saveby = ?, mee_savedate = ?
+               SET mee_date = ?, mee_time = ?, mee_subject = ?, ${roomCol} = ?, mee_respon = ?, mee_saveby = ?, mee_savedate = ?
                WHERE mee_id = ?`;
   const params = [mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate, id];
   const [result] = await db.query(sql, params);

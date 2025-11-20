@@ -6,7 +6,7 @@ exports.list = async (req, res) => {
     const meetings = await meetingModel.getAll();
     res.render('meetingroom/list', { meetings: meetings || [], user: req.user }); // added user
   } catch (err) {
-    console.error('Error fetching meetings:', err);
+    console.error('[meetingRoomController.list] DB error:', err);
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการดึงข้อมูลห้องประชุม' });
   }
 };

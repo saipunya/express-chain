@@ -359,29 +359,9 @@ function displayGroupName(code){
 }
 %>
 
-<%
-const stats = (typeof stats !== 'undefined' && stats) ? stats : { coop:0, farmer:0, closing:0 };
-const strengthGrades = Array.isArray(strengthGrades) ? strengthGrades : [];
-const strengthData = (typeof strengthData === 'object' && strengthData) ? strengthData : {};
-const strengthCoopItems = Array.isArray(strengthCoopItems) ? strengthCoopItems : [];
-const strengthYear = (typeof strengthYear !== 'undefined' && strengthYear) ? strengthYear : '-';
-const chamraAllProcesses = Array.isArray(chamraAllProcesses) ? chamraAllProcesses : [];
-const homeProcesses = Array.isArray(homeProcesses) ? homeProcesses : [];
-const coopGroupStats = Array.isArray(coopGroupStats) ? coopGroupStats : [];
-const homeCoops = Array.isArray(homeCoops) ? homeCoops : [];
-const activity = Array.isArray(activity) ? activity : [];
-const lastProjects = Array.isArray(lastProjects) ? lastProjects : [];
-const lastCommands = Array.isArray(lastCommands) ? lastCommands : [];
-const usecars = Array.isArray(usecars) ? usecars : [];
-const onlineUsers = Array.isArray(onlineUsers) ? onlineUsers : [];
-const top = Array.isArray(top) ? top : [];
-const summaryByYear = (typeof summaryByYear === 'object' && summaryByYear) ? summaryByYear : {};
-const lastArticles = Array.isArray(lastArticles) ? lastArticles : [];
-%>
-
 <!-- ================= Hero ================= -->
 <div class="container my-2 mb-4 reveal in" id="top">
-  <div class="hero-shell"></div>
+  <div class="hero-shell">
     <div class="row g-0 h-100 align-items-stretch">
        
       <div class="col-md-6 hero-img-wrap p-0 position-relative h-100">
@@ -537,7 +517,7 @@ const lastArticles = Array.isArray(lastArticles) ? lastArticles : [];
       <div class="col-md-4">
         <div class="card modern-card shadow-sm border-0">
           <div class="card-gradient-bar"></div>
-          <div class="card-body text-center"></div>
+          <div class="card-body text-center">
             <h5 class="card-title">อยู่ระหว่างชำระบัญชี</h5>
             <p class="card-text display-6 text-warning">
               <%= stats.closing + ' แห่ง' %>
@@ -1057,7 +1037,6 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
       errorEl.classList.remove('d-none');
     }
     const bsModal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
-    if(bsModal) bsModal.show();
   });
 })();
 </script>
@@ -1129,7 +1108,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
                       <td class="d-none d-sm-table-cell"><%= t.year || 'N/A' %></td>
                       <td class="d-none d-sm-table-cell"><%= t.อำเภอ %></td>
                       <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
-                      <td class="text-center"></td>
+                      <td class="text-center">
                         <a href="/members/<%= t.idx %>" class="btn btn-sm btn-outline-info">รายละเอียด</a>
                       </td>
                     </tr>
@@ -1330,7 +1309,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
                   </span>
                   <% if(user){ %>
                     <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary"
-                      target="_blank"></a>
+                      target="_blank">
                       <i class="bi bi-file-earmark-arrow-down"></i>
                     </a>
                   <% } %>
@@ -1487,7 +1466,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 <div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header modal-gradient py-2"></div>
+      <div class="modal-header modal-gradient py-2">
         <h5 class="modal-title mb-0"><i class="bi bi-car-front-fill me-1"></i> รายละเอียดการใช้รถ</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -1614,7 +1593,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 
 
 <div id="template-data"
-  data-stats='{"coop": <%= stats.coop %>, "farmer": <%= stats.farmer %>, "closing": <%= stats.closing %>}'
+  data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}'
   data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>'
   data-online-count="<%= typeof onlineCount !== 'undefined' ? onlineCount : 0 %>"
   data-logged-in="<%= user ? 'true' : 'false' %>"
@@ -1804,7 +1783,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   })();
 </script>
 
-<script></script>
+<script>
   (function(){
     document.addEventListener('click', function(e){
       const btn = e.target.closest('.js-show-group-items');
@@ -1835,7 +1814,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
             return;
           }
           listEl.innerHTML = data.items.map((it,i)=>`<li class="list-group-item d-flex justify-content-between align-items-start">
-              <div></div>
+              <div>
                 <span class="fw-semibold">${i+1}. ${it.c_name}</span>
                 <small class="text-muted ms-1">(${it.c_code || '-'})</small>
               </div>

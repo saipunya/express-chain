@@ -54,26 +54,27 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
+                  <!-- Changed: proper row per record -->
                   <% rows.forEach(r => { %>
-                   
+                    <tr>
                       <td class="text-center"><%= r.st_year %></td>
-                      <td class="text-center"><span class="badge bg-primary"><%= r.st_grade || '-' %></span></td>
                       <% if(user){ %>
-                      <td class="text-end"><%= Number(r.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) %></td>
-                      <td class="text-end"><%= r.st_no1 %></td>
-                      <td class="text-end"><%= r.st_no2 %></td>
-                      <td class="text-end"><%= r.st_no3 %></td>
-                      <td class="text-end"><%= r.st_no4 %></td>
-                      <td class="text-end"><%= r.st_cpd %></td>
-                      <td class="text-end"><%= r.st_cad %></td>
-                      
+                        <td class="text-end"><%= Number(r.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) %></td>
+                        <td class="text-center">
+                          <span class="badge bg-primary"><%= r.st_grade || '-' %></span>
+                        </td>
+                        <td class="text-end"><%= r.st_no1 %></td>
+                        <td class="text-end"><%= r.st_no2 %></td>
+                        <td class="text-end"><%= r.st_no3 %></td>
+                        <td class="text-end"><%= r.st_no4 %></td>
+                        <td class="text-end"><%= r.st_cpd %></td>
+                        <td class="text-end"><%= r.st_cad %></td>
                       <% } else { %>
-                      <td colspan="7" class="text-center">ต้องเข้าสู่ระบบเพื่อดูข้อมูล</td>
+                        <!-- colspan = remaining 8 columns -->
+                        <td colspan="8" class="text-center">ต้องเข้าสู่ระบบเพื่อดูข้อมูล</td>
                       <% } %>
-                  
+                    </tr>
                   <% }) %>
-                </tr>
                 </tbody>
               </table>
             </div>

@@ -837,10 +837,11 @@ function displayGroupName(code){
       if (Array.isArray(strengthCoopItems)) {
         strengthCoopItems.forEach(it => {
           if(!it || !it.st_code) return;
-            const grade = it.st_grade;
-            if(!grades.includes(grade)) return;
-            if(it.st_code.startsWith('A')) coopAgrCounts[grade]++; 
-            else if(it.st_code.startsWith('B')) coopNonAgrCounts[grade]++;
+          const code = String(it.st_code).trim();
+          const grade = it.st_grade;
+          if(!grade || !grades.includes(grade)) return;
+          if(code.startsWith('A'))      coopAgrCounts[grade]++; 
+          else if(code.startsWith('B')) coopNonAgrCounts[grade]++;
         });
       }
       function rowTotalSplit(obj){ return grades.reduce((a,g)=> a + (obj[g]||0),0); }

@@ -1854,23 +1854,22 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
     contentEl.classList.add('d-none');
     contentEl.innerHTML = '';
 
-    // Fetch full HTML page then extract main/container if possible
     fetch('/allCoop/profile/' + encodeURIComponent(code))
       .then(r=>{ if(!r.ok) throw new Error('network'); return r.text(); })
       .then(html=>{
         loadingEl.classList.add('d-none');
         try {
           const parser = new DOMParser();
-            const doc = parser.parseFromString(html,'text/html');
-            let container = doc.querySelector('main') || doc.querySelector('.container') || doc.body;
-            // Remove back buttons/links containing the text "ย้อนกลับ"
-            container.querySelectorAll('a, button').forEach(el=>{
-              if(/ย้อนกลับ/.test(el.textContent)) el.remove();
-            });
-            let extracted = container.innerHTML;
-            extracted = extracted.replace(/<script[\s\S]*?<\/script>/gi,'');
-            contentEl.innerHTML = '<div class="coop-modal-inner">' + extracted + '</div>';
+          const doc = parser.parseFromString(html,'text/html');
+          let container = doc.querySelector('main') || doc.querySelector('.container') || doc.body;
+          container.querySelectorAll('a, button').forEach(el=>{
+            if(/ย้อนกลับ/.test(el.textContent)) el.remove();
+          });
+          let extracted = container.innerHTML;
+          extracted = extracted.replace(/<script[\s\S]*?<\/script>/gi,'');
+          contentEl.innerHTML = '<div class="coop-modal-inner">' + extracted + '</div>';
         } catch(err){
+          console.error('coop detail parse error', err);
           contentEl.innerHTML = '<div class="alert alert-warning">ไม่สามารถแสดงผลได้</div>';
         }
         contentEl.classList.remove('d-none');
@@ -1879,6 +1878,7 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
         loadingEl.classList.add('d-none');
         errorEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
         errorEl.classList.remove('d-none');
+        console.error('coop detail fetch error', err);
       });
 
     const bsModal = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(modalEl) : null;
@@ -1886,11 +1886,6 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
   });
 })();
 </script>
-
-catch (e) {
-  console.error('showInstitutionDetail error', e);
-  res.status(500).send('พลาดโหลดข้อมูล: ' + e.message);
-}
 
 <!-- Back To Top behavior -->
 <script>

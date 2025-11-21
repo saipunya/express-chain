@@ -1,10 +1,16 @@
 <%- include('partials/header',{ title }) %>
+<%
+// Safe defaults
+const _profile = (typeof profile !== 'undefined' && profile) ? profile : {};
+const _rows = Array.isArray(rows) ? rows : [];
+const _user = (typeof user !== 'undefined' && user) ? user : null;
+%>
 <div class="container py-4">
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">Home</a></li>
       <li class="breadcrumb-item"><a href="/strength">Strength</a></li>
-      <li class="breadcrumb-item active" aria-current="page"><%= profile.c_name %> (<%= profile.c_code %>)</li>
+      <li class="breadcrumb-item active" aria-current="page"><%= _profile.c_name %> (<%= _profile.c_code %>)</li>
     </ol>
   </nav>
   <div class="row g-4">
@@ -14,12 +20,12 @@
           <i class="bi bi-building me-2"></i>ข้อมูลสถาบัน
         </div>
         <div class="card-body small">
-          <p class="mb-1"><strong>ชื่อ:</strong> <%= profile.c_name %></p>
-          <p class="mb-1"><strong>รหัส:</strong> <code><%= profile.c_code %></code></p>
-            <p class="mb-1"><strong>ประเภท:</strong> <%= profile.coop_group %></p>
-            <p class="mb-1"><strong>ชนิด:</strong> <%= profile.c_type || '-' %></p>
-            <p class="mb-1"><strong>อำเภอ:</strong> <%= profile.c_amp || '-' %></p>
-            <p class="mb-1"><strong>ตำบล:</strong> <%= profile.c_tambon || '-' %></p>
+          <p class="mb-1"><strong>ชื่อ:</strong> <%= _profile.c_name %></p>
+          <p class="mb-1"><strong>รหัส:</strong> <code><%= _profile.c_code %></code></p>
+            <p class="mb-1"><strong>ประเภท:</strong> <%= _profile.coop_group %></p>
+            <p class="mb-1"><strong>ชนิด:</strong> <%= _profile.c_type || '-' %></p>
+            <p class="mb-1"><strong>อำเภอ:</strong> <%= _profile.c_amp || '-' %></p>
+            <p class="mb-1"><strong>ตำบล:</strong> <%= _profile.c_tambon || '-' %></p>
         </div>
         <div class="card-footer bg-light text-end">
           <a href="/" class="btn btn-sm btn-outline-secondary">ย้อนกลับ</a>
@@ -35,7 +41,7 @@
           </div>
         </div>
         <div class="card-body p-2">
-          <% if (!(rows||[]).length) { %>
+          <% if (!(_rows||[]).length) { %>
             <div class="alert alert-warning mb-0 text-center">ไม่มีข้อมูล</div>
           <% } else { %>
             <div class="table-responsive">
@@ -55,10 +61,10 @@
                 </thead>
                 <tbody>
                   <!-- Changed: proper row per record -->
-                  <% rows.forEach(r => { %>
+                  <% _rows.forEach(r => { %>
                     <tr>
                       <td class="text-center"><%= r.st_year %></td>
-                      <% if(user){ %>
+                      <% if(_user){ %>
                         <td class="text-end"><%= Number(r.st_point||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) %></td>
                         <td class="text-center">
                           <span class="badge bg-primary"><%= r.st_grade || '-' %></span>
@@ -101,7 +107,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'strength_<%= profile.c_code %>.csv';
+      a.download = 'strength_<%= _profile.c_code %>.csv';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(url), 1000);
     });

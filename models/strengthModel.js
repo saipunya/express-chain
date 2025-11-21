@@ -71,7 +71,7 @@ exports.getByCode = async (code) => {
 // Fetch institution profile (join active_coop) if available
 exports.getInstitutionProfile = async (code) => {
   const [rows] = await db.query(`
-    SELECT ac.c_code, ac.c_name, ac.coop_group, ac.c_type, ac.c_group
+    SELECT ac.c_code, ac.c_name, ac.coop_group, ac.c_type, ac.c_group, ac.c_amp, ac.c_tambon
     FROM active_coop ac WHERE ac.c_code = ? LIMIT 1
   `, [code]);
   return rows[0] || null;

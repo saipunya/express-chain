@@ -1908,6 +1908,11 @@ const STRENGTH_SHOW_POINT = document.getElementById('template-data')?.getAttribu
 })();
 </script>
 
+catch (e) {
+  console.error('showInstitutionDetail error', e);
+  res.status(500).send('พลาดโหลดข้อมูล: ' + e.message);
+}
+
 <!-- Back To Top behavior -->
 <script>
   (function(){

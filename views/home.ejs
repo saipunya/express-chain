@@ -830,6 +830,22 @@ function displayGroupName(code){
     <% const grades = (strengthGrades||[]); const sData = (strengthData||{});
        function rowTotal(group){ return grades.reduce((a,g)=> a + (sData[group] && sData[group][g] || 0),0); }
     %>
+    <!-- Added: split counts for Coop A / Coop B -->
+    <% 
+      let coopAgrCounts = {}, coopNonAgrCounts = {};
+      grades.forEach(g => { coopAgrCounts[g]=0; coopNonAgrCounts[g]=0; });
+      if (Array.isArray(strengthCoopItems)) {
+        strengthCoopItems.forEach(it => {
+          if(!it || !it.st_code) return;
+            const grade = it.st_grade;
+            if(!grades.includes(grade)) return;
+            if(it.st_code.startsWith('A')) coopAgrCounts[grade]++; 
+            else if(it.st_code.startsWith('B')) coopNonAgrCounts[grade]++;
+        });
+      }
+      function rowTotalSplit(obj){ return grades.reduce((a,g)=> a + (obj[g]||0),0); }
+      const hasSplitData = rowTotalSplit(coopAgrCounts) > 0 || rowTotalSplit(coopNonAgrCounts) > 0;
+    %>
     <div class="text-center mb-3">
       <% if (strengthYear && strengthYear !== '-') { %>
         <span class="badge bg-secondary">ปีข้อมูล: <%= strengthYear %></span>
@@ -846,7 +862,6 @@ function displayGroupName(code){
               <div class="card-header  text-white fw-semibold flex-grow-1">สหกรณ์</div>
               <button class="btn btn-sm btn-outline-light m-2 ms-auto js-strength-list" data-group="สหกรณ์" data-year="<%= strengthYear %>">ดูรายชื่อสหกรณ์</button>
             </div>
-           
             <div class="card-body p-2">
               <div class="table-responsive">
                 <table class="table table-sm table-bordered table-hover align-middle mb-0">
@@ -858,15 +873,37 @@ function displayGroupName(code){
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td class="fw-semibold text-center">สหกรณ์</td>
-                      <% grades.forEach(g => { const v=(sData['สหกรณ์']&&sData['สหกรณ์'][g])||0; %>
-                        <td class="text-center"><%= v.toLocaleString() %></td>
-                      <% }); %>
-                      <td class="text-center fw-bold bg-secondary text-white"><%= rowTotal('สหกรณ์').toLocaleString() %></td>
-                    </tr>
+                    <!-- Changed: split into 2 rows if data available -->
+                    <% if (hasSplitData) { %>
+                      <tr>
+                        <td class="fw-semibold text-center">สหกรณ์ภาคการเกษตร (A*)</td>
+                        <% grades.forEach(g => { %>
+                          <td class="text-center"><%= (coopAgrCounts[g]||0).toLocaleString() %></td>
+                        <% }); %>
+                        <td class="text-center fw-bold bg-secondary text-white"><%= rowTotalSplit(coopAgrCounts).toLocaleString() %></td>
+                      </tr>
+                      <tr>
+                        <td class="fw-semibold text-center">สหกรณ์นอกภาคการเกษตร (B*)</td>
+                        <% grades.forEach(g => { %>
+                          <td class="text-center"><%= (coopNonAgrCounts[g]||0).toLocaleString() %></td>
+                        <% }); %>
+                        <td class="text-center fw-bold bg-secondary text-white"><%= rowTotalSplit(coopNonAgrCounts).toLocaleString() %></td>
+                      </tr>
+                    <% } else { %>
+                      <!-- Fallback: original single row -->
+                      <tr>
+                        <td class="fw-semibold text-center">สหกรณ์</td>
+                        <% grades.forEach(g => { const v=(sData['สหกรณ์']&&sData['สหกรณ์'][g])||0; %>
+                          <td class="text-center"><%= v.toLocaleString() %></td>
+                        <% }); %>
+                        <td class="text-center fw-bold bg-secondary text-white"><%= rowTotal('สหกรณ์').toLocaleString() %></td>
+                      </tr>
+                    <% } %>
                   </tbody>
                 </table>
+                <% if (hasSplitData) { %>
+                  <small class="text-muted d-block mt-1">* จำแนกตามรหัสสหกรณ์: ขึ้นต้น A = ภาคการเกษตร, ขึ้นต้น B = นอกภาคการเกษตร</small>
+                <% } %>
               </div>
             </div>
           </div>

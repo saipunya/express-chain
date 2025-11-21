@@ -34,7 +34,7 @@ html.embedded #rulePage nav,
 html.embedded #rulePage .rule-page-header a { display: none !important; }
 </style>
 
-<div class="container mt-4" id="rulePage" data-search="<%= safeSearch %>" data-rules='<%- JSON.stringify(safeAlls) %>'>
+<div class="container mt-4" id="rulePage">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center rule-page-header gap-3">
     <h3 class="mb-0">📋 ข้อบังคับสหกรณ์/กลุ่มเกษตรกร</h3>
     <% if(user && user.mClass=='kjs'){ %> 
@@ -46,14 +46,8 @@ html.embedded #rulePage .rule-page-header a { display: none !important; }
 
   <!-- Stats -->
   <% 
-    // Defensive fallbacks
-    const safeAlls = Array.isArray(alls) ? alls : [];
-    const safeSearch = typeof search === 'string' ? search : '';
-    const safeTotalPages = Number.isFinite(totalPages) ? totalPages : 1;
-    const safeCurrentPage = Number.isFinite(currentPage) ? currentPage : 1;
-
-    const totalRules = safeAlls.length; 
-    const institutionSet = new Set(safeAlls.map(r=> (r && r.c_name) || 'ไม่ระบุชื่อสถาบัน'));
+    const totalRules = alls.length; 
+    const institutionSet = new Set(alls.map(r=> r.c_name || 'ไม่ระบุชื่อสถาบัน'));
     const totalInstitutions = institutionSet.size;
   %>
   <div class="rule-stats mt-4 p-3 row g-3">
@@ -75,28 +69,29 @@ html.embedded #rulePage .rule-page-header a { display: none !important; }
   <form method="get" action="/rule" class="mt-4" autocomplete="off">
     <div class="input-group rule-search-wrapper shadow-sm">
       <i class="bi bi-search"></i>
-      <input type="text" name="search" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสถาบัน..." value="<%= safeSearch %>">
+      <input type="text" name="search" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสถาบัน..." value="<%= search || '' %>">
       <button class="btn btn-outline-primary" type="submit"><i class="bi bi-filter"></i> ค้นหา</button>
       <button class="btn btn-outline-secondary" type="button" onclick="window.location='/rule'">ล้าง</button>
     </div>
-    <% if(safeSearch){ %>
-      <div class="small text-muted mt-1">ผลการค้นหา: "<%= safeSearch %>"</div>
+    <% if(search){ %>
+      <div class="small text-muted mt-1">ผลการค้นหา: "<%= search %>"</div>
     <% } %>
   </form>
 
   <!-- Grouping & Accordion -->
   <% 
-    // Group by c_name with safeAlls
+    // Group by c_name
     const grouped = {};
-    safeAlls.forEach(item => {
-      const name = (item && item.c_name) || 'ไม่ระบุชื่อสถาบัน';
-      (grouped[name] ||= []).push(item);
+    alls.forEach(item => {
+      const name = item.c_name || 'ไม่ระบุชื่อสถาบัน';
+      if (!grouped[name]) grouped[name] = [];
+      grouped[name].push(item);
     });
 
     // Sort groups by max rule_id DESC
     const sortedGroups = Object.entries(grouped).sort((a, b) => {
-      const maxIdA = Math.max(...a[1].map(r => r.rule_id || 0));
-      const maxIdB = Math.max(...b[1].map(r => r.rule_id || 0));
+      const maxIdA = Math.max(...a[1].map(r => r.rule_id));
+      const maxIdB = Math.max(...b[1].map(r => r.rule_id));
       return maxIdB - maxIdA;
     });
   %>
@@ -116,13 +111,8 @@ html.embedded #rulePage .rule-page-header a { display: none !important; }
             <ul class="list-group list-group-flush">
               <% rules
                 .sort((a, b) => {
-                  // Safeguard rule_type and rule_year
-                  const typeA = a.rule_type || '';
-                  const typeB = b.rule_type || '';
-                  if (typeA !== typeB) return typeA === 'ER' ? 1 : -1;
-                  const yearA = Number.isFinite(a.rule_year) ? a.rule_year : 0;
-                  const yearB = Number.isFinite(b.rule_year) ? b.rule_year : 0;
-                  return yearA - yearB;
+                  if (a.rule_type !== b.rule_type) { return a.rule_type === 'ER' ? 1 : -1; }
+                  return a.rule_year - b.rule_year; // ...existing code...
                 })
                 .forEach(rule => { 
               %>
@@ -158,9 +148,9 @@ html.embedded #rulePage .rule-page-header a { display: none !important; }
   <!-- Pagination -->
   <nav class="mt-4">
     <ul class="pagination justify-content-center mb-0">
-      <% for (let i = 1; i <= safeTotalPages; i++) { %>
-        <li class="page-item <%= safeCurrentPage === i ? 'active' : '' %>">
-          <a class="page-link" href="/rule?page=<%= i %><%= safeSearch ? '&search=' + encodeURIComponent(safeSearch) : '' %>"><%= i %></a>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link" href="/rule?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
         </li>
       <% } %>
     </ul>
@@ -168,28 +158,19 @@ html.embedded #rulePage .rule-page-header a { display: none !important; }
 </div>
 
 <script>
-// Highlight search keyword inside institution names (defensive)
-try {
-  (function(){
-    const kw = (() => {
-      try {
-      const v = document.getElementById('rulePage').dataset.search || '';
-      if (typeof v !== 'string') return '';
-      const cleaned = v.normalize('NFC').trim().replace(/\s+/g,' ');
-      return cleaned.length > 100 ? cleaned.slice(0,100) : cleaned;
-      } catch(e) { return ''; }
-    })();
-    if(!kw) return;
-    const safe = kw.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');
-    const pattern = new RegExp('(' + safe + ')','gi');
-    document.querySelectorAll('#ruleAccordion .institution-name').forEach(el=>{
-      el.innerHTML = el.textContent.replace(pattern,'<span class="highlight">$1</span>');
-    });
-  })();
-} catch(e) { console.warn('Highlight error', e); }
+// Highlight search keyword inside institution names
+(function(){
+  const kw = <%- JSON.stringify(search || '') %>.trim();
+  if(!kw) return;
+  const safe = kw.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');
+  const pattern = new RegExp('(' + safe + ')','gi');
+  document.querySelectorAll('#ruleAccordion .institution-name').forEach(el=>{
+    el.innerHTML = el.textContent.replace(pattern,'<span class="highlight">$1</span>');
+  });
+})();
 </script>
 <script>
-// Embed mode with escaping and defensive data
+// Embed mode for homepage preview
 (function(){
   const params = new URLSearchParams(window.location.search);
   const isEmbed = params.get('embed') === '1';
@@ -199,40 +180,32 @@ try {
   const limit = Math.max(1, parseInt(params.get('limit') || '5', 10));
 
   // Use server-side data if present, otherwise empty array
-    const allRules = JSON.parse(document.getElementById('rulePage')?.dataset.rules || '[]');
-    // Sort by latest rule_id desc and take top N
-  allRules.sort((a,b) => ((b && b.rule_id) || 0) - ((a && a.rule_id) || 0));
+  const allRules = <%- JSON.stringify(alls || []) %>;
+  // Sort by latest rule_id desc and take top N
+  allRules.sort((a,b) => (b.rule_id||0) - (a.rule_id||0));
   const items = allRules.slice(0, limit);
 
-  const escapeHtml = s => String(s || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-
   const container = document.getElementById('rulePage');
-  if(!container) return;
-
   container.innerHTML = `
     <div class="p-0">
       <h5 class="mb-3"><i class="bi bi-journal-text text-primary me-2"></i>ข้อบังคับล่าสุด</h5>
       <ul class="list-group list-group-flush">
-        ${items.map(item => {
-          const type = item && item.rule_type === 'ER' ? 'แก้ไขเพิ่มเติม' : 'ข้อบังคับหลัก';
-          const badgeClass = item && item.rule_type === 'ER' ? 'badge-er' : 'badge-main';
-          return `
+        ${items.map(item => `
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-              <span class="badge ${badgeClass}">${type}</span>
-              <strong>${escapeHtml(item && item.c_name || 'ไม่ระบุชื่อสถาบัน')}</strong>
-              <small class="text-muted ms-2">พ.ศ. ${escapeHtml(item && item.rule_year || '-')}</small>
+              ${item.rule_type === 'ER'
+                ? '<span class="badge badge-er">แก้ไขเพิ่มเติม</span>'
+                : '<span class="badge badge-main">ข้อบังคับหลัก</span>'}
+              <strong>${item.c_name || 'ไม่ระบุชื่อสถาบัน'}</strong>
+              <small class="text-muted ms-2">พ.ศ. ${item.rule_year || '-'}</small>
             </div>
             <div>
-              <a href="/rule/${item && item.rule_id}" class="btn btn-sm btn-outline-primary" target="_blank" title="ดาวน์โหลด">
+              <a href="/rule/${item.rule_id}" class="btn btn-sm btn-outline-primary" target="_blank" title="ดาวน์โหลด">
                 <i class="bi bi-download"></i>
               </a>
             </div>
-          </li>`;
-        }).join('')}
+          </li>
+        `).join('')}
       </ul>
       <div class="text-end mt-2">
         <a href="/rule" class="small text-decoration-none">ดูทั้งหมด</a>

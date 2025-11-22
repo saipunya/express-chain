@@ -1,7 +1,12 @@
 const db = require('../config/db');
 
 exports.getAllActivities = async () => {
-  const [rows] = await db.query('SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act ASC');
+  const [rows] = await db.query(
+    `SELECT * FROM pt_activity
+     WHERE MONTH(date_act) = MONTH(CURDATE())
+       AND YEAR(date_act) = YEAR(CURDATE())
+     ORDER BY date_act ASC`
+  );
   return rows;
 };
 
@@ -38,7 +43,10 @@ exports.deleteActivity = async (id) => {
 
 exports.getLastActivities = async (limit = 10) => {
   const [rows] = await db.query(
-    'SELECT * FROM pt_activity WHERE date_act >= CURDATE() ORDER BY date_act ASC LIMIT ?', [limit]
+    `SELECT * FROM pt_activity
+     WHERE MONTH(date_act) = MONTH(CURDATE())
+       AND YEAR(date_act) = YEAR(CURDATE())
+     ORDER BY date_act ASC LIMIT ?`, [limit]
   );
   return rows;
 };

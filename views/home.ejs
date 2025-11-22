@@ -1085,7 +1085,57 @@ function displayGroupName(code){
   </div>
 </section>
 
-
+<section id="rules" class="section-block bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>ชื่อข้อบังคับ</th>
+                <th>ประเภท</th>
+                <th>ปี</th>
+                <th>ลิงก์ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% (ruleFiles || []).forEach(rule => { %>
+                <tr>
+                  <td><%= rule.rule_name %></td>
+                  <td>
+                    <% if(rule.rule_type === 'ER') { %>
+                      แก้ไขเพิ่มเติม <%= rule.er_no %>
+                    <% } else { %>
+                     ข้อบังคับหลัก
+                    <% } %>
+                  </td>
+                  <td><%= rule.rule_year %></td>
+                  <td>
+                    <% if(rule.rule_id) { %>
+                      <a href="/rule/file/<%= rule.rule_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                        ดูไฟล์
+                      </a>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <div class="text-end mt-2">
+          <a href="/rule" class="btn btn-success btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <%- include('home/vong-latest.ejs') %>
 

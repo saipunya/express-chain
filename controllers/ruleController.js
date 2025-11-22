@@ -149,6 +149,32 @@ exports.showDetailData = async (req,res) => {
   }
 };
 
+// ดาวน์โหลดหรือแสดงไฟล์ข้อบังคับตาม id
+exports.downloadFile = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const detail = await ruleModel.detail(id);
+    if (!detail) {
+      return res.status(404).send('ไม่พบข้อมูลข้อบังคับนี้');
+    }
+    const filename = detail.rule_file;
+    if (!filename) {
+      return res.status(404).send('ไม่พบชื่อไฟล์ในฐานข้อมูล');
+    }
+    const filePath = path.join(__dirname, '..', 'uploads', 'rule', filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('ไม่พบไฟล์ในระบบ');
+    }
+    // แสดง PDF ใน browser (inline)
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.send(fs.readFileSync(filePath));
+  } catch (error) {
+    console.error('Error downloading rule file:', error);
+    res.status(500).send('ข้อผิดพลาดในการดาวน์โหลดไฟล์');
+  }
+};
+
 // delete
 exports.deleteRule = async (req, res) => {
   try {

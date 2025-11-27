@@ -152,6 +152,10 @@ exports.showDetailData = async (req,res) => {
 // ดาวน์โหลดหรือแสดงไฟล์ข้อบังคับตาม id
 exports.downloadFile = async (req, res) => {
   try {
+    // ถ้าไม่ได้ login ให้ redirect ไปหน้า login
+    if (!req.session || !req.session.user) {
+      return res.redirect('/auth/login');
+    }
     const id = req.params.id;
     const detail = await ruleModel.detail(id);
     if (!detail) {
@@ -165,10 +169,37 @@ exports.downloadFile = async (req, res) => {
     if (!fs.existsSync(filePath)) {
       return res.status(404).send('ไม่พบไฟล์ในระบบ');
     }
-    // แสดง PDF ใน browser (inline)
+    const isAdmin = req.session.user?.mClass === 'admin';
+    const pdfBytes = fs.readFileSync(filePath);
+    let finalPdfBytes;
+    if (isAdmin) {
+      finalPdfBytes = pdfBytes;
+    } else {
+      // ติดลายน้ำสำหรับ user ที่ไม่ใช่ admin
+      const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
+      const fontBytes = fs.readFileSync(fontPath);
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      pdfDoc.registerFontkit(fontkit);
+      const customFont = await pdfDoc.embedFont(fontBytes);
+      const pages = pdfDoc.getPages();
+      const watermarkText = 'ใช้ในราชการสำนักงานสหกรณ์จังหวัดชัยภูมิ';
+      pages.forEach(page => {
+        const { width, height } = page.getSize();
+        page.drawText(watermarkText, {
+          x: width / 4,
+          y: height / 2,
+          size: 30,
+          font: customFont,
+          color: rgb(1, 0, 0),
+          opacity: 0.3,
+          rotate: degrees(45)
+        });
+      });
+      finalPdfBytes = await pdfDoc.save();
+    }
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.send(fs.readFileSync(filePath));
+    res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
     console.error('Error downloading rule file:', error);
     res.status(500).send('ข้อผิดพลาดในการดาวน์โหลดไฟล์');

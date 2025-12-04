@@ -50,3 +50,13 @@ exports.getLastActivities = async (limit = 10) => {
   );
   return rows;
 };
+
+// ดึงกิจกรรมที่มี date_act = วันนี้
+exports.getActivitiesForToday = async () => {
+  const [rows] = await db.query(
+    `SELECT * FROM pt_activity
+     WHERE DATE(date_act) = CURDATE()
+     ORDER BY date_act ASC`
+  );
+  return rows;
+};

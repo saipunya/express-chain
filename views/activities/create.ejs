@@ -76,16 +76,17 @@
         const now = new Date();
         const thaiTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
         thaiTimeElement.textContent = `เวลาปัจจุบัน: ${thaiTime}`;
-        
-        // Prefill the time input with the current time in 24-hour format
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        actTimeInput.value = `${hours}:${minutes}`;
 
-        // Prefill the hidden savedate input with the current date
+        // Prefill the hidden savedate input with the current date (do not touch act_time here)
         const currentDate = now.toISOString().split('T')[0];
         saveDateInput.value = currentDate;
       };
+
+      // Set default time only once when page loads
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      actTimeInput.value = `${hours}:${minutes}`;
 
       updateThaiTime();
       setInterval(updateThaiTime, 1000); // Update every second

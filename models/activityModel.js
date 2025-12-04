@@ -50,3 +50,12 @@ exports.getLastActivities = async (limit = 10) => {
   );
   return rows;
 };
+
+// ใหม่: ใช้สำหรับ cron แจ้งเตือนตาม date_act
+exports.getActivitiesByDate = async (date) => {
+  const [rows] = await db.query(
+    'SELECT * FROM pt_activity WHERE date_act = ? ORDER BY act_time ASC',
+    [date]
+  );
+  return rows;
+};

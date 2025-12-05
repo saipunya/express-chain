@@ -115,7 +115,7 @@ app.use((req, res) => {
 
 // อย่าง cron job ส่ง Telegram
 require('./cron/gitgumNotifier');
-//require('./cron/activityNotifier');  // <- เพิ่มบรรทัดนี้
+require('./cron/dailyTelegramNotify'); // <- เพิ่มบรรทัดนี้
 
 // สร้าง http server แทน app.listen
 const server = http.createServer(app);

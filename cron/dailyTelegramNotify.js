@@ -1,8 +1,10 @@
 // cron/dailyTelegramNotify.js
 const cron = require('node-cron');
 const { notifyActivityToday } = require('../controllers/cronController');
+const axios = require('axios');
 
 const TZ = process.env.TZ || 'Asia/Bangkok';
+const token = process.env.LINE_NOTIFY_TOKEN;
 console.log(`⏰ ตั้งเวลาแจ้งเตือน Activity ทุกวัน 04:30 น. (timezone: ${TZ})`);
 
 const job = cron.schedule(
@@ -12,6 +14,13 @@ const job = cron.schedule(
     console.log(`🚀 [Cron] เริ่มส่งแจ้งเตือน Activity: ${start.toISOString()}`);
     try {
       await notifyActivityToday();
+      await axios.post('https://notify-api.line.me/api/notify', {
+        message: 'Activity notification'
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       console.log('✅ [Cron] ส่งแจ้งเตือน Activity เสร็จสมบูรณ์');
     } catch (e) {
       console.error('❌ [Cron] ส่งแจ้งเตือน Activity ล้มเหลว:', e);

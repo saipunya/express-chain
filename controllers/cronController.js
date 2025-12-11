@@ -49,17 +49,20 @@ exports.notifyActivityToday = async () => {
     console.log('ไม่มีรายการกิจกรรมสำหรับวันนี้ ไม่ส่งแจ้งเตือน');
     return;
   }
-  const token = process.env.LINE_NOTIFY_TOKEN;
-  if (!token) throw new Error('LINE_NOTIFY_TOKEN is missing in .env');
-  await axios.post(
-    'https://notify-api.line.me/api/notify',
-    new URLSearchParams({ message }),
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  console.log('✅ ส่งการแจ้งเตือนกิจกรรมวันนี้เรียบร้อย');
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) {
+    throw new Error('TELEGRAM_BOT_TOKEN หรือ TELEGRAM_CHAT_ID ไม่มีใน .env');
+  }
+
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+  const res = await axios.post(url, {
+    chat_id: chatId,
+    text: message,
+    parse_mode: 'HTML', // หรือ 'Markdown' ถ้าต้อง
+  });
+
+  console.log('✅ ส่งการแจ้งเตือนกิจกรรมวันนี้ไป Telegram เรียบร้อย:', res.data);
 };

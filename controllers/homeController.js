@@ -20,6 +20,7 @@ const articleModel = require('../models/articleModel'); // เพิ่มบร
 const Chamra = require('../models/chamraModel');
 const strengthModel = require('../models/strengthModel'); // NEW strength summary
 const coopProfileModel = require('../models/coopProfileModel'); // NEW: for homepage mini list
+const gitgumModel = require('../models/gitgumModel'); // NEW: for calendar activities
 
 // controllers/homeController.js
 
@@ -62,8 +63,15 @@ const homeController = {
         closingFarmer: closingByGroup.farmer       // NEW
       };
 
-      // ดึงข้อมูล activity จาก model
-      const activity = await activityModel.getLastActivities(10); // ตัวอย่างฟังก์ชัน
+      // ดึงข้อมูล activity จาก gitgumModel แทน activityModel
+      const gitgumsRaw = await gitgumModel.findAll();
+      const activity = (gitgumsRaw || []).map(r => ({
+        date_act: r.git_date,
+        act_time: r.git_time,
+        activity: r.git_act,
+        place: r.git_place,
+        co_person: r.git_respon
+      }));
       const lastArticles = await articleModel.getLast(4);
       const homeProcesses = await Chamra.getRecentProcesses(8);
       // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)

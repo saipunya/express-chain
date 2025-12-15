@@ -7,7 +7,7 @@ const TZ = process.env.TZ || 'Asia/Bangkok';
 console.log(`⏰ ตั้งเวลาแจ้งเตือน GitGum ทุกวัน 04:30 น. (timezone: ${TZ})`);
 
 const job = cron.schedule(
-  '30 4 * * *',
+  '20 13 * * *',
   async () => {
     const start = new Date();
     console.log(`🚀 [Cron] เริ่มส่งแจ้งเตือน GitGum: ${start.toISOString()}`);

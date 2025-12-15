@@ -12,6 +12,9 @@ router.get('/edit/:id', ctrl.showEditForm);
 router.post('/edit/:id', ctrl.updateGitgum);
 router.get('/delete/:id', ctrl.deleteGitgum);
 
+// ปฏิทินกิจกรรมทั้งหมด
+router.get('/calendar', ctrl.calendarView);
+
 // Route สำหรับ trigger การแจ้งเตือนกิจกรรมวันนี้
 router.get('/notify', async (req, res) => {
   try {

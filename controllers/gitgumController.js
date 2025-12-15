@@ -62,3 +62,38 @@ exports.deleteGitgum = async (req, res) => {
   await gitgumModel.delete(req.params.id);
   res.redirect('/gitgum/list');
 };
+
+// แสดงปฏิทินกิจกรรมทั้งหมด (responsive)
+exports.calendarView = async (req, res) => {
+  try {
+    const rows = await gitgumModel.findAll();
+    const events = rows.map(r => {
+      const date = r.git_date || '';
+      const time = (r.git_time || '00:00').toString().slice(0,5);
+      const start = date ? `${date}T${time}` : undefined;
+      const titleParts = [r.git_act];
+      if (r.git_place) titleParts.push(`@${r.git_place}`);
+      return {
+        id: r.git_id,
+        title: titleParts.filter(Boolean).join(' '),
+        start,
+        allDay: false,
+        extendedProps: {
+          place: r.git_place,
+          respon: r.git_respon,
+          goto: r.git_goto,
+          group: r.git_group,
+          maihed: r.git_maihed
+        }
+      };
+    });
+
+    res.render('allcalendar', {
+      title: 'ปฏิทินกิจกรรม',
+      events
+    });
+  } catch (err) {
+    console.error('Error rendering calendar:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดปฏิทิน');
+  }
+};

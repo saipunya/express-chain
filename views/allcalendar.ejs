@@ -1,0 +1,120 @@
+<%- include('partials/header') %>
+
+<!-- FullCalendar CSS (loaded here since header is fixed) -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+
+<div class="container-fluid px-2 px-md-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between my-3 gap-2">
+    <h3 class="m-0">📆 ปฏิทินกิจกรรม</h3>
+    <div class="d-flex gap-2">
+      <a href="/gitgum/list" class="btn btn-outline-secondary"><i class="bi bi-list"></i> รายการ</a>
+      <% if(user && user.mClass=='kjs'){ %>
+        <a href="/gitgum/add" class="btn btn-success"><i class="bi bi-plus-circle"></i> เพิ่มกิจกรรม</a>
+      <% } %>
+      <a href="/dashboard" class="btn btn-primary"><i class="bi bi-house"></i> แดชบอร์ด</a>
+    </div>
+  </div>
+
+  <div id="calendar" class="bg-white rounded shadow-sm p-2" style="min-height: 70vh;"></div>
+</div>
+
+<!-- Modal แสดงรายละเอียดกิจกรรม -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventTitle">รายละเอียดกิจกรรม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2"><i class="bi bi-calendar-event me-2"></i><span id="eventDate"></span></div>
+        <div class="mb-2"><i class="bi bi-clock me-2"></i><span id="eventTime"></span></div>
+        <div class="mb-2"><i class="bi bi-geo-alt me-2"></i><span id="eventPlace"></span></div>
+        <div class="mb-2"><i class="bi bi-people me-2"></i><span id="eventRespon"></span></div>
+        <div class="mb-2"><i class="bi bi-arrow-right-circle me-2"></i><span id="eventGoto"></span></div>
+        <div class="mb-2"><i class="bi bi-diagram-3 me-2"></i><span id="eventGroup"></span></div>
+        <div class="mb-0"><i class="bi bi-card-text me-2"></i><span id="eventMaihed"></span></div>
+      </div>
+      <div class="modal-footer">
+        <a id="eventViewBtn" href="#" class="btn btn-outline-primary"><i class="bi bi-eye"></i> ดูรายละเอียด</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Embed events JSON safely -->
+<script type="application/json" id="events-data"><%- JSON.stringify(events || []) %></script>
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const eventsJsonEl = document.getElementById('events-data');
+    let events = [];
+    try {
+      events = JSON.parse(eventsJsonEl.textContent || '[]');
+    } catch (e) { events = []; }
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      locale: 'th',
+      timeZone: 'Asia/Bangkok',
+      initialView: isMobile ? 'listWeek' : 'dayGridMonth',
+      headerToolbar: isMobile
+        ? { left: 'prev,next today', center: 'title', right: '' }
+        : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+      height: 'auto',
+      stickyHeaderDates: true,
+      nowIndicator: true,
+      weekNumbers: false,
+      navLinks: true,
+      dayMaxEvents: true,
+      eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
+      events,
+      eventClick: function(info) {
+        info.jsEvent.preventDefault();
+        const e = info.event;
+        const p = e.extendedProps || {};
+        // เติมข้อมูลลงใน Modal
+        document.getElementById('eventTitle').textContent = e.title || 'รายละเอียดกิจกรรม';
+        const start = e.start ? new Date(e.start) : null;
+        const thDate = start ? start.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
+        const thTime = start ? start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+        document.getElementById('eventDate').textContent = thDate;
+        document.getElementById('eventTime').textContent = thTime;
+        document.getElementById('eventPlace').textContent = p.place || '-';
+        document.getElementById('eventRespon').textContent = p.respon || '-';
+        document.getElementById('eventGoto').textContent = p.goto || '-';
+        document.getElementById('eventGroup').textContent = p.group || '-';
+        document.getElementById('eventMaihed').textContent = p.maihed || '-';
+        const viewBtn = document.getElementById('eventViewBtn');
+        if (e.id) {
+          viewBtn.href = '/gitgum/view/' + e.id;
+          viewBtn.classList.remove('d-none');
+        } else {
+          viewBtn.href = '#';
+          viewBtn.classList.add('d-none');
+        }
+        const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+        modal.show();
+      }
+    });
+
+    calendar.render();
+
+    // Optional: เปลี่ยน layout เมื่อขนาดจอเปลี่ยน
+    window.addEventListener('resize', function() {
+      const nowMobile = window.matchMedia('(max-width: 768px)').matches;
+      const currentView = calendar.view.type;
+      const target = nowMobile ? 'listWeek' : 'dayGridMonth';
+      if (currentView !== target) {
+        calendar.changeView(target);
+      }
+    });
+  });
+</script>
+
+<%- include('partials/footer') %>

@@ -67,17 +67,51 @@ exports.deleteGitgum = async (req, res) => {
 exports.calendarView = async (req, res) => {
   try {
     const rows = await gitgumModel.findAll();
+
+    // ฟังก์ชันแปลงเวลาให้เป็น HH:mm
+    const toHHmm = (val) => {
+      if (!val) return null;
+      const s = String(val).trim();
+      // รูปแบบ 0830
+      if (/^\d{4}$/.test(s)) {
+        return `${s.slice(0,2)}:${s.slice(2,4)}`;
+      }
+      // รูปแบบ H:mm หรือ HH:mm หรือ H.mm หรือ HH.mm
+      const m = s.match(/^(\d{1,2})[:.](\d{2})/);
+      if (m) {
+        const hh = m[1].padStart(2, '0');
+        const mm = m[2];
+        if (Number(hh) <= 23 && Number(mm) <= 59) return `${hh}:${mm}`;
+      }
+      return null;
+    };
+
+    // แปลง date ให้เป็นสตริง YYYY-MM-DD (รองรับทั้ง string/Date)
+    const toYMD = (d) => {
+      if (!d) return '';
+      if (typeof d === 'string') return d.slice(0, 10);
+      if (d instanceof Date) {
+        try {
+          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(d);
+        } catch (_) {
+          return d.toISOString().slice(0, 10);
+        }
+      }
+      return String(d).slice(0, 10);
+    };
+
     const events = rows.map(r => {
-      const date = r.git_date || '';
-      const time = (r.git_time || '00:00').toString().slice(0,5);
-      const start = date ? `${date}T${time}` : undefined;
+      const dateStr = toYMD(r.git_date);
+      const norm = toHHmm(r.git_time);
+      const start = dateStr ? (norm ? `${dateStr}T${norm}` : dateStr) : undefined;
+      const allDay = !!(dateStr && !norm);
       const titleParts = [r.git_act];
       if (r.git_place) titleParts.push(`@${r.git_place}`);
       return {
         id: r.git_id,
         title: titleParts.filter(Boolean).join(' '),
         start,
-        allDay: false,
+        allDay,
         extendedProps: {
           place: r.git_place,
           respon: r.git_respon,
@@ -86,7 +120,7 @@ exports.calendarView = async (req, res) => {
           maihed: r.git_maihed
         }
       };
-    });
+    }).filter(e => !!e.start);
 
     res.render('allcalendar', {
       title: 'ปฏิทินกิจกรรม',

@@ -5,7 +5,10 @@
 
 <div class="container-fluid px-2 px-md-4">
   <div class="d-flex flex-wrap align-items-center justify-content-between my-3 gap-2">
-    <h3 class="m-0">📆 ปฏิทินกิจกรรม</h3>
+    <div class="d-flex align-items-center gap-2">
+      <h3 class="m-0">📆 ปฏิทินกิจกรรม</h3>
+      <span id="eventCount" class="badge text-bg-info d-none"></span>
+    </div>
     <div class="d-flex gap-2">
       <a href="/gitgum/list" class="btn btn-outline-secondary"><i class="bi bi-list"></i> รายการ</a>
       <% if(user && user.mClass=='kjs'){ %>
@@ -13,6 +16,10 @@
       <% } %>
       <a href="/dashboard" class="btn btn-primary"><i class="bi bi-house"></i> แดชบอร์ด</a>
     </div>
+  </div>
+
+  <div id="noDataAlert" class="alert alert-warning d-none" role="alert">
+    ยังไม่มีข้อมูลกิจกรรมในช่วงใกล้เคียง ลองเลื่อนเดือน/สัปดาห์ดู หรือเพิ่มกิจกรรมใหม่
   </div>
 
   <div id="calendar" class="bg-white rounded shadow-sm p-2" style="min-height: 70vh;"></div>
@@ -54,10 +61,22 @@
     const calendarEl = document.getElementById('calendar');
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
     const eventsJsonEl = document.getElementById('events-data');
+    const noDataAlert = document.getElementById('noDataAlert');
+    const eventCount = document.getElementById('eventCount');
     let events = [];
     try {
       events = JSON.parse(eventsJsonEl.textContent || '[]');
     } catch (e) { events = []; }
+
+    // แสดงจำนวนกิจกรรม และ alert เมื่อว่าง
+    if (Array.isArray(events)) {
+      if (events.length === 0) {
+        noDataAlert.classList.remove('d-none');
+      } else {
+        eventCount.textContent = events.length + ' รายการ';
+        eventCount.classList.remove('d-none');
+      }
+    }
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
       locale: 'th',

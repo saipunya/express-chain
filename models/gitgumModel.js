@@ -10,13 +10,22 @@ exports.insert = async (data) => {
   await db.query(sql, params);
 };
 
-// ดึงข้อมูลทั้งหมด
+// ดึงข้อมูลทั้งหมด (ช่วง -90 วัน ถึง +90 วัน จากวันนี้)
 exports.findAll = async () => {
-  // เงื่อนไขแสดงของเดือนนี้เท่านั้น สามารถปรับได้ตามต้องการ
   const [rows] = await db.query(
-    'SELECT * FROM tbl_gitgum WHERE git_date BETWEEN DATE_FORMAT(CURDATE(), "%Y-%m-01") AND LAST_DAY(CURDATE()) ORDER BY git_date ASC, git_time ASC'
+    `SELECT * FROM tbl_gitgum 
+     WHERE git_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 90 DAY) AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+     ORDER BY git_date ASC, git_time ASC`
   );
- 
+  return rows;
+};
+
+// ดึงข้อมูลระหว่างช่วงวันที่ (YYYY-MM-DD)
+exports.findBetween = async (startDate, endDate) => {
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_date BETWEEN ? AND ? ORDER BY git_date ASC, git_time ASC',
+    [startDate, endDate]
+  );
   return rows;
 };
 
@@ -81,13 +90,6 @@ const [rows] = await db.query(
   console.log("📌 Last 5 rows in DB:", rows.slice(-5));
   return rows;
 };
-
-
-
-
-
-
-
 
 // หมายเหตุ: findByDate เดิมอ้างอิง pool ซึ่งไม่มีในโมดูลนี้ จึงยังไม่แก้เพื่อไม่กระทบส่วนอื่น
 exports.findByDate = (date) => {

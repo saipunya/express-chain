@@ -12,7 +12,11 @@ exports.insert = async (data) => {
 
 // ดึงข้อมูลทั้งหมด
 exports.findAll = async () => {
-  const [rows] = await db.query('SELECT * FROM tbl_gitgum  WHERE git_date >= CURDATE() ORDER BY git_date ASC , git_time ASC');
+  // เงื่อนไขแสดงของเดือนนี้เท่านั้น สามารถปรับได้ตามต้องการ
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_date BETWEEN DATE_FORMAT(CURDATE(), "%Y-%m-01") AND LAST_DAY(CURDATE()) ORDER BY git_date ASC, git_time ASC'
+  );
+ 
   return rows;
 };
 

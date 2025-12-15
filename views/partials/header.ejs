@@ -34,6 +34,8 @@
               <!-- <li class="nav-item"><a class="nav-link" href="/rq2">รายงาน RQ2</a></li> -->
             <!-- ตรวจสอบ login -->
               <% if (user) { %>
+                <!-- เพิ่มกิจกรรม -->
+              <li class="nav-item"><a class="nav-link" href="/gitgum/create"><i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>ปฏิทินงาน</a></li>
               <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>แดชบอร์ด</a></li>
               <li class="nav-item"><a class="nav-link" href="/auth/logout"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>ออกจากระบบ</a></li>
             <% } else { %>

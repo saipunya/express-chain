@@ -10,13 +10,22 @@ async function sendMessage(message) {
     console.error('❌ TELEGRAM config missing: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
     return;
   }
+
+  const MAX_LENGTH = 4096;
+  const parts = [];
+  for (let i = 0; i < message.length; i += MAX_LENGTH) {
+    parts.push(message.slice(i, i + MAX_LENGTH));
+  }
+
   try {
-    await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-      chat_id: CHAT_ID,
-      text: message,
-      parse_mode: 'HTML'
-    });
-    console.log('✅ ส่งข้อความ Telegram เรียบร้อย');
+    for (const part of parts) {
+      await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+        chat_id: CHAT_ID,
+        text: part,
+        parse_mode: 'HTML',
+      });
+    }
+    console.log('✅ ส่งข้อความ Telegram (แบบหลายตอน) เรียบร้อย');
   } catch (error) {
     console.error('❌ ส่งข้อความ Telegram ไม่สำเร็จ:', error.message);
   }

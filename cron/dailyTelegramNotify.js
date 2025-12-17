@@ -8,7 +8,7 @@ const token = process.env.LINE_NOTIFY_TOKEN;
 console.log(`⏰ ตั้งเวลาแจ้งเตือน Activity ทุกวัน 04:30 น. (timezone: ${TZ})`);
 
 const job = cron.schedule(
-  '30 7 * * *',
+  '30 4 * * *',
   async () => {
     const start = new Date();
     console.log(`🚀 [Cron] เริ่มส่งแจ้งเตือน Activity: ${start.toISOString()}`);

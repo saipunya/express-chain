@@ -917,8 +917,11 @@ function displayGroupName(code){
         <div class="card-gradient-bar"></div>
         <div class="card-body">
           <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
+          <% const now = new Date(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear(); %>
           <ul class="list-group list-group-flush">
-            <% activity.forEach(acti => { %>
+            <% activity
+              .filter(acti => { const d = new Date(acti.date_act); return d.getMonth() === currentMonth && d.getFullYear() === currentYear; })
+              .forEach(acti => { %>
               <li class="list-group-item">
                 <i class="bi bi-calendar-event me-2 text-success"></i>
                 <% const today = new Date(); %>

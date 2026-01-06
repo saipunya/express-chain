@@ -1096,6 +1096,21 @@ function displayGroupName(code){
         <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
       </div>
       <div class="card-body">
+        <% 
+          // Helper: return true when date is within last N days (defaults to 3)
+          function isRecentDate(dstr, days=3){
+            if(!dstr) return false;
+            if(typeof dstr === 'string'){
+              if(dstr === '0000-00-00') return false;
+              if(/^1899-11-30/.test(dstr)) return false;
+            }
+            const d = new Date(dstr);
+            if(isNaN(d.getTime())) return false;
+            const now = Date.now();
+            const diff = now - d.getTime();
+            return diff >= 0 && diff <= (days * 24 * 60 * 60 * 1000);
+          }
+        %>
         <div class="table-responsive">
           <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
@@ -1107,14 +1122,23 @@ function displayGroupName(code){
               </tr>
             </thead>
             <tbody>
-              <% (ruleFiles || []).forEach(rule => { %>
+              <% (ruleFiles || []).forEach(rule => { 
+                   // try common date fields if present
+                   const dateField = rule.rule_savedate || rule.savedate || rule.created_at || rule.rule_date;
+                   const isNew = isRecentDate(dateField, 3);
+              %>
                 <tr>
-                  <td><%= rule.rule_name %></td>
+                  <td>
+                    <%= rule.rule_name %>
+                    <% if(isNew) { %>
+                      <span class="badge bg-danger ms-2">new</span>
+                    <% } %>
+                  </td>
                   <td>
                     <% if(rule.rule_type === 'ER') { %>
                       แก้ไขเพิ่มเติม <%= rule.er_no %>
                     <% } else { %>
-                     ข้อบังคับหลัก
+                      ข้อบังคับหลัก
                     <% } %>
                   </td>
                   <td><%= rule.rule_year %></td>

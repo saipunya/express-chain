@@ -1856,7 +1856,18 @@ function displayGroupName(code){
       let activities = [];
       try { const raw = tDataEl ? tDataEl.getAttribute('data-activities') : '[]'; activities = raw ? JSON.parse(raw) : []; } catch { activities = []; }
       const events = (activities || []).map((a, idx) => ({ id: String(idx+1), title: a.activity || '-', start: a.date_act, allDay: true, extendedProps: { raw: a } }));
-      const calendar = new FullCalendar.Calendar(calEl, { initialView:'dayGridMonth', locale:'th', height:'auto', headerToolbar:{ left:'prev,next today', center:'title', right:'' }, events, eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; document.getElementById('acParticipants').textContent = raw.co_person || '-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
+      const calendar = new FullCalendar.Calendar(calEl, { 
+        initialView:'dayGridMonth',
+        initialDate: new Date(), // แสดงเดือนปัจจุบัน
+        locale:'th',
+        height:'auto',
+        headerToolbar:{ left:'', center:'title', right:'' }, // ตัดปุ่ม prev/next/today
+        navLinks: false,
+        editable: false,
+        fixedWeekCount: false,
+        showNonCurrentDates: false, // ไม่โชว์วันที่ของเดือนอื่นจาง ๆ
+        events,
+        eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; document.getElementById('acParticipants').textContent = raw.co_person || '-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
       calendar.render();
 
       // List modal open button (unchanged)

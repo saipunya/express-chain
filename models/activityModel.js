@@ -1,11 +1,11 @@
 const db = require('../config/db');
 
 exports.getAllActivities = async () => {
+  // เดิมกรองเฉพาะกิจกรรมของเดือน/ปี ปัจจุบัน ทำให้หน้า /activities ว่างเมื่อไม่มีข้อมูลเดือนนี้
+  // เปลี่ยนเป็นดึงทุกกิจกรรม เรียงจากวันที่ล่าสุดลงมา
   const [rows] = await db.query(
     `SELECT * FROM pt_activity
-     WHERE MONTH(date_act) = MONTH(CURDATE())
-       AND YEAR(date_act) = YEAR(CURDATE())
-     ORDER BY date_act ASC`
+     ORDER BY date_act DESC, act_time DESC`
   );
   return rows;
 };

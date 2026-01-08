@@ -27,7 +27,7 @@
 
 <style>
   /* Layout Enhancements */
-  .page-title-icon { font-size:2rem; line-height:1; background:linear-gradient(135deg,#74ebd5,#ACB6E5); -webkit-background-clip:text; color:transparent; }
+  .page-title-icon { font-size:2rem; line-height:1; background:linear-gradient(135deg,#74ebd5,#ACB6E5); -webkit-background-clip:text; background-clip:text; color:transparent; }
   .chamra-wrapper { animation:fadeIn .4s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none;} }
 
@@ -180,14 +180,14 @@
             <% } %>
             <div class="mt-2"><%- latestBadgeHtml %></div>
             <div class="progress step-progress mt-2" <%= progressAttr %> title="Progress <%= percent %>%">
-              <div class="progress-bar" role="progressbar" style="width:<%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar" role="progressbar" style="width: <%= percent %> %" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
             <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
             <a href="/chamra/detail/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm mt-2">รายละเอียดขั้นตอน</a>
            
           </td>
           <td><span class="small"><%= c.de_person %></span></td>
-          <% if(user && user.mClass === 'admin'){  %>
+          <% if(user && user.mClass === 'kjs'){  %>
           <td>
             <div class="d-flex gap-1 flex-wrap">
               <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️</a>

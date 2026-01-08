@@ -141,9 +141,7 @@
           <% } %>
           <th>ชื่อ</th>
           <th>ผู้ชำระบัญชี</th>
-          <% if(user && user.mClass === 'kjs'){  %>
-          <th>จัดการ</th>
-          <% } %>
+          
         </tr>
       </thead>
       <tbody>
@@ -187,16 +185,7 @@
            
           </td>
           <td><span class="small"><%= c.de_person %></span></td>
-          <% if(user && user.mClass === 'kjs'){  %>
-          <td>
-            <div class="d-flex gap-1 flex-wrap">
-              <a href="/chamra/edit/<%= c.c_code %>" class="btn btn-primary btn-sm">✏️</a>
-              <form action="/chamra/delete/<%= c.c_code %>" method="POST" onsubmit="return confirm('ยืนยันลบ Chamra?');">
-                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-              </form>
-            </div>
-          </td>
-          <% } %>
+         
         </tr>
         <% }) %>
       </tbody>

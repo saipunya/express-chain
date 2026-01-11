@@ -58,10 +58,15 @@
           <td><%= c.end_date %></td>
           <td><%= c.c_status %></td>
           <td><%= c.c_group %></td>
-          <td>
-            <a href="/activeCoop/edit/<%= c.c_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
-            <a href="/activeCoop/delete/<%= c.c_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ลบข้อมูลนี้?')">ลบ</a>
-          </td>
+
+            <td>
+            <% if (user && user.role === 'admin') { %>
+              <a href="/activeCoop/edit/<%= c.c_id %>" class="btn btn-warning btn-sm">แก้ไข</a>
+              <a href="/activeCoop/delete/<%= c.c_id %>" class="btn btn-danger btn-sm" onclick="return confirm('ลบข้อมูลนี้?')">ลบ</a>
+            <% } else { %>
+              <span class="text-muted">-</span>
+            <% } %>
+            </td>
         </tr>
       <% }) %>
     <% } else { %>

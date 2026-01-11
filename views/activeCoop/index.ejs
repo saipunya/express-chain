@@ -44,7 +44,11 @@
       <th>วันสิ้นสุด</th>
       <th>สถานะ</th>
       <th>กลุ่ม</th>
-      <th>จัดการ</th>
+      <%
+
+  if (user && user.role === 'admin') { %>
+          <th>จัดการ</th>
+      <% } %>
     </tr>
   </thead>
   <tbody>

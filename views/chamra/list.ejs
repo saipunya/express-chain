@@ -104,7 +104,7 @@
       <button id="exportChamraBtn" class="btn btn-outline-primary btn-sm">⬇️ Export</button>
     </div>
   </div>
-   <div class="d-flex align-items-center gap-2">
+   <div class="gap-2 mb-4">
       <div
         class="table-responsive"
       >
@@ -125,6 +125,10 @@
             <tr class="">
               <td scope="row">2</td>
               <td>สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส จำกัด</td>
+            </tr>
+             <tr class="">
+              <td scope="row">3</td>
+              <td>กลุ่มเกษตรกรทำไร่บ้านชวน</td>
             </tr>
           </tbody>
         </table>
@@ -206,7 +210,7 @@
             <% } %>
             <div class="mt-2"><%- latestBadgeHtml %></div>
             <div class="progress step-progress mt-2" <%= progressAttr %> title="Progress <%= percent %>%">
-              <div class="progress-bar" role="progressbar" style="width: <%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar" role="progressbar" data-percent="<%= percent %>" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
             <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
             <a href="/chamra/detail/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm mt-2">รายละเอียดขั้นตอน</a>
@@ -263,6 +267,10 @@
       if (input) input.value = '';
       history.replaceState(null, '', location.pathname);
       applyFilter();
+    });
+    document.querySelectorAll('.progress-bar[data-percent]').forEach(el => {
+      const v = parseFloat(el.dataset.percent);
+      if (!isNaN(v)) el.style.width = v + '%';
     });
   });
 

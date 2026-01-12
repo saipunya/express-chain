@@ -94,7 +94,17 @@
         <div class="small-muted">ภาพรวมสถานะและความคืบหน้าการชำระบัญชี</div>
       </div>
     </div>
-    <div class="d-flex align-items-center gap-2">
+   
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+      <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+        <a href="/chamra/add" class="btn btn-gradient btn-sm shadow-sm">➕ เพิ่ม Chamra</a>
+        <a href="/chamra/poblem" class="btn btn-soft btn-sm">📋 ปัญหา</a>
+        <a href="/chamra/process" class="btn btn-soft btn-sm">📊 กระบวนการ</a>
+      <% } %>
+      <button id="exportChamraBtn" class="btn btn-outline-primary btn-sm">⬇️ Export</button>
+    </div>
+  </div>
+   <div class="d-flex align-items-center gap-2">
       <div
         class="table-responsive"
       >
@@ -121,15 +131,6 @@
       </div>
       
     </div>
-    <div class="ms-auto d-flex gap-2 flex-wrap">
-      <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
-        <a href="/chamra/add" class="btn btn-gradient btn-sm shadow-sm">➕ เพิ่ม Chamra</a>
-        <a href="/chamra/poblem" class="btn btn-soft btn-sm">📋 ปัญหา</a>
-        <a href="/chamra/process" class="btn btn-soft btn-sm">📊 กระบวนการ</a>
-      <% } %>
-      <button id="exportChamraBtn" class="btn btn-outline-primary btn-sm">⬇️ Export</button>
-    </div>
-  </div>
 
   <!-- Search Section -->
   <div class="search-card mb-4">

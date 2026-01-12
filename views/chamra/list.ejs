@@ -94,6 +94,33 @@
         <div class="small-muted">ภาพรวมสถานะและความคืบหน้าการชำระบัญชี</div>
       </div>
     </div>
+    <div class="d-flex align-items-center gap-2">
+      <div
+        class="table-responsive"
+      >
+        <table
+          class="table table-primary"
+        >
+          <thead>
+            <tr>
+              <th scope="col">ลำดับ</th>
+              <th scope="col">สถาบัน</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="">
+              <td scope="row">1</td>
+              <td>สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ จำกัด</td>
+            </tr>
+            <tr class="">
+              <td scope="row">2</td>
+              <td>สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส จำกัด</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+    </div>
     <div class="ms-auto d-flex gap-2 flex-wrap">
       <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
         <a href="/chamra/add" class="btn btn-gradient btn-sm shadow-sm">➕ เพิ่ม Chamra</a>
@@ -178,7 +205,7 @@
             <% } %>
             <div class="mt-2"><%- latestBadgeHtml %></div>
             <div class="progress step-progress mt-2" <%= progressAttr %> title="Progress <%= percent %>%">
-              <div class="progress-bar" role="progressbar" style="width: <%= percent %> %" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+              <div class="progress-bar" role="progressbar" style="width: <%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
             <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
             <a href="/chamra/detail/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm mt-2">รายละเอียดขั้นตอน</a>

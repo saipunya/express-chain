@@ -93,7 +93,6 @@
                     <% if(user && user.mClass=='admin'){ %>
                     <th style="width:10%" class="text-center">ลบ</th>
                     <% } %>
-                    <th style="width:<%= user && user.mClass=='admin' ? '10%' : '20%' %>" class="text-end pe-3">&nbsp;</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -115,7 +114,6 @@
                       </button>
                     </td>
                     <% } %>
-                    <td class="text-end pe-3 small text-muted"><%= (file.c_name||'') %></td>
                   </tr>
                   <% }) %>
                 </tbody>

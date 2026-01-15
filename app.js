@@ -91,6 +91,7 @@ const gitgumTest = require('./routes/gitgumTest'); // ทดสอบดึง�
 const linePush = require('./routes/linePush'); // ส่ง LINE โดยตรง
 const memberRoutes = require('./routes/memberRoutes'); // route สมาชิก
 const planMainRoutes = require('./routes/planMainRoutes'); // add this near other route requires
+const planKpiRoutes = require('./routes/planKpiRoutes'); // ตัวชี้วัดโครงการ
 const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
 const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
 
@@ -102,6 +103,7 @@ app.use(gitgumTest); // ใช้งานเส้นทางทดสอบ g
 app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
 app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
+app.use('/planKpi', planKpiRoutes); // เส้นทางจัดการตัวชี้วัดโครงการ
 app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
 app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rabiab (ดาวน์โหลดไฟล์ระเบียบ)
 app.use('/chamra', chamraExportRoute);

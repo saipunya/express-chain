@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ตัวชี้วัดโครงการ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h4 mb-0">ตัวชี้วัดโครงการ</h1>
+      <a href="/planKpi/create<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-primary">เพิ่มตัวชี้วัด</a>
+    </div>
+
+    <% if (pro_code) { %>
+      <p class="text-muted">แสดงเฉพาะโครงการรหัส: <strong><%= pro_code %></strong></p>
+    <% } %>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>ลำดับ</th>
+            <th>ชื่อตัวชี้วัด</th>
+            <th>ค่าเป้าหมาย</th>
+            <th>ผลการดำเนินงาน</th>
+            <th>หน่วย</th>
+            <th>รหัสโครงการ</th>
+            <th>บันทึกโดย</th>
+            <th>วันที่</th>
+            <th>การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% kpis.forEach(k => { %>
+            <tr>
+              <td><%= k.kp_id %></td>
+              <td><%= k.kp_number %></td>
+              <td><%= k.kp_subject %></td>
+              <td><%= k.kp_plan %></td>
+              <td><%= k.kp_action %></td>
+              <td><%= k.kp_unit %></td>
+              <td><%= k.kp_procode %></td>
+              <td><%= k.kp_saveby %></td>
+              <td><%= k.kp_savedate.toISOString().slice(0,10) %></td>
+              <td>
+                <a href="/planKpi/<%= k.kp_id %>/edit" class="btn btn-sm btn-warning">แก้ไข</a>
+                <form action="/planKpi/<%= k.kp_id %>/delete" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบตัวชี้วัดนี้?')">ลบ</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

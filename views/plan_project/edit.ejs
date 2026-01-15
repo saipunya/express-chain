@@ -35,6 +35,14 @@
         <input type="text" name="pro_respon" class="form-control" value="<%= project.pro_respon %>">
       </div>
       <div class="col-md-6">
+        <label class="form-label">สถานะโครงการ</label>
+        <select name="pro_status" class="form-select">
+          <option value="0" <%= project.pro_status === 0 ? 'selected' : '' %>>ยังไม่ดำเนินการ</option>
+          <option value="1" <%= project.pro_status === 1 ? 'selected' : '' %>>อยู่ระหว่างดำเนินการ</option>
+          <option value="2" <%= project.pro_status === 2 ? 'selected' : '' %>>ดำเนินการแล้ว</option>
+        </select>
+      </div>
+      <div class="col-md-6">
         <label class="form-label">แผนงานหลัก</label>
         <select name="pro_macode" class="form-select" required>
           <option value="">-- เลือกแผนงานหลัก --</option>

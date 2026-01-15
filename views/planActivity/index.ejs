@@ -9,7 +9,15 @@
       <td><%= a.ac_id %></td>
       <td><%= a.ac_number %></td>
       <td><%= a.ac_subject %></td>
-      <td><%= a.ac_status %></td>
+      <td>
+        <% if (a.ac_status === 2) { %>
+          ดำเนินการแล้ว
+        <% } else if (a.ac_status === 1) { %>
+          อยู่ระหว่างดำเนินการ
+        <% } else { %>
+          ยังไม่ดำเนินการ
+        <% } %>
+      </td>
       <td><%= a.ac_procode %></td>
       <td>
         <a href="/planActivity/<%= a.ac_id %>">View</a>

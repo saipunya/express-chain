@@ -2,7 +2,13 @@
 <form action="/planActivity/store" method="post">
   <label>Number: <input name="ac_number" type="number" required></label><br>
   <label>Subject: <input name="ac_subject" required></label><br>
-  <label>Status: <input name="ac_status" type="number" required></label><br>
+  <label>Status:
+    <select name="ac_status" required>
+      <option value="0">ยังไม่ดำเนินการ</option>
+      <option value="1">อยู่ระหว่างดำเนินการ</option>
+      <option value="2">ดำเนินการแล้ว</option>
+    </select>
+  </label><br>
   <label>Project Code:
     <select name="ac_procode" required>
       <% projects.forEach(p => { %>

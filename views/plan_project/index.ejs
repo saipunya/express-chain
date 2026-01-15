@@ -23,6 +23,7 @@
             <th>งบประมาณ</th>
             <th>กลุ่ม</th>
             <th>ผู้รับผิดชอบ</th>
+            <th>สถานะโครงการ</th>
             <th>แผนงานหลัก</th>
             <th>บันทึกโดย</th>
             <th>วันที่</th>
@@ -39,6 +40,15 @@
               <td><%= p.pro_budget %></td>
               <td><%= p.pro_group %></td>
               <td><%= p.pro_respon %></td>
+              <td>
+                <% if (p.pro_status === 2) { %>
+                  ดำเนินการแล้ว
+                <% } else if (p.pro_status === 1) { %>
+                  อยู่ระหว่างดำเนินการ
+                <% } else { %>
+                  ยังไม่ดำเนินการ
+                <% } %>
+              </td>
               <td><%= p.pro_macode %></td>
               <td><%= p.pro_saveby %></td>
               <td><%= thaiDate(p.pro_savedate) %></td>

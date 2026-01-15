@@ -2,7 +2,13 @@
 <form action="/planActivity/<%= activity.ac_id %>/update" method="post">
   <label>Number: <input name="ac_number" type="number" value="<%= activity.ac_number %>" required></label><br>
   <label>Subject: <input name="ac_subject" value="<%= activity.ac_subject %>" required></label><br>
-  <label>Status: <input name="ac_status" type="number" value="<%= activity.ac_status %>" required></label><br>
+  <label>Status:
+    <select name="ac_status" required>
+      <option value="0" <%= activity.ac_status === 0 ? 'selected' : '' %>>ยังไม่ดำเนินการ</option>
+      <option value="1" <%= activity.ac_status === 1 ? 'selected' : '' %>>อยู่ระหว่างดำเนินการ</option>
+      <option value="2" <%= activity.ac_status === 2 ? 'selected' : '' %>>ดำเนินการแล้ว</option>
+    </select>
+  </label><br>
   <label>Project Code:
     <select name="ac_procode" required>
       <% projects.forEach(p => { %>

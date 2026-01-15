@@ -3,7 +3,15 @@
   <li>ID: <%= activity.ac_id %></li>
   <li>Number: <%= activity.ac_number %></li>
   <li>Subject: <%= activity.ac_subject %></li>
-  <li>Status: <%= activity.ac_status %></li>
+  <li>Status:
+    <% if (activity.ac_status === 2) { %>
+      ดำเนินการแล้ว
+    <% } else if (activity.ac_status === 1) { %>
+      อยู่ระหว่างดำเนินการ
+    <% } else { %>
+      ยังไม่ดำเนินการ
+    <% } %>
+  </li>
   <li>Project Code: <%= activity.ac_procode %></li>
   <li>Save By: <%= activity.ac_saveby %></li>
   <li>Save Date: <%= activity.ac_savedate.toISOString().slice(0,10) %></li>

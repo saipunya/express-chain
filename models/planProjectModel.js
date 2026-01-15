@@ -13,13 +13,13 @@ exports.getById = async (id) => {
 exports.create = async (data) => {
   const {
     pro_code, pro_subject, pro_target, pro_budget, pro_group,
-    pro_respon, pro_saveby, pro_savedate, pro_macode
+    pro_respon, pro_saveby, pro_savedate, pro_macode, pro_status
   } = data;
   const [result] = await db.query(
     `INSERT INTO plan_project
-      (pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode]
+      (pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode, pro_status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode, pro_status]
   );
   return result.insertId;
 };
@@ -27,14 +27,14 @@ exports.create = async (data) => {
 exports.update = async (id, data) => {
   const {
     pro_code, pro_subject, pro_target, pro_budget, pro_group,
-    pro_respon, pro_saveby, pro_savedate, pro_macode
+    pro_respon, pro_saveby, pro_savedate, pro_macode, pro_status
   } = data;
   const [result] = await db.query(
     `UPDATE plan_project SET
       pro_code = ?, pro_subject = ?, pro_target = ?, pro_budget = ?, pro_group = ?,
-      pro_respon = ?, pro_saveby = ?, pro_savedate = ?, pro_macode = ?
+      pro_respon = ?, pro_saveby = ?, pro_savedate = ?, pro_macode = ?, pro_status = ?
      WHERE pro_id = ?`,
-    [pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode, id]
+    [pro_code, pro_subject, pro_target, pro_budget, pro_group, pro_respon, pro_saveby, pro_savedate, pro_macode, pro_status, id]
   );
   return result;
 };

@@ -24,7 +24,8 @@ exports.create = async (req, res) => {
       pro_respon: req.body.pro_respon || '',
       pro_saveby: req.session?.user?.username || req.body.pro_saveby || 'system',
       pro_savedate: req.body.pro_savedate || new Date().toISOString().slice(0,10),
-      pro_macode: req.body.pro_macode || ''
+      pro_macode: req.body.pro_macode || '',
+      pro_status: parseInt(req.body.pro_status ?? '0', 10)
     };
     await projectModel.create(payload);
     res.redirect('/plan_project');
@@ -50,7 +51,8 @@ exports.update = async (req, res) => {
       pro_respon: req.body.pro_respon || '',
       pro_saveby: req.session?.user?.username || req.body.pro_saveby || 'system',
       pro_savedate: req.body.pro_savedate || new Date().toISOString().slice(0,10),
-      pro_macode: req.body.pro_macode || ''
+      pro_macode: req.body.pro_macode || '',
+      pro_status: parseInt(req.body.pro_status ?? String(project.pro_status ?? 0), 10)
     };
     await projectModel.update(req.params.id, payload);
     res.redirect('/plan_project');

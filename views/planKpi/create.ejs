@@ -10,6 +10,15 @@
   <div class="container py-4">
     <h1 class="h4 mb-4">เพิ่มตัวชี้วัดโครงการ</h1>
     <form action="/planKpi/store" method="post" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">รหัสโครงการ</label>
+        <select name="kp_procode" class="form-select" required>
+          <option value="">-- เลือกโครงการ --</option>
+          <% projects.forEach(p => { %>
+            <option value="<%= p.pro_code %>" <%= pro_code === p.pro_code ? 'selected' : '' %>><%= p.pro_code %> - <%= p.pro_subject %></option>
+          <% }) %>
+        </select>
+      </div>
       <div class="col-md-3">
         <label class="form-label">ลำดับ</label>
         <input type="number" name="kp_number" class="form-control" required>
@@ -29,15 +38,6 @@
       <div class="col-md-4">
         <label class="form-label">หน่วย</label>
         <input type="text" name="kp_unit" class="form-control" placeholder="เช่น คน, %, ครั้ง" required>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">รหัสโครงการ</label>
-        <select name="kp_procode" class="form-select" required>
-          <option value="">-- เลือกโครงการ --</option>
-          <% projects.forEach(p => { %>
-            <option value="<%= p.pro_code %>" <%= pro_code === p.pro_code ? 'selected' : '' %>><%= p.pro_code %> - <%= p.pro_subject %></option>
-          <% }) %>
-        </select>
       </div>
       <div class="col-md-6">
         <label class="form-label">วันที่บันทึก</label>

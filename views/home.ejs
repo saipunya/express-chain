@@ -917,18 +917,25 @@ function displayGroupName(code){
         <div class="card-gradient-bar"></div>
         <div class="card-body">
           <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
-          <% const now = new Date(); const currentMonth = now.getMonth(); const currentYear = now.getFullYear(); %>
+          <% 
+            const now = new Date(); 
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          %>
           <ul class="list-group list-group-flush">
             <% activity
-              .filter(acti => { const d = new Date(acti.date_act); return d.getMonth() === currentMonth && d.getFullYear() === currentYear; })
+              .filter(acti => { 
+                const d = new Date(acti.date_act); 
+                const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                return actDateOnly >= today && actDateOnly <= lastDayOfMonth; 
+              })
               .forEach(acti => { %>
               <li class="list-group-item">
                 <i class="bi bi-calendar-event me-2 text-success"></i>
-                <% const today = new Date(); %>
                 <% const actDate = new Date(acti.date_act); %>
                 <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> - 
                 <%= acti.activity %>
-                <% if (actDate.toDateString() === today.toDateString()) { %>
+                <% if (actDate.toDateString() === now.toDateString()) { %>
                   <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
                 <% } %>
               </li>

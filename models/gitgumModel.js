@@ -104,3 +104,13 @@ exports.getLast = async (limit = 5) => {
   );
   return rows;
 };
+
+// ดึงข้อมูลตั้งแต่วันนี้ไปจนถึงวันสุดท้ายที่มีข้อมูล (สำหรับหน้าปฏิทินมือถือ)
+exports.findFromTodayToEnd = async () => {
+  const [rows] = await db.query(
+    `SELECT * FROM tbl_gitgum 
+     WHERE git_date >= CURDATE()
+     ORDER BY git_date ASC, git_time ASC`
+  );
+  return rows;
+};

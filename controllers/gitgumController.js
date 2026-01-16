@@ -131,3 +131,70 @@ exports.calendarView = async (req, res) => {
     res.status(500).send('เกิดข้อผิดพลาดในการโหลดปฏิทิน');
   }
 };
+
+// หน้าปฏิทินมือถือ (standalone - ไม่มี header/footer)
+exports.mobileCalendarView = async (req, res) => {
+  try {
+    const rows = await gitgumModel.findFromTodayToEnd();
+
+    // ฟังก์ชันแปลงเวลาให้เป็น HH:mm
+    const toHHmm = (val) => {
+      if (!val) return null;
+      const s = String(val).trim();
+      if (/^\d{4}$/.test(s)) {
+        return `${s.slice(0,2)}:${s.slice(2,4)}`;
+      }
+      const m = s.match(/^(\d{1,2})[:.](\d{2})/);
+      if (m) {
+        const hh = m[1].padStart(2, '0');
+        const mm = m[2];
+        if (Number(hh) <= 23 && Number(mm) <= 59) return `${hh}:${mm}`;
+      }
+      return null;
+    };
+
+    // แปลง date ให้เป็นสตริง YYYY-MM-DD
+    const toYMD = (d) => {
+      if (!d) return '';
+      if (typeof d === 'string') return d.slice(0, 10);
+      if (d instanceof Date) {
+        try {
+          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(d);
+        } catch (_) {
+          return d.toISOString().slice(0, 10);
+        }
+      }
+      return String(d).slice(0, 10);
+    };
+
+    // จัดกลุ่มข้อมูลตามเดือน
+    const groupedByMonth = {};
+    rows.forEach(r => {
+      const dateStr = toYMD(r.git_date);
+      if (!dateStr) return;
+      const monthKey = dateStr.slice(0, 7); // YYYY-MM
+      if (!groupedByMonth[monthKey]) {
+        groupedByMonth[monthKey] = [];
+      }
+      groupedByMonth[monthKey].push({
+        id: r.git_id,
+        date: dateStr,
+        time: toHHmm(r.git_time),
+        activity: r.git_act,
+        place: r.git_place,
+        respon: r.git_respon,
+        goto: r.git_goto,
+        group: r.git_group,
+        maihed: r.git_maihed
+      });
+    });
+
+    res.render('gitgum_mobile_calendar', {
+      title: 'ปฏิทินกิจกรรม',
+      groupedByMonth
+    });
+  } catch (err) {
+    console.error('Error rendering mobile calendar:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดปฏิทิน');
+  }
+};

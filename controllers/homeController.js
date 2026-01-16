@@ -6,7 +6,7 @@ const db = require('../config/db');
 
 const allfiles = require('../models/homeModel');
 const financeModel = require('../models/financeModel');
-   const meetingRoomModel = require('../models/meetingRoomModel');
+const meetingRoomModel = require('../models/meetingRoomModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
 const UseCar = require('../models/usecarModel');
@@ -73,17 +73,6 @@ const homeController = {
         place: r.git_place,
         co_person: r.git_respon
       }));
-
-      // Meeting room: today's bookings (Bangkok)
-      let meetingsToday = [];
-      let meetingroomTodayDate = null;
-      try {
-        const result = await meetingRoomModel.getTodayBangkok();
-        meetingroomTodayDate = result.date;
-        meetingsToday = result.rows || [];
-      } catch (e) {
-        console.error('[homeController] meetingroom today error:', e);
-      }
       const lastArticles = await articleModel.getLast(4);
       const homeProcesses = await Chamra.getRecentProcesses(8);
       // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)
@@ -102,13 +91,23 @@ const homeController = {
       const strengthYear = latestStrengthYear || '-';
       // NEW: fetch small list of coops (mix of coop and farmer) for homepage showcase
       const { rows: homeCoops } = await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 });
+
+      // Meeting room: today's bookings (Bangkok)
+      let meetingsToday = [];
+      let meetingroomTodayDate = null;
+      try {
+        const result = await meetingRoomModel.getTodayBangkok();
+        meetingroomTodayDate = result.date;
+        meetingsToday = result.rows || [];
+      } catch (e) {
+        console.error('[homeController] meetingroom error:', e);
+      }
+
       res.render('home', { 
         finances, 
         ruleFiles,
         rabiabFiles,
         businessFiles,
-           meetingsToday,
-           meetingroomTodayDate,
         usecars,
         lastProjects,
         lastRq2,
@@ -129,6 +128,8 @@ const homeController = {
         strengthData,     // NEW mapping { coop_group: { grade: count } }
         strengthYear,     // NEW selected year for display
         homeCoops,        // NEW variable for view
+        meetingsToday,
+        meetingroomTodayDate,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

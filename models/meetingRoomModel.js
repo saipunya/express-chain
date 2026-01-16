@@ -55,6 +55,26 @@ exports.getTodayBangkok = async () => {
   return { date: bangkokDate, rows };
 };
 
+// Get upcoming bookings (after today)
+exports.getUpcoming = async (limit = 5) => {
+  const roomCol = await ensureRoomColumn();
+  const options = { timeZone: 'Asia/Bangkok' };
+  const formatter = new Intl.DateTimeFormat('en-CA', options); // YYYY-MM-DD
+  const today = formatter.format(new Date());
+  
+  const [rows] = await db.query(
+    `SELECT mee_id, mee_date, mee_time, mee_subject,
+            ${roomCol} AS mee_room,
+            mee_respon, mee_saveby, mee_savedate
+     FROM tbl_meetingroom
+     WHERE mee_date > ?
+     ORDER BY mee_date ASC, mee_time ASC
+     LIMIT ?`,
+    [today, limit]
+  );
+  return rows;
+};
+
 // Get a booking by id (include past)
 exports.getById = async (id) => {
   const roomCol = await ensureRoomColumn();

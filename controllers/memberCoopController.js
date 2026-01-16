@@ -35,7 +35,7 @@ exports.home = async (req, res) => {
 		meetingroomTodayDate = result.date;
 		meetingsToday = result.rows || [];
 	} catch (e) {
-		console.error('[memberCoopController.home] meetingroom today error:', e);
+		console.error('[memberCoopController.home] meetingroom error:', e);
 	}
 
 	res.render('home', { summaryByYear, top, meetingsToday, meetingroomTodayDate });

@@ -1335,7 +1335,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
   </div>
 </div>
 
-<!-- ================= Meeting Room Today ================= -->
+<!-- ================= Meeting Room Today With Link ================= -->
 <div class="container mb-4 reveal in">
   <div class="meeting-today-card">
     <div class="meeting-today-head">
@@ -1343,8 +1343,14 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
         <span class="badge">วันนี้</span>
         การใช้ห้องประชุม
       </h3>
-      <div class="text-muted small" style="white-space: nowrap;">
-        <%= _meetingroomTodayDate %>
+      <div class="d-flex align-items-center gap-3">
+        <div class="text-muted small d-none d-sm-block">
+          <%= _meetingroomTodayDate %>
+        </div>
+        <a href="/meetingroom" class="btn btn-sm btn-outline-primary rounded-pill d-inline-flex align-items-center gap-1" style="font-weight: 600; font-size: 0.85rem;">
+          <i class="bi bi-calendar-event"></i>
+          ดูทั้งหมด
+        </a>
       </div>
     </div>
     <div class="meeting-today-body">

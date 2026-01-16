@@ -19,9 +19,13 @@ const { setUserLocals, updateOnlineTime } = require('./middlewares/authMiddlewar
 
 // Session setup
 app.use(session({
-  secret: 'pmpilaiwan',
+  secret: process.env.SESSION_SECRET || 'pmpilaiwan',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
 
 // ตั้งค่า View Engine

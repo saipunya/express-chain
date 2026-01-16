@@ -31,6 +31,30 @@ exports.getAll = async () => {
   return rows;
 };
 
+// Get bookings by a specific date (YYYY-MM-DD)
+exports.getByDate = async (dateStr) => {
+  const roomCol = await ensureRoomColumn();
+  const [rows] = await db.query(
+    `SELECT mee_id, mee_date, mee_time, mee_subject,
+            ${roomCol} AS mee_room,
+            mee_respon, mee_saveby, mee_savedate
+     FROM tbl_meetingroom
+     WHERE mee_date = ?
+     ORDER BY mee_time ASC, mee_id ASC`,
+    [dateStr]
+  );
+  return rows;
+};
+
+// Helper: Bangkok today bookings
+exports.getTodayBangkok = async () => {
+  const options = { timeZone: 'Asia/Bangkok' };
+  const formatter = new Intl.DateTimeFormat('en-CA', options); // YYYY-MM-DD
+  const bangkokDate = formatter.format(new Date());
+  const rows = await exports.getByDate(bangkokDate);
+  return { date: bangkokDate, rows };
+};
+
 // Get a booking by id (include past)
 exports.getById = async (id) => {
   const roomCol = await ensureRoomColumn();

@@ -6,6 +6,7 @@ const db = require('../config/db');
 
 const allfiles = require('../models/homeModel');
 const financeModel = require('../models/financeModel');
+   const meetingRoomModel = require('../models/meetingRoomModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
 const UseCar = require('../models/usecarModel');
@@ -72,6 +73,17 @@ const homeController = {
         place: r.git_place,
         co_person: r.git_respon
       }));
+
+      // Meeting room: today's bookings (Bangkok)
+      let meetingsToday = [];
+      let meetingroomTodayDate = null;
+      try {
+        const result = await meetingRoomModel.getTodayBangkok();
+        meetingroomTodayDate = result.date;
+        meetingsToday = result.rows || [];
+      } catch (e) {
+        console.error('[homeController] meetingroom today error:', e);
+      }
       const lastArticles = await articleModel.getLast(4);
       const homeProcesses = await Chamra.getRecentProcesses(8);
       // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)
@@ -95,6 +107,8 @@ const homeController = {
         ruleFiles,
         rabiabFiles,
         businessFiles,
+           meetingsToday,
+           meetingroomTodayDate,
         usecars,
         lastProjects,
         lastRq2,

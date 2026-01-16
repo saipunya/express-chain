@@ -34,13 +34,16 @@ exports.login = async (req, res) => {
     };
 
     // rememberMe support: หากเลือกให้จำไว้ -> อายุคุกกี้ 30 วัน, ไม่เช็ค -> session ชั่วคราว (ปิดเบราว์เซอร์หลุด)
-    if (req.body.rememberMe === 'on' || req.body.rememberMe === 'true' || req.body.rememberMe === true) {
-      // 30 days
-      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 วัน
+    const rememberRaw = req.body && req.body.rememberMe;
+    const rememberMe = rememberRaw === 'on' || rememberRaw === 'true' || rememberRaw === true || rememberRaw === 1 || rememberRaw === '1';
+    if (rememberMe) {
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      req.session.cookie.maxAge = thirtyDays;
+      req.session.cookie.expires = new Date(Date.now() + thirtyDays);
     } else {
       // ทำให้เป็น session cookie (ไม่ตั้ง expires / maxAge)
-      req.session.cookie.expires = false; // browser session only
-      delete req.session.cookie.maxAge;
+      req.session.cookie.expires = false;
+      req.session.cookie.maxAge = null;
     }
 
     // ข้อมูลออนไลน์

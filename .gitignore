@@ -44,3 +44,9 @@ coverage/
 # EJS cache (ถ้าเปิดใช้งานใน prod)
 views_cache/
 
+# environment specific files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env

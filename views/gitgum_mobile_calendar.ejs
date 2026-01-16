@@ -139,6 +139,17 @@
       gap: 4px;
     }
     
+    .event-participants {
+      font-size: 0.85rem;
+      color: #5a6c7d;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px dashed #dee2e6;
+    }
+    
     /* Modal Styles */
     .modal-overlay {
       display: none;
@@ -373,8 +384,11 @@
         <div class="event-list">
           <% events.forEach(event => { 
             const isToday = event.date === todayStr;
+            const eventJson = JSON.stringify(event).replace(/"/g, '&quot;');
           %>
-            <div class="event-item<%= isToday ? ' today' : '' %>" onclick="showEventDetail(<%= JSON.stringify(event).replace(/"/g, '&quot;') %>)">
+            <div class="event-item<%= isToday ? ' today' : '' %>" 
+                 data-event="<%= eventJson %>" 
+                 onclick="showEventDetail(this)">
               <div class="event-date">
                 <span class="date-badge"><%= formatThaiDate(event.date) %><%= isToday ? ' (วันนี้)' : '' %></span>
                 <% if (event.time) { %>
@@ -384,6 +398,9 @@
               <div class="event-title"><%= event.activity || '-' %></div>
               <% if (event.place) { %>
                 <div class="event-place">📍 <%= event.place %></div>
+              <% } %>
+              <% if (event.goto) { %>
+                <div class="event-participants">👥 <%= event.goto %></div>
               <% } %>
             </div>
           <% }); %>
@@ -481,7 +498,16 @@
     }
     
     // Show event detail modal
-    function showEventDetail(event) {
+    function showEventDetail(element) {
+      const eventData = element.getAttribute('data-event');
+      let event;
+      try {
+        event = JSON.parse(eventData.replace(/&quot;/g, '"'));
+      } catch (e) {
+        console.error('Error parsing event data:', e);
+        return;
+      }
+      
       document.getElementById('modalTitle').textContent = event.activity || 'รายละเอียดกิจกรรม';
       document.getElementById('modalDate').textContent = formatFullThaiDate(event.date);
       document.getElementById('modalTime').textContent = event.time ? event.time + ' น.' : '-';

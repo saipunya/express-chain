@@ -1,19 +1,71 @@
-<h1>Plan Activity Detail</h1>
-<ul>
-  <li>ID: <%= activity.ac_id %></li>
-  <li>Number: <%= activity.ac_number %></li>
-  <li>Subject: <%= activity.ac_subject %></li>
-  <li>Status:
-    <% if (activity.ac_status === 2) { %>
-      ดำเนินการแล้ว
-    <% } else if (activity.ac_status === 1) { %>
-      อยู่ระหว่างดำเนินการ
-    <% } else { %>
-      ยังไม่ดำเนินการ
-    <% } %>
-  </li>
-  <li>Project Code: <%= activity.ac_procode %></li>
-  <li>Save By: <%= activity.ac_saveby %></li>
-  <li>Save Date: <%= activity.ac_savedate.toISOString().slice(0,10) %></li>
-</ul>
-<a href="/planActivity">Back</a>
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-card-text me-2"></i>รายละเอียดกิจกรรม</h1>
+      <p class="text-muted small mb-0">ดูรายละเอียดของกิจกรรม</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/planactivity/<%= activity.ac_id %>/edit" class="btn btn-warning btn-lg">
+        <i class="bi bi-pencil-square me-2"></i>แก้ไข
+      </a>
+      <a href="/planactivity" class="btn btn-outline-secondary btn-lg">
+        <i class="bi bi-arrow-left me-2"></i>กลับ
+      </a>
+    </div>
+  </div>
+
+  <% const st = Number(activity.ac_status); %>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="text-muted small">รหัสกิจกรรม</div>
+          <div class="fw-semibold"><%= activity.ac_id %></div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">ลำดับ</div>
+          <div class="fw-semibold"><%= activity.ac_number %></div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">รหัสโครงการ</div>
+          <div><span class="badge bg-info text-dark"><%= activity.ac_procode %></span></div>
+        </div>
+
+        <div class="col-12">
+          <div class="text-muted small">ชื่อกิจกรรม</div>
+          <div class="fw-semibold fs-5"><%= activity.ac_subject %></div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="text-muted small">สถานะ</div>
+          <div>
+            <% if (st === 2) { %>
+              <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>ดำเนินการแล้ว</span>
+            <% } else if (st === 1) { %>
+              <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>อยู่ระหว่างดำเนินการ</span>
+            <% } else { %>
+              <span class="badge bg-secondary"><i class="bi bi-clock me-1"></i>ยังไม่ดำเนินการ</span>
+            <% } %>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">บันทึกโดย</div>
+          <div class="fw-semibold"><%= activity.ac_saveby || '' %></div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">วันที่บันทึก</div>
+          <div class="fw-semibold">
+            <% if (activity.ac_savedate) { %>
+              <%= activity.ac_savedate.toISOString ? activity.ac_savedate.toISOString().slice(0,10) : String(activity.ac_savedate).slice(0,10) %>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

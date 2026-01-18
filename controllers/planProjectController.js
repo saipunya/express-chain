@@ -28,7 +28,7 @@ exports.create = async (req, res) => {
       pro_status: parseInt(req.body.pro_status ?? '0', 10)
     };
     await projectModel.create(payload);
-    res.redirect('/plan_project');
+    res.redirect('/planproject');
   } catch (err) {
     res.status(500).send('Error creating project');
   }
@@ -52,10 +52,10 @@ exports.update = async (req, res) => {
       pro_saveby: req.session?.user?.username || req.body.pro_saveby || 'system',
       pro_savedate: req.body.pro_savedate || new Date().toISOString().slice(0,10),
       pro_macode: req.body.pro_macode || '',
-      pro_status: parseInt(req.body.pro_status ?? String(project.pro_status ?? 0), 10)
+      pro_status: parseInt(req.body.pro_status || '0', 10)
     };
     await projectModel.update(req.params.id, payload);
-    res.redirect('/plan_project');
+    res.redirect('/planproject');
   } catch (err) {
     res.status(500).send('Error updating project');
   }
@@ -64,7 +64,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     await projectModel.delete(req.params.id);
-    res.redirect('/plan_project');
+    res.redirect('/planproject');
   } catch (err) {
     res.status(500).send('Error deleting project');
   }

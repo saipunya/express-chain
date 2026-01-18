@@ -108,6 +108,7 @@ app.use(linePush);   // ใช้งานเส้นทางส่ง LINE
 app.use('/member', memberRoutes); // ใช้งานเส้นทางสมาชิก
 app.use('/plan', planMainRoutes); // add this with other app.use(...) routes
 app.use('/planKpi', planKpiRoutes); // เส้นทางจัดการตัวชี้วัดโครงการ
+app.use('/plan_project', (req, res) => res.redirect('/planproject')); // Redirect old path
 app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
 app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rabiab (ดาวน์โหลดไฟล์ระเบียบ)
 app.use('/chamra', chamraExportRoute);

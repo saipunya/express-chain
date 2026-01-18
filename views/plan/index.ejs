@@ -1,22 +1,23 @@
-<!— list of main plans —>
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %></title>
-  <!-- Bootstrap 5.3 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h1 class="h3 mb-0"><%= title %></h1>
-      <a href="/plan/new" class="btn btn-primary">เพิ่มแผนงานหลัก</a>
+<%- include('partials/header') %>
+
+<div class="py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-1"><i class="bi bi-clipboard-check me-2"></i><%= title %></h1>
+        <p class="text-muted small mb-0">จัดการแผนงาน โครงการ ตัวชี้วัด และกิจกรรมต่างๆ</p>
+      </div>
+      <div class="btn-group" role="group" role="group">
+        <a href="/planmain/new" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>แผนงานหลัก</a>
+        <a href="/planproject/new" class="btn btn-outline-success"><i class="bi bi-folder-plus me-1"></i>โครงการ</a>
+        <a href="/plankpi/create" class="btn btn-outline-success"><i class="bi bi-graph-up me-1"></i>ตัวชี้วัด</a>
+        <a href="/planactivity/select" class="btn btn-outline-success"><i class="bi bi-list-task me-1"></i>กิจกรรม</a>
+      </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-striped table-bordered align-middle">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0">
         <thead class="table-light">
           <tr>
             <th scope="col">#</th>
@@ -37,7 +38,7 @@
               <td><%= thaiDate(p.ma_savedate) %></td>
               <td>
                 <!-- submit POST with hidden _method so method-override turns it into DELETE -->
-                <form action="/plan/api/<%= p.ma_id %>" method="post" class="d-inline">
+                <form action="/planmain/api/<%= p.ma_id %>" method="post" class="d-inline">
                   <input type="hidden" name="_method" value="DELETE">
                   <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบรายการ?')">ลบ</button>
                 </form>
@@ -45,11 +46,13 @@
             </tr>
           <% }) %>
         </tbody>
-      </table>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-light text-muted small text-center py-2">
+        <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= plans.length %> แผนงานหลัก
+      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Bootstrap 5.3 Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<%- include('partials/footer') %>

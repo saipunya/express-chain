@@ -1,22 +1,51 @@
-<h1>Edit Plan Activity</h1>
-<form action="/planActivity/<%= activity.ac_id %>/update" method="post">
-  <label>Number: <input name="ac_number" type="number" value="<%= activity.ac_number %>" required></label><br>
-  <label>Subject: <input name="ac_subject" value="<%= activity.ac_subject %>" required></label><br>
-  <label>Status:
-    <select name="ac_status" required>
-      <option value="0" <%= activity.ac_status === 0 ? 'selected' : '' %>>ยังไม่ดำเนินการ</option>
-      <option value="1" <%= activity.ac_status === 1 ? 'selected' : '' %>>อยู่ระหว่างดำเนินการ</option>
-      <option value="2" <%= activity.ac_status === 2 ? 'selected' : '' %>>ดำเนินการแล้ว</option>
-    </select>
-  </label><br>
-  <label>Project Code:
-    <select name="ac_procode" required>
-      <% projects.forEach(p => { %>
-        <option value="<%= p.pro_code %>" <%= activity.ac_procode === p.pro_code ? 'selected' : '' %>><%= p.pro_code %></option>
-      <% }) %>
-    </select>
-  </label><br>
-  <label>Save By: <input name="ac_saveby" value="<%= activity.ac_saveby %>" required></label><br>
-  <label>Save Date: <input name="ac_savedate" type="date" value="<%= activity.ac_savedate.toISOString().slice(0,10) %>" required></label><br>
-  <button type="submit">Update</button>
-</form>
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="mb-4">
+    <h1 class="h3 mb-1"><i class="bi bi-pencil-square me-2"></i>แก้ไขกิจกรรมโครงการ</h1>
+    <p class="text-muted">แก้ไขข้อมูลกิจกรรม</p>
+  </div>
+  <form action="/planactivity/<%= activity.ac_id %>/update" method="post" class="row g-3" novalidate>
+    <div class="col-md-3">
+      <label class="form-label">ลำดับ</label>
+      <input type="number" name="ac_number" class="form-control" value="<%= activity.ac_number %>" required>
+    </div>
+    <div class="col-md-9">
+      <label class="form-label">ชื่อกิจกรรม</label>
+      <input type="text" name="ac_subject" class="form-control" value="<%= activity.ac_subject %>" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">สถานะ</label>
+      <select name="ac_status" class="form-select" required>
+        <option value="0" <%= activity.ac_status === 0 ? 'selected' : '' %>>ยังไม่ดำเนินการ</option>
+        <option value="1" <%= activity.ac_status === 1 ? 'selected' : '' %>>อยู่ระหว่างดำเนินการ</option>
+        <option value="2" <%= activity.ac_status === 2 ? 'selected' : '' %>>ดำเนินการแล้ว</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">รหัสโครงการ</label>
+      <select name="ac_procode" class="form-select" required>
+        <option value="">-- เลือกโครงการ --</option>
+        <% projects.forEach(p => { %>
+          <option value="<%= p.pro_code %>" <%= activity.ac_procode === p.pro_code ? 'selected' : '' %>><%= p.pro_code %> - <%= p.pro_subject %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">บันทึกโดย</label>
+      <input type="text" name="ac_saveby" class="form-control" value="<%= activity.ac_saveby %>" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">วันที่บันทึก</label>
+      <input type="date" name="ac_savedate" class="form-control" value="<%= activity.ac_savedate.toISOString().slice(0,10) %>" required>
+    </div>
+    <div class="col-12 pt-3">
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง</button>
+        <a href="/planactivity" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

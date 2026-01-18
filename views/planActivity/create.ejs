@@ -1,22 +1,81 @@
-<h1>Create Plan Activity</h1>
-<form action="/planActivity/store" method="post">
-  <label>Number: <input name="ac_number" type="number" required></label><br>
-  <label>Subject: <input name="ac_subject" required></label><br>
-  <label>Status:
-    <select name="ac_status" required>
-      <option value="0">ยังไม่ดำเนินการ</option>
-      <option value="1">อยู่ระหว่างดำเนินการ</option>
-      <option value="2">ดำเนินการแล้ว</option>
-    </select>
-  </label><br>
-  <label>Project Code:
-    <select name="ac_procode" required>
-      <% projects.forEach(p => { %>
-        <option value="<%= p.pro_code %>"><%= p.pro_code %></option>
-      <% }) %>
-    </select>
-  </label><br>
-  <label>Save By: <input name="ac_saveby" required></label><br>
-  <label>Save Date: <input name="ac_savedate" type="date" required></label><br>
-  <button type="submit">Save</button>
-</form>
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="mb-4">
+    <h1 class="h3 mb-1"><i class="bi bi-plus-square me-2"></i>เพิ่มกิจกรรมใหม่</h1>
+    <p class="text-muted">เพิ่มกิจกรรมให้กับโครงการของคุณ</p>
+  </div>
+
+  <% if (pro_code) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle me-2"></i>
+      <strong>โครงการที่เลือก:</strong> <span class="badge bg-info text-dark"><%= pro_code %></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% } %>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <form action="/planactivity/store" method="post" class="row g-3" novalidate id="activityForm">
+        <div class="col-md-3">
+          <label class="form-label"><i class="bi bi-hash me-1"></i>ลำดับ</label>
+          <input type="number" name="ac_number" class="form-control" placeholder="เช่น 1, 2, 3" required>
+          <small class="text-muted">ลำดับที่ของกิจกรรม</small>
+        </div>
+        <div class="col-md-9">
+          <label class="form-label"><i class="bi bi-pencil me-1"></i>ชื่อกิจกรรม</label>
+          <input type="text" name="ac_subject" class="form-control" placeholder="เช่น ประชุมวางแผน, ดำเนินโครงการ" required>
+          <small class="text-muted">รายละเอียดของกิจกรรมนี้</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-circle me-1"></i>สถานะ</label>
+          <select name="ac_status" class="form-select" required>
+            <option value="0">ยังไม่ดำเนินการ</option>
+            <option value="1">อยู่ระหว่างดำเนินการ</option>
+            <option value="2">ดำเนินการแล้ว</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-folder2 me-1"></i>โครงการ</label>
+          <select name="ac_procode" class="form-select" required>
+            <option value="">-- เลือกโครงการ --</option>
+            <% projects.forEach(p => { %>
+              <option value="<%= p.pro_code %>" <%= pro_code === p.pro_code ? 'selected' : '' %>><%= p.pro_code %> - <%= p.pro_subject %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-person me-1"></i>บันทึกโดย</label>
+          <input type="text" name="ac_saveby" class="form-control" value="<%= ac_saveby || '' %>" required>
+          <small class="text-muted">ชื่อผู้บันทึกข้อมูล</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label"><i class="bi bi-calendar me-1"></i>วันที่บันทึก</label>
+          <input type="date" name="ac_savedate" class="form-control" value="<%= new Date().toISOString().slice(0,10) %>" required>
+        </div>
+        <div class="col-12 pt-3 border-top">
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save me-2"></i>บันทึกกิจกรรม</button>
+            <a href="/planactivity/select" class="btn btn-outline-primary btn-lg"><i class="bi bi-plus-circle me-2"></i>เลือกโครงการใหม่</a>
+            <a href="/planactivity" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="card-title mb-3"><i class="bi bi-lightbulb me-2"></i>เคล็ดลับ</h6>
+          <ul class="list-unstyled text-small">
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>กรอกข้อมูลให้ครบถ้วน</li>
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>เลือกโครงการที่ถูกต้อง</li>
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>ระบุสถานะของกิจกรรม</li>
+            <li><i class="bi bi-check text-success me-2"></i>บันทึกข้อมูลส่วนตัว</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,15 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>แก้ไขตัวชี้วัดโครงการ</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-  <div class="container py-4">
-    <h1 class="h4 mb-4">แก้ไขตัวชี้วัดโครงการ</h1>
-    <form action="/planKpi/<%= kpi.kp_id %>/update" method="post" class="row g-3">
+<%- include('../partials/header') %>
+
+<div class="py-4">
+    <div class="mb-4">
+      <h1 class="h3 mb-1"><i class="bi bi-pencil-square me-2"></i>แก้ไขตัวชี้วัดโครงการ</h1>
+      <p class="text-muted">แก้ไขข้อมูลตัวชี้วัด</p>
+    </div>
+    <form action="/plankpi/<%= kpi.kp_id %>/update" method="post" class="row g-3" novalidate>
       <div class="col-md-3">
         <label class="form-label">ลำดับ</label>
         <input type="number" name="kp_number" class="form-control" value="<%= kpi.kp_number %>" required>
@@ -43,12 +39,13 @@
         <label class="form-label">วันที่บันทึก</label>
         <input type="date" name="kp_savedate" class="form-control" value="<%= kpi.kp_savedate.toISOString().slice(0,10) %>" required>
       </div>
-      <div class="col-12 d-flex gap-2">
-        <button type="submit" class="btn btn-success">บันทึก</button>
-        <a href="/planKpi?pro_code=<%= encodeURIComponent(kpi.kp_procode) %>" class="btn btn-secondary">ยกเลิก</a>
+      <div class="col-12 pt-3">
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง</button>
+          <a href="/plankpi?pro_code=<%= encodeURIComponent(kpi.kp_procode) %>" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+        </div>
       </div>
     </form>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+
+<%- include('../partials/footer') %>

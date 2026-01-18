@@ -17,6 +17,30 @@ module.exports = {
     );
     return result.insertId;
   },
+  async createMany(items) {
+    if (!Array.isArray(items) || items.length === 0) return 0;
+
+    const placeholders = items.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+    const values = [];
+    for (const item of items) {
+      values.push(
+        item.ac_number,
+        item.ac_subject,
+        item.ac_status,
+        item.ac_procode,
+        item.ac_saveby,
+        item.ac_savedate
+      );
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO plan_activity (ac_number, ac_subject, ac_status, ac_procode, ac_saveby, ac_savedate)
+       VALUES ${placeholders}`,
+      values
+    );
+
+    return result.affectedRows || 0;
+  },
   async update(id, data) {
     const { ac_number, ac_subject, ac_status, ac_procode, ac_saveby, ac_savedate } = data;
     await db.query(

@@ -38,7 +38,7 @@ exports.store = async (req, res) => {
   await PlanKpi.create(payload);
 
   const redirectCode = payload.kp_procode ? `?pro_code=${encodeURIComponent(payload.kp_procode)}` : '';
-  res.redirect('/planKpi' + redirectCode);
+  res.redirect('/plankpi' + redirectCode);
 };
 
 // Show edit form
@@ -66,7 +66,7 @@ exports.update = async (req, res) => {
   await PlanKpi.update(req.params.id, payload);
 
   const redirectCode = payload.kp_procode ? `?pro_code=${encodeURIComponent(payload.kp_procode)}` : '';
-  res.redirect('/planKpi' + redirectCode);
+  res.redirect('/plankpi' + redirectCode);
 };
 
 // Delete KPI
@@ -74,5 +74,5 @@ exports.destroy = async (req, res) => {
   const existing = await PlanKpi.findByPk(req.params.id);
   await PlanKpi.destroy(req.params.id);
   const redirectCode = existing?.kp_procode ? `?pro_code=${encodeURIComponent(existing.kp_procode)}` : '';
-  res.redirect('/planKpi' + redirectCode);
+  res.redirect('/plankpi' + redirectCode);
 };

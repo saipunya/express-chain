@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
       ma_savedate: req.body.ma_savedate || new Date().toISOString().slice(0,10)
     };
     await planModel.create(payload);
-    res.redirect('/planMain'); // redirect to list page
+    res.redirect('/planmain'); // redirect to list page
   } catch (err) {
     console.error(err);
     res.status(500).send('Error creating plan');
@@ -46,7 +46,7 @@ exports.apiList = async (req, res) => {
 exports.apiDelete = async (req, res) => {
   try {
     await planModel.delete(req.params.id);
-    res.redirect('/planMain'); // redirect to list page
+    res.redirect('/planmain'); // redirect to list page
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

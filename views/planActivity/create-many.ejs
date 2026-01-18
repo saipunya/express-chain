@@ -1,0 +1,217 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="mb-4">
+    <h1 class="h3 mb-1"><i class="bi bi-stack me-2"></i>เพิ่มกิจกรรมหลายรายการ</h1>
+    <p class="text-muted mb-0">เลือกโครงการ แล้วเพิ่มกิจกรรมได้หลายรายการในครั้งเดียว</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-9">
+      <% if (pro_code) { %>
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+          <i class="bi bi-check-circle me-2 fs-5"></i>
+          <div>
+            โครงการที่เลือก: <span class="badge bg-info text-dark"><%= pro_code %></span>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <i class="bi bi-info-circle me-2 fs-5"></i>
+          <div>
+            ยังไม่ได้เลือกโครงการ — กรุณาเลือกโครงการก่อนเริ่มเพิ่มกิจกรรม
+          </div>
+        </div>
+      <% } %>
+
+      <form action="/planactivity/store-many" method="post" id="bulkActivityForm" novalidate>
+        <input type="hidden" name="ac_saveby" value="<%= ac_saveby || '' %>">
+        <input type="hidden" name="ac_savedate" value="<%= new Date().toISOString().slice(0,10) %>">
+        <input type="hidden" name="pro_code" value="<%= pro_code || '' %>" id="proCodeHidden">
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <strong class="me-2">รายการกิจกรรม</strong>
+                <span class="text-muted small" id="rowCountText"></span>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-primary" id="addRowBtn">
+                  <i class="bi bi-plus-circle me-2"></i>เพิ่มแถว
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="add5RowsBtn">
+                  <i class="bi bi-plus-square-dotted me-2"></i>เพิ่ม 5 แถว
+                </button>
+              </div>
+            </div>
+
+            <% if (!pro_code) { %>
+              <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                  <label class="form-label"><i class="bi bi-folder2 me-1"></i>โครงการ</label>
+                  <select class="form-select" id="projectSelect" required>
+                    <option value="">-- เลือกโครงการ --</option>
+                    <% projects.forEach(p => { %>
+                      <option value="<%= p.pro_code %>"><%= p.pro_code %> - <%= p.pro_subject %></option>
+                    <% }) %>
+                  </select>
+                  <div class="form-text">ระบบจะใช้โครงการเดียวกันทุกแถว</div>
+                </div>
+              </div>
+            <% } %>
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0" id="activitiesTable">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 120px;">ลำดับ</th>
+                    <th>ชื่อกิจกรรม</th>
+                    <th style="width: 210px;">สถานะ</th>
+                    <th style="width: 90px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="activitiesTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card-footer bg-light">
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-save me-2"></i>บันทึกทั้งหมด
+              </button>
+              <a href="/planactivity/select" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-arrow-repeat me-2"></i>เปลี่ยนโครงการ
+              </a>
+              <a href="/planactivity" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-x-circle me-2"></i>ยกเลิก
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="card-title mb-3"><i class="bi bi-lightbulb me-2"></i>เคล็ดลับ</h6>
+          <ul class="list-unstyled small mb-0">
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>กด “เพิ่มแถว” เพื่อเพิ่มหลายกิจกรรม</li>
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>เว้นแถวว่างได้ ระบบจะข้ามให้</li>
+            <li class="mb-2"><i class="bi bi-check text-success me-2"></i>ใช้โครงการเดียวกันทุกแถว</li>
+            <li><i class="bi bi-check text-success me-2"></i>ผู้บันทึก: <span class="fw-semibold"><%= ac_saveby || 'system' %></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const tbody = document.getElementById('activitiesTbody');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const add5RowsBtn = document.getElementById('add5RowsBtn');
+    const rowCountText = document.getElementById('rowCountText');
+    const projectSelect = document.getElementById('projectSelect');
+    const proCodeHidden = document.getElementById('proCodeHidden');
+
+    let rowIndex = 0;
+    let currentProCode = proCodeHidden ? (proCodeHidden.value || '') : '';
+
+    function updateRowCount() {
+      const count = tbody.querySelectorAll('tr').length;
+      rowCountText.textContent = count ? `(${count} แถว)` : '';
+    }
+
+    function makeRow(index) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <input type="number" name="activities[${index}][ac_number]" class="form-control form-control-sm" placeholder="เช่น 1" min="0">
+        </td>
+        <td>
+          <input type="text" name="activities[${index}][ac_subject]" class="form-control form-control-sm" placeholder="ชื่อกิจกรรม">
+        </td>
+        <td>
+          <select name="activities[${index}][ac_status]" class="form-select form-select-sm">
+            <option value="0">ยังไม่ดำเนินการ</option>
+            <option value="1">อยู่ระหว่างดำเนินการ</option>
+            <option value="2">ดำเนินการแล้ว</option>
+          </select>
+        </td>
+        <td class="text-end">
+          <input type="hidden" name="activities[${index}][ac_procode]" value="${currentProCode}">
+          <button type="button" class="btn btn-sm btn-outline-danger" data-remove-row>
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      return tr;
+    }
+
+    function addRow() {
+      const tr = makeRow(rowIndex++);
+      tbody.appendChild(tr);
+      updateRowCount();
+    }
+
+    function ensureProCodeReady() {
+      if (currentProCode) return true;
+      if (!projectSelect) return false;
+      currentProCode = projectSelect.value || '';
+      if (proCodeHidden) proCodeHidden.value = currentProCode;
+      return Boolean(currentProCode);
+    }
+
+    function updateAllProCodes() {
+      const inputs = tbody.querySelectorAll('input[name$="[ac_procode]"]');
+      inputs.forEach((inp) => inp.value = currentProCode);
+    }
+
+    addRowBtn.addEventListener('click', () => {
+      if (!ensureProCodeReady()) {
+        alert('กรุณาเลือกโครงการก่อน');
+        return;
+      }
+      addRow();
+    });
+
+    add5RowsBtn.addEventListener('click', () => {
+      if (!ensureProCodeReady()) {
+        alert('กรุณาเลือกโครงการก่อน');
+        return;
+      }
+      for (let i = 0; i < 5; i++) addRow();
+    });
+
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-remove-row]');
+      if (!btn) return;
+      const tr = btn.closest('tr');
+      if (tr) tr.remove();
+      updateRowCount();
+    });
+
+    if (projectSelect) {
+      projectSelect.addEventListener('change', () => {
+        currentProCode = projectSelect.value || '';
+        if (proCodeHidden) proCodeHidden.value = currentProCode;
+        updateAllProCodes();
+      });
+    }
+
+    // Start with a few rows
+    if (currentProCode || !projectSelect) {
+      addRow();
+      addRow();
+      addRow();
+    }
+
+    updateRowCount();
+  })();
+</script>
+
+<%- include('../partials/footer') %>

@@ -5,81 +5,135 @@
 
 <div class="meetingroom-wrapper py-3 py-md-4">
   <div class="container">
-    <!-- Page header -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3 mb-md-4">
-      <div>
-        <h1 class="h3 h2-md fw-bold mb-1"><i class="bi bi-calendar-week me-2 text-primary"></i>ตารางการใช้ห้องประชุม</h1>
-        <div class="text-muted small">ดูตารางการใช้ห้อง ประชุม แก้ไข หรือลบรายการ (เฉพาะผู้ดูแลเท่านั้น)</div>
-      </div>
-      <div class="d-flex flex-wrap gap-2">
-        <button id="btnPrint" class="btn btn-outline-dark"><i class="bi bi-printer me-1"></i> พิมพ์</button>
-        <button id="btnCsv" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i> ส่งออก CSV</button>
-        <% if (user) { %>
-          <a href="/meetingroom/create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> เพิ่มการจอง</a>
-        <% } %>
-        <a href="/dashboard" class="btn btn-outline-secondary d-none d-md-inline-flex"><i class="bi bi-speedometer2 me-1"></i> แดชบอร์ด</a>
-      </div>
-    </div>
-
-    <!-- Tools: Search + Filter -->
-    <div class="card border-0 shadow-sm mb-3 d-print-none">
-      <div class="card-body">
-        <div class="row g-2 g-md-3 align-items-center">
-          <div class="col-12 col-md-6 col-lg-5">
-            <div class="input-group">
-              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-              <input id="searchInput" type="search" class="form-control" placeholder="ค้นหาเรื่อง ห้อง ผู้รับผิดชอบ..." autocomplete="off">
+    <!-- Page header with enhanced visual -->
+    <div class="page-header-card card border-0 shadow-sm mb-4">
+      <div class="card-body p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="icon-box bg-primary bg-opacity-10 rounded-3 p-2">
+                <i class="bi bi-calendar-week fs-4 text-primary"></i>
+              </div>
+              <div>
+                <h1 class="h3 fw-bold mb-0">ตารางการใช้ห้องประชุม</h1>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="badge bg-success-subtle text-success px-3 py-2">
+                <i class="bi bi-calendar-check me-1"></i>แสดงตั้งแต่วันนี้เป็นต้นไป
+              </span>
+              <span class="text-muted small">
+                <i class="bi bi-info-circle me-1"></i>แก้ไข/ลบ: เฉพาะผู้ดูแล
+              </span>
             </div>
           </div>
-          <div class="col-6 col-md-3 col-lg-3">
-            <select id="timeFilter" class="form-select">
-              <option value="all">ทั้งหมด</option>
-              <option value="upcoming">เฉพาะอนาคต</option>
-              <option value="past">ที่ผ่านมา</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-3 col-lg-2">
-            <input id="monthFilter" type="month" class="form-control" placeholder="เดือน">
-          </div>
-          <div class="col-12 col-md-12 col-lg-2 text-end">
-            <button id="clearFilter" class="btn btn-light w-100 w-md-auto"><i class="bi bi-x-circle me-1"></i> ล้างตัวกรอง</button>
+          <div class="d-flex flex-wrap gap-2 justify-content-end">
+            <button id="btnPrint" class="btn btn-outline-secondary btn-action">
+              <i class="bi bi-printer me-1"></i><span class="d-none d-md-inline">พิมพ์</span>
+            </button>
+            <button id="btnCsv" class="btn btn-outline-success btn-action">
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i><span class="d-none d-md-inline">ส่งออก</span>
+            </button>
+            <% if (user) { %>
+              <a href="/meetingroom/create" class="btn btn-primary btn-action">
+                <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline">เพิ่มการจอง</span>
+              </a>
+            <% } %>
+            <a href="/dashboard" class="btn btn-outline-primary btn-action d-none d-md-inline-flex">
+              <i class="bi bi-speedometer2 me-1"></i>แดชบอร์ด
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Data card (screen only) -->
+    <!-- Enhanced Data Table -->
     <div class="card border-0 shadow-sm d-print-none">
       <div class="card-body p-0">
         <!-- Table (desktop) -->
         <div class="table-responsive d-none d-lg-block">
-          <table class="table table-hover table-nowrap align-middle mb-0">
-            <thead class="table-light sticky-top-subtle">
+          <table class="table table-hover align-middle mb-0 modern-table">
+            <thead class="table-light">
               <tr>
-                <th class="text-muted small fw-semibold">วันที่</th>
-                <th class="text-muted small fw-semibold">เวลา</th>
-                <th class="text-muted small fw-semibold">เรื่อง</th>
-                <th class="text-muted small fw-semibold text-center">รายละเอียด</th>
+                <th class="text-muted small fw-semibold ps-4" style="width: 180px;">
+                  <i class="bi bi-calendar3 me-2"></i>วันที่
+                </th>
+                <th class="text-muted small fw-semibold" style="width: 130px;">
+                  <i class="bi bi-clock me-2"></i>เวลา
+                </th>
+                <th class="text-muted small fw-semibold">
+                  <i class="bi bi-journal-text me-2"></i>เรื่อง / ห้อง / ผู้รับผิดชอบ
+                </th>
+                <th class="text-muted small fw-semibold text-center" style="width: 140px;">
+                  <i class="bi bi-gear me-2"></i>จัดการ
+                </th>
               </tr>
             </thead>
             <tbody id="meetingTbody">
-              <% (meetings || []).forEach(m => { %>
+              <% 
+              const thaiDays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+              const dayColors = {
+                0: { bg: 'bg-danger', text: 'text-danger', name: 'อาทิตย์' },
+                1: { bg: 'bg-warning', text: 'text-warning', name: 'จันทร์' },
+                2: { bg: 'bg-pink', text: 'text-pink', name: 'อังคาร' },
+                3: { bg: 'bg-success', text: 'text-success', name: 'พุธ' },
+                4: { bg: 'bg-orange', text: 'text-orange', name: 'พฤหัสบดี' },
+                5: { bg: 'bg-info', text: 'text-info', name: 'ศุกร์' },
+                6: { bg: 'bg-purple', text: 'text-purple', name: 'เสาร์' }
+              };
+              %>
+              <% (meetings || []).forEach((m, index) => { %>
                 <% const isoDate = m.mee_date ? new Date(m.mee_date).toISOString().slice(0,10) : ''; %>
                 <% const saveDateIso = m.mee_savedate ? new Date(m.mee_savedate).toISOString().slice(0,10) : ''; %>
+                <% const isToday = isoDate === new Date().toISOString().slice(0,10); %>
+                <% const meetingDate = new Date(m.mee_date); %>
+                <% const dayOfWeek = meetingDate.getDay(); %>
+                <% const dayColor = dayColors[dayOfWeek]; %>
                 <tr data-id="<%= m.mee_id %>" data-date="<%= isoDate %>"
-                    data-subject="<%= (m.mee_subject || '').toLowerCase() %>"
-                    data-room="<%= (m.mee_room || '').toLowerCase() %>"
-                    data-respon="<%= (m.mee_respon || '').toLowerCase() %>">
+                    class="<%= isToday ? 'table-today' : '' %>">
+                  <td class="ps-4">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="date-badge <%= dayColor.bg %> rounded-3 p-2 text-center position-relative" style="min-width: 75px;">
+                        <div class="day-abbr text-white fw-bold mb-1" style="font-size: 0.75rem;">
+                          <%= thaiDays[dayOfWeek] %>
+                        </div>
+                        <div class="fs-4 fw-bold text-white">
+                          <%= meetingDate.getDate() %>
+                        </div>
+                        <div class="x-small text-white opacity-75">
+                          <%= meetingDate.toLocaleDateString('th-TH', { month: 'short' }) %>
+                        </div>
+                      </div>
+                      <div>
+                        <% if (isToday) { %>
+                          <span class="badge <%= dayColor.bg %> <%= dayColor.text %> px-3 py-2 mb-1">
+                            <i class="bi bi-calendar-check me-1"></i>วันนี้
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </td>
                   <td>
-                    <span class="fw-semibold"><%= formatDate(m.mee_date) %></span>
-                    <span class="ms-1 badge rounded-pill <%= (new Date(m.mee_date) >= new Date(new Date().toISOString().slice(0,10))) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' %>">
-                      <%= (new Date(m.mee_date) >= new Date(new Date().toISOString().slice(0,10))) ? 'อนาคต' : 'ผ่านมา' %>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6">
+                      <i class="bi bi-clock me-2"></i><%= m.mee_time %>
                     </span>
                   </td>
-                  <td><span class="badge bg-primary-subtle text-primary"><i class="bi bi-clock me-1"></i><%= m.mee_time %></span></td>
-                  <td class="w-35 cell-subject"><div class="fw-semibold text-dark subject-text"><%= m.mee_subject %></div></td>
+                  <td>
+                    <div class="meeting-info">
+                      <div class="fw-semibold text-dark mb-2 fs-6"><%= m.mee_subject %></div>
+                      <div class="d-flex flex-wrap gap-2 small">
+                        <span class="text-muted">
+                          <i class="bi bi-geo-alt-fill text-info me-1"></i><%= m.mee_room %>
+                        </span>
+                        <span class="text-muted">•</span>
+                        <span class="text-muted">
+                          <i class="bi bi-person-fill text-warning me-1"></i><%= m.mee_respon %>
+                        </span>
+                      </div>
+                    </div>
+                  </td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-secondary btn-detail"
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill btn-detail"
                       data-id="<%= m.mee_id %>"
                       data-date="<%= isoDate %>"
                       data-date-display="<%= formatDate(m.mee_date) %>"
@@ -91,46 +145,101 @@
                       data-savedate="<%= saveDateIso %>"
                       data-savedate-display="<%= formatDate(m.mee_savedate) %>"
                       data-bs-toggle="modal" data-bs-target="#detailModal">
-                      <i class="bi bi-eye me-1"></i> ดูรายละเอียด
+                      <i class="bi bi-eye me-1"></i>ดูเพิ่มเติม
                     </button>
                   </td>
                 </tr>
               <% }) %>
               <% if (!meetings || meetings.length === 0) { %>
-                <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>ไม่มีข้อมูล</td></tr>
+                <tr>
+                  <td colspan="4" class="text-center py-5">
+                    <div class="text-muted">
+                      <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                      <p class="mb-0 fs-5">ไม่มีข้อมูลการจองห้องประชุม</p>
+                      <p class="small">ลองเปลี่ยนช่วงเวลาหรือเพิ่มการจองใหม่</p>
+                    </div>
+                  </td>
+                </tr>
               <% } %>
             </tbody>
           </table>
         </div>
-        <!-- Mobile Cards -->
-        <div class="d-lg-none p-2">
-          <div id="meetingCards" class="row g-2">
+        <!-- Enhanced Mobile Cards -->
+        <div class="d-lg-none p-3">
+          <div id="meetingCards" class="row g-3">
+            <% 
+            const thaiDaysMobile = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            const dayColorsMobile = {
+              0: { bg: 'bg-danger', text: 'text-danger', border: 'border-danger' },
+              1: { bg: 'bg-warning', text: 'text-warning', border: 'border-warning' },
+              2: { bg: 'bg-pink', text: 'text-pink', border: 'border-pink' },
+              3: { bg: 'bg-success', text: 'text-success', border: 'border-success' },
+              4: { bg: 'bg-orange', text: 'text-orange', border: 'border-orange' },
+              5: { bg: 'bg-info', text: 'text-info', border: 'border-info' },
+              6: { bg: 'bg-purple', text: 'text-purple', border: 'border-purple' }
+            };
+            %>
             <% (meetings || []).forEach(m => { %>
               <% const isoDate = m.mee_date ? new Date(m.mee_date).toISOString().slice(0,10) : ''; %>
               <% const saveDateIso = m.mee_savedate ? new Date(m.mee_savedate).toISOString().slice(0,10) : ''; %>
-              <div class="col-12" data-card data-date="<%= isoDate %>"
-                   data-subject="<%= (m.mee_subject || '').toLowerCase() %>"
-                   data-room="<%= (m.mee_room || '').toLowerCase() %>"
-                   data-respon="<%= (m.mee_respon || '').toLowerCase() %>">
-                <div class="card border-0 shadow-sm h-100">
+              <% const isToday = isoDate === new Date().toISOString().slice(0,10); %>
+              <% const meetingDateMobile = new Date(m.mee_date); %>
+              <% const dayOfWeekMobile = meetingDateMobile.getDay(); %>
+              <% const dayColorMobile = dayColorsMobile[dayOfWeekMobile]; %>
+              <div class="col-12" data-card data-date="<%= isoDate %>">
+                <div class="card border-0 shadow-sm h-100 border-start border-4 <%= dayColorMobile.border %> meeting-card">
                   <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-1">
-                      <div class="fw-bold"><i class="bi bi-calendar-event text-primary me-1"></i><%= formatDate(m.mee_date) %></div>
-                      <span class="badge rounded-pill <%= (new Date(m.mee_date) >= new Date(new Date().toISOString().slice(0,10))) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' %>">
-                        <%= (new Date(m.mee_date) >= new Date(new Date().toISOString().slice(0,10))) ? 'อนาคต' : 'ผ่านมา' %>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="date-badge-mobile <%= dayColorMobile.bg %> rounded-3 p-2 text-center position-relative" style="min-width: 70px;">
+                          <div class="day-abbr text-white fw-bold mb-1" style="font-size: 0.7rem;">
+                            <%= thaiDaysMobile[dayOfWeekMobile] %>
+                          </div>
+                          <div class="fs-3 fw-bold text-white">
+                            <%= meetingDateMobile.getDate() %>
+                          </div>
+                          <div class="x-small text-white opacity-75">
+                            <%= meetingDateMobile.toLocaleDateString('th-TH', { month: 'short' }) %>
+                          </div>
+                        </div>
+                        <div>
+                          <div class="fw-bold text-dark">
+                            <%= formatDate(m.mee_date) %>
+                          </div>
+                          <% if (isToday) { %>
+                            <span class="badge <%= dayColorMobile.bg %> <%= dayColorMobile.text %> px-2 py-1">
+                              <i class="bi bi-calendar-check me-1"></i>วันนี้
+                            </span>
+                          <% } %>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                        <i class="bi bi-clock me-1"></i><%= m.mee_time %>
                       </span>
                     </div>
-                    <div class="mb-2">
-                      <span class="badge bg-primary-subtle text-primary"><i class="bi bi-clock me-1"></i><%= m.mee_time %></span>
-                      <span class="badge bg-info-subtle text-info"><i class="bi bi-geo-alt me-1"></i><%= m.mee_room %></span>
+                    
+                    <div class="mb-3">
+                      <div class="fw-semibold fs-5 text-dark mb-2"><%= m.mee_subject %></div>
+                      <div class="d-flex flex-column gap-2">
+                        <div class="d-flex align-items-center text-muted">
+                          <i class="bi bi-geo-alt-fill text-info me-2"></i>
+                          <span><%= m.mee_room %></span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted">
+                          <i class="bi bi-person-fill text-warning me-2"></i>
+                          <span><%= m.mee_respon %></span>
+                        </div>
+                      </div>
                     </div>
-                    <div class="mb-2">
-                      <div class="fw-semibold"><%= m.mee_subject %></div>
-                      <div class="text-muted small"><i class="bi bi-person-circle me-1"></i><%= m.mee_respon %></div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                      <small class="text-muted">บันทึกโดย <strong class="text-dark"><%= m.mee_saveby %></strong> · <%= formatDate(m.mee_savedate) %></small>
-                      <button type="button" class="btn btn-sm btn-outline-secondary btn-detail"
+                    
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                      <small class="text-muted">
+                        <i class="bi bi-pencil-square me-1"></i>
+                        <strong class="text-dark"><%= m.mee_saveby %></strong>
+                      </small>
+                      <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 btn-detail"
                         data-id="<%= m.mee_id %>"
                         data-date="<%= isoDate %>"
                         data-date-display="<%= formatDate(m.mee_date) %>"
@@ -142,7 +251,7 @@
                         data-savedate="<%= saveDateIso %>"
                         data-savedate-display="<%= formatDate(m.mee_savedate) %>"
                         data-bs-toggle="modal" data-bs-target="#detailModal">
-                        <i class="bi bi-eye"></i>
+                        <i class="bi bi-eye me-1"></i>ดูเพิ่มเติม
                       </button>
                     </div>
                   </div>
@@ -150,7 +259,15 @@
               </div>
             <% }) %>
             <% if (!meetings || meetings.length === 0) { %>
-              <div class="col-12"><div class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>ไม่มีข้อมูล</div></div>
+              <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                    <p class="mb-0 fs-5 text-muted">ไม่มีข้อมูลการจองห้องประชุม</p>
+                    <p class="small text-muted">ลองเปลี่ยนช่วงเวลาหรือเพิ่มการจองใหม่</p>
+                  </div>
+                </div>
+              </div>
             <% } %>
           </div>
         </div>
@@ -189,29 +306,74 @@
       </table>
     </div>
 
-    <!-- Detail Modal -->
+    <!-- Enhanced Detail Modal -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><i class="bi bi-info-circle me-1"></i> รายละเอียดการใช้ห้อง</h5>
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary bg-opacity-10 border-0 pb-3">
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-info-circle-fill text-primary me-2"></i>รายละเอียดการใช้ห้องประชุม
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div class="mb-2"><strong>เรื่อง:</strong> <span id="md-subject"></span></div>
-            <div class="mb-2"><strong>วันที่/เวลา:</strong> <span id="md-datetime"></span></div>
-            <div class="mb-2"><strong>ห้อง:</strong> <span id="md-room"></span></div>
-            <div class="mb-2"><strong>ผู้รับผิดชอบ:</strong> <span id="md-respon"></span></div>
-            <div class="text-muted small">บันทึกโดย <span id="md-saveby"></span> · <span id="md-savedate"></span></div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="info-item p-3 bg-light rounded-3">
+                  <label class="small text-muted mb-1 d-block">
+                    <i class="bi bi-journal-text me-1"></i>เรื่อง
+                  </label>
+                  <div class="fw-semibold fs-5" id="md-subject"></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item p-3 bg-light rounded-3">
+                  <label class="small text-muted mb-1 d-block">
+                    <i class="bi bi-calendar-event me-1"></i>วันที่และเวลา
+                  </label>
+                  <div class="fw-semibold" id="md-datetime"></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item p-3 bg-light rounded-3">
+                  <label class="small text-muted mb-1 d-block">
+                    <i class="bi bi-geo-alt-fill me-1"></i>ห้อง
+                  </label>
+                  <div class="fw-semibold" id="md-room"></div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-item p-3 bg-light rounded-3">
+                  <label class="small text-muted mb-1 d-block">
+                    <i class="bi bi-person-fill me-1"></i>ผู้รับผิดชอบ
+                  </label>
+                  <div class="fw-semibold" id="md-respon"></div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+                  <i class="bi bi-pencil-square"></i>
+                  <span>บันทึกโดย <strong class="text-dark" id="md-saveby"></strong></span>
+                  <span>•</span>
+                  <span id="md-savedate"></span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer border-0 bg-light">
             <% if (isAdmin) { %>
-              <a id="md-edit" href="#" class="btn btn-primary btn-sm"><i class="bi bi-pencil-square me-1"></i> แก้ไข</a>
+              <a id="md-edit" href="#" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i>แก้ไข
+              </a>
               <form id="md-delete-form" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันการลบรายการนี้?')">
-                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i> ลบ</button>
+                <button type="submit" class="btn btn-outline-danger">
+                  <i class="bi bi-trash me-1"></i>ลบ
+                </button>
               </form>
             <% } %>
-            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ปิด</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i>ปิด
+            </button>
           </div>
         </div>
       </div>
@@ -221,132 +383,261 @@
 </div>
 
 <style>
-  .meetingroom-wrapper{background:linear-gradient(135deg,#f8fafc 0%,#eef2f7 100%);} 
-  .table-nowrap td, .table-nowrap th{white-space:nowrap;}
-  /* Allow subject column to wrap */
-  .table-nowrap td.cell-subject{white-space:normal !important;}
-  .subject-text{white-space:normal !important; word-break:break-word; overflow-wrap:anywhere;}
-  .sticky-top-subtle{position:sticky; top:0; z-index:5;}
-  .w-35{width:35%;}
-  @media (max-width: 991.98px){ .w-35{width:auto;} }
-  @media print{
-    #searchInput, #timeFilter, #monthFilter, #clearFilter, #btnPrint, #btnCsv, .navbar, footer { display:none !important; }
-    .card{ box-shadow:none !important; }
-    body{ background:#fff !important; }
-    .meetingroom-wrapper{ background:#fff !important; }
+  /* Enhanced Modern Styling */
+  .meetingroom-wrapper {
+    background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+    min-height: calc(100vh - 200px);
+  }
+  
+  .page-header-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+  
+  .icon-box {
+    transition: all 0.3s ease;
+  }
+  
+  .icon-box:hover {
+    transform: scale(1.1);
+  }
+  
+  .btn-action {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-width: 2px;
+  }
+  
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  .modern-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  .modern-table thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .modern-table tbody tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .modern-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  
+  .table-today {
+    background-color: rgba(25, 135, 84, 0.05) !important;
+  }
+  
+  /* Day color classes */
+  .bg-pink { background-color: #ff69b4; }
+  .text-pink { color: #ff1493; }
+  .border-pink { border-color: #ff69b4 !important; }
+  
+  .bg-orange { background-color: #ff8c00; }
+  .text-orange { color: #ff6600; }
+  .border-orange { border-color: #ff8c00 !important; }
+  
+  .bg-purple { background-color: #9370db; }
+  .text-purple { color: #7b68ee; }
+  .border-purple { border-color: #9370db !important; }
+  
+  .modern-table tbody td {
+    padding: 1.25rem 1rem;
+    vertical-align: middle;
+  }
+  
+  .date-badge {
+    transition: all 0.3s ease;
+  }
+  
+  .date-badge:hover {
+    transform: scale(1.05);
+  }
+  
+  .date-badge-mobile {
+    min-width: 55px;
+  }
+  
+  .meeting-card {
+    transition: all 0.3s ease;
+    border-radius: 12px !important;
+    overflow: hidden;
+  }
+  
+  .meeting-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  }
+  
+  .meeting-info {
+    line-height: 1.6;
+  }
+  
+  .info-item {
+    transition: all 0.2s ease;
+  }
+  
+  .info-item:hover {
+    background-color: #e9ecef !important;
+  }
+  
+  .badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  
+  .btn-detail {
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  
+  .btn-detail:hover {
+    transform: scale(1.05);
+  }
+  
+  .x-small {
+    font-size: 0.7rem;
+  }
+  
+  .modal-content {
+    border-radius: 16px !important;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  }
+  
+  .input-group-lg .form-control {
+    border-radius: 0 10px 10px 0;
+  }
+  
+  .input-group-lg .input-group-text {
+    border-radius: 10px 0 0 10px;
+  }
+  
+  .form-select-lg,
+  .form-control-lg {
+    border-radius: 10px;
+  }
+  
+  @media (max-width: 991.98px) {
+    .modern-table tbody tr:hover {
+      transform: none;
+    }
+  }
+  
+  @media print {
+    .meetingroom-wrapper {
+      background: #fff !important;
+    }
+    .page-header-card,
+    .card {
+      box-shadow: none !important;
+      border: 1px solid #dee2e6 !important;
+    }
   }
 </style>
 
 <script>
-  (function(){
-    const search = document.getElementById('searchInput');
-    const filter = document.getElementById('timeFilter');
-    const monthFilter = document.getElementById('monthFilter');
-    const clearBtn = document.getElementById('clearFilter');
-    const btnPrint = document.getElementById('btnPrint');
-    const btnCsv = document.getElementById('btnCsv');
-    const todayStr = new Date().toISOString().slice(0,10);
-    const tbody = document.getElementById('meetingTbody');
-    const rows = Array.from(tbody ? tbody.querySelectorAll('tr[data-id]') : []);
-    const cards = Array.from(document.querySelectorAll('[data-card]'));
+  // Wait for DOM to be fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Export and Print functions
+    (function(){
+      const btnPrint = document.getElementById('btnPrint');
+      const btnCsv = document.getElementById('btnCsv');
+      const tbody = document.getElementById('meetingTbody');
+      const rows = Array.from(tbody ? tbody.querySelectorAll('tr[data-id]') : []);
 
-    function matchFilter(dateStr){
-      if (filter.value === 'all') return true;
-      if (!dateStr) return false;
-      if (filter.value === 'upcoming') return dateStr >= todayStr;
-      if (filter.value === 'past') return dateStr < todayStr;
-      return true;
-    }
-    function matchMonth(dateStr){
-      const m = (monthFilter && monthFilter.value) ? monthFilter.value : '';
-      if (!m) return true;
-      return (dateStr || '').slice(0,7) === m;
-    }
-    function matchSearch(target){
-      const q = (search.value || '').trim().toLowerCase();
-      if (!q) return true;
-      return target.includes(q);
-    }
-    function apply(){
-      rows.forEach(tr => {
-        const dateStr = tr.getAttribute('data-date') || '';
-        const blob = [tr.getAttribute('data-subject')||'', tr.getAttribute('data-room')||'', tr.getAttribute('data-respon')||''].join(' ');
-        const ok = matchFilter(dateStr) && matchMonth(dateStr) && matchSearch(blob);
-        tr.style.display = ok ? '' : 'none';
+      function exportCsv(){
+        const headers = ['ID','วันที่','เวลา','เรื่อง','ห้อง','ผู้รับผิดชอบ','ผู้บันทึก','บันทึกเมื่อ'];
+        const data = rows.map(r => {
+          const id = r.getAttribute('data-id') || '';
+          const btn = r.querySelector('.btn-detail');
+          const d = btn ? btn.dataset : {};
+          return [
+            id,
+            (d.dateDisplay || d.date || '').toString().trim(),
+            (d.time || '').toString().trim(),
+            (d.subject || '').toString().trim(),
+            (d.room || '').toString().trim(),
+            (d.respon || '').toString().trim(),
+            (d.saveby || '').toString().trim(),
+            (d.savedateDisplay || d.savedate || '').toString().trim()
+          ];
+        });
+        const csv = [headers, ...data].map(row => row.map(v => '"' + (v || '').replace(/"/g,'""') + '"').join(',')).join('\n');
+        const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'meetingroom_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      if (btnPrint) btnPrint.addEventListener('click', () => window.print());
+      if (btnCsv) btnCsv.addEventListener('click', exportCsv);
+    })();
+
+    // Modal detail handler
+    (function(){
+      const detailButtons = document.querySelectorAll('.btn-detail');
+      const modal = document.getElementById('detailModal');
+      
+      if (!modal) {
+        console.error('Detail modal not found');
+        return;
+      }
+
+      detailButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const d = this.dataset;
+          
+          // Update modal content
+          const mdSubject = document.getElementById('md-subject');
+          const mdDatetime = document.getElementById('md-datetime');
+          const mdRoom = document.getElementById('md-room');
+          const mdRespon = document.getElementById('md-respon');
+          const mdSaveby = document.getElementById('md-saveby');
+          const mdSavedate = document.getElementById('md-savedate');
+          const mdEdit = document.getElementById('md-edit');
+          const mdDeleteForm = document.getElementById('md-delete-form');
+          
+          if (mdSubject) mdSubject.textContent = d.subject || '';
+          if (mdDatetime) {
+            const dt = d.dateDisplay || d.date || '';
+            mdDatetime.textContent = (dt ? dt : '') + (d.time ? ' · ' + d.time : '');
+          }
+          if (mdRoom) mdRoom.textContent = d.room || '';
+          if (mdRespon) mdRespon.textContent = d.respon || '';
+          if (mdSaveby) mdSaveby.textContent = d.saveby || '';
+          if (mdSavedate) mdSavedate.textContent = d.savedateDisplay || d.savedate || '';
+          if (mdEdit && d.id) mdEdit.href = '/meetingroom/edit/' + d.id;
+          if (mdDeleteForm && d.id) mdDeleteForm.action = '/meetingroom/delete/' + d.id;
+        });
       });
-      cards.forEach(card => {
-        const dateStr = card.getAttribute('data-date') || '';
-        const blob = [card.getAttribute('data-subject')||'', card.getAttribute('data-room')||'', card.getAttribute('data-respon')||''].join(' ');
-        const ok = matchFilter(dateStr) && matchMonth(dateStr) && matchSearch(blob);
-        card.style.display = ok ? '' : 'none';
-      });
-    }
-
-    function exportCsv(){
-      const headers = ['ID','วันที่','เวลา','เรื่อง','ห้อง','ผู้รับผิดชอบ','ผู้บันทึก','บันทึกเมื่อ'];
-      const visRows = rows.filter(r => r.style.display !== 'none');
-      const data = visRows.map(r => {
-        const id = r.getAttribute('data-id') || '';
-        const btn = r.querySelector('.btn-detail');
-        const d = btn ? btn.dataset : {};
-        return [
-          id,
-          (d.dateDisplay || d.date || '').toString().trim(),
-          (d.time || '').toString().trim(),
-          (d.subject || '').toString().trim(),
-          (d.room || '').toString().trim(),
-          (d.respon || '').toString().trim(),
-          (d.saveby || '').toString().trim(),
-          (d.savedateDisplay || d.savedate || '').toString().trim()
-        ];
-      });
-      const csv = [headers, ...data].map(row => row.map(v => '"' + (v || '').replace(/"/g,'""') + '"').join(',')).join('\n');
-      const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const month = (monthFilter && monthFilter.value) ? '_' + monthFilter.value : '';
-      a.download = 'meetingroom' + month + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    if (search) search.addEventListener('input', apply);
-    if (filter) filter.addEventListener('change', apply);
-    if (monthFilter) monthFilter.addEventListener('change', apply);
-    if (clearBtn) clearBtn.addEventListener('click', function(){
-      if (search) search.value='';
-      if (filter) filter.value='all';
-      if (monthFilter) monthFilter.value='';
-      apply();
-    });
-    if (btnPrint) btnPrint.addEventListener('click', () => window.print());
-    if (btnCsv) btnCsv.addEventListener('click', exportCsv);
-
-    apply();
-  })();
-
-  (function(){
-    function byId(id){ return document.getElementById(id); }
-    document.querySelectorAll('.btn-detail').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const d = btn.dataset;
-        const dt = (d.dateDisplay || d.date || '');
-        byId('md-subject').textContent = d.subject || '';
-        byId('md-datetime').textContent = (dt ? dt : '') + (d.time ? ' · ' + d.time : '');
-        byId('md-room').textContent = d.room || '';
-        byId('md-respon').textContent = d.respon || '';
-        byId('md-saveby').textContent = d.saveby || '';
-        byId('md-savedate').textContent = d.savedateDisplay || d.savedate || '';
-        var edit = byId('md-edit');
-        var delForm = byId('md-delete-form');
-        if (edit) edit.href = '/meetingroom/edit/' + d.id;
-        if (delForm) delForm.action = '/meetingroom/delete/' + d.id;
-      });
-    });
-  })();
+    })();
+  });
 </script>
 
 <%- include('../partials/footer.ejs') %>

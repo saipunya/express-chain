@@ -3,7 +3,7 @@ const meetingModel = require('../models/meetingRoomModel');
 // List all bookings
 exports.list = async (req, res) => {
   try {
-    const meetings = await meetingModel.getAll();
+    const meetings = await meetingModel.getFromTodayBangkok();
     // Use global res.locals.user (set by setUserLocals middleware)
     // to avoid overriding it with an undefined req.user.
     res.render('meetingroom/list', { meetings: meetings || [] });

@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs') %>
 
-<% const isAdmin = (typeof user !== 'undefined' && (user && user.mClass === 'pbt' || user.mClass === 'admin')); %>
+<% const isAdmin = (user && (user.mClass === 'pbt' || user.mClass === 'admin')); %>
 <% function formatDate(d){ try { const dt = new Date(d); if (isNaN(dt)) return ''; return dt.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } } %>
 
 <div class="meetingroom-wrapper py-3 py-md-4">

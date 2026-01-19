@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs') %>
 
-<% const isAdmin = (typeof user !== 'undefined' && user && user.mClass === 'pbt'); %>
+<% const isAdmin = (typeof user !== 'undefined' && (user && user.mClass === 'pbt' || user.mClass === 'admin')); %>
 <% function formatDate(d){ try { const dt = new Date(d); if (isNaN(dt)) return ''; return dt.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } } %>
 
 <div class="meetingroom-wrapper py-3 py-md-4">
@@ -14,7 +14,7 @@
       <div class="d-flex flex-wrap gap-2">
         <button id="btnPrint" class="btn btn-outline-dark"><i class="bi bi-printer me-1"></i> พิมพ์</button>
         <button id="btnCsv" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i> ส่งออก CSV</button>
-        <% if (user) { %>
+        <% if (isAdmin) { %>
           <a href="/meetingroom/create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> เพิ่มการจอง</a>
         <% } %>
         <a href="/dashboard" class="btn btn-outline-secondary d-none d-md-inline-flex"><i class="bi bi-speedometer2 me-1"></i> แดชบอร์ด</a>

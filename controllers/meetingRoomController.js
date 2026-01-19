@@ -4,7 +4,9 @@ const meetingModel = require('../models/meetingRoomModel');
 exports.list = async (req, res) => {
   try {
     const meetings = await meetingModel.getAll();
-    res.render('meetingroom/list', { meetings: meetings || [], user: req.user }); // added user
+    // Use global res.locals.user (set by setUserLocals middleware)
+    // to avoid overriding it with an undefined req.user.
+    res.render('meetingroom/list', { meetings: meetings || [] });
   } catch (err) {
     console.error('[meetingRoomController.list] DB error:', err);
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการดึงข้อมูลห้องประชุม' });

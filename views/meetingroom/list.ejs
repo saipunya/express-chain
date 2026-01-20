@@ -603,16 +603,60 @@
     (function(){
       const detailButtons = document.querySelectorAll('.btn-detail');
       const modal = document.getElementById('detailModal');
-      
+
       if (!modal) {
         console.error('Detail modal not found');
         return;
       }
 
+      // Move modal under <body> so Bootstrap stacking context works reliably
+      if (modal.parentElement && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+
+      const hasBootstrapModal = !!(window.bootstrap && typeof bootstrap.Modal === 'function');
+
+      // Fallback show/hide when Bootstrap JS is not available (e.g. CDN โหลดไม่ได้)
+      function showFallbackModal() {
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        modal.removeAttribute('aria-hidden');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('role', 'dialog');
+
+        // สร้าง backdrop แบบง่าย ๆ
+        if (!document.getElementById('detailModal-backdrop-fallback')) {
+          const backdrop = document.createElement('div');
+          backdrop.id = 'detailModal-backdrop-fallback';
+          backdrop.className = 'modal-backdrop fade show';
+          document.body.appendChild(backdrop);
+        }
+        document.body.classList.add('modal-open');
+      }
+
+      function hideFallbackModal() {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+
+        const backdrop = document.getElementById('detailModal-backdrop-fallback');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+      }
+
+      if (!hasBootstrapModal) {
+        // ถ้าไม่มี Bootstrap JS ให้ผูกปุ่มปิดเอง
+        const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+        closeButtons.forEach(btn => {
+          btn.addEventListener('click', hideFallbackModal);
+        });
+      }
+
       detailButtons.forEach(btn => {
         btn.addEventListener('click', function() {
           const d = this.dataset;
-          
+
           // Update modal content
           const mdSubject = document.getElementById('md-subject');
           const mdDatetime = document.getElementById('md-datetime');
@@ -622,7 +666,7 @@
           const mdSavedate = document.getElementById('md-savedate');
           const mdEdit = document.getElementById('md-edit');
           const mdDeleteForm = document.getElementById('md-delete-form');
-          
+
           if (mdSubject) mdSubject.textContent = d.subject || '';
           if (mdDatetime) {
             const dt = d.dateDisplay || d.date || '';
@@ -634,6 +678,14 @@
           if (mdSavedate) mdSavedate.textContent = d.savedateDisplay || d.savedate || '';
           if (mdEdit && d.id) mdEdit.href = '/meetingroom/edit/' + d.id;
           if (mdDeleteForm && d.id) mdDeleteForm.action = '/meetingroom/delete/' + d.id;
+
+          // Ensure modal is shown even if data-bs-toggle doesn't fire
+          if (hasBootstrapModal) {
+            const instance = bootstrap.Modal.getOrCreateInstance(modal);
+            instance.show();
+          } else {
+            showFallbackModal();
+          }
         });
       });
     })();

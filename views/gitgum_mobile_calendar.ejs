@@ -484,6 +484,10 @@
                         'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
     const thaiYear = today.getFullYear() + 543;
+    const calendarDataset = <%- JSON.stringify(groupedByMonth || {}) %>;
+    const todayISODate = today.toISOString().slice(0, 10);
+    const todayMonthKey = todayISODate.slice(0, 7);
+    const todayEventCount = ((calendarDataset[todayMonthKey] || []).filter(ev => ev.date === todayISODate)).length;
     document.getElementById('todayDate').textContent = 
       `วัน${thaiDays[today.getDay()]}ที่ ${today.getDate()} ${thaiMonths[today.getMonth()]} ${thaiYear}`;
     
@@ -560,10 +564,38 @@
     });
     
     // Register service worker for PWA
+    function syncAppBadge(count) {
+      if (typeof count !== 'number') return;
+      const clearBadge = () => {
+        if ('clearAppBadge' in navigator) {
+          navigator.clearAppBadge().catch(() => {});
+        } else if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => {
+            if (reg && reg.clearAppBadge) reg.clearAppBadge();
+          }).catch(() => {});
+        }
+      };
+      if (!count) {
+        clearBadge();
+        return;
+      }
+      if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(count).catch(() => {});
+        return;
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          if (reg && reg.setAppBadge) reg.setAppBadge(count);
+        }).catch(() => {});
+      }
+    }
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw-calendar.js').catch(() => {
         // Service worker registration failed, app still works offline
-      });
+      }).finally(() => syncAppBadge(todayEventCount));
+    } else {
+      syncAppBadge(todayEventCount);
     }
   </script>
 </body>

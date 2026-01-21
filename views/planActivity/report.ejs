@@ -1,0 +1,250 @@
+<%- include('../partials/header') %>
+
+<% const kpiList = Array.isArray(typeof kpiMetrics !== 'undefined' ? kpiMetrics : []) ? (kpiMetrics || []) : []; const hasProject = Boolean(selectedProject); const monthInput = (selectedMonth || '').slice(0, 7); const monthDisplay = (typeof monthLabel !== 'undefined' && monthLabel) ? monthLabel : monthInput; const hasActivities = Array.isArray(activities) && activities.length > 0; const hasKpis = kpiList.length > 0; %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-calendar2-check me-2"></i>รายงานสถานะกิจกรรมรายเดือน</h1>
+      <p class="text-muted small mb-0">เลือกโครงการและเดือนที่ต้องการสรุปรายงาน พร้อมกำหนดสถานะกิจกรรมย่อย</p>
+    </div>
+    <div>
+      <a href="/planactivity" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>ย้อนกลับกิจกรรมทั้งหมด</a>
+    </div>
+  </div>
+
+  <form class="card border-0 shadow-sm mb-4" method="get" action="/planactivity/report">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label for="pro_code" class="form-label">เลือกโครงการ</label>
+          <select class="form-select" id="pro_code" name="pro_code" required>
+            <option value="">-- เลือกโครงการ --</option>
+            <% projects.forEach(project => { %>
+              <option value="<%= project.pro_code %>" <%= project.pro_code === selectedProject ? 'selected' : '' %>>
+                <%= project.pro_code %> - <%= project.pro_name || '' %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="month" class="form-label">เดือนที่รายงาน</label>
+          <input type="month" class="form-control" id="month" name="month" value="<%= monthInput || new Date().toISOString().slice(0,7) %>" required>
+        </div>
+        <div class="col-md-3 d-grid">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search me-2"></i>แสดงรายการ</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <% if (!hasProject) { %>
+    <div class="alert alert-info shadow-sm">กรุณาเลือกโครงการเพื่อเริ่มบันทึกสถานะรายเดือน</div>
+  <% } else { %>
+    <% if (!hasActivities) { %>
+      <div class="alert alert-warning shadow-sm">โครงการนี้ยังไม่มีกิจกรรมย่อย กรุณาเพิ่มกิจกรรมก่อน</div>
+    <% } else { %>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <p class="text-uppercase text-muted small mb-1">จำนวนกิจกรรมทั้งหมด</p>
+              <h3 class="mb-0"><%= totalActivities %> รายการ</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100 border-success">
+            <div class="card-body">
+              <p class="text-uppercase text-muted small mb-1">ดำเนินการเรียบร้อย</p>
+              <h3 class="text-success mb-0"><%= summary.completed %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100 border-warning">
+            <div class="card-body">
+              <p class="text-uppercase text-muted small mb-1">อยู่ระหว่างดำเนินการ</p>
+              <h3 class="text-warning mb-0"><%= summary.inProgress %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100 border-secondary">
+            <div class="card-body">
+              <p class="text-uppercase text-muted small mb-1">ยังไม่ดำเนินการ / ยังไม่ระบุ</p>
+              <h3 class="text-muted mb-0"><%= summary.notStarted + summary.pending %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form action="/planactivity/report" method="post" class="card border-0 shadow-sm">
+        <input type="hidden" name="pro_code" value="<%= selectedProject %>">
+        <input type="hidden" name="report_month" value="<%= monthInput %>">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="h5 mb-0">บันทึกสถานะกิจกรรม</h2>
+            <p class="text-muted small mb-0">เดือน <span class="fw-semibold"><%= monthDisplay %></span></p>
+          </div>
+          <button type="submit" class="btn btn-success"><i class="bi bi-save me-2"></i>บันทึกทั้งหมด</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 70px;">#</th>
+                <th style="width: 90px;">ลำดับ</th>
+                <th>ชื่อกิจกรรม</th>
+                <th style="width: 360px;">สถานะรอบเดือนนี้</th>
+                <th style="width: 220px;">หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% activities.forEach(activity => { const currentStatus = statusesMap[activity.ac_id]?.status; %>
+                <tr>
+                  <td><%= activity.ac_id %></td>
+                  <td><%= activity.ac_number %></td>
+                  <td><%= activity.ac_subject %></td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <% statusOptions.forEach(opt => { %>
+                        <input type="radio" class="btn-check" name="status[<%= activity.ac_id %>]" id="status-<%= activity.ac_id %>-<%= opt.value %>" value="<%= opt.value %>" <%= Number(currentStatus) === opt.value ? 'checked' : '' %>>
+                        <label class="btn btn-outline-<%= opt.value === 2 ? 'success' : opt.value === 1 ? 'warning' : 'secondary' %>" for="status-<%= activity.ac_id %>-<%= opt.value %>">
+                          <i class="bi bi-<%= opt.icon %> me-1"></i><%= opt.label %>
+                        </label>
+                      <% }) %>
+                    </div>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control" name="note[<%= activity.ac_id %>]" value="<%= statusesMap[activity.ac_id]?.note || '' %>" placeholder="หมายเหตุเพิ่มเติม">
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-light text-end">
+          <button type="submit" class="btn btn-success"><i class="bi bi-save me-2"></i>บันทึกสถานะกิจกรรม</button>
+        </div>
+      </form>
+    <% } %>
+
+    <div class="mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="h5 mb-1">รายงานผลตามตัวชี้วัด</h2>
+          <p class="text-muted small mb-0">สะสมผลรายเดือนเพื่อเปรียบเทียบกับตัวชี้วัดหลักของโครงการ</p>
+        </div>
+        <% if (hasKpis) { %>
+          <span class="badge bg-primary">ตัวชี้วัดทั้งหมด <%= kpiSummary.total %> รายการ</span>
+        <% } %>
+      </div>
+
+      <% if (!hasKpis) { %>
+        <div class="alert alert-secondary shadow-sm">โครงการนี้ยังไม่มีตัวชี้วัด กรุณาเพิ่มตัวชี้วัดก่อนที่เมนูตัวชี้วัด</div>
+      <% } else { %>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100 border-primary">
+              <div class="card-body">
+                <p class="text-uppercase text-muted small mb-1">บรรลุเป้าหมายแล้ว</p>
+                <h3 class="text-success mb-0"><%= kpiSummary.achieved %></h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100 border-warning">
+              <div class="card-body">
+                <p class="text-uppercase text-muted small mb-1">มีแนวโน้มบรรลุ (≥70%)</p>
+                <h3 class="text-warning mb-0"><%= kpiSummary.onTrack %></h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100 border-danger">
+              <div class="card-body">
+                <p class="text-uppercase text-muted small mb-1">ต่ำกว่าเป้าหมาย</p>
+                <h3 class="text-danger mb-0"><%= kpiSummary.behind %></h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card shadow-sm h-100 border-secondary">
+              <div class="card-body">
+                <p class="text-uppercase text-muted small mb-1">ยังไม่กำหนดเป้า</p>
+                <h3 class="text-muted mb-0"><%= kpiSummary.noTarget %></h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form action="/planactivity/report/kpi" method="post" class="card border-0 shadow-sm">
+          <input type="hidden" name="pro_code" value="<%= selectedProject %>">
+          <input type="hidden" name="report_month" value="<%= monthInput %>">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+              <h3 class="h5 mb-0">บันทึกผลการดำเนินงานตามตัวชี้วัด</h3>
+              <p class="text-muted small mb-0">เดือน <span class="fw-semibold"><%= monthDisplay %></span></p>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>บันทึกผลตัวชี้วัด</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 60px;">#</th>
+                  <th>ตัวชี้วัด</th>
+                  <th style="width: 140px;">เป้าหมาย</th>
+                  <th style="width: 160px;">ผลสะสม</th>
+                  <th style="width: 140px;">% เทียบเป้า</th>
+                  <th style="width: 180px;">ผลเดือนนี้</th>
+                  <th style="width: 220px;">หมายเหตุ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% kpiList.forEach(kpi => { const percent = kpi.achievement_percent; const monthlyRecord = kpi.monthly_record; const cumulative = Number(kpi.cumulative_total || 0); const targetValue = Number(kpi.kp_plan || 0); %>
+                  <tr>
+                    <td><span class="badge bg-light text-dark">ID <%= kpi.kp_id %></span></td>
+                    <td>
+                      <div class="fw-semibold"><%= kpi.kp_subject %></div>
+                      <small class="text-muted">ลำดับ <%= kpi.kp_number %> | โค้ด <%= kpi.kp_procode %></small>
+                    </td>
+                    <td>
+                      <div class="fw-semibold"><%= targetValue.toLocaleString('th-TH') %></div>
+                      <small class="text-muted"><%= kpi.kp_unit %></small>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-primary"><%= cumulative.toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></div>
+                      <small class="text-muted">สะสมทุกเดือน</small>
+                    </td>
+                    <td>
+                      <% if (percent === null) { %>
+                        <span class="text-muted">-</span>
+                      <% } else { %>
+                        <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" min="0" class="form-control" name="actual_value[<%= kpi.kp_id %>]" value="<%= monthlyRecord ? Number(monthlyRecord.actual_value).toString() : '' %>" placeholder="เช่น 25.0">
+                      <small class="text-muted">เว้นว่างหากไม่มีข้อมูล</small>
+                    </td>
+                    <td>
+                      <input type="text" class="form-control" name="kpi_note[<%= kpi.kp_id %>]" value="<%= monthlyRecord && monthlyRecord.note ? monthlyRecord.note : '' %>" placeholder="สาระสำคัญ/ที่มาของข้อมูล">
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-light text-end">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>อัปเดตผลตัวชี้วัด</button>
+            <p class="text-muted small mb-0 mt-2">ระบบจะอัปเดตค่าของเดือนเดิมให้อัตโนมัติ หากมีการบันทึกซ้ำ</p>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

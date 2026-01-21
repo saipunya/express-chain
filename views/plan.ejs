@@ -1,13 +1,22 @@
 <%- include('partials/header') %>
 
+<% const projectReports = (() => {
+  try {
+    return Array.isArray(projectReporting) ? projectReporting : [];
+  } catch (err) {
+    return [];
+  }
+})(); %>
+
 <div class="py-3">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h1 class="h4 mb-1"><i class="bi bi-clipboard-check me-2"></i>แดชบอร์ดแผนงาน</h1>
       <p class="text-muted mb-0">ภาพรวมแผนงานหลัก โครงการ กิจกรรม และตัวชี้วัด</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="/plan" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat me-1"></i>รีเฟรช</a>
+      <a href="/planactivity/report" class="btn btn-outline-info btn-sm"><i class="bi bi-clipboard-data me-1"></i>รายงานสถานะรายเดือน</a>
       <a href="/planmain" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>เพิ่มแผนงานหลัก</a>
     </div>
   </div>
@@ -150,6 +159,63 @@
             <% } else { %>
               <tr>
                 <td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลแผนงานหลัก</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 mb-0"><i class="bi bi-bar-chart-line me-2"></i>ผลการรายงานตามโครงการ</h2>
+        <a href="/planactivity/report" class="btn btn-outline-info btn-sm"><i class="bi bi-clipboard-data me-1"></i>จัดการรายงานรายเดือน</a>
+      </div>
+      <div class="table-responsive mb-0">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>โครงการ</th>
+              <th class="text-center">กิจกรรมที่รายงาน</th>
+              <th class="text-center">ผลตัวชี้วัดสะสม / เป้าหมาย</th>
+              <th style="width: 220px;">เดือนที่รายงานล่าสุด</th>
+              <th style="width: 140px;">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (projectReports.length) { %>
+              <% projectReports.forEach((report) => { const totalActivities = Number(report.total_activities || 0); const reportedActivities = Number(report.reported_activities || 0); const totalPlan = Number(report.total_plan || 0); const cumulativeActual = Number(report.cumulative_actual || 0); const percent = report.achievementPercent; %>
+                <tr>
+                  <td>
+                    <div class="fw-semibold"><%= report.pro_code %> - <%= report.pro_name || '-' %></div>
+                    <small class="text-muted">กิจกรรมทั้งหมด <%= totalActivities %> | ตัวชี้วัด <%= report.total_kpis || 0 %></small>
+                  </td>
+                  <td class="text-center">
+                    <div class="fw-semibold"><%= reportedActivities %> / <%= totalActivities %></div>
+                    <small class="text-muted">มีบันทึกรายเดือนแล้ว</small>
+                  </td>
+                  <td class="text-center">
+                    <% if (totalPlan > 0) { %>
+                      <div class="fw-semibold text-primary"><%= cumulativeActual.toLocaleString('th-TH', { maximumFractionDigits: 2 }) %> / <%= totalPlan.toLocaleString('th-TH', { maximumFractionDigits: 0 }) %></div>
+                      <small class="text-muted">คิดเป็น <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span></small>
+                    <% } else { %>
+                      <span class="text-muted">ยังไม่กำหนดเป้า</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div>กิจกรรม: <strong><%= report.latestActivityLabel || '-' %></strong></div>
+                    <div>ตัวชี้วัด: <strong><%= report.latestKpiLabel || '-' %></strong></div>
+                  </td>
+                  <td>
+                    <a href="/planactivity/report?pro_code=<%= encodeURIComponent(report.pro_code) %>" class="btn btn-outline-primary btn-sm">ดูรายงาน</a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="text-center text-muted">ยังไม่มีโครงการให้แสดงผลรายงาน</td>
               </tr>
             <% } %>
           </tbody>

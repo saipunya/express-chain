@@ -1,5 +1,67 @@
 const PlanActivity = require('../models/planActivity');
 const PlanProject = require('../models/planProject');
+const PlanActivityMonthly = require('../models/planActivityMonthly');
+const PlanKpi = require('../models/planKpi');
+const PlanKpiMonthly = require('../models/planKpiMonthly');
+
+const STATUS_OPTIONS = [
+  { value: 2, label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
+  { value: 1, label: 'อยู่ระหว่างดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' },
+  { value: 0, label: 'ยังไม่ดำเนินการ', badge: 'secondary', icon: 'clock' }
+];
+
+const TH_MONTHS = [
+  'มกราคม',
+  'กุมภาพันธ์',
+  'มีนาคม',
+  'เมษายน',
+  'พฤษภาคม',
+  'มิถุนายน',
+  'กรกฎาคม',
+  'สิงหาคม',
+  'กันยายน',
+  'ตุลาคม',
+  'พฤศจิกายน',
+  'ธันวาคม'
+];
+
+const normalizeMonthInput = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    return `${value}-01`;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value.slice(0, 10);
+  }
+
+  return null;
+};
+
+const toThaiMonthLabel = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  let dateString = value;
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    dateString = value.toISOString().slice(0, 10);
+  }
+
+  if (typeof dateString === 'string' && dateString.length >= 7) {
+    const [year, month] = dateString.split('-');
+    const monthIndex = Number(month) - 1;
+    const monthName = TH_MONTHS[monthIndex] || month;
+    const buddhistYear = Number(year) + 543;
+    return `${monthName} ${buddhistYear}`;
+  }
+
+  return dateString;
+};
 
 // List all activities
 exports.index = async (req, res) => {
@@ -124,4 +186,191 @@ exports.destroy = async (req, res) => {
 exports.show = async (req, res) => {
   const activity = await PlanActivity.findByPk(req.params.id);
   res.render('planActivity/show', { activity });
+};
+
+// Monthly reporting page for activity statuses
+exports.monthlyReport = async (req, res) => {
+  const projects = await PlanProject.findAll();
+  const selectedProject = req.query.pro_code || '';
+  const selectedMonth = req.query.month || new Date().toISOString().slice(0, 7);
+  const normalizedMonth = normalizeMonthInput(selectedMonth) || new Date().toISOString().slice(0, 10);
+  const monthLabel = toThaiMonthLabel(normalizedMonth);
+
+  let activities = [];
+  let statusesMap = {};
+  let kpiMetrics = [];
+  let kpiSummary = { total: 0, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 };
+
+  if (selectedProject) {
+    activities = await PlanActivity.findByProjectCode(selectedProject);
+    if (activities.length) {
+      const rows = await PlanActivityMonthly.findByActivitiesAndMonth(
+        activities.map((a) => a.ac_id),
+        normalizedMonth
+      );
+      statusesMap = rows.reduce((acc, row) => {
+        acc[row.ac_id] = row;
+        return acc;
+      }, {});
+    }
+
+    const kpis = await PlanKpi.findByProjectCode(selectedProject);
+    if (kpis.length) {
+      const kpiIds = kpis.map((kpi) => kpi.kp_id);
+      const monthlyRows = await PlanKpiMonthly.findByKpiIdsAndMonth(kpiIds, normalizedMonth);
+      const monthlyMap = monthlyRows.reduce((acc, row) => {
+        acc[row.kp_id] = row;
+        return acc;
+      }, {});
+      const totals = await PlanKpiMonthly.sumForIds(kpiIds);
+
+      kpiMetrics = kpis.map((kpi) => {
+        const cumulativeTotal = Number(totals[kpi.kp_id] ?? 0);
+        const targetValue = Number(kpi.kp_plan || 0);
+        const achievementPercent = targetValue ? (cumulativeTotal / targetValue) * 100 : null;
+        return {
+          ...kpi,
+          cumulative_total: cumulativeTotal,
+          achievement_percent: achievementPercent,
+          monthly_record: monthlyMap[kpi.kp_id] || null
+        };
+      });
+
+      const baseSummary = { total: kpiMetrics.length, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 };
+      kpiSummary = kpiMetrics.reduce((acc, kpi) => {
+        if (kpi.achievement_percent === null) {
+          acc.noTarget += 1;
+        } else if (kpi.achievement_percent >= 100) {
+          acc.achieved += 1;
+        } else if (kpi.achievement_percent >= 70) {
+          acc.onTrack += 1;
+        } else {
+          acc.behind += 1;
+        }
+        return acc;
+      }, baseSummary);
+    }
+  }
+
+  const summary = activities.reduce(
+    (acc, activity) => {
+      const status = Number(statusesMap[activity.ac_id]?.status ?? -1);
+      if (status === 2) acc.completed += 1;
+      else if (status === 1) acc.inProgress += 1;
+      else if (status === 0) acc.notStarted += 1;
+      else acc.pending += 1;
+      return acc;
+    },
+    { completed: 0, inProgress: 0, notStarted: 0, pending: 0 }
+  );
+
+  res.render('planActivity/report', {
+    projects,
+    activities,
+    statusesMap,
+    selectedProject,
+    selectedMonth,
+    statusOptions: STATUS_OPTIONS,
+    summary,
+    totalActivities: activities.length,
+    kpiMetrics,
+    kpiSummary,
+    monthLabel
+  });
+};
+
+// Store monthly statuses for activities
+exports.storeMonthlyStatuses = async (req, res) => {
+  const { pro_code: proCode, report_month: reportMonthInput } = req.body;
+  const normalizedMonth = normalizeMonthInput(reportMonthInput);
+
+  if (!proCode || !normalizedMonth) {
+    return res.status(400).send('ข้อมูลโครงการหรือเดือนที่รายงานไม่ถูกต้อง');
+  }
+
+  const activities = await PlanActivity.findByProjectCode(proCode);
+
+  if (!activities.length) {
+    return res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
+  }
+
+  const statusInputs = req.body.status || {};
+  const noteInputs = req.body.note || {};
+  const updatedBy = req.session?.user?.username || req.session?.user?.fullname || 'system';
+
+  const validStatuses = new Set([0, 1, 2]);
+
+  const rows = activities
+    .map((activity) => {
+      const raw = statusInputs[activity.ac_id] ?? statusInputs[String(activity.ac_id)];
+      if (raw === undefined || raw === '') {
+        return null;
+      }
+      const parsed = Number.parseInt(raw, 10);
+      if (!validStatuses.has(parsed)) {
+        return null;
+      }
+      return {
+        ac_id: activity.ac_id,
+        report_month: normalizedMonth,
+        status: parsed,
+        note: noteInputs[activity.ac_id] || noteInputs[String(activity.ac_id)] || null,
+        updated_by: updatedBy
+      };
+    })
+    .filter(Boolean);
+
+  if (rows.length) {
+    await PlanActivityMonthly.upsertStatuses(rows);
+  }
+
+  res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
+};
+
+// Store monthly KPI performance values for a project
+exports.storeMonthlyKpi = async (req, res) => {
+  const { pro_code: proCode, report_month: reportMonthInput } = req.body;
+  const normalizedMonth = normalizeMonthInput(reportMonthInput);
+
+  if (!proCode || !normalizedMonth) {
+    return res.status(400).send('ข้อมูลโครงการหรือเดือนที่รายงานไม่ถูกต้อง');
+  }
+
+  const kpis = await PlanKpi.findByProjectCode(proCode);
+
+  if (!kpis.length) {
+    return res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
+  }
+
+  const actualInputs = req.body.actual_value || {};
+  const noteInputs = req.body.kpi_note || {};
+  const createdBy = req.session?.user?.username || req.session?.user?.fullname || 'system';
+
+  const rows = kpis
+    .map((kpi) => {
+      const rawValue = actualInputs[kpi.kp_id] ?? actualInputs[String(kpi.kp_id)];
+      if (rawValue === undefined || rawValue === '') {
+        return null;
+      }
+
+      const numericValue = Number.parseFloat(rawValue);
+      if (Number.isNaN(numericValue)) {
+        return null;
+      }
+
+      return {
+        kp_id: kpi.kp_id,
+        report_month: normalizedMonth,
+        actual_value: numericValue,
+        note: noteInputs[kpi.kp_id] || noteInputs[String(kpi.kp_id)] || null,
+        created_by: createdBy
+      };
+    })
+    .filter(Boolean);
+
+  if (rows.length) {
+    await PlanKpiMonthly.upsertMany(rows);
+  }
+
+  res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
 };

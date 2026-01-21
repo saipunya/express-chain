@@ -24,6 +24,8 @@
             <th>ชื่อตัวชี้วัด</th>
             <th>ค่าเป้าหมาย</th>
             <th>ผลการดำเนินงาน</th>
+            <th>ผลสะสมรายเดือน</th>
+            <th>% เทียบเป้า</th>
             <th>หน่วย</th>
             <th>รหัสโครงการ</th>
             <th>บันทึกโดย</th>
@@ -39,11 +41,25 @@
               <td><%= k.kp_subject %></td>
               <td><%= k.kp_plan %></td>
               <td><%= k.kp_action %></td>
+              <td>
+                <div class="fw-semibold"><%= k.monthly_total || 0 %></div>
+                <small class="text-muted">รวมจากรายงานรายเดือน</small>
+              </td>
+              <td>
+                <% if (k.achievement_percent !== null && !Number.isNaN(k.achievement_percent)) { %>
+                  <span class="fw-semibold <%= k.achievement_percent >= 100 ? 'text-success' : 'text-warning' %>">
+                    <%= k.achievement_percent.toFixed(1) %>%
+                  </span>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
               <td><%= k.kp_unit %></td>
               <td><%= k.kp_procode %></td>
               <td><%= k.kp_saveby %></td>
               <td><%= k.kp_savedate.toISOString().slice(0,10) %></td>
               <td>
+                <a href="/plankpi/<%= k.kp_id %>/report" class="btn btn-sm btn-outline-primary mb-1">รายงานรายเดือน</a>
                 <a href="/plankpi/<%= k.kp_id %>/edit" class="btn btn-sm btn-warning">แก้ไข</a>
                 <form action="/plankpi/<%= k.kp_id %>/delete" method="post" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบตัวชี้วัดนี้?')">ลบ</button>

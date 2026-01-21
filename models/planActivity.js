@@ -5,6 +5,10 @@ module.exports = {
     const [rows] = await db.query('SELECT * FROM plan_activity');
     return rows;
   },
+  async findByProjectCode(proCode) {
+    const [rows] = await db.query('SELECT * FROM plan_activity WHERE ac_procode = ? ORDER BY ac_number ASC', [proCode]);
+    return rows;
+  },
   async findByPk(id) {
     const [rows] = await db.query('SELECT * FROM plan_activity WHERE ac_id = ?', [id]);
     return rows[0];

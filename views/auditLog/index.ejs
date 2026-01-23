@@ -1,0 +1,140 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1"><i class="bi bi-journal-text me-2"></i>Audit Log</h1>
+    <div class="text-muted small">บันทึกการเข้าจัดการข้อมูล (เฉพาะผู้ดูแลระบบ)</div>
+  </div>
+</div>
+
+<form class="card shadow-sm mb-3" method="get" action="/auditlog">
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-md-2">
+        <label class="form-label">จาก (YYYY-MM-DD)</label>
+        <input class="form-control" name="from" value="<%= filters.from || '' %>" placeholder="2026-01-01">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ถึง (YYYY-MM-DD)</label>
+        <input class="form-control" name="to" value="<%= filters.to || '' %>" placeholder="2026-01-31">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ผู้ใช้</label>
+        <input class="form-control" name="username" value="<%= filters.username || '' %>" placeholder="username">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">โมดูล</label>
+        <input class="form-control" name="module" value="<%= filters.module || '' %>" placeholder="planactivity">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">pro_code</label>
+        <input class="form-control" name="proCode" value="<%= filters.proCode || '' %>" placeholder="p101">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Entity Type</label>
+        <input class="form-control" name="entityType" value="<%= filters.entityType || '' %>" placeholder="activity">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Entity ID</label>
+        <input class="form-control" name="entityId" value="<%= filters.entityId || '' %>" placeholder="1">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Action</label>
+        <input class="form-control" name="action" value="<%= filters.action || '' %>" placeholder="UPDATE">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ค้นหา</label>
+        <input class="form-control" name="q" value="<%= filters.q || '' %>" placeholder="/report">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Method</label>
+        <input class="form-control" name="method" value="<%= filters.method || '' %>" placeholder="POST">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Status</label>
+        <input class="form-control" name="statusCode" value="<%= filters.statusCode || '' %>" placeholder="200">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ต่อหน้า</label>
+        <input class="form-control" name="limit" value="<%= limit %>">
+      </div>
+      <div class="col-md-4 d-grid align-content-end">
+        <button class="btn btn-primary mt-4" type="submit"><i class="bi bi-search me-2"></i>ค้นหา</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-light d-flex justify-content-between">
+    <div class="small text-muted">ทั้งหมด <%= total %> รายการ</div>
+    <div class="small text-muted">หน้า <%= page %> / <%= totalPages %></div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width:110px;">เวลา</th>
+          <th style="width:160px;">ผู้ใช้</th>
+          <th style="width:170px;">Entity</th>
+          <th style="width:120px;">โมดูล</th>
+          <th style="width:120px;">Action</th>
+          <th>Request</th>
+          <th style="width:90px;">Status</th>
+          <th style="width:120px;">IP</th>
+          <th style="width:90px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!rows.length) { %>
+          <tr><td colspan="9" class="text-center text-muted py-4">ไม่มีข้อมูล</td></tr>
+        <% } %>
+        <% rows.forEach(r => { %>
+          <tr>
+            <td class="small"><%= new Date(r.created_at).toLocaleString('th-TH') %></td>
+            <td>
+              <div class="fw-semibold"><%= r.username || '-' %></div>
+              <div class="small text-muted"><%= r.fullname || '' %></div>
+            </td>
+            <td>
+              <div class="small">
+                <% if (r.entity_type || r.entity_id) { %>
+                  <span class="badge bg-secondary"><%= r.entity_type || '-' %></span>
+                  <span class="text-muted"><%= r.entity_id || '' %></span>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </div>
+              <div class="small text-muted">
+                <% if (r.pro_code) { %>pro_code: <%= r.pro_code %><% } %>
+                <% if (r.ac_id) { %> | ac_id: <%= r.ac_id %><% } %>
+                <% if (r.kp_id) { %> | kp_id: <%= r.kp_id %><% } %>
+              </div>
+            </td>
+            <td><span class="badge bg-secondary"><%= r.module %></span></td>
+            <td><span class="badge bg-info text-dark"><%= r.action %></span></td>
+            <td>
+              <div class="small"><span class="badge bg-dark"><%= r.method %></span> <span class="text-muted"><%= r.path %></span></div>
+              <div class="small text-muted">เวลา <%= r.duration_ms %> ms</div>
+            </td>
+            <td><span class="badge <%= (r.status_code >= 200 && r.status_code < 300) ? 'bg-success' : 'bg-danger' %>"><%= r.status_code %></span></td>
+            <td class="small"><%= r.ip || '-' %></td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="/auditlog/<%= r.id %>">ดู</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-light d-flex justify-content-between">
+    <div>
+      <% const prev = Math.max(1, page - 1); const next = Math.min(totalPages, page + 1); %>
+      <a class="btn btn-sm btn-outline-secondary <%= page <= 1 ? 'disabled' : '' %>" href="/auditlog?<%= new URLSearchParams({ ...filters, page: prev, limit }).toString() %>">ก่อนหน้า</a>
+      <a class="btn btn-sm btn-outline-secondary <%= page >= totalPages ? 'disabled' : '' %>" href="/auditlog?<%= new URLSearchParams({ ...filters, page: next, limit }).toString() %>">ถัดไป</a>
+    </div>
+    <div class="small text-muted">เก็บเฉพาะการใช้งานส่วนแผน/ติดตามผล</div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

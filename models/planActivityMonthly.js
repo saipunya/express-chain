@@ -8,7 +8,10 @@ module.exports = {
 
     const placeholders = activityIds.map(() => '?').join(',');
     const [rows] = await db.query(
-      `SELECT * FROM plan_activity_monthly WHERE ac_id IN (${placeholders}) AND report_month = ?`,
+      `SELECT *
+       FROM plan_activity_monthly
+       WHERE ac_id IN (${placeholders}) AND report_month = ?
+       ORDER BY updated_at DESC, id DESC`,
       [...activityIds, reportMonth]
     );
     return rows;

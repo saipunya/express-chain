@@ -1,0 +1,55 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h5 mb-1"><i class="bi bi-journal-text me-2"></i>Audit Log #<%= row.id %></h1>
+    <div class="text-muted small"><%= new Date(row.created_at).toLocaleString('th-TH') %></div>
+  </div>
+  <a class="btn btn-outline-secondary" href="/auditlog"><i class="bi bi-arrow-left me-2"></i>กลับ</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="fw-semibold">ผู้ใช้</div>
+        <div><%= row.username || '-' %></div>
+        <div class="text-muted small"><%= row.fullname || '' %> (<%= row.m_class || '-' %>)</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Action</div>
+        <div><span class="badge bg-info text-dark"><%= row.action %></span> <span class="badge bg-secondary"><%= row.module %></span></div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Request</div>
+        <div><span class="badge bg-dark"><%= row.method %></span> <span class="text-muted"><%= row.path %></span></div>
+        <div class="text-muted small">status <%= row.status_code %> | <%= row.duration_ms %> ms</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">IP / User-Agent</div>
+        <div class="small"><%= row.ip || '-' %></div>
+        <div class="small text-muted"><%= row.user_agent || '-' %></div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Session</div>
+        <div class="small"><%= row.session_id || '-' %></div>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Query</div>
+        <pre class="bg-light p-3 rounded small mb-0"><%= row.query_text || '' %></pre>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Body</div>
+        <pre class="bg-light p-3 rounded small mb-0"><%= row.body_text || '' %></pre>
+      </div>
+      <% if (row.error_text) { %>
+        <div class="col-12">
+          <div class="fw-semibold text-danger">Error</div>
+          <pre class="bg-light p-3 rounded small mb-0"><%= row.error_text %></pre>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

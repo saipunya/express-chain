@@ -134,6 +134,7 @@
       <form action="/planactivity/report" method="post" class="card border-0 shadow-sm">
         <input type="hidden" name="pro_code" value="<%= selectedProject %>">
         <input type="hidden" name="report_month" value="<%= monthInput %>">
+
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
           <div>
             <h2 class="h5 mb-0">บันทึกสถานะกิจกรรม</h2>
@@ -153,15 +154,15 @@
               </tr>
             </thead>
             <tbody>
-              <% activities.forEach(activity => { const monthlyRecord = statusesMap[activity.ac_id]; const currentStatus = typeof monthlyRecord?.status !== 'undefined' ? monthlyRecord.status : activity.ac_status; const currentNote = monthlyRecord?.note || ''; %>
+              <% activities.forEach(activity => { const monthlyRecord = statusesMap[activity.ac_id]; const currentStatusRaw = typeof monthlyRecord?.status !== 'undefined' ? monthlyRecord.status : activity.ac_status; const currentStatus = Number.isFinite(Number(currentStatusRaw)) ? Number(currentStatusRaw) : 0; const currentNote = monthlyRecord?.note || ''; %>
                 <tr>
                   <td><%= activity.ac_id %></td>
                   <td><%= activity.ac_number %></td>
                   <td><%= activity.ac_subject %></td>
                   <td>
                     <div class="btn-group" role="group">
-                      <% statusOptions.forEach(opt => { %>
-                        <input type="radio" class="btn-check" name="status[<%= activity.ac_id %>]" id="status-<%= activity.ac_id %>-<%= opt.value %>" value="<%= opt.value %>" <%= Number(currentStatus) === opt.value ? 'checked' : '' %>>
+                      <% statusOptions.forEach((opt, idx) => { %>
+                        <input type="radio" class="btn-check" name="status_<%= activity.ac_id %>" id="status-<%= activity.ac_id %>-<%= opt.value %>" value="<%= opt.value %>" <%= currentStatus === opt.value ? 'checked' : '' %> <%= idx === 0 ? 'required' : '' %>>
                         <label class="btn btn-outline-<%= opt.value === 2 ? 'success' : opt.value === 1 ? 'warning' : 'secondary' %>" for="status-<%= activity.ac_id %>-<%= opt.value %>">
                           <i class="bi bi-<%= opt.icon %> me-1"></i><%= opt.label %>
                         </label>
@@ -169,7 +170,7 @@
                     </div>
                   </td>
                   <td>
-                    <input type="text" class="form-control" name="note[<%= activity.ac_id %>]" value="<%= currentNote %>" placeholder="หมายเหตุเพิ่มเติม">
+                    <input type="text" class="form-control" name="note_<%= activity.ac_id %>" value="<%= currentNote %>" placeholder="หมายเหตุเพิ่มเติม">
                   </td>
                 </tr>
               <% }) %>
@@ -233,7 +234,8 @@
 
         <form action="/planactivity/report/kpi" method="post" class="card border-0 shadow-sm">
           <input type="hidden" name="pro_code" value="<%= selectedProject %>">
-          <input type="hidden" name="report_month" value="<%= monthInput %>">
+         <input type="hidden" name="report_month" value="<%= monthInput %>-01">
+
           <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <div>
               <h3 class="h5 mb-0">บันทึกผลการดำเนินงานตามตัวชี้วัด</h3>

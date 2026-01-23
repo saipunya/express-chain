@@ -42,6 +42,9 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '2mb' }));
 
+// Audit log (management actions)
+app.use(require('./middlewares/auditLogger')());
+
 // method-override: prefer installed package, otherwise use lightweight fallback
 let methodOverridePkg = null;
 try {
@@ -125,6 +128,7 @@ app.use((req, res) => {
 // อย่าง cron job ส่ง Telegram
 require('./cron/gitgumNotifier');
 require('./cron/dailyTelegramNotify'); // <- เพิ่มบรรทัดนี้
+require('./cron/auditLogRetention');
 
 // สร้าง http server แทน app.listen
 const server = http.createServer(app);

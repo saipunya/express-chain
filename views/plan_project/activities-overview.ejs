@@ -1,0 +1,114 @@
+<%- include('../partials/header') %>
+
+<% const projectStatusMap = {
+  2: { label: 'เสร็จแล้ว', badge: 'success', icon: 'check-circle' },
+  1: { label: 'กำลังดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' },
+  0: { label: 'รอดำเนิน', badge: 'secondary', icon: 'clock' }
+}; %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-collection me-2"></i>ภาพรวมโครงการและกิจกรรม</h1>
+      <p class="text-muted small mb-0">ดูรายละเอียดโครงการทั้งหมดพร้อมกิจกรรมที่เกี่ยวข้องในหน้าจอเดียว</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/planproject" class="btn btn-outline-primary"><i class="bi bi-kanban me-2"></i>จัดการโครงการ</a>
+      <a href="/planactivity" class="btn btn-outline-success"><i class="bi bi-list-check me-2"></i>จัดการกิจกรรม</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase text-muted small mb-1">จำนวนโครงการ</p>
+          <h3 class="mb-0"><%= stats.totalProjects %> โครงการ</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <p class="text-uppercase text-muted small mb-1">จำนวนกิจกรรมทั้งหมด</p>
+          <h3 class="mb-0 text-primary"><%= stats.totalActivities %> รายการ</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if (!projects.length) { %>
+    <div class="alert alert-info shadow-sm">ยังไม่มีโครงการในระบบ</div>
+  <% } else { %>
+    <% projects.forEach((project) => { const activityCount = project.activities.length; const projectStatus = projectStatusMap[project.pro_status] || projectStatusMap[0]; %>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <h2 class="h5 mb-0"><i class="bi bi-kanban me-2"></i><%= project.pro_subject %></h2>
+            <p class="text-muted small mb-0">รหัสโครงการ <span class="fw-semibold"><%= project.pro_code %></span> | แผนหลัก <%= project.pro_macode || '-' %></p>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
+            <div class="small text-muted mt-1">กิจกรรมทั้งหมด <span class="fw-semibold"><%= activityCount %></span> รายการ</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">
+              <p class="text-muted small mb-1">เป้าหมาย</p>
+              <div class="fw-semibold"><%= project.pro_target || '-' %></div>
+            </div>
+            <div class="col-md-3">
+              <p class="text-muted small mb-1">งบประมาณ</p>
+              <div class="text-success fw-semibold"><%= project.pro_budget ? Number(project.pro_budget).toLocaleString('th-TH') + ' บาท' : '-' %></div>
+            </div>
+            <div class="col-md-3">
+              <p class="text-muted small mb-1">ผู้รับผิดชอบ</p>
+              <div class="fw-semibold"><%= project.pro_respon || '-' %></div>
+            </div>
+            <div class="col-md-3">
+              <p class="text-muted small mb-1">บันทึกโดย / วันที่</p>
+              <div class="small"><%= project.pro_saveby || '-' %></div>
+              <div class="text-muted small"><%= thaiDate(project.pro_savedate) %></div>
+            </div>
+          </div>
+
+          <% if (!activityCount) { %>
+            <div class="alert alert-secondary mb-0"><i class="bi bi-info-circle me-2"></i>ยังไม่มีการเพิ่มกิจกรรมสำหรับโครงการนี้</div>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 60px;">#</th>
+                    <th style="width: 80px;">ลำดับ</th>
+                    <th>ชื่อกิจกรรม</th>
+                    <th style="width: 200px;">สถานะ</th>
+                    <th style="width: 160px;">ผู้บันทึก</th>
+                    <th style="width: 140px;">วันที่</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% project.activities.forEach((activity, index) => { const statusMeta = activityStatuses[Number(activity.ac_status)] || activityStatuses[0]; %>
+                    <tr>
+                      <td><span class="badge bg-light text-dark">ID <%= activity.ac_id %></span></td>
+                      <td><%= activity.ac_number %></td>
+                      <td><%= activity.ac_subject %></td>
+                      <td>
+                        <span class="badge bg-<%= statusMeta.badge %>"><i class="bi bi-<%= statusMeta.icon %> me-1"></i><%= statusMeta.label %></span>
+                      </td>
+                      <td><small><%= activity.ac_saveby || '-' %></small></td>
+                      <td><small class="text-muted"><%= thaiDate(activity.ac_savedate) %></small></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

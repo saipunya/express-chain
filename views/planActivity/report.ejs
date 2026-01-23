@@ -1,6 +1,40 @@
 <%- include('../partials/header') %>
 
-<% const kpiList = Array.isArray(typeof kpiMetrics !== 'undefined' ? kpiMetrics : []) ? (kpiMetrics || []) : []; const hasProject = Boolean(selectedProject); const monthInput = (selectedMonth || '').slice(0, 7); const monthDisplay = (typeof monthLabel !== 'undefined' && monthLabel) ? monthLabel : monthInput; const hasActivities = Array.isArray(activities) && activities.length > 0; const hasKpis = kpiList.length > 0; %>
+<%
+  const kpiList = Array.isArray(typeof kpiMetrics !== 'undefined' ? kpiMetrics : []) ? (kpiMetrics || []) : [];
+  const hasProject = Boolean(selectedProject);
+  const monthInput = (selectedMonth || '').slice(0, 7);
+  const monthDisplay = (typeof monthLabel !== 'undefined' && monthLabel) ? monthLabel : monthInput;
+  const hasActivities = Array.isArray(activities) && activities.length > 0;
+  const hasKpis = kpiList.length > 0;
+  const isoMonthValue = monthInput || new Date().toISOString().slice(0, 7);
+  let selectedGregorianYear = Number.parseInt(isoMonthValue.slice(0, 4), 10);
+  let selectedMonthNumber = Number.parseInt(isoMonthValue.slice(5, 7), 10);
+  if (Number.isNaN(selectedGregorianYear)) {
+    selectedGregorianYear = new Date().getFullYear();
+  }
+  if (Number.isNaN(selectedMonthNumber)) {
+    selectedMonthNumber = new Date().getMonth() + 1;
+  }
+  const monthOptions = [
+    { value: 1, label: 'มกราคม' },
+    { value: 2, label: 'กุมภาพันธ์' },
+    { value: 3, label: 'มีนาคม' },
+    { value: 4, label: 'เมษายน' },
+    { value: 5, label: 'พฤษภาคม' },
+    { value: 6, label: 'มิถุนายน' },
+    { value: 7, label: 'กรกฎาคม' },
+    { value: 8, label: 'สิงหาคม' },
+    { value: 9, label: 'กันยายน' },
+    { value: 10, label: 'ตุลาคม' },
+    { value: 11, label: 'พฤศจิกายน' },
+    { value: 12, label: 'ธันวาคม' }
+  ];
+  const thaiYearOptions = [];
+  for (let diff = -2; diff <= 2; diff += 1) {
+    thaiYearOptions.push(selectedGregorianYear + diff);
+  }
+%>
 
 <div class="py-4">
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
@@ -9,11 +43,13 @@
       <p class="text-muted small mb-0">เลือกโครงการและเดือนที่ต้องการสรุปรายงาน พร้อมกำหนดสถานะกิจกรรมย่อย</p>
     </div>
     <div>
-      <a href="/planactivity" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>ย้อนกลับกิจกรรมทั้งหมด</a>
+      <!-- back to project page -->
+
+      <a href="/planproject/activities-overview" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>ย้อนกลับโครงการทั้งหมด</a>
     </div>
   </div>
 
-  <form class="card border-0 shadow-sm mb-4" method="get" action="/planactivity/report">
+  <form id="monthly-filter-form" class="card border-0 shadow-sm mb-4" method="get" action="/planactivity/report">
     <div class="card-body">
       <div class="row g-3 align-items-end">
         <div class="col-md-6">
@@ -29,7 +65,23 @@
         </div>
         <div class="col-md-3">
           <label for="month" class="form-label">เดือนที่รายงาน</label>
-          <input type="month" class="form-control" id="month" name="month" value="<%= monthInput || new Date().toISOString().slice(0,7) %>" required>
+          <input type="hidden" id="month-hidden" name="month" value="<%= isoMonthValue %>">
+          <div class="row g-2">
+            <div class="col-6">
+              <select class="form-select" id="month-select" aria-label="เลือกเดือน" required>
+                <% monthOptions.forEach((option) => { %>
+                  <option value="<%= option.value %>" <%= option.value === selectedMonthNumber ? 'selected' : '' %>><%= option.label %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-6">
+              <select class="form-select" id="year-select" aria-label="เลือกปี พ.ศ." required>
+                <% thaiYearOptions.forEach((year) => { const thaiYear = year + 543; %>
+                  <option value="<%= thaiYear %>" <%= year === selectedGregorianYear ? 'selected' : '' %>><%= thaiYear %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="col-md-3 d-grid">
           <button type="submit" class="btn btn-primary"><i class="bi bi-search me-2"></i>แสดงรายการ</button>
@@ -101,7 +153,7 @@
               </tr>
             </thead>
             <tbody>
-              <% activities.forEach(activity => { const currentStatus = statusesMap[activity.ac_id]?.status; %>
+              <% activities.forEach(activity => { const monthlyRecord = statusesMap[activity.ac_id]; const currentStatus = typeof monthlyRecord?.status !== 'undefined' ? monthlyRecord.status : activity.ac_status; const currentNote = monthlyRecord?.note || ''; %>
                 <tr>
                   <td><%= activity.ac_id %></td>
                   <td><%= activity.ac_number %></td>
@@ -117,7 +169,7 @@
                     </div>
                   </td>
                   <td>
-                    <input type="text" class="form-control" name="note[<%= activity.ac_id %>]" value="<%= statusesMap[activity.ac_id]?.note || '' %>" placeholder="หมายเหตุเพิ่มเติม">
+                    <input type="text" class="form-control" name="note[<%= activity.ac_id %>]" value="<%= currentNote %>" placeholder="หมายเหตุเพิ่มเติม">
                   </td>
                 </tr>
               <% }) %>
@@ -187,7 +239,6 @@
               <h3 class="h5 mb-0">บันทึกผลการดำเนินงานตามตัวชี้วัด</h3>
               <p class="text-muted small mb-0">เดือน <span class="fw-semibold"><%= monthDisplay %></span></p>
             </div>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>บันทึกผลตัวชี้วัด</button>
           </div>
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -203,9 +254,12 @@
                 </tr>
               </thead>
               <tbody>
-                <% kpiList.forEach(kpi => { const percent = kpi.achievement_percent; const monthlyRecord = kpi.monthly_record; const cumulative = Number(kpi.cumulative_total || 0); const targetValue = Number(kpi.kp_plan || 0); %>
+                <% kpiList.forEach((kpi, index) => { const percent = kpi.achievement_percent; const monthlyRecord = kpi.monthly_record; const cumulative = Number(kpi.cumulative_total || 0); const targetValue = Number(kpi.kp_plan || 0); %>
                   <tr>
-                    <td><span class="badge bg-light text-dark">ID <%= kpi.kp_id %></span></td>
+                    <td>
+                      <span class="badge bg-light text-dark">ID <%= kpi.kp_id %></span>
+                      <input type="hidden" name="kpi_rows[<%= index %>][kp_id]" value="<%= kpi.kp_id %>">
+                    </td>
                     <td>
                       <div class="fw-semibold"><%= kpi.kp_subject %></div>
                       <small class="text-muted">ลำดับ <%= kpi.kp_number %> | โค้ด <%= kpi.kp_procode %></small>
@@ -226,11 +280,11 @@
                       <% } %>
                     </td>
                     <td>
-                      <input type="number" step="0.01" min="0" class="form-control" name="actual_value[<%= kpi.kp_id %>]" value="<%= monthlyRecord ? Number(monthlyRecord.actual_value).toString() : '' %>" placeholder="เช่น 25.0">
+                      <input type="number" step="0.01" min="0" class="form-control" name="kpi_rows[<%= index %>][actual_value]" value="<%= monthlyRecord ? Number(monthlyRecord.actual_value).toString() : '' %>" placeholder="เช่น 25.0">
                       <small class="text-muted">เว้นว่างหากไม่มีข้อมูล</small>
                     </td>
                     <td>
-                      <input type="text" class="form-control" name="kpi_note[<%= kpi.kp_id %>]" value="<%= monthlyRecord && monthlyRecord.note ? monthlyRecord.note : '' %>" placeholder="สาระสำคัญ/ที่มาของข้อมูล">
+                      <input type="text" class="form-control" name="kpi_rows[<%= index %>][note]" value="<%= monthlyRecord && monthlyRecord.note ? monthlyRecord.note : '' %>" placeholder="สาระสำคัญ/ที่มาของข้อมูล">
                     </td>
                   </tr>
                 <% }) %>
@@ -246,5 +300,33 @@
     </div>
   <% } %>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('monthly-filter-form');
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+    const hiddenInput = document.getElementById('month-hidden');
+    if (!form || !monthSelect || !yearSelect || !hiddenInput) {
+      return;
+    }
+
+    const padMonth = (value) => {
+      const numeric = Number.parseInt(value, 10);
+      const safeNumber = Number.isNaN(numeric) ? 1 : numeric;
+      return String(safeNumber).padStart(2, '0');
+    };
+
+    const syncMonthValue = () => {
+      const beYear = Number.parseInt(yearSelect.value, 10);
+      const adYear = Number.isNaN(beYear) ? new Date().getFullYear() : beYear - 543;
+      hiddenInput.value = `${adYear}-${padMonth(monthSelect.value)}`;
+    };
+
+    monthSelect.addEventListener('change', syncMonthValue);
+    yearSelect.addEventListener('change', syncMonthValue);
+    form.addEventListener('submit', syncMonthValue);
+  });
+</script>
 
 <%- include('../partials/footer') %>

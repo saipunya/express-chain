@@ -1,6 +1,13 @@
 const projectModel = require('../models/planProjectModel');
 const planMainModel = require('../models/planMainModel');
+const planActivityModel = require('../models/planActivity');
 const thaiDate = require('../utils/thaiDate');
+
+const ACTIVITY_STATUS = {
+  2: { label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
+  1: { label: 'อยู่ระหว่างดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' },
+  0: { label: 'ยังไม่ดำเนินการ', badge: 'secondary', icon: 'clock' }
+};
 
 exports.listPage = async (req, res) => {
   const projects = await projectModel.getAll();
@@ -67,5 +74,53 @@ exports.delete = async (req, res) => {
     res.redirect('/planproject');
   } catch (err) {
     res.status(500).send('Error deleting project');
+  }
+};
+
+exports.activitiesOverviewPage = async (req, res) => {
+  try {
+    const [projects, activities] = await Promise.all([
+      projectModel.getAll(),
+      planActivityModel.findAll()
+    ]);
+
+    const groupedActivities = activities.reduce((acc, activity) => {
+      const key = activity.ac_procode || 'UNASSIGNED';
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(activity);
+      return acc;
+    }, {});
+
+    Object.values(groupedActivities).forEach((list) => {
+      list.sort((a, b) => Number(a.ac_number || 0) - Number(b.ac_number || 0));
+    });
+
+    const projectsWithActivities = projects
+      .map((project) => ({
+        ...project,
+        activities: groupedActivities[project.pro_code] || []
+      }))
+      .sort((a, b) => {
+        if (!a.pro_code || !b.pro_code) return 0;
+        return a.pro_code.localeCompare(b.pro_code);
+      });
+
+    const stats = {
+      totalProjects: projects.length,
+      totalActivities: activities.length
+    };
+
+    res.render('plan_project/activities-overview', {
+      title: 'โครงการและกิจกรรมทั้งหมด',
+      projects: projectsWithActivities,
+      stats,
+      activityStatuses: ACTIVITY_STATUS,
+      thaiDate
+    });
+  } catch (error) {
+    console.error('Error loading project activity overview:', error);
+    res.status(500).send('ไม่สามารถโหลดข้อมูลโครงการและกิจกรรมได้');
   }
 };

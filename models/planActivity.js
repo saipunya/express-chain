@@ -54,5 +54,37 @@ module.exports = {
   },
   async destroy(id) {
     await db.query('DELETE FROM plan_activity WHERE ac_id=?', [id]);
+  },
+
+  async updateStatuses(statusRows) {
+    if (!Array.isArray(statusRows) || statusRows.length === 0) {
+      return 0;
+    }
+
+    const filteredRows = statusRows
+      .map((row) => ({
+        ac_id: Number.parseInt(row.ac_id, 10),
+        status: Number.parseInt(row.status, 10)
+      }))
+      .filter((row) => Number.isInteger(row.ac_id) && Number.isInteger(row.status));
+
+    if (!filteredRows.length) {
+      return 0;
+    }
+
+    const caseSql = filteredRows.map(() => 'WHEN ? THEN ?').join(' ');
+    const caseValues = [];
+    filteredRows.forEach((row) => {
+      caseValues.push(row.ac_id, row.status);
+    });
+    const idPlaceholders = filteredRows.map(() => '?').join(',');
+    const ids = filteredRows.map((row) => row.ac_id);
+
+    const sql = `UPDATE plan_activity
+                 SET ac_status = CASE ac_id ${caseSql} ELSE ac_status END
+                 WHERE ac_id IN (${idPlaceholders})`;
+
+    const [result] = await db.query(sql, [...caseValues, ...ids]);
+    return result.affectedRows || 0;
   }
 };

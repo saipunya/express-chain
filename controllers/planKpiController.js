@@ -35,21 +35,23 @@ const toMonthLabel = (value) => {
     return '-';
   }
 
-  let isoString = value;
-
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    isoString = value.toISOString().slice(0, 10);
+    const year = value.getFullYear();
+    const monthIndex = value.getMonth();
+    const monthName = TH_MONTHS[monthIndex] || String(monthIndex + 1).padStart(2, '0');
+    const buddhistYear = year + 543;
+    return `${monthName} ${buddhistYear}`;
   }
 
-  if (typeof isoString === 'string' && isoString.length >= 7) {
-    const [year, month] = isoString.split('-');
+  if (typeof value === 'string' && value.length >= 7) {
+    const [year, month] = value.split('-');
     const monthIndex = Number(month) - 1;
     const monthName = TH_MONTHS[monthIndex] || month;
     const buddhistYear = Number(year) + 543;
     return `${monthName} ${buddhistYear}`;
   }
 
-  return value;
+  return String(value);
 };
 
 // List all KPIs (optionally filter by project code ?pro_code=...)

@@ -205,8 +205,8 @@
                     <% } %>
                   </td>
                   <td>
-                    <div>กิจกรรม: <strong><%= report.latestActivityLabel || '-' %></strong></div>
-                    <div>ตัวชี้วัด: <strong><%= report.latestKpiLabel || '-' %></strong></div>
+                    <div>กิจกรรม: <strong><%= report.latestActivityLabel ? 'เดือน ' + report.latestActivityLabel : '-' %></strong></div>
+                    <div>ตัวชี้วัด: <strong><%= report.latestKpiLabel ? 'เดือน ' + report.latestKpiLabel : '-' %></strong></div>
                   </td>
                   <td>
                     <a href="/planactivity/report?pro_code=<%= encodeURIComponent(report.pro_code) %>" class="btn btn-outline-primary btn-sm">ดูรายงาน</a>

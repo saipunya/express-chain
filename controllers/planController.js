@@ -20,14 +20,16 @@ const toThaiMonthLabel = (value) => {
         return '';
     }
 
-    let isoString = value;
-
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
-        isoString = value.toISOString().slice(0, 10);
+        const year = value.getFullYear();
+        const monthIndex = value.getMonth();
+        const monthName = TH_MONTHS[monthIndex] || String(monthIndex + 1).padStart(2, '0');
+        const buddhistYear = year + 543;
+        return `${monthName} ${buddhistYear}`;
     }
 
-    if (typeof isoString === 'string' && isoString.length >= 7) {
-        const [year, month] = isoString.split('-');
+    if (typeof value === 'string' && value.length >= 7) {
+        const [year, month] = value.split('-');
         const monthIndex = Number(month) - 1;
         const monthName = TH_MONTHS[monthIndex] || month;
         const buddhistYear = Number(year) + 543;
@@ -80,11 +82,11 @@ exports.index = async function (req, res) {
              ORDER BY m.ma_code`
         );
 
-        const [projectReportingRows] = await db.query(
+        const projectReportingSql =
             `SELECT
                 p.pro_id,
                 p.pro_code,
-                p.pro_name,
+                p.pro_subject AS pro_name,
                 COALESCE(act.total_activities, 0) AS total_activities,
                 COALESCE(act.reported_activities, 0) AS reported_activities,
                 act.latest_activity_month,
@@ -114,8 +116,9 @@ exports.index = async function (req, res) {
                 LEFT JOIN plan_kpi_monthly m ON m.kp_id = k.kp_id
                 GROUP BY k.kp_procode
             ) AS kpi ON kpi.kp_procode = p.pro_code
-            ORDER BY p.pro_code`
-        );
+            ORDER BY p.pro_code`;
+
+        const [projectReportingRows] = await db.query(projectReportingSql);
 
         const projectReporting = projectReportingRows.map((row) => {
             const totalPlan = Number(row.total_plan || 0);

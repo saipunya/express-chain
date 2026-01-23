@@ -46,21 +46,50 @@ const toThaiMonthLabel = (value) => {
     return '';
   }
 
-  let dateString = value;
-
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    dateString = value.toISOString().slice(0, 10);
+    const year = value.getFullYear();
+    const monthIndex = value.getMonth();
+    const monthName = TH_MONTHS[monthIndex] || String(monthIndex + 1).padStart(2, '0');
+    const buddhistYear = year + 543;
+    return `${monthName} ${buddhistYear}`;
   }
 
-  if (typeof dateString === 'string' && dateString.length >= 7) {
-    const [year, month] = dateString.split('-');
+  if (typeof value === 'string' && value.length >= 7) {
+    const [year, month] = value.split('-');
     const monthIndex = Number(month) - 1;
     const monthName = TH_MONTHS[monthIndex] || month;
     const buddhistYear = Number(year) + 543;
     return `${monthName} ${buddhistYear}`;
   }
 
-  return dateString;
+  return String(value);
+};
+
+const extractBracketFieldMap = (payload, fieldName) => {
+  if (!payload) {
+    return {};
+  }
+
+  const direct = payload[fieldName];
+  if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+    return direct;
+  }
+
+  const prefix = `${fieldName}[`;
+  const suffix = ']';
+
+  return Object.entries(payload).reduce((acc, [key, value]) => {
+    if (typeof key !== 'string' || !key.startsWith(prefix) || !key.endsWith(suffix)) {
+      return acc;
+    }
+
+    const innerKey = key.slice(prefix.length, -1);
+    if (innerKey) {
+      acc[innerKey] = value;
+    }
+
+    return acc;
+  }, {});
 };
 
 // List all activities
@@ -294,8 +323,8 @@ exports.storeMonthlyStatuses = async (req, res) => {
     return res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
   }
 
-  const statusInputs = req.body.status || {};
-  const noteInputs = req.body.note || {};
+  const statusInputs = extractBracketFieldMap(req.body, 'status');
+  const noteInputs = extractBracketFieldMap(req.body, 'note');
   const updatedBy = req.session?.user?.username || req.session?.user?.fullname || 'system';
 
   const validStatuses = new Set([0, 1, 2]);
@@ -322,6 +351,7 @@ exports.storeMonthlyStatuses = async (req, res) => {
 
   if (rows.length) {
     await PlanActivityMonthly.upsertStatuses(rows);
+    await PlanActivity.updateStatuses(rows.map(({ ac_id, status }) => ({ ac_id, status })));
   }
 
   res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
@@ -345,28 +375,70 @@ exports.storeMonthlyKpi = async (req, res) => {
   const actualInputs = req.body.actual_value || {};
   const noteInputs = req.body.kpi_note || {};
   const createdBy = req.session?.user?.username || req.session?.user?.fullname || 'system';
+  const structuredInput = req.body.kpi_rows || null;
+  let structuredRows = [];
 
-  const rows = kpis
-    .map((kpi) => {
-      const rawValue = actualInputs[kpi.kp_id] ?? actualInputs[String(kpi.kp_id)];
-      if (rawValue === undefined || rawValue === '') {
-        return null;
-      }
+  if (structuredInput) {
+    const entries = Array.isArray(structuredInput)
+      ? structuredInput
+      : Object.keys(structuredInput)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((key) => structuredInput[key]);
 
-      const numericValue = Number.parseFloat(rawValue);
-      if (Number.isNaN(numericValue)) {
-        return null;
-      }
+    structuredRows = entries
+      .map((entry) => {
+        if (!entry) {
+          return null;
+        }
 
-      return {
-        kp_id: kpi.kp_id,
-        report_month: normalizedMonth,
-        actual_value: numericValue,
-        note: noteInputs[kpi.kp_id] || noteInputs[String(kpi.kp_id)] || null,
-        created_by: createdBy
-      };
-    })
-    .filter(Boolean);
+        const kpId = Number.parseInt(entry.kp_id || entry.id || entry.kpi_id, 10);
+        const rawValue = entry.actual_value ?? entry.value;
+
+        if (!kpId || rawValue === undefined || rawValue === '') {
+          return null;
+        }
+
+        const numericValue = Number.parseFloat(rawValue);
+        if (Number.isNaN(numericValue)) {
+          return null;
+        }
+
+        return {
+          kp_id: kpId,
+          report_month: normalizedMonth,
+          actual_value: numericValue,
+          note: entry.note?.trim() ? entry.note.trim() : null,
+          created_by: createdBy
+        };
+      })
+      .filter(Boolean);
+  }
+
+  const fallbackRows = structuredRows.length
+    ? []
+    : kpis
+        .map((kpi) => {
+          const rawValue = actualInputs[kpi.kp_id] ?? actualInputs[String(kpi.kp_id)];
+          if (rawValue === undefined || rawValue === '') {
+            return null;
+          }
+
+          const numericValue = Number.parseFloat(rawValue);
+          if (Number.isNaN(numericValue)) {
+            return null;
+          }
+
+          return {
+            kp_id: kpi.kp_id,
+            report_month: normalizedMonth,
+            actual_value: numericValue,
+            note: noteInputs[kpi.kp_id] || noteInputs[String(kpi.kp_id)] || null,
+            created_by: createdBy
+          };
+        })
+        .filter(Boolean);
+
+  const rows = structuredRows.length ? structuredRows : fallbackRows;
 
   if (rows.length) {
     await PlanKpiMonthly.upsertMany(rows);

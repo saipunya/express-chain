@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 module.exports = {
   async findAll() {
-    const [rows] = await db.query('SELECT * FROM plan_kpi');
+    const [rows] = await db.query('SELECT * FROM plan_kpi ORDER BY kp_number ASC, kp_id ASC');
     return rows;
   },
 
@@ -12,7 +12,10 @@ module.exports = {
   },
 
   async findByProjectCode(proCode) {
-    const [rows] = await db.query('SELECT * FROM plan_kpi WHERE kp_procode = ?', [proCode]);
+    const [rows] = await db.query(
+      'SELECT * FROM plan_kpi WHERE kp_procode = ? ORDER BY kp_number ASC, kp_id ASC',
+      [proCode]
+    );
     return rows;
   },
 

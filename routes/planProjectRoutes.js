@@ -8,6 +8,7 @@ const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 router.use(requireLogin, requireLevel(['admin', 'pbt']));
 
 router.get('/', controller.listPage);
+router.get('/activities-overview', controller.activitiesOverviewPage);
 router.get('/new', controller.newPage);
 router.post('/', controller.create);
 router.get('/edit/:id', controller.editPage);

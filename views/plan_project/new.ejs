@@ -24,11 +24,17 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">กลุ่ม</label>
-        <input type="text" name="pro_group" class="form-control">
+        <input type="text" class="form-control" value="(ระบบจะกำหนดตามผู้รับผิดชอบ)" disabled>
+        <div class="form-text text-muted">จะบันทึกค่า <code>pro_group</code> จาก <code>member3.m_class</code> ของผู้รับผิดชอบ</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">ผู้รับผิดชอบ</label>
-        <input type="text" name="pro_respon" class="form-control">
+        <select name="pro_respon_id" class="form-select" required>
+          <option value="">-- เลือกผู้รับผิดชอบ (จากผู้ใช้งานในระบบ) --</option>
+          <% (users || []).forEach(u => { %>
+            <option value="<%= u.m_id %>"><%= u.m_name %> (<%= u.m_user %>)</option>
+          <% }) %>
+        </select>
       </div>
       <div class="col-md-6">
         <label class="form-label">สถานะโครงการ</label>

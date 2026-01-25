@@ -3,16 +3,24 @@ const router = express.Router();
 const controller = require('../controllers/planProjectController');
 
 const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
+const { requireAdminOrResponsibleByProjectId } = require('../middlewares/projectAccess');
 
-// Only logged-in users with mClass = admin or pbt
-router.use(requireLogin, requireLevel(['admin', 'pbt']));
+router.use(requireLogin);
 
-router.get('/', controller.listPage);
-router.get('/activities-overview', controller.activitiesOverviewPage);
-router.get('/new', controller.newPage);
-router.post('/', controller.create);
-router.get('/edit/:id', controller.editPage);
-router.post('/edit/:id', controller.update);
-router.post('/delete/:id', controller.delete);
+const requireAdminOrPbt = requireLevel(['admin', 'pbt']);
+const requireAdmin = requireLevel(['admin']);
+const requireAdminOrResponForProject = requireAdminOrResponsibleByProjectId((req) => req.params.id);
+
+router.get('/', requireAdminOrPbt, controller.listPage);
+router.get('/activities-overview', requireAdminOrPbt, controller.activitiesOverviewPage);
+router.get('/new', requireAdminOrPbt, controller.newPage);
+router.post('/', requireAdminOrPbt, controller.create);
+
+// Edit/update: only admin or project responsible
+router.get('/edit/:id', requireAdminOrResponForProject, controller.editPage);
+router.post('/edit/:id', requireAdminOrResponForProject, controller.update);
+
+// Delete: admin only
+router.post('/delete/:id', requireAdmin, controller.delete);
 
 module.exports = router;

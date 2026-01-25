@@ -11,6 +11,29 @@
         <a href="/planproject/new" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มโครงการใหม่</a>
       </div>
     </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <form class="row g-2 align-items-end" method="GET" action="/planproject">
+          <div class="col-md-4">
+            <label class="form-label small text-muted">กรองตามผู้รับผิดชอบ</label>
+            <select class="form-select" name="pro_respon_id">
+              <option value="" <%= selectedResponId ? '' : 'selected' %>>ทั้งหมด</option>
+              <% (users || []).forEach((u) => { %>
+                <option value="<%= u.m_id %>" <%= Number(selectedResponId) === Number(u.m_id) ? 'selected' : '' %>>
+                  <%= u.m_name %><%= u.m_user ? ' (@' + u.m_user + ')' : '' %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-8 d-flex gap-2">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-2"></i>กรอง</button>
+            <a class="btn btn-outline-secondary" href="/planproject"><i class="bi bi-x-circle me-2"></i>ล้างตัวกรอง</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="card border-0 shadow-sm">
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -28,6 +51,9 @@
                 <th style="width: 8%">แผนงาน</th>
                 <th style="width: 8%">โดย</th>
                 <th class="text-center" style="width: 8%">วันที่</th>
+                <% if (user && user.mClass === 'admin') { %>
+                  <th class="text-center" style="width: 10%">จัดการ</th>
+                <% } %>
               </tr>
             </thead>
             <tbody>
@@ -39,7 +65,12 @@
                   <td><small><%= p.pro_target %></small></td>
                   <td><small class="text-success fw-bold"><%= p.pro_budget ? p.pro_budget.toLocaleString('th-TH') : '-' %></small></td>
                   <td><small><%= p.pro_group %></small></td>
-                  <td><small><%= p.pro_respon %></small></td>
+                  <td>
+                    <div class="small"><%= p.respon_name || '-' %></div>
+                    <% if (p.respon_username) { %>
+                      <div class="small text-muted">@<%= p.respon_username %></div>
+                    <% } %>
+                  </td>
                   <td class="text-center">
                     <% if (p.pro_status === 2) { %>
                       <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>เสร็จแล้ว</span>
@@ -52,6 +83,18 @@
                   <td><small><%= p.pro_macode %></small></td>
                   <td><small class="text-muted"><%= p.pro_saveby %></small></td>
                   <td class="text-center"><small class="text-muted"><%= thaiDate(p.pro_savedate) %></small></td>
+                  <% if (user && user.mClass === 'admin') { %>
+                    <td class="text-center">
+                      <a href="/planproject/edit/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary me-1" title="แก้ไข">
+                        <i class="bi bi-pencil-square"></i>
+                      </a>
+                      <form method="POST" action="/planproject/delete/<%= p.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบ">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </td>
+                  <% } %>
                 </tr>
               <% }) %>
             </tbody>

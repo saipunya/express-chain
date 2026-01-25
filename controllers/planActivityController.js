@@ -208,7 +208,11 @@ exports.monthlyReport = async (req, res) => {
   // Avoid 304 caching that can make the UI appear unchanged after POST/redirect.
   res.set('Cache-Control', 'no-store');
 
-  const projects = await PlanProject.findAll();
+  const isAdmin = req.session?.user?.mClass === 'admin';
+  const userId = Number(req.session?.user?.id);
+  const projects = isAdmin
+    ? await PlanProject.findAll()
+    : (userId ? await PlanProject.findAllByResponsibleId(userId) : []);
   const selectedProject = req.query.pro_code || '';
 
   const selectedMonth = req.query.month || new Date().toISOString().slice(0, 7);

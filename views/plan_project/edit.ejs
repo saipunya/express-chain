@@ -24,11 +24,20 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">กลุ่ม</label>
-        <input type="text" name="pro_group" class="form-control" value="<%= project.pro_group %>">
+        <input type="text" class="form-control" value="<%= project.pro_group || '' %>" disabled>
+        <div class="form-text text-muted">ระบบจะอัปเดตกลุ่มจาก <code>member3.m_class</code> ของผู้รับผิดชอบเมื่อกดบันทึก</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">ผู้รับผิดชอบ</label>
-        <input type="text" name="pro_respon" class="form-control" value="<%= project.pro_respon %>">
+        <select name="pro_respon_id" class="form-select" required>
+          <option value="">-- เลือกผู้รับผิดชอบ (จากผู้ใช้งานในระบบ) --</option>
+          <% (users || []).forEach(u => { %>
+            <option value="<%= u.m_id %>" <%= String(project.pro_respon_id || '') === String(u.m_id) ? 'selected' : '' %>><%= u.m_name %> (<%= u.m_user %>)</option>
+          <% }) %>
+        </select>
+        <% if (!project.pro_respon_id && project.pro_respon) { %>
+          <div class="form-text text-muted">ค่าเดิม: <%= project.pro_respon %> (กรุณาเลือกใหม่เพื่อบันทึก id)</div>
+        <% } %>
       </div>
       <div class="col-md-6">
         <label class="form-label">สถานะโครงการ</label>

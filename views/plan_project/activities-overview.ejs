@@ -48,7 +48,19 @@
             <p class="text-muted small mb-0">รหัสโครงการ <span class="fw-semibold"><%= project.pro_code %></span> | แผนหลัก <%= project.pro_macode || '-' %></p>
           </div>
           <div class="text-end">
-            <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
+            <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+              <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
+              <% if (user && user.mClass === 'admin') { %>
+                <a href="/planproject/edit/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary" title="แก้ไขโครงการ">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                <form method="POST" action="/planproject/delete/<%= project.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบโครงการ">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              <% } %>
+            </div>
             <div class="small text-muted mt-1">กิจกรรมทั้งหมด <span class="fw-semibold"><%= activityCount %></span> รายการ</div>
           </div>
         </div>
@@ -64,7 +76,10 @@
             </div>
             <div class="col-md-3">
               <p class="text-muted small mb-1">ผู้รับผิดชอบ</p>
-              <div class="fw-semibold"><%= project.pro_respon || '-' %></div>
+              <div class="fw-semibold"><%= project.respon_name || '-' %></div>
+              <% if (project.respon_username) { %>
+                <div class="text-muted small">@<%= project.respon_username %></div>
+              <% } %>
             </div>
             <div class="col-md-3">
               <p class="text-muted small mb-1">บันทึกโดย / วันที่</p>

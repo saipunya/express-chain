@@ -2,6 +2,7 @@ const projectModel = require('../models/planProjectModel');
 const planMainModel = require('../models/planMainModel');
 const planActivityModel = require('../models/planActivity');
 const thaiDate = require('../utils/thaiDate');
+const userModel = require('../models/userModel');
 
 const ACTIVITY_STATUS = {
   2: { label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
@@ -10,25 +11,53 @@ const ACTIVITY_STATUS = {
 };
 
 exports.listPage = async (req, res) => {
-  const projects = await projectModel.getAll();
-  res.render('plan_project/index', { projects, title: 'โครงการ', thaiDate });
+  const responIdRaw = req.query.pro_respon_id;
+  const responIdParsed = Number.parseInt(String(responIdRaw ?? ''), 10);
+  const selectedResponId = Number.isFinite(responIdParsed) ? responIdParsed : '';
+
+  const [projects, users] = await Promise.all([
+    projectModel.getAll(selectedResponId ? { pro_respon_id: selectedResponId } : undefined),
+    userModel.findActiveUsers()
+  ]);
+
+  res.render('plan_project/index', {
+    projects,
+    users,
+    selectedResponId,
+    title: 'โครงการ',
+    thaiDate
+  });
 };
 
 exports.newPage = async (req, res) => {
   const plans = await planMainModel.getAll();
   const pro_saveby = req.session?.user?.username || 'system';
-  res.render('plan_project/new', { title: 'เพิ่มโครงการ', plans, pro_saveby });
+  const users = await userModel.findActiveUsers();
+  res.render('plan_project/new', { title: 'เพิ่มโครงการ', plans, pro_saveby, users });
 };
 
 exports.create = async (req, res) => {
   try {
+    const responIdRaw = req.body.pro_respon_id;
+    const responId = Number.parseInt(String(responIdRaw ?? ''), 10);
+    if (!Number.isFinite(responId)) {
+      return res.status(400).send('กรุณาเลือกผู้รับผิดชอบจากรายชื่อในระบบ');
+    }
+
+    const responUser = await userModel.findActiveUserById(responId);
+    if (!responUser) {
+      return res.status(400).send('ไม่พบผู้รับผิดชอบในระบบ หรือผู้ใช้งานถูกปิดใช้งาน');
+    }
+
     const payload = {
       pro_code: req.body.pro_code || '',
       pro_subject: req.body.pro_subject || '',
       pro_target: req.body.pro_target || '',
       pro_budget: req.body.pro_budget || 0,
-      pro_group: req.body.pro_group || '',
-      pro_respon: req.body.pro_respon || '',
+      // Auto-set group from responsible user's member3.m_class
+      pro_group: responUser.m_class || '',
+      pro_respon: responUser.m_name || '',
+      pro_respon_id: responUser.m_id,
       pro_saveby: req.session?.user?.username || req.body.pro_saveby || 'system',
       pro_savedate: req.body.pro_savedate || new Date().toISOString().slice(0,10),
       pro_macode: req.body.pro_macode || '',
@@ -44,18 +73,32 @@ exports.create = async (req, res) => {
 exports.editPage = async (req, res) => {
   const project = await projectModel.getById(req.params.id);
   const plans = await planMainModel.getAll();
-  res.render('plan_project/edit', { title: 'แก้ไขโครงการ', project, plans });
+  const users = await userModel.findActiveUsers();
+  res.render('plan_project/edit', { title: 'แก้ไขโครงการ', project, plans, users });
 };
 
 exports.update = async (req, res) => {
   try {
+    const responIdRaw = req.body.pro_respon_id;
+    const responId = Number.parseInt(String(responIdRaw ?? ''), 10);
+    if (!Number.isFinite(responId)) {
+      return res.status(400).send('กรุณาเลือกผู้รับผิดชอบจากรายชื่อในระบบ');
+    }
+
+    const responUser = await userModel.findActiveUserById(responId);
+    if (!responUser) {
+      return res.status(400).send('ไม่พบผู้รับผิดชอบในระบบ หรือผู้ใช้งานถูกปิดใช้งาน');
+    }
+
     const payload = {
       pro_code: req.body.pro_code || '',
       pro_subject: req.body.pro_subject || '',
       pro_target: req.body.pro_target || '',
       pro_budget: req.body.pro_budget || 0,
-      pro_group: req.body.pro_group || '',
-      pro_respon: req.body.pro_respon || '',
+      // Auto-set group from responsible user's member3.m_class
+      pro_group: responUser.m_class || '',
+      pro_respon: responUser.m_name || '',
+      pro_respon_id: responUser.m_id,
       pro_saveby: req.session?.user?.username || req.body.pro_saveby || 'system',
       pro_savedate: req.body.pro_savedate || new Date().toISOString().slice(0,10),
       pro_macode: req.body.pro_macode || '',

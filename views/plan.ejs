@@ -76,28 +76,35 @@
     </div>
   </div>
 
-  <!-- Status distribution -->
+  <!-- Status distribution + Charts -->
   <div class="row g-3 mb-4">
     <div class="col-md-6">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
-          <h2 class="h6 mb-3"><i class="bi bi-kanban me-2"></i>สถานะโครงการ</h2>
-          <div class="row text-center">
-            <div class="col-4">
-              <div class="fw-semibold">ยังไม่ดำเนินการ</div>
-              <div class="display-6"><%= projectStats.status.notStarted %></div>
-            </div>
-            <div class="col-4">
-              <div class="fw-semibold text-warning">อยู่ระหว่างดำเนินการ</div>
-              <div class="display-6 text-warning"><%= projectStats.status.inProgress %></div>
-            </div>
-            <div class="col-4">
-              <div class="fw-semibold text-success">ดำเนินการแล้ว</div>
-              <div class="display-6 text-success"><%= projectStats.status.done %></div>
-            </div>
-          </div>
-          <div class="mt-3 text-end">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0"><i class="bi bi-kanban me-2"></i>สถานะโครงการ</h2>
             <a href="/planproject" class="btn btn-outline-primary btn-sm">ไปยังรายการโครงการ</a>
+          </div>
+          <div class="row g-2 align-items-center">
+            <div class="col-6">
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="fw-semibold">ยังไม่ดำเนินการ</div>
+                  <div class="display-6"><%= projectStats.status.notStarted %></div>
+                </div>
+                <div class="col-4">
+                  <div class="fw-semibold text-warning">อยู่ระหว่างดำเนินการ</div>
+                  <div class="display-6 text-warning"><%= projectStats.status.inProgress %></div>
+                </div>
+                <div class="col-4">
+                  <div class="fw-semibold text-success">ดำเนินการแล้ว</div>
+                  <div class="display-6 text-success"><%= projectStats.status.done %></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <canvas id="chartProjectStatus" height="140"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -106,23 +113,30 @@
     <div class="col-md-6">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
-          <h2 class="h6 mb-3"><i class="bi bi-list-check me-2"></i>สถานะกิจกรรม</h2>
-          <div class="row text-center">
-            <div class="col-4">
-              <div class="fw-semibold">ยังไม่ดำเนินการ</div>
-              <div class="display-6"><%= activityStats.status.notStarted %></div>
-            </div>
-            <div class="col-4">
-              <div class="fw-semibold text-warning">อยู่ระหว่างดำเนินการ</div>
-              <div class="display-6 text-warning"><%= activityStats.status.inProgress %></div>
-            </div>
-            <div class="col-4">
-              <div class="fw-semibold text-success">ดำเนินการแล้ว</div>
-              <div class="display-6 text-success"><%= activityStats.status.done %></div>
-            </div>
-          </div>
-          <div class="mt-3 text-end">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0"><i class="bi bi-list-check me-2"></i>สถานะกิจกรรม</h2>
             <a href="/planactivity" class="btn btn-outline-primary btn-sm">ไปยังรายการกิจกรรม</a>
+          </div>
+          <div class="row g-2 align-items-center">
+            <div class="col-6">
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="fw-semibold">ยังไม่ดำเนินการ</div>
+                  <div class="display-6"><%= activityStats.status.notStarted %></div>
+                </div>
+                <div class="col-4">
+                  <div class="fw-semibold text-warning">อยู่ระหว่างดำเนินการ</div>
+                  <div class="display-6 text-warning"><%= activityStats.status.inProgress %></div>
+                </div>
+                <div class="col-4">
+                  <div class="fw-semibold text-success">ดำเนินการแล้ว</div>
+                  <div class="display-6 text-success"><%= activityStats.status.done %></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <canvas id="chartActivityStatus" height="140"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -173,6 +187,12 @@
         <h2 class="h6 mb-0"><i class="bi bi-bar-chart-line me-2"></i>ผลการรายงานตามโครงการ</h2>
         <a href="/planactivity/report" class="btn btn-outline-info btn-sm"><i class="bi bi-clipboard-data me-1"></i>จัดการรายงานรายเดือน</a>
       </div>
+
+      <!-- Bar chart: ความก้าวหน้าตามโครงการ -->
+      <div class="mb-3">
+        <canvas id="chartProjectProgress" height="180"></canvas>
+      </div>
+
       <div class="table-responsive mb-0">
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light">
@@ -228,5 +248,121 @@
     <a href="/plankpi" class="btn btn-outline-success btn-sm"><i class="bi bi-graph-up-arrow me-1"></i>จัดการตัวชี้วัดโครงการ</a>
   </div>
 </div>
+
+<!-- Charts: Chart.js CDN and render script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.Chart === 'undefined') return;
+
+    // Embed EJS data safely into client-side JS
+    const __projectStats = <%- JSON.stringify(typeof projectStats !== 'undefined' ? projectStats : {}) %>;
+    const __activityStats = <%- JSON.stringify(typeof activityStats !== 'undefined' ? activityStats : {}) %>;
+    const pr = <%- JSON.stringify(Array.isArray(projectReports) ? projectReports : []) %>;
+
+    const projectStatus = {
+      notStarted: Number((__projectStats.status && __projectStats.status.notStarted) || 0),
+      inProgress: Number((__projectStats.status && __projectStats.status.inProgress) || 0),
+      done: Number((__projectStats.status && __projectStats.status.done) || 0)
+    };
+
+    const activityStatus = {
+      notStarted: Number((__activityStats.status && __activityStats.status.notStarted) || 0),
+      inProgress: Number((__activityStats.status && __activityStats.status.inProgress) || 0),
+      done: Number((__activityStats.status && __activityStats.status.done) || 0)
+    };
+
+    const colors = {
+      primary: '#0d6efd',
+      success: '#198754',
+      warning: '#ffc107',
+      danger: '#dc3545',
+      secondary: '#6c757d',
+      info: '#0dcaf0'
+    };
+
+    const elProj = document.getElementById('chartProjectStatus');
+    if (elProj) {
+      new Chart(elProj.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['ยังไม่ดำเนินการ', 'อยู่ระหว่างดำเนินการ', 'ดำเนินการแล้ว'],
+          datasets: [{
+            data: [projectStatus.notStarted, projectStatus.inProgress, projectStatus.done],
+            backgroundColor: [colors.secondary, colors.warning, colors.success],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    const elAct = document.getElementById('chartActivityStatus');
+    if (elAct) {
+      new Chart(elAct.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['ยังไม่ดำเนินการ', 'อยู่ระหว่างดำเนินการ', 'ดำเนินการแล้ว'],
+          datasets: [{
+            data: [activityStatus.notStarted, activityStatus.inProgress, activityStatus.done],
+            backgroundColor: [colors.secondary, colors.warning, colors.success],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    const elProg = document.getElementById('chartProjectProgress');
+    if (elProg) {
+      const labels = pr.map(r => (r.pro_name ? `${r.pro_code} - ${r.pro_name}` : r.pro_code));
+      const percents = pr.map(r => {
+        const p = Number(r.achievementPercent || 0);
+        return isFinite(p) ? Math.max(0, Math.min(100, p)) : 0;
+      });
+
+      new Chart(elProg.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'ความก้าวหน้า (%)',
+            data: percents,
+            backgroundColor: labels.map((_, i) => {
+              const v = percents[i];
+              if (v >= 100) return colors.success;
+              if (v >= 70) return colors.warning;
+              return colors.danger;
+            }),
+            borderWidth: 0
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.parsed.y}%`
+              }
+            }
+          },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>

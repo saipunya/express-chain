@@ -56,11 +56,15 @@
           <label for="pro_code" class="form-label">เลือกโครงการ</label>
           <select class="form-select" id="pro_code" name="pro_code" required>
             <option value="">-- เลือกโครงการ --</option>
+            <!-- choose thai name of project -->
             <% projects.forEach(project => { %>
               <option value="<%= project.pro_code %>" <%= project.pro_code === selectedProject ? 'selected' : '' %>>
-                <%= project.pro_code %> - <%= project.pro_name || '' %>
+                <!-- display thai name of project-->
+                <%= project.pro_subject || '' %>
+
               </option>
             <% }) %>
+
           </select>
         </div>
         <div class="col-md-3">

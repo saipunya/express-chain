@@ -7,6 +7,29 @@ body {
     background-color: #f7f9fb;
 }
 
+/* Hover row effect */
+.hover-row {
+    transition: all 0.3s ease;
+}
+
+.hover-row:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+    transform: translateY(-1px);
+}
+
+/* Enhanced card shadows */
+.card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
 /* Navbar polish */
 .navbar .navbar-brand { letter-spacing: .2px; }
 .navbar .nav-link { transition: color .2s ease, opacity .2s ease; }
@@ -37,16 +60,6 @@ body {
 .hover-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
-}
-
-.card {
-  border-radius: 14px;
-  overflow: hidden;
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.12) !important;
 }
 
 /* Gradient backgrounds */

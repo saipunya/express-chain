@@ -1,354 +1,766 @@
 <%- include('../partials/header') %>
 
-<%
-  function formatThaiDate(dateStr) {
-    if (
-      !dateStr ||
-      dateStr === '0000-00-00' ||
-      dateStr === '0000-00-00 00:00:00' ||
-      dateStr === 'Invalid date'
-    ) return '-';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
-    const months = [
-      '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-    ];
-    const day = d.getDate();
-    const month = months[d.getMonth() + 1];
-    const year = d.getFullYear() + 543;
-    return `${day} ${month} ${year}`;
-  }
-  function safeDate(dateStr) {
-    if (!dateStr || dateStr === '0000-00-00' || dateStr === '0000-00-00 00:00:00' || dateStr === 'Invalid date') return '';
-    return dateStr;
-  }
-%>
+  <% function formatThaiDate(dateStr) { if ( !dateStr || dateStr==='0000-00-00' || dateStr==='0000-00-00 00:00:00' ||
+    dateStr==='Invalid date' ) return '-' ; const d=new Date(dateStr); if (isNaN(d.getTime()) || d.getFullYear() < 1950)
+    return '-' ; const months=[ '' , 'มกราคม' , 'กุมภาพันธ์' , 'มีนาคม' , 'เมษายน' , 'พฤษภาคม' , 'มิถุนายน' , 'กรกฎาคม'
+    , 'สิงหาคม' , 'กันยายน' , 'ตุลาคม' , 'พฤศจิกายน' , 'ธันวาคม' ]; const day=d.getDate(); const
+    month=months[d.getMonth() + 1]; const year=d.getFullYear() + 543; return `${day} ${month} ${year}`; } function
+    safeDate(dateStr) { if (!dateStr || dateStr==='0000-00-00' || dateStr==='0000-00-00 00:00:00' ||
+    dateStr==='Invalid date' ) return '' ; return dateStr; } %>
 
-<style>
-  /* Layout Enhancements */
-  .page-title-icon { font-size:2rem; line-height:1; background:linear-gradient(135deg,#74ebd5,#ACB6E5); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .chamra-wrapper { animation:fadeIn .4s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none;} }
-
-  /* Search card */
-  .search-card { border:1px solid #e3e8ef; background:#ffffff; border-radius:14px; padding:1rem 1.25rem; box-shadow:0 2px 4px rgba(0,0,0,.04); }
-  .search-card h6 { font-weight:600; letter-spacing:.5px; }
-  .search-input-wrapper { position:relative; }
-  .search-input-wrapper .search-icon { position:absolute; top:50%; left:.75rem; transform:translateY(-50%); color:#6c757d; }
-  .search-input-wrapper input { padding-left:2rem; border-radius:10px; }
-
-  /* Table styling */
-  .table-responsive { border-radius:16px; background:#ffffff; box-shadow:0 4px 18px -4px rgba(31,45,61,.08),0 8px 32px -6px rgba(31,45,61,.06); overflow:hidden; }
-  .chamra-table thead th { vertical-align:middle; font-size:.75rem; text-transform:uppercase; letter-spacing:.8px; font-weight:600; }
-  .chamra-table thead { position:sticky; top:0; z-index:5; }
-  .chamra-table tbody tr { transition:background .25s, box-shadow .25s; }
-  .chamra-table tbody tr:hover { background:#f8fbff; box-shadow:inset 0 0 0 9999px rgba(116,235,213,.08); }
-  tr[data-latest-step="10"] { background:#eefdf5; }
-
-  /* Status & badges */
-  .status-pill { font-size:.6rem; letter-spacing:.5px; padding:.35rem .55rem; border-radius:30px; font-weight:500; box-shadow:0 0 0 1px rgba(255,255,255,.3); }
-  .status-pill.bg-success { background:linear-gradient(135deg,#38b980,#73d99a)!important; }
-  .status-pill.bg-danger { background:linear-gradient(135deg,#ff5858,#f857a6)!important; }
-  .latest-step-badge { background:linear-gradient(90deg,#fdfbfb,#ebedee); font-weight:600; border:1px solid #e1e5ea; color:#374151; box-shadow:0 1px 0 rgba(0,0,0,.05); }
-  td .badge + .badge { margin-left:.25rem; }
-
-  /* Progress */
-  .progress.step-progress { height:7px; border-radius:5px; overflow:hidden; background:#eef2f5; }
-  .progress.step-progress .progress-bar { background:linear-gradient(90deg,#4facfe,#00f2fe); box-shadow:0 0 0 1px rgba(255,255,255,.3); }
-  .progress.step-progress[data-low] .progress-bar { background:linear-gradient(90deg,#f7971e,#ffd200); }
-  .progress.step-progress[data-mid] .progress-bar { background:linear-gradient(90deg,#56ab2f,#a8e063); }
-  .progress.step-progress[data-high] .progress-bar { background:linear-gradient(90deg,#4facfe,#00f2fe); }
-
-  /* Steps modal */
-  .steps-modal-line { font-size:.78rem; border-left:3px solid #5fa8d3; padding:.35rem .65rem; margin-bottom:.3rem; background:#f5faff; border-radius:0 6px 6px 0; position:relative; }
-  .steps-modal-line:before { content:''; position:absolute; left:-6px; top:9px; width:10px; height:10px; background:#5fa8d3; border:2px solid #fff; border-radius:50%; box-shadow:0 0 0 3px rgba(95,168,211,.25); }
-
-  /* Buttons */
-  .btn-gradient { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; }
-  .btn-gradient:hover { filter:brightness(.92); color:#fff; }
-  .btn-soft { background:#eef2f7; border:1px solid #e2e8f0; }
-  .btn-soft:hover { background:#e2e8f0; }
-
-  /* Utility */
-  .small-muted { font-size:.7rem; color:#6b7280; }
-  .fw-semibold { font-weight:600; }
-  .chamra-meta { font-size:.65rem; letter-spacing:.5px; }
-
-  /* Responsive tweaks */
-  @media (max-width: 768px) {
-    .table-responsive { box-shadow:none; border-radius:8px; }
-    .chamra-table thead { display:none; }
-    .chamra-table tbody tr { display:block; margin-bottom:1rem; border:1px solid #e5e7eb; border-radius:12px; padding:.75rem .9rem; }
-    .chamra-table tbody td { display:block; width:100%; padding:.25rem 0; }
-    .chamra-table tbody td:first-child { font-weight:600; }
-  }
-</style>
-
-<div class="container mt-4 chamra-wrapper">
-  <div class="d-flex align-items-center mb-3 flex-wrap gap-3">
-    <div class="d-flex align-items-center gap-2">
-      <span class="page-title-icon">📋</span>
-      <div>
-        <h2 class="mb-0 fw-bold" style="letter-spacing:.5px;">รายการชำระบัญชี</h2>
-        <div class="small-muted">ภาพรวมสถานะและความคืบหน้าการชำระบัญชี</div>
-      </div>
-    </div>
-   
-    <div class="ms-auto d-flex gap-2 flex-wrap">
-      <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
-        <a href="/chamra/add" class="btn btn-gradient btn-sm shadow-sm">➕ เพิ่ม Chamra</a>
-        <a href="/chamra/poblem" class="btn btn-soft btn-sm">📋 ปัญหา</a>
-        <a href="/chamra/process" class="btn btn-soft btn-sm">📊 กระบวนการ</a>
-      <% } %>
-      <button id="exportChamraBtn" class="btn btn-outline-primary btn-sm">⬇️ Export</button>
-    </div>
-  </div>
-  <div class="row g-3 mb-4">
-    <div class="col-md-6">
-      <div class="gap-2 h-100">
-        <h3>เป้าหมายการชำระบัญชี</h3>
-        <div class="table-responsive">
-          <table class="table table-bordered table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th scope="col">ลำดับ</th>
-                <th scope="col">สถาบัน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td scope="row">1</td>
-                <td>สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ จำกัด</td>
-              </tr>
-              <tr>
-                <td scope="row">2</td>
-                <td>สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส จำกัด</td>
-              </tr>
-              <tr>
-                <td scope="row">3</td>
-                <td>กลุ่มเกษตรกรทำไร่บ้านชวน</td>
-              </tr>
-              <tr>
-                <td scope="row">4</td>
-                <td>กลุ่มเกษตรกรทำนาวังชมภู</td>
-              </tr>
-              <tr>
-                <td scope="row">5</td>
-                <td>กลุ่มเกษตรกรทำนาบ้านแท่น</td>
-              </tr>
-              <tr>
-                <td scope="row">6</td>
-                <td>กลุ่มเกษตรกรทำนาท่าใหญ่</td>
-              </tr>
-              <tr>
-                <td scope="row">7</td>
-                <td>กลุ่มเกษตรกรเลี้ยงสัตว์หนองตูม</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="gap-2 h-100">
-        <h4>รายงานการประชุม ประจำปีงบประมาณ พ.ศ. 2569</h4>
-        <div class="table-responsive">
-          <table class="table table-bordered table-sm align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th scope="col" style="width:60px;">ลำดับ</th>
-                <th scope="col">ลิงก์รายงานการประชุม</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td scope="row">1</td>
-                <td><a href="images/meeting/meeting1.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 1/2569[26 ธันวาคม 2568] <i class="bi bi-box-arrow-up-right ms-1"></i></a></td>
-              </tr>
-              <tr>
-                <td scope="row">2</td>
-                <td>ประชุมติดตามความก้าวหน้า 2/2569</td>
-              </tr>
-              <tr>
-                <td scope="row">3</td>
-                <td>ประชุมติดตามความก้าวหน้า 3/2569</td>
-              </tr>
-              <tr>
-                <td scope="row">4</td>
-                <td>ประชุมติดตามความก้าวหน้า 4/2569</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search Section -->
-  <div class="search-card mb-4">
-    <form id="searchForm" class="row g-2 align-items-center" method="get" action="">
-      <div class="col-md-6">
-        <div class="search-input-wrapper">
-          <span class="search-icon"><i class="bi bi-search"></i></span>
-          <input
-            type="search"
-            class="form-control form-control-sm"
-            id="searchInput"
-            name="q"
-            value="<%= typeof q !== 'undefined' ? q : '' %>"
-            placeholder="ระบุชื่อสถาบันที่ต้องการค้นหา" />
-        </div>
-      </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-primary btn-sm">ค้นหา</button>
-      </div>
-      <div class="col-auto">
-        <a href="" id="resetSearch" class="btn btn-outline-secondary btn-sm">ล้าง</a>
-      </div>
-      <div class="col-12">
-        <small id="searchSummary" class="text-muted"></small>
-      </div>
-    </form>
-  </div>
-
-  <div class="table-responsive mb-5">
-    <table class="table chamra-table table-hover align-middle mb-0">
-      <thead class="table-dark">
-        <tr>
-          <th>#</th>
-          <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
-          <th>รหัส</th>
-          <% } %>
-          <th>ชื่อ</th>
-          <th>ผู้ชำระบัญชี</th>
-          
-        </tr>
-      </thead>
-      <tbody>
-        <%
-          const isValidProcessDate = (v) => {
-            if(!v) return false; if(v === '0000-00-00') return false; if(/^1899-11-30/.test(v)) return false; const d = new Date(v); if(isNaN(d.getTime())) return false; if(d.getFullYear() < 1950) return false; return true; };
-        %>
-        <% data.forEach((c, index) => {
-            const processDates = [ c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5, c.pr_s6, c.pr_s7, c.pr_s8, c.pr_s9, c.pr_s10 ];
-            let latestStepNumber = 0; let latestStepDate = '';
-            for (let i = processDates.length - 1; i >= 0; i--) {
-              if (isValidProcessDate(processDates[i])) { latestStepNumber = i + 1; latestStepDate = safeDate(processDates[i]); break; }
-            }
-            const totalSteps = 10; const percent = Math.round((latestStepNumber / totalSteps) * 100);
-            let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
-            if(latestStepNumber > 0){
-              latestBadgeHtml = `\n                <span class="badge latest-step-badge text-dark">📈 ขั้นที่ ${latestStepNumber} : ${formatThaiDate(latestStepDate)}</span>`;
-            }
-            function showStep(label, value) { if (!isValidProcessDate(value)) return `${label}: -`; return `${label}: ${formatThaiDate(safeDate(value))}`; }
-            const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
-            let progressAttr = percent < 30 ? 'data-low' : (percent < 70 ? 'data-mid' : 'data-high');
-        %>
-        <tr data-latest-step="<%= latestStepNumber %>" data-search="<%= [ (c.c_name||''), (c.active_name||c.ac_name||c.coop_name||c.a_name||'') ].join(' ').toLowerCase() %>">
-          <td class="text-muted small"><%= index + 1 %></td>
-          <% if(user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
-          <td><span class="badge bg-secondary-subtle text-dark border" style="font-size:.7rem;">#<%= c.c_code %></span></td>
-          <% } %>
-          <td>
-            <div class="fw-semibold mb-1"><%= c.c_name %></div>
-            <% if(c.c_status === 'ถอนชื่อ'){ %>
-              <span class="badge status-pill bg-success">ถอนชื่อแล้ว</span>
-            <% } else { %>
-              <span class="badge status-pill bg-danger">กำลังชำระบัญชี</span>
-            <% } %>
-            <div class="mt-2"><%- latestBadgeHtml %></div>
-            <div class="progress step-progress mt-2" <%= progressAttr %> title="Progress <%= percent %>%">
-              <div class="progress-bar" role="progressbar" data-percent="<%= percent %>" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted d-block">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps %> (<%= percent %>%)</small>
-            <a href="/chamra/detail/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm mt-2">รายละเอียดขั้นตอน</a>
-           
-          </td>
-          <td><span class="small"><%= c.de_person %></span></td>
-         
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="modal fade" id="stepsModal" tabindex="-1" aria-labelledby="stepsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-md">
-    <div class="modal-content">
-      <div class="modal-header py-2">
-        <h6 class="modal-title mb-0" id="stepsModalLabel">รายละเอียดขั้นตอน</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
-      </div>
-      <div class="modal-body" id="stepsModalBody"></div>
-      <div class="modal-footer py-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ปิด</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('searchInput');
-    const summary = document.getElementById('searchSummary');
-    const rows = Array.from(document.querySelectorAll('.chamra-table tbody tr'));
-    const urlQ = new URLSearchParams(location.search).get('q') || '';
-    if (input && !input.value) input.value = urlQ;
-    const applyFilter = () => {
-      const q = (input?.value || '').toLowerCase().trim();
-      let visible = 0;
-      rows.forEach(row => {
-        const hay = row.dataset.search || '';
-        const show = !q || hay.includes(q);
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-      });
-      if (summary) {
-        summary.textContent = q ? `ผลการค้นหา "${q}" - พบ ${visible} รายการ` : `ทั้งหมด ${rows.length} รายการ`;
+    <style>
+      /* Layout Enhancements */
+      .page-title-icon {
+        font-size: 2rem;
+        line-height: 1;
+        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
-    };
-    applyFilter();
-    input?.addEventListener('input', applyFilter);
-    document.getElementById('resetSearch')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (input) input.value = '';
-      history.replaceState(null, '', location.pathname);
-      applyFilter();
-    });
-    document.querySelectorAll('.progress-bar[data-percent]').forEach(el => {
-      const v = parseFloat(el.dataset.percent);
-      if (!isNaN(v)) el.style.width = v + '%';
-    });
-  });
 
-  document.addEventListener('click', e => {
-    const btn = e.target.closest('.btn-show-steps');
-    if (!btn) return;
-    let steps = [];
-    try { steps = JSON.parse(btn.dataset.steps); } catch {}
-    const body = document.getElementById('stepsModalBody');
-    body.innerHTML = steps.map(s => `<div class="steps-modal-line">${s}</div>`).join('') || '<div class="text-muted small">ไม่มีข้อมูล</div>';
-    document.getElementById('stepsModalLabel').textContent = `รายละเอียดขั้นตอน - ${btn.dataset.code} (${btn.dataset.name})`;
-    const modal = new bootstrap.Modal(document.getElementById('stepsModal'));
-    modal.show();
-  });
+      .chamra-wrapper {
+        animation: fadeIn .4s ease;
+      }
 
-  document.getElementById('exportChamraBtn')?.addEventListener('click', async () => {
-    const btn = document.getElementById('exportChamraBtn');
-    btn.disabled = true; const original = btn.textContent; btn.textContent = 'กำลังส่งออก...';
-    try {
-      const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
-      if (!resp.ok) throw new Error('Export failed');
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (e) { alert('ไม่สามารถส่งออกข้อมูลได้'); }
-    finally { btn.disabled = false; btn.textContent = original; }
-  });
-</script>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
 
-<%- include('../partials/footer') %>
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* Search card */
+      .search-card {
+        border: 1px solid #e3e8ef;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .04);
+      }
+
+      .search-card h6 {
+        font-weight: 600;
+        letter-spacing: .5px;
+      }
+
+      .search-input-wrapper {
+        position: relative;
+      }
+
+      .search-input-wrapper .search-icon {
+        position: absolute;
+        top: 50%;
+        left: .75rem;
+        transform: translateY(-50%);
+        color: #6c757d;
+      }
+
+      .search-input-wrapper input {
+        padding-left: 2rem;
+        border-radius: 10px;
+      }
+
+      /* Table styling */
+      .table-responsive {
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 4px 18px -4px rgba(31, 45, 61, .08), 0 8px 32px -6px rgba(31, 45, 61, .06);
+        overflow: hidden;
+      }
+
+      .chamra-table thead th {
+        vertical-align: middle;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        font-weight: 600;
+      }
+
+      .chamra-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+
+      .chamra-table tbody tr {
+        transition: background .25s, box-shadow .25s;
+      }
+
+      .chamra-table tbody tr:hover {
+        background: #f8fbff;
+        box-shadow: inset 0 0 0 9999px rgba(116, 235, 213, .08);
+      }
+
+      tr[data-latest-step="10"] {
+        background: #eefdf5;
+      }
+
+      /* Status & badges */
+      .status-pill {
+        font-size: .6rem;
+        letter-spacing: .5px;
+        padding: .35rem .55rem;
+        border-radius: 30px;
+        font-weight: 500;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .3);
+      }
+
+      .status-pill.bg-success {
+        background: linear-gradient(135deg, #38b980, #73d99a) !important;
+      }
+
+      .status-pill.bg-danger {
+        background: linear-gradient(135deg, #ff5858, #f857a6) !important;
+      }
+
+      .latest-step-badge {
+        background: linear-gradient(90deg, #fdfbfb, #ebedee);
+        font-weight: 600;
+        border: 1px solid #e1e5ea;
+        color: #374151;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, .05);
+      }
+
+      td .badge+.badge {
+        margin-left: .25rem;
+      }
+
+      /* Progress */
+      .progress.step-progress {
+        height: 7px;
+        border-radius: 5px;
+        overflow: hidden;
+        background: #eef2f5;
+      }
+
+      .progress.step-progress .progress-bar {
+        background: linear-gradient(90deg, #4facfe, #00f2fe);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .3);
+      }
+
+      .progress.step-progress[data-low] .progress-bar {
+        background: linear-gradient(90deg, #f7971e, #ffd200);
+      }
+
+      .progress.step-progress[data-mid] .progress-bar {
+        background: linear-gradient(90deg, #56ab2f, #a8e063);
+      }
+
+      .progress.step-progress[data-high] .progress-bar {
+        background: linear-gradient(90deg, #4facfe, #00f2fe);
+      }
+
+      /* Steps modal */
+      .steps-modal-line {
+        font-size: .78rem;
+        border-left: 3px solid #5fa8d3;
+        padding: .35rem .65rem;
+        margin-bottom: .3rem;
+        background: #f5faff;
+        border-radius: 0 6px 6px 0;
+        position: relative;
+      }
+
+      .steps-modal-line:before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 9px;
+        width: 10px;
+        height: 10px;
+        background: #5fa8d3;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(95, 168, 211, .25);
+      }
+
+      /* Buttons */
+      .btn-gradient {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        border: none;
+      }
+
+      .btn-gradient:hover {
+        filter: brightness(.92);
+        color: #fff;
+      }
+
+      .btn-soft {
+        background: #eef2f7;
+        border: 1px solid #e2e8f0;
+      }
+
+      .btn-soft:hover {
+        background: #e2e8f0;
+      }
+
+      /* Utility */
+      .small-muted {
+        font-size: .7rem;
+        color: #6b7280;
+      }
+
+      .fw-semibold {
+        font-weight: 600;
+      }
+
+      .chamra-meta {
+        font-size: .65rem;
+        letter-spacing: .5px;
+      }
+
+      /* Custom gradient and hover effects */
+      .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .hover-scale {
+        transition: transform 0.2s ease;
+      }
+
+      .hover-scale:hover {
+        transform: scale(1.05);
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 768px) {
+        .table-responsive {
+          box-shadow: none;
+          border-radius: 8px;
+        }
+
+        .chamra-table thead {
+          display: none;
+        }
+
+        .chamra-table tbody tr {
+          display: block;
+          margin-bottom: 1rem;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: .75rem .9rem;
+        }
+
+        .chamra-table tbody td {
+          display: block;
+          width: 100%;
+          padding: .25rem 0;
+        }
+
+        .chamra-table tbody td:first-child {
+          font-weight: 600;
+        }
+      }
+    </style>
+
+    <div class="container mt-4 chamra-wrapper">
+      <div class="d-flex align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="p-3 bg-primary bg-opacity-10 rounded-circle">
+            <i class="bi bi-cash-coin text-primary fs-3"></i>
+          </div>
+          <div>
+            <h1 class="mb-1 fw-bold">รายการชำระบัญชี</h1>
+            <div class="text-muted">ภาพรวมสถานะและความคืบหน้าการชำระบัญชี</div>
+          </div>
+        </div>
+
+        <div class="ms-auto d-flex gap-2 flex-wrap">
+          <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
+            <a href="/chamra/add" class="btn btn-primary rounded-pill px-3">
+              <i class="bi bi-plus-lg me-1"></i>เพิ่ม Chamra
+            </a>
+            <a href="/chamra/poblem" class="btn btn-outline-secondary rounded-pill px-3">
+              <i class="bi bi-exclamation-triangle me-1"></i>ปัญหา
+            </a>
+            <a href="/chamra/process" class="btn btn-outline-info rounded-pill px-3">
+              <i class="bi bi-diagram-3 me-1"></i>กระบวนการ
+            </a>
+            <% } %>
+              <button id="exportChamraBtn" class="btn btn-outline-success rounded-pill px-3">
+                <i class="bi bi-download me-1"></i>Export
+              </button>
+        </div>
+      </div>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100 hover-card">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="p-2 bg-success bg-opacity-10 rounded-circle me-3">
+                  <i class="bi bi-bullseye text-success fs-5"></i>
+                </div>
+                <h4 class="mb-0 fw-semibold">เป้าหมายการชำระบัญชี</h4>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="fw-medium text-muted">ลำดับ</th>
+                      <th class="fw-medium text-muted">สถาบัน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="hover-row">
+                      <td class="fw-medium">1</td>
+                      <td>สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ จำกัด</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">2</td>
+                      <td>สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส จำกัด</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">3</td>
+                      <td>กลุ่มเกษตรกรทำไร่บ้านชวน</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">4</td>
+                      <td>กลุ่มเกษตรกรทำนาวังชมภู</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">5</td>
+                      <td>กลุ่มเกษตรกรทำนาบ้านแท่น</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">6</td>
+                      <td>กลุ่มเกษตรกรทำนาท่าใหญ่</td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">7</td>
+                      <td>กลุ่มเกษตรกรเลี้ยงสัตว์หนองตูม</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm h-100 hover-card">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="p-2 bg-info bg-opacity-10 rounded-circle me-3">
+                  <i class="bi bi-calendar-week text-info fs-5"></i>
+                </div>
+                <h4 class="mb-0 fw-semibold">รายงานการประชุม ประจำปีงบประมาณ พ.ศ. 2569</h4>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="fw-medium text-muted" style="width:60px;">ลำดับ</th>
+                      <th class="fw-medium text-muted">ลิงก์รายงานการประชุม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="hover-row">
+                      <td class="fw-medium">1</td>
+                      <td>
+                        <a href="images/meeting/meeting1.pdf" target="_blank" rel="noopener noreferrer"
+                          class="text-decoration-none">
+                          <i class="bi bi-file-pdf text-danger me-2"></i>
+                          ประชุมติดตามความก้าวหน้า 1/2569[26 ธันวาคม 2568]
+                          <i class="bi bi-box-arrow-up-right ms-1 text-muted"></i>
+                        </a>
+                      </td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">2</td>
+                      <td class="text-muted">
+                        <i class="bi bi-file-pdf text-muted me-2"></i>
+                        ประชุมติดตามความก้าวหน้า 2/2569
+                      </td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">3</td>
+                      <td class="text-muted">
+                        <i class="bi bi-file-pdf text-muted me-2"></i>
+                        ประชุมติดตามความก้าวหน้า 3/2569
+                      </td>
+                    </tr>
+                    <tr class="hover-row">
+                      <td class="fw-medium">4</td>
+                      <td class="text-muted">
+                        <i class="bi bi-file-pdf text-muted me-2"></i>
+                        ประชุมติดตามความก้าวหน้า 4/2569
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Card สำหรับแสดงสถาบันที่ถอนชื่อ (step >= 9) -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="p-2 bg-success bg-opacity-10 rounded-circle me-3">
+                  <i class="bi bi-check-circle text-success fs-5"></i>
+                </div>
+                <h5 class="mb-0 fw-semibold">สถาบันที่ถอนชื่อแล้ว (ขั้นที่ 9 ขึ้นไป)</h5>
+              </div>
+              <div class="row g-3" id="withdrawnInstitutions">
+                <% const withdrawnInstitutions=[]; data.forEach((c)=> {
+                  const processDates = [ c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5, c.pr_s6, c.pr_s7, c.pr_s8,
+                  c.pr_s9, c.pr_s10 ];
+                  let latestStepNumber = 0;
+                  for (let i = processDates.length - 1; i >= 0; i--) {
+                  if (function(v) {
+                  if(!v) return false; if(v === '0000-00-00') return false; if(/^1899-11-30/.test(v)) return false;
+                  const d = new Date(v); if(isNaN(d.getTime())) return false; if(d.getFullYear() < 1950) return false;
+                    return true; }(processDates[i])) { latestStepNumber=i + 1; break; } } if (latestStepNumber>= 9) {
+                    withdrawnInstitutions.push(c);
+                    }
+                    });
+                    %>
+                    <% if (withdrawnInstitutions.length> 0) { %>
+                      <% withdrawnInstitutions.forEach((institution, index)=> { %>
+                        <div class="col-md-6 col-lg-4">
+                          <div class="card border-0 shadow-sm h-100 hover-card">
+                            <div class="card-body p-3">
+                              <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 bg-gradient-success rounded-circle flex-shrink-0">
+                                  <i class="bi bi-building text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                  <div class="fw-semibold text-dark mb-2">
+                                    <%= institution.c_name %>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="badge bg-success-subtle text-success px-2 py-1">
+                                      <i class="bi bi-check-circle-fill me-1"></i>ถอนชื่อแล้ว
+                                    </span>
+                                  </div>
+                                  <div class="mt-auto">
+                                    <a href="/chamra/detail/<%= institution.c_code %>" class="btn btn-success btn-sm rounded-pill px-3 hover-scale">
+                                      <i class="bi bi-eye me-1"></i>ดูรายละเอียด
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <% }) %>
+                          <% } else { %>
+                            <div class="col-12">
+                              <div class="text-center py-4">
+                                <i class="bi bi-inbox fs-3 text-muted mb-2 d-block"></i>
+                                <p class="text-muted mb-0">ยังไม่มีสถาบันที่ถอนชื่อ (ขั้นที่ 9 ขึ้นไป)</p>
+                              </div>
+                            </div>
+                            <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Search Section -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
+              <i class="bi bi-search text-primary fs-5"></i>
+            </div>
+            <h5 class="mb-0 fw-semibold">ค้นหาข้อมูล</h5>
+          </div>
+          <form id="searchForm" class="row g-3 align-items-center" method="get" action="">
+            <div class="col-md-8">
+              <div class="search-input-wrapper">
+                <span class="search-icon"><i class="bi bi-search"></i></span>
+                <input type="search" class="form-control form-control-lg" id="searchInput" name="q"
+                  value="<%= typeof q !== 'undefined' ? q : '' %>" placeholder="ระบุชื่อสถาบันที่ต้องการค้นหา" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                  <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+                <a href="" id="resetSearch" class="btn btn-outline-secondary">
+                  <i class="bi bi-x-circle me-1"></i>ล้าง
+                </a>
+              </div>
+            </div>
+            <div class="col-12">
+              <small id="searchSummary" class="text-muted"></small>
+            </div>
+          </form>
+        </div>
+      </div>
+
+
+
+      <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-0">
+          <div class="d-flex align-items-center p-4 border-bottom">
+            <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
+              <i class="bi bi-table text-primary fs-5"></i>
+            </div>
+            <h5 class="mb-0 fw-semibold">รายการข้อมูลชำระบัญชี</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table chamra-table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="fw-medium text-muted">#</th>
+                  <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
+                    <th class="fw-medium text-muted">รหัส</th>
+                    <% } %>
+                      <th class="fw-medium text-muted">ชื่อ</th>
+                      <th class="fw-medium text-muted">ผู้ชำระบัญชี</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% const isValidProcessDate=(v)=> {
+                  if(!v) return false; if(v === '0000-00-00') return false; if(/^1899-11-30/.test(v)) return false;
+                  const d = new Date(v); if(isNaN(d.getTime())) return false; if(d.getFullYear() < 1950) return false;
+                    return true; }; %>
+                    <% data.forEach((c, index)=> {
+                      const processDates = [ c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5, c.pr_s6, c.pr_s7, c.pr_s8,
+                      c.pr_s9, c.pr_s10 ];
+                      let latestStepNumber = 0; let latestStepDate = '';
+                      for (let i = processDates.length - 1; i >= 0; i--) {
+                      if (isValidProcessDate(processDates[i])) { latestStepNumber = i + 1; latestStepDate =
+                      safeDate(processDates[i]); break; }
+                      }
+                      const totalSteps = 10; const percent = Math.round((latestStepNumber / totalSteps) * 100);
+                      let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
+                      if(latestStepNumber > 0){
+                      latestBadgeHtml = `\n <span class="badge latest-step-badge text-dark">📈 ขั้นที่
+                        ${latestStepNumber} : ${formatThaiDate(latestStepDate)}</span>`;
+                      }
+                      function showStep(label, value) { if (!isValidProcessDate(value)) return `${label}: -`; return
+                      `${label}: ${formatThaiDate(safeDate(value))}`; }
+                      const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
+                      let progressAttr = percent < 30 ? 'data-low' : (percent < 70 ? 'data-mid' : 'data-high' );
+                      
+                      // ดึงข้อมูลสมาชิกสำหรับแสดงรูปภาพ
+                      // แยกหลายคนที่คั่นด้วย / และ , และทำความสะอาดชื่อ
+                      const persons = c.de_person ? c.de_person.split('/') : [];
+                      const foundMembers = [];
+                      
+                      persons.forEach(person => {
+                        // แยกตามเครื่องหมาย , อีกครั้ง
+                        const subPersons = person.split(',');
+                        subPersons.forEach(subPerson => {
+                          let cleanPersonName = subPerson.trim();
+                          // ลบเลขลำดับที่ขึ้นต้นด้วย 1. 2. 3. เป็นต้น
+                          cleanPersonName = cleanPersonName.replace(/^\d+\.\s*/, '');
+                          // ลบเลขลำดับที่อยู่หน้าชื่อโดยไม่มีจุด (เช่น "1นาย...")
+                          cleanPersonName = cleanPersonName.replace(/^\d+\s*/, '');
+                          // ทำความสะอาดช่องว่างให้เป็นช่องว่างเดียว
+                          cleanPersonName = cleanPersonName.replace(/\s+/g, ' ').trim();
+                          
+                          if (cleanPersonName && typeof members !== 'undefined' && members) {
+                            const member = members[cleanPersonName];
+                            if (member) {
+                              foundMembers.push({
+                                ...member,
+                                cleanName: cleanPersonName
+                              });
+                            }
+                          }
+                        });
+                      });
+                      
+                      // Debug logging
+                      if (typeof console !== 'undefined') {
+                        console.log('🔍 Processing:', c.de_person, 'found members:', foundMembers.length, 'persons:', foundMembers.map(f => f.cleanName));
+                      }
+                      %>
+                        <tr data-latest-step="<%= latestStepNumber %>"
+                          data-search="<%= [ (c.c_name||''), (c.active_name||c.ac_name||c.coop_name||c.a_name||'') ].join(' ').toLowerCase() %>">
+                          <td class="text-muted small">
+                            <%= index + 1 %>
+                          </td>
+                          <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
+                            <td><span class="badge bg-secondary-subtle text-dark border" style="font-size:.7rem;">#<%=
+                                  c.c_code %></span></td>
+                            <% } %>
+                              <td>
+                                <div class="d-flex align-items-start gap-3">
+                                  <div class="p-2 bg-light rounded-circle">
+                                    <i class="bi bi-building text-muted"></i>
+                                  </div>
+                                  <div class="flex-grow-1">
+                                    <div class="fw-semibold mb-2">
+                                      <%= c.c_name %>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                      <% if(c.c_status==='ถอนชื่อ' ){ %>
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1">
+                                          <i class="bi bi-check-circle me-1"></i>ถอนชื่อแล้ว
+                                        </span>
+                                        <% } else { %>
+                                          <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">
+                                            <i class="bi bi-clock me-1"></i>กำลังชำระบัญชี
+                                          </span>
+                                          <% } %>
+                                    </div>
+                                    <div class="mb-2"><%- latestBadgeHtml %></div>
+                                    <div class="progress step-progress mb-2" <%=progressAttr %> title="Progress <%=
+                                        percent %>%">
+                                        <div class="progress-bar" role="progressbar" data-percent="<%= percent %>"
+                                          aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                      <small class="text-muted">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps
+                                            %> (<%= percent %>%)</small>
+                                      <a href="/chamra/detail/<%= c.c_code %>"
+                                        class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                        <i class="bi bi-eye me-1"></i>รายละเอียด
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div class="d-flex align-items-center gap-3">
+                                  <% if (foundMembers.length > 0) { %>
+                                    <!-- แสดงรูปภาพสมาชิกที่พบ -->
+                                    <div class="d-flex">
+                                      <% foundMembers.forEach((member, idx) => { %>
+                                        <div class="position-relative"<% if (idx > 0) { %> style="margin-left: -10px;"<% } %>>
+                                          <% if (member.m_img) { %>
+                                            <img src="<%= member.m_img %>" alt="<%= member.cleanName %>" 
+                                                 class="rounded-circle border border-white" 
+                                                 style="width: 35px; height: 35px; object-fit: cover;"
+                                                 title="<%= member.cleanName %>"
+                                                 onerror="this.src='/images/default-avatar.png'">
+                                          <% } else { %>
+                                            <div class="p-1 bg-light rounded-circle border border-white" 
+                                                 style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                                                 title="<%= member.cleanName %>">
+                                              <i class="bi bi-person text-muted" style="font-size: 14px;"></i>
+                                            </div>
+                                          <% } %>
+                                        </div>
+                                      <% }) %>
+                                    </div>
+                                  <% } else { %>
+                                    <!-- ไม่พบข้อมูลสมาชิก -->
+                                    <div class="p-2 bg-light rounded-circle">
+                                      <i class="bi bi-person text-muted"></i>
+                                    </div>
+                                  <% } %>
+                                  <div class="flex-grow-1">
+                                    <div class="fw-medium text-dark">
+                                      <%= c.de_person %>
+                                    </div>
+                                    <% if (foundMembers.length > 0) { %>
+                                      <div class="text-muted small">
+                                        พบข้อมูล <%= foundMembers.length %> คน
+                                      </div>
+                                    <% } %>
+                                  </div>
+                                </div>
+                              </td>
+
+                        </tr>
+                        <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="stepsModal" tabindex="-1" aria-labelledby="stepsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-md">
+        <div class="modal-content">
+          <div class="modal-header py-2">
+            <h6 class="modal-title mb-0" id="stepsModalLabel">รายละเอียดขั้นตอน</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+          </div>
+          <div class="modal-body" id="stepsModalBody"></div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ปิด</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('searchInput');
+        const summary = document.getElementById('searchSummary');
+        const rows = Array.from(document.querySelectorAll('.chamra-table tbody tr'));
+        const urlQ = new URLSearchParams(location.search).get('q') || '';
+        if (input && !input.value) input.value = urlQ;
+        const applyFilter = () => {
+          const q = (input?.value || '').toLowerCase().trim();
+          let visible = 0;
+          rows.forEach(row => {
+            const hay = row.dataset.search || '';
+            const show = !q || hay.includes(q);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+          });
+          if (summary) {
+            summary.textContent = q ? `ผลการค้นหา "${q}" - พบ ${visible} รายการ` : `ทั้งหมด ${rows.length} รายการ`;
+          }
+        };
+        applyFilter();
+        input?.addEventListener('input', applyFilter);
+        document.getElementById('resetSearch')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (input) input.value = '';
+          history.replaceState(null, '', location.pathname);
+          applyFilter();
+        });
+        document.querySelectorAll('.progress-bar[data-percent]').forEach(el => {
+          const v = parseFloat(el.dataset.percent);
+          if (!isNaN(v)) el.style.width = v + '%';
+        });
+      });
+
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-show-steps');
+        if (!btn) return;
+        let steps = [];
+        try { steps = JSON.parse(btn.dataset.steps); } catch { }
+        const body = document.getElementById('stepsModalBody');
+        body.innerHTML = steps.map(s => `<div class="steps-modal-line">${s}</div>`).join('') || '<div class="text-muted small">ไม่มีข้อมูล</div>';
+        document.getElementById('stepsModalLabel').textContent = `รายละเอียดขั้นตอน - ${btn.dataset.code} (${btn.dataset.name})`;
+        const modal = new bootstrap.Modal(document.getElementById('stepsModal'));
+        modal.show();
+      });
+
+      document.getElementById('exportChamraBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('exportChamraBtn');
+        btn.disabled = true; const original = btn.textContent; btn.textContent = 'กำลังส่งออก...';
+        try {
+          const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
+          if (!resp.ok) throw new Error('Export failed');
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch (e) { alert('ไม่สามารถส่งออกข้อมูลได้'); }
+        finally { btn.disabled = false; btn.textContent = original; }
+      });
+    </script>
+
+    <%- include('../partials/footer') %>

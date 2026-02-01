@@ -36,7 +36,81 @@ const chamraController = {};
 // แสดงทั้งหมด
 chamraController.list = async (req, res) => {
   const data = await Chamra.getAll();
-  res.render('chamra/list', { data });
+  
+  // ดึงข้อมูลสมาชิกจากตาราง member3 เพื่อแสดงรูปภาพ
+  const members = {};
+  if (data && data.length > 0) {
+    // รวบรวมชื่อผู้ชำระบัญชีทั้งหมด และแยกหลายคน
+    const allPersonNames = [];
+    data.forEach(item => {
+      if (!item.de_person) return;
+      
+      // แยกตามเครื่องหมาย / และ , ก่อน
+      let persons = item.de_person.split('/');
+      let finalPersons = [];
+      
+      persons.forEach(person => {
+        // แยกตามเครื่องหมาย , อีกครั้ง
+        let subPersons = person.split(',');
+        subPersons.forEach(subPerson => {
+          // ทำความสะอาดชื่อให้สมบูรณ์
+          let cleanName = subPerson.trim();
+          // ลบเลขลำดับที่ขึ้นต้นด้วย 1. 2. 3. เป็นต้น
+          cleanName = cleanName.replace(/^\d+\.\s*/, '');
+          // ลบเลขลำดับที่อยู่หน้าชื่อโดยไม่มีจุด (เช่น "1นาย...")
+          cleanName = cleanName.replace(/^\d+\s*/, '');
+          // ทำความสะอาดช่องว่างให้เป็นช่องว่างเดียว
+          cleanName = cleanName.replace(/\s+/g, ' ').trim();
+          
+          if (cleanName) {
+            finalPersons.push(cleanName);
+          }
+        });
+      });
+      
+      allPersonNames.push(...finalPersons);
+    });
+    
+    // ลบชื่อซ้ำ
+    const uniquePersonNames = [...new Set(allPersonNames)];
+    
+    if (uniquePersonNames.length > 0) {
+      try {
+        console.log('🔍 All unique person names to search:', uniquePersonNames.slice(0, 15));
+        
+        // ดึงข้อมูลสมาชิกทั้งหมดมาเพื่อเปรียบเทียบ
+        const [allMemberRows] = await db.query('SELECT m_user, m_name, m_img FROM member3');
+        console.log('📋 All members in DB count:', allMemberRows.length);
+        
+        // ค้นหาด้วยชื่อเต็ม (m_name) แทนชื่อผู้ใช้ (m_user)
+        const placeholders = uniquePersonNames.map(() => '?').join(',');
+        const [memberRows] = await db.query(
+          `SELECT m_user, m_name, m_img FROM member3 WHERE m_name IN (${placeholders})`,
+          uniquePersonNames
+        );
+        
+        // สร้าง object map โดยใช้ชื่อเต็มเป็น key
+        memberRows.forEach(member => {
+          members[member.m_name] = member;
+        });
+        
+        console.log('📊 Found members:', memberRows.length, 'out of', uniquePersonNames.length, 'requested');
+        console.log('👤 Sample found members:', memberRows.slice(0, 3).map(m => ({ name: m.m_name, hasImg: !!m.m_img })));
+        
+        // แสดงชื่อที่ไม่พบ
+        const notFound = uniquePersonNames.filter(name => !members[name]);
+        if (notFound.length > 0) {
+          console.log('❌ Not found members:', notFound.slice(0, 10));
+        }
+        
+      } catch (error) {
+        console.error('❌ Error fetching members:', error);
+      }
+    }
+  }
+  
+  console.log('🔍 Members object keys:', Object.keys(members));
+  res.render('chamra/list', { data, members });
 };
 
 chamraController.listPob = async (req, res) => {

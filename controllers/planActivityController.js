@@ -431,3 +431,23 @@ exports.storeMonthlyKpi = async (req, res) => {
 
   res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
 };
+
+/* =========================
+   API: Get Activities by Project
+========================= */
+exports.getActivitiesByProject = async (req, res) => {
+  try {
+    const { pro_code } = req.query;
+
+    if (!pro_code) {
+      return res.status(400).json({ error: 'pro_code is required' });
+    }
+
+    const activities = await PlanActivity.findByProjectCode(pro_code);
+    
+    return res.json(activities || []);
+  } catch (error) {
+    console.error('Error in getActivitiesByProject:', error);
+    return res.status(500).json({ error: 'Failed to fetch activities', details: error.message });
+  }
+};

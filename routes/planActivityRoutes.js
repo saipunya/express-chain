@@ -5,6 +5,9 @@ const controller = require('../controllers/planActivityController');
 const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 const { requireAdminOrResponsibleByProjectCode } = require('../middlewares/projectAccess');
 
+// API: Get activities by project code (no auth required)
+router.get('/api/by-project', controller.getActivitiesByProject);
+
 router.use(requireLogin);
 
 const requireAdminOrResponForReport = requireAdminOrResponsibleByProjectCode(

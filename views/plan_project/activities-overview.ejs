@@ -6,32 +6,32 @@
   0: { label: 'รอดำเนิน', badge: 'secondary', icon: 'clock' }
 }; %>
 
-<div class="py-4">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+<div class="py-3 py-md-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-md-items-center gap-3 mb-4">
     <div>
-      <h1 class="h3 mb-1"><i class="bi bi-collection me-2"></i>ภาพรวมโครงการและกิจกรรม</h1>
+      <h1 class="h3 h4-md mb-1"><i class="bi bi-collection me-2"></i>ภาพรวมโครงการและกิจกรรม</h1>
       <p class="text-muted small mb-0">ดูรายละเอียดโครงการทั้งหมดพร้อมกิจกรรมที่เกี่ยวข้องในหน้าจอเดียว</p>
     </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="/planproject" class="btn btn-outline-primary"><i class="bi bi-kanban me-2"></i>จัดการโครงการ</a>
-      <a href="/planactivity" class="btn btn-outline-success"><i class="bi bi-list-check me-2"></i>จัดการกิจกรรม</a>
+    <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+      <a href="/planproject" class="btn btn-outline-primary btn-sm"><i class="bi bi-kanban me-2"></i>จัดการโครงการ</a>
+      <a href="/planactivity" class="btn btn-outline-success btn-sm"><i class="bi bi-list-check me-2"></i>จัดการกิจกรรม</a>
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-md-6">
+  <div class="row g-2 g-md-3 mb-4">
+    <div class="col-12 col-md-6">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <p class="text-uppercase text-muted small mb-1">จำนวนโครงการ</p>
-          <h3 class="mb-0"><%= stats.totalProjects %> โครงการ</h3>
+          <h3 class="mb-0 fs-5 fs-md-4"><%= stats.totalProjects %> โครงการ</h3>
         </div>
       </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body">
           <p class="text-uppercase text-muted small mb-1">จำนวนกิจกรรมทั้งหมด</p>
-          <h3 class="mb-0 text-primary"><%= stats.totalActivities %> รายการ</h3>
+          <h3 class="mb-0 fs-5 fs-md-4 text-primary"><%= stats.totalActivities %> รายการ</h3>
         </div>
       </div>
     </div>
@@ -42,46 +42,50 @@
   <% } else { %>
     <% projects.forEach((project) => { const activityCount = project.activities.length; const projectStatus = projectStatusMap[project.pro_status] || projectStatusMap[0]; %>
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div>
-            <h2 class="h5 mb-0"><i class="bi bi-kanban me-2"></i><%= project.pro_subject %></h2>
-            <p class="text-muted small mb-0">รหัสโครงการ <span class="fw-semibold"><%= project.pro_code %></span> | แผนหลัก <%= project.pro_macode || '-' %></p>
-          </div>
-          <div class="text-end">
-            <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
-              <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
-              <% if (user && user.mClass === 'admin') { %>
-                <a href="/planproject/edit/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary" title="แก้ไขโครงการ">
-                  <i class="bi bi-pencil-square"></i>
-                </a>
-                <form method="POST" action="/planproject/delete/<%= project.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
-                  <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบโครงการ">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              <% } %>
+        <div class="card-header bg-light">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-md-items-center gap-2 gap-md-3">
+            <div>
+              <h2 class="h5 h6-md mb-1"><i class="bi bi-kanban me-2"></i><%= project.pro_subject %></h2>
+              <p class="text-muted small mb-0">รหัสโครงการ <span class="fw-semibold"><%= project.pro_code %></span> <span class="d-none d-md-inline">|</span> <span class="d-md-inline">แผนหลัก <%= project.pro_macode || '-' %></span></p>
             </div>
-            <div class="small text-muted mt-1">กิจกรรมทั้งหมด <span class="fw-semibold"><%= activityCount %></span> รายการ</div>
+            <div class="w-100 w-md-auto">
+              <div class="d-flex flex-column flex-md-row justify-content-start justify-md-content-end align-items-start align-md-items-center gap-2">
+                <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
+                <% if (user && user.mClass === 'admin') { %>
+                  <div class="d-flex gap-1">
+                    <a href="/planproject/edit/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary" title="แก้ไขโครงการ">
+                      <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <form method="POST" action="/planproject/delete/<%= project.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบโครงการ">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+              <div class="small text-muted mt-2">กิจกรรมทั้งหมด <span class="fw-semibold"><%= activityCount %></span> รายการ</div>
+            </div>
           </div>
         </div>
         <div class="card-body">
-          <div class="row g-3 mb-3">
-            <div class="col-md-3">
+          <div class="row g-2 g-md-3 mb-3">
+            <div class="col-12 col-sm-6 col-md-3">
               <p class="text-muted small mb-1">เป้าหมาย</p>
-              <div class="fw-semibold"><%= project.pro_target || '-' %></div>
+              <div class="fw-semibold small small-md-normal"><%= project.pro_target || '-' %></div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
               <p class="text-muted small mb-1">งบประมาณ</p>
-              <div class="text-success fw-semibold"><%= project.pro_budget ? Number(project.pro_budget).toLocaleString('th-TH') + ' บาท' : '-' %></div>
+              <div class="text-success fw-semibold small small-md-normal"><%= project.pro_budget ? Number(project.pro_budget).toLocaleString('th-TH') + ' บาท' : '-' %></div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
               <p class="text-muted small mb-1">ผู้รับผิดชอบ</p>
-              <div class="fw-semibold"><%= project.respon_name || '-' %></div>
+              <div class="fw-semibold small small-md-normal"><%= project.respon_name || '-' %></div>
               <% if (project.respon_username) { %>
                 <div class="text-muted small">@<%= project.respon_username %></div>
               <% } %>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
               <p class="text-muted small mb-1">บันทึกโดย / วันที่</p>
               <div class="small"><%= project.pro_saveby || '-' %></div>
               <div class="text-muted small"><%= thaiDate(project.pro_savedate) %></div>
@@ -91,33 +95,39 @@
           <% if (!activityCount) { %>
             <div class="alert alert-secondary mb-0"><i class="bi bi-info-circle me-2"></i>ยังไม่มีการเพิ่มกิจกรรมสำหรับโครงการนี้</div>
           <% } else { %>
+            <button class="btn btn-sm btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#activities-<%= project.pro_id %>" aria-expanded="false" aria-controls="activities-<%= project.pro_id %>">
+              <i class="bi bi-chevron-up me-1"></i>
+              <span class="toggle-text">แสดงกิจกรรม</span>
+            </button>
+            <div class="collapse" id="activities-<%= project.pro_id %>">
             <div class="table-responsive">
               <table class="table table-hover table-sm align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th style="width: 60px;">#</th>
-                    <th style="width: 80px;">ลำดับ</th>
-                    <th>ชื่อกิจกรรม</th>
-                    <th style="width: 200px;">สถานะ</th>
-                    <th style="width: 160px;">ผู้บันทึก</th>
-                    <th style="width: 140px;">วันที่</th>
+                    <th class="small" style="width: 50px;">#</th>
+                    <th class="small" style="width: 60px;">ลำดับ</th>
+                    <th class="small">ชื่อกิจกรรม</th>
+                    <th class="small d-none d-md-table-cell" style="width: 180px;">สถานะ</th>
+                    <th class="small d-none d-lg-table-cell" style="width: 150px;">ผู้บันทึก</th>
+                    <th class="small d-none d-lg-table-cell" style="width: 130px;">วันที่</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% project.activities.forEach((activity, index) => { const statusMeta = activityStatuses[Number(activity.ac_status)] || activityStatuses[0]; %>
                     <tr>
-                      <td><span class="badge bg-light text-dark">ID <%= activity.ac_id %></span></td>
-                      <td><%= activity.ac_number %></td>
-                      <td><%= activity.ac_subject %></td>
-                      <td>
+                      <td><span class="badge bg-light text-dark small">ID <%= activity.ac_id %></span></td>
+                      <td class="small"><%= activity.ac_number %></td>
+                      <td class="small"><%= activity.ac_subject %></td>
+                      <td class="d-none d-md-table-cell small">
                         <span class="badge bg-<%= statusMeta.badge %>"><i class="bi bi-<%= statusMeta.icon %> me-1"></i><%= statusMeta.label %></span>
                       </td>
-                      <td><small><%= activity.ac_saveby || '-' %></small></td>
-                      <td><small class="text-muted"><%= thaiDate(activity.ac_savedate) %></small></td>
+                      <td class="d-none d-lg-table-cell"><small><%= activity.ac_saveby || '-' %></small></td>
+                      <td class="d-none d-lg-table-cell"><small class="text-muted"><%= thaiDate(activity.ac_savedate) %></small></td>
                     </tr>
                   <% }) %>
                 </tbody>
               </table>
+            </div>
             </div>
           <% } %>
         </div>
@@ -127,3 +137,27 @@
 </div>
 
 <%- include('../partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+  toggleButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const icon = this.querySelector('i');
+      const text = this.querySelector('.toggle-text');
+      setTimeout(() => {
+        if (this.getAttribute('aria-expanded') === 'true') {
+          icon.classList.remove('bi-chevron-down');
+          icon.classList.add('bi-chevron-up');
+          text.textContent = 'แสดงกิจกรรม';
+        } else {
+          icon.classList.remove('bi-chevron-up');
+          icon.classList.add('bi-chevron-down');
+          text.textContent = 'ซ่อนกิจกรรม';
+        }
+      }, 0);
+    });
+  });
+});
+</script>
+

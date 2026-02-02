@@ -223,6 +223,7 @@ exports.monthlyReport = async (req, res) => {
   let statusesMap = {};
   let kpiMetrics = [];
   let kpiSummary = { total: 0, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 };
+  let historicalRecords = [];
 
   if (selectedProject) {
     activities = await PlanActivity.findByProjectCode(selectedProject);
@@ -274,6 +275,29 @@ exports.monthlyReport = async (req, res) => {
         { total: kpiMetrics.length, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 }
       );
     }
+
+    // Fetch historical monthly records
+    try {
+      const db = require('../config/db');
+      const query = `
+        SELECT DISTINCT 
+          am.report_month,
+          COUNT(am.ac_id) as total_activities,
+          SUM(CASE WHEN am.status = 2 THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN am.status = 1 THEN 1 ELSE 0 END) as in_progress,
+          SUM(CASE WHEN am.status = 0 OR am.status IS NULL THEN 1 ELSE 0 END) as not_started
+        FROM activity_monthly am
+        WHERE am.pro_code = ?
+        GROUP BY am.report_month
+        ORDER BY am.report_month DESC
+        LIMIT 12
+      `;
+      const [rows] = await db.promise().query(query, [selectedProject]);
+      historicalRecords = Array.isArray(rows) ? rows : [];
+    } catch (error) {
+      console.error('Error fetching historical records:', error);
+      historicalRecords = [];
+    }
   }
 
   const summary = activities.reduce(
@@ -299,7 +323,8 @@ exports.monthlyReport = async (req, res) => {
     totalActivities: activities.length,
     kpiMetrics,
     kpiSummary,
-    monthLabel
+    monthLabel,
+    historicalRecords
   });
 };
 

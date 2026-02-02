@@ -276,21 +276,26 @@
                     </td>
                     <td>
                       <div class="fw-semibold text-primary"><%= cumulative.toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></div>
-                      <small class="text-muted">สะสมทุกเดือน</small>
+                      <small class="text-muted">สะสมจนถึงเดือนนี้</small>
                     </td>
-                    <td>
-                      <% if (percent === null) { %>
-                        <span class="text-muted">-</span>
-                      <% } else { %>
-                        <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span>
-                      <% } %>
-                    </td>
+                    <% if (percent === null) { %>
+                      <span class="text-muted">-</span>
+                    <% } else { %>
+                      <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span>
+                    <% } %>
                     <td>
                       <input type="number" step="0.01" min="0" class="form-control" name="kpi_rows[<%= index %>][actual_value]" value="<%= monthlyRecord ? Number(monthlyRecord.actual_value).toString() : '' %>" placeholder="เช่น 25.0">
                       <small class="text-muted">เว้นว่างหากไม่มีข้อมูล</small>
                     </td>
                     <td>
                       <input type="text" class="form-control" name="kpi_rows[<%= index %>][note]" value="<%= monthlyRecord && monthlyRecord.note ? monthlyRecord.note : '' %>" placeholder="สาระสำคัญ/ที่มาของข้อมูล">
+                    </td>
+                  </tr>
+                  <tr class="table-secondary">
+                    <td colspan="7" class="py-2">
+                      <small class="text-muted">
+                        <strong>ระยะเวลารายงาน:</strong> 1 ตุลาคม <%=  new Date().getFullYear() %> – 30 กันยายน <%= new Date().getFullYear() + 1 %>
+                      </small>
                     </td>
                   </tr>
                 <% }) %>
@@ -304,6 +309,102 @@
         </form>
       <% } %>
     </div>
+
+    <!-- NEW: Historical Monthly Records Section -->
+    <div class="mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="h5 mb-1">ประวัติการบันทึกรายเดือนที่ผ่านมา</h2>
+          <p class="text-muted small mb-0">แสดงผลการบันทึกสถานะกิจกรรมของเดือนที่ผ่านมา (ย้อนหลัง 12 เดือน)</p>
+        </div>
+      </div>
+
+      <% if (!selectedProject) { %>
+        <div class="alert alert-secondary shadow-sm">กรุณาเลือกโครงการเพื่อดูประวัติการบันทึก</div>
+      <% } else if (!Array.isArray(historicalRecords) || historicalRecords.length === 0) { %>
+        <div class="alert alert-info shadow-sm">ยังไม่มีข้อมูลการบันทึกรายเดือนที่ผ่านมา</div>
+      <% } else { %>
+        <div class="card border-0 shadow-sm">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 140px;">เดือน-ปี</th>
+                  <th style="width: 100px;">กิจกรรมทั้งหมด</th>
+                  <th style="width: 120px;">
+                    <span class="badge bg-success">ดำเนินการเรียบร้อย</span>
+                  </th>
+                  <th style="width: 120px;">
+                    <span class="badge bg-warning">ในระหว่างดำเนิน</span>
+                  </th>
+                  <th style="width: 120px;">
+                    <span class="badge bg-secondary">ยังไม่ดำเนิน</span>
+                  </th>
+                  <th style="width: 120px;">อัตราสำเร็จ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% historicalRecords.forEach((record) => { 
+                  const completed = Number(record.completed || 0);
+                  const inProgress = Number(record.in_progress || 0);
+                  const notStarted = Number(record.not_started || 0);
+                  const total = Number(record.total_activities || 1);
+                  const successRate = ((completed / total) * 100).toFixed(1);
+                  
+                  // Parse ISO month to Thai display format
+                  const [year, month] = (record.report_month || '').split('-');
+                  const gregorianYear = Number.parseInt(year, 10);
+                  const monthNum = Number.parseInt(month, 10);
+                  const thaiYear = gregorianYear + 543;
+                  
+                  const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                                      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                  const monthLabel = monthNames[monthNum - 1] || '-';
+                %>
+                  <tr>
+                    <td>
+                      <strong><%= monthLabel %> <%= thaiYear %></strong>
+                      <br>
+                      <small class="text-muted"><%= record.report_month %></small>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark"><%= total %> รายการ</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-success"><%= completed %> ✓</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-warning text-dark"><%= inProgress %> ⧳</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary"><%= notStarted %> ○</span>
+                    </td>
+                    <td>
+                      <div class="progress" style="height: 24px;">
+                        <div 
+                          class="progress-bar <%= successRate >= 80 ? 'bg-success' : successRate >= 60 ? 'bg-info' : 'bg-warning' %>" 
+                          role="progressbar" 
+                          style="width: <%= Math.min(successRate, 100) %>%;" 
+                          aria-valuenow="<%= successRate %>" 
+                          aria-valuemin="0" 
+                          aria-valuemax="100">
+                          <%= successRate %>%
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-light text-muted small">
+            <i class="bi bi-info-circle me-2"></i>
+            แสดงข้อมูลล่าสุด 12 เดือน เรียงลำดับจากเดือนล่าสุด
+          </div>
+        </div>
+      <% } %>
+    </div>
+
   <% } %>
 </div>
 

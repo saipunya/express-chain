@@ -103,6 +103,13 @@ const planKpiRoutes = require('./routes/planKpiRoutes'); // ตัวชี้�
 const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
 const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
 
+// Public routes that don't require authentication
+const publicRoutes = [
+  '/chamra/process',
+  '/chamra/detail/:id', // optional: also allow viewing details
+  // ...other public routes
+];
+
 // online member
 app.use(onlineStatus);
 app.use(lineWebhook);

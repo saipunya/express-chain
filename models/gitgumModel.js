@@ -114,3 +114,14 @@ exports.findFromTodayToEnd = async () => {
   );
   return rows;
 };
+
+// ดึงข้อมูลล่าสุด N รายการ (สำหรับแสดงในฟอร์ม)
+exports.findRecent = async (limit = 5) => {
+  const [rows] = await db.query(
+    `SELECT * FROM tbl_gitgum 
+     ORDER BY git_date DESC, git_time DESC, git_id DESC 
+     LIMIT ?`,
+    [Number(limit)]
+  );
+  return rows;
+};

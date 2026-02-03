@@ -55,5 +55,79 @@
   </form>
 </div>
 
+<!-- แสดงข้อมูลล่าสุด -->
+<% if (recentData && recentData.length > 0) { %>
+<div class="container mt-5">
+  <div class="card">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0">📋 ข้อมูลที่บันทึกล่าสุด (<%= recentData.length %> รายการ)</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>วันที่</th>
+              <th>เวลา</th>
+              <th>กิจกรรม</th>
+              <th>สถานที่</th>
+              <th>ผู้รับผิดชอบ</th>
+           
+              <% if(user && user.mClass=='kjs'){ %>
+              <th>จัดการ</th>
+              <% } %>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentData.forEach(item => { %>
+              <tr>
+                <% const date = new Date(item.git_date); %>
+                <% const options = { year: 'numeric', month: 'short', day: 'numeric' }; %>
+                <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+                <td><%= thaiDate %></td>
+                <td><%= item.git_time %></td>
+                <td>
+                  <div class="fw-semibold"><%= item.git_act %></div>
+                  <% if (item.git_maihed) { %>
+                    <small class="text-muted"><%= item.git_maihed %></small>
+                  <% } %>
+                </td>
+                <td><%= item.git_place || '-' %></td>
+                <td><%= item.git_goto || item.git_respon || '-' %></td>
+                <td>
+                  <small class="text-muted">
+                    <%= item.git_saveby %>
+                    <br><%= new Date(item.git_savedate).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit' }) %>
+                  </small>
+                </td>
+                <% if(user && (user.mClass=='kjs' || user.mClass=='admin')){ %>
+                <td class="text-center text-nowrap">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <a href="/gitgum/view/<%= item.git_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="/gitgum/edit/<%= item.git_id %>" class="btn btn-outline-warning" title="แก้ไข">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/gitgum/delete/<%= item.git_id %>" class="btn btn-outline-danger" title="ลบ" onclick="return confirm('ต้องการลบกิจกรรมนี้?')">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                </td>
+                <% } %>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="/gitgum/list" class="btn btn-outline-primary btn-sm">ดูทั้งหมด</a>
+      <a href="/gitgum/calendar" class="btn btn-outline-info btn-sm">ดูปฏิทิน</a>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <%- include('partials/footer') %>
 

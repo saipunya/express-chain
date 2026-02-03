@@ -28,8 +28,14 @@ exports.list = async (req, res) => {
 };
 
 // แสดงฟอร์มเพิ่ม
-exports.showAddForm = (req, res) => {
-  res.render('gitgum_form', { title: 'เพิ่มกิจกรรม' });
+exports.showAddForm = async (req, res) => {
+  // ดึงข้อมูล 5 รายการล่าสุดมาแสดง
+  const recentData = await gitgumModel.findRecent(5);
+  
+  res.render('gitgum_form', { 
+    title: 'เพิ่มกิจกรรม',
+    recentData
+  });
 };
 
 // บันทึกข้อมูล

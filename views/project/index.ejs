@@ -2,102 +2,273 @@
 <% const canManage = user && (user.mClass=='admin' || user.mClass=='pbt'); %>
 
 <style>
+  :root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --light-bg: #f8fafc;
+    --border-color: #e2e8f0;
+  }
+
   .page-header {
-    background: linear-gradient(135deg, var(--grad-start, #10b981), var(--grad-end, #059669));
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-    border-radius: 0 0 1rem 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 3rem 0;
+    margin-bottom: 3rem;
   }
+
+  .search-wrapper {
+    transform: translateY(-2rem);
+    margin-bottom: 1rem;
+  }
+
   .search-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: white;
     border-radius: 1rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-    transform: translateY(-20px);
-    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    border: none;
   }
-  .project-card {
-    transition: all 0.2s ease;
-    border: 1px solid #f1f5f9;
-    border-left: 4px solid #10b981;
-    background: #fff;
+
+  .search-input {
+    background: var(--light-bg);
+    border: 2px solid var(--border-color);
     border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
   }
+
+  .search-input:focus {
+    background: white;
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  .btn-primary-action {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary-action:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    color: white;
+  }
+
+  .project-card {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+  }
+
   .project-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+    transform: translateY(-4px);
   }
+
   .year-badge {
     position: absolute;
-    top: -10px;
-    right: 15px;
-    background: #10b981;
+    top: 1rem;
+    right: 1rem;
+    background: var(--primary);
     color: white;
     font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
     font-weight: 600;
+    letter-spacing: 0.5px;
   }
+
   .project-icon {
-    width: 48px;
-    height: 48px;
-    background: #ecfdf5;
-    color: #10b981;
-    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--primary);
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     flex-shrink: 0;
+  }
+
+  .project-no {
+    background: var(--light-bg);
+    color: #64748b;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-top: 0.5rem;
+  }
+
+  .project-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
+    margin: 1rem 0 1.25rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .project-meta {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+  }
+
+  .project-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .btn-view {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0.65rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    flex-grow: 1;
+  }
+
+  .btn-view:hover {
+    background: var(--primary-dark);
+    color: white;
+    text-decoration: none;
+  }
+
+  .dropdown-toggle::after {
+    display: none;
+  }
+
+  .dropdown-item {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .dropdown-item:hover {
+    background: var(--light-bg);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--light-bg);
+    border-radius: 1rem;
+    border: 2px dashed var(--border-color);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+  }
+
+  .empty-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  .results-info {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-info strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    .search-wrapper {
+      transform: translateY(-1.5rem);
+    }
+
+    .project-title {
+      font-size: 0.95rem;
+    }
+
+    .year-badge {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+    }
   }
 </style>
 
-<!-- Header Section -->
-<div class="page-header text-center">
+<!-- Header -->
+<div class="page-header">
   <div class="container">
-    <h1 class="h3 fw-bold mb-1">โครงการ</h1>
-    <p class="mb-0 opacity-75 small">ระบบจัดเก็บเอกสารและข้อมูลโครงการ</p>
+    <h1 class="mb-2 fw-bold">โครงการ</h1>
+    <p class="mb-0 opacity-75">จัดเก็บและค้นหาเอกสารโครงการอย่างเป็นระเบบ</p>
   </div>
 </div>
 
 <div class="container">
   <!-- Search & Filter -->
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="search-card p-3 p-md-4">
-        <form class="row g-3" method="GET" action="">
-          <div class="col-12 col-md d-flex gap-2">
+  <div class="search-wrapper">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="search-card">
+          <form class="d-flex gap-2" method="GET" action="">
             <div class="position-relative flex-grow-1">
               <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-              <input type="text" class="form-control rounded-pill ps-5 py-2 border-0 bg-light" 
+              <input type="text" class="form-control search-input ps-5" 
                      name="search" placeholder="ค้นหาชื่อโครงการ..." value="<%= search || '' %>">
             </div>
-            <button class="btn btn-success rounded-pill px-4" type="submit">ค้นหา</button>
-          </div>
-          <div class="col-auto d-flex gap-2 align-items-center">
+            <button class="btn btn-primary-action" type="submit">ค้นหา</button>
             <% if(search) { %>
-              <a href="/project" class="btn btn-light rounded-pill border" data-bs-toggle="tooltip" title="ล้างการค้นหา"><i class="bi bi-x-lg"></i></a>
-            <% } %>
-            <% if (canManage) { %>
-              <a href="/project/create" class="btn btn-success rounded-pill px-3 shadow-sm">
-                <i class="bi bi-plus-lg me-1"></i> <span class="d-none d-sm-inline">เพิ่มโครงการ</span>
+              <a href="/project" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="ล้างการค้นหา">
+                <i class="bi bi-x-lg"></i>
               </a>
             <% } %>
-          </div>
-        </form>
+            <% if (canManage) { %>
+              <a href="/project/create" class="btn btn-primary-action">
+                <i class="bi bi-plus-lg me-2"></i>เพิ่มโครงการ
+              </a>
+            <% } %>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Stats -->
-  <div class="d-flex justify-content-between align-items-center mb-3 px-1">
-    <small class="text-muted">
-      <i class="bi bi-folder2-open me-1"></i> พบทั้งหมด <span class="fw-bold text-dark"><%= (projects && projects.length) ? projects.length : 0 %></span> รายการ
-    </small>
+  <!-- Results Info -->
+  <div class="results-info">
+    <i class="bi bi-folder2-open me-2"></i>
+    พบทั้งหมด <strong><%= (projects && projects.length) ? projects.length : 0 %></strong> รายการ
   </div>
 
   <!-- Project Grid -->
@@ -105,53 +276,52 @@
     <% if (projects && projects.length) { %>
       <% projects.forEach(p => { %>
         <div class="col-12 col-md-6 col-lg-4">
-          <div class="project-card p-3 h-100 position-relative pt-4">
+          <div class="project-card">
             <div class="year-badge">ปี <%= p.pro_year %></div>
-            
-            <div class="d-flex align-items-start gap-3">
-              <div class="d-flex flex-column align-items-center gap-1">
-                <div class="project-icon">
-                  <i class="bi bi-kanban"></i>
-                </div>
-                <div class="mt-2 text-center w-100">
-                   <div class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">
-                     เลขที่ <%= p.pro_no %>
-                   </div>
-                </div>
+
+            <div class="d-flex gap-3">
+              <div class="project-icon">
+                <i class="bi bi-folder-check"></i>
               </div>
 
               <div class="flex-grow-1 min-w-0">
-                <% const thaiDate = new Date(p.pro_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); %>
-                <div class="text-muted small mb-1"><i class="bi bi-calendar4-week me-1"></i><%= thaiDate %></div>
-                
-                <h6 class="fw-bold text-dark mb-3 text-wrap" style="line-height: 1.5; min-height: 3rem;">
-                  <%= p.pro_story %>
-                </h6>
+                <% const thaiDate = new Date(p.pro_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }); %>
+                <div class="project-meta">
+                  <i class="bi bi-calendar-event me-1"></i><%= thaiDate %>
+                </div>
 
-                <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
-                  <div>
-                    <% if (user) { %>
-                      <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-success rounded-pill px-3" target="_blank">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> เปิดดู
-                      </a>
-                    <% } else { %>
-                      <a href="/auth/login" class="btn btn-sm btn-light border rounded-pill px-3 text-muted">
-                        <i class="bi bi-lock me-1"></i> Login
-                      </a>
-                    <% } %>
-                  </div>
+                <div class="project-no">เลขที่ <%= p.pro_no %></div>
+
+                <h5 class="project-title">
+                  <%= p.pro_story %>
+                </h5>
+
+                <div class="project-actions">
+                  <% if (user) { %>
+                    <a href="/project/download/<%= p.pro_id %>" class="btn btn-view" target="_blank">
+                      <i class="bi bi-file-earmark-pdf me-1"></i>เปิดดู
+                    </a>
+                  <% } else { %>
+                    <a href="/auth/login" class="btn btn-view">
+                      <i class="bi bi-lock-fill me-1"></i>เข้าสู่ระบบ
+                    </a>
+                  <% } %>
 
                   <% if (canManage) { %>
                     <div class="dropdown">
-                      <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" title="เพิ่มเติม">
                         <i class="bi bi-three-dots"></i>
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item" href="/project/edit/<%= p.pro_id %>"><i class="bi bi-pencil me-2 text-warning"></i>แก้ไข</a></li>
+                        <li><a class="dropdown-item" href="/project/edit/<%= p.pro_id %>">
+                          <i class="bi bi-pencil me-2 text-warning"></i>แก้ไข
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                          <form action="/project/delete/<%= p.pro_id %>" method="POST" onsubmit="return confirm('ต้องการลบรายการนี้หรือไม่?')">
-                            <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>
+                          <form action="/project/delete/<%= p.pro_id %>" method="POST" onsubmit="return confirm('ต้องการลบรายการนี้หรือไม่?');">
+                            <button class="dropdown-item text-danger" type="submit">
+                              <i class="bi bi-trash me-2"></i>ลบ
+                            </button>
                           </form>
                         </li>
                       </ul>
@@ -165,16 +335,17 @@
       <% }) %>
     <% } else { %>
       <div class="col-12">
-        <div class="text-center py-5 bg-white rounded-3 border border-dashed">
-          <div class="mb-3 text-muted opacity-50">
-            <i class="bi bi-inbox fs-1"></i>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-inbox"></i>
           </div>
-          <h5 class="text-muted">ไม่พบข้อมูลโครงการ</h5>
-          <p class="small text-muted mb-0">ลองเปลี่ยนคำค้นหา หรือเริ่มต้นปีงบประมาณใหม่</p>
+          <div class="empty-title">ไม่พบข้อมูลโครงการ</div>
+          <p class="empty-text">ลองเปลี่ยนคำค้นหา หรือ<% if(canManage) { %> <a href="/project/create">เพิ่มโครงการใหม่</a><% } %></p>
         </div>
       </div>
     <% } %>
   </div>
 </div>
+
 <script src="/js/project-search.js"></script>
 <%- include('../partials/footer') %>

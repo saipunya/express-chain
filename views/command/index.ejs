@@ -20,37 +20,157 @@
     margin-bottom: 0.5rem;
   }
   .command-card {
-    transition: all 0.2s ease;
-    border: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
     border-left: 4px solid #3b82f6;
     background: #fff;
-    border-radius: 0.75rem;
+    border-radius: 0.875rem;
+    overflow: hidden;
   }
   .command-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -5px rgba(59, 130, 246, 0.1);
+    border-left-color: #2563eb;
   }
   .command-icon {
-    width: 48px;
-    height: 48px;
-    background: #eff6ff;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
     color: #3b82f6;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+  }
+  .command-date-box {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .command-date-box .date-value {
+    display: block;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .command-date-box .date-label {
+    display: block;
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+  }
+  .command-no-badge {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    display: inline-block;
+  }
+  .command-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    word-break: break-word;
+  }
+  .command-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #475569;
+  }
+  .meta-item i {
+    color: #3b82f6;
+    font-size: 1rem;
+  }
+  .meta-label {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+  }
+  .meta-value {
+    color: #1e293b;
+    font-weight: 500;
+    display: block;
+  }
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn-action {
+    flex: 1;
+    min-width: 140px;
   }
   .badge-custom {
     font-weight: 500;
     letter-spacing: 0.3px;
     padding: 0.4em 0.8em;
     border-radius: 2rem;
+    font-size: 0.8rem;
   }
-  @media (max-width: 576px) {
+  .stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .stats-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stats-number {
+    font-weight: 700;
+    color: #3b82f6;
+    font-size: 1.25rem;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 2px dashed #cbd5e1;
+  }
+  .empty-state i {
+    font-size: 3rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  @media (max-width: 768px) {
     .page-header { padding: 1.5rem 0 2.5rem; }
-    .command-card { border-left-width: 4px; }
+    .command-card { border-left-width: 3px; margin-bottom: 0.5rem; }
+    .command-meta { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; }
+    .action-buttons { flex-direction: column; }
+    .btn-action { min-width: auto; }
+    .stats-bar { flex-direction: column; gap: 1rem; text-align: center; }
   }
 </style>
 
@@ -91,11 +211,15 @@
     </div>
   </div>
 
-  <!-- Stats -->
-  <div class="d-flex justify-content-between align-items-center mb-3 px-1">
-    <small class="text-muted">
-      <i class="bi bi-folder2-open me-1"></i> พบทั้งหมด <span class="fw-bold text-dark"><%= (commands && commands.length) ? commands.length : 0 %></span> รายการ
-    </small>
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stats-item">
+      <i class="bi bi-folder2-open text-primary" style="font-size: 1.25rem;"></i>
+      <div>
+        <span class="stats-number"><%= (commands && commands.length) ? commands.length : 0 %></span>
+        <small class="text-muted d-block">รายการทั้งหมด</small>
+      </div>
+    </div>
   </div>
 
   <!-- Command List -->
@@ -103,58 +227,65 @@
     <% if (commands && commands.length) { %>
       <% commands.forEach(c => { %>
         <div class="col-12 col-lg-6">
-          <div class="command-card p-3 h-100 position-relative">
-            <div class="d-flex align-items-start gap-3">
-              <!-- Icon/Date Box -->
-              <div class="d-flex flex-column align-items-center gap-1">
-                <div class="command-icon">
-                  <i class="bi bi-megaphone"></i>
+          <div class="command-card h-100">
+            <div class="p-4">
+              <!-- Header Row -->
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                <div class="flex-grow-1 min-w-0">
+                  <span class="command-no-badge">
+                    <i class="bi bi-hash me-1"></i><%= c.com_no %>
+                  </span>
                 </div>
-                <% const thaiDate = new Date(c.com_date).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' }); %>
-                <span class="badge bg-light text-dark border badge-custom mt-2 w-100 text-center" style="font-size: 0.7rem;">
-                  <%= thaiDate %>
-                </span>
+                <% if(hasActions){ %>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-light text-muted p-2" type="button" data-bs-toggle="dropdown">
+                      <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                      <li><a class="dropdown-item" href="/command/edit/<%= c.command_id %>"><i class="bi bi-pencil me-2 text-warning"></i>แก้ไข</a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <form action="/command/delete/<%= c.command_id %>" method="POST" onsubmit="return confirm('ยืนยันลบ?')">
+                          <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
+                <% } %>
               </div>
 
-              <!-- Content -->
-              <div class="flex-grow-1 min-w-0">
-                <div class="d-flex justify-content-between align-items-start mb-1">
-                  <span class="badge bg-primary bg-opacity-10 text-primary badge-custom mb-1">
-                    เลขที่ <%= c.com_no %>
-                  </span>
-                  <% if(hasActions){ %>
-                    <div class="dropdown">
-                      <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-three-dots-vertical"></i>
-                      </button>
-                      <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item" href="/command/edit/<%= c.command_id %>"><i class="bi bi-pencil me-2 text-warning"></i>แก้ไข</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                          <form action="/command/delete/<%= c.command_id %>" method="POST" onsubmit="return confirm('ยืนยันลบ?')">
-                            <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>
-                          </form>
-                        </li>
-                      </ul>
-                    </div>
-                  <% } %>
-                </div>
-                
-                <h5 class="fw-bold text-dark mb-2 text-wrap" style="font-size: 1rem; line-height: 1.5;">
-                  <%= c.com_story %>
-                </h5>
+              <!-- Title -->
+              <h5 class="command-title"><%= c.com_story %></h5>
 
-                <div class="mt-3">
-                  <% if (user) { %>
-                    <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
-                      <i class="bi bi-file-earmark-pdf-fill me-1"></i> เปิดอ่านคำสั่ง
-                    </a>
-                  <% } else { %>
-                    <a href="/auth/login" class="btn btn-sm btn-light rounded-pill text-muted border px-3">
-                      <i class="bi bi-lock-fill me-1"></i> เข้าสู่ระบบ
-                    </a>
-                  <% } %>
+              <!-- Date -->
+              <% const thaiDate = new Date(c.com_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+              <div class="command-date-box mb-3">
+                <span class="date-value"><%= thaiDate %></span>
+                <span class="date-label">วันที่ออกคำสั่ง</span>
+              </div>
+
+              <!-- Meta Information -->
+              <div class="command-meta">
+                <div class="meta-item">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <div>
+                    <span class="meta-label">ประเภท</span>
+                    <span class="meta-value">คำสั่งสำนักงาน</span>
+                  </div>
                 </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <% if (user) { %>
+                  <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-primary rounded-pill btn-action" target="_blank">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> เปิดอ่าน
+                  </a>
+                <% } else { %>
+                  <a href="/auth/login" class="btn btn-sm btn-outline-primary rounded-pill btn-action">
+                    <i class="bi bi-lock-fill me-1"></i> เข้าสู่ระบบ
+                  </a>
+                <% } %>
               </div>
             </div>
           </div>
@@ -162,12 +293,15 @@
       <% }) %>
     <% } else { %>
       <div class="col-12">
-        <div class="text-center py-5 bg-white rounded-3 border border-dashed">
-          <div class="mb-3 text-muted opacity-50">
-            <i class="bi bi-inbox fs-1"></i>
-          </div>
-          <h5 class="text-muted">ไม่พบข้อมูลคำสั่ง</h5>
-          <p class="small text-muted mb-0">ลองเปลี่ยนคำค้นหา หรือเพิ่มรายการใหม่</p>
+        <div class="empty-state">
+          <i class="bi bi-inbox text-muted"></i>
+          <h5 class="text-muted fw-600">ไม่พบข้อมูลคำสั่ง</h5>
+          <p class="text-muted small mb-2">ลองเปลี่ยนคำค้นหา หรือเพิ่มรายการใหม่</p>
+          <% if(hasActions){ %>
+            <a href="/command/create" class="btn btn-sm btn-primary rounded-pill mt-2">
+              <i class="bi bi-plus-lg me-1"></i> สร้างคำสั่งใหม่
+            </a>
+          <% } %>
         </div>
       </div>
     <% } %>

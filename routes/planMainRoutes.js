@@ -10,6 +10,9 @@ router.use(requireLogin, requireLevel(['admin', 'pbt']));
 router.get('/', controller.listPage);
 router.get('/new', controller.newPage);
 router.post('/', controller.create);
+router.post('/:id', controller.update);
+router.get('/:id/edit', controller.editPage);
+router.put('/:id', controller.update);
 
 // simple API
 router.get('/api', controller.apiList);

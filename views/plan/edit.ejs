@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+
+<body>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h4 mb-1"><%= title %></h1>
+        <p class="text-muted small mb-0">ปรับปรุงข้อมูลแผนงานหลักให้เป็นปัจจุบัน</p>
+      </div>
+      <a href="/planmain" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับไปหน้ารายการ</a>
+    </div>
+
+    <form action="/planmain/<%= plan.ma_id %>" method="post" class="row g-3">
+      <input type="hidden" name="_method" value="PUT">
+
+      <div class="col-12 col-md-4">
+        <label class="form-label">รหัสแผนงาน</label>
+        <input type="text" name="ma_code" class="form-control" value="<%= plan.ma_code %>" required>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">หัวข้อ</label>
+        <input type="text" name="ma_subject" class="form-control" value="<%= plan.ma_subject %>" required>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">รายละเอียด</label>
+        <textarea name="ma_detail" rows="6" class="form-control"><%= plan.ma_detail || '' %></textarea>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-label">วันที่บันทึก</label>
+        <input type="date" name="ma_savedate" class="form-control" value="<%= typeof savedDateValue !== 'undefined' ? savedDateValue : '' %>">
+        <small class="text-muted">หากเว้นว่าง ระบบจะใช้วันที่ปัจจุบัน</small>
+      </div>
+
+      <div class="col-12 d-flex gap-2">
+        <input type="hidden" name="ma_saveby" value="<%= plan.ma_saveby %>">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>บันทึกการแก้ไข</button>
+        <a href="/planmain" class="btn btn-secondary">ยกเลิก</a>
+      </div>
+    </form>
+  </div>
+</body>
+
+<%- include('../partials/footer') %>

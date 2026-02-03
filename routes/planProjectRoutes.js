@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require('../controllers/planProjectController');
 
 const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
-const { requireAdminOrResponsibleByProjectId } = require('../middlewares/projectAccess');
+const { requireAdminOrResponsibleByProjectId, requireAdminOrResponsibleByProjectCode } = require('../middlewares/projectAccess');
 
 router.use(requireLogin);
 
@@ -15,6 +15,7 @@ router.get('/', requireAdminOrPbt, controller.listPage);
 router.get('/activities-overview', requireAdminOrPbt, controller.activitiesOverviewPage);
 router.get('/new', requireAdminOrPbt, controller.newPage);
 router.post('/', requireAdminOrPbt, controller.create);
+router.get('/summary/:code', requireAdminOrResponsibleByProjectCode((req) => req.params.code), controller.summaryPage);
 
 // Edit/update: only admin or project responsible
 router.get('/edit/:id', requireAdminOrResponForProject, controller.editPage);

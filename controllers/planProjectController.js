@@ -1,13 +1,46 @@
 const projectModel = require('../models/planProjectModel');
 const planMainModel = require('../models/planMainModel');
 const planActivityModel = require('../models/planActivity');
+const PlanKpi = require('../models/planKpi');
+const PlanKpiMonthly = require('../models/planKpiMonthly');
 const thaiDate = require('../utils/thaiDate');
 const userModel = require('../models/userModel');
+const db = require('../config/db');
 
 const ACTIVITY_STATUS = {
   2: { label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
   1: { label: 'อยู่ระหว่างดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' },
   0: { label: 'ยังไม่ดำเนินการ', badge: 'secondary', icon: 'clock' }
+};
+
+const TH_MONTHS = [
+  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+];
+
+const toThaiMonthLabel = (value) => {
+  if (!value) return '';
+  let isoValue = '';
+  if (value instanceof Date) {
+    isoValue = value.toISOString().slice(0, 10);
+  } else if (typeof value === 'string') {
+    isoValue = value.includes('T') ? value.split('T')[0] : value;
+  } else if (value && typeof value.toISOString === 'function') {
+    isoValue = value.toISOString().slice(0, 10);
+  } else {
+    isoValue = String(value);
+  }
+
+  const normalized = isoValue.length >= 7 ? isoValue.slice(0, 7) : isoValue;
+  if (!normalized.includes('-')) {
+    return normalized;
+  }
+
+  const [y, m] = normalized.split('-');
+  const monthIndex = Number(m) - 1;
+  const name = TH_MONTHS[monthIndex] || m;
+  const thaiYear = Number.isFinite(Number(y)) ? Number(y) + 543 : y;
+  return `${name} ${thaiYear}`;
 };
 
 exports.listPage = async (req, res) => {
@@ -165,5 +198,230 @@ exports.activitiesOverviewPage = async (req, res) => {
   } catch (error) {
     console.error('Error loading project activity overview:', error);
     res.status(500).send('ไม่สามารถโหลดข้อมูลโครงการและกิจกรรมได้');
+  }
+};
+
+exports.summaryPage = async (req, res) => {
+  try {
+    const proCode = req.params.code;
+    const project = await projectModel.getByCode(proCode);
+    if (!project) {
+      return res.status(404).render('error', { message: 'ไม่พบโครงการที่ระบุ' });
+    }
+
+    const mainPlan = project.pro_macode ? await planMainModel.getByCode(project.pro_macode) : null;
+
+    const [activities, kpis] = await Promise.all([
+      typeof planActivityModel.findWithLatestMonthly === 'function'
+        ? planActivityModel.findWithLatestMonthly(proCode)
+        : planActivityModel.findByProjectCode(proCode),
+      PlanKpi.findByProjectCode(proCode)
+    ]);
+
+    const activityStats = activities.reduce(
+      (acc, activity) => {
+        const status = Number(activity.monthly_status ?? activity.ac_status ?? -1);
+        if (status === 2) acc.completed += 1;
+        else if (status === 1) acc.inProgress += 1;
+        else if (status === 0) acc.notStarted += 1;
+        else acc.pending += 1;
+        return acc;
+      },
+      { completed: 0, inProgress: 0, notStarted: 0, pending: 0 }
+    );
+
+    let kpiMetrics = [];
+    const kpiIds = kpis.map((kpi) => kpi.kp_id);
+    if (kpiIds.length) {
+      const totals = await PlanKpiMonthly.sumForIds(kpiIds);
+
+      let latestRows = [];
+      try {
+        const placeholders = kpiIds.map(() => '?').join(',');
+        const [rows] = await db.query(
+          `SELECT m.*
+           FROM plan_kpi_monthly m
+           INNER JOIN (
+             SELECT kp_id, MAX(updated_at) AS latest_update
+             FROM plan_kpi_monthly
+             WHERE kp_id IN (${placeholders})
+             GROUP BY kp_id
+           ) latest ON latest.kp_id = m.kp_id AND latest.latest_update = m.updated_at`,
+          kpiIds
+        );
+        latestRows = rows;
+      } catch (err) {
+        console.error('Error fetching latest KPI rows', err);
+      }
+
+      const latestMap = latestRows.reduce((acc, row) => {
+        acc[row.kp_id] = row;
+        return acc;
+      }, {});
+
+      kpiMetrics = kpis.map((kpi) => {
+        const cumulative = Number(totals[kpi.kp_id] ?? 0);
+        const target = Number(kpi.kp_plan || 0);
+        const percent = target ? (cumulative / target) * 100 : null;
+        return {
+          ...kpi,
+          cumulative_total: cumulative,
+          achievement_percent: percent,
+          latest_monthly: latestMap[kpi.kp_id] || null
+        };
+      });
+    }
+
+    let kpiHistory = [];
+    let kpiTimelineMonths = [];
+    let kpiTimelineRows = [];
+    if (kpiIds.length) {
+      try {
+        const placeholders = kpiIds.map(() => '?').join(',');
+        const [rows] = await db.query(
+          `SELECT kp_id, report_month, actual_value
+           FROM plan_kpi_monthly
+           WHERE kp_id IN (${placeholders})
+           ORDER BY report_month ASC, kp_id ASC`,
+          kpiIds
+        );
+
+        const normalizeMonthKey = (value) => {
+          if (!value) return '';
+          if (typeof value === 'string') {
+            return value.slice(0, 7);
+          }
+          if (value instanceof Date) {
+            return value.toISOString().slice(0, 7);
+          }
+          if (value && typeof value.toISOString === 'function') {
+            return value.toISOString().slice(0, 7);
+          }
+          return String(value).slice(0, 7);
+        };
+
+        const monthSet = new Set();
+        const monthlyValueMap = {};
+        rows.forEach((row) => {
+          const monthKey = normalizeMonthKey(row.report_month);
+          if (!monthKey) return;
+          monthSet.add(monthKey);
+          const key = `${row.kp_id}_${monthKey}`;
+          monthlyValueMap[key] = Number(row.actual_value || 0);
+        });
+
+        const monthsAsc = Array.from(monthSet).sort();
+        kpiTimelineMonths = monthsAsc.map((month) => ({
+          value: month,
+          label: toThaiMonthLabel(month)
+        }));
+        const runningTotals = Object.fromEntries(kpiIds.map((id) => [id, 0]));
+        const cumulativeMap = {};
+        monthsAsc.forEach((month) => {
+          kpiIds.forEach((kpiId) => {
+            const key = `${kpiId}_${month}`;
+            const monthlyValue = monthlyValueMap[key];
+            if (monthlyValue !== undefined) {
+              runningTotals[kpiId] += monthlyValue;
+              cumulativeMap[key] = runningTotals[kpiId];
+            } else if (runningTotals[kpiId] > 0) {
+              cumulativeMap[key] = runningTotals[kpiId];
+            }
+          });
+        });
+
+        const monthsDesc = [...monthsAsc].sort((a, b) => b.localeCompare(a));
+        kpiHistory = monthsDesc
+          .map((month) => {
+            const entries = kpis.map((kpi) => {
+              const key = `${kpi.kp_id}_${month}`;
+              return {
+                kpi_id: kpi.kp_id,
+                subject: kpi.kp_subject,
+                unit: kpi.kp_unit,
+                target: Number(kpi.kp_plan || 0),
+                monthly_value: monthlyValueMap[key],
+                cumulative_value: cumulativeMap[key]
+              };
+            });
+
+            const hasData = entries.some(
+              (entry) => entry.monthly_value !== undefined || entry.cumulative_value !== undefined
+            );
+            if (!hasData) {
+              return null;
+            }
+
+            const monthTotal = entries.reduce((sum, entry) => sum + Number(entry.monthly_value || 0), 0);
+            const cumulativeTotal = entries.reduce((sum, entry) => sum + Number(entry.cumulative_value || 0), 0);
+            const targetTotal = entries.reduce((sum, entry) => sum + Number(entry.target || 0), 0);
+            const percent = targetTotal ? (cumulativeTotal / targetTotal) * 100 : null;
+
+            return {
+              month,
+              month_label: toThaiMonthLabel(month),
+              entries,
+              monthTotal,
+              cumulativeTotal,
+              targetTotal,
+              percent
+            };
+          })
+          .filter(Boolean);
+
+        kpiTimelineRows = kpis
+          .map((kpi) => {
+            const monthValues = monthsAsc.map((month) => {
+              const key = `${kpi.kp_id}_${month}`;
+              return {
+                month,
+                monthly_value: monthlyValueMap[key],
+                cumulative_value: cumulativeMap[key]
+              };
+            });
+            const hasData = monthValues.some((item) => item.monthly_value !== undefined || item.cumulative_value !== undefined);
+            if (!hasData) return null;
+            return {
+              kpi_id: kpi.kp_id,
+              subject: kpi.kp_subject,
+              unit: kpi.kp_unit,
+              target: Number(kpi.kp_plan || 0),
+              monthValues
+            };
+          })
+          .filter(Boolean);
+      } catch (error) {
+        console.error('Error fetching KPI history', error);
+        kpiHistory = [];
+        kpiTimelineMonths = [];
+        kpiTimelineRows = [];
+      }
+    }
+
+    const summary = {
+      activities: activityStats,
+      completionPercent:
+        activities.length > 0 ? Math.round((activityStats.completed / activities.length) * 100) : 0,
+      kpiCount: kpiMetrics.length,
+      kpiAchieved: kpiMetrics.filter((kpi) => (kpi.achievement_percent ?? 0) >= 100).length
+    };
+
+    res.render('plan_project/summary', {
+      title: `สรุปโครงการ ${project.pro_subject}`,
+      project,
+      mainPlan,
+      activities,
+      kpiMetrics,
+      kpiHistory,
+      kpiTimelineMonths,
+      kpiTimelineRows,
+      summary,
+      activityStatuses: ACTIVITY_STATUS,
+      thaiDate,
+      formatMonthLabel: toThaiMonthLabel
+    });
+  } catch (error) {
+    console.error('Error loading project summary:', error);
+    res.status(500).send('ไม่สามารถโหลดข้อมูลสรุปโครงการได้');
   }
 };

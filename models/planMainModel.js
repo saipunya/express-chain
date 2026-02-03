@@ -10,6 +10,11 @@ exports.getById = async (id) => {
   return rows[0];
 };
 
+exports.getByCode = async (code) => {
+  const [rows] = await db.query('SELECT * FROM plan_main WHERE ma_code = ?', [code]);
+  return rows[0];
+};
+
 exports.create = async (data) => {
   const { ma_code, ma_subject, ma_detail, ma_saveby, ma_savedate } = data;
   const [result] = await db.query(

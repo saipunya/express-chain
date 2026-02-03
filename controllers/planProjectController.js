@@ -155,8 +155,16 @@ exports.delete = async (req, res) => {
 
 exports.activitiesOverviewPage = async (req, res) => {
   try {
+    const currentUser = req.session?.user;
+    
+    // If user is not admin/pbt, filter to only their projects
+    let projectFilter = undefined;
+    if (currentUser && currentUser.level !== 'admin' && currentUser.level !== 'pbt') {
+      projectFilter = { pro_respon_id: currentUser.id };
+    }
+    
     const [projects, activities] = await Promise.all([
-      projectModel.getAll(),
+      projectModel.getAll(projectFilter),
       planActivityModel.findAll()
     ]);
 
@@ -183,15 +191,23 @@ exports.activitiesOverviewPage = async (req, res) => {
         return a.pro_code.localeCompare(b.pro_code);
       });
 
+    // Count only activities from filtered projects (not all activities)
+    const totalActivitiesInProjects = projectsWithActivities.reduce((sum, project) => sum + (project.activities?.length || 0), 0);
+
     const stats = {
       totalProjects: projects.length,
-      totalActivities: activities.length
+      totalActivities: totalActivitiesInProjects
     };
+
+    // Check if current user is admin or pbt (can manage all projects)
+    const canManageAll = currentUser && (currentUser.level === 'admin' || currentUser.level === 'pbt');
 
     res.render('plan_project/activities-overview', {
       title: 'โครงการและกิจกรรมทั้งหมด',
       projects: projectsWithActivities,
       stats,
+      canManageAll,
+      currentUser,
       activityStatuses: ACTIVITY_STATUS,
       thaiDate
     });
@@ -381,11 +397,21 @@ exports.summaryPage = async (req, res) => {
             });
             const hasData = monthValues.some((item) => item.monthly_value !== undefined || item.cumulative_value !== undefined);
             if (!hasData) return null;
+            // Get latest cumulative value from the last month
+            let latestCumulative = 0;
+            for (let i = monthsAsc.length - 1; i >= 0; i--) {
+              const key = `${kpi.kp_id}_${monthsAsc[i]}`;
+              if (cumulativeMap[key] !== undefined) {
+                latestCumulative = cumulativeMap[key];
+                break;
+              }
+            }
             return {
               kpi_id: kpi.kp_id,
               subject: kpi.kp_subject,
               unit: kpi.kp_unit,
               target: Number(kpi.kp_plan || 0),
+              latestCumulative,
               monthValues
             };
           })
@@ -406,6 +432,10 @@ exports.summaryPage = async (req, res) => {
       kpiAchieved: kpiMetrics.filter((kpi) => (kpi.achievement_percent ?? 0) >= 100).length
     };
 
+    // Check if current user can edit (owner or admin)
+    const currentUser = req.session?.user;
+    const canEdit = currentUser && (project.pro_respon_id === currentUser.id || currentUser.level === 'admin');
+
     res.render('plan_project/summary', {
       title: `สรุปโครงการ ${project.pro_subject}`,
       project,
@@ -416,6 +446,7 @@ exports.summaryPage = async (req, res) => {
       kpiTimelineMonths,
       kpiTimelineRows,
       summary,
+      canEdit,
       activityStatuses: ACTIVITY_STATUS,
       thaiDate,
       formatMonthLabel: toThaiMonthLabel

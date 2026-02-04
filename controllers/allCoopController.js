@@ -1,4 +1,6 @@
+const db = require('../config/db');
 const coopProfileModel = require('../models/coopProfileModel');
+
 // Render profile by c_code
 exports.profile = async (req, res) => {
   const { c_code } = req.params;
@@ -13,28 +15,77 @@ exports.profile = async (req, res) => {
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' });
   }
 };
-// List by group (optional group param) + search + pagination
-exports.byGroup = async (req, res) => {
-  const { group } = req.params;
-  const q = (req.query.q || '').trim();
-  const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-  const pageSize = Math.min(Math.max(parseInt(req.query.pageSize || '25', 10), 5), 200); // clamp 5-200
+
+// Display all coops (grouped, all results, no pagination)
+exports.group = async (req, res) => {
   try {
-    const groups = await coopProfileModel.getGroups();
-    const { rows, total } = await coopProfileModel.searchCoopsPaged({ group: group || null, q: q || null, page, pageSize });
-    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    console.log('=== allCoop/group route called ===');
+    console.log('Query params:', { q: req.query.q, group: req.query.group, params: req.params.group });
+    
+    const search = req.query.q ? String(req.query.q).trim() : '';
+    const currentGroup = req.query.group || req.params.group || '';
+
+    // Table: active_coop with correct column names
+    const TABLE_NAME = 'active_coop';
+    const COL_CODE = 'c_code';
+    const COL_NAME = 'c_name';
+    const COL_GROUP = 'c_group';
+    const COL_TYPE = 'coop_group';
+    const COL_STATUS = 'c_status';
+
+    // Build base query - filter only active coops
+    let query = `SELECT * FROM ${TABLE_NAME} WHERE ${COL_STATUS} = 'ดำเนินการ'`;
+    const params = [];
+
+    // Filter by group if specified
+    if (currentGroup) {
+      query += ` AND ${COL_GROUP} = ?`;
+      params.push(currentGroup);
+    }
+
+    // Search filter (applies to code, name, group)
+    if (search) {
+      query += ` AND (${COL_CODE} LIKE ? OR ${COL_NAME} LIKE ? OR ${COL_GROUP} LIKE ?)`;
+      const searchWildcard = '%' + search + '%';
+      params.push(searchWildcard, searchWildcard, searchWildcard);
+    }
+
+    // Order by code
+    query += ` ORDER BY ${COL_CODE} ASC`;
+
+    console.log('Query:', query);
+    console.log('Params:', params);
+
+    // Fetch ALL matching records
+    const connection = await db.getConnection();
+    const [coops] = await connection.query(query, params);
+    connection.release();
+    
+    console.log('Coops fetched:', coops.length);
+
+    // Get unique groups for sidebar (only active coops)
+    const connection2 = await db.getConnection();
+    const [groupsResult] = await connection2.query(
+      `SELECT DISTINCT ${COL_GROUP} FROM ${TABLE_NAME} WHERE ${COL_STATUS} = 'ดำเนินการ' AND ${COL_GROUP} IS NOT NULL AND ${COL_GROUP} != "" ORDER BY ${COL_GROUP}`
+    );
+    connection2.release();
+    
+    const groups = groupsResult.map(g => g[COL_GROUP]);
+    console.log('Groups fetched:', groups.length);
+
     res.render('allCoop/group', {
-      groups,
-      currentGroup: group || null,
-      coops: rows,
-      search: q,
-      page,
-      pageSize,
-      total,
-      totalPages
+      coops: coops || [],
+      groups: groups || [],
+      search,
+      currentGroup,
+      totalResults: (coops || []).length,
+      pageTitle: 'สถาบันทั้งหมด'
     });
-  } catch (e) {
-    console.error('byGroup error', e);
-    res.status(500).render('error_page', { message: 'โหลดกลุ่มไม่สำเร็จ' });
+  } catch (err) {
+    console.error('ERROR in allCoop/group:', err.message);
+    console.error('Full error:', err);
+    res.status(500).render('error_page', { 
+      message: 'ไม่สามารถโหลดข้อมูลได้: ' + err.message 
+    });
   }
 };

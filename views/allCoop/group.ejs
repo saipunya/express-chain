@@ -1,7 +1,5 @@
 <%- include('../partials/header') %>
 <% 
-  const searchQueryBase = (search && search.length) ? ('&q=' + encodeURIComponent(search)) : '';
-  
   const getGroupThaiName = (groupCode) => {
     const groupMap = {
       'group1': 'กลุ่มส่งเสริมสหกรณ์ 1',
@@ -13,9 +11,11 @@
     return groupMap[groupCode] || groupCode;
   };
 
+  // Build search query string (for passing to group links)
+  const searchQueryBase = (search && search.length) ? ('?q=' + encodeURIComponent(search)) : '';
+
   const allCoops = coops || [];
   
-  // Use coop_group column to separate cooperatives and farmer groups
   const cooperatives = allCoops.filter(c => {
     const coopGroup = (c.coop_group || '').trim().toLowerCase();
     return coopGroup === 'สหกรณ์' || coopGroup.includes('สหกรณ์');
@@ -32,13 +32,22 @@
 %>
 
 <div class="container py-3" id="allcoop-page">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
-    <h2 class="mb-0 d-flex flex-wrap align-items-center gap-2">
-      <span>สถาบันทั้งหมด</span>
-      <% if (currentGroup) { %>
-        <span class="badge bg-primary-subtle text-primary-emphasis fs-6"><i class="bi bi-collection me-1"></i><%= getGroupThaiName(currentGroup) %></span>
-      <% } %>
-    </h2>
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <h2 class="mb-2 d-flex flex-wrap align-items-center gap-2">
+        <span>สถาบันทั้งหมด</span>
+        <% if (currentGroup) { %>
+          <span class="badge bg-primary-subtle text-primary-emphasis fs-6"><i class="bi bi-collection me-1"></i><%= getGroupThaiName(currentGroup) %></span>
+        <% } %>
+      </h2>
+      <p class="text-muted mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        ค้นหาพบ <strong><%= totalResults || 0 %></strong> รายการ
+        <% if (search) { %>
+          สำหรับ "<%= search %>"
+        <% } %>
+      </p>
+    </div>
     <div class="d-flex gap-2">
       <button id="toggleGroupPanel" class="btn btn-outline-primary btn-sm" type="button"><i class="bi bi-layout-sidebar"></i> ซ่อนกล่องกลุ่ม</button>
     </div>
@@ -68,13 +77,13 @@
           </div>
           <ul id="groupList" class="list-group small mb-2" style="max-height:55vh; overflow:auto;">
             <li class="list-group-item p-1 <%= !currentGroup ? 'active' : '' %>">
-              <a href="/allcoop/group?<%= 'page=1&pageSize=' + pageSize + searchQueryBase %>" class="d-block text-decoration-none px-1"><i class="bi bi-grid me-1 text-muted"></i>ทั้งหมด</a>
+              <a href="/allcoop/group<%= searchQueryBase %>" class="d-block text-decoration-none px-1"><i class="bi bi-grid me-1 text-muted"></i>ทั้งหมด</a>
             </li>
             <% if (groups && groups.length) { %>
               <% groups.forEach(g => { %>
-                <% const gVal = (g.group || g.name || g.code || g).toString(); %>
+                <% const gVal = (g || '').toString(); %>
                 <% const gThaiName = getGroupThaiName(gVal); %>
-                <% const gLink = '/allcoop/group/' + encodeURIComponent(gVal) + '?page=1&pageSize=' + pageSize + searchQueryBase; %>
+                <% const gLink = '/allcoop/group/' + encodeURIComponent(gVal) + searchQueryBase; %>
                 <li class="list-group-item p-1 group-item <%= currentGroup === gVal ? 'active' : '' %>" data-group-name="<%= gThaiName.toLowerCase() %>" data-group-code="<%= gVal.toLowerCase() %>">
                   <a href="<%= gLink %>" class="d-block text-decoration-none px-1"><i class="bi bi-collection me-1 text-primary"></i><%= gThaiName %></a>
                 </li>
@@ -91,7 +100,7 @@
     <div class="col-12 col-lg-9" id="coopPanelCol">
       <!-- Debug Info (ลบออกหลังแก้ไขเสร็จ) -->
       <div class="alert alert-info small mb-3">
-        <strong>Debug Info:</strong> สหกรณ์ <%= cooperatives.length %> | กลุ่มเกษตรกร <%= farmerGroups.length %> | อื่นๆ <%= others.length %> (รวม <%= allCoops.length %>)
+         สหกรณ์ <%= cooperatives.length %> | กลุ่มเกษตรกร <%= farmerGroups.length %> | อื่นๆ <%= others.length %> (รวม <%= allCoops.length %>)
       </div>
 
       <!-- Cooperatives Table -->
@@ -115,9 +124,9 @@
           </div>
           <div class="card-body p-0">
             <% if (cooperatives.length > 0) { %>
-              <div class="table-responsive" style="max-height:50vh;">
+              <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="cooperative">
-                  <thead class="table-light position-sticky top-0" style="z-index:10;">
+                  <thead class="table-light sticky-top" style="z-index:10;">
                     <tr class="text-nowrap">
                       <th style="width:50px;" class="text-center">#</th>
                       <th style="width:110px;">รหัส</th>
@@ -130,7 +139,7 @@
                     <% cooperatives.forEach((c,i) => { %>
                       <tr class="coop-row" data-code="<%= (c.c_code || '').toLowerCase() %>" data-name="<%= (c.c_name || '').toLowerCase() %>" data-group="<%= (c.c_group || '').toLowerCase() %>">
                         <td class="text-center text-muted" data-label="#"><%= i + 1 %></td>
-                        <td data-label="รหัส"><%= c.c_code || '-' %></td>
+                        <td data-label="รหัส"><%= c.c_no || '-' %></td>
                         <td data-label="ชื่อ"><%= c.c_name || '-' %></td>
                         <td data-label="กลุ่ม"><span class="badge bg-primary-subtle text-primary-emphasis">
                           <%= getGroupThaiName(c.c_group || '') %>
@@ -148,8 +157,6 @@
             <% } %>
           </div>
         </div>
-      <% } else { %>
-        <div class="alert alert-warning">ไม่พบสหกรณ์ (ตรวจสอบ coop_group ในฐานข้อมูล)</div>
       <% } %>
 
       <!-- Farmer Groups Table -->
@@ -173,9 +180,9 @@
           </div>
           <div class="card-body p-0">
             <% if (farmerGroups.length > 0) { %>
-              <div class="table-responsive" style="max-height:50vh;">
+              <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="farmer-group">
-                  <thead class="table-light position-sticky top-0" style="z-index:10;">
+                  <thead class="table-light sticky-top" style="z-index:10;">
                     <tr class="text-nowrap">
                       <th style="width:50px;" class="text-center">#</th>
                       <th style="width:110px;">รหัส</th>
@@ -184,7 +191,7 @@
                       <th style="width:110px;" class="text-center">ดูข้อมูล</th>
                     </tr>
                   </thead>
-                  <tbody></tbody>
+                  <tbody>
                     <% farmerGroups.forEach((c,i) => { %>
                       <tr class="coop-row" data-code="<%= (c.c_code || '').toLowerCase() %>" data-name="<%= (c.c_name || '').toLowerCase() %>" data-group="<%= (c.c_group || '').toLowerCase() %>">
                         <td class="text-center text-muted" data-label="#"><%= i + 1 %></td>
@@ -206,8 +213,6 @@
             <% } %>
           </div>
         </div>
-      <% } else { %>
-        <div class="alert alert-warning">ไม่พบกลุ่มเกษตรกร (ตรวจสอบ coop_group ในฐานข้อมูล)</div>
       <% } %>
 
       <!-- Others Table -->
@@ -230,9 +235,9 @@
             </div>
           </div>
           <div class="card-body p-0">
-            <div class="table-responsive" style="max-height:50vh;">
+            <div class="table-responsive">
               <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="other">
-                <thead class="table-light position-sticky top-0" style="z-index:10;">
+                <thead class="table-light sticky-top" style="z-index:10;">
                   <tr class="text-nowrap">
                     <th style="width:50px;" class="text-center">#</th>
                     <th style="width:110px;">รหัส</th>
@@ -264,7 +269,16 @@
 
       <!-- Message when no data -->
       <% if (allCoops.length === 0) { %>
-        <div class="alert alert-info shadow-sm">ยังไม่มีข้อมูลสถาบัน</div>
+        <div class="alert alert-warning shadow-sm">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <% if (search) { %>
+            ไม่พบข้อมูลสถาบันที่ตรงกับ "<%= search %>"
+          <% } else if (currentGroup) { %>
+            ไม่มีข้อมูลสถาบันในกลุ่มนี้
+          <% } else { %>
+            ยังไม่มีข้อมูลสถาบัน
+          <% } %>
+        </div>
       <% } %>
     </div>
   </div>

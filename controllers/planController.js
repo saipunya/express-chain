@@ -88,7 +88,7 @@ exports.index = async function (req, res) {
                 p.pro_code,
                 p.pro_subject AS pro_name,
                 COALESCE(act.total_activities, 0) AS total_activities,
-                COALESCE(act.reported_activities, 0) AS reported_activities,
+                COALESCE(act.completed_activities, 0) AS completed_activities,
                 act.latest_activity_month,
                 COALESCE(kpi.total_kpis, 0) AS total_kpis,
                 COALESCE(kpi.total_plan, 0) AS total_plan,
@@ -99,7 +99,7 @@ exports.index = async function (req, res) {
                 SELECT
                     a.ac_procode,
                     COUNT(DISTINCT a.ac_id) AS total_activities,
-                    COUNT(DISTINCT IF(am.status IS NOT NULL, a.ac_id, NULL)) AS reported_activities,
+                    COUNT(DISTINCT IF(a.ac_status = 2, a.ac_id, NULL)) AS completed_activities,
                     MAX(am.report_month) AS latest_activity_month
                 FROM plan_activity a
                 LEFT JOIN plan_activity_monthly am ON am.ac_id = a.ac_id

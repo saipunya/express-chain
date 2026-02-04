@@ -37,7 +37,10 @@
               <td><%= p.ma_subject %></td>
               <td><%= p.ma_saveby %></td>
               <td><%= thaiDate(p.ma_savedate) %></td>
-              <td>
+              <td class="d-flex gap-2">
+                <a href="/planmain/<%= p.ma_id %>/edit" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
                 <!-- submit POST with hidden _method so method-override turns it into DELETE -->
                 <form action="/planmain/api/<%= p.ma_id %>" method="post" class="d-inline">
                   <input type="hidden" name="_method" value="DELETE">

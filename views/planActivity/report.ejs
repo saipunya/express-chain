@@ -43,9 +43,11 @@
       <p class="text-muted small mb-0">เลือกโครงการและเดือนที่ต้องการสรุปรายงาน พร้อมกำหนดสถานะกิจกรรมย่อย</p>
     </div>
     <div>
-      <!-- back to project page -->
-
-      <a href="/planproject/activities-overview" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>ย้อนกลับโครงการทั้งหมด</a>
+      <!-- back to main page -->
+      <div class="d-flex gap-2">
+        <a href="/plan" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-2"></i>กลับหน้าหลัก</a>
+        <a href="/planproject/activities-overview" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-2"></i>ย้อนกลับโครงการทั้งหมด</a>
+      </div>
     </div>
   </div>
 
@@ -100,36 +102,66 @@
     <% if (!hasActivities) { %>
       <div class="alert alert-warning shadow-sm">โครงการนี้ยังไม่มีกิจกรรมย่อย กรุณาเพิ่มกิจกรรมก่อน</div>
     <% } else { %>
+      <% 
+        const totalActivitiesCount = Number(totalActivities) || 0;
+        const completedCount = Number(summary.completed || 0);
+        const inProgressCount = Number(summary.inProgress || 0);
+        const pendingCount = Number(summary.notStarted || 0) + Number(summary.pending || 0);
+        const completionPercent = totalActivitiesCount ? (completedCount / totalActivitiesCount) * 100 : 0;
+        const inProgressPercent = totalActivitiesCount ? (inProgressCount / totalActivitiesCount) * 100 : 0;
+        const pendingPercent = totalActivitiesCount ? (pendingCount / totalActivitiesCount) * 100 : 0;
+        const statusBadge = completionPercent >= 80 ? 'success' : completionPercent >= 50 ? 'info' : 'warning';
+        const completionBarWidth = Math.min(completionPercent, 100).toFixed(1);
+        const completionBarStyle = `width: ${completionBarWidth}%;`;
+      %>
       <div class="row g-3 mb-4">
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100">
+        <div class="col-lg-4">
+          <div class="card shadow-sm h-100 border-<%= statusBadge %>">
             <div class="card-body">
-              <p class="text-uppercase text-muted small mb-1">จำนวนกิจกรรมทั้งหมด</p>
-              <h3 class="mb-0"><%= totalActivities %> รายการ</h3>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <p class="text-uppercase text-muted small mb-1">ภาพรวมความก้าวหน้า</p>
+                  <h3 class="mb-0"><%= completionPercent.toFixed(1) %>%</h3>
+                </div>
+                <span class="badge bg-<%= statusBadge %>">
+                  <%= completionPercent >= 80 ? 'สำเร็จดี' : completionPercent >= 50 ? 'กำลังเดินหน้า' : 'ต้องเร่งรัด' %>
+                </span>
+              </div>
+              <div class="progress" style="height: 16px;">
+                <div class="progress-bar bg-<%= statusBadge %>" role="progressbar" style="<%= completionBarStyle %>" aria-valuenow="<%= completionPercent.toFixed(1) %>" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small class="text-muted d-block mt-2">จากกิจกรรมทั้งหมด <strong><%= totalActivitiesCount %></strong> รายการ</small>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100 border-success">
-            <div class="card-body">
-              <p class="text-uppercase text-muted small mb-1">ดำเนินการเรียบร้อย</p>
-              <h3 class="text-success mb-0"><%= summary.completed %></h3>
+        <div class="col-lg-8">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100 border-success-subtle">
+                <div class="card-body">
+                  <p class="text-uppercase text-muted small mb-1">ดำเนินการเรียบร้อย</p>
+                  <h4 class="text-success mb-0"><%= completedCount %> รายการ</h4>
+                  <small class="text-muted">คิดเป็น <strong><%= completionPercent.toFixed(1) %>%</strong></small>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100 border-warning">
-            <div class="card-body">
-              <p class="text-uppercase text-muted small mb-1">อยู่ระหว่างดำเนินการ</p>
-              <h3 class="text-warning mb-0"><%= summary.inProgress %></h3>
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100 border-warning-subtle">
+                <div class="card-body">
+                  <p class="text-uppercase text-muted small mb-1">อยู่ระหว่างดำเนินการ</p>
+                  <h4 class="text-warning mb-0"><%= inProgressCount %> รายการ</h4>
+                  <small class="text-muted">คิดเป็น <strong><%= inProgressPercent.toFixed(1) %>%</strong></small>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100 border-secondary">
-            <div class="card-body">
-              <p class="text-uppercase text-muted small mb-1">ยังไม่ดำเนินการ / ยังไม่ระบุ</p>
-              <h3 class="text-muted mb-0"><%= summary.notStarted + summary.pending %></h3>
+            <div class="col-md-4">
+              <div class="card shadow-sm h-100 border-secondary-subtle">
+                <div class="card-body">
+                  <p class="text-uppercase text-muted small mb-1">ยังไม่ดำเนินการ/รอดำเนินการ</p>
+                  <h4 class="text-muted mb-0"><%= pendingCount %> รายการ</h4>
+                  <small class="text-muted">คิดเป็น <strong><%= pendingPercent.toFixed(1) %>%</strong></small>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -278,11 +310,13 @@
                       <div class="fw-semibold text-primary"><%= cumulative.toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></div>
                       <small class="text-muted">สะสมจนถึงเดือนนี้</small>
                     </td>
-                    <% if (percent === null) { %>
-                      <span class="text-muted">-</span>
-                    <% } else { %>
-                      <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span>
-                    <% } %>
+                    <td>
+                      <% if (percent === null) { %>
+                        <span class="text-muted">-</span>
+                      <% } else { %>
+                        <span class="fw-semibold <%= percent >= 100 ? 'text-success' : percent >= 70 ? 'text-warning' : 'text-danger' %>"><%= percent.toFixed(1) %>%</span>
+                      <% } %>
+                    </td>
                     <td>
                       <input type="number" step="0.01" min="0" class="form-control" name="kpi_rows[<%= index %>][actual_value]" value="<%= monthlyRecord ? Number(monthlyRecord.actual_value).toString() : '' %>" placeholder="เช่น 25.0">
                       <small class="text-muted">เว้นว่างหากไม่มีข้อมูล</small>

@@ -9,6 +9,27 @@ module.exports = {
     const [rows] = await db.query('SELECT * FROM plan_activity WHERE ac_procode = ? ORDER BY ac_number ASC', [proCode]);
     return rows;
   },
+
+  async findWithLatestMonthly(proCode) {
+    const [rows] = await db.query(
+      `SELECT a.*, am.status AS monthly_status, am.note AS monthly_note, am.report_month
+       FROM plan_activity a
+       LEFT JOIN (
+         SELECT pam.*
+         FROM plan_activity_monthly pam
+         INNER JOIN (
+           SELECT ac_id, MAX(updated_at) AS latest_update
+           FROM plan_activity_monthly
+           WHERE report_month IS NOT NULL
+           GROUP BY ac_id
+         ) latest ON latest.ac_id = pam.ac_id AND latest.latest_update = pam.updated_at
+       ) am ON am.ac_id = a.ac_id
+       WHERE a.ac_procode = ?
+       ORDER BY a.ac_number ASC`,
+      [proCode]
+    );
+    return rows;
+  },
   async findByPk(id) {
     const [rows] = await db.query('SELECT * FROM plan_activity WHERE ac_id = ?', [id]);
     return rows[0];

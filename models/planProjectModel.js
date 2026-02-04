@@ -38,6 +38,31 @@ exports.getAll = async (filters = {}) => {
   }
 };
 
+exports.getByCode = async (code) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT
+        p.*,
+        u.m_user AS respon_username,
+        u.m_name AS respon_name,
+        u.m_position AS respon_position,
+        u.m_class AS respon_class
+      FROM plan_project p
+      LEFT JOIN member3 u ON u.m_id = p.pro_respon_id
+      WHERE p.pro_code = ?
+      LIMIT 1`,
+      [code]
+    );
+    return rows[0];
+  } catch (e) {
+    if (String(e && e.code) === 'ER_BAD_FIELD_ERROR') {
+      const [rows] = await db.query('SELECT * FROM plan_project WHERE pro_code = ? LIMIT 1', [code]);
+      return rows[0];
+    }
+    throw e;
+  }
+};
+
 exports.getById = async (id) => {
   try {
     const [rows] = await db.query(

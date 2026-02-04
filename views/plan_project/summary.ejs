@@ -1,0 +1,241 @@
+<%- include('../partials/header') %>
+
+<% const formatMonth = typeof formatMonthLabel === 'function' ? formatMonthLabel : (value => value || '-'); %>
+
+<% const timelineRows = Array.isArray(kpiTimelineRows) ? kpiTimelineRows : []; %>
+<% const timelineMonths = Array.isArray(kpiTimelineMonths) ? kpiTimelineMonths : []; %>
+
+<div class="py-3 py-md-4 project-summary">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <p class="text-uppercase text-muted small mb-1">แผนงานหลัก</p>
+      <h1 class="h4 mb-2"> <%= mainPlan ? mainPlan.ma_subject : (project.pro_macode || '-') %></h1>
+      <p class="mb-0 text-muted">โครงการ: <span class="fw-semibold text-dark"><%= project.pro_subject %></span> (<%= project.pro_code %>)</p>
+      <p class="mb-0 text-muted">ผู้รับผิดชอบ: <%= project.pro_respon || '-' %></p>
+      <p class="mb-0 text-muted">สถานะ: <span class="badge bg-<%= project.pro_status === 2 ? 'success' : project.pro_status === 1 ? 'warning text-dark' : 'secondary' %>">
+        <%= project.pro_status === 2 ? 'ดำเนินการแล้ว' : project.pro_status === 1 ? 'อยู่ระหว่างดำเนินการ' : 'ยังไม่ดำเนินการ' %></span>
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>กลับแดชบอร์ด</a>
+      <% if (canEdit) { %>
+        <a href="/planactivity/report?pro_code=<%= encodeURIComponent(project.pro_code) %>" class="btn btn-outline-info btn-sm rounded-pill px-3"><i class="bi bi-clipboard-data me-1"></i>รายงานรายเดือน</a>
+        <a href="/planproject/edit/<%= project.pro_id %>" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-pencil-square me-1"></i>แก้ไขโครงการ</a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row g-3 g-md-4 mb-4">
+    <div class="col-12 col-md-4 col-xl-3">
+      <div class="summary-card shadow-sm">
+        <p class="summary-label">ความก้าวหน้ากิจกรรม</p>
+        <h2 class="summary-value text-primary"><%= summary.completionPercent %>%</h2>
+        <p class="summary-subtext">เสร็จแล้ว <%= summary.activities.completed %> จาก <%= activities.length %> กิจกรรม</p>
+        <div class="progress progress-thin">
+          <div class="progress-bar bg-primary" style="<%= 'width: ' + summary.completionPercent + '%;' %>"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 col-xl-3">
+      <div class="summary-card shadow-sm">
+        <p class="summary-label">ตัวชี้วัด (KPI)</p>
+        <h2 class="summary-value text-success"><%= summary.kpiAchieved %>/<%= summary.kpiCount %></h2>
+        <p class="summary-subtext">บรรลุเป้าหมายทั้งหมด <%= summary.kpiCount %> ตัว</p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 col-xl-3">
+      <div class="summary-card shadow-sm">
+        <p class="summary-label">งบประมาณ</p>
+        <h2 class="summary-value text-warning"><%= project.pro_budget ? Number(project.pro_budget).toLocaleString('th-TH') + ' บาท' : '-' %></h2>
+        <p class="summary-subtext">เป้าหมาย: <%= project.pro_target || '-' %></p>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 col-xl-3">
+      <div class="summary-card shadow-sm">
+        <p class="summary-label">บันทึกล่าสุด</p>
+        <h2 class="summary-value text-info"><%= project.pro_savedate ? thaiDate(project.pro_savedate) : '-' %></h2>
+        <p class="summary-subtext">สร้างโดย <%= project.pro_saveby || '-' %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 g-lg-4 mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="section-header">
+            <div class="d-flex align-items-center gap-2">
+              <span class="dashboard-chip chip-info"><i class="bi bi-graph-up"></i></span>
+              <div>
+                <h2 class="h5 mb-0">ตัวชี้วัดและความก้าวหน้า</h2>
+                <p class="text-muted small mb-0">แสดงผลสะสมเทียบกับเป้าหมาย</p>
+              </div>
+            </div>
+          </div>
+          <% if (!kpiMetrics.length) { %>
+            <div class="alert alert-light border text-center">ยังไม่มีตัวชี้วัดในโครงการนี้</div>
+          <% } else { %>
+            <div class="kpi-list">
+              <% kpiMetrics.forEach((kpi) => { const percent = kpi.achievement_percent; %>
+                <div class="kpi-item">
+                  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                      <p class="mb-0 fw-semibold"><%= kpi.kp_subject %></p>
+                      <small class="text-muted">เป้า <%= Number(kpi.kp_plan || 0).toLocaleString('th-TH') %> <%= kpi.kp_unit || '' %></small>
+                    </div>
+                    <span class="badge bg-<%= percent >=100 ? 'success' : percent >=70 ? 'warning text-dark' : 'secondary' %>">
+                      <%= percent === null ? '-' : percent.toFixed(1) + '%' %>
+                    </span>
+                  </div>
+                  <div class="progress progress-thin mt-2">
+                    <div class="progress-bar <%= percent >=100 ? 'bg-success' : percent >=70 ? 'bg-warning' : 'bg-danger' %>" style="width: <%= Math.min(percent || 0, 100) %>%;"></div>
+                  </div>
+                  <div class="d-flex justify-content-between text-muted small mt-1">
+                    <span>สะสม <%= Number(kpi.cumulative_total || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></span>
+                    <span>อัปเดตล่าสุด <%= kpi.latest_monthly?.report_month ? formatMonth(kpi.latest_monthly.report_month) : '-' %></span>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <div class="section-header">
+            <div class="d-flex align-items-center gap-2">
+              <span class="dashboard-chip chip-warning"><i class="bi bi-list-task"></i></span>
+              <div>
+                <h2 class="h5 mb-0">สถานะกิจกรรม</h2>
+                <p class="text-muted small mb-0">แสดงกิจกรรมทั้งหมดของโครงการ</p>
+              </div>
+            </div>
+          </div>
+          <% if (!activities.length) { %>
+            <div class="alert alert-light border text-center">ยังไม่มีการบันทึกกิจกรรม</div>
+          <% } else { %>
+            <div class="table-responsive mb-0">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th style="width:80px;">ลำดับ</th>
+                    <th>กิจกรรม</th>
+                    <th style="width:160px;">สถานะล่าสุด</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% activities.forEach((activity) => { const statusCode = Number(activity.monthly_status ?? activity.ac_status ?? 0); const status = activityStatuses[statusCode] || activityStatuses[0]; %>
+                    <tr>
+                      <td><span class="badge bg-light text-dark">#<%= activity.ac_number || '-' %></span></td>
+                      <td>
+                        <div class="fw-semibold"><%= activity.ac_subject %></div>
+                        <small class="text-muted">บันทึกเมื่อ <%= activity.report_month ? formatMonth(activity.report_month) : (activity.ac_savedate ? thaiDate(activity.ac_savedate) : '-') %></small>
+                      </td>
+                      <td>
+                        <span class="badge bg-<%= status.badge %>"><i class="bi bi-<%= status.icon %> me-1"></i><%= status.label %></span>
+                        <% if (activity.monthly_note) { %>
+                          <div class="text-muted small mt-1"><i class="bi bi-chat-left-text me-1"></i><%= activity.monthly_note %></div>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="section-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="dashboard-chip chip-primary"><i class="bi bi-calendar3"></i></span>
+          <div>
+            <h2 class="h5 mb-0">ภาพรวม KPI ตามเดือน</h2>
+            <p class="text-muted small mb-0">แถว = ตัวชี้วัด, คอลัมน์ = เดือนที่รายงาน</p>
+          </div>
+        </div>
+      </div>
+      <% if (!timelineRows.length) { %>
+        <div class="alert alert-light border text-center">ยังไม่มีข้อมูล KPI เพื่อสร้างตาราง</div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle kpi-timeline-table">
+            <thead>
+              <tr>
+                <th style="min-width:220px">ตัวชี้วัด</th>
+                <th class="text-center" style="width:120px">เป้าหมาย</th>
+                <th class="text-center" style="width:120px">สรุปยอดสะสมล่าสุด</th>
+                <% timelineMonths.forEach((month) => { %>
+                  <th class="text-center"> <%= month.label %> </th>
+                <% }) %>
+              </tr>
+            </thead>
+            <tbody>
+              <% timelineRows.forEach((row) => { %>
+                <tr>
+                  <td>
+                    <div class="fw-semibold"><%= row.subject %></div>
+                    <small class="text-muted">หน่วย: <%= row.unit || '-' %></small>
+                  </td>
+                  <td class="text-center"><%= Number(row.target || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></td>
+                  <td class="text-center"><%= Number(row.latestCumulative || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %></td>
+                  <% row.monthValues.forEach((item) => { %>
+                    <td class="p-1">
+                      <% if (item.monthly_value === undefined && item.cumulative_value === undefined) { %>
+                        <div class="text-muted small">-</div>
+                      <% } else { %>
+                        <div class="d-flex flex-column text-center">
+                          <span class="text-primary fw-semibold"><%= item.monthly_value !== undefined ? Number(item.monthly_value || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : '-' %></span>
+                          <small class="text-muted">สะสม: <%= item.cumulative_value !== undefined ? Number(item.cumulative_value || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : '-' %></small>
+                        </div>
+                      <% } %>
+                    </td>
+                  <% }) %>
+                </tr>
+                
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .project-summary .summary-card {
+    border-radius: 1rem;
+    background: #fff;
+    padding: 1.25rem;
+  }
+  .summary-label {
+    margin: 0;
+    font-size: .85rem;
+    text-transform: uppercase;
+    color: #6c757d;
+  }
+  .summary-value { margin: .25rem 0; font-weight: 700; }
+  .summary-subtext { margin: 0; color: #9aa0a6; }
+  .kpi-list { display: flex; flex-direction: column; gap: 1rem; }
+  .kpi-item { padding-bottom: 1rem; border-bottom: 1px solid #f1f3f5; }
+  .kpi-item:last-child { border-bottom: 0; }
+  .progress-thin { height: 6px; border-radius: 999px; background: #e9ecef; }
+  .progress-thin .progress-bar { border-radius: 999px; }
+  .dashboard-chip { width: 2.5rem; height: 2.5rem; border-radius: .75rem; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .chip-info { background: rgba(13, 202, 240, .15); color: #0dcaf0; }
+  .chip-warning { background: rgba(255, 193, 7, .15); color: #f0ad4e; }
+  .chip-primary { background: rgba(13, 110, 253, .1); color: #0d6efd; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+  .project-summary table thead { background: #f8f9fa; }
+  .kpi-timeline-table th, .kpi-timeline-table td { white-space: nowrap; }
+  .kpi-timeline-table td .text-muted { font-size: .75rem; }
+</style>
+
+<%- include('../partials/footer') %>

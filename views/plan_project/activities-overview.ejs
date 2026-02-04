@@ -13,6 +13,7 @@
       <p class="text-muted small mb-0">ดูรายละเอียดโครงการทั้งหมดพร้อมกิจกรรมที่เกี่ยวข้องในหน้าจอเดียว</p>
     </div>
     <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+      <a href="/plan" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-2"></i>กลับหน้าหลัก</a>
       <a href="/planproject" class="btn btn-outline-primary btn-sm"><i class="bi bi-kanban me-2"></i>จัดการโครงการ</a>
       <a href="/planactivity" class="btn btn-outline-success btn-sm"><i class="bi bi-list-check me-2"></i>จัดการกิจกรรม</a>
     </div>
@@ -51,16 +52,18 @@
             <div class="w-100 w-md-auto">
               <div class="d-flex flex-column flex-md-row justify-content-start justify-md-content-end align-items-start align-md-items-center gap-2">
                 <span class="badge bg-<%= projectStatus.badge %>"><i class="bi bi-<%= projectStatus.icon %> me-1"></i><%= projectStatus.label %></span>
-                <% if (user && user.mClass === 'admin') { %>
+                <% if (canManageAll || (currentUser && currentUser.id === project.pro_respon_id)) { %>
                   <div class="d-flex gap-1">
                     <a href="/planproject/edit/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary" title="แก้ไขโครงการ">
                       <i class="bi bi-pencil-square"></i>
                     </a>
-                    <form method="POST" action="/planproject/delete/<%= project.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
-                      <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบโครงการ">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </form>
+                    <% if (canManageAll) { %>
+                      <form method="POST" action="/planproject/delete/<%= project.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบโครงการ">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    <% } %>
                   </div>
                 <% } %>
               </div>

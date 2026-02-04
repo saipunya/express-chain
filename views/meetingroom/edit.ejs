@@ -13,7 +13,7 @@
     <form action="/meetingroom/edit/<%= meeting.mee_id %>" method="POST" class="row g-3">
       <div class="col-md-4">
         <label for="mee_date" class="form-label">วันที่ประชุม</label>
-        <input type="date" id="mee_date" name="mee_date" class="form-control" value="<%= meeting.mee_date ? new Date(meeting.mee_date).toISOString().slice(0,10) : '' %>" required>
+        <input type="date" id="mee_date" name="mee_date" class="form-control" value="<%= meeting.mee_date ? meeting.mee_date.toISOString().split('T')[0] : '' %>" required>
       </div>
       <div class="col-md-4">
         <label for="mee_time" class="form-label">เวลา</label>
@@ -39,7 +39,7 @@
       </div>
       <div class="col-md-4">
         <label for="mee_savedate" class="form-label">วันที่บันทึก</label>
-        <input type="date" id="mee_savedate" name="mee_savedate" class="form-control" value="<%= meeting.mee_savedate ? new Date(meeting.mee_savedate).toISOString().slice(0,10) : '' %>" required>
+        <input type="date" id="mee_savedate" name="mee_savedate" class="form-control" value="<%= meeting.mee_savedate ? meeting.mee_savedate.toISOString().split('T')[0] : '' %>" required>
       </div>
 
       <div class="col-12 d-flex gap-2">

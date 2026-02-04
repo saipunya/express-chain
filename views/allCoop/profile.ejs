@@ -40,6 +40,7 @@
   <% if (!data || !data.coop) { %>
     <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
   <% } else { %>
+    <!-- Header Section -->
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
         <h1 class="h4 mb-0"><i class="bi bi-building me-2 text-secondary"></i><%= data.coop.c_name %> <small class="text-muted">(<%= data.coop.c_code %>)</small></h1>
@@ -48,6 +49,55 @@
         <span class="badge rounded-pill bg-info-subtle text-info-emphasis me-1"><i class="bi bi-diagram-3 me-1"></i><%= data.coop.c_group || 'ไม่ระบุ' %></span>
         <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis me-1"><i class="bi bi-layers me-1"></i><%= data.coop.coop_group || data.coop.c_type || 'ไม่ระบุ' %></span>
         <span class="badge rounded-pill <%= (data.coop.c_status||'')==='ดำเนินการ' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' %>"><i class="bi bi-activity me-1"></i><%= data.coop.c_status || 'ไม่ระบุ' %></span>
+      </div>
+    </div>
+
+    <!-- Personnel and Fiscal Year Information Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-person-badge fs-5 text-primary mt-1"></i>
+              <div class="flex-grow-1">
+                <p class="text-muted small mb-1">เจ้าหน้าที่ส่งเสริมสหกรณ์ (1)</p>
+                <div class="fw-semibold"><%= data.coop.c_person || '-' %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-person-badge fs-5 text-info mt-1"></i>
+              <div class="flex-grow-1">
+                <p class="text-muted small mb-1">เจ้าหน้าที่ส่งเสริมสหกรณ์ (2)</p>
+                <div class="fw-semibold"><%= data.coop.c_person2 || '-' %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-calendar-event fs-5 text-success mt-1"></i>
+              <div class="flex-grow-1">
+                <p class="text-muted small mb-1">วันสิ้นปีบัญชี</p>
+                <div class="fw-semibold">
+                    <% if (data.coop.end_date) { %>
+                    <%= data.coop.end_date %>
+                    <% } else { %>
+                    ไม่ระบุ
+                    <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -85,7 +135,6 @@
           </div>
         </div>
       </div>
-      <!-- เพิ่มวงเงินกู้ยืม/ค้ำประกัน -->
       <div class="col-6 col-sm-4 col-lg-2">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body py-3">
@@ -94,7 +143,6 @@
           </div>
         </div>
       </div>
-      <!-- เพิ่ม RQ2 -->
       <div class="col-6 col-sm-4 col-lg-2">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body py-3">
@@ -104,8 +152,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Stacked Sections -->
 
     <!-- Strength Section -->
     <section class="section-block" id="strength-section">
@@ -161,7 +207,7 @@
       </div>
     </section>
 
-
+    <!-- Finance and Business Sections (2 columns) -->
     <div class="row my-2">
       <div class="col-md-6">
         <!-- Finance Section -->
@@ -254,10 +300,6 @@
         </section>
       </div>
     </div>
-
-  
-
-   
 
     <!-- Rules Section -->
     <section class="section-block" id="rules-section">
@@ -569,7 +611,6 @@
         <div class="mb-2 small"><strong>หมายเหตุ:</strong> <span id="am-remark">-</span></div>
         <hr/>
         <div class="row g-2 mb-2 small text-muted">
-          
           <div class="col-12"><strong>ที่อยู่:</strong> <span id="am-address">-</span></div>
           <div class="col-md-6"><strong>ผู้ติดต่อ:</strong> <span id="am-contact">-</span></div>
           <div class="col-md-6"><strong>พิกัด:</strong> <span id="am-geo">-</span> <a id="am-map" class="ms-1" target="_blank" rel="noopener"></a></div>

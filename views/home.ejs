@@ -1600,41 +1600,8 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
 %>
 
 
-<!-- ================= Coop Groups ================= -->
-<section id="groups" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-primary text-white">
-        <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่มส่งเสริมสหกรณ์
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <% coopGroupStats.forEach(group => { %>
-            <div class="col-md-4 mb-3">
-              <div class="card h-100 modern-card shadow-sm border-0">
-                <div class="card-gradient-bar"></div>
-                <div class="card-body text-center">
-                  <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
-                  <div class="mb-2">
-                    <button type="button" class="badge bg-success fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="สหกรณ์" aria-label="ดูรายชื่อสหกรณ์ใน <%= displayGroupName(group.c_group) %>">
-                      สหกรณ์: <%= group.coop %>
-                    </button>
-                  </div>
-                  <div>
-                    <button type="button" class="badge bg-info fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="กลุ่มเกษตรกร" aria-label="ดูรายชื่อกลุ่มเกษตรกรใน <%= displayGroupName(group.c_group) %>">
-                      กลุ่มเกษตรกร: <%= group.farmer %>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<!--  -->
+
 
 <!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->
 <div class="modal fade modal-elevated" id="groupItemsModal" tabindex="-1" aria-hidden="true">

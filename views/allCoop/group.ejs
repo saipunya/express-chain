@@ -1,22 +1,55 @@
 <%- include('../partials/header') %>
-<% const searchQueryBase = (search && search.length) ? ('&q=' + encodeURIComponent(search)) : ''; %>
+<% 
+  const searchQueryBase = (search && search.length) ? ('&q=' + encodeURIComponent(search)) : '';
+  
+  const getGroupThaiName = (groupCode) => {
+    const groupMap = {
+      'group1': 'กลุ่มส่งเสริมสหกรณ์ 1',
+      'group2': 'กลุ่มส่งเสริมสหกรณ์ 2',
+      'group3': 'กลุ่มส่งเสริมสหกรณ์ 3',
+      'group4': 'กลุ่มส่งเสริมสหกรณ์ 4',
+      'group5': 'กลุ่มส่งเสริมสหกรณ์ 5'
+    };
+    return groupMap[groupCode] || groupCode;
+  };
+
+  const allCoops = coops || [];
+  
+  // Use coop_group column to separate cooperatives and farmer groups
+  const cooperatives = allCoops.filter(c => {
+    const coopGroup = (c.coop_group || '').trim().toLowerCase();
+    return coopGroup === 'สหกรณ์' || coopGroup.includes('สหกรณ์');
+  });
+  
+  const farmerGroups = allCoops.filter(c => {
+    const coopGroup = (c.coop_group || '').trim().toLowerCase();
+    return coopGroup === 'กลุ่มเกษตรกร' || coopGroup.includes('กลุ่ม');
+  });
+  
+  const others = allCoops.filter(c => 
+    !cooperatives.includes(c) && !farmerGroups.includes(c)
+  );
+%>
+
 <div class="container py-3" id="allcoop-page">
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
     <h2 class="mb-0 d-flex flex-wrap align-items-center gap-2">
       <span>สถาบันทั้งหมด</span>
       <% if (currentGroup) { %>
-        <span class="badge bg-primary-subtle text-primary-emphasis fs-6"><i class="bi bi-collection me-1"></i>กลุ่ม: <%= currentGroup %></span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6"><i class="bi bi-collection me-1"></i><%= getGroupThaiName(currentGroup) %></span>
       <% } %>
     </h2>
     <div class="d-flex gap-2">
       <button id="toggleGroupPanel" class="btn btn-outline-primary btn-sm" type="button"><i class="bi bi-layout-sidebar"></i> ซ่อนกล่องกลุ่ม</button>
     </div>
   </div>
+
   <div class="row g-3">
+    <!-- Group Panel Sidebar -->
     <div class="col-12 col-lg-3" id="groupPanelCol">
       <div class="card shadow-sm h-100">
         <div class="card-header py-2 d-flex align-items-center justify-content-between">
-          <h5 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-diagram-3 text-secondary"></i> กลุ่ม</h5>
+          <h5 class="mb-0 d-flex align-items-center gap-2"><i class="bi bi-diagram-3 text-secondary"></i> กลุ่มส่งเสริมสหกรณ์</h5>
           <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"><%= groups ? groups.length : 0 %></span>
         </div>
         <div class="card-body p-2">
@@ -39,9 +72,11 @@
             </li>
             <% if (groups && groups.length) { %>
               <% groups.forEach(g => { %>
-                <% const gVal = (g.group || g.name || g.code || g).toString(); const gLink = '/allcoop/group/' + encodeURIComponent(gVal) + '?page=1&pageSize=' + pageSize + searchQueryBase; %>
-                <li class="list-group-item p-1 group-item <%= currentGroup === gVal ? 'active' : '' %>" data-group-name="<%= gVal.toLowerCase() %>">
-                  <a href="<%= gLink %>" class="d-block text-decoration-none px-1"><i class="bi bi-collection me-1 text-primary"></i><%= gVal %></a>
+                <% const gVal = (g.group || g.name || g.code || g).toString(); %>
+                <% const gThaiName = getGroupThaiName(gVal); %>
+                <% const gLink = '/allcoop/group/' + encodeURIComponent(gVal) + '?page=1&pageSize=' + pageSize + searchQueryBase; %>
+                <li class="list-group-item p-1 group-item <%= currentGroup === gVal ? 'active' : '' %>" data-group-name="<%= gThaiName.toLowerCase() %>" data-group-code="<%= gVal.toLowerCase() %>">
+                  <a href="<%= gLink %>" class="d-block text-decoration-none px-1"><i class="bi bi-collection me-1 text-primary"></i><%= gThaiName %></a>
                 </li>
               <% }) %>
             <% } else { %>
@@ -51,33 +86,152 @@
         </div>
       </div>
     </div>
+
+    <!-- Main Content Panel -->
     <div class="col-12 col-lg-9" id="coopPanelCol">
-      <div class="card shadow-sm">
-        <div class="card-header py-2">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-            <div class="d-flex flex-column">
-              <h5 class="mb-0"><i class="bi bi-people me-2 text-secondary"></i>รายการสหกรณ์/กลุ่มเกษตรกร</h5>
-              <small class="text-muted">หน้า <%= page %>/<%= totalPages %> • ทั้งหมด <%= total %> รายการ (แสดง <%= coops.length %>/<%= pageSize %>) <%= search ? ('(ค้นหา: ' + search + ')') : '' %></small>
-            </div>
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-              <div class="input-group input-group-sm" style="min-width:240px;">
-                <span class="input-group-text bg-light"><i class="bi bi-filter"></i></span>
-                <input id="tableQuickFilter" type="text" class="form-control" placeholder="กรองในตาราง...">
+      <!-- Debug Info (ลบออกหลังแก้ไขเสร็จ) -->
+      <div class="alert alert-info small mb-3">
+        <strong>Debug Info:</strong> สหกรณ์ <%= cooperatives.length %> | กลุ่มเกษตรกร <%= farmerGroups.length %> | อื่นๆ <%= others.length %> (รวม <%= allCoops.length %>)
+      </div>
+
+      <!-- Cooperatives Table -->
+      <% if (cooperatives.length > 0) { %>
+        <div class="card shadow-sm mb-4">
+          <div class="card-header py-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+              <div class="d-flex flex-column">
+                <h5 class="mb-0"><i class="bi bi-building me-2 text-primary"></i>สหกรณ์</h5>
+                <small class="text-muted">ทั้งหมด <%= cooperatives.length %> รายการ</small>
               </div>
-              <select id="pageSizeSelect" class="form-select form-select-sm" style="width:auto;">
-                <% [10,25,50,100].forEach(size => { %>
-                  <option value="<%= size %>" <%= pageSize === size ? 'selected' : '' %>><%= size %>/หน้า</option>
-                <% }) %>
-              </select>
-              <button id="clearFilters" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle"></i> ล้าง</button>
-              <button id="exportCsv" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="min-width:240px;">
+                  <span class="input-group-text bg-light"><i class="bi bi-filter"></i></span>
+                  <input id="cooperativeFilter" type="text" class="form-control" placeholder="กรองในตาราง...">
+                </div>
+                <button class="btn btn-outline-secondary btn-sm btn-clear-coop-filter"><i class="bi bi-x-circle"></i> ล้าง</button>
+                <button class="btn btn-outline-success btn-sm btn-export-coop-csv"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+              </div>
             </div>
           </div>
+          <div class="card-body p-0">
+            <% if (cooperatives.length > 0) { %>
+              <div class="table-responsive" style="max-height:50vh;">
+                <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="cooperative">
+                  <thead class="table-light position-sticky top-0" style="z-index:10;">
+                    <tr class="text-nowrap">
+                      <th style="width:50px;" class="text-center">#</th>
+                      <th style="width:110px;">รหัส</th>
+                      <th>ชื่อ</th>
+                      <th style="width:180px;">กลุ่ม</th>
+                      <th style="width:110px;" class="text-center">ดูข้อมูล</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% cooperatives.forEach((c,i) => { %>
+                      <tr class="coop-row" data-code="<%= (c.c_code || '').toLowerCase() %>" data-name="<%= (c.c_name || '').toLowerCase() %>" data-group="<%= (c.c_group || '').toLowerCase() %>">
+                        <td class="text-center text-muted" data-label="#"><%= i + 1 %></td>
+                        <td data-label="รหัส"><%= c.c_code || '-' %></td>
+                        <td data-label="ชื่อ"><%= c.c_name || '-' %></td>
+                        <td data-label="กลุ่ม"><span class="badge bg-primary-subtle text-primary-emphasis">
+                          <%= getGroupThaiName(c.c_group || '') %>
+                        </span></td>
+                        <td class="text-center row-actions" data-label="ดูข้อมูล">
+                          <a href="/allCoop/profile/<%= c.c_code %>" class="btn btn-outline-primary btn-sm" aria-label="เปิดโปรไฟล์"><i class="bi bi-box-arrow-up-right"></i></a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูลสหกรณ์</div>
+            <% } %>
+          </div>
         </div>
-        <div class="card-body p-0">
-          <% if (coops && coops.length) { %>
-            <div class="table-responsive" style="max-height:65vh;">
-              <table class="table table-sm table-hover align-middle mb-0 responsive-table" id="coopTable">
+      <% } else { %>
+        <div class="alert alert-warning">ไม่พบสหกรณ์ (ตรวจสอบ coop_group ในฐานข้อมูล)</div>
+      <% } %>
+
+      <!-- Farmer Groups Table -->
+      <% if (farmerGroups.length > 0) { %>
+        <div class="card shadow-sm mb-4">
+          <div class="card-header py-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+              <div class="d-flex flex-column">
+                <h5 class="mb-0"><i class="bi bi-people me-2 text-success"></i>กลุ่มเกษตรกร</h5>
+                <small class="text-muted">ทั้งหมด <%= farmerGroups.length %> รายการ</small>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="min-width:240px;">
+                  <span class="input-group-text bg-light"><i class="bi bi-filter"></i></span>
+                  <input id="farmerGroupFilter" type="text" class="form-control" placeholder="กรองในตาราง...">
+                </div>
+                <button class="btn btn-outline-secondary btn-sm btn-clear-farmer-filter"><i class="bi bi-x-circle"></i> ล้าง</button>
+                <button class="btn btn-outline-success btn-sm btn-export-farmer-csv"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <% if (farmerGroups.length > 0) { %>
+              <div class="table-responsive" style="max-height:50vh;">
+                <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="farmer-group">
+                  <thead class="table-light position-sticky top-0" style="z-index:10;">
+                    <tr class="text-nowrap">
+                      <th style="width:50px;" class="text-center">#</th>
+                      <th style="width:110px;">รหัส</th>
+                      <th>ชื่อ</th>
+                      <th style="width:180px;">กลุ่ม</th>
+                      <th style="width:110px;" class="text-center">ดูข้อมูล</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                    <% farmerGroups.forEach((c,i) => { %>
+                      <tr class="coop-row" data-code="<%= (c.c_code || '').toLowerCase() %>" data-name="<%= (c.c_name || '').toLowerCase() %>" data-group="<%= (c.c_group || '').toLowerCase() %>">
+                        <td class="text-center text-muted" data-label="#"><%= i + 1 %></td>
+                        <td data-label="รหัส"><%= c.c_code || '-' %></td>
+                        <td data-label="ชื่อ"><%= c.c_name || '-' %></td>
+                        <td data-label="กลุ่ม"><span class="badge bg-success-subtle text-success-emphasis">
+                          <%= getGroupThaiName(c.c_group || '') %>
+                        </span></td>
+                        <td class="text-center row-actions" data-label="ดูข้อมูล">
+                          <a href="/allCoop/profile/<%= c.c_code %>" class="btn btn-outline-success btn-sm" aria-label="เปิดโปรไฟล์"><i class="bi bi-box-arrow-up-right"></i></a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">ไม่มีข้อมูลกลุ่มเกษตรกร</div>
+            <% } %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="alert alert-warning">ไม่พบกลุ่มเกษตรกร (ตรวจสอบ coop_group ในฐานข้อมูล)</div>
+      <% } %>
+
+      <!-- Others Table -->
+      <% if (others.length > 0) { %>
+        <div class="card shadow-sm">
+          <div class="card-header py-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+              <div class="d-flex flex-column">
+                <h5 class="mb-0"><i class="bi bi-diagram-2 me-2 text-secondary"></i>อื่น ๆ</h5>
+                <small class="text-muted">ทั้งหมด <%= others.length %> รายการ</small>
+              </div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="min-width:240px;">
+                  <span class="input-group-text bg-light"><i class="bi bi-filter"></i></span>
+                  <input id="otherFilter" type="text" class="form-control" placeholder="กรองในตาราง...">
+                </div>
+                <button class="btn btn-outline-secondary btn-sm btn-clear-other-filter"><i class="bi bi-x-circle"></i> ล้าง</button>
+                <button class="btn btn-outline-success btn-sm btn-export-other-csv"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height:50vh;">
+              <table class="table table-sm table-hover align-middle mb-0 responsive-table coop-table" data-type="other">
                 <thead class="table-light position-sticky top-0" style="z-index:10;">
                   <tr class="text-nowrap">
                     <th style="width:50px;" class="text-center">#</th>
@@ -88,52 +242,30 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% coops.forEach((c,i) => { %>
-                    <tr class="coop-row" data-code="<%= (c.c_code || c.code || '').toLowerCase() %>" data-name="<%= (c.c_name || c.name || '').toLowerCase() %>" data-group="<%= (c.c_group || c.coop_group || c.group || '').toLowerCase() %>">
-                      <td class="text-center text-muted" data-label="#"><%= ( (page - 1) * pageSize ) + i + 1 %></td>
-                      <td data-label="รหัส"><%= c.c_code || c.code || '-' %></td>
-                      <td data-label="ชื่อ"><%= c.c_name || c.name || '-' %></td>
-                      <td data-label="กลุ่ม"><span class="badge bg-info-subtle text-info-emphasis">
-                        <%= c.c_group === 'group1' ? 'กลุ่มส่งเสริมสหกรณ์ 1' : c.c_group === 'group2' ? 'กลุ่มส่งเสริมสหกรณ์ 2' : c.c_group === 'group3' ? 'กลุ่มส่งเสริมสหกรณ์ 3' : c.c_group === 'group4' ? 'กลุ่มส่งเสริมสหกรณ์ 4' : c.c_group ==='group5' ? 'กลุ่มส่งเสริมสหกรณ์ 5': (c.c_group || c.coop_group || c.group || '') %>
+                  <% others.forEach((c,i) => { %>
+                    <tr class="coop-row" data-code="<%= (c.c_code || '').toLowerCase() %>" data-name="<%= (c.c_name || '').toLowerCase() %>" data-group="<%= (c.c_group || '').toLowerCase() %>">
+                      <td class="text-center text-muted" data-label="#"><%= i + 1 %></td>
+                      <td data-label="รหัส"><%= c.c_code || '-' %></td>
+                      <td data-label="ชื่อ"><%= c.c_name || '-' %></td>
+                      <td data-label="กลุ่ม"><span class="badge bg-secondary-subtle text-secondary-emphasis">
+                        <%= getGroupThaiName(c.c_group || '') %>
                       </span></td>
                       <td class="text-center row-actions" data-label="ดูข้อมูล">
-                        <a href="/allCoop/profile/<%= c.c_code || c.code || '' %>" class="btn btn-outline-primary btn-sm" aria-label="เปิดโปรไฟล์สหกรณ์"><i class="bi bi-box-arrow-up-right"></i></a>
+                        <a href="/allCoop/profile/<%= c.c_code %>" class="btn btn-outline-secondary btn-sm" aria-label="เปิดโปรไฟล์"><i class="bi bi-box-arrow-up-right"></i></a>
                       </td>
                     </tr>
                   <% }) %>
                 </tbody>
               </table>
             </div>
-            <!-- Pagination Footer -->
-            <div class="border-top p-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div class="small text-muted">ไปหน้า:</div>
-              <nav aria-label="pagination" class="flex-grow-1">
-                <ul class="pagination pagination-sm mb-0 flex-wrap">
-                  <li class="page-item <%= page === 1 ? 'disabled' : '' %>">
-                    <a class="page-link" href="?<%= 'page=' + (page-1) + '&pageSize=' + pageSize + (search? ('&q=' + encodeURIComponent(search)):'') + (currentGroup? '' : '') %>">&laquo;</a>
-                  </li>
-                  <% 
-                    const maxDisplay = 7;
-                    let start = Math.max(1, page - Math.floor(maxDisplay/2));
-                    let end = start + maxDisplay -1;
-                    if(end > totalPages){ end = totalPages; start = Math.max(1, end - maxDisplay +1); }
-                    for(let p = start; p <= end; p++){ 
-                      const url = (currentGroup ? ('/allcoop/group/' + encodeURIComponent(currentGroup)) : '/allcoop/group') + '?page=' + p + '&pageSize=' + pageSize + (search? ('&q=' + encodeURIComponent(search)):'');
-                  %>
-                    <li class="page-item <%= p === page ? 'active' : '' %>"><a class="page-link" href="<%= url %>"><%= p %></a></li>
-                  <% } %>
-                  <li class="page-item <%= page === totalPages ? 'disabled' : '' %>">
-                    <a class="page-link" href="?<%= 'page=' + (page+1) + '&pageSize=' + pageSize + (search? ('&q=' + encodeURIComponent(search)):'') %>">&raquo;</a>
-                  </li>
-                </ul>
-              </nav>
-              <div class="small text-muted">หน้าที่ <%= page %> จาก <%= totalPages %></div>
-            </div>
-          <% } else { %>
-            <div class="p-4 text-center text-muted">ยังไม่มีข้อมูลสหกรณ์สำหรับเงื่อนไขนี้</div>
-          <% } %>
+          </div>
         </div>
-      </div>
+      <% } %>
+
+      <!-- Message when no data -->
+      <% if (allCoops.length === 0) { %>
+        <div class="alert alert-info shadow-sm">ยังไม่มีข้อมูลสถาบัน</div>
+      <% } %>
     </div>
   </div>
 </div>
@@ -142,35 +274,28 @@
   #allcoop-page .list-group-item.active { font-weight: 600; }
   #allcoop-page .list-group-item a { color: inherit; }
   #allcoop-page .list-group-item.active a { color: #fff; }
-  #allcoop-page #coopTable tbody tr { transition: background-color .12s ease; }
-  #allcoop-page #coopTable tbody tr:hover { background: #f6faff; }
+  #allcoop-page .coop-table tbody tr { transition: background-color .12s ease; }
+  #allcoop-page .coop-table tbody tr:hover { background: #f6faff; }
   #allcoop-page .highlight { background: #ffe9a8; padding: 0 2px; border-radius: 2px; }
   #groupPanelCol.collapsed-placeholder { display:none !important; }
 
-  /* Mobile-first responsive stacked table */
   @media (max-width: 575.98px) {
-    #coopTable thead { display: none; }
-    #coopTable tbody tr { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; padding: .5rem .75rem; }
-    #coopTable tbody td { display: flex; justify-content: space-between; align-items: center; border: none !important; padding: .25rem 0; }
-    #coopTable tbody tr + tr { border-top: 1px solid var(--bs-border-color); }
-    #coopTable tbody td::before { content: attr(data-label); font-size: .72rem; color: var(--bs-secondary-color); margin-right: .75rem; }
-    #coopTable tbody td.row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+    .coop-table thead { display: none; }
+    .coop-table tbody tr { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; padding: .5rem .75rem; }
+    .coop-table tbody td { display: flex; justify-content: space-between; align-items: center; border: none !important; padding: .25rem 0; }
+    .coop-table tbody tr + tr { border-top: 1px solid var(--bs-border-color); }
+    .coop-table tbody td::before { content: attr(data-label); font-size: .72rem; color: var(--bs-secondary-color); margin-right: .75rem; }
+    .coop-table tbody td.row-actions { grid-column: 1 / -1; justify-content: flex-end; }
   }
 </style>
 
 <script>
 (function(){
-  const qFilter = document.getElementById('tableQuickFilter');
   const groupFilterInput = document.getElementById('groupQuickFilter');
-  const clearBtn = document.getElementById('clearFilters');
-  const exportBtn = document.getElementById('exportCsv');
-  const coopRows = Array.from(document.querySelectorAll('#coopTable tbody tr.coop-row'));
-  const coopCountEl = document.getElementById('coopCount');
   const groupItems = Array.from(document.querySelectorAll('#groupList .group-item'));
   const toggleBtn = document.getElementById('toggleGroupPanel');
   const groupCol = document.getElementById('groupPanelCol');
   const coopCol = document.getElementById('coopPanelCol');
-  const pageSizeSelect = document.getElementById('pageSizeSelect');
   const LS_KEY = 'allcoop_group_panel_hidden';
 
   function normalize(str){ return (str||'').toLowerCase(); }
@@ -190,7 +315,6 @@
     }
   }
 
-  // Initialize panel state from localStorage
   const savedHidden = localStorage.getItem(LS_KEY) === '1';
   applyGroupPanelState(savedHidden);
 
@@ -202,27 +326,16 @@
     });
   }
 
-  if(pageSizeSelect){
-    pageSizeSelect.addEventListener('change', () => {
-      const ps = pageSizeSelect.value;
-      const params = new URLSearchParams(window.location.search);
-      params.set('pageSize', ps);
-      params.set('page','1');
-      window.location.search = params.toString();
-    });
-  }
-
-  function filterTable(){
-    const text = normalize(qFilter.value);
-    let visible = 0;
-    coopRows.forEach(r => {
+  function filterTable(filterInput, tableSelector) {
+    const text = normalize(filterInput.value);
+    const rows = Array.from(document.querySelectorAll(tableSelector + ' tbody tr.coop-row'));
+    rows.forEach(r => {
       const hay = r.dataset.code + ' ' + r.dataset.name + ' ' + r.dataset.group;
       if(!text || hay.indexOf(text) !== -1){
-        r.style.display=''; visible++;
+        r.style.display='';
         highlightCells(r, text);
       } else { r.style.display='none'; }
     });
-    coopCountEl && (coopCountEl.textContent = visible);
   }
 
   function highlightCells(row, term){
@@ -231,7 +344,6 @@
       const original = td.getAttribute('data-original') || td.innerHTML;
       if(!td.getAttribute('data-original')) td.setAttribute('data-original', original);
       if(!t){ td.innerHTML = original; return; }
-      // Skip action cells that contain buttons/links to avoid breaking them
       if(td.querySelector('a, button, .btn')){ td.innerHTML = original; return; }
       const regex = new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
       td.innerHTML = original.replace(regex,'<span class="highlight">$1</span>');
@@ -242,39 +354,60 @@
     const t = normalize(groupFilterInput.value);
     groupItems.forEach(li => {
       const gname = li.dataset.groupName || '';
-      li.style.display = (!t || gname.indexOf(t) !== -1) ? '' : 'none';
+      const gcode = li.dataset.groupCode || '';
+      li.style.display = (!t || gname.indexOf(t) !== -1 || gcode.indexOf(t) !== -1) ? '' : 'none';
     });
   }
 
-  if(qFilter){ qFilter.addEventListener('input', filterTable); }
-  if(groupFilterInput){ groupFilterInput.addEventListener('input', filterGroups); }
-  if(clearBtn){
-    clearBtn.addEventListener('click', () => {
-      if(qFilter) qFilter.value='';
-      if(groupFilterInput) groupFilterInput.value='';
-      filterTable(); filterGroups();
+  function exportTableCSV(tableSelector, filename) {
+    const visibleRows = Array.from(document.querySelectorAll(tableSelector + ' tbody tr.coop-row')).filter(r => r.style.display !== 'none');
+    if(!visibleRows.length){ alert('ไม่มีข้อมูลสำหรับส่งออก'); return; }
+    const header = ['#','รหัส','ชื่อ','กลุ่ม'];
+    const lines = [header.join(',')];
+    visibleRows.forEach((r,i) => {
+      const cells = r.querySelectorAll('td');
+      const row = [i+1, cells[1].innerText.trim(), cells[2].innerText.trim(), cells[3].innerText.trim()];
+      lines.push(row.map(v => '"'+v.replace(/"/g,'""')+'"').join(','));
     });
+    const blob = new Blob(["\ufeff"+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
   }
 
-  if(exportBtn){
-    exportBtn.addEventListener('click', () => {
-      const visibleRows = coopRows.filter(r => r.style.display !== 'none');
-      if(!visibleRows.length){ alert('ไม่มีข้อมูลสำหรับส่งออก'); return; }
-      const header = ['#','รหัส','ชื่อ','กลุ่ม'];
-      const lines = [header.join(',')];
-      visibleRows.forEach((r,i) => {
-        const cells = r.querySelectorAll('td');
-        const row = [i+1, cells[1].innerText.trim(), cells[2].innerText.trim(), cells[3].innerText.trim()];
-        lines.push(row.map(v => '"'+v.replace(/"/g,'""')+'"').join(','));
-      });
-      const blob = new Blob(["\ufeff"+lines.join('\n')], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'coops_export_'+Date.now()+'.csv';
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    });
-  }
+  // Cooperatives table
+  const coopFilter = document.getElementById('cooperativeFilter');
+  if(coopFilter) coopFilter.addEventListener('input', () => filterTable(coopFilter, '.coop-table[data-type="cooperative"]'));
+  document.querySelector('.btn-clear-coop-filter')?.addEventListener('click', () => {
+    coopFilter.value = ''; filterTable(coopFilter, '.coop-table[data-type="cooperative"]');
+  });
+  document.querySelector('.btn-export-coop-csv')?.addEventListener('click', () => {
+    exportTableCSV('.coop-table[data-type="cooperative"]', 'cooperatives_export_'+Date.now()+'.csv');
+  });
+
+  // Farmer groups table
+  const farmerFilter = document.getElementById('farmerGroupFilter');
+  if(farmerFilter) farmerFilter.addEventListener('input', () => filterTable(farmerFilter, '.coop-table[data-type="farmer-group"]'));
+  document.querySelector('.btn-clear-farmer-filter')?.addEventListener('click', () => {
+    farmerFilter.value = ''; filterTable(farmerFilter, '.coop-table[data-type="farmer-group"]');
+  });
+  document.querySelector('.btn-export-farmer-csv')?.addEventListener('click', () => {
+    exportTableCSV('.coop-table[data-type="farmer-group"]', 'farmer_groups_export_'+Date.now()+'.csv');
+  });
+
+  // Others table
+  const otherFilter = document.getElementById('otherFilter');
+  if(otherFilter) otherFilter.addEventListener('input', () => filterTable(otherFilter, '.coop-table[data-type="other"]'));
+  document.querySelector('.btn-clear-other-filter')?.addEventListener('click', () => {
+    otherFilter.value = ''; filterTable(otherFilter, '.coop-table[data-type="other"]');
+  });
+  document.querySelector('.btn-export-other-csv')?.addEventListener('click', () => {
+    exportTableCSV('.coop-table[data-type="other"]', 'others_export_'+Date.now()+'.csv');
+  });
+
+  if(groupFilterInput) groupFilterInput.addEventListener('input', filterGroups);
 })();
 </script>
 <%- include('../partials/footer') %>

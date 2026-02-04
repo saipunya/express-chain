@@ -1,0 +1,156 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <h3 class="mb-4">
+    <% if (action === 'edit') { %>
+      ✏️ แก้ไขสมาชิกเพิ่มเติม
+    <% } else { %>
+      ➕ เพิ่มสมาชิกเพิ่มเติม
+    <% } %>
+  </h3>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <form action="<% if (action === 'edit') { %>/addmem/update/<%= record.addmem_id %><% } else { %>/addmem/save<% } %>" method="POST">
+            <div class="mb-3">
+              <label for="addmem_code" class="form-label">รหัสสมาชิก <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="addmem_code" name="addmem_code" 
+                     value="<%= record.addmem_code || '' %>" required 
+                     placeholder="กรอกรหัสสมาชิก" autofocus>
+              <div class="form-text">รหัสสมาชิกต้องไม่ซ้ำกับรายการอื่น</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="addmem_year" class="form-label">ปี <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="addmem_year" name="addmem_year" 
+                     value="<%= record.addmem_year || '' %>" required 
+                     placeholder="เช่น 2026, 2569">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="addmem_saman" class="form-label">สมาชิก <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" id="addmem_saman" name="addmem_saman" 
+                         value="<%= record.addmem_saman || '' %>" required 
+                         placeholder="0" min="0">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="addmem_somtob" class="form-label">สมทบ <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" id="addmem_somtob" name="addmem_somtob" 
+                         value="<%= record.addmem_somtob || '' %>" required 
+                         placeholder="0" min="0">
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden meta fields -->
+            <input type="hidden" name="addmem_saveby" value="<%= (user && user.fullname) ? user.fullname : 'guest' %>" />
+            <input type="hidden" name="addmem_savedate" value="<%= new Date().toISOString().slice(0,19).replace('T',' ') %>" />
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <% if (action === 'edit') { %>
+                  💾 อัปเดตข้อมูล
+                <% } else { %>
+                  💾 บันทึกข้อมูล
+                <% } %>
+              </button>
+              <a href="/addmem/list" class="btn btn-secondary">ย้อนกลับ</a>
+              <% if (action === 'edit') { %>
+                <a href="/addmem/add" class="btn btn-primary">เพิ่มใหม่</a>
+              <% } %>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <!-- แสดงข้อมูลล่าสุด -->
+      <% if (recentData && recentData.length > 0) { %>
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">📋 ข้อมูลล่าสุด (<%= recentData.length %> รายการ)</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>รหัส</th>
+                  <th>ปี</th>
+                  <th>สมาชิก</th>
+                  <th>สมทบ</th>
+                  <% if(user && user.mClass=='kjs'){ %>
+                  <th>จัดการ</th>
+                  <% } %>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentData.forEach(item => { %>
+                  <tr>
+                    <td class="fw-bold"><%= item.addmem_code %></td>
+                    <td><%= item.addmem_year %></td>
+                    <td><%= item.addmem_saman %></td>
+                    <td><%= item.addmem_somtob %></td>
+                    <% if(user && user.mClass=='kjs'){ %>
+                    <td class="text-center text-nowrap">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="/addmem/view/<%= item.addmem_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/addmem/edit/<%= item.addmem_id %>" class="btn btn-outline-warning" title="แก้ไข">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/addmem/delete/<%= item.addmem_id %>" class="btn btn-outline-danger" title="ลบ" onclick="return confirm('ต้องการลบข้อมูลนี้?')">
+                          <i class="bi bi-trash"></i>
+                        </a>
+                      </div>
+                    </td>
+                    <% } %>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="/addmem/list" class="btn btn-outline-primary btn-sm">ดูทั้งหมด</a>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- สถิติ -->
+      <div class="card mt-3">
+        <div class="card-header bg-secondary text-white">
+          <h6 class="mb-0">📊 สถิติ</h6>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="border-end">
+                <h4 class="text-primary mb-1">
+                  <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_saman), 0) : 0 %>
+                </h4>
+                <small class="text-muted">สมาชิกทั้งหมด</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <h4 class="text-success mb-1">
+                <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_somtob), 0) : 0 %>
+              </h4>
+              <small class="text-muted">สมทบทั้งหมด</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

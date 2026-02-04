@@ -38,7 +38,7 @@
       <div class="d-flex align-items-center gap-2">
         <h2 class="section-title m-0"><i class="fas fa-scroll"></i> ระเบียบสหกรณ์ / กลุ่มเกษตรกร</h2>
       </div>
-      <% if(user && user.mClass === 'kjs') { %>
+      <% if (user && ['kjs', 'kts', 'admin'].includes(user.mClass)) { %>
         <a href="/rabiab/upload" class="btn btn-primary d-flex align-items-center gap-2" style="border-radius:14px;">
           <i class="fas fa-cloud-upload-alt"></i>
           <span>อัปโหลดระเบียบ</span>

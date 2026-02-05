@@ -2,13 +2,23 @@ const express = require('express');
 const router = express.Router();
 const allCoopController = require('../controllers/allCoopController');
 
-// โปรไฟล์สหกรณ์ตามรหัส
-router.get('/profile/:c_code', allCoopController.profile);
-router.get('/', (req, res) => res.redirect('/allCoop/group'));
+console.log('allCoopController keys:', Object.keys(allCoopController));
+console.log('allCoopController.group:', typeof allCoopController.group);
+console.log('allCoopController.profile:', typeof allCoopController.profile);
 
-// แสดงรายชื่อสหกรณ์ทั้งหมด (ไม่มี group ระบุ)
-router.get('/group', allCoopController.byGroup);
-// แสดงรายชื่อสหกรณ์ตามกลุ่ม (ระบุ group)
-router.get('/group/:group', allCoopController.byGroup);
+// Verify controller is loaded
+if (!allCoopController) {
+  throw new Error('allCoopController failed to load');
+}
+
+// Route: Display all coops grouped with filters (no pagination)
+router.get('/group', allCoopController.group);
+router.get('/group/:group', allCoopController.group);
+
+// Route: Profile page by c_code
+router.get('/profile/:c_code', allCoopController.profile);
+
+// Default redirect
+router.get('/', (req, res) => res.redirect('/allCoop/group'));
 
 module.exports = router;

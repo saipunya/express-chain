@@ -102,6 +102,14 @@ const planProjectRoutes = require('./routes/planProjectRoutes'); // โครง
 const planKpiRoutes = require('./routes/planKpiRoutes'); // ตัวชี้วัดโครงการ
 const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
 const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
+const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route addmem
+
+// Public routes that don't require authentication
+const publicRoutes = [
+  '/chamra/process',
+  '/chamra/detail/:id', // optional: also allow viewing details
+  // ...other public routes
+];
 
 // online member
 app.use(onlineStatus);
@@ -116,6 +124,7 @@ app.use('/planKpi', planKpiRoutes); // เส้นทางจัดการ�
 app.use('/plan_project', (req, res) => res.redirect('/planproject')); // Redirect old path
 app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้หน้า home และ members ถูกให้บริการ
 app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rabiab (ดาวน์โหลดไฟล์ระเบียบ)
+app.use('/addmem', addmemRoutes); // ใช้งานเส้นทาง addmem (สมาชิกเพิ่มเติม)
 app.use('/chamra', chamraExportRoute);
 
 // 404 handler

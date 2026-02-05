@@ -1347,9 +1347,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
                 <i class="bi bi-speedometer2 me-1"></i> แดชบอร์ด
               </a>
               <% if(user && (user.mClass==='kjs' || user.mClass==='admin')) { %>
-                <a href="/account/list" class="btn btn-outline-secondary">
-                  <i class="bi bi-cash-stack me-1"></i> เงินกลุ่ม กจส.
-                </a>
+                
                 <a href="/chamra" class="btn btn-outline-secondary">
                   <i class="bi bi-file-earmark-check me-1"></i> ชำระบัญชี
                 </a>
@@ -1484,7 +1482,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
             </p>
             <span class="badge bg-success bg-opacity-10 text-success mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="/activeCoop/by-end-date">
+              <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="/allCoop/group">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -1506,7 +1504,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
             </p>
             <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/activeCoop/by-end-date">
+              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/activeCoop/allCoop/group">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -1598,6 +1596,88 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
     });
   }
 %>
+
+
+<!--  -->
+
+
+<!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->
+<div class="modal fade modal-elevated" id="groupItemsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0 d-flex align-items-center gap-2" id="groupItemsModalLabel"><i class="bi bi-diagram-3"></i> รายชื่อ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="groupItemsLoading" class="text-center py-5">
+          <div class="spinner-border text-light mb-3" role="status"></div>
+          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
+        </div>
+        <div id="groupItemsError" class="alert alert-danger d-none"></div>
+        <ul id="groupItemsList" class="list-group d-none"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Featured Coops (New) ================= -->
+<section id="featured-coops" class="section-block bg-light">
+  <div class="container">
+    <h2 class="text-center text-primary section-title mb-4">🏢 ข้อมูลรายสถาบัน</h2>
+    <% if ((homeCoops||[]).length) { %>
+      <% const _featuredCoops = (homeCoops||[]).slice().sort(()=> Math.random() - 0.5).slice(0,6); %>
+      <div class="row g-3">
+        <% _featuredCoops.forEach(c => { %>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card modern-card h-100 shadow-sm border-0">
+              <div class="card-gradient-bar"></div>
+              <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <span class="badge <%= c.coop_group==='สหกรณ์' ? 'bg-success' : 'bg-info' %>"><%= c.coop_group %></span>
+                  <span class="badge bg-secondary"><%= c.c_group || '-' %></span>
+                </div>
+                <h6 class="fw-semibold mb-1 text-truncate" title="<%= c.c_name %>"><i class="bi bi-building me-1 text-primary"></i><%= c.c_name %></h6>
+                <div class="text-muted small mb-3">รหัส: <%= c.c_code %></div>
+                <div class="mt-auto d-grid">
+                  <!-- Changed: link -> button triggers modal -->
+                  <a href="/allCoop/profile/<%= c.c_code %>" data-code="<%= c.c_code %>" class="btn btn-sm btn-outline-primary js-coop-detail" role="button" aria-label="รายละเอียด <%= c.c_name %>">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>รายละเอียด
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <div class="text-center mt-4">
+        <a href="/allCoop/group" class="btn btn-primary px-4"><i class="bi bi-grid-3x3-gap me-1"></i> ดูทั้งหมด</a>
+      <% } else { %>
+      <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Modal for Coop Detail (added) -->
+<div class="modal fade modal-elevated" id="coopDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="coopDetailModalLabel"><i class="bi bi-building"></i> รายละเอียด</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div id="coopDetailLoading" class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status"></div>
+          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
+        </div>
+        <div id="coopDetailError" class="alert alert-danger m-3 d-none"></div>
+        <div id="coopDetailContent" class="p-3 d-none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- chamra section -->
 <section id="chamra" class="section-block">
   <% if ((chamraAllProcesses || []).length) { %>
@@ -1713,183 +1793,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
   </div>
 </section>
 
-<!-- ================= Coop Groups ================= -->
-<section id="groups" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-primary text-white">
-        <i class="bi bi-diagram-3 me-2"></i> สรุปจำนวนสหกรณ์/กลุ่มเกษตรกรในแต่ละกลุ่มส่งเสริมสหกรณ์
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <% coopGroupStats.forEach(group => { %>
-            <div class="col-md-4 mb-3">
-              <div class="card h-100 modern-card shadow-sm border-0">
-                <div class="card-gradient-bar"></div>
-                <div class="card-body text-center">
-                  <h5 class="fw-bold mb-2 text-primary"><%= displayGroupName(group.c_group) %></h5>
-                  <div class="mb-2">
-                    <button type="button" class="badge bg-success fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="สหกรณ์" aria-label="ดูรายชื่อสหกรณ์ใน <%= displayGroupName(group.c_group) %>">
-                      สหกรณ์: <%= group.coop %>
-                    </button>
-                  </div>
-                  <div>
-                    <button type="button" class="badge bg-info fs-6 border-0 js-show-group-items shadow-focus" data-group="<%= group.c_group %>" data-group-label="<%= displayGroupName(group.c_group) %>" data-type="กลุ่มเกษตรกร" aria-label="ดูรายชื่อกลุ่มเกษตรกรใน <%= displayGroupName(group.c_group) %>">
-                      กลุ่มเกษตรกร: <%= group.farmer %>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->
-<div class="modal fade modal-elevated" id="groupItemsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header modal-gradient py-2">
-        <h5 class="modal-title mb-0 d-flex align-items-center gap-2" id="groupItemsModalLabel"><i class="bi bi-diagram-3"></i> รายชื่อ</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="groupItemsLoading" class="text-center py-5">
-          <div class="spinner-border text-light mb-3" role="status"></div>
-          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
-        </div>
-        <div id="groupItemsError" class="alert alert-danger d-none"></div>
-        <ul id="groupItemsList" class="list-group d-none"></ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ================= Featured Coops (New) ================= -->
-<section id="featured-coops" class="section-block bg-light">
-  <div class="container">
-    <h2 class="text-center text-primary section-title mb-4">🏢 ข้อมูลรายสถาบัน</h2>
-    <% if ((homeCoops||[]).length) { %>
-      <% const _featuredCoops = (homeCoops||[]).slice().sort(()=> Math.random() - 0.5).slice(0,6); %>
-      <div class="row g-3">
-        <% _featuredCoops.forEach(c => { %>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <div class="card modern-card h-100 shadow-sm border-0">
-              <div class="card-gradient-bar"></div>
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <span class="badge <%= c.coop_group==='สหกรณ์' ? 'bg-success' : 'bg-info' %>"><%= c.coop_group %></span>
-                  <span class="badge bg-secondary"><%= c.c_group || '-' %></span>
-                </div>
-                <h6 class="fw-semibold mb-1 text-truncate" title="<%= c.c_name %>"><i class="bi bi-building me-1 text-primary"></i><%= c.c_name %></h6>
-                <div class="text-muted small mb-3">รหัส: <%= c.c_code %></div>
-                <div class="mt-auto d-grid">
-                  <!-- Changed: link -> button triggers modal -->
-                  <a href="/allCoop/profile/<%= c.c_code %>" data-code="<%= c.c_code %>" class="btn btn-sm btn-outline-primary js-coop-detail" role="button" aria-label="รายละเอียด <%= c.c_name %>">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>รายละเอียด
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-      <div class="text-center mt-4">
-        <a href="/allCoop/group" class="btn btn-primary px-4"><i class="bi bi-grid-3x3-gap me-1"></i> ดูทั้งหมด</a>
-      <% } else { %>
-      <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
-    <% } %>
-  </div>
-</section>
-
-<!-- Modal for Coop Detail (added) -->
-<div class="modal fade modal-elevated" id="coopDetailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header modal-gradient py-2">
-        <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="coopDetailModalLabel"><i class="bi bi-building"></i> รายละเอียด</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-0">
-        <div id="coopDetailLoading" class="text-center py-5">
-          <div class="spinner-border text-primary mb-3" role="status"></div>
-          <div class="small text-muted">กำลังโหลดข้อมูล...</div>
-        </div>
-        <div id="coopDetailError" class="alert alert-danger m-3 d-none"></div>
-        <div id="coopDetailContent" class="p-3 d-none"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- ================= Member Summary ================= -->
-<section id="members" class="section-block bg-light">
-  <div class="container">
-    <div class="mb-3 text-center">
-      <h2 class="text-primary section-title">📊 สรุปจำนวนสมาชิก (สหกรณ์)</h2>
-    </div>
-
-    <% const hasSummary = (typeof summaryByYear !== 'undefined' && summaryByYear); %>
-    <% const hasTop = (typeof top !== 'undefined' && Array.isArray(top)); %>
-    <% let yearEntries = hasSummary ? Object.entries(summaryByYear).sort((a,b)=> Number(b[0]) - Number(a[0])) : []; %>
-    <% const targetYear = 2567; yearEntries = yearEntries.filter(([y]) => Number(y) === targetYear); %>
-
-    <div class="row g-3">
-      <div class="col-12">
-        <div class="card modern-card h-100">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <h5 class="card-title text-primary mb-3">
-              <i class="bi bi-trophy me-2"></i> Top สหกรณ์ (ตามจำนวนสมาชิกรวม ปี <%= targetYear %>)
-            </h5>
-            <% const filteredTop = (hasTop && Array.isArray(top)) ? top.filter(t => Number(t.year) === targetYear) : []; %>
-            <% if (filteredTop.length) { %>
-              <div class="table-responsive">
-                <table class="table table-sm table-bordered table-hover align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th class="text-center">อันดับ</th>
-                      <th>ชื่อสหกรณ์</th>
-                      <th class="d-none d-sm-table-cell">พ.ศ.</th>
-                      <th class="d-none d-sm-table-cell">อำเภอ</th>
-                      <th class="text-end">สมาชิกรวม(ราย)</th>
-                      <th class="text-center">view</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  <% filteredTop.forEach((t,i)=>{ %>
-                    <tr>
-                      <td class="text-center"><%= i+1 %></td>
-                      <td><%= t.name %></td>
-                      <td class="d-none d-sm-table-cell"><%= t.year || 'N/A' %></td>
-                      <td class="d-none d-sm-table-cell"><%= t.อำเภอ %></td>
-                      <td class="text-end"><%= Number(t.total).toLocaleString() %></td>
-                      <td class="text-center">
-                        <a href="/members/<%= t.idx %>" class="btn btn-sm btn-outline-info">รายละเอียด</a>
-                      </td>
-                    </tr>
-                  <% }) %>
-                  </tbody>
-                </table>
-              </div>
-            <% } else { %>
-              <div class="text-muted">ไม่มีข้อมูลรายการ Top สำหรับปี <%= targetYear %></div>
-            <% } %>
-          </div>
-          <div class="card-footer bg-light text-end">
-            <a href="/members" class="btn btn-sm btn-primary">รายการทั้งหมด / ค้นหา</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ================= Activities & Image (replaced image with calendar) ================= -->
 <section id="activities" class="section-block">
@@ -2209,21 +2113,6 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
   </div>
 </section>
 <!-- ================= Articles (List View) ================= -->
-
-<section id="articles" class="section-block bg-light">
-  <div class="container">
-    <div class="card modern-card shadow-sm border-0">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i> บทความ (แสดงแบบรายการ)</h6>
-        <a href="/article" class="btn btn-sm btn-outline-light">ดูทั้งหมด</a>
-      </div>
-      <div class="card-body">
-        <%- include('article/partials/list-body.ejs', { articles: (lastArticles || []) }) %>
-      </div>
-    </div>
-  </div>
-</section>
 
 
 <section id="usecar" class="section-block">

@@ -31,7 +31,17 @@ router.get('/poblem/check-exist', chamraController.checkPoblemExist);
 router.get('/poblem/available-coop', chamraController.getAvailableCoop);
 
 // ---- chamra_process routes ----
-router.get('/process',requireLogin, chamraController.processList);
+// Route for process page - PUBLIC ACCESS (no auth required)
+// Verify that chamraController.process exists; if not, define it or redirect
+if (typeof chamraController.process === 'function') {
+  router.get('/process', chamraController.process);
+} else {
+  console.warn('⚠️ chamraController.process is not defined. Please add it to chamraController.js');
+  router.get('/process', (req, res) => {
+    res.status(501).render('error_page', { message: 'ฟังก์ชันนี้ยังไม่พร้อมใช้งาน' });
+  });
+}
+
 router.post('/process/:pr_id/update', chamraController.processUpdate);
 router.post('/process/:pr_id/delete', chamraController.processDelete);
 // (optional separate edit page)

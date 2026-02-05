@@ -1,0 +1,148 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">👁️ รายละเอียดสมาชิกเพิ่มเติม</h3>
+    <div>
+      <a href="/addmem/list" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+      </a>
+      <% if(user && user.mClass=='kjs'){ %>
+        <a href="/addmem/edit/<%= record.addmem_id %>" class="btn btn-warning">
+          <i class="bi bi-pencil"></i> แก้ไข
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">📋 ข้อมูลสมาชิก</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">รหัสสมาชิก:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-primary fs-6"><%= record.addmem_code %></span>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">ปี:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-info fs-6"><%= record.addmem_year %></span>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">จำนวนสมาชิก:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-success fs-6"><%= record.addmem_saman %> คน</span>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">จำนวนสมทบ:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-warning fs-6"><%= record.addmem_somtob %> คน</span>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">บันทึกโดย:</div>
+            <div class="col-sm-8">
+              <i class="bi bi-person"></i> <%= record.addmem_saveby %>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">วันที่บันทึก:</div>
+            <div class="col-sm-8">
+              <i class="bi bi-calendar"></i> 
+              <%= new Date(record.addmem_savedate).toLocaleString('th-TH', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              }) %>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-sm-4 fw-bold">ID:</div>
+            <div class="col-sm-8">
+              <code class="text-muted">#<%= record.addmem_id %></code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <!-- สถิติ -->
+      <div class="card">
+        <div class="card-header bg-secondary text-white">
+          <h6 class="mb-0">📊 สถิติ</h6>
+        </div>
+        <div class="card-body text-center">
+          <div class="mb-3">
+            <h4 class="text-primary mb-1"><%= record.addmem_saman %></h4>
+            <small class="text-muted">สมาชิก</small>
+          </div>
+          <div class="mb-3">
+            <h4 class="text-success mb-1"><%= record.addmem_somtob %></h4>
+            <small class="text-muted">สมทบ</small>
+          </div>
+          <div>
+            <h4 class="text-info mb-1"><%= parseInt(record.addmem_saman) + parseInt(record.addmem_somtob) %></h4>
+            <small class="text-muted">รวมทั้งหมด</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ปุ่มจัดการ -->
+      <% if(user && user.mClass=='kjs'){ %>
+      <div class="card mt-3">
+        <div class="card-header bg-danger text-white">
+          <h6 class="mb-0">⚠️ จัดการข้อมูล</h6>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="/addmem/edit/<%= record.addmem_id %>" class="btn btn-warning">
+              <i class="bi bi-pencil"></i> แก้ไขข้อมูล
+            </a>
+            <a href="/addmem/delete/<%= record.addmem_id %>" class="btn btn-danger" 
+               onclick="return confirm('ต้องการลบข้อมูลสมาชิกนี้?\nรหัส: <%= record.addmem_code %>\nปี: <%= record.addmem_year %>\n\nการลบข้อมูลไม่สามารถกู้คืนได้!')">
+              <i class="bi bi-trash"></i> ลบข้อมูล
+            </a>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- ข้อมูลเพิ่มเติม -->
+      <div class="card mt-3">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">ℹ️ ข้อมูลเพิ่มเติม</h6>
+        </div>
+        <div class="card-body">
+          <small class="text-muted">
+            <p class="mb-2"><strong>รหัสสมาชิก:</strong> <%= record.addmem_code %></p>
+            <p class="mb-2"><strong>ปีงบประมาณ:</strong> <%= record.addmem_year %></p>
+            <p class="mb-0"><strong>อัตราส่วน:</strong> 
+              <%= ((parseInt(record.addmem_somtob) / parseInt(record.addmem_saman)) * 100).toFixed(1) %>%
+            </p>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -655,7 +655,13 @@ chamraController.exportDetailPdf = async (req, res) => {
       return new Intl.DateTimeFormat('th-TH',{day:'numeric',month:'long',year:'numeric'}).format(dt); 
     }; 
     const procRows = []; const timeline = [];
-    for (let i=1;i<=10;i++){ const key=`pr_s${i}`; const raw=record[key]||''; const label= showStepServer(i); procRows.push([{ text:`ขั้น ${i} ${label}`, margin:[2,2,2,2]}, fmtThai(raw)]); timeline.push(`${isValid(raw)?'✅':'⬜️'} ขั้น ${i} ${label} ${isValid(raw)? '('+fmtThai(raw)+')':''}`); }
+    for (let i=1; i<=10; i++) { 
+      const key=`pr_s${i}`; 
+      const raw=record[key]||''; 
+      const label= showStepServer(i); 
+      procRows.push([{ text:`ขั้น ${i} ${label}`, margin:[2,2,2,2]}, fmtThai(raw)]); 
+      timeline.push(`${isValid(raw)?'✅':'⬜️'} ขั้น ${i} ${label} ${isValid(raw)? '('+fmtThai(raw)+')':''}`); 
+    }
     const pobRows = poblems && poblems.length ? poblems.map(p=> [p.po_year||'-', p.po_meeting||'-', p.po_detail||'-', p.po_problem||'-', (p.po_saveby||'-'), (fmtThai(p.po_savedate)||'-')]) : [];
     const docDefinition = {
       info:{ title:`Chamra Detail ${record.c_name||''}`, author:'Express Chain' },
@@ -667,11 +673,10 @@ chamraController.exportDetailPdf = async (req, res) => {
       content:[
         { text:'ข้อมูลทั่วไป', style:'section' },
         { columns:[ { width:'50%', stack:[ { text:`กรณี: ${record.de_case||'-'}` }, { text:`คำสั่งเลขที่: ${record.de_comno||'-'}` }, { text:`วันที่คำสั่ง: ${fmtThai(record.de_comdate)}` }, { text:`ผู้รับผิดชอบ: ${record.de_person||'-'}` }, { text:`หมายเหตุ: ${record.de_maihed||'-'}` } ] }, { width:'50%', stack:[ { text:`สถานะ: ${record.c_status||'-'}` }, { text:`กลุ่ม: ${record.c_group||'-'}` }, { text:`บันทึกโดย: ${record.de_saveby||'-'}` }, { text:`บันทึกวันที่: ${fmtThai(record.de_savedate)}` } ] } ], columnGap:24 },
-      
         
         { table:{ widths:['*',160], headerRows:1, body:[ [{ text:'ขั้น', bold:true, color:'#fff' }, { text:'วันที่ (ไทย)', bold:true, color:'#fff' } ], ...procRows ] }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12, margin:[0,0,0,14] },
         { text:'รายการปัญหา (Problems)', style:'section' },
-        pobRows.length ? { table:{ headerRows:1, widths:[50,50,'*','*',70,90], body:[ [ { text:'ปี', bold:true, color:'#fff' }, { text:'ครั้ง', bold:true, color:'#fff' }, { text:'รายละเอียด', bold:true, color:'#fff' }, { text:'ปัญหา', bold:true, color:'#fff' }, { text:'บันทึกโดย', bold:true, color:'#fff' }, { text:'วันที่บันทึก', bold:true, color:'#fff' } ], ...pobRows ], }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12 } : { text:'ไม่มีรายการปัญหา', italics:true }
+        poblems && poblems.length ? { table:{ headerRows:1, widths:[50,50,'*','*',70,90], body:[ [ { text:'ปี', bold:true, color:'#fff' }, { text:'ครั้ง', bold:true, color:'#fff' }, { text:'รายละเอียด', bold:true, color:'#fff' }, { text:'ปัญหา', bold:true, color:'#fff' }, { text:'บันทึกโดย', bold:true, color:'#fff' }, { text:'วันที่บันทึก', bold:true, color:'#fff' } ], ...pobRows ], }, layout:{ fillColor:(rowIndex)=> rowIndex===0? '#0d9488': (rowIndex%2===0? '#f5fdfb': null), hLineWidth:()=>0.4, vLineWidth:()=>0.4, hLineColor:()=> '#b5c2c7', vLineColor:()=> '#b5c2c7' }, fontSize:12 } : { text:'ไม่มีรายการปัญหา', italics:true }
       ]
     };
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
@@ -713,6 +718,27 @@ chamraController.exportDetailPdf = async (req, res) => {
   } catch (err) {
     console.error('exportDetailPdf error:', err);
     res.status(500).send('Export PDF failed');
+  }
+};
+
+/**
+ * Display public process page (no auth required)
+ */
+chamraController.process = async (req, res) => {
+  try {
+    // Fetch all chamra records with process data
+    const processes = await Chamra.getAllProcess();
+    
+    res.render('chamra/process', {
+      data: processes || [],
+      user: req.session.user || null,
+      title: 'กระบวนการชำระบัญชี - CoopChain'
+    });
+  } catch (error) {
+    console.error('Error in chamraController.process:', error);
+    res.status(500).render('error_page', {
+      message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล'
+    });
   }
 };
 

@@ -1,0 +1,214 @@
+<%- include('partials/header') %>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">📋 รายการสมาชิกเพิ่มเติม</h3>
+    <div>
+      <% if(user && user.mClass=='kjs'){ %>
+        <a href="/addmem/add" class="btn btn-success">
+          <i class="bi bi-plus-circle"></i> เพิ่มรายการ
+        </a>
+      <% } %>
+      <a href="/dashboard/" class="btn btn-primary">
+        <i class="bi bi-house"></i> กลับไปที่แดชบอร์ด
+      </a>
+    </div>
+  </div>
+
+  <!-- สถิติภาพรวม -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title">ทั้งหมด</h5>
+          <h2><%= pagination.total %></h2>
+          <small>รายการ</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <h5 class="card-title">สมาชิก</h5>
+          <h2><%= data.reduce((sum, item) => sum + parseInt(item.addmem_saman), 0) %></h2>
+          <small>คน</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">สมทบ</h5>
+          <h2><%= data.reduce((sum, item) => sum + parseInt(item.addmem_somtob), 0) %></h2>
+          <small>คน</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <h5 class="card-title">หน้าปัจจุบัน</h5>
+          <h2><%= pagination.page %>/<%= pagination.totalPages %></h2>
+          <small>หน้า</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ค้นหา -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" action="/addmem/list" class="row g-3">
+        <div class="col-md-4">
+          <input type="text" name="search" class="form-control" placeholder="ค้นหาตามรหัสสมาชิก..." 
+                 value="<%= search || '' %>">
+        </div>
+        <div class="col-md-2">
+          <select name="pageSize" class="form-select">
+            <option value="10" <%= pagination.pageSize == 10 ? 'selected' : '' %>>10 รายการ</option>
+            <option value="25" <%= pagination.pageSize == 25 ? 'selected' : '' %>>25 รายการ</option>
+            <option value="50" <%= pagination.pageSize == 50 ? 'selected' : '' %>>50 รายการ</option>
+            <option value="100" <%= pagination.pageSize == 100 ? 'selected' : '' %>>100 รายการ</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-search"></i> ค้นหา
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ตารางข้อมูล -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th class="text-center">#</th>
+              <th>รหัสสมาชิก</th>
+              <th>ปี</th>
+              <th class="text-center">สมาชิก</th>
+              <th class="text-center">สมทบ</th>
+              <th>บันทึกโดย</th>
+              <th>วันที่บันทึก</th>
+              <% if(user && user.mClass=='kjs'){ %>
+              <th class="text-center">จัดการ</th>
+              <% } %>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (data.length === 0) { %>
+              <tr>
+                <td colspan="<%= (user && user.mClass=='kjs') ? '8' : '7' %>" class="text-center py-4">
+                  <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                  <p class="text-muted mt-2 mb-0">ไม่พบข้อมูล</p>
+                </td>
+              </tr>
+            <% } else { %>
+              <% data.forEach((item, index) => { %>
+                <tr>
+                  <td class="text-center">
+                    <%= (pagination.page - 1) * pagination.pageSize + index + 1 %>
+                  </td>
+                  <td class="fw-bold"><%= item.addmem_code %></td>
+                  <td><%= item.addmem_year %></td>
+                  <td class="text-center">
+                    <span class="badge bg-info"><%= item.addmem_saman %></span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-success"><%= item.addmem_somtob %></span>
+                  </td>
+                  <td>
+                    <small class="text-muted">
+                      <i class="bi bi-person"></i> <%= item.addmem_saveby %>
+                    </small>
+                  </td>
+                  <td>
+                    <small class="text-muted">
+                      <%= new Date(item.addmem_savedate).toLocaleString('th-TH', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) %>
+                    </small>
+                  </td>
+                  <% if(user && user.mClass=='kjs'){ %>
+                  <td class="text-center text-nowrap">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a href="/addmem/view/<%= item.addmem_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a href="/addmem/edit/<%= item.addmem_id %>" class="btn btn-outline-warning" title="แก้ไข">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a href="/addmem/delete/<%= item.addmem_id %>" class="btn btn-outline-danger" title="ลบ" 
+                         onclick="return confirm('ต้องการลบข้อมูลสมาชิกนี้?\nรหัส: <%= item.addmem_code %>\nปี: <%= item.addmem_year %>')">
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                  <% } %>
+                </tr>
+              <% }); %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination && pagination.totalPages > 1) { %>
+  <nav aria-label="Addmem pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+        <a class="page-link" href="/addmem/list?page=<%= pagination.page - 1 %>&pageSize=<%= pagination.pageSize %><%= search ? '&search=' + search : '' %>">
+          <i class="bi bi-chevron-left"></i> ก่อนหน้า
+        </a>
+      </li>
+
+      <% // แสดงเลขหน้าแบบ dynamic 
+      const startPage = Math.max(1, pagination.page - 2);
+      const endPage = Math.min(pagination.totalPages, pagination.page + 2);
+      
+      if (startPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link" href="/addmem/list?page=1&pageSize=<%= pagination.pageSize %><%= search ? '&search=' + search : '' %>">1</a>
+        </li>
+        <% if (startPage > 2) { %>
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        <% } %>
+      <% } %>
+
+      <% for (let p = startPage; p <= endPage; p++) { %>
+        <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
+          <a class="page-link" href="/addmem/list?page=<%= p %>&pageSize=<%= pagination.pageSize %><%= search ? '&search=' + search : '' %>"><%= p %></a>
+        </li>
+      <% } %>
+
+      <% if (endPage < pagination.totalPages) { %>
+        <% if (endPage < pagination.totalPages - 1) { %>
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        <% } %>
+        <li class="page-item">
+          <a class="page-link" href="/addmem/list?page=<%= pagination.totalPages %>&pageSize=<%= pagination.pageSize %>&search=<%= search %>"><%= pagination.totalPages %></a>
+        </li>
+      <% } %>
+
+      <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+        <a class="page-link" href="/addmem/list?page=<%= pagination.page + 1 %>&pageSize=<%= pagination.pageSize %>&search=<%= search %>">
+          ถัดไป <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <% } %>
+
+</div>
+
+<%- include('partials/footer') %>

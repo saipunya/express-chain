@@ -63,7 +63,11 @@
           <th>รหัส</th>
           <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
           <th>S6</th><th>S7</th><th>S8</th><th>S9</th><th>S10</th>
-          <th>จัดการ</th>
+          <!-- show only if user is admin or kts -->
+          <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
+            <th>จัดการ</th>
+          <% } %>
+         
         </tr>
       </thead>
       <tbody class="table-group-divider">
@@ -124,6 +128,8 @@
                 <% } %>
               </td>
             <% } %>
+           
+            <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
             <td class="text-center">
               <div class="d-flex justify-content-center gap-1">
                 <button type="button" class="btn btn-primary btn-sm" onclick="toggleEdit('<%= p.pr_id %>')">แก้ไข</button>
@@ -132,6 +138,7 @@
                 </form>
               </div>
             </td>
+            <% } %>
           </tr>
           <tr id="edit-row-<%= p.pr_id %>" class="edit-row" style="display:none;">
             <td colspan="12">

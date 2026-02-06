@@ -729,8 +729,8 @@ chamraController.process = async (req, res) => {
     // Fetch all chamra records with process data
     const processes = await Chamra.getAllProcess();
     
-    res.render('chamra/process', {
-      data: processes || [],
+    res.render('chamra/process/list', {
+      processes: processes || [],
       user: req.session.user || null,
       title: 'กระบวนการชำระบัญชี - CoopChain'
     });

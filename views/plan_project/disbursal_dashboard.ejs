@@ -1,0 +1,672 @@
+<%- include('../partials/header') %>
+
+<nav class="dashboard-nav">
+  <div class="dashboard-nav__brand">
+    <span class="dashboard-nav__logo">Plan</span>
+    <span class="dashboard-nav__divider"></span>
+    <span>แดชบอร์ดการเบิกเงิน</span>
+  </div>
+  <div class="dashboard-nav__actions">
+    <a href="/plan" class="btn btn-outline-secondary btn-sm">กลับหน้าหลัก</a>
+    <a href="/planproject/disbursal-dashboard" class="btn btn-link btn-sm text-muted">รีเฟรช</a>
+  </div>
+</nav>
+
+<div class="disbursal-dashboard">
+  <header class="disbursal-hero">
+    <div class="hero-copy">
+      <p class="hero-tag">ภาพรวมการเบิกจ่ายโครงการ</p>
+      <h1>แดชบอร์ดการเบิกเงิน</h1>
+      <p class="hero-lede">ติดตามยอดเบิกในภาพรวม เปรียบเทียบกับงบประมาณที่ได้รับแต่ละโครงการ พร้อมจัดลำดับความเสี่ยงตามอัตราการใช้งบ.</p>
+    </div>
+    <div class="hero-panel">
+      <div class="hero-panel__heading">
+        <i class="bi bi-funnel-fill"></i>
+        <div>
+          <p class="m-0 fw-semibold">กรองตามผู้รับผิดชอบ</p>
+          <small class="text-muted">เลือกเพื่อดูเฉพาะโครงการที่ดูแลโดยเจ้าหน้าที่คนนั้น</small>
+        </div>
+      </div>
+      <form class="hero-filter" method="get">
+        <select name="pro_respon_id" class="form-select">
+          <option value="" <%= !selectedResponId ? 'selected' : '' %>>โครงการทั้งหมด</option>
+          <% users.forEach((user) => { %>
+            <option value="<%= user.m_id %>" <%= String(user.m_id) === String(selectedResponId) ? 'selected' : '' %>><%= user.m_name || user.m_user %> (<%= user.m_user %>)</option>
+          <% }) %>
+        </select>
+        <div class="hero-filter__actions">
+          <button type="submit" class="btn btn-primary btn-sm">นำไปใช้</button>
+          <a href="/planproject/disbursal-dashboard" class="btn btn-outline-light btn-sm">รีเซ็ต</a>
+          <a href="/plan" class="btn btn-link btn-sm text-muted px-0">กลับหน้าหลัก</a>
+        </div>
+      </form>
+    </div>
+  </header>
+
+  <section class="metric-grid">
+    <article class="metric-card">
+      <p>งบประมาณรวมโครงการ</p>
+      <h3><%= Number(totals.totalBudget || 0).toLocaleString('th-TH') %> <span>บาท</span></h3>
+      <small class="text-muted"><%= projects.length %> โครงการ</small>
+    </article>
+    <article class="metric-card">
+      <p>เบิกจ่ายไปแล้ว</p>
+      <h3 class="text-warning"><%= Number(totals.totalSpent || 0).toLocaleString('th-TH') %> <span>บาท</span></h3>
+      <small class="text-muted">คงเหลือ <%= Number(totals.remainingBudget || 0).toLocaleString('th-TH') %> บาท</small>
+    </article>
+    <article class="metric-card">
+      <p>อัตราการใช้รวม</p>
+      <h3><%= totals.percentUsed %>%</h3>
+      <div class="metric-progress">
+        <span class="metric-progress__bar" style="width: <%= Math.min(totals.percentUsed, 100) %>%"></span>
+      </div>
+      <small class="text-muted">สูงสุด 999% (ถ้ามีจ่ายเกิน)</small>
+    </article>
+    <article class="metric-card">
+      <p>จำนวนครั้งการเบิกทั้งสิ้น</p>
+      <h3 class="text-info"><%= totals.disbursalCount %> ครั้ง</h3>
+      <small class="text-muted">เฉลี่ยโครงการละ <%= projects.length ? Math.round(totals.disbursalCount / projects.length) : 0 %> ครั้ง</small>
+    </article>
+  </section>
+
+  <section class="highlight-section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">โครงการที่ควรจับตา</p>
+        <h2>โครงการที่ใช้งบสูงเกินค่าเฉลี่ย</h2>
+      </div>
+      <p class="text-muted mb-0">เรียงจากเปอร์เซ็นต์การใช้สูงสุด แม้ไม่มีข้อมูลการเบิกจะไม่แสดงการ์ด</p>
+    </div>
+    <div class="highlight-grid">
+      <% if (!highlightProjects.length) { %>
+        <div class="highlight-empty">ยังไม่มีข้อมูลการเบิกเงินเพียงพอ</div>
+      <% } else { %>
+        <% highlightProjects.forEach((project) => { %>
+          <article class="highlight-card">
+            <header>
+              <span class="project-code">โครงการ <%= project.pro_code %></span>
+              <span class="badge badge-soft text-white" style="background: rgba(255,255,255,.2)"><%= project.statusLabel %></span>
+            </header>
+            <h3><%= project.pro_subject %></h3>
+            <p class="text-muted mb-2">ผู้รับผิดชอบ: <%= project.pro_respon || 'ยังไม่ระบุ' %></p>
+            <div class="highlight-progress">
+              <div class="highlight-progress__track">
+                <span class="highlight-progress__bar" style="width: <%= Math.min(project.percentUsed, 100) %>%"></span>
+              </div>
+              <div class="highlight-progress__label">
+                <span><%= project.percentUsed %>%</span>
+                <small>คงเหลือ <%= Number(project.remainingBudget || 0).toLocaleString('th-TH') %> บาท</small>
+              </div>
+            </div>
+            <div class="highlight-footer">
+              <div class="text-muted"><i class="bi bi-clock"></i> ล่าสุด <%= project.lastDisbursalLabel %></div>
+            </div>
+          </article>
+        <% }) %>
+      <% } %>
+    </div>
+  </section>
+
+  <% const planGroupsList = typeof planGroups !== 'undefined' ? planGroups : []; %>
+  <section class="plan-group-section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">แผนงานหลัก</p>
+        <h2>แยกข้อมูลการเบิกตามแผนงาน</h2>
+      </div>
+      <p class="text-muted mb-0">รวมยอดงบและจำนวนโครงการที่เชื่อมโยงกับแผนงานหลักแต่ละรายการ</p>
+    </div>
+    <% if (!planGroupsList.length) { %>
+      <div class="highlight-empty">ยังไม่มีข้อมูลแผนงานหลักที่สามารถแสดงผลได้</div>
+    <% } else { %>
+        <div class="plan-grid">
+          <% planGroupsList.forEach((plan) => { %>
+          <article class="plan-card">
+            <div class="plan-card__header">
+              <div>
+                <p class="text-muted mb-1">แผนงานหลัก</p>
+                <h3><%= plan.label %></h3>
+              </div>
+              <span class="plan-card__code"><%= plan.planCode === 'UNASSIGNED' ? 'ไม่ระบุ' : plan.planCode %></span>
+            </div>
+            <div class="plan-card__metrics">
+              <div>
+                <p class="text-muted mb-1">งบประมาณรวม</p>
+                <strong><%= Number(plan.totalBudget).toLocaleString('th-TH') %> บาท</strong>
+              </div>
+              <div>
+                <p class="text-muted mb-1">เบิกแล้ว</p>
+                <strong class="text-warning"><%= Number(plan.totalSpent).toLocaleString('th-TH') %> บาท</strong>
+              </div>
+              <div>
+                <p class="text-muted mb-1">คงเหลือ</p>
+                <strong class="text-success"><%= Number(plan.remainingBudget).toLocaleString('th-TH') %> บาท</strong>
+              </div>
+            </div>
+            <div class="progress plan-progress">
+              <span class="progress-bar" style="width: <%= Math.min(plan.percentUsed, 100) %>%"></span>
+            </div>
+            <div class="plan-card__stat">
+              <span>ใช้งบ <strong><%= plan.percentUsed %>%</strong></span>
+              <span><%= plan.projectCount %> โครงการ / <%= plan.disbursalCount %> ครั้ง</span>
+            </div>
+            <div class="plan-card__chips">
+              <% plan.projects.slice(0, 3).forEach((proj) => { %>
+                <span><%= proj.pro_code %></span>
+              <% }) %>
+              <% if (plan.projects.length > 3) { %>
+                <span>+<%= plan.projects.length - 3 %> โครงการอื่น</span>
+              <% } %>
+            </div>
+            <% if (plan.projects.length) { %>
+              <div class="plan-card__projects">
+                <div class="plan-card__projects-head">
+                  <span>โครงการ</span>
+                  <span class="text-end">เบิกแล้ว</span>
+                  <span class="text-end">งบโครงการ</span>
+                  <span class="text-end">คงเหลือ</span>
+                </div>
+                <% plan.projects.forEach((proj) => { %>
+                  <div class="plan-project-row">
+                    <div>
+                      <p class="mb-0 fw-semibold"><%= proj.pro_subject %></p>
+                      <small class="text-muted">
+                        <%= proj.pro_code %> • <%= proj.disbursalCount %> ครั้ง
+                        <% if (proj.lastDisbursalLabel) { %>
+                          • ล่าสุด <%= proj.lastDisbursalLabel %>
+                        <% } %>
+                      </small>
+                    </div>
+                    <div class="plan-project-row__value text-end text-warning fw-semibold"><%= Number(proj.totalSpent).toLocaleString('th-TH') %></div>
+                    <div class="plan-project-row__value text-end text-primary fw-semibold"><%= Number(proj.totalBudget).toLocaleString('th-TH') %></div>
+                    <div class="plan-project-row__value text-end text-success fw-semibold"><%= Number(proj.remainingBudget).toLocaleString('th-TH') %></div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+            <div class="plan-card__months">
+              <p class="text-muted small mb-1">เดือนที่รายงานยอดเบิกจ่าย</p>
+              <% if (plan.months && plan.months.length) { %>
+                <div class="plan-card__months-list">
+                  <% plan.months.forEach((month) => { %>
+                    <div class="plan-card__month-row">
+                      <span><%= month.label || month.month %></span>
+                      <span><%= Number(month.totalAmount || 0).toLocaleString('th-TH') %> บาท</span>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="text-muted small">ยังไม่มีการเบิก</div>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="table-section">
+    <div class="table-card">
+      <div class="table-card__head">
+        <div>
+          <p class="eyebrow">ตารางสรุปเบิกเงิน</p>
+          <h2>ภาพรวมทุกโครงการ</h2>
+        </div>
+        <div class="table-card__meta">
+          <span><i class="bi bi-list"></i> แสดง <%= projects.length %> โครงการ</span>
+        </div>
+      </div>
+      <% if (!projects.length) { %>
+        <div class="alert alert-light border text-center m-0">
+          ยังไม่มีโครงการที่สามารถแสดงผลได้
+        </div>
+      <% } else { %>
+        <div class="table-wrapper">
+          <table class="table table-borderless align-middle">
+            <thead>
+              <tr>
+                <th>โครงการ</th>
+                <th>ผู้รับผิดชอบ</th>
+                <th class="text-end">งบประมาณ</th>
+                <th class="text-end">เบิกแล้ว</th>
+                <th class="text-end">คงเหลือ</th>
+                <th class="text-center">ความก้าวหน้า</th>
+                <th class="text-center">ครั้ง</th>
+                <th class="text-center">ล่าสุด</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% projects.forEach((project) => { %>
+                <tr>
+                  <td>
+                    <div class="project-name">
+                      <p class="mb-0 fw-semibold"><%= project.pro_subject %></p>
+                      <small class="text-muted"><%= project.pro_code %></small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge badge-soft" style="background: rgba(255,255,255,.1)"><%= project.statusLabel %></span>
+                    <div class="text-muted small"><%= project.pro_respon || 'ยังไม่ระบุ' %></div>
+                  </td>
+                  <td class="text-end text-primary fw-semibold"><%= Number(project.totalBudget).toLocaleString('th-TH') %></td>
+                  <td class="text-end text-warning fw-semibold"><%= Number(project.totalSpent).toLocaleString('th-TH') %></td>
+                  <td class="text-end text-success fw-semibold"><%= Number(project.remainingBudget).toLocaleString('th-TH') %></td>
+                  <td>
+                    <div class="progress mini-progress">
+                      <span class="progress-bar" style="width: <%= Math.min(project.percentUsed, 100) %>%"></span>
+                    </div>
+                    <small class="text-muted"><%= project.percentUsed %>%</small>
+                  </td>
+                  <td class="text-center"><%= project.disbursalCount %></td>
+                  <td class="text-center"><%= project.lastDisbursalLabel %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</div>
+
+<style>
+  :root {
+    --surface: #f8f9ff;
+    --surface-soft: #ffffff;
+    --text-muted: #6c757d;
+    --border-soft: #e2e8f0;
+  }
+  .disbursal-dashboard {
+    font-family: 'Sarabun', 'Inter', sans-serif;
+    padding: 2rem 1.5rem 4rem;
+    color: #0f172a;
+    background: var(--surface);
+  }
+  .dashboard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .dashboard-nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1rem;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  .dashboard-nav__logo {
+    font-size: 1.25rem;
+  }
+  .dashboard-nav__divider {
+    width: 1px;
+    height: 1.25rem;
+    background: rgba(15, 23, 42, 0.2);
+  }
+  .dashboard-nav__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .disbursal-hero {
+    border-radius: 14px;
+    background: var(--surface-soft);
+    padding: 2rem;
+    color: #0f172a;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+  }
+  .hero-copy h1 {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .hero-lede {
+    max-width: 36rem;
+  }
+  .hero-tag {
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    opacity: 0.85;
+  }
+  .hero-panel {
+    background: #f7f7fb;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-soft);
+  }
+  .hero-panel__heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .hero-panel__heading i {
+    font-size: 1.75rem;
+  }
+  .hero-filter select {
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    background: #fff;
+    color: #0f172a;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .hero-filter__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .metric-card {
+    background: var(--surface-soft);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border-soft);
+  }
+  .metric-card h3 {
+    font-size: 1.9rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+  .metric-card span {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .metric-progress {
+    background: var(--border-soft);
+    border-radius: 999px;
+    height: 6px;
+    margin: 0.75rem 0 0.25rem;
+  }
+  .metric-progress__bar {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #f6c343, #fd7e14);
+    border-radius: 999px;
+  }
+  .highlight-section {
+    margin-bottom: 2rem;
+  }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+  .highlight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .highlight-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .highlight-card header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+  }
+  .project-code {
+    font-weight: 600;
+    color: #0d6efd;
+  }
+  .highlight-progress__track {
+    height: 8px;
+    border-radius: 999px;
+    background: #eef2ff;
+    overflow: hidden;
+  }
+  .highlight-progress__bar {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #0d6efd, #6c63ff);
+    transition: width 0.6s ease;
+  }
+  .highlight-progress__label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .highlight-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .highlight-empty {
+    padding: 2rem;
+    border-radius: 1rem;
+    background: #f7f8fc;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .plan-group-section {
+    margin-bottom: 2rem;
+  }
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .plan-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .plan-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .plan-card__header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  .plan-card__code {
+    font-size: 0.85rem;
+    color: #0d6efd;
+    border: 1px solid rgba(13, 110, 253, 0.3);
+    padding: 0.25rem 0.8rem;
+    border-radius: 1rem;
+    font-weight: 700;
+  }
+  .plan-card__metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+  }
+  .plan-card__metrics strong {
+    display: block;
+    font-size: 1.1rem;
+  }
+  .plan-progress {
+    height: 6px;
+    background: #eff2ff;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .plan-progress .progress-bar {
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    display: block;
+    height: 100%;
+  }
+  .plan-card__stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .plan-card__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+  }
+  .plan-card__chips span {
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 999px;
+    padding: 0.3rem 0.65rem;
+  }
+  .plan-card__projects {
+    margin-top: 1rem;
+    border-top: 1px dashed rgba(13, 110, 253, 0.2);
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .plan-card__projects-head {
+    display: grid;
+    grid-template-columns: 1fr repeat(3, minmax(90px, 1fr));
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .plan-project-row {
+    display: grid;
+    grid-template-columns: 1fr repeat(3, minmax(90px, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+  .plan-project-row__value {
+    font-size: 0.85rem;
+  }
+  .plan-card__months {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .plan-card__months-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+  }
+  .plan-card__month-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #495057;
+  }
+  .plan-project-row small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .table-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 40px 60px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(13, 110, 253, 0.05);
+  }
+  .table-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+  }
+  .table-card__meta span {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    border-bottom: 2px solid rgba(13, 110, 253, 0.2);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: #4b567b;
+    padding-bottom: 0.75rem;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(13, 110, 253, 0.08);
+    transition: background 0.2s ease;
+  }
+  tbody tr:hover {
+    background: rgba(13, 110, 253, 0.03);
+  }
+  .project-name p {
+    margin-bottom: 0.1rem;
+  }
+  .project-name small {
+    color: var(--text-muted);
+  }
+  .badge-soft {
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(13, 110, 253, 0.2);
+  }
+  .mini-progress {
+    height: 6px;
+    background: #f1f3f7;
+    border-radius: 999px;
+    position: relative;
+  }
+  .mini-progress .progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0dcaf0, #20c997);
+  }
+  @media (max-width: 768px) {
+    .disbursal-dashboard {
+      padding: 1.5rem 1rem 3rem;
+    }
+    .hero-filter__actions {
+      flex-direction: column;
+    }
+    .table-card__head {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<%- include('../partials/footer') %>

@@ -3,6 +3,7 @@ const planMainModel = require('../models/planMainModel');
 const planActivityModel = require('../models/planActivity');
 const PlanKpi = require('../models/planKpi');
 const PlanKpiMonthly = require('../models/planKpiMonthly');
+const PlanBudgetDisbursal = require('../models/planBudgetDisbursal');
 const thaiDate = require('../utils/thaiDate');
 const userModel = require('../models/userModel');
 const db = require('../config/db');
@@ -214,6 +215,205 @@ exports.activitiesOverviewPage = async (req, res) => {
   } catch (error) {
     console.error('Error loading project activity overview:', error);
     res.status(500).send('ไม่สามารถโหลดข้อมูลโครงการและกิจกรรมได้');
+  }
+};
+
+exports.disbursalDashboardPage = async (req, res) => {
+  try {
+    const responIdRaw = req.query.pro_respon_id;
+    const parsedResponId = Number.isFinite(Number(responIdRaw)) ? Number(responIdRaw) : '';
+    const projectFilter = parsedResponId ? { pro_respon_id: parsedResponId } : undefined;
+
+    const [projects, users, summaryQueryResult] = await Promise.all([
+      projectModel.getAll(projectFilter),
+      userModel.findActiveUsers(),
+      db.query(
+        `SELECT
+          pro_id,
+          COUNT(*) AS disbursal_count,
+          SUM(amount) AS total_spent,
+          MAX(disbursal_date) AS last_disbursal_date
+         FROM plan_budget_disbursal
+         GROUP BY pro_id`
+      )
+    ]);
+
+    const [summaryRows = []] = summaryQueryResult || [];
+    const summaryMap = summaryRows.reduce((acc, row) => {
+      acc[row.pro_id] = {
+        disbursalCount: Number(row.disbursal_count || 0),
+        totalSpent: parseFloat(row.total_spent) || 0,
+        lastDisbursalDate: row.last_disbursal_date
+      };
+      return acc;
+    }, {});
+
+    const projectsWithStats = projects.map((project) => {
+      const budget = Number(project.pro_budget) || 0;
+      const summary = summaryMap[project.pro_id] || {};
+      const spent = summary.totalSpent || 0;
+      const remaining = Math.max(0, budget - spent);
+      const percentUsed = budget > 0 ? Math.min(Math.round((spent / budget) * 100), 999) : 0;
+      const statusInfo = ACTIVITY_STATUS[project.pro_status] || { label: 'ยังไม่มีกำหนด', badge: 'secondary' };
+
+      return {
+        ...project,
+        totalBudget: budget,
+        totalSpent: spent,
+        remainingBudget: remaining,
+        percentUsed,
+        disbursalCount: summary.disbursalCount || 0,
+        lastDisbursalLabel: summary.lastDisbursalDate ? thaiDate(summary.lastDisbursalDate) : 'ยังไม่มีข้อมูล',
+        statusLabel: statusInfo.label,
+        statusBadge: statusInfo.badge
+      };
+    });
+
+    const planMains = await planMainModel.getAll();
+    const planMainMap = planMains.reduce((acc, plan) => {
+      if (plan && plan.ma_code) {
+        acc[plan.ma_code] = plan;
+      }
+      return acc;
+    }, {});
+
+    const planGroupsAccumulator = {};
+    projectsWithStats.forEach((project) => {
+      const planCode = project.pro_macode && project.pro_macode.trim() ? project.pro_macode : 'UNASSIGNED';
+      if (!planGroupsAccumulator[planCode]) {
+        const planLabel = planMainMap[planCode]?.ma_subject || (planCode === 'UNASSIGNED' ? 'ไม่ระบุแผนหลัก' : planCode);
+        planGroupsAccumulator[planCode] = {
+          planCode,
+          label: planLabel,
+          totalBudget: 0,
+          totalSpent: 0,
+          remainingBudget: 0,
+          percentUsed: 0,
+          disbursalCount: 0,
+          projectCount: 0,
+          projects: []
+        };
+      }
+
+      const group = planGroupsAccumulator[planCode];
+      group.totalBudget += project.totalBudget;
+      group.totalSpent += project.totalSpent;
+      group.remainingBudget += project.remainingBudget;
+      group.disbursalCount += project.disbursalCount;
+      group.projectCount += 1;
+      group.projects.push({
+        pro_code: project.pro_code,
+        pro_subject: project.pro_subject,
+        totalBudget: project.totalBudget,
+        totalSpent: project.totalSpent,
+        remainingBudget: project.remainingBudget,
+        disbursalCount: project.disbursalCount,
+        lastDisbursalLabel: project.lastDisbursalLabel,
+        statusLabel: project.statusLabel,
+        percentUsed: project.percentUsed
+      });
+    });
+
+    const planGroups = Object.values(planGroupsAccumulator)
+      .map((group) => ({
+        ...group,
+        percentUsed: group.totalBudget > 0 ? Math.min(Math.round((group.totalSpent / group.totalBudget) * 100), 999) : 0
+      }))
+      .map((group) => ({
+        ...group,
+        projects: group.projects.sort((a, b) => b.totalSpent - a.totalSpent)
+      }))
+      .sort((a, b) => b.percentUsed - a.percentUsed);
+
+    const planCodes = [...new Set(planGroups.map((group) => group.planCode))];
+    const normalizedPlanCodes = planCodes.length ? planCodes : ['UNASSIGNED'];
+
+    const monthlyWhereClauses = [];
+    const monthlyParams = [];
+    if (projectFilter && projectFilter.pro_respon_id) {
+      monthlyWhereClauses.push('p.pro_respon_id = ?');
+      monthlyParams.push(projectFilter.pro_respon_id);
+    }
+    if (normalizedPlanCodes.length) {
+      monthlyWhereClauses.push("COALESCE(NULLIF(p.pro_macode, ''), 'UNASSIGNED') IN (?)");
+      monthlyParams.push(normalizedPlanCodes);
+    }
+    const monthlyWhereClause = monthlyWhereClauses.length ? `WHERE ${monthlyWhereClauses.join(' AND ')}` : '';
+
+    const [monthlyRows = []] = await db.query(
+      `SELECT
+        COALESCE(NULLIF(p.pro_macode, ''), 'UNASSIGNED') AS plan_code,
+        DATE_FORMAT(b.disbursal_date, '%Y-%m') AS report_month,
+        SUM(b.amount) AS total_amount
+       FROM plan_budget_disbursal b
+       JOIN plan_project p ON b.pro_id = p.pro_id
+       ${monthlyWhereClause}
+       GROUP BY plan_code, report_month
+       ORDER BY report_month DESC`,
+      monthlyParams
+    );
+
+    const planMonthlyMap = monthlyRows.reduce((acc, row) => {
+      const code = row.plan_code || 'UNASSIGNED';
+      if (!acc[code]) {
+        acc[code] = [];
+      }
+      acc[code].push({
+        month: row.report_month,
+        totalAmount: parseFloat(row.total_amount) || 0
+      });
+      return acc;
+    }, {});
+
+    const planGroupsWithMonths = planGroups.map((group) => ({
+      ...group,
+      months: (planMonthlyMap[group.planCode] || [])
+        .sort((a, b) => (b.month || '').localeCompare(a.month || ''))
+        .slice(0, 3)
+        .map((entry) => ({
+          ...entry,
+          label: toThaiMonthLabel(entry.month)
+        }))
+    }));
+
+    const totals = projectsWithStats.reduce(
+      (acc, project) => {
+        acc.totalBudget += project.totalBudget;
+        acc.totalSpent += project.totalSpent;
+        acc.remainingBudget += project.remainingBudget;
+        acc.disbursalCount += project.disbursalCount;
+        return acc;
+      },
+      { totalBudget: 0, totalSpent: 0, remainingBudget: 0, disbursalCount: 0 }
+    );
+    totals.percentUsed = totals.totalBudget > 0
+      ? Math.min(Math.round((totals.totalSpent / totals.totalBudget) * 100), 999)
+      : 0;
+
+    const sortedProjects = [...projectsWithStats].sort((a, b) => {
+      if (b.percentUsed !== a.percentUsed) {
+        return b.percentUsed - a.percentUsed;
+      }
+      return b.totalSpent - a.totalSpent;
+    });
+
+    const highlightProjects = sortedProjects
+      .filter((project) => project.disbursalCount > 0)
+      .slice(0, 3);
+
+    res.render('plan_project/disbursal_dashboard', {
+      title: 'แดชบอร์ดการเบิกเงิน',
+      projects: sortedProjects,
+      totals,
+      highlightProjects,
+      users,
+      selectedResponId: parsedResponId,
+      thaiDate,
+      planGroups: planGroupsWithMonths
+    });
+  } catch (error) {
+    console.error('Error loading disbursal dashboard:', error);
+    res.status(500).send('ไม่สามารถโหลดแดชบอร์ดการเบิกเงินได้');
   }
 };
 
@@ -436,6 +636,22 @@ exports.summaryPage = async (req, res) => {
     const currentUser = req.session?.user;
     const canEdit = currentUser && (project.pro_respon_id === currentUser.id || currentUser.level === 'admin');
 
+    // Fetch budget disbursal data
+    let budgetDisbursalData = [];
+    let monthlyBudgetSummary = [];
+    try {
+      budgetDisbursalData = await PlanBudgetDisbursal.getByProjectId(project.pro_id);
+      monthlyBudgetSummary = await PlanBudgetDisbursal.getMonthlyWithBalance(
+        project.pro_id,
+        parseFloat(project.pro_budget) || 0
+      );
+    } catch (error) {
+      console.error('Error fetching budget disbursal:', error);
+      // ส่งข้อมูลว่างไปแทนเพื่อไม่ให้ render error
+      budgetDisbursalData = [];
+      monthlyBudgetSummary = [];
+    }
+
     res.render('plan_project/summary', {
       title: `สรุปโครงการ ${project.pro_subject}`,
       project,
@@ -449,7 +665,9 @@ exports.summaryPage = async (req, res) => {
       canEdit,
       activityStatuses: ACTIVITY_STATUS,
       thaiDate,
-      formatMonthLabel: toThaiMonthLabel
+      formatMonthLabel: toThaiMonthLabel,
+      budgetDisbursalData,
+      monthlyBudgetSummary
     });
   } catch (error) {
     console.error('Error loading project summary:', error);

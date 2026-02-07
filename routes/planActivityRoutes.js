@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/planActivityController');
+const attachmentController = require('../controllers/planActivityAttachmentController');
 
 const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 const { requireAdminOrResponsibleByProjectCode } = require('../middlewares/projectAccess');
@@ -29,6 +30,8 @@ router.get('/report', (req, res, next) => {
 	if (!req.query.pro_code && req.session?.user?.mClass === 'admin') return next();
 	return requireAdminOrResponForReport(req, res, next);
 }, controller.monthlyReport);
+router.post('/report/attachments/upload', requireAdminOrResponForReport, attachmentController.uploadAttachment);
+router.delete('/report/attachments/:id', requireAdminOrResponForReport, attachmentController.deleteAttachment);
 router.post('/report', requireAdminOrResponForReport, controller.storeMonthlyStatuses);
 router.post('/report/kpi', requireAdminOrResponForReport, controller.storeMonthlyKpi);
 

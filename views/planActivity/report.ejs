@@ -34,6 +34,8 @@
   for (let diff = -2; diff <= 2; diff += 1) {
     thaiYearOptions.push(selectedGregorianYear + diff);
   }
+  const safeAttachments = Array.isArray(typeof attachments !== 'undefined' ? attachments : []) ? (attachments || []) : [];
+  const attachmentErrorMessage = typeof attachmentUploadError === 'string' ? attachmentUploadError : null;
 %>
 
 <div class="py-4">
@@ -217,6 +219,59 @@
           <button type="submit" class="btn btn-success"><i class="bi bi-save me-2"></i>บันทึกสถานะกิจกรรม</button>
         </div>
       </form>
+
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+              <h2 class="h5 mb-1">เอกสารแนบรายงาน</h2>
+              <p class="text-muted small mb-0">แนบไฟล์ PDF/Word/Excel หรือรูปภาพที่อธิบายผลดำเนินงานเดือนนี้</p>
+            </div>
+          </div>
+          <% if (attachmentErrorMessage) { %>
+            <div class="alert alert-warning small mb-3"><%= attachmentErrorMessage %></div>
+          <% } %>
+          <% if (!safeAttachments.length) { %>
+            <div class="alert alert-light border text-center">ยังไม่มีเอกสารแนบสำหรับเดือนนี้</div>
+          <% } else { %>
+            <div class="list-group attachments-list mb-3">
+              <% safeAttachments.forEach((file) => { const fileUrl = '/uploads/' + file.relative_path; const fileSize = Number(file.size || 0).toLocaleString('th-TH'); const uploadedAt = new Date(file.uploaded_at); %>
+                <div class="list-group-item list-group-item-action rounded-3 shadow-sm px-3 py-3 d-flex flex-column flex-md-row justify-content-between gap-3">
+                  <div class="flex-grow-1">
+                    <a href="<%= fileUrl %>" target="_blank" class="fw-semibold text-decoration-none">
+                      <i class="bi bi-file-earmark-text me-2"></i><%= file.original_name %>
+                    </a>
+                    <div class="text-muted small">
+                      อัปโหลดโดย <%= file.uploaded_by || 'ระบบ' %> | <%= uploadedAt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> เวลา <%= uploadedAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) %>
+                    </div>
+                    <div class="text-muted small">ขนาด <%= fileSize %> ไบต์</div>
+                  </div>
+                  <form class="d-inline-flex align-items-center" method="post" action="/planactivity/report/attachments/<%= file.id %>?pro_code=<%= encodeURIComponent(selectedProject) %>&month=<%= encodeURIComponent(isoMonthValue) %>&report_month=<%= encodeURIComponent(monthInput) %>">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
+                      <i class="bi bi-trash me-1"></i>ลบ
+                    </button>
+                  </form>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+          <form class="row g-3" action="/planactivity/report/attachments/upload?pro_code=<%= encodeURIComponent(selectedProject) %>&month=<%= encodeURIComponent(isoMonthValue) %>&report_month=<%= encodeURIComponent(monthInput) %>" method="post" enctype="multipart/form-data">
+            <div class="col-md-8">
+              <label for="attachment-file" class="form-label">เลือกไฟล์</label>
+              <input class="form-control" type="file" id="attachment-file" name="attachment" required>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-upload me-2"></i>อัปโหลดเอกสาร
+              </button>
+            </div>
+            <div class="col-12">
+              <p class="text-muted small mb-0">รองรับ PDF, Word, Excel, JPG, PNG ขนาดไม่เกิน 20MB</p>
+            </div>
+          </form>
+        </div>
+      </div>
     <% } %>
 
     <div class="mt-5">
@@ -469,5 +524,15 @@
     form.addEventListener('submit', syncMonthValue);
   });
 </script>
+
+<style>
+  .attachments-list .list-group-item {
+    border: 1px solid rgba(13, 110, 253, 0.15);
+    background: #ffffff;
+  }
+  .attachments-list .list-group-item a {
+    color: inherit;
+  }
+</style>
 
 <%- include('../partials/footer') %>

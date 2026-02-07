@@ -15,6 +15,21 @@ const TH_MONTHS = [
     'ธันวาคม'
 ];
 
+const TH_SHORT_MONTHS = [
+    'ม.ค.',
+    'ก.พ.',
+    'มี.ค.',
+    'เม.ย.',
+    'พ.ค.',
+    'มิ.ย.',
+    'ก.ค.',
+    'ส.ค.',
+    'ก.ย.',
+    'ต.ค.',
+    'พ.ย.',
+    'ธ.ค.'
+];
+
 const toThaiMonthLabel = (value) => {
     if (!value) {
         return '';
@@ -39,8 +54,81 @@ const toThaiMonthLabel = (value) => {
     return String(value);
 };
 
+const toThaiMonthShortLabel = (value) => {
+    if (!value) return '';
+    const [yearPart, monthPart] = String(value).split('-');
+    const monthIndex = Number(monthPart) - 1;
+    const shortName = TH_SHORT_MONTHS[monthIndex] || monthPart;
+    const buddhistYear = Number(yearPart) + 543;
+    return `${shortName} ${buddhistYear}`;
+};
+
+const getCurrentFiscalYear = (referenceDate = new Date()) => {
+    const year = referenceDate.getFullYear();
+    const month = referenceDate.getMonth() + 1;
+    const buddhistYear = year + 543;
+    return month >= 10 ? buddhistYear + 1 : buddhistYear;
+};
+
+const buildFiscalRange = (buddhistFiscalYear) => {
+    const fy = Number(buddhistFiscalYear);
+    if (!Number.isFinite(fy)) {
+        return null;
+    }
+    const startBe = fy - 1;
+    const startAd = startBe - 543;
+    const endAd = fy - 543;
+    return {
+        fy,
+        startDate: `${startAd}-10-01`,
+        endDate: `${endAd}-09-30`,
+        startMonth: `${startAd}-10`,
+        endMonth: `${endAd}-09`
+    };
+};
+
+const generateFiscalMonths = (startDate, endDate) => {
+    const months = [];
+    const pointer = new Date(`${startDate}T00:00:00`);
+    const limit = new Date(`${endDate}T00:00:00`);
+    while (pointer <= limit) {
+        const year = pointer.getFullYear();
+        const month = String(pointer.getMonth() + 1).padStart(2, '0');
+        const iso = `${year}-${month}`;
+        months.push({
+            iso,
+            label: toThaiMonthLabel(iso),
+            shortLabel: toThaiMonthShortLabel(iso)
+        });
+        pointer.setMonth(pointer.getMonth() + 1);
+    }
+    return months;
+};
+
 exports.index = async function (req, res) {
     try {
+        const requestedFy = Number.parseInt(String(req.query.fy ?? ''), 10);
+        const currentFy = getCurrentFiscalYear();
+        const selectedFiscalYear = Number.isFinite(requestedFy) ? requestedFy : currentFy;
+        const fiscalRange = buildFiscalRange(selectedFiscalYear);
+        if (!fiscalRange) {
+            throw new Error('Invalid fiscal year');
+        }
+        const { startDate, endDate, startMonth, endMonth } = fiscalRange;
+        const fiscalMonths = generateFiscalMonths(startDate, endDate);
+        const fiscalRangeLabel = `${toThaiMonthLabel(startMonth)} – ${toThaiMonthLabel(endMonth)}`;
+        const fiscalYearOptions = Array.from({ length: 5 }, (_, idx) => {
+            const fy = currentFy - idx;
+            return {
+                label: `ปีงบประมาณ ${fy}`,
+                value: fy
+            };
+        });
+        if (!fiscalYearOptions.some((option) => option.value === selectedFiscalYear)) {
+            fiscalYearOptions.push({ label: `ปีงบประมาณ ${selectedFiscalYear}`, value: selectedFiscalYear });
+        }
+        fiscalYearOptions.sort((a, b) => b.value - a.value);
+
         // รวมสถิติภาพรวม
         const [[planRow]] = await db.query('SELECT COUNT(*) AS total_plans FROM plan_main');
         const [[projectRow]] = await db.query('SELECT COUNT(*) AS total_projects FROM plan_project');
@@ -84,17 +172,18 @@ exports.index = async function (req, res) {
 
         const projectReportingSql =
             `SELECT
-                p.pro_id,
-                p.pro_code,
-                p.pro_subject AS pro_name,
-                COALESCE(act.total_activities, 0) AS total_activities,
-                COALESCE(act.completed_activities, 0) AS completed_activities,
-                act.latest_activity_month,
-                COALESCE(kpi.total_kpis, 0) AS total_kpis,
-                COALESCE(kpi.total_plan, 0) AS total_plan,
-                COALESCE(kpi.cumulative_actual, 0) AS cumulative_actual,
-                kpi.latest_report_month
-            FROM plan_project p
+                    p.pro_id,
+                    p.pro_code,
+                    p.pro_subject AS pro_name,
+                    p.pro_budget,
+                    COALESCE(act.total_activities, 0) AS total_activities,
+                    COALESCE(act.completed_activities, 0) AS completed_activities,
+                    act.latest_activity_month,
+                    COALESCE(kpi.total_kpis, 0) AS total_kpis,
+                    COALESCE(kpi.total_plan, 0) AS total_plan,
+                    COALESCE(kpi.cumulative_actual, 0) AS cumulative_actual,
+                    kpi.latest_report_month
+                FROM plan_project p
             LEFT JOIN (
                 SELECT
                     a.ac_procode,
@@ -120,15 +209,94 @@ exports.index = async function (req, res) {
 
         const [projectReportingRows] = await db.query(projectReportingSql);
 
-        const projectReporting = projectReportingRows.map((row) => {
+            const projectReporting = projectReportingRows.map((row) => {
             const totalPlan = Number(row.total_plan || 0);
             const cumulative = Number(row.cumulative_actual || 0);
             const achievementPercent = totalPlan > 0 ? (cumulative / totalPlan) * 100 : null;
             return {
                 ...row,
+                    budget: Number(row.pro_budget || 0),
                 achievementPercent,
                 latestKpiLabel: toThaiMonthLabel(row.latest_report_month),
                 latestActivityLabel: toThaiMonthLabel(row.latest_activity_month)
+            };
+        });
+
+        const operationMonthsMap = {};
+        const addOperationMonth = (proId, month) => {
+            if (!proId || !month) return;
+            const normalized = month.trim().slice(0, 7);
+            if (!normalized) return;
+            if (!operationMonthsMap[proId]) {
+                operationMonthsMap[proId] = new Set();
+            }
+            operationMonthsMap[proId].add(normalized);
+        };
+
+        const [activityMonthRows] = await db.query(
+            `SELECT p.pro_id, LEFT(am.report_month, 7) AS month
+             FROM plan_activity_monthly am
+             JOIN plan_activity a ON a.ac_id = am.ac_id
+             JOIN plan_project p ON p.pro_code = a.ac_procode
+             WHERE LEFT(am.report_month, 7) BETWEEN ? AND ?
+             GROUP BY p.pro_id, month`,
+            [startMonth, endMonth]
+        );
+        activityMonthRows.forEach((row) => addOperationMonth(row.pro_id, row.month));
+
+        const [kpiMonthRows] = await db.query(
+            `SELECT p.pro_id, LEFT(km.report_month, 7) AS month
+             FROM plan_kpi_monthly km
+             JOIN plan_kpi k ON k.kp_id = km.kp_id
+             JOIN plan_project p ON p.pro_code = k.kp_procode
+             WHERE LEFT(km.report_month, 7) BETWEEN ? AND ?
+             GROUP BY p.pro_id, month`,
+            [startMonth, endMonth]
+        );
+        kpiMonthRows.forEach((row) => addOperationMonth(row.pro_id, row.month));
+
+            const [disbursalRows] = await db.query(
+            `SELECT p.pro_id, DATE_FORMAT(b.disbursal_date, '%Y-%m') AS month, SUM(b.amount) AS total_amount
+             FROM plan_budget_disbursal b
+             JOIN plan_project p ON p.pro_id = b.pro_id
+             WHERE b.disbursal_date BETWEEN ? AND ?
+             GROUP BY p.pro_id, month`,
+            [startDate, endDate]
+        );
+            const disbursalMap = {};
+            disbursalRows.forEach((row) => {
+                if (!row.pro_id || !row.month) return;
+                const normalized = row.month.trim().slice(0, 7);
+                if (!normalized) return;
+                const amount = Number(row.total_amount || 0);
+                if (!disbursalMap[row.pro_id]) {
+                    disbursalMap[row.pro_id] = {};
+                }
+                disbursalMap[row.pro_id][normalized] = amount;
+            });
+
+        const projectReportingWithMonths = projectReporting.map((project) => {
+                let cumulativeSpent = 0;
+                const monthlyStatus = fiscalMonths.map((month) => {
+                    const operationsReported = operationMonthsMap[project.pro_id]?.has(month.iso) || false;
+                    const monthlyAmount = disbursalMap[project.pro_id]?.[month.iso] || 0;
+                    cumulativeSpent += monthlyAmount;
+                    return {
+                        ...month,
+                        operationsReported,
+                        disbursedAmount: monthlyAmount,
+                        cumulativeSpent,
+                        remainingBudget: Math.max(0, (project.budget || 0) - cumulativeSpent)
+                    };
+                });
+            const monthlyStatusMap = monthlyStatus.reduce((acc, entry) => {
+                acc[entry.iso] = entry;
+                return acc;
+            }, {});
+            return {
+                ...project,
+                monthlyStatus,
+                monthlyStatusMap
             };
         });
 
@@ -149,7 +317,11 @@ exports.index = async function (req, res) {
                 total: kpiRow?.total_kpis || 0,
             },
             planOverview,
-            projectReporting
+            projectReporting: projectReportingWithMonths,
+            fiscalMonths,
+            selectedFiscalYear,
+            fiscalRangeLabel,
+            fiscalYearOptions
         });
     } catch (error) {
         console.error(error);

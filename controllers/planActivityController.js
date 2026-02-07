@@ -3,6 +3,7 @@ const PlanProject = require('../models/planProject');
 const PlanActivityMonthly = require('../models/planActivityMonthly');
 const PlanKpi = require('../models/planKpi');
 const PlanKpiMonthly = require('../models/planKpiMonthly');
+const AttachmentModel = require('../models/planActivityMonthlyAttachment');
 
 const STATUS_OPTIONS = [
   { value: 2, label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
@@ -224,6 +225,7 @@ exports.monthlyReport = async (req, res) => {
   let kpiMetrics = [];
   let kpiSummary = { total: 0, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 };
   let historicalRecords = [];
+  let attachments = [];
 
   if (selectedProject) {
     activities = await PlanActivity.findByProjectCode(selectedProject);
@@ -298,6 +300,7 @@ exports.monthlyReport = async (req, res) => {
       console.error('Error fetching historical records:', error);
       historicalRecords = [];
     }
+    attachments = await AttachmentModel.findByProjectAndMonth(selectedProject, normalizedMonth);
   }
 
   const summary = activities.reduce(
@@ -324,7 +327,9 @@ exports.monthlyReport = async (req, res) => {
     kpiMetrics,
     kpiSummary,
     monthLabel,
-    historicalRecords
+    historicalRecords,
+    attachments,
+    attachmentUploadError: req.query.upload_error
   });
 };
 

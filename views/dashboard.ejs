@@ -41,7 +41,10 @@
               </div>
               <h4 class="fw-bold mb-1 text-dark"><i class="bi bi-person-badge me-1 text-primary"></i><%= user.fullname %></h4>
               <p class="text-muted mb-3"><i class="bi bi-award me-1"></i> <%= user.position %></p>
-              
+              <!-- for admin link only -->
+              <% if (user && user.mClass === 'admin') { %>
+                <a href="/auditlog" class="btn btn-primary btn-action mb-2"><i class="bi bi-speedometer2 me-1"></i> auditlog</a>
+              <% } %>
               <a href="/auth/logout" class="btn btn-outline-danger w-100"><i class="bi bi-box-arrow-right me-1"></i> ออกจากระบบ</a>
             </div>
           </div>
@@ -87,8 +90,47 @@
           </div>
         </div>
       </div>
+    
 
       <!-- Feature Navigation Grid -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <a href="/allCoop" class="feature-link">
+            <div class="feature-card gradient-red">
+              <div class="icon"><i class="bi bi-file-earmark-text"></i></div>
+              <h5>ข้อมูลสถาบัน</h5>
+              <p>ข้อมูลสหกรณ์และกลุ่มเกษตรกร</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="/command" class="feature-link">
+            <div class="feature-card gradient-teal">
+              <div class="icon"><i class="bi bi-book"></i></div>
+              <h5>คำสั่งสำนักงาน</h5>
+              <p>คำสั่งต่างๆ</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="/rq2" class="feature-link">
+            <div class="feature-card gradient-bluegreen">
+              <div class="icon"><i class="bi bi-graph-up"></i></div>
+              <h5>รายงาน RQ2</h5>
+              <p>สำนักงานตรวจบัญชี</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="<%= user.mClass === 'admin' ? '/activeCoop/' : '#' %>" class="feature-link <%= user.mClass === 'admin' ? '' : 'disabled' %>">
+            <div class="feature-card gradient-pink">
+              <div class="icon"><i class="bi bi-gear"></i></div>
+              <h5>ตั้งค่า</h5>
+              <p>ระบบอื่นๆ</p>
+            </div>
+          </a>
+        </div>
+      </div>
       <div class="row g-4 mb-4">
         <div class="col-md-3">
           <a href="/project" class="feature-link">

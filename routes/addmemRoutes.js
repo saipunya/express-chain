@@ -2,28 +2,26 @@ const express = require('express');
 const router = express.Router();
 const addmemController = require('../controllers/addmemController');
 
-// แสดงรายการ (พร้อม pagination)
+// Verify controller is loaded
+if (!addmemController || typeof addmemController.form !== 'function') {
+  throw new Error('addmemController.form is not a function');
+}
+
+// GET: Show form for adding/editing
+router.get('/add', addmemController.form);
+router.get('/edit/:id', addmemController.form);
+
+// POST: Save or Update
+router.post('/save', addmemController.save);
+router.post('/update/:id', addmemController.update);
+
+// GET: List all
 router.get('/list', addmemController.list);
 
-// แสดงฟอร์มเพิ่ม
-router.get('/add', addmemController.showAddForm);
-
-// บันทึกข้อมูลใหม่
-router.post('/save', addmemController.saveAddmem);
-
-// แสดงรายละเอียด
+// GET: View one
 router.get('/view/:id', addmemController.viewOne);
 
-// แสดงฟอร์มแก้ไข
-router.get('/edit/:id', addmemController.showEditForm);
-
-// อัปเดตข้อมูล
-router.post('/update/:id', addmemController.updateAddmem);
-
-// ลบข้อมูล
+// DELETE: Delete record
 router.get('/delete/:id', addmemController.deleteAddmem);
-
-// API สำหรับค้นหาตามรหัส (AJAX)
-router.get('/search', addmemController.searchByCode);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const addmemModel = require('../models/addmemModel');
+const db = require('../config/db');
 
 // แสดงรายการ (รองรับ pagination)
 exports.list = async (req, res) => {
@@ -33,56 +34,100 @@ exports.list = async (req, res) => {
   }
 };
 
-// แสดงฟอร์มเพิ่ม
-exports.showAddForm = async (req, res) => {
+// GET: Show form for adding new or editing existing member
+exports.form = async (req, res) => {
   try {
-    // ดึงข้อมูล 5 รายการล่าสุดมาแสดง
-    const recentData = await addmemModel.findRecent(5);
-    
-    res.render('addmem_form', { 
-      title: 'เพิ่มสมาชิกเพิ่มเติม',
-      recentData,
-      action: 'add',
-      record: {}
+    const { id } = req.params;
+    let record = {};
+    let action = 'add';
+
+    // Fetch all active cooperatives for dropdown
+    const connection = await db.getConnection();
+    const [coops] = await connection.query(
+      'SELECT c_code, c_name FROM active_coop WHERE c_status = ? ORDER BY c_name',
+      ['ดำเนินการ']
+    );
+
+    // If editing, fetch the record
+    if (id) {
+      const [rows] = await connection.query(
+        'SELECT * FROM add_mem WHERE addmem_id = ?',
+        [id]
+      );
+      if (rows.length > 0) {
+        record = rows[0];
+        action = 'edit';
+      }
+    }
+
+    // Fetch recent data - FIX: Use COLLATE to match collations
+    const [recentData] = await connection.query(
+      `SELECT a.*, c.c_name FROM add_mem a
+       LEFT JOIN active_coop c ON a.c_code COLLATE utf8mb3_general_ci = c.c_code
+       ORDER BY a.addmem_id DESC LIMIT 10`
+    );
+    connection.release();
+
+    res.render('addmem_form', {
+      action,
+      record,
+      coops: coops || [],
+      recentData: recentData || [],
+      user: req.user || null,
+      pageTitle: action === 'edit' ? 'แก้ไขสมาชิก' : 'เพิ่มสมาชิก'
     });
-  } catch (error) {
-    console.error('Error in addmem form:', error);
-    res.status(500).send('เกิดข้อผิดพลาดในการโหลดฟอร์ม');
+  } catch (err) {
+    console.error('Error in form:', err);
+    res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาด: ' + err.message });
   }
 };
 
-// บันทึกข้อมูล
-exports.saveAddmem = async (req, res) => {
+// POST: Save new member
+exports.save = async (req, res) => {
   try {
+    const { addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_saveby, addmem_savedate } = req.body;
+
+    if (!addmem_code) {
+      return res.status(400).render('error_page', { message: 'กรุณาเลือกสหกรณ์' });
+    }
+
+    const connection = await db.getConnection();
+    await connection.query(
+      `INSERT INTO add_mem (addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_saveby, addmem_savedate)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_saveby, addmem_savedate]
+    );
+    connection.release();
+
+    res.redirect('/addmem/list?success=บันทึกข้อมูลสำเร็จ');
+  } catch (err) {
+    console.error('Error in save:', err);
+    res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาด: ' + err.message });
+  }
+};
+
+// POST: Update existing member
+exports.update = async (req, res) => {
+  try {
+    const { id } = req.params;
     const { addmem_code, addmem_year, addmem_saman, addmem_somtob } = req.body;
-    
-    // ตรวจสอบข้อมูลที่จำเป็น
-    if (!addmem_code || !addmem_year || !addmem_saman || !addmem_somtob) {
-      return res.status(400).send('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+    if (!addmem_code) {
+      return res.status(400).render('error_page', { message: 'กรุณาเลือกสหกรณ์' });
     }
-    
-    // ตรวจสอบว่ารหัสซ้ำหรือไม่
-    const isDuplicate = await addmemModel.isCodeDuplicate(addmem_code);
-    if (isDuplicate) {
-      return res.status(400).send('รหัสสมาชิกนี้มีอยู่แล้ว');
-    }
-    
-    // เตรียมข้อมูลสำหรับบันทึก
-    const data = {
-      addmem_code,
-      addmem_year,
-      addmem_saman: parseInt(addmem_saman),
-      addmem_somtob: parseInt(addmem_somtob),
-      addmem_saveby: (req.user && req.user.fullname) ? req.user.fullname : 'guest',
-      addmem_savedate: new Date().toISOString().slice(0, 19).replace('T', ' ')
-    };
-    
-    await addmemModel.insert(data);
-    res.redirect('/addmem/list');
-    
-  } catch (error) {
-    console.error('Error saving addmem:', error);
-    res.status(500).send('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+
+    const connection = await db.getConnection();
+    await connection.query(
+      `UPDATE add_mem SET addmem_code = ?, addmem_year = ?, addmem_saman = ?, addmem_somtob = ?
+       WHERE addmem_id = ?`,
+      [addmem_code, addmem_year, addmem_saman, addmem_somtob, id]
+    );
+    connection.release();
+
+    res.redirect('/addmem/list?success=อัปเดตข้อมูลสำเร็จ');
+  } catch (err) {
+    console.error('Error in update:', err);
+    res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาด: ' + err.message });
   }
 };
 

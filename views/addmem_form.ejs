@@ -10,23 +10,31 @@
   </h3>
 
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
       <div class="card">
         <div class="card-body">
           <form action="<% if (action === 'edit') { %>/addmem/update/<%= record.addmem_id %><% } else { %>/addmem/save<% } %>" method="POST">
+            
+            <!-- Select Cooperative -->
             <div class="mb-3">
-              <label for="addmem_code" class="form-label">รหัสสมาชิก <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="addmem_code" name="addmem_code" 
-                     value="<%= record.addmem_code || '' %>" required 
-                     placeholder="กรอกรหัสสมาชิก" autofocus>
-              <div class="form-text">รหัสสมาชิกต้องไม่ซ้ำกับรายการอื่น</div>
+              <label for="addmem_code" class="form-label">เลือกสหกรณ์/กลุ่มเกษตรกร <span class="text-danger">*</span></label>
+              <select class="form-select" id="addmem_code" name="addmem_code" required>
+                <option value="">-- เลือกสถาบัน --</option>
+                <% (coops || []).forEach(coop => { %>
+                  <option value="<%= coop.c_code %>" 
+                    <% if (record && record.addmem_code === coop.c_code) { %>selected<% } %>>
+                    <%= coop.c_name %> (<%= coop.c_code %>)
+                  </option>
+                <% }); %>
+              </select>
+              <div class="form-text">เลือกสหกรณ์หรือกลุ่มเกษตรกรที่ต้องการเพิ่มข้อมูลสมาชิก</div>
             </div>
 
             <div class="mb-3">
               <label for="addmem_year" class="form-label">ปี <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="addmem_year" name="addmem_year" 
                      value="<%= record.addmem_year || '' %>" required 
-                     placeholder="เช่น 2026, 2569">
+                     placeholder="เช่น 2026, 2569" autofocus>
             </div>
 
             <div class="row">
@@ -50,9 +58,9 @@
 
             <!-- Hidden meta fields -->
             <input type="hidden" name="addmem_saveby" value="<%= (user && user.fullname) ? user.fullname : 'guest' %>" />
-            <input type="hidden" name="addmem_savedate" value="<%= new Date().toISOString().slice(0,19).replace('T',' ') %>" />
+            <input type="hidden" name="addmem_savedate" value="<%= new Date().toISOString().slice(0,10) %>" />
 
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 mt-4">
               <button type="submit" class="btn btn-success">
                 <% if (action === 'edit') { %>
                   💾 อัปเดตข้อมูล
@@ -70,7 +78,7 @@
       </div>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
       <!-- แสดงข้อมูลล่าสุด -->
       <% if (recentData && recentData.length > 0) { %>
       <div class="card">
@@ -79,13 +87,12 @@
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 table-sm">
               <thead class="table-light">
                 <tr>
-                  <th>รหัส</th>
+                  <th>สถาบัน</th>
                   <th>ปี</th>
                   <th>สมาชิก</th>
-                  <th>สมทบ</th>
                   <% if(user && user.mClass=='kjs'){ %>
                   <th>จัดการ</th>
                   <% } %>
@@ -94,20 +101,16 @@
               <tbody>
                 <% recentData.forEach(item => { %>
                   <tr>
-                    <td class="fw-bold"><%= item.addmem_code %></td>
-                    <td><%= item.addmem_year %></td>
-                    <td><%= item.addmem_saman %></td>
-                    <td><%= item.addmem_somtob %></td>
+                    <td class="fw-bold small"><%= item.c_name || item.addmem_code %></td>
+                    <td class="small"><%= item.addmem_year %></td>
+                    <td class="small"><%= item.addmem_saman %></td>
                     <% if(user && user.mClass=='kjs'){ %>
                     <td class="text-center text-nowrap">
                       <div class="btn-group btn-group-sm" role="group">
-                        <a href="/addmem/view/<%= item.addmem_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
-                          <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="/addmem/edit/<%= item.addmem_id %>" class="btn btn-outline-warning" title="แก้ไข">
+                        <a href="/addmem/edit/<%= item.addmem_id %>" class="btn btn-outline-warning btn-sm" title="แก้ไข">
                           <i class="bi bi-pencil"></i>
                         </a>
-                        <a href="/addmem/delete/<%= item.addmem_id %>" class="btn btn-outline-danger" title="ลบ" onclick="return confirm('ต้องการลบข้อมูลนี้?')">
+                        <a href="/addmem/delete/<%= item.addmem_id %>" class="btn btn-outline-danger btn-sm" title="ลบ" onclick="return confirm('ต้องการลบข้อมูลนี้?')">
                           <i class="bi bi-trash"></i>
                         </a>
                       </div>
@@ -135,14 +138,14 @@
             <div class="col-6">
               <div class="border-end">
                 <h4 class="text-primary mb-1">
-                  <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_saman), 0) : 0 %>
+                  <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_saman || 0), 0) : 0 %>
                 </h4>
                 <small class="text-muted">สมาชิกทั้งหมด</small>
               </div>
             </div>
             <div class="col-6">
               <h4 class="text-success mb-1">
-                <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_somtob), 0) : 0 %>
+                <%= recentData ? recentData.reduce((sum, item) => sum + parseInt(item.addmem_somtob || 0), 0) : 0 %>
               </h4>
               <small class="text-muted">สมทบทั้งหมด</small>
             </div>

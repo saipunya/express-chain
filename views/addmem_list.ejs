@@ -4,11 +4,11 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0">📋 รายการสมาชิกเพิ่มเติม</h3>
     <div>
-      <% if(user && user.mClass=='kjs'){ %>
+
         <a href="/addmem/add" class="btn btn-success">
           <i class="bi bi-plus-circle"></i> เพิ่มรายการ
         </a>
-      <% } %>
+
       <a href="/dashboard/" class="btn btn-primary">
         <i class="bi bi-house"></i> กลับไปที่แดชบอร์ด
       </a>
@@ -60,7 +60,7 @@
     <div class="card-body">
       <form method="GET" action="/addmem/list" class="row g-3">
         <div class="col-md-4">
-          <input type="text" name="search" class="form-control" placeholder="ค้นหาตามรหัสสมาชิก..." 
+          <input type="text" name="search" class="form-control" placeholder="ค้นหาตามชื่อสหกรณ์..." 
                  value="<%= search || '' %>">
         </div>
         <div class="col-md-2">
@@ -88,7 +88,7 @@
           <thead class="table-dark">
             <tr>
               <th class="text-center">#</th>
-              <th>รหัสสมาชิก</th>
+              <th>ชื่อสหกรณ์</th>
               <th>ปี</th>
               <th class="text-center">สมาชิก</th>
               <th class="text-center">สมทบ</th>
@@ -102,7 +102,7 @@
           <tbody>
             <% if (data.length === 0) { %>
               <tr>
-                <td colspan="<%= (user && user.mClass=='kjs') ? '8' : '7' %>" class="text-center py-4">
+                <td colspan="<%= (user && (user.mClass=='kjs' || user.mClass=='pbt')) ? '8' : '7' %>" class="text-center py-4">
                   <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
                   <p class="text-muted mt-2 mb-0">ไม่พบข้อมูล</p>
                 </td>
@@ -113,7 +113,7 @@
                   <td class="text-center">
                     <%= (pagination.page - 1) * pagination.pageSize + index + 1 %>
                   </td>
-                  <td class="fw-bold"><%= item.addmem_code %></td>
+                  <td class="fw-bold"><%= item.c_name %></td>
                   <td><%= item.addmem_year %></td>
                   <td class="text-center">
                     <span class="badge bg-info"><%= item.addmem_saman %></span>
@@ -137,7 +137,7 @@
                       }) %>
                     </small>
                   </td>
-                  <% if(user && user.mClass=='kjs'){ %>
+                  <% if(user && (user.mClass=='kjs' || user.mClass=='pbt')){ %>
                   <td class="text-center text-nowrap">
                     <div class="btn-group btn-group-sm" role="group">
                       <a href="/addmem/view/<%= item.addmem_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
@@ -147,7 +147,7 @@
                         <i class="bi bi-pencil"></i>
                       </a>
                       <a href="/addmem/delete/<%= item.addmem_id %>" class="btn btn-outline-danger" title="ลบ" 
-                         onclick="return confirm('ต้องการลบข้อมูลสมาชิกนี้?\nรหัส: <%= item.addmem_code %>\nปี: <%= item.addmem_year %>')">
+                         onclick="return confirm('ต้องการลบข้อมูลสมาชิกนี้?\nสหกรณ์: <%= item.c_name %>\nปี: <%= item.addmem_year %>')">
                         <i class="bi bi-trash"></i>
                       </a>
                     </div>

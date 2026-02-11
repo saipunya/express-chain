@@ -10,22 +10,38 @@
   </h3>
 
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-7">
       <div class="card">
         <div class="card-body">
           <form action="<% if (action === 'edit') { %>/addmem/update/<%= record.addmem_id %><% } else { %>/addmem/save<% } %>" method="POST">
             
-            <!-- Select Cooperative -->
+            <!-- Select Group First -->
+            <div class="mb-3">
+              <label for="c_group_filter" class="form-label">เลือกกลุ่ม <span class="text-danger">*</span></label>
+              <select class="form-select" id="c_group_filter" required>
+                <option value="">-- เลือกกลุ่ม --</option>
+                <% 
+                  // Use groups array from controller (DISTINCT)
+                  const groupsList = groups || [];
+                %>
+                <% if (groupsList.length > 0) { %>
+                  <% groupsList.forEach(item => { %>
+                    <option value="<%= item.c_group %>">
+                      <%= item.c_group.replace(/group(\d+)/, 'กลุ่มส่งเสริมสหกรณ์ $1') %>
+                    </option>
+                  <% }); %>
+                <% } else { %>
+                  <option value="">ไม่มีกลุ่มในระบบ</option>
+                <% } %>
+              </select>
+              <div class="form-text">เลือกส่งเสริมสหกรณ์ เช่น group1</div>
+            </div>
+
+            <!-- Select Cooperative (filtered by group) -->
             <div class="mb-3">
               <label for="addmem_code" class="form-label">เลือกสหกรณ์/กลุ่มเกษตรกร <span class="text-danger">*</span></label>
-              <select class="form-select" id="addmem_code" name="addmem_code" required>
-                <option value="">-- เลือกสถาบัน --</option>
-                <% (coops || []).forEach(coop => { %>
-                  <option value="<%= coop.c_code %>" 
-                    <% if (record && record.addmem_code === coop.c_code) { %>selected<% } %>>
-                    <%= coop.c_name %> (<%= coop.c_code %>)
-                  </option>
-                <% }); %>
+              <select class="form-select" id="addmem_code" name="addmem_code" required disabled>
+                <option value="">-- กรุณาเลือกกลุ่มก่อน --</option>
               </select>
               <div class="form-text">เลือกสหกรณ์หรือกลุ่มเกษตรกรที่ต้องการเพิ่มข้อมูลสมาชิก</div>
             </div>
@@ -78,7 +94,7 @@
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-5">
       <!-- แสดงข้อมูลล่าสุด -->
       <% if (recentData && recentData.length > 0) { %>
       <div class="card">
@@ -93,7 +109,7 @@
                   <th>สถาบัน</th>
                   <th>ปี</th>
                   <th>สมาชิก</th>
-                  <% if(user && user.mClass=='kjs'){ %>
+                  <% if (user && (user.mClass=='pbt' || user.mClass=='admin')) { %>
                   <th>จัดการ</th>
                   <% } %>
                 </tr>
@@ -102,9 +118,9 @@
                 <% recentData.forEach(item => { %>
                   <tr>
                     <td class="fw-bold small"><%= item.c_name || item.addmem_code %></td>
-                    <td class="small"><%= item.addmem_year %></td>
+                    <td class="small"><%= item.end_date %> (<%= item.addmem_year %>)</td>
                     <td class="small"><%= item.addmem_saman %></td>
-                    <% if(user && user.mClass=='kjs'){ %>
+                    <% if (user && (user.mClass=='pbt' || user.mClass=='admin')) { %>
                     <td class="text-center text-nowrap">
                       <div class="btn-group btn-group-sm" role="group">
                         <a href="/addmem/edit/<%= item.addmem_id %>" class="btn btn-outline-warning btn-sm" title="แก้ไข">
@@ -155,5 +171,90 @@
     </div>
   </div>
 </div>
+
+<script>
+// Store all coops data from server
+const allCoops = <%- JSON.stringify(coops || []) %>;
+const recordCode = '<%= record && record.addmem_code ? record.addmem_code : "" %>';
+
+console.log('📊 All Coops Data:', allCoops);
+console.log('🔍 Record Code:', recordCode);
+
+// Function to format group name
+function formatGroupName(groupCode) {
+  if (!groupCode) return '';
+  return groupCode.replace(/group(\d+)/, 'กลุ่มส่งเสริมสหกรณ์ $1');
+}
+
+// Function to filter cooperatives by selected group
+function filterCoopsByGroup(selectedGroup) {
+  const coopSelect = document.getElementById('addmem_code');
+  
+  console.log('🔄 Filtering by group:', selectedGroup);
+  
+  // Clear existing options
+  coopSelect.innerHTML = '<option value="">-- เลือกสถาบัน --</option>';
+  
+  if (!selectedGroup) {
+    coopSelect.disabled = true;
+    console.log('⚠️ No group selected');
+    return;
+  }
+  
+  // Filter and add options
+  const filteredCoops = allCoops.filter(coop => coop.c_group === selectedGroup);
+  
+  console.log('✅ Filtered coops:', filteredCoops);
+  
+  if (filteredCoops.length === 0) {
+    coopSelect.innerHTML = '<option value="">-- ไม่พบสถาบันในกลุ่มนี้ --</option>';
+    coopSelect.disabled = true;
+    console.log('❌ No coops found for this group');
+    return;
+  }
+  
+  filteredCoops.forEach(coop => {
+    const option = document.createElement('option');
+    option.value = coop.c_code;
+    option.textContent = `${coop.c_name} (${coop.c_code})`;
+    
+    // Select if editing and matches record
+    if (recordCode && coop.c_code === recordCode) {
+      option.selected = true;
+      console.log('✨ Selected option:', coop.c_name);
+    }
+    
+    coopSelect.appendChild(option);
+  });
+  
+  coopSelect.disabled = false;
+  console.log('✅ Dropdown populated with', filteredCoops.length, 'items');
+}
+
+// Event listener for group selection
+document.getElementById('c_group_filter').addEventListener('change', function() {
+  console.log('👁️ Group changed to:', this.value);
+  filterCoopsByGroup(this.value);
+});
+
+// Initialize on page load (for edit mode)
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('📄 Page loaded');
+  console.log('📋 Total coops:', allCoops.length);
+  
+  <% if (action === 'edit' && record && record.addmem_code) { %>
+    // Find the group of the current record
+    const currentCoop = allCoops.find(c => c.c_code === recordCode);
+    console.log('🎯 Current coop:', currentCoop);
+    
+    if (currentCoop && currentCoop.c_group) {
+      const groupSelect = document.getElementById('c_group_filter');
+      groupSelect.value = currentCoop.c_group;
+      console.log('🔗 Set group to:', currentCoop.c_group);
+      filterCoopsByGroup(currentCoop.c_group);
+    }
+  <% } %>
+});
+</script>
 
 <%- include('partials/footer') %>

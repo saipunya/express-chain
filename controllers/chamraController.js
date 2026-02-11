@@ -76,12 +76,6 @@ chamraController.list = async (req, res) => {
     
     if (uniquePersonNames.length > 0) {
       try {
-        // console.log('🔍 All unique person names to search:', uniquePersonNames.slice(0, 15));
-        
-        // ดึงข้อมูลสมาชิกทั้งหมดมาเพื่อเปรียบเทียบ
-        const [allMemberRows] = await db.query('SELECT m_user, m_name, m_img FROM member3');
-        // console.log('📋 All members in DB count:', allMemberRows.length);
-        
         // ค้นหาด้วยชื่อเต็ม (m_name) แทนชื่อผู้ใช้ (m_user)
         const placeholders = uniquePersonNames.map(() => '?').join(',');
         const [memberRows] = await db.query(
@@ -94,22 +88,12 @@ chamraController.list = async (req, res) => {
           members[member.m_name] = member;
         });
         
-        // console.log('📊 Found members:', memberRows.length, 'out of', uniquePersonNames.length, 'requested');
-        // console.log('👤 Sample found members:', memberRows.slice(0, 3).map(m => ({ name: m.m_name, hasImg: !!m.m_img })));
-        
-        // แสดงชื่อที่ไม่พบ
-        const notFound = uniquePersonNames.filter(name => !members[name]);
-        // if (notFound.length > 0) {
-        //   console.log('❌ Not found members:', notFound.slice(0, 10));
-        // }
-        
       } catch (error) {
-        console.error('❌ Error fetching members:', error);
+        console.error('Error fetching members:', error);
       }
     }
   }
   
-  // console.log('🔍 Members object keys:', Object.keys(members));
   res.render('chamra/list', { data, members });
 };
 

@@ -567,6 +567,88 @@
         </div>
       </div>
     </section>
+
+    <!-- Member Count Section (Addmem) -->
+    <section class="section-block" id="addmem-section">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-people me-2 text-purple" style="color:#6f42c1;"></i>จำนวนสมาชิก (Addmem)</h5>
+          <span class="badge rounded-pill" style="background-color:#e2d5f3; color:#6f42c1;">รวม <%= (data.addmem||[]).length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <% if (data.addmem && data.addmem.length) { %>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover table-striped align-middle mb-0 responsive-table">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:120px">ปี (จากข้อมูล)</th>
+                    <th style="width:160px">วันสิ้นปี + ปี</th>
+                    <th style="width:120px">สามัญ</th>
+                    <th style="width:120px">สมทบ</th>
+                    <th style="width:100px">รวมทั้งหมด</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.addmem.forEach(a => { %>
+                    <tr>
+                      <td class="fw-medium" data-label="ปี">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูข้อมูล"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <%= a.addmem_year || '-' %>
+                        <% } %>
+                      </td>
+                      <td data-label="วันสิ้นปี + ปี">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูข้อมูล"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <% if (a.calculated_date) { %>
+                            <%= new Date(a.calculated_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) %>
+                          <% } else { %>
+                            -
+                          <% } %>
+                        <% } %>
+                      </td>
+                      <td data-label="สามัญ">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูข้อมูล"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <span class="badge bg-info-subtle text-info-emphasis">
+                            <%= (a.addmem_saman !== null && a.addmem_saman !== undefined && !isNaN(Number(a.addmem_saman))) ? Number(a.addmem_saman).toLocaleString('th-TH') : '-' %>
+                          </span>
+                        <% } %>
+                      </td>
+                      <td data-label="สมทบ">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูข้อมูล"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <span class="badge bg-warning-subtle text-warning-emphasis">
+                            <%= (a.addmem_somtob !== null && a.addmem_somtob !== undefined && !isNaN(Number(a.addmem_somtob))) ? Number(a.addmem_somtob).toLocaleString('th-TH') : '-' %>
+                          </span>
+                        <% } %>
+                      </td>
+                      <td data-label="รวมทั้งหมด" class="fw-bold">
+                        <% if(!user) { %>
+                          <span class="text-muted" title="เข้าสู่ระบบเพื่อดูข้อมูล"><i class="bi bi-lock-fill"></i></span>
+                        <% } else { %>
+                          <% const saman = Number(a.addmem_saman) || 0; const somtob = Number(a.addmem_somtob) || 0; const total = saman + somtob; %>
+                          <span class="badge bg-success-subtle text-success-emphasis">
+                            <%= total.toLocaleString('th-TH') %>
+                          </span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="p-4 text-center text-muted">ไม่มีข้อมูล</div>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
   <% } %>
   <div class="mt-2">
     <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>

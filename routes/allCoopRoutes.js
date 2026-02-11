@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const allCoopController = require('../controllers/allCoopController');
+const { requireLogin } = require('../middlewares/authMiddleware');
 
 console.log('allCoopController keys:', Object.keys(allCoopController));
 console.log('allCoopController.group:', typeof allCoopController.group);
@@ -15,8 +16,8 @@ if (!allCoopController) {
 router.get('/group', allCoopController.group);
 router.get('/group/:group', allCoopController.group);
 
-// Route: Profile page by c_code
-router.get('/profile/:c_code', allCoopController.profile);
+// Route: Profile page by c_code (requires login)
+router.get('/profile/:c_code', requireLogin, allCoopController.profile);
 
 // Default redirect
 router.get('/', (req, res) => res.redirect('/allCoop/group'));

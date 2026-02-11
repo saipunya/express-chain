@@ -28,6 +28,12 @@ app.use(session({
   }
 }));
 
+// Make `user` available in all EJS views
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  next();
+});
+
 // ตั้งค่า View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

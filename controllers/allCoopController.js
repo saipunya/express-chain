@@ -1,18 +1,29 @@
 const db = require('../config/db');
 const coopProfileModel = require('../models/coopProfileModel');
+const addmemModel = require('../models/addmemModel');
 
 // Render profile by c_code
-exports.profile = async (req, res) => {
+exports.profile = async (req, res, next) => {
   const { c_code } = req.params;
   try {
     const data = await coopProfileModel.getProfileByCode(c_code);
     if (!data.coop) {
       return res.status(404).render('error_page', { message: 'ไม่พบสหกรณ์รหัสนี้' });
     }
-    res.render('allCoop/profile', { data, pageTitle: `โปรไฟล์: ${data.coop.c_name}` });
+
+    // ดึงข้อมูล addmem แบบ async/await
+    try {
+      const addmemData = await addmemModel.getByCoopCode(c_code);
+      data.addmem = addmemData || [];
+    } catch (err) {
+      console.error('Error fetching addmem:', err);
+      data.addmem = [];
+    }
+
+    res.render('allCoop/profile', { data });
   } catch (e) {
     console.error('profile error', e);
-    res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' });
+    next(e);
   }
 };
 
@@ -45,7 +56,7 @@ exports.group = async (req, res) => {
 
     // Search filter (applies to code, name, group)
     if (search) {
-      query += ` AND (${COL_CODE} LIKE ? OR ${COL_NAME} LIKE ? OR ${COL_GROUP} LIKE ?)`;
+      query += ` AND (${COL_CODE} LIKE ? OR ${COL_NAME} LIKE ? OR ${COL_GROUP} LIKE ?)`
       const searchWildcard = '%' + search + '%';
       params.push(searchWildcard, searchWildcard, searchWildcard);
     }

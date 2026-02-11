@@ -586,9 +586,7 @@
                       });
                       
                       // Debug logging
-                      if (typeof console !== 'undefined') {
-                        console.log('🔍 Processing:', c.de_person, 'found members:', foundMembers.length, 'persons:', foundMembers.map(f => f.cleanName));
-                      }
+                      
                       %>
                         <tr data-latest-step="<%= latestStepNumber %>"
                           data-search="<%= [ (c.c_name||''), (c.active_name||c.ac_name||c.coop_name||c.a_name||'') ].join(' ').toLowerCase() %>">

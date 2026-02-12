@@ -1,160 +1,212 @@
-<% if (!locals.user) { %>
-  <script>
-    alert('กรุณาเข้าสู่ระบบก่อนเข้าใช้งาน');
-    window.location.href = '/login';
-  </script>
-<% } %>
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>บันทึกการประชุมใหญ่</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- ...existing head includes... -->
-  <style>
-    :root {
-      --primary-color: #0d6efd;
-      --bg-color: #f8f9fa;
-      --card-bg: #fff;
-    }
-    body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-color); padding-top: 2rem; }
-    .container { max-width: 600px; margin: 0 auto; padding: 0 15px; }
-    .card { background: var(--card-bg); padding: 2rem; border-radius: 10px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); border: 1px solid #dee2e6; }
-    h1 { font-size: 1.5rem; text-align: center; margin-bottom: 2rem; color: #212529; }
-    .form-group { margin-bottom: 1.25rem; }
-    label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }
-    input, select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #ced4da; border-radius: 0.375rem; box-sizing: border-box; font-size: 1rem; }
-    input:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25); }
-    .error { background-color: #f8d7da; border: 1px solid #f5c2c7; color: #842029; padding: 1rem; border-radius: 0.375rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
-    .btn-group { display: flex; gap: 0.75rem; margin-top: 2rem; }
-    button { flex: 2; background-color: var(--primary-color); color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500; }
-    button:hover { background-color: #0b5ed7; }
-    .btn-cancel { flex: 1; display: inline-block; text-align: center; background-color: #6c757d; color: white; text-decoration: none; padding: 0.6rem; border-radius: 0.375rem; font-size: 0.95rem; }
-    .btn-cancel:hover { background-color: #5c636a; }
-  </style>
-</head>
-<body>
-  <%- include('../partials/header') %>
-  <div class="container">
-    <div class="card">
-      <h1><%= (item && item.big_id) ? 'แก้ไขข้อมูลการประชุมใหญ่' : 'บันทึกการประชุมใหญ่' %></h1>
+<%- include('../partials/header') %>
 
-      <% 
-        const _coops = (typeof coops === 'undefined' || !Array.isArray(coops)) ? [] : coops;
-        const _groups = (typeof groups === 'undefined' || !Array.isArray(groups)) ? [] : groups;
-      %>
-
-      <% if (Array.isArray(errors) && errors.length) { %>
-        <div class="error">
-          <strong>กรุณาตรวจสอบข้อมูล:</strong>
-          <ul style="margin: 5px 0 0 0; padding-left: 1.5rem;">
-            <% errors.forEach(err => { %> <li><%= err %></li> <% }) %>
-          </ul>
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-users me-2"></i><%= (item && item.big_id) ? 'แก้ไขข้อมูลการประชุมใหญ่' : 'บันทึกการประชุมใหญ่' %>
+          </h5>
         </div>
-      <% } %>
+        <div class="card-body">
+          <% 
+            const _coops = (typeof coops === 'undefined' || !Array.isArray(coops)) ? [] : coops;
+            const _groups = (typeof groups === 'undefined' || !Array.isArray(groups)) ? [] : groups;
+          %>
 
-      <form action="<%= (item && item.big_id) ? '/bigmeet/update/' + item.big_id : '/bigmeet' %>" method="post">
-        <div class="form-group">
-          <label for="coop_group">กลุ่มสถาบัน</label>
-          <select id="coop_group" name="coop_group">
-            <option value="">-- เลือกกลุ่ม --</option>
-            <% _groups.forEach(function(g){ %>
-              <option value="<%= g %>"><%= g %></option>
-            <% }) %>
-          </select>
+          <% if (Array.isArray(errors) && errors.length) { %>
+            <div class="alert alert-danger" role="alert">
+              <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>กรุณาตรวจสอบข้อมูล:</h6>
+              <ul class="mb-0">
+                <% errors.forEach(err => { %> <li><%= err %></li> <% }) %>
+              </ul>
+            </div>
+          <% } %>
+
+          <form action="<%= (item && item.big_id) ? '/bigmeet/update/' + item.big_id : '/bigmeet' %>" method="post" id="bigmeetForm">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="coop_group" class="form-label">กลุ่มสถาบัน <span class="text-danger">*</span></label>
+                  <select class="form-select" id="coop_group" name="coop_group" required>
+                    <option value="">-- เลือกกลุ่ม --</option>
+                    <% _groups.forEach(function(g){ %>
+                      <option value="<%= g %>" <%= (item && item.c_group === g) ? 'selected' : '' %>><%= g %></option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="coop_code" class="form-label">ชื่อสถาบัน <span class="text-danger">*</span></label>
+                  <select class="form-select" id="coop_code" name="coop_code" required>
+                    <option value="">-- เลือกสถาบัน --</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="big_code" name="big_code" value="<%= (item && item.big_code) || '' %>">
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="big_endyear" class="form-label">ปีที่สิ้นสุดรอบบัญชี (พ.ศ.) <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="big_endyear" name="big_endyear" maxlength="4" placeholder="เช่น 2566" pattern="\d{4}" value="<%= (item && item.big_endyear) || '' %>" required>
+                  <div class="form-text">ระบุปี พ.ศ. 4 หลัก (เช่น 2566)</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="big_type" class="form-label">มีงบการเงินหรือไม่ <span class="text-danger">*</span></label>
+                  <select class="form-select" name="big_type" id="big_type" required>
+                    <option value="">-- เลือก --</option>
+                    <option value="มีงบการเงิน" <%= (item && item.big_type === 'มีงบการเงิน') ? 'selected' : '' %>>มีงบการเงิน</option>
+                    <option value="ไม่มีงบการเงิน" <%= (item && item.big_type === 'ไม่มีงบการเงิน') ? 'selected' : '' %>>ไม่มีงบการเงิน</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="big_date" class="form-label">วันที่ประชุม <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="big_date" name="big_date" value="<%= (item && item.big_date) ? new Date(item.big_date).toISOString().split('T')[0] : '' %>" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden fields for audit trail -->
+            <input type="hidden" name="big_saveby" value="<%= locals.user ? (locals.user.username || locals.user.name) : '' %>">
+            <input type="hidden" name="big_savedate" value="<%= new Date().toISOString().split('T')[0] %>">
+
+            <div class="d-flex justify-content-between mt-4">
+              <a href="/bigmeet" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>กลับ
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-save me-2"></i>บันทึกข้อมูล
+              </button>
+            </div>
+          </form>
         </div>
-
-        <div class="form-group">
-          <label for="coop_code">ชื่อสถาบัน</label>
-          <select id="coop_code" name="coop_code" required>
-            <option value="">-- เลือกสถาบัน --</option>
-          </select>
-        </div>
-
-        <input type="hidden" id="big_code" name="big_code" value="<%= (item && item.big_code) || '' %>">
-
-        <div class="form-group">
-          <label for="big_endyear">ปีที่สิ้นสุดรอบบัญชี (พ.ศ.)</label>
-          <input type="text" id="big_endyear" name="big_endyear" maxlength="4" placeholder="เช่น 2566" pattern="\d{4}" value="<%= (item && item.big_endyear) || '' %>" required>
-        </div>
-
-        <div class="form-group">
-          <label for="big_type">มีงบการเงินหรือไม่:</label>
-          <select class="form-control" name="big_type" id="big_type">
-            <option value="มีงบการเงิน" <%= (item && item.big_type === 'มีงบการเงิน') ? 'selected' : '' %>>มีงบการเงิน</option>
-            <option value="ไม่มีงบการเงิน" <%= (item && item.big_type === 'ไม่มีงบการเงิน') ? 'selected' : '' %>>ไม่มีงบการเงิน</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="big_date">วันที่ประชุม</label>
-          <input type="date" id="big_date" name="big_date" value="<%= (item && item.big_date) ? new Date(item.big_date).toISOString().split('T')[0] : '' %>" required>
-        </div>
-
-        <!-- Hidden fields for audit trail -->
-        <input type="hidden" name="big_saveby" value="<%= locals.user ? (locals.user.username || locals.user.name) : '' %>">
-        <input type="hidden" name="big_savedate" value="<%= new Date().toISOString().split('T')[0] %>">
-
-        <div class="btn-group">
-          <button type="submit">บันทึกข้อมูล</button>
-          <a href="/bigmeet" class="btn-cancel">ยกเลิก</a>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // ข้อมูลสหกรณ์ทั้งหมดจาก server
-    const COOPS = <%- JSON.stringify(_coops) %>;
+<script>
+// ข้อมูลสหกรณ์ทั้งหมดจาก server
+const COOPS = <%- JSON.stringify(_coops) %>;
 
-    const groupSelect = document.getElementById('coop_group');
-    const coopSelect = document.getElementById('coop_code');
-    const bigCodeInput = document.getElementById('big_code');
+const groupSelect = document.getElementById('coop_group');
+const coopSelect = document.getElementById('coop_code');
+const bigCodeInput = document.getElementById('big_code');
+const form = document.getElementById('bigmeetForm');
+const submitBtn = document.getElementById('submitBtn');
 
-    function renderCoopsForGroup(group) {
-      // ล้างรายการเดิม
-      coopSelect.innerHTML = '<option value="">-- เลือกสถาบัน --</option>';
-      if (!group) return;
+function renderCoopsForGroup(group) {
+  // ล้างรายการเดิม
+  coopSelect.innerHTML = '<option value="">-- เลือกสถาบัน --</option>';
+  if (!group) return;
 
-      const items = COOPS.filter(c => c.c_group === group);
-      items.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.c_code;           // เก็บค่า c_code
-        opt.textContent = c.c_name;     // แสดงชื่อสถาบัน
-        coopSelect.appendChild(opt);
-      });
+  const items = COOPS.filter(c => c.c_group === group);
+  items.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.c_code;           // เก็บค่า c_code
+    opt.textContent = c.c_name;     // แสดงชื่อสถาบัน
+    coopSelect.appendChild(opt);
+  });
 
-      // ถ้ามีค่าเดิมใน big_code ให้เลือกตรงกับนั้น
-      if (bigCodeInput.value) {
-        coopSelect.value = bigCodeInput.value;
-      }
-    }
+  // ถ้ามีค่าเดิมใน big_code ให้เลือกตรงกับนั้น
+  if (bigCodeInput.value) {
+    coopSelect.value = bigCodeInput.value;
+  }
+}
 
-    groupSelect.addEventListener('change', (e) => {
-      renderCoopsForGroup(e.target.value);
-      // เมื่อเปลี่ยนกลุ่ม ล้างค่า big_code และ coop_code
-      bigCodeInput.value = '';
+groupSelect.addEventListener('change', (e) => {
+  renderCoopsForGroup(e.target.value);
+  // เมื่อเปลี่ยนกลุ่ม ล้างค่า big_code และ coop_code
+  bigCodeInput.value = '';
+});
+
+coopSelect.addEventListener('change', (e) => {
+  // ตั้งค่า big_code จาก c_code ที่เลือก
+  bigCodeInput.value = e.target.value || '';
+});
+
+// Form validation and submission
+form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  // Basic validation
+  if (!groupSelect.value || !coopSelect.value || !document.getElementById('big_endyear').value || 
+      !document.getElementById('big_type').value || !document.getElementById('big_date').value) {
+    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+    return;
+  }
+  
+  // Show loading state
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังบันทึก...';
+  
+  try {
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    const isEdit = <%= (item && item.big_id) ? 'true' : 'false' %>;
+    const url = isEdit ? '/bigmeet/update/<%= (item && item.big_id) %>' : '/bigmeet';
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(data)
     });
-
-    coopSelect.addEventListener('change', (e) => {
-      // ตั้งค่า big_code จาก c_code ที่เลือก
-      bigCodeInput.value = e.target.value || '';
-    });
-
-    // เติมค่าเริ่มต้นกรณีกลับมาจาก error พร้อม item.big_code
-    (function init() {
-      const currentCode = bigCodeInput.value;
-      if (currentCode) {
-        const found = COOPS.find(c => c.c_code === currentCode);
-        if (found) {
-          groupSelect.value = found.c_group;
-          renderCoopsForGroup(found.c_group);
-          coopSelect.value = currentCode;
+    
+    if (response.ok) {
+      // Check if response is JSON (AJAX) or HTML redirect
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const result = await response.json();
+        if (result.success) {
+          alert(result.message);
+          window.location.href = '/bigmeet';
+        } else {
+          alert(result.error || 'เกิดข้อผิดพลาด');
         }
+      } else {
+        // HTML response - redirect
+        window.location.href = '/bigmeet';
       }
-    })();
-  </script>
+    } else {
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    }
+  } catch (error) {
+    console.error('Submit error:', error);
+    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+  } finally {
+    // Reset button state
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>บันทึกข้อมูล';
+  }
+});
 
-  <%- include('../partials/footer') %>
-</body>
-</html>
+// เติมค่าเริ่มต้นกรณีกลับมาจาก error พร้อม item.big_code
+(function init() {
+  const currentCode = bigCodeInput.value;
+  if (currentCode) {
+    const found = COOPS.find(c => c.c_code === currentCode);
+    if (found) {
+      groupSelect.value = found.c_group;
+      renderCoopsForGroup(found.c_group);
+      coopSelect.value = currentCode;
+    }
+  }
+})();
+</script>
+
+<%- include('../partials/footer') %>

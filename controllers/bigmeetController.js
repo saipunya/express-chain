@@ -7,14 +7,87 @@ function validateCreate(body) {
   return { valid: missing.length === 0, missing };
 }
 
+function validatePagination(page, limit) {
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 10;
+  const offset = (pageNum - 1) * limitNum;
+  
+  return {
+    page: Math.max(1, pageNum),
+    limit: Math.min(Math.max(1, limitNum), 100), // Max 100 items per page
+    offset: Math.max(0, offset)
+  };
+}
+
 module.exports = {
   async list(req, res) {
     try {
-      const rows = await Bigmeet.findAll();
-      res.render('bigmeet/list', { items: rows });
+      const { page = 1, limit = 10, search, year, type } = req.query;
+      const pagination = validatePagination(page, limit);
+      
+      const filters = {};
+      if (search) filters.search = search;
+      if (year) filters.year = year;
+      if (type) filters.type = type;
+      
+      const [items, total] = await Promise.all([
+        Bigmeet.findPage(pagination.limit, pagination.offset, filters),
+        Bigmeet.countAll(filters)
+      ]);
+      
+      const totalPages = Math.ceil(total / pagination.limit);
+      
+      res.render('bigmeet/list', { 
+        items, 
+        pagination: {
+          currentPage: pagination.page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: pagination.limit,
+          hasNextPage: pagination.page < totalPages,
+          hasPrevPage: pagination.page > 1
+        },
+        filters
+      });
     } catch (err) {
       console.error('bigmeet:list', err);
       res.status(500).render('error_page', { message: 'Internal server error' });
+    }
+  },
+
+  // API endpoint for AJAX requests
+  async apiList(req, res) {
+    try {
+      const { page = 1, limit = 10, search, year, type } = req.query;
+      const pagination = validatePagination(page, limit);
+      
+      const filters = {};
+      if (search) filters.search = search;
+      if (year) filters.year = year;
+      if (type) filters.type = type;
+      
+      const [items, total] = await Promise.all([
+        Bigmeet.findPage(pagination.limit, pagination.offset, filters),
+        Bigmeet.countAll(filters)
+      ]);
+      
+      const totalPages = Math.ceil(total / pagination.limit);
+      
+      res.json({
+        success: true,
+        data: items,
+        pagination: {
+          currentPage: pagination.page,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: pagination.limit,
+          hasNextPage: pagination.page < totalPages,
+          hasPrevPage: pagination.page > 1
+        }
+      });
+    } catch (err) {
+      console.error('bigmeet:apiList', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
     }
   },
 
@@ -69,19 +142,33 @@ module.exports = {
         ]);
         return res.status(400).render('bigmeet/form', { item: req.body, errors: missing, groups, coops });
       }
+      
       await Bigmeet.create(req.body);
-      // After creating via form, redirect to list
-      return res.redirect('/bigmeet');
+      
+      // Check if request expects JSON (AJAX) or HTML redirect
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.json({ success: true, message: 'สร้างข้อมูลสำเร็จ' });
+      } else {
+        res.redirect('/bigmeet?success=สร้างข้อมูลสำเร็จ');
+      }
     } catch (err) {
       console.error('bigmeet:create', err);
-      res.status(500).render('error_page', { message: 'Internal server error' });
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.status(500).json({ success: false, error: 'Internal server error' });
+      } else {
+        res.status(500).render('error_page', { message: 'Internal server error' });
+      }
     }
   },
 
   async update(req, res) {
     try {
       const exists = await Bigmeet.findById(req.params.id);
-      if (!exists) return res.status(404).render('error_page', { message: 'ไม่พบข้อมูล' });
+      if (!exists) {
+        return req.xhr || req.headers.accept.indexOf('json') > -1
+          ? res.status(404).json({ success: false, error: 'ไม่พบข้อมูล' })
+          : res.status(404).render('error_page', { message: 'ไม่พบข้อมูล' });
+      }
 
       const { valid, missing } = validateCreate(req.body || {});
       if (!valid) {
@@ -93,23 +180,108 @@ module.exports = {
       }
 
       await Bigmeet.update(req.params.id, req.body || {});
-      return res.redirect('/bigmeet');
+      
+      // Check if request expects JSON (AJAX) or HTML redirect
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.json({ success: true, message: 'อัปเดตข้อมูลสำเร็จ' });
+      } else {
+        res.redirect('/bigmeet?success=อัปเดตข้อมูลสำเร็จ');
+      }
     } catch (err) {
       console.error('bigmeet:update', err);
-      res.status(500).render('error_page', { message: 'Internal server error' });
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.status(500).json({ success: false, error: 'Internal server error' });
+      } else {
+        res.status(500).render('error_page', { message: 'Internal server error' });
+      }
     }
   },
 
   async remove(req, res) {
     try {
       const ok = await Bigmeet.remove(req.params.id);
-      if (!ok) return res.status(404).render('error_page', { message: 'Not found' });
-      res.redirect('/bigmeet');
+      if (!ok) {
+        return req.xhr || req.headers.accept.indexOf('json') > -1
+          ? res.status(404).json({ success: false, error: 'Not found' })
+          : res.status(404).render('error_page', { message: 'Not found' });
+      }
+      
+      // Check if request expects JSON (AJAX) or HTML redirect
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.json({ success: true, message: 'ลบข้อมูลสำเร็จ' });
+      } else {
+        res.redirect('/bigmeet?success=ลบข้อมูลสำเร็จ');
+      }
     } catch (err) {
       console.error('bigmeet:remove', err);
-      res.status(500).render('error_page', { message: 'Internal server error' });
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        res.status(500).json({ success: false, error: 'Internal server error' });
+      } else {
+        res.status(500).render('error_page', { message: 'Internal server error' });
+      }
     }
   },
+
+  // Bulk operations
+  async bulkCreate(req, res) {
+    try {
+      const { data } = req.body;
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        return res.status(400).json({ success: false, error: 'Invalid data array' });
+      }
+
+      // Validate all items
+      const validationResults = data.map(item => validateCreate(item));
+      const invalidItems = validationResults.filter(result => !result.valid);
+      
+      if (invalidItems.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Validation failed',
+          details: invalidItems.map((result, index) => ({ index, missing: result.missing }))
+        });
+      }
+
+      const result = await Bigmeet.bulkCreate(data);
+      res.json({ success: true, message: `สร้างข้อมูล ${result.affectedRows} รายการสำเร็จ`, result });
+    } catch (err) {
+      console.error('bigmeet:bulkCreate', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async bulkUpdate(req, res) {
+    try {
+      const { updates } = req.body;
+      
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ success: false, error: 'Invalid updates array' });
+      }
+
+      const result = await Bigmeet.bulkUpdate(updates);
+      res.json({ success: true, message: `อัปเดตข้อมูล ${result.updated} รายการสำเร็จ`, result });
+    } catch (err) {
+      console.error('bigmeet:bulkUpdate', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async bulkDelete(req, res) {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ success: false, error: 'Invalid IDs array' });
+      }
+
+      const result = await Bigmeet.bulkDelete(ids);
+      res.json({ success: true, message: `ลบข้อมูล ${result.affectedRows} รายการสำเร็จ`, result });
+    } catch (err) {
+      console.error('bigmeet:bulkDelete', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
 };
 
 

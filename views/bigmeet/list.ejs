@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid mt-4">
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+      <h5 class="m-0 font-weight-bold text-primary">การประชุมใหญ่สหกรณ์และกลุ่มเกษตรกร</h5>
+      <div>
+        <span class="mr-3 text-muted"><i class="fas fa-user-circle"></i> <%= user ? user.username : 'Guest' %></span>
+        <a href="/bigmeet/new" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> เพิ่มข้อมูล</a>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-striped" width="100%" cellspacing="0">
+          <thead class="thead-light">
+            <tr>
+              <th>ID</th>
+              <th>ชื่อสหกรณ์</th>
+              <th>ปีสิ้นสุด</th>
+              <th>ประเภท</th>
+              <th>วันที่ประชุม</th>
+              <th>บันทึกโดย</th>
+              <th>วันที่บันทึก</th>
+              <th class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (Array.isArray(items) && items.length) { %>
+              <% items.forEach(function(item){ %>
+                <tr>
+                  <td><%= item.big_id %></td>
+                  <td><%= item.c_name || item.big_code %></td>
+                  <td><%= item.big_endyear %></td>
+                  <td><%= item.big_type %></td>
+                  <td><%= item.big_date ? new Date(item.big_date).toLocaleDateString('th-TH') : '' %></td>
+                  <td><%= item.big_saveby %></td>
+                  <td><%= item.big_savedate ? new Date(item.big_savedate).toLocaleDateString('th-TH') : '' %></td>
+                  <td class="text-center">
+                    <div class="btn-group">
+                      <a href="/bigmeet/edit/<%= item.big_id %>" class="btn btn-warning btn-sm" title="แก้ไข">
+                        <i class="fas fa-edit">แก้ไข</i>
+                      </a>
+                      <form action="/bigmeet/delete/<%= item.big_id %>" method="POST" style="display:inline;" onsubmit="return confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')">
+                        <button type="submit" class="btn btn-danger btn-sm" title="ลบ">
+                          <i class="fas fa-trash">ลบ</i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" class="text-center py-4 text-muted">ไม่พบข้อมูลการประชุม</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

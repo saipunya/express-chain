@@ -16,6 +16,7 @@ require('dotenv').config();
 
 // Import middleware
 const { setUserLocals, updateOnlineTime } = require('./middlewares/authMiddleware');
+const authMiddleware = require('./middlewares/authMiddleware');
 
 // Session setup
 app.use(session({
@@ -78,8 +79,8 @@ if (methodOverridePkg) {
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(setUserLocals);
-app.use(updateOnlineTime); 
+app.use(authMiddleware.setUserLocals);
+app.use(authMiddleware.updateOnlineTime); 
 
 // เพิ่มบรรทัดนี้เพื่อเตรียม summaryByYear/top ให้ทุก view (อ่าน member6667.json)
 app.use(require('./middlewares/memberCoopLocals'));
@@ -109,6 +110,7 @@ const planKpiRoutes = require('./routes/planKpiRoutes'); // ตัวชี้�
 const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่ม
 const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
 const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route addmem
+const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
 
 // Public routes that don't require authentication
 const publicRoutes = [
@@ -132,6 +134,7 @@ app.use('/', memberCoopRoutes); // เพิ่ม เพื่อให้ห�
 app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rabiab (ดาวน์โหลดไฟล์ระเบียบ)
 app.use('/addmem', addmemRoutes); // ใช้งานเส้นทาง addmem (สมาชิกเพิ่มเติม)
 app.use('/chamra', chamraExportRoute);
+app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
 
 // 404 handler
 app.use((req, res) => {

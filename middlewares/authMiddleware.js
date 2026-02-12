@@ -53,3 +53,6 @@ exports.requireLogin = (req, res, next) => {
     next();
   };
 
+// ลบ module.exports ตัวเดิมออกแล้วใช้ตัวเดียวกับ requireLogin
+exports.isAuth = exports.requireLogin;
+

@@ -255,6 +255,66 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   <% } %>
 });
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+  const yearInput = document.getElementById('addmem_year');
+  const samanInput = document.getElementById('addmem_saman');
+  const somtobInput = document.getElementById('addmem_somtob');
+  const coopSelect = document.getElementById('addmem_code');
+  
+  let isValid = true;
+  let errorMessage = '';
+  
+  // Validate year (4 digits)
+  if (!/^\d{4}$/.test(yearInput.value.trim())) {
+    isValid = false;
+    errorMessage += 'ปีต้องเป็นตัวเลข 4 หลัก\n';
+    yearInput.classList.add('is-invalid');
+  } else {
+    yearInput.classList.remove('is-invalid');
+  }
+  
+  // Validate cooperative selection
+  if (!coopSelect.value) {
+    isValid = false;
+    errorMessage += 'กรุณาเลือกสหกรณ์\n';
+    coopSelect.classList.add('is-invalid');
+  } else {
+    coopSelect.classList.remove('is-invalid');
+  }
+  
+  // Validate numbers
+  const saman = parseInt(samanInput.value);
+  const somtob = parseInt(somtobInput.value);
+  
+  if (isNaN(saman) || saman < 0) {
+    isValid = false;
+    errorMessage += 'จำนวนสมาชิกต้องเป็นตัวเลขไม่ติดลบ\n';
+    samanInput.classList.add('is-invalid');
+  } else {
+    samanInput.classList.remove('is-invalid');
+  }
+  
+  if (isNaN(somtob) || somtob < 0) {
+    isValid = false;
+    errorMessage += 'จำนวนสมทบต้องเป็นตัวเลขไม่ติดลบ\n';
+    somtobInput.classList.add('is-invalid');
+  } else {
+    somtobInput.classList.remove('is-invalid');
+  }
+  
+  if (!isValid) {
+    e.preventDefault();
+    alert('กรุณาแก้ไขข้อมูล:\n\n' + errorMessage);
+    return false;
+  }
+  
+  // Show loading state
+  const submitBtn = document.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...';
+});
 </script>
 
 <%- include('partials/footer') %>

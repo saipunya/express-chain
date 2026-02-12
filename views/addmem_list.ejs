@@ -1,6 +1,21 @@
 <%- include('partials/header') %>
 
 <div class="container mt-4">
+  <% if (success) { %>
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    <div id="successToast" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-success text-white">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong class="me-auto">สำเร็จ</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="ปิด"></button>
+      </div>
+      <div class="toast-body">
+        <%= success %>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0">📋 รายการสมาชิกเพิ่มเติม</h3>
     <div>
@@ -18,7 +33,7 @@
   <!-- สถิติภาพรวม -->
   <div class="row mb-4">
     <div class="col-md-3">
-      <div class="card bg-primary text-white">
+      <div class="card text-white hover-card" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
         <div class="card-body">
           <h5 class="card-title">ทั้งหมด</h5>
           <h2><%= pagination.total %></h2>
@@ -27,7 +42,7 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card bg-info text-white">
+      <div class="card text-white hover-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
         <div class="card-body">
           <h5 class="card-title">สมาชิก</h5>
           <h2><%= data.reduce((sum, item) => sum + parseInt(item.addmem_saman), 0) %></h2>
@@ -36,7 +51,7 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card bg-success text-white">
+      <div class="card text-white hover-card" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);">
         <div class="card-body">
           <h5 class="card-title">สมทบ</h5>
           <h2><%= data.reduce((sum, item) => sum + parseInt(item.addmem_somtob), 0) %></h2>
@@ -45,7 +60,7 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card bg-warning text-white">
+      <div class="card text-white hover-card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
         <div class="card-body">
           <h5 class="card-title">หน้าปัจจุบัน</h5>
           <h2><%= pagination.page %>/<%= pagination.totalPages %></h2>
@@ -210,5 +225,16 @@
   <% } %>
 
 </div>
+
+<script>
+// Auto hide toast after 5 seconds
+setTimeout(() => {
+  const toastEl = document.getElementById('successToast');
+  if (toastEl) {
+    const toast = new bootstrap.Toast(toastEl);
+    toast.hide();
+  }
+}, 5000);
+</script>
 
 <%- include('partials/footer') %>

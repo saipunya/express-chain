@@ -7,6 +7,7 @@ exports.list = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const search = req.query.search || '';
+    const success = req.query.success || '';
     const offset = (page - 1) * pageSize;
 
     let whereClause = '';
@@ -55,6 +56,7 @@ exports.list = async (req, res) => {
         hasNext: page < totalPages
       },
       search,
+      success,
       user: req.session.user
     });
   } catch (error) {
@@ -213,7 +215,7 @@ exports.save = async (req, res) => {
       [addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_saveby || 'system', addmem_savedate || new Date().toISOString().slice(0, 10)]
     );
 
-    res.redirect('/addmem/list');
+    res.redirect('/addmem/list?success=เพิ่มข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
   } catch (err) {
     console.error('Error in save:', err);
     res.status(500).send('เกิดข้อผิดพลาด: ' + err.message);
@@ -236,7 +238,7 @@ exports.update = async (req, res) => {
       [addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_id]
     );
 
-    res.redirect('/addmem/list');
+    res.redirect('/addmem/list?success=แก้ไขข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
   } catch (err) {
     console.error('Error in update:', err);
     res.status(500).send('เกิดข้อผิดพลาด: ' + err.message);
@@ -246,12 +248,19 @@ exports.update = async (req, res) => {
 // แสดงรายละเอียด
 exports.viewOne = async (req, res) => {
   try {
-    const record = await addmemModel.findById(req.params.id);
-    if (!record) return res.status(404).send('ไม่พบข้อมูล');
+    const query = `
+      SELECT a.*, ac.c_name
+      FROM addmem a
+      LEFT JOIN active_coop ac ON a.addmem_code = ac.c_code
+      WHERE a.addmem_id = ?
+    `;
+    const [rows] = await db.query(query, [req.params.id]);
+    
+    if (!rows || rows.length === 0) return res.status(404).send('ไม่พบข้อมูล');
     
     res.render('addmem_view', { 
       title: 'รายละเอียดสมาชิกเพิ่มเติม', 
-      record 
+      record: rows[0]
     });
   } catch (error) {
     console.error('Error viewing addmem:', error);
@@ -326,7 +335,7 @@ exports.deleteAddmem = async (req, res) => {
     if (!record) return res.status(404).send('ไม่พบข้อมูล');
     
     await addmemModel.delete(id);
-    res.redirect('/addmem/list');
+    res.redirect('/addmem/list?success=ลบข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
     
   } catch (error) {
     console.error('Error deleting addmem:', error);

@@ -18,7 +18,7 @@
   <div class="row">
     <div class="col-md-8">
       <div class="card">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
           <h5 class="mb-0">📋 ข้อมูลสมาชิก</h5>
         </div>
         <div class="card-body">
@@ -26,6 +26,13 @@
             <div class="col-sm-4 fw-bold">รหัสสมาชิก:</div>
             <div class="col-sm-8">
               <span class="badge bg-primary fs-6"><%= record.addmem_code %></span>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 fw-bold">ชื่อสหกรณ์:</div>
+            <div class="col-sm-8">
+              <%= record.c_name || 'ไม่พบข้อมูล' %>
             </div>
           </div>
           
@@ -87,7 +94,7 @@
     <div class="col-md-4">
       <!-- สถิติ -->
       <div class="card">
-        <div class="card-header bg-secondary text-white">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
           <h6 class="mb-0">📊 สถิติ</h6>
         </div>
         <div class="card-body text-center">
@@ -109,7 +116,7 @@
       <!-- ปุ่มจัดการ -->
       <% if(user && user.mClass=='kjs'){ %>
       <div class="card mt-3">
-        <div class="card-header bg-danger text-white">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);">
           <h6 class="mb-0">⚠️ จัดการข้อมูล</h6>
         </div>
         <div class="card-body">
@@ -128,7 +135,7 @@
 
       <!-- ข้อมูลเพิ่มเติม -->
       <div class="card mt-3">
-        <div class="card-header bg-info text-white">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
           <h6 class="mb-0">ℹ️ ข้อมูลเพิ่มเติม</h6>
         </div>
         <div class="card-body">

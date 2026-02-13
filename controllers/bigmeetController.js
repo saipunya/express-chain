@@ -1,6 +1,6 @@
 const Bigmeet = require('../models/bigmeetModel');
 
-const requiredFields = ['big_code', 'big_endyear', 'big_type', 'big_date', 'big_saveby', 'big_savedate'];
+const requiredFields = ['big_code', 'big_endyear', 'big_type', 'big_date'];
 
 function validateCreate(body) {
   const missing = requiredFields.filter((f) => body[f] === undefined || body[f] === null || body[f] === '');
@@ -134,26 +134,34 @@ module.exports = {
 
   async create(req, res) {
     try {
+      // Set defaults for audit fields
+      req.body.big_saveby = req.body.big_saveby || 'system';
+      req.body.big_savedate = req.body.big_savedate || new Date().toISOString().split('T')[0];
+
       const { valid, missing } = validateCreate(req.body || {});
       if (!valid) {
-        const [groups, coops] = await Promise.all([
-          Bigmeet.allcoopGroups(),
-          Bigmeet.allcoop(),
-        ]);
-        return res.status(400).render('bigmeet/form', { item: req.body, errors: missing, groups, coops });
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+          return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลให้ครบถ้วน: ' + missing.join(', ') });
+        } else {
+          const [groups, coops] = await Promise.all([
+            Bigmeet.allcoopGroups(),
+            Bigmeet.allcoop(),
+          ]);
+          return res.status(400).render('bigmeet/form', { item: req.body, errors: missing, groups, coops });
+        }
       }
       
       await Bigmeet.create(req.body);
       
       // Check if request expects JSON (AJAX) or HTML redirect
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
         res.json({ success: true, message: 'สร้างข้อมูลสำเร็จ' });
       } else {
         res.redirect('/bigmeet?success=สร้างข้อมูลสำเร็จ');
       }
     } catch (err) {
       console.error('bigmeet:create', err);
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
         res.status(500).json({ success: false, error: 'Internal server error' });
       } else {
         res.status(500).render('error_page', { message: 'Internal server error' });
@@ -163,33 +171,41 @@ module.exports = {
 
   async update(req, res) {
     try {
+      // Set defaults for audit fields
+      req.body.big_saveby = req.body.big_saveby || 'system';
+      req.body.big_savedate = req.body.big_savedate || new Date().toISOString().split('T')[0];
+
       const exists = await Bigmeet.findById(req.params.id);
       if (!exists) {
-        return req.xhr || req.headers.accept.indexOf('json') > -1
+        return req.xhr || req.headers.accept?.indexOf('json') > -1
           ? res.status(404).json({ success: false, error: 'ไม่พบข้อมูล' })
           : res.status(404).render('error_page', { message: 'ไม่พบข้อมูล' });
       }
 
       const { valid, missing } = validateCreate(req.body || {});
       if (!valid) {
-        const [groups, coops] = await Promise.all([
-          Bigmeet.allcoopGroups(),
-          Bigmeet.allcoop(),
-        ]);
-        return res.status(400).render('bigmeet/form', { item: { ...req.body, big_id: req.params.id }, errors: missing, groups, coops });
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+          return res.status(400).json({ success: false, error: 'กรุณากรอกข้อมูลให้ครบถ้วน: ' + missing.join(', ') });
+        } else {
+          const [groups, coops] = await Promise.all([
+            Bigmeet.allcoopGroups(),
+            Bigmeet.allcoop(),
+          ]);
+          return res.status(400).render('bigmeet/form', { item: { ...req.body, big_id: req.params.id }, errors: missing, groups, coops });
+        }
       }
 
       await Bigmeet.update(req.params.id, req.body || {});
       
       // Check if request expects JSON (AJAX) or HTML redirect
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
         res.json({ success: true, message: 'อัปเดตข้อมูลสำเร็จ' });
       } else {
         res.redirect('/bigmeet?success=อัปเดตข้อมูลสำเร็จ');
       }
     } catch (err) {
       console.error('bigmeet:update', err);
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
         res.status(500).json({ success: false, error: 'Internal server error' });
       } else {
         res.status(500).render('error_page', { message: 'Internal server error' });

@@ -75,7 +75,11 @@
               <th class="text-center" style="width: 120px;">ประเภท</th>
               <th class="text-center" style="width: 120px;">วันที่ประชุม</th>
               <th class="text-center" style="width: 120px;">วันที่บันทึก</th>
-              <th class="text-center" style="width: 100px;">จัดการ</th>
+                    <% if (user && (user.mClass === 'kbs' || user.mClass === 'admin')) { %>
+
+              <th class="text-center" style="width: 80px;">แก้ไข</th>
+              <th class="text-center" style="width: 80px;">ลบ</th>
+                    <% } %> 
             </tr>
           </thead>
           <tbody id="dataTable">
@@ -106,21 +110,23 @@
                   <td class="text-center">
                     <%= item.big_savedate ? new Date(item.big_savedate).toLocaleDateString('th-TH') : '-' %>
                   </td>
-                  <td class="text-center">
-                    <div class="btn-group" role="group">
+                    <% if (user && (user.mClass === 'kbs' || user.mClass === 'admin')) { %>
+                    <td class="text-center">
                       <a href="/bigmeet/edit/<%= item.big_id %>" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-                        <i class="fas fa-edit"></i>
+                      <i class="fas fa-edit"></i>แก้ไข
                       </a>
+                    </td>
+                    <td class="text-center">
                       <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(<%= item.big_id %>)" title="ลบ">
-                        <i class="fas fa-trash"></i>
+                      <i class="fas fa-trash"></i>ลบ
                       </button>
-                    </div>
-                  </td>
+                    </td>
+                    <% } %>
                 </tr>
               <% }) %>
             <% } else { %>
               <tr>
-                <td colspan="7" class="text-center py-5">
+                <td colspan="8" class="text-center py-5">
                   <div class="text-muted">
                     <i class="fas fa-inbox fa-3x mb-3"></i>
                     <div class="h5">ไม่พบข้อมูลการประชุม</div>
@@ -220,7 +226,7 @@ function renderTable() {
   if (pageItems.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center py-5">
+        <td colspan="8" class="text-center py-5">
           <div class="text-muted">
             <i class="fas fa-search fa-3x mb-3"></i>
             <div class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
@@ -258,14 +264,14 @@ function renderTable() {
             ${item.big_savedate ? new Date(item.big_savedate).toLocaleDateString('th-TH') : '-'}
           </td>
           <td class="text-center">
-            <div class="btn-group" role="group">
-              <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-                <i class="fas fa-edit"></i>
-              </a>
-              <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
+            <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
+              <i class="fas fa-edit"></i>แก้ไข
+            </a>
+          </td>
+          <td class="text-center">
+            <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
+              <i class="fas fa-trash"></i>ลบ
+            </button>
           </td>
         </tr>
       `;

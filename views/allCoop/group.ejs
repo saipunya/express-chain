@@ -135,7 +135,7 @@
                       <th style="width:110px;">รหัส</th>
                       <th>ชื่อ</th>
                       <th style="width:180px;">กลุ่ม</th>
-                      <th style="width:110px;" class="text-center">ดูข้อมูล</th>
+                      <th style="width:150px;" class="text-center">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -147,8 +147,11 @@
                         <td data-label="กลุ่ม"><span class="badge bg-primary-subtle text-primary-emphasis">
                           <%= getGroupThaiName(c.c_group || '') %>
                         </span></td>
-                        <td class="text-center row-actions" data-label="ดูข้อมูล">
+                        <td class="text-center row-actions" data-label="จัดการ">
                           <a href="/allCoop/profile/<%= c.c_code %>" class="btn btn-outline-primary btn-sm" aria-label="เปิดโปรไฟล์"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% if (user && (user.mClass === 'admin' || user.mClass === 'pbt')) { %>
+                            <a href="/activeCoop/edit/<%= c.c_id %>" class="btn btn-warning btn-sm" aria-label="แก้ไข"><i class="bi bi-pencil"></i></a>
+                          <% } %>
                         </td>
                       </tr>
                     <% }) %>
@@ -191,7 +194,7 @@
                       <th style="width:110px;">รหัส</th>
                       <th>ชื่อ</th>
                       <th style="width:180px;">กลุ่ม</th>
-                      <th style="width:110px;" class="text-center">ดูข้อมูล</th>
+                      <th style="width:150px;" class="text-center">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -203,8 +206,11 @@
                         <td data-label="กลุ่ม"><span class="badge bg-success-subtle text-success-emphasis">
                           <%= getGroupThaiName(c.c_group || '') %>
                         </span></td>
-                        <td class="text-center row-actions" data-label="ดูข้อมูล">
+                        <td class="text-center row-actions" data-label="จัดการ">
                           <a href="/allCoop/profile/<%= c.c_code %>" class="btn btn-outline-success btn-sm" aria-label="เปิดโปรไฟล์"><i class="bi bi-box-arrow-up-right"></i></a>
+                          <% if (user && (user.mClass === 'admin' || user.mClass === 'pbt')) { %>
+                            <a href="/activeCoop/edit/<%= c.c_id %>" class="btn btn-warning btn-sm" aria-label="แก้ไข"><i class="bi bi-pencil"></i></a>
+                          <% } %>
                         </td>
                       </tr>
                     <% }) %>

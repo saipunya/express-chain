@@ -25,8 +25,14 @@ exports.createForm = (req, res) => {
 };
 
 exports.store = async (req, res) => {
+  delete req.body.gmem;
+  delete req.body.mastatan;
+  delete req.body.c_standard;
+  delete req.body.c_standard65;
+  delete req.body.yokradab;
+  delete req.body.plan;
   await activeCoopModel.create(req.body);
-  res.redirect('/activeCoop'); // จาก '/active-coop'
+  res.redirect('/activeCoop');
 };
 
 exports.editForm = async (req, res) => {
@@ -39,6 +45,14 @@ exports.editForm = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
+  delete req.body.gmem;
+  delete req.body.mastatan;
+  delete req.body.c_standard;
+  delete req.body.c_standard65;
+  delete req.body.yokradab;
+  delete req.body.plan;
+  req.body.c_saveby = req.session.user.fullname;
+  req.body.c_savedate = new Date().toISOString().split('T')[0];
   await activeCoopModel.update(req.params.id, req.body);
   res.redirect('/activeCoop');
 };

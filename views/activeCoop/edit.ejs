@@ -98,17 +98,6 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">บันทึกโดย (c_saveby)</label>
-      <input type="text" name="c_saveby" class="form-control" value="<%= coop.c_saveby %>">
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">วันที่บันทึก (c_savedate)</label>
-      <input type="date" name="c_savedate" class="form-control" value="<%= coop.c_savedate.toISOString().slice(0,10) %>">
-    </div>
-  </div>
-
   <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
   <a href="/activeCoop" class="btn btn-secondary">ยกเลิก</a>
 </form>

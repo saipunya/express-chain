@@ -225,6 +225,7 @@ exports.monthlyReport = async (req, res) => {
   let kpiMetrics = [];
   let kpiSummary = { total: 0, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 };
   let historicalRecords = [];
+  let kpiHistoricalRecords = [];  // ✅ Add this
   let attachments = [];
 
   if (selectedProject) {
@@ -276,30 +277,24 @@ exports.monthlyReport = async (req, res) => {
         },
         { total: kpiMetrics.length, achieved: 0, onTrack: 0, behind: 0, noTarget: 0 }
       );
+
+      // ✅ Fetch KPI historical records
+      try {
+        kpiHistoricalRecords = await PlanKpiMonthly.getHistoricalByProject(selectedProject, 12);
+      } catch (error) {
+        console.error('Error fetching KPI historical records:', error);
+        kpiHistoricalRecords = [];
+      }
     }
 
-    // Fetch historical monthly records
+    // Fetch historical monthly records - Fixed query
     try {
-      const db = require('../config/db');
-      const query = `
-        SELECT DISTINCT 
-          am.report_month,
-          COUNT(am.ac_id) as total_activities,
-          SUM(CASE WHEN am.status = 2 THEN 1 ELSE 0 END) as completed,
-          SUM(CASE WHEN am.status = 1 THEN 1 ELSE 0 END) as in_progress,
-          SUM(CASE WHEN am.status = 0 OR am.status IS NULL THEN 1 ELSE 0 END) as not_started
-        FROM activity_monthly am
-        WHERE am.pro_code = ?
-        GROUP BY am.report_month
-        ORDER BY am.report_month DESC
-        LIMIT 12
-      `;
-      const [rows] = await db.promise().query(query, [selectedProject]);
-      historicalRecords = Array.isArray(rows) ? rows : [];
+      historicalRecords = await PlanActivityMonthly.getHistoricalByProject(selectedProject, 12);
     } catch (error) {
       console.error('Error fetching historical records:', error);
       historicalRecords = [];
     }
+
     attachments = await AttachmentModel.findByProjectAndMonth(selectedProject, normalizedMonth);
   }
 
@@ -328,6 +323,7 @@ exports.monthlyReport = async (req, res) => {
     kpiSummary,
     monthLabel,
     historicalRecords,
+    kpiHistoricalRecords,  // ✅ Pass to view
     attachments,
     attachmentUploadError: req.query.upload_error
   });
@@ -457,6 +453,102 @@ exports.storeMonthlyKpi = async (req, res) => {
 
   if (rows.length) {
     await PlanKpiMonthly.upsertMany(rows);
+  }
+
+  res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);
+};
+
+/* =========================
+   Unified Monthly Save (POST)
+   Saves both activity statuses + KPI rows in one request.
+========================= */
+
+exports.storeMonthlyAll = async (req, res) => {
+  const proCode = req.body.pro_code;
+  const normalizedMonth = normalizeMonthInput(req.body.report_month);
+
+  if (!proCode || !normalizedMonth) {
+    return res.status(400).send('ข้อมูลโครงการหรือเดือนที่รายงานไม่ถูกต้อง');
+  }
+
+  const updatedBy = req.session?.user?.username || req.session?.user?.fullname || 'system';
+
+  // ── 1) Activity statuses ──────────────────────────────────────────────
+  const activities = await PlanActivity.findByProjectCode(proCode);
+  if (activities.length) {
+    const allowedIds = new Set(activities.map(a => String(a.ac_id)));
+    const statusMap = extractFieldMap(req.body, 'status');
+    const noteMap = extractFieldMap(req.body, 'note');
+    const validStatuses = new Set([0, 1, 2]);
+
+    const activityRows = Object.entries(statusMap)
+      .map(([acId, status]) => {
+        const acIdKey = String(acId);
+        if (!allowedIds.has(acIdKey)) return null;
+
+        const parsedId = Number.parseInt(acIdKey, 10);
+        const parsedStatus = Number.parseInt(status, 10);
+        if (!Number.isInteger(parsedId) || !validStatuses.has(parsedStatus)) return null;
+
+        const rawNote = noteMap[acIdKey];
+        const trimmedNote = typeof rawNote === 'string' ? rawNote.trim() : '';
+
+        return {
+          ac_id: parsedId,
+          pro_code: proCode,  // ✅ เพิ่ม pro_code
+          report_month: normalizedMonth,
+          status: parsedStatus,
+          note: trimmedNote || null,
+          updated_by: updatedBy
+        };
+      })
+      .filter(Boolean);
+
+    if (activityRows.length) {
+      await PlanActivityMonthly.upsertStatuses(activityRows);
+      await PlanActivity.updateStatuses(
+        activityRows.map(r => ({ ac_id: r.ac_id, status: r.status }))
+      );
+    }
+  }
+
+  // ── 2) KPI rows ──────────────────────────────────────────────────────
+  const structuredInput = req.body.kpi_rows || null;
+  const entries = Array.isArray(structuredInput)
+    ? structuredInput
+    : structuredInput && typeof structuredInput === 'object'
+      ? Object.keys(structuredInput)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((key) => structuredInput[key])
+      : [];
+
+  if (entries.length) {
+    const kpis = await PlanKpi.findByProjectCode(proCode);
+    const allowedKpiIds = new Set(kpis.map((kpi) => Number(kpi.kp_id)));
+
+    const kpiRows = entries
+      .map((entry) => {
+        if (!entry) return null;
+        const kpId = Number.parseInt(entry.kp_id || entry.id || entry.kpi_id, 10);
+        const rawValue = entry.actual_value ?? entry.value;
+        if (!kpId || rawValue === undefined || rawValue === '') return null;
+        if (!allowedKpiIds.has(kpId)) return null;
+        const numericValue = Number.parseFloat(rawValue);
+        if (Number.isNaN(numericValue)) return null;
+        const note = typeof entry.note === 'string' && entry.note.trim() ? entry.note.trim() : null;
+        return {
+          kp_id: kpId,
+          report_month: normalizedMonth,
+          actual_value: numericValue,
+          note,
+          created_by: updatedBy
+        };
+      })
+      .filter(Boolean);
+
+    if (kpiRows.length) {
+      await PlanKpiMonthly.upsertMany(kpiRows);
+    }
   }
 
   res.redirect(`/planactivity/report?pro_code=${encodeURIComponent(proCode)}&month=${normalizedMonth.slice(0, 7)}`);

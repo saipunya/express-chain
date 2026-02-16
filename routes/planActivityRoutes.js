@@ -8,6 +8,7 @@ const { requireAdminOrResponsibleByProjectCode } = require('../middlewares/proje
 
 // API: Get activities by project code (no auth required)
 router.get('/api/by-project', controller.getActivitiesByProject);
+router.get('/api/activities-by-project', controller.getActivitiesByProject);
 
 router.use(requireLogin);
 
@@ -34,6 +35,9 @@ router.post('/report/attachments/upload', requireAdminOrResponForReport, attachm
 router.delete('/report/attachments/:id', requireAdminOrResponForReport, attachmentController.deleteAttachment);
 router.post('/report', requireAdminOrResponForReport, controller.storeMonthlyStatuses);
 router.post('/report/kpi', requireAdminOrResponForReport, controller.storeMonthlyKpi);
+
+// Unified save (activities + KPI in one form)
+router.post('/report/all', controller.storeMonthlyAll);
 
 router.get('/:id/edit', requireAdminOrPbt, controller.edit);
 router.post('/:id/update', requireAdminOrPbt, controller.update);

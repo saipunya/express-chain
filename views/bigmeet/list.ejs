@@ -94,7 +94,29 @@
                     <small class="text-muted">รหัส: <%= item.big_code %></small>
                   </td>
                   <td class="text-center">
-                    <span class="badge bg-info"><%= item.big_endyear %></span>
+                    <!-- DEBUG: end_date="<%= item.end_date %>" big_endyear="<%= item.big_endyear %>" -->
+                    <% 
+                      let displayEndDateBE = item.big_endyear || '-';
+                      const endDayVal = item.end_day ? String(item.end_day).trim() : '';
+                      
+                      if (item.big_endyear && endDayVal && endDayVal.includes('-')) {
+                        try {
+                          // big_endyear = "2569" (พ.ศ.) -> 2026 (ค.ศ.)
+                          const ceYear = parseInt(item.big_endyear) - 543;
+                          // end_day = "02-28" (MM-DD)
+                          // รวมเป็น "2026-02-28"
+                          const isoStr = ceYear + '-' + endDayVal;
+                          const dateObj = new Date(isoStr + 'T00:00:00');
+                          
+                          if (!isNaN(dateObj.getTime())) {
+                            displayEndDateBE = dateObj.toLocaleDateString('th-TH', { 
+                              day: 'numeric', month: 'long', year: 'numeric' 
+                            });
+                          }
+                        } catch(e) { /* keep default */ }
+                      }
+                    %>
+                    <div class="text-nowrap"><%= displayEndDateBE %></div>
                   </td>
                   <td class="text-center">
                     <% if (item.big_type === 'มีงบการเงิน') { %>
@@ -104,13 +126,27 @@
                     <% } %>
                   </td>
                   <td class="text-center">
-                    <div><%= item.big_date ? new Date(item.big_date).toLocaleDateString('th-TH') : '-' %></div>
+                    <% 
+                      let validBigDate = '-';
+                      if (item.big_date) {
+                        const d = new Date(item.big_date);
+                        if (!isNaN(d.getTime())) validBigDate = d.toLocaleDateString('th-TH');
+                      }
+                    %>
+                    <div><%= validBigDate %></div>
                     <small class="text-muted"><%= item.big_saveby %></small>
                   </td>
                   <td class="text-center">
-                    <%= item.big_savedate ? new Date(item.big_savedate).toLocaleDateString('th-TH') : '-' %>
+                    <% 
+                      let validSaveDate = '-';
+                      if (item.big_savedate) {
+                        const d = new Date(item.big_savedate);
+                        if (!isNaN(d.getTime())) validSaveDate = d.toLocaleDateString('th-TH');
+                      }
+                    %>
+                    <%= validSaveDate %>
                   </td>
-                    <% if (user && (user.mClass === 'kbs' || user.mClass === 'admin')) { %>
+                    <% if (user && ['kbs', 'admin'].includes(user.mClass)) { %>
                     <td class="text-center">
                       <a href="/bigmeet/edit/<%= item.big_id %>" class="btn btn-outline-warning btn-sm" title="แก้ไข">
                       <i class="fas fa-edit"></i>แก้ไข
@@ -155,6 +191,10 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let allItems = <%- JSON.stringify(items || []) %>;
 let filteredItems = [...allItems];
+
+// User permission
+const userClass = '<%= user ? user.mClass : "" %>';
+const canEdit = (userClass === 'kbs' || userClass === 'admin');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -238,6 +278,32 @@ function renderTable() {
   } else {
     tbody.innerHTML = pageItems.map((item, index) => {
       const globalIndex = startIndex + index + 1;
+      
+      // big_endyear (พ.ศ.) + end_day (MM-DD) -> "YYYY-MM-DD" (ค.ศ.) -> วันที่ไทย
+      let displayEndDateBE = item.big_endyear || '';
+      const endDayVal = item.end_day ? String(item.end_day).trim() : '';
+      
+      if (item.big_endyear && endDayVal && endDayVal.includes('-')) {
+        try {
+          const ceYear = parseInt(item.big_endyear) - 543;
+          const isoStr = ceYear + '-' + endDayVal;
+          const dateObj = new Date(isoStr + 'T00:00:00');
+          
+          if (!isNaN(dateObj.getTime())) {
+            displayEndDateBE = dateObj.toLocaleDateString('th-TH', { 
+              day: 'numeric', month: 'long', year: 'numeric' 
+            });
+          }
+        } catch(e) { /* keep default */ }
+      }
+
+      // Format standard dates safely
+      const formatLocal = (dStr) => {
+        if (!dStr) return '-';
+        const d = new Date(dStr);
+        return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
+      };
+
       return `
         <tr data-id="${item.big_id}">
           <td class="text-center">
@@ -248,7 +314,7 @@ function renderTable() {
             <small class="text-muted">รหัส: ${item.big_code}</small>
           </td>
           <td class="text-center">
-            <span class="badge bg-info">${item.big_endyear}</span>
+            <div class="text-nowrap">${displayEndDateBE}</div>
           </td>
           <td class="text-center">
             ${item.big_type === 'มีงบการเงิน' 
@@ -257,12 +323,13 @@ function renderTable() {
             }
           </td>
           <td class="text-center">
-            <div>${item.big_date ? new Date(item.big_date).toLocaleDateString('th-TH') : '-'}</div>
-            <small class="text-muted">${item.big_saveby}</small>
+            <div>${formatLocal(item.big_date)}</div>
+            <small class="text-muted">${item.big_saveby || ''}</small>
           </td>
           <td class="text-center">
-            ${item.big_savedate ? new Date(item.big_savedate).toLocaleDateString('th-TH') : '-'}
+            ${formatLocal(item.big_savedate)}
           </td>
+          ${canEdit ? `
           <td class="text-center">
             <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
               <i class="fas fa-edit"></i>แก้ไข
@@ -273,6 +340,7 @@ function renderTable() {
               <i class="fas fa-trash"></i>ลบ
             </button>
           </td>
+          ` : ''}
         </tr>
       `;
     }).join('');

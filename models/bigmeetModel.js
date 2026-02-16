@@ -10,7 +10,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 module.exports = {
   async findAll() {
     const [rows] = await db.query(`
-      SELECT b.*, c.c_name 
+      SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day 
       FROM bigmeet b
       LEFT JOIN active_coop c ON b.big_code = c.c_code
       ORDER BY b.big_id DESC
@@ -20,7 +20,7 @@ module.exports = {
 
   async findPage(limit = 10, offset = 0, filters = {}) {
     let query = `
-      SELECT b.*, c.c_name 
+      SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day 
       FROM bigmeet b
       LEFT JOIN active_coop c ON b.big_code = c.c_code
       WHERE 1=1
@@ -91,6 +91,7 @@ module.exports = {
     const [result] = await db.query(
       `INSERT INTO ${table} (big_code, big_endyear, big_type, big_date, big_saveby, big_savedate)
        VALUES (?, ?, ?, ?, ?, ?)`,
+
       [
         payload.big_code,
         payload.big_endyear,

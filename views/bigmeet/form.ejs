@@ -73,14 +73,33 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="big_date" class="form-label">วันที่ประชุม <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="big_date" name="big_date" value="<%= (item && item.big_date) ? new Date(item.big_date).toISOString().split('T')[0] : '' %>" required>
+                  <% 
+                    let formattedBigDate = '';
+                    if (item && item.big_date) {
+                      const d = new Date(item.big_date);
+                      formattedBigDate = [
+                        d.getFullYear(),
+                        ('0' + (d.getMonth() + 1)).slice(-2),
+                        ('0' + d.getDate()).slice(-2)
+                      ].join('-');
+                    }
+                  %>
+                  <input type="date" class="form-control" id="big_date" name="big_date" value="<%= formattedBigDate %>" required>
                 </div>
               </div>
             </div>
 
             <!-- Hidden fields for audit trail -->
             <input type="hidden" name="big_saveby" value="<%= locals.user ? (locals.user.username || locals.user.name) : '' %>">
-            <input type="hidden" name="big_savedate" value="<%= new Date().toISOString().split('T')[0] %>">
+            <% 
+              const now = new Date();
+              const todayLocal = [
+                now.getFullYear(),
+                ('0' + (now.getMonth() + 1)).slice(-2),
+                ('0' + now.getDate()).slice(-2)
+              ].join('-');
+            %>
+            <input type="hidden" name="big_savedate" value="<%= todayLocal %>">
 
             <div class="d-flex justify-content-between mt-4">
               <a href="/bigmeet" class="btn btn-secondary">

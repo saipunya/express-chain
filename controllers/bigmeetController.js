@@ -35,6 +35,7 @@ module.exports = {
         Bigmeet.countAll(filters)
       ]);
       
+     
       const totalPages = Math.ceil(total / pagination.limit);
       
       res.render('bigmeet/list', { 

@@ -22,6 +22,7 @@ const Chamra = require('../models/chamraModel');
 const strengthModel = require('../models/strengthModel'); // NEW strength summary
 const coopProfileModel = require('../models/coopProfileModel'); // NEW: for homepage mini list
 const gitgumModel = require('../models/gitgumModel'); // NEW: for calendar activities
+const bigmeetModel = require('../models/bigmeetModel');
 
 // controllers/homeController.js
 
@@ -42,6 +43,7 @@ const homeController = {
       const lastRq2 = await Rq2.getLast(10);
       const lastCommands = await Command.getLast(10);
       const closedCoops = await activeCoopModel.getClosedCoops();
+      const meetingDeadlineBase = await activeCoopModel.getMeetingDeadlineBase();
 
       // ข้อมูลสหกรณ์
       const coopStats = await coopModel.getCoopStats();
@@ -104,6 +106,153 @@ const homeController = {
         console.error('[homeController] meetingroom error:', e);
       }
 
+      const currentYear = new Date().getFullYear();
+      const toMonthDay = (value) => {
+        if (!value) return null;
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (/^\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+          const md = trimmed.slice(5, 10);
+          return /^\d{2}-\d{2}$/.test(md) ? md : null;
+        }
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+          const month = String(value.getMonth() + 1).padStart(2, '0');
+          const day = String(value.getDate()).padStart(2, '0');
+          return `${month}-${day}`;
+        }
+        return null;
+      };
+      const addDaysUtc = (ymd, days) => {
+        const [y, m, d] = ymd.split('-').map(Number);
+        const date = new Date(Date.UTC(y, m - 1, d));
+        date.setUTCDate(date.getUTCDate() + days);
+        return date;
+      };
+      const formatThaiDate = (date) => date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+      const parseDateToUtcMs = (value) => {
+        if (!value) return null;
+        if (typeof value === 'string') {
+          const ymd = value.trim().slice(0, 10);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+            const [y, m, d] = ymd.split('-').map(Number);
+            return Date.UTC(y, m - 1, d);
+          }
+        }
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+          return Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
+        }
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? null : Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+      };
+      const bangkokNow = new Date();
+      const bangkokYear = Number(
+        new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric' })
+          .format(bangkokNow)
+      );
+      const bangkokMonth = Number(
+        new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', month: '2-digit' })
+          .format(bangkokNow)
+      );
+      const bangkokMonthKey = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit'
+      }).format(bangkokNow);
+      const nextBangkokDate = new Date(bangkokNow.getTime());
+      nextBangkokDate.setMonth(nextBangkokDate.getMonth() + 1);
+      const nextBangkokMonthKey = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit'
+      }).format(nextBangkokDate);
+      const meetingDeadlineMonthLabel = bangkokNow.toLocaleDateString('th-TH', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+
+      const resolveYearForEndDay = (monthDay, yearNow) => {
+        if (!monthDay) return yearNow;
+        const month = Number(monthDay.split('-')[0]);
+        if (Number.isNaN(month)) return yearNow;
+        return month >= 4 ? yearNow - 1 : yearNow;
+      };
+
+      const meetingDeadlines = (meetingDeadlineBase || [])
+        .map((row) => {
+          const monthDay = toMonthDay(row.end_day);
+          if (!monthDay) return null;
+          const endDateYear = resolveYearForEndDay(monthDay, currentYear);
+          const endDateYmd = `${endDateYear}-${monthDay}`;
+          const endDateObj = addDaysUtc(endDateYmd, 0);
+          const deadlineObj = addDaysUtc(endDateYmd, 150);
+          const deadlineMonthKey = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit'
+          }).format(deadlineObj);
+          return {
+            c_code: row.c_code,
+            c_name: row.c_name,
+            c_group: row.c_group,
+            coop_group: row.coop_group,
+            endDateYmd,
+            endDateThai: formatThaiDate(endDateObj),
+            deadlineYmd: deadlineObj.toISOString().slice(0, 10),
+            deadlineThai: formatThaiDate(deadlineObj),
+            deadlineSort: deadlineObj.getTime(),
+            deadlineMonthKey,
+            endDateMs: endDateObj.getTime(),
+            deadlineMs: deadlineObj.getTime()
+          };
+        })
+        .filter(Boolean)
+        .filter((row) => row.deadlineMonthKey === bangkokMonthKey || row.deadlineMonthKey === nextBangkokMonthKey)
+        .sort((a, b) => a.deadlineSort - b.deadlineSort);
+
+      const meetingCodes = meetingDeadlines.map((row) => row.c_code).filter(Boolean);
+      const bigmeetRows = await bigmeetModel.findByCodes(meetingCodes);
+      const bigmeetMap = bigmeetRows.reduce((acc, row) => {
+        const key = row.big_code || '';
+        const ms = parseDateToUtcMs(row.big_date);
+        if (!key || ms === null) return acc;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push({ ms, raw: row.big_date });
+        return acc;
+      }, {});
+
+      const meetingDeadlinesWithStatus = meetingDeadlines.map((row) => {
+        const dates = bigmeetMap[row.c_code] || [];
+        const inWindow = dates
+          .filter((item) => item.ms >= row.endDateMs && item.ms <= row.deadlineMs)
+          .sort((a, b) => a.ms - b.ms);
+        const meetingDateThai = inWindow.length
+          ? formatThaiDate(new Date(inWindow[0].ms))
+          : null;
+        return { ...row, meetingDateThai };
+      });
+
+      const meetingDeadlinesGrouped = meetingDeadlinesWithStatus.reduce((acc, row) => {
+        const groupKey = row.c_group || 'ไม่ระบุกลุ่ม';
+        if (!acc[groupKey]) acc[groupKey] = [];
+        acc[groupKey].push(row);
+        return acc;
+      }, {});
+
+      const meetingDeadlineGroups = Object.keys(meetingDeadlinesGrouped)
+        .sort((a, b) => a.localeCompare(b, 'th-TH'))
+        .map((groupName) => {
+          const rows = meetingDeadlinesGrouped[groupName].slice().sort((a, b) =>
+            (a.c_name || '').localeCompare(b.c_name || '', 'th-TH')
+          );
+          return { groupName, rows };
+        });
+
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -131,6 +280,8 @@ const homeController = {
         homeCoops,        // NEW variable for view
         meetingsToday,
         meetingroomTodayDate,
+        meetingDeadlineGroups,
+        meetingDeadlineMonthLabel,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

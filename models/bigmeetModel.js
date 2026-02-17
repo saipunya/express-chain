@@ -8,6 +8,15 @@ let coopCacheExpiry = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 module.exports = {
+  async findByCodes(codes = []) {
+    if (!Array.isArray(codes) || codes.length === 0) return [];
+    const placeholders = codes.map(() => '?').join(',');
+    const [rows] = await db.query(
+      `SELECT big_code, big_date FROM ${table} WHERE big_code IN (${placeholders})` ,
+      codes
+    );
+    return rows;
+  },
   async findAll() {
     const [rows] = await db.query(`
       SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day 

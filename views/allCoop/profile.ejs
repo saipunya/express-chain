@@ -54,7 +54,7 @@
 
     <!-- Personnel and Fiscal Year Information Cards -->
     <div class="row g-3 mb-4">
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -67,7 +67,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -80,7 +80,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -88,11 +88,30 @@
               <div class="flex-grow-1">
                 <p class="text-muted small mb-1">วันสิ้นปีบัญชี</p>
                 <div class="fw-semibold">
-                    <% if (data.coop.end_date) { %>
-                    <%= data.coop.end_date %>
-                    <% } else { %>
+                  <% if (data.fiscalEndDateThai) { %>
+                    <%= data.fiscalEndDateThai %>
+                  <% } else { %>
                     ไม่ระบุ
-                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-check2-square fs-5 text-primary mt-1"></i>
+              <div class="flex-grow-1">
+                <p class="text-muted small mb-1">วันที่ประชุมใหญ่ล่าสุด</p>
+                <div class="fw-semibold">
+                  <% if (data.bigmeetDateThai) { %>
+                    <%= data.bigmeetDateThai %>
+                  <% } else { %>
+                    ไม่มีข้อมูล
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -101,58 +120,33 @@
       </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row g-3 mb-4 quick-stats">
-      <div class="col-6 col-sm-4 col-lg-2 active">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">ผลความเข้มแข็ง (ปี)</div>
-            <div class="fw-bold stat-value text-danger"><%= [...new Set((data.strength||[]).map(s=>s.st_year))].length %></div>
-          </div>
-        </div>
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h6 class="mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>ประวัติการประชุมใหญ่</h6>
       </div>
-      <div class="col-6 col-sm-4 col-lg-2">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">รายงานกิจการประจำปี</div>
-            <div class="fw-bold stat-value text-success"><%= (data.business||[]).length %></div>
+      <div class="card-body">
+        <% if ((data.bigmeetDatesByYear || []).length) { %>
+          <div class="row g-3">
+            <% data.bigmeetDatesByYear.forEach((entry) => { %>
+              <div class="col-md-6">
+                <div class="border rounded-3 p-3 h-100">
+                  <div class="fw-semibold mb-2">ปี <%= entry.year %></div>
+                  <ul class="mb-0 ps-3">
+                    <% entry.dates.forEach((d) => { %>
+                      <li><%= d %></li>
+                    <% }) %>
+                  </ul>
+                </div>
+              </div>
+            <% }) %>
           </div>
-        </div>
-      </div>
-      <div class="col-6 col-sm-4 col-lg-2">
-        <div class="card border-0 shadow-sm h-100 bg-gradient" style="--bs-bg-opacity:.08;">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">จำนวนไฟล์การเงิน</div>
-            <div class="fw-bold stat-value text-primary"><%= (data.finance||[]).length %></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-sm-4 col-lg-2">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">ข้อบังคับ</div>
-            <div class="fw-bold stat-value text-warning"><%= (data.rules||[]).length %></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-sm-4 col-lg-2">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">วงเงินกู้ยืม/ค้ำประกัน</div>
-            <div class="fw-bold stat-value text-danger"><%= (data.vong||[]).length %></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-sm-4 col-lg-2">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body py-3">
-            <div class="stat-label text-muted mb-1">RQ2</div>
-            <div class="fw-bold stat-value text-info"><%= (data.rq2||[]).length %></div>
-          </div>
-        </div>
+        <% } else { %>
+          <div class="text-muted">ยังไม่มีข้อมูลการประชุมใหญ่</div>
+        <% } %>
       </div>
     </div>
 
+  
     <!-- Strength Section -->
     <section class="section-block" id="strength-section">
       <div class="card border-0 shadow-sm mb-4">

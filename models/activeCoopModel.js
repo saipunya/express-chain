@@ -159,3 +159,15 @@ exports.getAllGroupedByEndDate = async () => {
   }, {});
 };
 
+exports.getMeetingDeadlineBase = async () => {
+  const [rows] = await pool.query(`
+    SELECT c_code, c_name, c_group, coop_group, end_day
+    FROM active_coop
+    WHERE end_day IS NOT NULL
+      AND end_day <> ''
+      AND c_status = 'ดำเนินการ'
+    ORDER BY end_day ASC, c_name ASC
+  `);
+  return rows;
+};
+

@@ -20,6 +20,71 @@ exports.profile = async (req, res, next) => {
       data.addmem = [];
     }
 
+    const now = new Date();
+    const bangkokYear = Number(
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric' })
+        .format(now)
+    );
+    const toMonthDay = (value) => {
+      if (!value) return null;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (/^\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+        const md = trimmed.slice(5, 10);
+        return /^\d{2}-\d{2}$/.test(md) ? md : null;
+      }
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        return `${month}-${day}`;
+      }
+      return null;
+    };
+    const resolveYearForEndDay = (monthDay, yearNow) => {
+      if (!monthDay) return yearNow;
+      const month = Number(monthDay.split('-')[0]);
+      if (Number.isNaN(month)) return yearNow;
+      return month >= 4 ? yearNow - 1 : yearNow;
+    };
+    const formatThaiDate = (date) => date.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Bangkok'
+    });
+    const endDay = toMonthDay(data.coop.end_day);
+    if (endDay) {
+      const endYear = resolveYearForEndDay(endDay, bangkokYear);
+      const [m, d] = endDay.split('-').map(Number);
+      const endDateObj = new Date(Date.UTC(endYear, m - 1, d));
+      data.fiscalEndDateThai = formatThaiDate(endDateObj);
+    } else {
+      data.fiscalEndDateThai = null;
+    }
+
+    const [bigmeetRows] = await db.query(
+      'SELECT big_date FROM bigmeet WHERE big_code = ? AND big_date IS NOT NULL ORDER BY big_date DESC',
+      [c_code]
+    );
+    if (bigmeetRows && bigmeetRows.length) {
+      const firstDate = new Date(bigmeetRows[0].big_date);
+      data.bigmeetDateThai = Number.isNaN(firstDate.getTime()) ? null : formatThaiDate(firstDate);
+      const grouped = {};
+      bigmeetRows.forEach((row) => {
+        const d = new Date(row.big_date);
+        if (Number.isNaN(d.getTime())) return;
+        const yearBe = d.getFullYear() + 543;
+        if (!grouped[yearBe]) grouped[yearBe] = [];
+        grouped[yearBe].push(formatThaiDate(d));
+      });
+      data.bigmeetDatesByYear = Object.keys(grouped)
+        .sort((a, b) => Number(b) - Number(a))
+        .map((year) => ({ year, dates: grouped[year] }));
+    } else {
+      data.bigmeetDateThai = null;
+      data.bigmeetDatesByYear = [];
+    }
+
     res.render('allCoop/profile', { data });
   } catch (e) {
     console.error('profile error', e);

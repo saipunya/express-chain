@@ -444,7 +444,7 @@
           </thead>
           <tbody>
             <% if (projectReports.length) { %>
-              <% projectReports.forEach((report) => { const totalActivities = Number(report.total_activities || 0); const completedActivities = Number(report.completed_activities || 0); const totalPlan = Number(report.total_plan || 0); const cumulativeActual = Number(report.cumulative_actual || 0); const percent = report.achievementPercent; %>
+              <% projectReports.forEach((report) => { const totalActivities = Number(report.total_activities || 0); const completedActivities = Number(report.completed_activities || 0); const totalPlan = Number(report.total_plan || 0); const cumulativeActual = Number(report.cumulative_actual || 0); const percent = report.achievementPercent; const monthlyStatusList = Array.isArray(report.monthlyStatus) ? report.monthlyStatus : []; %>
                 <tr>
                   <td>
                     <div class="fw-semibold"><%= report.pro_code %> - <%= report.pro_name || '-' %></div>
@@ -472,10 +472,7 @@
                     <% } %>
                   </td>
                   <td>
-                    <div class="timeline-label">
-                      <small class="text-muted d-block">กิจกรรม</small>
-                      <strong><%= report.latestActivityLabel ? 'เดือน ' + report.latestActivityLabel : '-' %></strong>
-                    </div>
+                    
                     <div class="timeline-label">
                       <small class="text-muted d-block">ตัวชี้วัด</small>
                       <strong class="text-success"><%= report.latestKpiLabel ? 'เดือน ' + report.latestKpiLabel : '-' %></strong>
@@ -489,9 +486,29 @@
                       <button type="button" class="btn btn-outline-info btn-sm" onclick="showActivitiesModal('<%= report.pro_code %>', '<%= report.pro_name || '-' %>')">
                         <i class="bi bi-list-check me-1"></i>ดูกิจกรรม
                       </button>
-                      <a href="/planactivity/report?pro_code=<%= encodeURIComponent(report.pro_code) %>" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-eye me-1"></i>รายงานผล
-                      </a>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="bi bi-calendar3 me-1"></i>รายงานรายเดือน
+                        </button>
+                        <ul class="dropdown-menu">
+                          <% if (monthlyStatusList.length) { %>
+                            <% monthlyStatusList.forEach((status) => { %>
+                              <li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="/planactivity/report?pro_code=<%= encodeURIComponent(report.pro_code) %>&month=<%= encodeURIComponent(status.iso) %>">
+                                  <span><%= status.shortLabel %></span>
+                                  <% if (status.operationsReported) { %>
+                                    <span class="badge bg-success-subtle text-success">มีรายงาน</span>
+                                  <% } else { %>
+                                    <span class="badge bg-secondary-subtle text-dark">ยังไม่รายงาน</span>
+                                  <% } %>
+                                </a>
+                              </li>
+                            <% }) %>
+                          <% } else { %>
+                            <li><span class="dropdown-item text-muted">ยังไม่มีเดือนให้เลือก</span></li>
+                          <% } %>
+                        </ul>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -507,6 +524,7 @@
           </tbody>
         </table>
       </div>
+      
     </div>
   </div>
 
@@ -572,6 +590,9 @@
                         <span class="text-muted">ยังไม่เบิก</span>
                       <% } %>
                     </div>
+                    <a class="btn btn-outline-primary btn-sm w-100" href="/planactivity/report?pro_code=<%= encodeURIComponent(report.pro_code) %>&month=<%= encodeURIComponent(status.iso) %>">
+                      ดูรายงานเดือนนี้
+                    </a>
                   </div>
                 <% }) %>
               </div>

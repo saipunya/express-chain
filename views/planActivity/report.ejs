@@ -22,6 +22,7 @@
   for (let diff = -2; diff <= 2; diff += 1) thaiYearOptions.push(selectedGregorianYear + diff);
   const safeAttachments = Array.isArray(typeof attachments !== 'undefined' ? attachments : []) ? (attachments || []) : [];
   const attachmentErrorMessage = typeof attachmentUploadError === 'string' ? attachmentUploadError : null;
+  const attachmentsCollapseClass = attachmentErrorMessage ? 'show' : '';
 %>
 
 <div class="py-4">
@@ -96,60 +97,8 @@
       const completionBarWidth = Math.min(completionPercent, 100).toFixed(1);
     %>
 
-    <!-- ═══════════════════ Summary Cards ═══════════════════ -->
-    <div class="row g-3 mb-4">
-      <div class="col-lg-4">
-        <div class="card shadow-sm h-100 border-<%= statusBadge %>">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <p class="text-uppercase text-muted small mb-1">ภาพรวมความก้าวหน้า</p>
-                <h3 class="mb-0"><%= completionPercent.toFixed(1) %>%</h3>
-              </div>
-              <span class="badge bg-<%= statusBadge %>">
-                <%= completionPercent >= 80 ? 'สำเร็จดี' : completionPercent >= 50 ? 'กำลังเดินหน้า' : 'ต้องเร่งรัด' %>
-              </span>
-            </div>
-            <div class="progress" style="height: 16px;">
-              <div class="progress-bar bg-<%= statusBadge %>" role="progressbar" style="width: <%= completionBarWidth %>%;" aria-valuenow="<%= completionBarWidth %>" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="text-muted d-block mt-2">จากกิจกรรมทั้งหมด <strong><%= totalActivitiesCount %></strong> รายการ</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-8">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <div class="card shadow-sm h-100 border-success-subtle">
-              <div class="card-body text-center">
-                <p class="text-uppercase text-muted small mb-1"><i class="bi bi-check-circle text-success me-1"></i>เรียบร้อย</p>
-                <h4 class="text-success mb-0"><%= completedCount %></h4>
-                <small class="text-muted"><%= completionPercent.toFixed(1) %>%</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card shadow-sm h-100 border-warning-subtle">
-              <div class="card-body text-center">
-                <p class="text-uppercase text-muted small mb-1"><i class="bi bi-hourglass-split text-warning me-1"></i>กำลังดำเนินการ</p>
-                <h4 class="text-warning mb-0"><%= inProgressCount %></h4>
-                <small class="text-muted"><%= inProgressPercent.toFixed(1) %>%</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card shadow-sm h-100 border-secondary-subtle">
-              <div class="card-body text-center">
-                <p class="text-uppercase text-muted small mb-1"><i class="bi bi-clock text-secondary me-1"></i>ยังไม่ดำเนินการ</p>
-                <h4 class="text-muted mb-0"><%= pendingCount %></h4>
-                <small class="text-muted"><%= pendingPercent.toFixed(1) %>%</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+ 
+<hr>
     <!-- ═══════════════════ UNIFIED FORM: Activities + KPI ═══════════════════ -->
     <form id="unified-save-form" action="/planactivity/report/all" method="post">
       <input type="hidden" name="pro_code" value="<%= selectedProject %>">
@@ -206,43 +155,8 @@
       <!-- ── Section 2: KPI Metrics ── -->
       <% if (hasKpis) { %>
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <div>
-              <h2 class="h5 mb-0"><i class="bi bi-graph-up me-2"></i>ผลตามตัวชี้วัด</h2>
-              <p class="text-muted small mb-0">เดือน <span class="fw-semibold"><%= monthDisplay %></span></p>
-            </div>
-            <span class="badge bg-primary"><%= kpiSummary.total %> ตัวชี้วัด</span>
-          </div>
 
-          <!-- KPI summary mini cards -->
-          <div class="card-body border-bottom">
-            <div class="row g-2 text-center">
-              <div class="col-3">
-                <div class="p-2 rounded bg-success bg-opacity-10">
-                  <div class="fw-bold text-success fs-5"><%= kpiSummary.achieved %></div>
-                  <small class="text-muted">บรรลุเป้า</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-2 rounded bg-warning bg-opacity-10">
-                  <div class="fw-bold text-warning fs-5"><%= kpiSummary.onTrack %></div>
-                  <small class="text-muted">แนวโน้มดี ≥70%</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-2 rounded bg-danger bg-opacity-10">
-                  <div class="fw-bold text-danger fs-5"><%= kpiSummary.behind %></div>
-                  <small class="text-muted">ต่ำกว่าเป้า</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-2 rounded bg-secondary bg-opacity-10">
-                  <div class="fw-bold text-muted fs-5"><%= kpiSummary.noTarget %></div>
-                  <small class="text-muted">ไม่มีเป้า</small>
-                </div>
-              </div>
-            </div>
-          </div>
+      
 
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -323,11 +237,17 @@
 
     <!-- ═══════════════════ Attachments (separate form) ═══════════════════ -->
     <div class="card border-0 shadow-sm mt-4">
-      <div class="card-header bg-light">
-        <h2 class="h5 mb-0"><i class="bi bi-paperclip me-2"></i>เอกสารแนบรายงาน</h2>
-        <p class="text-muted small mb-0">แนบไฟล์ PDF/Word/Excel หรือรูปภาพประกอบรายงานเดือนนี้</p>
+      <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h2 class="h5 mb-0"><i class="bi bi-paperclip me-2"></i>เอกสารแนบรายงาน</h2>
+          <p class="text-muted small mb-0">แนบไฟล์ PDF/Word/Excel หรือรูปภาพประกอบรายงานเดือนนี้</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#attachments-collapse" aria-expanded="false" aria-controls="attachments-collapse">
+          ย่อ/ขยาย
+        </button>
       </div>
-      <div class="card-body">
+      <div class="collapse <%= attachmentsCollapseClass %>" id="attachments-collapse">
+        <div class="card-body">
         <% if (attachmentErrorMessage) { %>
           <div class="alert alert-warning small mb-3"><%= attachmentErrorMessage %></div>
         <% } %>
@@ -375,86 +295,25 @@
             <p class="text-muted small mb-0">รองรับ PDF, Word, Excel, JPG, PNG ขนาดไม่เกิน 20MB</p>
           </div>
         </form>
+        </div>
       </div>
     </div>
 
     <!-- ═══════════════════ Historical Records (Activity) ═══════════════════ -->
     <div class="card border-0 shadow-sm mt-4">
-      <div class="card-header bg-light">
-        <h2 class="h5 mb-0"><i class="bi bi-clock-history me-2"></i>ประวัติการบันทึกกิจกรรมรายเดือน</h2>
-        <p class="text-muted small mb-0">ย้อนหลัง 12 เดือน</p>
-      </div>
-      <% if (!Array.isArray(historicalRecords) || historicalRecords.length === 0) { %>
-        <div class="card-body">
-          <div class="alert alert-light border text-center mb-0"><i class="bi bi-inbox me-2"></i>ยังไม่มีข้อมูลการบันทึกรายเดือนที่ผ่านมา</div>
-        </div>
-      <% } else { %>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 160px;">เดือน-ปี</th>
-                <th style="width: 90px;">ทั้งหมด</th>
-                <th style="width: 100px;"><span class="text-success">เรียบร้อย</span></th>
-                <th style="width: 100px;"><span class="text-warning">กำลังดำเนิน</span></th>
-                <th style="width: 100px;"><span class="text-secondary">ยังไม่เริ่ม</span></th>
-                <th>อัตราสำเร็จ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% historicalRecords.forEach((record) => {
-                const completed = Number(record.completed || 0);
-                const inProgress = Number(record.in_progress || 0);
-                const notStarted = Number(record.not_started || 0);
-                const total = Number(record.total_activities || 1);
-                const successRate = ((completed / total) * 100).toFixed(1);
-                const [year, month] = (record.report_month || '').split('-');
-                const gregorianYear = Number.parseInt(year, 10);
-                const monthNum = Number.parseInt(month, 10);
-                const thaiYear = gregorianYear + 543;
-                const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-                const mLabel = monthNames[monthNum - 1] || '-';
-                const rateColor = successRate >= 80 ? 'success' : successRate >= 60 ? 'info' : 'warning';
-              %>
-                <tr>
-                  <td>
-                    <strong><%= mLabel %> <%= thaiYear %></strong>
-                    <br><small class="text-muted"><%= record.report_month %></small>
-                  </td>
-                  <td><span class="badge bg-light text-dark"><%= total %></span></td>
-                  <td><span class="badge bg-success"><%= completed %></span></td>
-                  <td><span class="badge bg-warning text-dark"><%= inProgress %></span></td>
-                  <td><span class="badge bg-secondary"><%= notStarted %></span></td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="progress flex-grow-1" style="height: 20px;">
-                        <div class="progress-bar bg-<%= rateColor %>" role="progressbar" style="width: <%= Math.min(successRate, 100) %>%;">
-                          <%= successRate %>%
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <div class="card-footer bg-light text-muted small">
-          <i class="bi bi-info-circle me-1"></i>แสดงข้อมูลล่าสุด 12 เดือน เรียงจากเดือนล่าสุด
-        </div>
-      <% } %>
-    </div>
-
-    <!-- ═══════════════════ Historical Records (KPI) ═══════════════════ -->
-    <% if (hasKpis) { %>
-      <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-light">
-          <h2 class="h5 mb-0"><i class="bi bi-graph-up me-2"></i>ประวัติการบันทึกตัวชี้วัดรายเดือน</h2>
+      <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h2 class="h5 mb-0"><i class="bi bi-clock-history me-2"></i>ประวัติการบันทึกกิจกรรมรายเดือน</h2>
           <p class="text-muted small mb-0">ย้อนหลัง 12 เดือน</p>
         </div>
-        <% if (!Array.isArray(kpiHistoricalRecords) || kpiHistoricalRecords.length === 0) { %>
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#activity-history-collapse" aria-expanded="false" aria-controls="activity-history-collapse">
+          ย่อ/ขยาย
+        </button>
+      </div>
+      <div class="collapse" id="activity-history-collapse">
+        <% if (!Array.isArray(historicalRecords) || historicalRecords.length === 0) { %>
           <div class="card-body">
-            <div class="alert alert-light border text-center mb-0"><i class="bi bi-inbox me-2"></i>ยังไม่มีข้อมูลการบันทึกตัวชี้วัดรายเดือนที่ผ่านมา</div>
+            <div class="alert alert-light border text-center mb-0"><i class="bi bi-inbox me-2"></i>ยังไม่มีข้อมูลการบันทึกรายเดือนที่ผ่านมา</div>
           </div>
         <% } else { %>
           <div class="table-responsive">
@@ -462,29 +321,27 @@
               <thead class="table-light">
                 <tr>
                   <th style="width: 160px;">เดือน-ปี</th>
-                  <th style="width: 90px;">ตัวชี้วัด</th>
-                  <th style="width: 100px;"><span class="text-success">บรรลุเป้า</span></th>
-                  <th style="width: 100px;"><span class="text-warning">แนวโน้มดี ≥70%</span></th>
-                  <th style="width: 100px;"><span class="text-danger">ต่ำกว่าเป้า</span></th>
-                  <th style="width: 100px;"><span class="text-secondary">ไม่มีเป้า</span></th>
-                  <th>เฉลี่ยความสำเร็จ</th>
+                  <th style="width: 90px;">ทั้งหมด</th>
+                  <th style="width: 100px;"><span class="text-success">เรียบร้อย</span></th>
+                  <th style="width: 100px;"><span class="text-warning">กำลังดำเนิน</span></th>
+                  <th style="width: 100px;"><span class="text-secondary">ยังไม่เริ่ม</span></th>
+                  <th>อัตราสำเร็จ</th>
                 </tr>
               </thead>
               <tbody>
-                <% kpiHistoricalRecords.forEach((record) => {
-                  const achieved = Number(record.achieved || 0);
-                  const onTrack = Number(record.on_track || 0);
-                  const behind = Number(record.behind || 0);
-                  const noTarget = Number(record.no_target || 0);
-                  const total = Number(record.total_kpis || 1);
-                  const avgPercent = Number(record.avg_achievement_percent || 0).toFixed(1);
+                <% historicalRecords.forEach((record) => {
+                  const completed = Number(record.completed || 0);
+                  const inProgress = Number(record.in_progress || 0);
+                  const notStarted = Number(record.not_started || 0);
+                  const total = Number(record.total_activities || 1);
+                  const successRate = ((completed / total) * 100).toFixed(1);
                   const [year, month] = (record.report_month || '').split('-');
                   const gregorianYear = Number.parseInt(year, 10);
                   const monthNum = Number.parseInt(month, 10);
                   const thaiYear = gregorianYear + 543;
                   const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
                   const mLabel = monthNames[monthNum - 1] || '-';
-                  const avgColor = avgPercent >= 100 ? 'success' : avgPercent >= 70 ? 'warning' : 'danger';
+                  const rateColor = successRate >= 80 ? 'success' : successRate >= 60 ? 'info' : 'warning';
                 %>
                   <tr>
                     <td>
@@ -492,15 +349,14 @@
                       <br><small class="text-muted"><%= record.report_month %></small>
                     </td>
                     <td><span class="badge bg-light text-dark"><%= total %></span></td>
-                    <td><span class="badge bg-success"><%= achieved %></span></td>
-                    <td><span class="badge bg-warning text-dark"><%= onTrack %></span></td>
-                    <td><span class="badge bg-danger"><%= behind %></span></td>
-                    <td><span class="badge bg-secondary"><%= noTarget %></span></td>
+                    <td><span class="badge bg-success"><%= completed %></span></td>
+                    <td><span class="badge bg-warning text-dark"><%= inProgress %></span></td>
+                    <td><span class="badge bg-secondary"><%= notStarted %></span></td>
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <div class="progress flex-grow-1" style="height: 20px;">
-                          <div class="progress-bar bg-<%= avgColor %>" role="progressbar" style="width: <%= Math.min(avgPercent, 100) %>%;">
-                            <%= avgPercent %>%
+                          <div class="progress-bar bg-<%= rateColor %>" role="progressbar" style="width: <%= Math.min(successRate, 100) %>%;">
+                            <%= successRate %>%
                           </div>
                         </div>
                       </div>
@@ -515,7 +371,87 @@
           </div>
         <% } %>
       </div>
+    </div>
+
+    <!-- ═══════════════════ Historical Records (KPI) ═══════════════════ -->
+    <% if (hasKpis) { %>
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <h2 class="h5 mb-0"><i class="bi bi-graph-up me-2"></i>ประวัติการบันทึกตัวชี้วัดรายเดือน</h2>
+            <p class="text-muted small mb-0">ย้อนหลัง 12 เดือน</p>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#kpi-history-collapse" aria-expanded="false" aria-controls="kpi-history-collapse">
+            ย่อ/ขยาย
+          </button>
+        </div>
+        <div class="collapse" id="kpi-history-collapse">
+          <% if (!Array.isArray(kpiHistoricalRecords) || kpiHistoricalRecords.length === 0) { %>
+            <div class="card-body">
+              <div class="alert alert-light border text-center mb-0"><i class="bi bi-inbox me-2"></i>ยังไม่มีข้อมูลการบันทึกตัวชี้วัดรายเดือนที่ผ่านมา</div>
+            </div>
+          <% } else { %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 160px;">เดือน-ปี</th>
+                    <th style="width: 90px;">ตัวชี้วัด</th>
+                    <th style="width: 100px;"><span class="text-success">บรรลุเป้า</span></th>
+                    <th style="width: 100px;"><span class="text-warning">แนวโน้มดี ≥70%</span></th>
+                    <th style="width: 100px;"><span class="text-danger">ต่ำกว่าเป้า</span></th>
+                    <th style="width: 100px;"><span class="text-secondary">ไม่มีเป้า</span></th>
+                    <th>เฉลี่ยความสำเร็จ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% kpiHistoricalRecords.forEach((record) => {
+                    const achieved = Number(record.achieved || 0);
+                    const onTrack = Number(record.on_track || 0);
+                    const behind = Number(record.behind || 0);
+                    const noTarget = Number(record.no_target || 0);
+                    const total = Number(record.total_kpis || 1);
+                    const avgPercent = Number(record.avg_achievement_percent || 0).toFixed(1);
+                    const [year, month] = (record.report_month || '').split('-');
+                    const gregorianYear = Number.parseInt(year, 10);
+                    const monthNum = Number.parseInt(month, 10);
+                    const thaiYear = gregorianYear + 543;
+                    const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+                    const mLabel = monthNames[monthNum - 1] || '-';
+                    const avgColor = avgPercent >= 100 ? 'success' : avgPercent >= 70 ? 'warning' : 'danger';
+                  %>
+                    <tr>
+                      <td>
+                        <strong><%= mLabel %> <%= thaiYear %></strong>
+                        <br><small class="text-muted"><%= record.report_month %></small>
+                      </td>
+                      <td><span class="badge bg-light text-dark"><%= total %></span></td>
+                      <td><span class="badge bg-success"><%= achieved %></span></td>
+                      <td><span class="badge bg-warning text-dark"><%= onTrack %></span></td>
+                      <td><span class="badge bg-danger"><%= behind %></span></td>
+                      <td><span class="badge bg-secondary"><%= noTarget %></span></td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height: 20px;">
+                            <div class="progress-bar bg-<%= avgColor %>" role="progressbar" style="width: <%= Math.min(avgPercent, 100) %>%;">
+                              <%= avgPercent %>%
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer bg-light text-muted small">
+              <i class="bi bi-info-circle me-1"></i>แสดงข้อมูลล่าสุด 12 เดือน เรียงจากเดือนล่าสุด
+            </div>
+          <% } %>
+        </div>
+      </div>
     <% } %>
+  <% } %>
 </div>
 
 <script>

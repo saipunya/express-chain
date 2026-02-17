@@ -1583,6 +1583,49 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
 </section>
 
 
+<!-- ================= Coop Group Counts ================= -->
+<section id="coop-groups" class="section-block bg-light">
+  <div class="container">
+    <h2 class="my-4 text-center text-primary section-title">
+      <i class="bi bi-people-fill me-2"></i> สรุปจำนวนตามกลุ่มส่งเสริมสหกรณ์
+    </h2>
+    <% if ((coopGroupStats || []).length) { %>
+      <div class="row g-3">
+        <% (coopGroupStats || []).forEach((g) => { %>
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card modern-card shadow-sm border-0 h-100">
+              <div class="card-body">
+                <h6 class="text-primary fw-semibold mb-2">
+                  <i class="bi bi-diagram-3 me-1"></i>
+                  <%= displayGroupName(g.c_group) %>
+                </h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted">สหกรณ์</span>
+                  <span class="fw-bold text-success"><%= Number(g.coop || 0) %> แห่ง</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                  <span class="text-muted">กลุ่มเกษตรกร</span>
+                  <span class="fw-bold text-info"><%= Number(g.farmer || 0) %> แห่ง</span>
+                </div>
+                <% if (g.c_group) { %>
+                  <div class="mt-3 text-end">
+                    <a href="/allcoop/group/<%= g.c_group %>" class="btn btn-outline-primary btn-sm">
+                      ดูข้อมูล
+                    </a>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
+    <% } %>
+  </div>
+</section>
+
+
 
 <!-- ================= Charts ================= -->
 <section id="charts" class="section-block bg-white">
@@ -2206,6 +2249,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
                               data-time="<%= usecar.time_car %>"
                               data-place="<%= usecar.place_car %>"
                               data-act="<%= usecar.act_car %>"
+                              data-respon="<%= usecar.respon_car %>"
                             >
                               <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
                             </button>
@@ -2266,6 +2310,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <dt class="col-4">เวลา</dt><dd class="col-8" id="ucTime">-</dd>
             <dt class="col-4">สถานที่</dt><dd class="col-8" id="ucPlace">-</dd>
           <dt class="col-4">กิจกรรม</dt><dd class="col-8" id="ucAct">-</dd>
+          <dt class="col-4">ผู้รับผิดชอบ</dt><dd class="col-8" id="ucRespon">-</dd>
         </dl>
       </div>
     </div>
@@ -2282,10 +2327,12 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
     const time = btn.getAttribute('data-time') || '-';
     const place = btn.getAttribute('data-place') || '-';
     const act = btn.getAttribute('data-act') || '-';
+    const respon = btn.getAttribute('data-respon') || '-';
     document.getElementById('ucDate').textContent = date;
     document.getElementById('ucTime').textContent = time + ' น.';
     document.getElementById('ucPlace').textContent = place;
     document.getElementById('ucAct').textContent = act;
+    document.getElementById('ucRespon').textContent = respon;
     // If Bootstrap auto trigger fails for some reason, ensure show programmatically
     const modalEl = document.getElementById('usecarModal');
     if(modalEl){

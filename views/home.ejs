@@ -683,6 +683,14 @@
     #activitiesCalendar .fc-daygrid-day-number {
       font-size: 0.8rem;
     }
+    #activitiesCalendar .fc-toolbar {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    #activitiesCalendar .fc-button {
+      padding: 0.2rem 0.55rem;
+      font-size: 0.75rem;
+    }
     
     /* Projects & Commands Mobile */
     #projects .col-md-6 {
@@ -1001,7 +1009,72 @@
   #activitiesCalendar { 
     min-height: 520px;
     border-radius: var(--radius);
+    background: #f8fafc;
     overflow: hidden;
+  }
+  #activitiesCalendar .fc {
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  #activitiesCalendar .fc .fc-scrollgrid {
+    background: #f8fafc;
+  }
+  #activitiesCalendar .fc .fc-toolbar {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(90deg, #eff6ff 0%, #ffffff 60%);
+    border-bottom: 1px solid var(--color-border);
+  }
+  #activitiesCalendar .fc .fc-toolbar-title {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  #activitiesCalendar .fc .fc-button {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    border-radius: 999px;
+    box-shadow: none;
+    padding: 0.25rem 0.7rem;
+    font-weight: 600;
+  }
+  #activitiesCalendar .fc .fc-button:hover {
+    background: #e2e8f0;
+  }
+  #activitiesCalendar .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+  #activitiesCalendar .fc-daygrid-day-number {
+    color: #334155;
+    font-weight: 600;
+  }
+  #activitiesCalendar .fc-daygrid-day {
+    background: #ffffff;
+  }
+  #activitiesCalendar .fc-day-today {
+    background: #eff6ff;
+  }
+  #activitiesCalendar .fc-daygrid-day-frame {
+    padding: 6px;
+  }
+  #activitiesCalendar .fc-event {
+    border: 0;
+    background: #10b981;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.2);
+  }
+  #activitiesCalendar .fc-event:hover {
+    filter: brightness(0.96);
+  }
+  #activitiesCalendar .fc-daygrid-more-link {
+    color: #2563eb;
+    font-weight: 600;
   }
   
   /* Stats Cards */
@@ -2884,11 +2957,13 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
         initialDate: new Date(), // แสดงเดือนปัจจุบัน
         locale:'th',
         height:'auto',
-        headerToolbar:{ left:'', center:'title', right:'' }, // ตัดปุ่ม prev/next/today
-        navLinks: false,
+        headerToolbar:{ left:'prev,next today', center:'title', right:'' },
+        buttonText: { today: 'วันนี้' },
+        navLinks: true,
         editable: false,
         fixedWeekCount: false,
         showNonCurrentDates: false, // ไม่โชว์วันที่ของเดือนอื่นจาง ๆ
+        dayMaxEventRows: 2,
         events,
         eventClick(info){ const ev=info.event; const raw=ev.extendedProps?.raw||{}; const d=ev.start?new Date(ev.start):null; const modalEl=document.getElementById('activityModal'); if(!modalEl) return; document.getElementById('acDate').textContent=d?formatThaiDate(d):'-'; document.getElementById('acTitle').textContent=raw.activity||ev.title||'-'; document.getElementById('acTime').textContent=raw.act_time?(raw.act_time+' น.'):'-'; document.getElementById('acPlace').textContent=raw.place||'-'; document.getElementById('acParticipants').textContent = raw.co_person || '-'; const modal=bootstrap&&bootstrap.Modal?new bootstrap.Modal(modalEl):null; if(modal) modal.show(); } });
       calendar.render();

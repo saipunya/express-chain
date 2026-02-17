@@ -34,9 +34,17 @@
           <% data.forEach(gitgum => { %>
             <tr>
               <!-- thai date -->
-               <% const date = new Date(gitgum.git_date); %>
-               <% const options = { year: 'numeric', month: 'long', day: 'numeric' }; %>
-               <% const thaiDate = date.toLocaleDateString('th-TH', options); %>
+               <%
+                 let thaiDate = '-';
+                 if (gitgum.git_date) {
+                   const date = gitgum.git_date instanceof Date ? gitgum.git_date : new Date(gitgum.git_date);
+                   if (!Number.isNaN(date.getTime())) {
+                     thaiDate = date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Bangkok' });
+                   } else {
+                     thaiDate = String(gitgum.git_date).slice(0, 10);
+                   }
+                 }
+               %>
                <td><%= thaiDate %></td>
               <td><%= gitgum.git_time %></td>
               <td><%= gitgum.git_act %></td>

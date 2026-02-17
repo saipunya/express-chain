@@ -12,34 +12,34 @@
 <!-- ================= Modern Global Styles (Refactored) ================ -->
 <style>
   :root {
-    --color-bg: #f8fafc;
+    --color-bg: #f1f3f5;
     --color-surface: #ffffff;
-    --color-border: #e2e8f0;
-    --color-text: #1e293b;
-    --color-muted: #64748b;
-    --color-accent: #0d9488;
-    --color-accent-grad: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0ea5e9 100%);
-    --color-focus: #2563eb;
-    --color-primary: #2563eb;
-    --color-success: #059669;
-    --color-warning: #d97706;
-    --color-danger: #dc2626;
-    --radius-sm: .5rem;
-    --radius: 1rem;
-    --radius-lg: 1.5rem;
-    --radius-xl: 2rem;
-    --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
-    --shadow-sm: 0 4px 12px -2px rgba(0,0,0,.08);
-    --shadow: 0 8px 24px -6px rgba(0,0,0,.12);
-    --shadow-lg: 0 12px 32px -8px rgba(0,0,0,.18);
-    --shadow-hover: 0 16px 40px -8px rgba(0,0,0,.22);
-    --glass: rgba(255,255,255,0.85);
-    --glass-blur: blur(20px) saturate(180%);
-    --grad-accent: linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%);
-    --grad-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    --grad-warm: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-    --transition: .35s cubic-bezier(.4,0,.2,1);
-    --transition-fast: .2s ease;
+    --color-border: #dee2e6;
+    --color-text: #1f2937;
+    --color-muted: #6b7280;
+    --color-accent: #0d6efd;
+    --color-accent-grad: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    --color-focus: #0d6efd;
+    --color-primary: #0d6efd;
+    --color-success: #198754;
+    --color-warning: #ffc107;
+    --color-danger: #dc3545;
+    --radius-sm: .375rem;
+    --radius: .5rem;
+    --radius-lg: .75rem;
+    --radius-xl: 1rem;
+    --shadow-xs: 0 1px 2px rgba(0,0,0,.04);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+    --shadow-lg: 0 2px 6px rgba(0,0,0,.12);
+    --shadow-hover: 0 2px 8px rgba(0,0,0,.12);
+    --glass: rgba(255,255,255,0.95);
+    --glass-blur: blur(6px) saturate(130%);
+    --grad-accent: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    --grad-success: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    --grad-warm: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    --transition: .2s ease;
+    --transition-fast: .15s ease;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -88,23 +88,17 @@
 
   /* Hero */
   .hero-shell {
-    background: var(--color-accent-grad);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     overflow: hidden;
     position: relative;
-    box-shadow: var(--shadow-lg);
-    min-height: 380px;
+    box-shadow: var(--shadow-sm);
+    min-height: 320px;
   }
   .hero-shell:before {
-    content:"";
-    position:absolute; inset:0;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(255,255,255,.4), transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(255,255,255,.3), transparent 55%),
-      radial-gradient(circle at 50% 50%, rgba(255,255,255,.1), transparent 70%);
-    mix-blend-mode: overlay;
-    pointer-events:none;
-    animation: heroGlow 8s ease-in-out infinite alternate;
+    display: none;
+    content: none;
   }
   @keyframes heroGlow {
     0% { opacity: 0.7; }
@@ -152,7 +146,7 @@
     transition: transform 0.5s ease;
   }
   .hero-shell:hover .hero-img-wrap > img {
-    transform: scale(1.02);
+    transform: none;
   }
 
   /* Cards / Sections */
@@ -161,43 +155,24 @@
     overflow: hidden;
   }
   .modern-card {
-    border: 0;
-    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     transition: var(--transition);
     position: relative;
     overflow: hidden;
   }
   .modern-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-hover);
+    transform: none;
+    box-shadow: var(--shadow-xs);
   }
   .modern-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 0;
-    background: var(--grad-accent);
-    opacity: 0;
-    transition: var(--transition);
-  }
-  .modern-card:hover::before {
-    height: 4px;
-    opacity: 1;
+    display: none;
+    content: none;
   }
   .card-gradient-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    background: var(--grad-accent);
-    opacity: 0.9;
-    border-top-left-radius: inherit;
-    border-top-right-radius: inherit;
+    display: none;
   }
   .modern-card .card-body {
     padding: 1.5rem;
@@ -217,6 +192,7 @@
   .table-responsive {
     border-radius: var(--radius);
     background: #fff;
+    border: 1px solid var(--color-border);
   }
 
   /* Section layout */
@@ -284,13 +260,11 @@
     gap: 0.5rem;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 1rem 1.25rem;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    padding: 0.75rem 1rem;
+    background: #ffffff;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    box-shadow: none;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
@@ -299,17 +273,17 @@
     white-space: nowrap;
     font-size: 0.875rem;
     font-weight: 500;
-    padding: 0.6rem 1.1rem;
-    border-radius: 2rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 0.5rem;
     text-decoration: none;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #475569;
-    border: 1px solid #e2e8f0;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
     transition: var(--transition-fast);
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    animation: navSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: none;
   }
   
   @keyframes navSlideIn {
@@ -343,15 +317,15 @@
     opacity: 0.8;
   }
   .quick-nav a:hover {
-    background: #e2e8f0;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-xs);
+    background: #e9ecef;
+    transform: none;
+    box-shadow: none;
   }
   .quick-nav a.active {
-    background: var(--grad-success);
+    background: #0d6efd;
     color: #fff;
-    border-color: transparent;
-    box-shadow: 0 4px 16px -4px rgba(5,150,105,0.5);
+    border-color: #0d6efd;
+    box-shadow: none;
   }
   .quick-nav a.active i {
     opacity: 1;
@@ -359,13 +333,13 @@
 
   /* Animations */
   .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: 0.8s cubic-bezier(0.16, 0.8, 0.28, 0.96);
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
   .reveal.in {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
   
   @keyframes fadeInUp {
@@ -446,43 +420,45 @@
   /* Buttons Enhancement */
   .btn {
     font-weight: 500;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     transition: var(--transition-fast);
   }
   .btn:hover {
-    transform: translateY(-2px);
-  }
-  .btn-success {
-    background: var(--grad-success);
-    border: none;
-    box-shadow: 0 4px 12px -4px rgba(5,150,105,0.4);
-  }
-  .btn-success:hover {
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
-    box-shadow: 0 6px 16px -4px rgba(5,150,105,0.5);
+    transform: none;
   }
   .btn-primary {
-    background: var(--grad-accent);
-    border: none;
-    box-shadow: 0 4px 12px -4px rgba(37,99,235,0.4);
+    background: #0d6efd;
+    border-color: #0d6efd;
+    box-shadow: none;
   }
   .btn-primary:hover {
-    box-shadow: 0 6px 16px -4px rgba(37,99,235,0.5);
+    background: #0b5ed7;
+    border-color: #0a58ca;
+    box-shadow: none;
+  }
+  .btn-success {
+    background: #198754;
+    border-color: #198754;
+    box-shadow: none;
+  }
+  .btn-success:hover {
+    background: #157347;
+    border-color: #146c43;
   }
   .btn-outline-primary {
-    border: 2px solid #2563eb;
-    color: #2563eb;
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
   }
   .btn-outline-primary:hover {
-    background: #2563eb;
+    background: #0d6efd;
     color: #fff;
   }
   .btn-outline-success {
-    border: 2px solid #059669;
-    color: #059669;
+    border: 1px solid #198754;
+    color: #198754;
   }
   .btn-outline-success:hover {
-    background: #059669;
+    background: #198754;
     color: #fff;
   }
 
@@ -1442,23 +1418,6 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
   </div>
 </div>
 
-<!-- ================= Quick Navigation ================= -->
-<div class="container quick-nav-wrapper reveal in" aria-label="Quick section navigation">
-  <nav class="quick-nav" id="quickNav">
-
-    <a href="/gitgum"><i class="bi bi-calendar-event"></i> กิจกรรม</a>
-    <a href="/finance"><i class="bi bi-cash-coin"></i> งบการเงิน</a>
-    <a href="/business"><i class="bi bi-briefcase"></i> กิจการ</a>
-    <a href="/rule"><i class="bi bi-file-earmark-text"></i> ข้อบังคับ</a>
-    <a href="/rabiab"><i class="bi bi-file-earmark"></i> ระเบียบ</a>
-    <a href="#projects"><i class="bi bi-file-earmark-pdf"></i> โครงการ</a>
-    <a href="#commands"><i class="bi bi-megaphone"></i> คำสั่ง</a>
-    <a href="#chamra"><i class="bi bi-activity"></i> ชำระบัญชี</a>
-    <a href="#rq2"><i class="bi bi-file-earmark-ruled"></i> RQ2</a>
-    <a href="#usecar"><i class="bi bi-car-front"></i> ใช้รถ</a>
-
-  </nav>
-</div>
 
 <!-- ================= Stats ================= -->
 <section id="stats" class="section-block pt-4">
@@ -1504,7 +1463,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
             </p>
             <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/activeCoop/allCoop/group">
+              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/allCoop/group">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -1704,11 +1663,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
         <h6 class="mb-0">
           <i class="bi bi-activity me-2"></i> สถานะการชำระบัญชีล่าสุด
         </h6>
-        <% if(user) { %>
-          <button id="exportChamraBtnHome" class="btn btn-secondary me-2">⬇️ ส่งออก pdf</button>
-        <% } else { %>
-          <button id="exportChamraBtnHome" class="btn btn-secondary">⬇️ Export PDF</button>
-        <% } %>
+        
       </div>
 
       <% if ((homeProcesses || []).length) { %>

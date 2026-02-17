@@ -6,7 +6,23 @@
   <form action="/gitgum/edit/<%= record.git_id %>" method="POST" class="row g-3">
     <div class="col-md-4">
       <label for="git_date" class="form-label">วันที่</label>
-      <input type="date" class="form-control" id="git_date" name="git_date" value="<%= (record.git_date && record.git_date.toISOString) ? record.git_date.toISOString().slice(0,10) : (record.git_date || '') %>" required />
+      <%
+        let dateValue = '';
+        if (record.git_date) {
+          if (typeof record.git_date === 'string') {
+            dateValue = record.git_date.slice(0, 10);
+          } else if (record.git_date instanceof Date) {
+            try {
+              dateValue = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(record.git_date);
+            } catch (_) {
+              dateValue = record.git_date.toISOString().slice(0, 10);
+            }
+          } else {
+            dateValue = String(record.git_date).slice(0, 10);
+          }
+        }
+      %>
+      <input type="date" class="form-control" id="git_date" name="git_date" value="<%= dateValue %>" required />
     </div>
 
     <div class="col-md-4">

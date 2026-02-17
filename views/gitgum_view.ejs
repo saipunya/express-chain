@@ -12,8 +12,18 @@
           <i class="bi bi-calendar-check me-1"></i> วันที่
         </dt>
         <dd class="col-sm-9">
-          <% const d = new Date(record.git_date); const thai = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-          <%= thai %>
+          <%
+            let viewDate = '-';
+            if (record.git_date) {
+              const d = record.git_date instanceof Date ? record.git_date : new Date(record.git_date);
+              if (!Number.isNaN(d.getTime())) {
+                viewDate = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Bangkok' });
+              } else {
+                viewDate = String(record.git_date).slice(0, 10);
+              }
+            }
+          %>
+          <%= viewDate %>
         </dd>
 
         <dt class="col-sm-3 fw-bold text-secondary">

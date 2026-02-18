@@ -5,10 +5,12 @@ const db = require('../config/db');
 exports.list = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const pageSizeParam = req.query.pageSize || 'all';
+    const isAll = pageSizeParam === 'all';
+    const pageSize = isAll ? 0 : (parseInt(pageSizeParam, 10) || 10);
     const search = req.query.search || '';
     const success = req.query.success || '';
-    const offset = (page - 1) * pageSize;
+    const offset = isAll ? 0 : (page - 1) * pageSize;
 
     let whereClause = '';
     if (search) {
@@ -22,7 +24,7 @@ exports.list = async (req, res) => {
       ${whereClause}
     `;
 
-    const query = `
+    const baseQuery = `
       SELECT 
         a.addmem_id,
         a.addmem_code,
@@ -36,25 +38,28 @@ exports.list = async (req, res) => {
       JOIN active_coop ac ON a.addmem_code = ac.c_code
       ${whereClause}
       ORDER BY a.addmem_savedate DESC
-      LIMIT ? OFFSET ?
     `;
 
     const [countResult] = await db.query(countQuery);
     const total = countResult[0].total;
-    const totalPages = Math.ceil(total / pageSize);
+    const totalPages = isAll ? 1 : Math.ceil(total / pageSize);
+    const startIndex = isAll ? 0 : (page - 1) * pageSize;
 
-    const [results] = await db.query(query, [pageSize, offset]);
+    const query = isAll ? baseQuery : `${baseQuery} LIMIT ? OFFSET ?`;
+    const params = isAll ? [] : [pageSize, offset];
+    const [results] = await db.query(query, params);
 
     res.render('addmem_list', {
       data: results,
       pagination: {
         page,
-        pageSize,
+        pageSize: isAll ? 'all' : pageSize,
         total,
         totalPages,
         hasPrev: page > 1,
         hasNext: page < totalPages
       },
+      startIndex,
       search,
       success,
       user: req.session.user
@@ -215,7 +220,7 @@ exports.save = async (req, res) => {
       [addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_saveby || 'system', addmem_savedate || new Date().toISOString().slice(0, 10)]
     );
 
-    res.redirect('/addmem/list?success=เพิ่มข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
+    res.redirect('/addmem/list?success=save completely');
   } catch (err) {
     console.error('Error in save:', err);
     res.status(500).send('เกิดข้อผิดพลาด: ' + err.message);
@@ -225,7 +230,7 @@ exports.save = async (req, res) => {
 // POST: Update existing member
 exports.update = async (req, res) => {
   try {
-    const { addmem_id } = req.params;
+    const addmem_id = req.params.id || req.params.addmem_id;
     const { addmem_code, addmem_year, addmem_saman, addmem_somtob } = req.body;
 
     if (!addmem_code) {
@@ -238,7 +243,7 @@ exports.update = async (req, res) => {
       [addmem_code, addmem_year, addmem_saman, addmem_somtob, addmem_id]
     );
 
-    res.redirect('/addmem/list?success=แก้ไขข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
+    res.redirect('/addmem/list?success=update completely');
   } catch (err) {
     console.error('Error in update:', err);
     res.status(500).send('เกิดข้อผิดพลาด: ' + err.message);
@@ -335,7 +340,7 @@ exports.deleteAddmem = async (req, res) => {
     if (!record) return res.status(404).send('ไม่พบข้อมูล');
     
     await addmemModel.delete(id);
-    res.redirect('/addmem/list?success=ลบข้อมูลสมาชิกเพิ่มเติมสำเร็จ');
+    res.redirect('/addmem/list?success=delete completely');
     
   } catch (error) {
     console.error('Error deleting addmem:', error);

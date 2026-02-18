@@ -1350,6 +1350,10 @@ function displayGroupName(code){
 // Meeting room locals (safe defaults in case some controller doesn't pass them)
 const _meetingsToday = (typeof meetingsToday !== 'undefined' && Array.isArray(meetingsToday)) ? meetingsToday : [];
 const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && meetingroomTodayDate) ? meetingroomTodayDate : '';
+const _coopTypeByGroup = (typeof coopTypeByGroup !== 'undefined' && Array.isArray(coopTypeByGroup)) ? coopTypeByGroup : [];
+const _strengthTypeGrades = (typeof strengthTypeGrades !== 'undefined' && Array.isArray(strengthTypeGrades)) ? strengthTypeGrades : [];
+const _strengthTypeRows = (typeof strengthTypeRows !== 'undefined' && Array.isArray(strengthTypeRows)) ? strengthTypeRows : [];
+const _strengthTypeYear = (typeof strengthTypeYear !== 'undefined' && strengthTypeYear) ? strengthTypeYear : '';
 %>
 
 <!-- ================= Hero ================= -->
@@ -1695,82 +1699,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
   </div>
 </section>
 
-<!-- ================= Stats ================= -->
-<section id="stats" class="section-block pt-4">
-  <div class="container">
-    <h2 class="my-4 text-center text-primary section-title">
-      <i class="bi bi-bar-chart-line-fill me-2"></i> ข้อมูลสหกรณ์
-    </h2>
-    <div class="row g-4 mt-2">
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: var(--grad-success);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 metric-icon">
-                <i class="bi bi-building text-success"></i>
-              </span>
-            </div> 
-            <h5 class="card-title text-muted mb-2">จำนวนสหกรณ์</h5>
-            <p class="card-text display-5 text-success fw-bold mb-3">
-              <%= stats.coop %>
-            </p>
-            <span class="badge bg-success bg-opacity-10 text-white mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="/allCoop/group">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10 metric-icon">
-                <i class="bi bi-people-fill text-info"></i>
-              </span>
-            </div> 
-            <h5 class="card-title text-muted mb-2">จำนวนกลุ่มเกษตรกร</h5>
-            <p class="card-text display-5 text-info fw-bold mb-3">
-              <%= stats.farmer %>
-            </p>
-            <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/allCoop/group">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: var(--grad-warm);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 metric-icon">
-                <i class="bi bi-hourglass-split text-warning"></i>
-              </span>
-            </div> 
-            <h5 class="card-title text-muted mb-2">อยู่ระหว่างชำระบัญชี</h5>
-            <p class="card-text display-5 text-warning fw-bold mb-3">
-              <%= stats.closing %>
-            </p>
-            <span class="badge bg-warning bg-opacity-10 text-warning mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-warning rounded-pill px-3" href="/chamra">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 
 <!-- ================= Charts ================= -->
@@ -1878,7 +1807,170 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
 %>
 
 
-<!--  -->
+<!-- ================= Stats ================= -->
+<section id="stats" class="section-block pt-4">
+  <div class="container">
+    <div class="card modern-card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-people me-2 text-primary"></i>สรุปจำนวนสถาบันตามประเภท
+        </h5>
+        <span class="small text-muted">ฐานข้อมูล active_coop</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 deadline-table">
+            <thead class="table-light">
+              <tr>
+                <th>กลุ่มส่งเสริม</th>
+                <th class="text-end">สหกรณ์ภาคการเกษตร</th>
+                <th class="text-end">สหกรณ์นอกภาคการเกษตร</th>
+                <th class="text-end">กลุ่มเกษตรกร</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if ((coopTypeByGroup || []).length) { %>
+                <% coopTypeByGroup.forEach((row) => { %>
+                  <tr>
+                    <td><%= displayGroupName(row.c_group) %></td>
+                    <td class="text-end"><%= Number(row.coop_agri || 0).toLocaleString() %></td>
+                    <td class="text-end"><%= Number(row.coop_non_agri || 0).toLocaleString() %></td>
+                    <td class="text-end"><%= Number(row.farmer_group || 0).toLocaleString() %></td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูล</td>
+                </tr>
+              <% } %>
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <th>รวมทั้งหมด</th>
+                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_agri) || 0).toLocaleString() %></th>
+                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></th>
+                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.farmer_group) || 0).toLocaleString() %></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card modern-card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-award me-2 text-success"></i>สรุปความเข้มแข็ง (st_grade) ตามประเภทสถาบัน
+        </h5>
+        <span class="small text-muted">ปี <%= _strengthTypeYear || '-' %></span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 deadline-table">
+            <thead class="table-light">
+              <tr>
+                <th>ประเภท</th>
+                <% if (_strengthTypeGrades.length) { %>
+                  <% _strengthTypeGrades.forEach((g) => { %>
+                    <th class="text-end"><%= g %></th>
+                  <% }) %>
+                <% } else { %>
+                  <th class="text-end">-</th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (_strengthTypeRows.length) { %>
+                <% _strengthTypeRows.forEach((row) => { %>
+                  <tr>
+                    <td><%= row.typeLabel === 'อื่นๆ' ? 'อื่นๆ(ตั้งใหม่ 1 ชำระบัญชี 4)' : row.typeLabel %></td>
+                    <% _strengthTypeGrades.forEach((g) => { %>
+                      <td class="text-end"><%= Number((row.counts && row.counts[g]) || 0).toLocaleString() %></td>
+                    <% }) %>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="2" class="text-center text-muted py-3">ไม่มีข้อมูล</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <h2 class="my-4 text-center text-primary section-title">
+      <i class="bi bi-bar-chart-line-fill me-2"></i> ข้อมูลสหกรณ์
+    </h2>
+    <div class="row g-4 mt-2">
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 h-100">
+          <div class="card-gradient-bar" style="background: var(--grad-success);"></div>
+          <div class="card-body text-center py-4">
+            <div class="mb-3">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 metric-icon">
+                <i class="bi bi-building text-success"></i>
+              </span>
+            </div> 
+            <h5 class="card-title text-muted mb-2">จำนวนสหกรณ์</h5>
+            <p class="card-text display-5 text-success fw-bold mb-3">
+              <%= stats.coop %>
+            </p>
+            <span class="badge bg-success bg-opacity-10 text-white mb-3">แห่ง</span>
+            <div class="mt-2">
+              <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="/allCoop/group">
+                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 h-100">
+          <div class="card-gradient-bar" style="background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);"></div>
+          <div class="card-body text-center py-4">
+            <div class="mb-3">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10 metric-icon">
+                <i class="bi bi-people-fill text-info"></i>
+              </span>
+            </div> 
+            <h5 class="card-title text-muted mb-2">จำนวนกลุ่มเกษตรกร</h5>
+            <p class="card-text display-5 text-info fw-bold mb-3">
+              <%= stats.farmer %>
+            </p>
+            <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
+            <div class="mt-2">
+              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/allCoop/group">
+                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card modern-card shadow-sm border-0 h-100">
+          <div class="card-gradient-bar" style="background: var(--grad-warm);"></div>
+          <div class="card-body text-center py-4">
+            <div class="mb-3">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 metric-icon">
+                <i class="bi bi-hourglass-split text-warning"></i>
+              </span>
+            </div> 
+            <h5 class="card-title text-muted mb-2">อยู่ระหว่างชำระบัญชี</h5>
+            <p class="card-text display-5 text-warning fw-bold mb-3">
+              <%= stats.closing %>
+            </p>
+            <span class="badge bg-warning bg-opacity-10 text-warning mb-3">แห่ง</span>
+            <div class="mt-2">
+              <a class="btn btn-sm btn-outline-warning rounded-pill px-3" href="/chamra">
+                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <!-- Modal แสดงรายชื่อสหกรณ์/กลุ่มเกษตรกร ตาม group -->

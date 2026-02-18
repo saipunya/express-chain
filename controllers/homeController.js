@@ -54,6 +54,38 @@ const homeController = {
       const coopGroupChart = await coopModel.getByCoopGroup();
       const cGroupChart = await coopModel.getByGroup();
       const coopGroupStats = await activeCoopModel.getGroupStats();
+      const [coopTypeSummaryRows] = await db.query(`
+        SELECT
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'ภาคการเกษตร' THEN 1 ELSE 0 END) AS coop_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'นอกภาคเกษตร' THEN 1 ELSE 0 END) AS coop_non_agri,
+          SUM(CASE WHEN coop_group = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmer_group
+        FROM active_coop
+        WHERE c_status = 'ดำเนินการ'
+      `);
+      const coopTypeSummary = coopTypeSummaryRows && coopTypeSummaryRows[0] ? coopTypeSummaryRows[0] : {
+        coop_agri: 0,
+        coop_non_agri: 0,
+        farmer_group: 0
+      };
+      const [coopTypeByGroupRows] = await db.query(`
+        SELECT
+          c_group,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'ภาคการเกษตร' THEN 1 ELSE 0 END) AS coop_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'นอกภาคเกษตร' THEN 1 ELSE 0 END) AS coop_non_agri,
+          SUM(CASE WHEN coop_group = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmer_group
+        FROM active_coop
+        WHERE c_status = 'ดำเนินการ'
+          AND c_group IS NOT NULL
+          AND c_group <> ''
+        GROUP BY c_group
+        ORDER BY c_group
+      `);
+      const coopTypeByGroup = (coopTypeByGroupRows || []).map((row) => ({
+        c_group: row.c_group,
+        coop_agri: Number(row.coop_agri || 0),
+        coop_non_agri: Number(row.coop_non_agri || 0),
+        farmer_group: Number(row.farmer_group || 0)
+      }));
       
       // ข้อมูลการใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
@@ -92,6 +124,46 @@ const homeController = {
       });
       const strengthGrades = Array.from(gradeSet).sort();
       const strengthYear = latestStrengthYear || '-';
+      let strengthTypeGrades = [];
+      let strengthTypeRows = [];
+      let strengthTypeYear = strengthYear;
+      if (latestStrengthYear) {
+        const [strengthTypeRaw] = await db.query(`
+          SELECT
+            CASE
+              WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
+              WHEN ac.coop_group = 'สหกรณ์' AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร' THEN 'สหกรณ์ภาคการเกษตร'
+              WHEN ac.coop_group = 'สหกรณ์' AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร' THEN 'สหกรณ์นอกภาคการเกษตร'
+              ELSE 'อื่นๆ'
+            END AS type_label,
+            s.st_grade,
+            COUNT(*) AS total
+          FROM tbl_strength s
+          JOIN active_coop ac ON ac.c_code = s.st_code
+          WHERE s.st_year = ? AND s.st_grade IS NOT NULL AND s.st_grade <> ''
+          GROUP BY type_label, s.st_grade
+          ORDER BY type_label, s.st_grade
+        `, [latestStrengthYear]);
+
+        const gradeSetByType = new Set();
+        const typeMap = {};
+        (strengthTypeRaw || []).forEach((row) => {
+          const typeLabel = row.type_label || 'อื่นๆ';
+          const grade = row.st_grade || '-';
+          gradeSetByType.add(grade);
+          if (!typeMap[typeLabel]) typeMap[typeLabel] = {};
+          typeMap[typeLabel][grade] = Number(row.total || 0);
+        });
+
+        strengthTypeGrades = Array.from(gradeSetByType).sort();
+        const typeOrder = ['สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร', 'อื่นๆ'];
+        strengthTypeRows = typeOrder
+          .filter((typeLabel) => typeMap[typeLabel])
+          .map((typeLabel) => ({
+            typeLabel,
+            counts: typeMap[typeLabel]
+          }));
+      }
       // NEW: fetch small list of coops (mix of coop and farmer) for homepage showcase
       const { rows: homeCoops } = await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 });
 
@@ -328,6 +400,11 @@ const homeController = {
         lastArticles,    // ✅ ส่งไปที่ view
         closedCoops,     // ✅ ส่ง closed coops to view
         coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+        coopTypeSummary,
+        coopTypeByGroup,
+        strengthTypeGrades,
+        strengthTypeRows,
+        strengthTypeYear,
         homeProcesses,
         chamraAllProcesses, // NEW: all rows for chart
         closingByGroup,   // NEW expose raw

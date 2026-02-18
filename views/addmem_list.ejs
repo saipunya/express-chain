@@ -70,6 +70,46 @@
     </div>
   </div>
 
+  <!-- สรุปจำนวนสมาชิกตามประเภทสถาบัน (active_coop) -->
+  <div class="card mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-people me-2"></i>สรุปจำนวนสมาชิกตามประเภทสถาบัน
+      </h5>
+      <span class="small text-muted">ฐานข้อมูล active_coop</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>ประเภท</th>
+              <th class="text-end">สามัญ</th>
+              <th class="text-end">สมทบ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>สหกรณ์ภาคเกษตร</td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_agri_saman) || 0).toLocaleString() %></td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_agri_somtob) || 0).toLocaleString() %></td>
+            </tr>
+            <tr>
+              <td>สหกรณ์นอกภาคเกษตร</td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_non_agri_saman) || 0).toLocaleString() %></td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_non_agri_somtob) || 0).toLocaleString() %></td>
+            </tr>
+            <tr>
+              <td>กลุ่มเกษตรกร</td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.farmer_group_saman) || 0).toLocaleString() %></td>
+              <td class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.farmer_group_somtob) || 0).toLocaleString() %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ค้นหา -->
   <div class="card mb-4">
     <div class="card-body">

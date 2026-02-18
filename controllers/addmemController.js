@@ -49,6 +49,67 @@ exports.list = async (req, res) => {
     const params = isAll ? [] : [pageSize, offset];
     const [results] = await db.query(query, params);
 
+    const [summaryRows] = await db.query(`
+      SELECT
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'สหกรณ์'
+              AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร'
+            THEN COALESCE(a.addmem_saman, 0)
+            ELSE 0
+          END
+        ) AS coop_agri_saman,
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'สหกรณ์'
+              AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร'
+            THEN COALESCE(a.addmem_somtob, 0)
+            ELSE 0
+          END
+        ) AS coop_agri_somtob,
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'สหกรณ์'
+              AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร'
+            THEN COALESCE(a.addmem_saman, 0)
+            ELSE 0
+          END
+        ) AS coop_non_agri_saman,
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'สหกรณ์'
+              AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร'
+            THEN COALESCE(a.addmem_somtob, 0)
+            ELSE 0
+          END
+        ) AS coop_non_agri_somtob,
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'กลุ่มเกษตรกร'
+            THEN COALESCE(a.addmem_saman, 0)
+            ELSE 0
+          END
+        ) AS farmer_group_saman,
+        SUM(
+          CASE
+            WHEN ac.coop_group = 'กลุ่มเกษตรกร'
+            THEN COALESCE(a.addmem_somtob, 0)
+            ELSE 0
+          END
+        ) AS farmer_group_somtob
+      FROM addmem a
+      JOIN active_coop ac ON a.addmem_code = ac.c_code
+      WHERE ac.c_status = 'ดำเนินการ'
+    `);
+    const coopTypeSummary = summaryRows && summaryRows[0] ? summaryRows[0] : {
+      coop_agri_saman: 0,
+      coop_agri_somtob: 0,
+      coop_non_agri_saman: 0,
+      coop_non_agri_somtob: 0,
+      farmer_group_saman: 0,
+      farmer_group_somtob: 0
+    };
+
     res.render('addmem_list', {
       data: results,
       pagination: {
@@ -60,6 +121,7 @@ exports.list = async (req, res) => {
         hasNext: page < totalPages
       },
       startIndex,
+      coopTypeSummary,
       search,
       success,
       user: req.session.user

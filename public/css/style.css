@@ -170,6 +170,23 @@ footer { backdrop-filter: saturate(160%) blur(2px); }
 .bg-surface { background-color: #ffffff; }
 .border-subtle { border-color: #e2e8f0 !important; }
 
+/* Responsive helpers (global) */
+.metric-icon { width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.75rem; }
+.metric-icon i { font-size: 1.75rem; }
+.avatar { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+.avatar-lg { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; }
+.col-index { width: 56px; }
+.small-dot { font-size: 8px; line-height: 1; }
+.online-empty-icon { font-size: 2rem; }
+@media (max-width: 767.98px) {
+  .metric-icon { width: 44px; height: 44px; font-size: 1.25rem; }
+  .metric-icon i { font-size: 1.25rem; }
+  .avatar { width: 32px; height: 32px; }
+  .avatar-lg { width: 72px; height: 72px; }
+  .col-index { width: auto; }
+  .online-empty-icon { font-size: 1.5rem; }
+}
+
 /* Navbar color improvements */
 .bg-gradient-success {
   background: linear-gradient(135deg, #0f9d58 0%, #34a853 50%, #26c281 100%) !important;

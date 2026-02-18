@@ -373,6 +373,23 @@
     font-size: 0.8rem;
   }
 
+  /* Responsive helpers for avatars, metric icons, and small UI pieces */
+  .metric-icon { width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.75rem; }
+  .metric-icon i { font-size: 1.75rem; }
+  .avatar { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+  .avatar-lg { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 4px solid rgba(255,255,255,0.8); }
+  .col-index { width: 56px; }
+  .small-dot { font-size: 8px; line-height: 1; }
+  .online-empty-icon { font-size: 2rem; }
+  @media (max-width: 767.98px) {
+    .metric-icon { width: 44px; height: 44px; font-size: 1.25rem; }
+    .metric-icon i { font-size: 1.25rem; }
+    .avatar { width: 32px; height: 32px; }
+    .avatar-lg { width: 72px; height: 72px; }
+    .col-index { width: auto; }
+    .online-empty-icon { font-size: 1.5rem; }
+  }
+
   .activity-list li {
     position: relative;
     padding-left: 1.75rem;
@@ -1418,7 +1435,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
             <h1 class="display-6 mb-3 text-success fw-bold">
               <i class="bi bi-emoji-smile me-2"></i>ยินดีต้อนรับ!
             </h1>
-            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3 shadow" width="100" height="100" style="object-fit: cover; border: 4px solid rgba(255,255,255,0.8);" loading="lazy" decoding="async">
+            <img src="<%= user.m_img %>" alt="User Image" class="rounded-circle mb-3 shadow avatar-lg" width="100" height="100" loading="lazy" decoding="async">
             <p class="lead mb-4 fw-semibold">
               <%= user.fullname %>
             </p>
@@ -1447,13 +1464,13 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
 <div class="container mb-4 reveal in">
   <div class="row my-2">
     <div class="col-md-6">
-      <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100" style="font-size:16px;">
+      <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100">
       <i class="bi bi-globe2"></i>
       ประกาศหลักเกณฑ์การกำหนดวงเงินกู้ยืมหรือค้ำประกัน[กลุ่มเกษตรกร]
       </a>
     </div>
     <div class="col-md-6">
-    <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100" style="font-size:16px;">
+    <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100">
     <i class="bi bi-globe2"></i>
     ประกาศหลักเกณฑ์การกำหนดวงเงินดำเนินกิจการ[กลุ่มเกษตรกร]
     </a>
@@ -1590,10 +1607,10 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <div class="card-gradient-bar" style="background: var(--grad-success);"></div>
           <div class="card-body text-center py-4">
             <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" style="width: 60px; height: 60px;">
-                <i class="bi bi-building text-success" style="font-size: 1.75rem;"></i>
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 metric-icon">
+                <i class="bi bi-building text-success"></i>
               </span>
-            </div>
+            </div> 
             <h5 class="card-title text-muted mb-2">จำนวนสหกรณ์</h5>
             <p class="card-text display-5 text-success fw-bold mb-3">
               <%= stats.coop %>
@@ -1612,10 +1629,10 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <div class="card-gradient-bar" style="background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);"></div>
           <div class="card-body text-center py-4">
             <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" style="width: 60px; height: 60px;">
-                <i class="bi bi-people-fill text-info" style="font-size: 1.75rem;"></i>
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10 metric-icon">
+                <i class="bi bi-people-fill text-info"></i>
               </span>
-            </div>
+            </div> 
             <h5 class="card-title text-muted mb-2">จำนวนกลุ่มเกษตรกร</h5>
             <p class="card-text display-5 text-info fw-bold mb-3">
               <%= stats.farmer %>
@@ -1634,10 +1651,10 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <div class="card-gradient-bar" style="background: var(--grad-warm);"></div>
           <div class="card-body text-center py-4">
             <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10" style="width: 60px; height: 60px;">
-                <i class="bi bi-hourglass-split text-warning" style="font-size: 1.75rem;"></i>
+              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 metric-icon">
+                <i class="bi bi-hourglass-split text-warning"></i>
               </span>
-            </div>
+            </div> 
             <h5 class="card-title text-muted mb-2">อยู่ระหว่างชำระบัญชี</h5>
             <p class="card-text display-5 text-warning fw-bold mb-3">
               <%= stats.closing %>
@@ -2058,10 +2075,10 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
             <thead>
               <tr class="text-center">
-                <th style="width:56px;">#</th>
+                <th class="col-index d-none d-sm-table-cell">#</th>
                 <th class="text-start">วันที่</th>
                 <th class="text-start">กิจกรรม</th>
-              </tr>
+              </tr> 
             </thead>
             <tbody id="activityTbody">
               <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
@@ -2250,12 +2267,12 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
           <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th style="width:56px;" class="d-none d-sm-table-cell">#</th>
+                <th class="col-index d-none d-sm-table-cell">#</th>
                 <th>เรื่อง</th>
                 <th class="text-nowrap">ไฟล์</th>
                 <th class="text-center">ลิงก์</th>
                 <th class="text-nowrap">วันที่</th>
-              </tr>
+              </tr> 
             </thead>
             <tbody id="topDownloadsTbody">
               <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
@@ -2466,7 +2483,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
                 <div class="col-md-6 mb-3">
                   <div class="d-flex align-items-center">
                     <img src="<%= user.m_img || '/images/default-avatar.png' %>" alt="Avatar"
-                      class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;" loading="lazy" decoding="async">
+                      class="rounded-circle me-3 avatar" loading="lazy" decoding="async">
                     <div>
                       <div class="fw-bold text-success">
                         <%= user.on_name %>
@@ -2475,8 +2492,8 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
                         <%= user.m_position || '32ใช้' %>
                       </small>
                       <div class="badge bg-success ms-2">
-                        <i class="bi bi-circle-fill" style="font-size: 8px;"></i> ออนไลน์
-                      </div>
+                        <i class="bi bi-circle-fill small-dot"></i> ออนไลน์
+                      </div> 
                     </div>
                   </div>
                 </div>
@@ -2485,7 +2502,7 @@ const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && me
 
             <% if (onlineUsers.length===0) { %>
               <div class="text-center text-muted">
-                <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                <i class="bi bi-people-fill online-empty-icon"></i>
                 <p>ไม่มีสมาชิกออนไลน์ในขณะนี้</p>
               </div>
             <% } %>

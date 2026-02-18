@@ -203,11 +203,30 @@ io.on('connection', (socket) => {
 // start(port);
 
 // Use PORT env if provided, otherwise default to 3000 for local development
-const PORT = parseInt(process.env.PORT, 10) || 3000;
+const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000;
+let port = DEFAULT_PORT;
+let attempts = 0;
+const maxAttempts = 5;
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`✅ Server running on port ${PORT}`);
+function start(p) {
+  server.listen(p, '127.0.0.1', () => {
+    console.log(`✅ Server running on port ${p}`);
+  });
+}
+
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE' && attempts < maxAttempts) {
+    attempts += 1;
+    port += 1;
+    console.warn(`⚠️ Port in use. Retrying on ${port}...`);
+    setTimeout(() => start(port), 300);
+    return;
+  }
+  console.error('Server error:', err);
+  process.exit(1);
 });
+
+start(port);
 
 
 

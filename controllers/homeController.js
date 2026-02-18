@@ -253,6 +253,63 @@ const homeController = {
           return { groupName, rows };
         });
 
+      const groupByCoopGroup = (rows) => {
+        const grouped = rows.reduce((acc, row) => {
+          const groupKey = row.c_group || 'ไม่ระบุกลุ่ม';
+          if (!acc[groupKey]) acc[groupKey] = [];
+          acc[groupKey].push(row);
+          return acc;
+        }, {});
+        return Object.keys(grouped)
+          .sort((a, b) => a.localeCompare(b, 'th-TH'))
+          .map((groupName) => {
+            const sorted = grouped[groupName].slice().sort((a, b) =>
+              (a.c_name || '').localeCompare(b.c_name || '', 'th-TH')
+            );
+            return { groupName, rows: sorted };
+          });
+      };
+
+      const closingDeadlinesBase = (meetingDeadlineBase || [])
+        .map((row) => {
+          const monthDay = toMonthDay(row.end_day);
+          if (!monthDay) return null;
+          const endDateYear = resolveYearForEndDay(monthDay, currentYear);
+          const endDateYmd = `${endDateYear}-${monthDay}`;
+          const endDateObj = addDaysUtc(endDateYmd, 0);
+          const closingDeadlineObj = addDaysUtc(endDateYmd, 30);
+          const closingDeadlineMonthKey = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Bangkok',
+            year: 'numeric',
+            month: '2-digit'
+          }).format(closingDeadlineObj);
+          return {
+            c_code: row.c_code,
+            c_name: row.c_name,
+            c_group: row.c_group,
+            coop_group: row.coop_group,
+            endDateYmd,
+            endDateThai: formatThaiDate(endDateObj),
+            closingDeadlineYmd: closingDeadlineObj.toISOString().slice(0, 10),
+            closingDeadlineThai: formatThaiDate(closingDeadlineObj),
+            closingDeadlineMs: closingDeadlineObj.getTime(),
+            closingDeadlineMonthKey
+          };
+        })
+        .filter(Boolean);
+
+      const nowMs = bangkokNow.getTime();
+      const inThirtyDaysMs = nowMs + (30 * 24 * 60 * 60 * 1000);
+      const closingWithin30 = closingDeadlinesBase
+        .filter((row) => row.closingDeadlineMs >= nowMs && row.closingDeadlineMs <= inThirtyDaysMs)
+        .sort((a, b) => a.closingDeadlineMs - b.closingDeadlineMs);
+      const closingWithin30Groups = groupByCoopGroup(closingWithin30);
+
+      const closingThisMonth = closingDeadlinesBase
+        .filter((row) => row.closingDeadlineMonthKey === bangkokMonthKey)
+        .sort((a, b) => a.closingDeadlineMs - b.closingDeadlineMs);
+      const closingThisMonthGroups = groupByCoopGroup(closingThisMonth);
+
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -282,6 +339,9 @@ const homeController = {
         meetingroomTodayDate,
         meetingDeadlineGroups,
         meetingDeadlineMonthLabel,
+        closingWithin30Groups,
+        closingThisMonthGroups,
+        closingDeadlineMonthLabel: meetingDeadlineMonthLabel,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

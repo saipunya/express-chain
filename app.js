@@ -202,12 +202,8 @@ io.on('connection', (socket) => {
 
 // start(port);
 
-const PORT = process.env.PORT;
-
-if (!PORT) {
-  console.error('❌ PORT is not defined');
-  process.exit(1);
-}
+// Use PORT env if provided, otherwise default to 3000 for local development
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`✅ Server running on port ${PORT}`);

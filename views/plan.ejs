@@ -206,57 +206,7 @@
     .card-body { padding: 1rem !important; }
   }
 </style>
-  <!-- Summary cards -->
-  <div class="row g-3 g-lg-4 mb-4">
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="stat-card shadow-sm">
-        <div class="stat-icon bg-primary-subtle text-primary">
-          <i class="bi bi-journal-text"></i>
-        </div>
-        <div>
-          <p class="stat-label">แผนงานหลัก</p>
-          <h2 class="stat-value"><%= planStats.totalPlans %></h2>
-          <p class="stat-subtext">ทั้งหมดในระบบ</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="stat-card shadow-sm">
-        <div class="stat-icon bg-success-subtle text-success">
-          <i class="bi bi-kanban"></i>
-        </div>
-        <div>
-          <p class="stat-label">โครงการทั้งหมด</p>
-          <h2 class="stat-value"><%= projectStats.total %></h2>
-          <p class="stat-subtext">รวมโครงการทุกสถานะ</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="stat-card shadow-sm">
-        <div class="stat-icon bg-warning-subtle text-warning">
-          <i class="bi bi-list-task"></i>
-        </div>
-        <div>
-          <p class="stat-label">กิจกรรมทั้งหมด</p>
-          <h2 class="stat-value"><%= activityStats.total %></h2>
-          <p class="stat-subtext">กำลังติดตาม <%= activityStats.status.inProgress %> รายการ</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="stat-card shadow-sm">
-        <div class="stat-icon bg-info-subtle text-info">
-          <i class="bi bi-graph-up"></i>
-        </div>
-        <div>
-          <p class="stat-label">ตัวชี้วัด (KPI)</p>
-          <h2 class="stat-value"><%= kpiStats.total %></h2>
-          <p class="stat-subtext">พร้อมสำหรับรายงาน</p>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Status distribution + Charts -->
   <div class="row g-3 g-lg-4 mb-4">

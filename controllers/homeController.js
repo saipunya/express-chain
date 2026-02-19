@@ -127,42 +127,25 @@ const homeController = {
       let strengthTypeGrades = [];
       let strengthTypeRows = [];
       let strengthTypeYear = strengthYear;
+      let gradeSummary = [];
       if (latestStrengthYear) {
-        const [strengthTypeRaw] = await db.query(`
-          SELECT
-            CASE
-              WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
-              WHEN ac.coop_group = 'สหกรณ์' AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร' THEN 'สหกรณ์ภาคการเกษตร'
-              WHEN ac.coop_group = 'สหกรณ์' AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร' THEN 'สหกรณ์นอกภาคการเกษตร'
-              ELSE 'อื่นๆ'
-            END AS type_label,
-            s.st_grade,
-            COUNT(*) AS total
-          FROM tbl_strength s
-          JOIN active_coop ac ON ac.c_code = s.st_code
-          WHERE s.st_year = ? AND s.st_grade IS NOT NULL AND s.st_grade <> ''
-          GROUP BY type_label, s.st_grade
-          ORDER BY type_label, s.st_grade
-        `, [latestStrengthYear]);
+        const gradeSummaryRows = await strengthModel.getGradeSummaryByInOutGroup(latestStrengthYear);
+        gradeSummary = gradeSummaryRows || [];
 
-        const gradeSetByType = new Set();
-        const typeMap = {};
-        (strengthTypeRaw || []).forEach((row) => {
-          const typeLabel = row.type_label || 'อื่นๆ';
-          const grade = row.st_grade || '-';
-          gradeSetByType.add(grade);
-          if (!typeMap[typeLabel]) typeMap[typeLabel] = {};
-          typeMap[typeLabel][grade] = Number(row.total || 0);
-        });
-
-        strengthTypeGrades = Array.from(gradeSetByType).sort();
-        const typeOrder = ['สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร', 'อื่นๆ'];
+        const gradeKeys = ['ชั้น1', 'ชั้น2', 'ชั้น3'];
+        const colMap = { 'ชั้น1': 'grade_1_count', 'ชั้น2': 'grade_2_count', 'ชั้น3': 'grade_3_count' };
+        strengthTypeGrades = gradeKeys;
+        const typeOrder = ['สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร'];
+        const rowMap = {};
+        gradeSummary.forEach(r => { if (r.group_name) rowMap[r.group_name] = r; });
         strengthTypeRows = typeOrder
-          .filter((typeLabel) => typeMap[typeLabel])
-          .map((typeLabel) => ({
-            typeLabel,
-            counts: typeMap[typeLabel]
-          }));
+          .filter(label => rowMap[label])
+          .map(label => {
+            const r = rowMap[label];
+            const counts = {};
+            gradeKeys.forEach(g => { counts[g] = Number(r[colMap[g]] || 0); });
+            return { typeLabel: label, counts };
+          });
       }
       // NEW: fetch small list of coops (mix of coop and farmer) for homepage showcase
       const { rows: homeCoops } = await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 });
@@ -405,6 +388,8 @@ const homeController = {
         strengthTypeGrades,
         strengthTypeRows,
         strengthTypeYear,
+        gradeSummary,          // NEW: same as strengthList
+        summaryYear: latestStrengthYear || '-',
         homeProcesses,
         chamraAllProcesses, // NEW: all rows for chart
         closingByGroup,   // NEW expose raw

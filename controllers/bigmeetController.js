@@ -19,6 +19,19 @@ function validatePagination(page, limit) {
   };
 }
 
+function fyRangeToIso(fyBE) {
+  const fy = parseInt(fyBE, 10);
+  if (!fy || Number.isNaN(fy)) return null;
+
+  // ปีงบประมาณ 2569 => ช่วง 1 ก.ย. 2568 ถึง 31 ส.ค. 2569
+  const startCEYear = (fy - 1) - 543;
+  const endCEYear = fy - 543;
+
+  const start = `${startCEYear}-09-01`;
+  const end = `${endCEYear}-08-31`;
+  return { start, end, fy };
+}
+
 module.exports = {
   async list(req, res) {
     try {
@@ -275,6 +288,43 @@ module.exports = {
       res.json({ success: true, message: `ลบข้อมูล ${result.affectedRows} รายการสำเร็จ`, result });
     } catch (err) {
       console.error('bigmeet:bulkDelete', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async summaryByFiscalYear(req, res) {
+    try {
+      const { fy } = req.query; // เช่น 2569
+      const range = fyRangeToIso(fy);
+      if (!range) {
+        return res.status(400).json({ success: false, error: 'Invalid fiscal year (fy)' });
+      }
+
+      const items = await Bigmeet.findAll();
+
+      const total = items.length;
+
+      const inRangeCount = items.reduce((acc, item) => {
+        if (!item.big_date) return acc;
+        // เทียบแบบ string ISO (YYYY-MM-DD) ได้ ถ้า big_date เป็น date/datetime มาตรฐาน
+        const d = String(item.big_date).slice(0, 10);
+        return d >= range.start && d <= range.end ? acc + 1 : acc;
+      }, 0);
+
+      const notMetCount = Math.max(0, total - inRangeCount);
+
+      return res.json({
+        success: true,
+        data: {
+          fiscalYear: range.fy,
+          range: { start: range.start, end: range.end },
+          totalCoopsInList: total,
+          metInFiscalYear: inRangeCount,
+          notMetInFiscalYear: notMetCount
+        }
+      });
+    } catch (err) {
+      console.error('bigmeet:summaryByFiscalYear', err);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   }

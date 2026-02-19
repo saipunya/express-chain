@@ -120,33 +120,41 @@ const getSummaryByYear = async (year) => {
 };
 
 const getGradeSummaryByInOutGroup = async (year) => {
-  let sql = `
-    SELECT 
-      CASE 
-        WHEN ac.coop_group = 'สหกรณ์' AND ac.in_out_group = 'ภาคการเกษตร' THEN 'สหกรณ์ภาคการเกษตร'
-        WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
-        WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
-        WHEN ac.coop_group IS NOT NULL THEN ac.coop_group
-        ELSE 'ไม่ระบุประเภท'
-      END AS group_name,
+  const y = parseInt(year, 10);
+  if (!y) return [];
+
+  const [rows] = await db.query(
+    `
+    SELECT
+      group_name,
       COUNT(*) AS total_count,
-      SUM(CASE WHEN s.st_grade = 'ชั้น1' THEN 1 ELSE 0 END) AS grade_1_count,
-      SUM(CASE WHEN s.st_grade = 'ชั้น2' THEN 1 ELSE 0 END) AS grade_2_count,
-      SUM(CASE WHEN s.st_grade = 'ชั้น3' THEN 1 ELSE 0 END) AS grade_3_count
-    FROM tbl_strength s
-    LEFT JOIN active_coop ac ON s.st_code = ac.c_code
-  `;
-  const params = [];
-  if (year) {
-    sql += ` WHERE s.st_year = ?`;
-    params.push(year);
-  }
-  sql += `
+      SUM(CASE WHEN st_grade IN ('ชั้น1','ชั้น 1','1','ระดับ1','ระดับ 1') THEN 1 ELSE 0 END) AS grade_1_count,
+      SUM(CASE WHEN st_grade IN ('ชั้น2','ชั้น 2','2','ระดับ2','ระดับ 2') THEN 1 ELSE 0 END) AS grade_2_count,
+      SUM(CASE WHEN st_grade IN ('ชั้น3','ชั้น 3','3','ระดับ3','ระดับ 3') THEN 1 ELSE 0 END) AS grade_3_count
+    FROM (
+      SELECT
+        s.st_grade,
+        CASE
+          WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
+          WHEN ac.coop_group = 'สหกรณ์'
+            AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร'
+            THEN 'สหกรณ์ภาคการเกษตร'
+          WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
+          ELSE 'ไม่ทราบประเภท'
+        END AS group_name
+      FROM tbl_strength s
+      LEFT JOIN active_coop ac
+        ON ac.c_code = s.st_code
+      WHERE s.st_year = ?
+    ) x
+    WHERE group_name <> 'ไม่ทราบประเภท'
     GROUP BY group_name
-    ORDER BY FIELD(group_name, 'สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร')
-  `;
-  const [rows] = await db.query(sql, params);
-  return rows;
+    ORDER BY FIELD(group_name,'สหกรณ์ภาคการเกษตร','สหกรณ์นอกภาคการเกษตร','กลุ่มเกษตรกร')
+    `,
+    [y]
+  );
+
+  return rows || [];
 };
 
 module.exports = {

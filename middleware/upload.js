@@ -26,13 +26,15 @@ const uploadDown = multer({
       'application/zip',
       'application/x-rar-compressed',
       'image/png',
-      'image/jpeg',
-      'image/jpg'
+      'image/jpeg'
     ];
 
     const allowedExts = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.png', '.jpg', '.jpeg'];
+    const fileExt = path.extname(file.originalname).toLowerCase();
+    const mimeType = file.mimetype;
 
-    if (allowedMimes.includes(file.mimetype) && allowedExts.includes(path.extname(file.originalname).toLowerCase())) {
+    // ตรวจสอบนามสกุลไฟล์ หรือ MIME type อย่างใดอย่างหนึ่ง
+    if (allowedExts.includes(fileExt) || allowedMimes.includes(mimeType)) {
       cb(null, true);
     } else {
       cb(new Error('ชนิดไฟล์ไม่รองรับ'));

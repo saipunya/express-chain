@@ -1,0 +1,152 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <h2 class="mb-3"><i class="bi bi-pencil me-2"></i> แก้ไขรายการดาวน์โหลด</h2>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <form action="/down/edit/<%= down.down_id %>" method="post" enctype="multipart/form-data" class="card shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label for="down_subject" class="form-label">เรื่อง (จำเป็น)</label>
+          <input type="text" id="down_subject" name="down_subject" class="form-control" value="<%= down.down_subject %>" required>
+        </div>
+
+        <div class="col-md-4">
+          <label for="down_group" class="form-label">หมวดหมู่</label>
+          <select id="down_group" name="down_group" class="form-select">
+            <option value="">-- เลือกหมวดหมู่ --</option>
+            <option value="kts" <%= down.down_group === 'kts' ? 'selected' : '' %>>kts</option>
+            <option value="kjs" <%= down.down_group === 'kjs' ? 'selected' : '' %>>kjs</option>
+            <option value="pbt" <%= down.down_group === 'pbt' ? 'selected' : '' %>>pbt</option>
+            <option value="kbs" <%= down.down_group === 'kbs' ? 'selected' : '' %>>kbs</option>
+            <option value="kps" <%= down.down_group === 'kps' ? 'selected' : '' %>>kps</option>
+            <option value="admin" <%= down.down_group === 'admin' ? 'selected' : '' %>>admin</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="down_type" class="form-label">ประเภท</label>
+          <select id="down_type" name="down_type" class="form-select">
+            <option value="">-- เลือกประเภท --</option>
+            <option value="O" <%= down.down_type === 'O' ? 'selected' : '' %>>O</option>
+            <option value="M" <%= down.down_type === 'M' ? 'selected' : '' %>>M</option>
+            <option value="R" <%= down.down_type === 'R' ? 'selected' : '' %>>R</option>
+            <option value="T" <%= down.down_type === 'T' ? 'selected' : '' %>>T</option>
+            <option value="P" <%= down.down_type === 'P' ? 'selected' : '' %>>P</option>
+            <option value="K" <%= down.down_type === 'K' ? 'selected' : '' %>>K</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="down_for" class="form-label">สำหรับ</label>
+          <select id="down_for" name="down_for" class="form-select">
+            <option value="">-- เลือกกลุ่มผู้ใช้ --</option>
+            <option value="cpd" <%= down.down_for === 'cpd' ? 'selected' : '' %>>cpd</option>
+            <option value="coop" <%= down.down_for === 'coop' ? 'selected' : '' %>>coop</option>
+            <option value="all" <%= down.down_for === 'all' ? 'selected' : '' %>>all</option>
+          </select>
+        </div>
+
+        <!-- Toggle between File or Link -->
+        <div class="col-12">
+          <label class="form-label">รูปแบบข้อมูล</label>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="source_type" id="source_file" value="file" 
+                   <%= (down.down_file && down.down_file !== '-') ? 'checked' : '' %>>
+            <label class="form-check-label" for="source_file">ไฟล์</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="source_type" id="source_link" value="link"
+                   <%= (down.down_link && down.down_link !== '-') ? 'checked' : '' %>>
+            <label class="form-check-label" for="source_link">ลิงก์</label>
+          </div>
+        </div>
+
+        <!-- File input -->
+        <div class="col-md-6" id="wrap_file">
+          <label for="down_file" class="form-label">อัปโหลดไฟล์</label>
+          <% if (down.down_file && down.down_file !== '-') { %>
+            <div class="alert alert-info py-2 mb-2">
+              ไฟล์ปัจจุบัน: <strong><%= down.down_file %></strong>
+            </div>
+          <% } %>
+          <input type="file" id="down_file" name="down_file" class="form-control"
+                 accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.png,.jpg,.jpeg">
+          <div class="form-text">รองรับ PDF/Office/ZIP/รูปภาพ (PNG/JPG/JPEG) ขนาดไม่เกิน 20MB</div>
+        </div>
+
+        <!-- Link input -->
+        <div class="col-md-6 d-none" id="wrap_link">
+          <label for="down_link" class="form-label">ลิงก์</label>
+          <input type="url" id="down_link" name="down_link" class="form-control" placeholder="https://..."
+                 value="<%= (down.down_link && down.down_link !== '-') ? down.down_link : '' %>">
+          <div class="form-text">กรอกลิงก์ภายนอก หากไม่มีไฟล์แนบ</div>
+        </div>
+
+        <div class="col-md-4">
+          <label for="down_savedate" class="form-label">วันที่บันทึก</label>
+          <input type="date" id="down_savedate" name="down_savedate" class="form-control"
+                 value="<%= down.down_savedate ? down.down_savedate : new Date().toISOString().slice(0,10) %>">
+        </div>
+
+        <!-- Hidden: save by (keep existing or fallback) -->
+        <input type="hidden" name="down_saveby"
+               value="<%= down.down_saveby || (user && (user.username || user.mName || user.mFullname || user.mUser)) ? (user.username || user.mName || user.mFullname || user.mUser) : '-' %>">
+      </div>
+
+      <div class="alert alert-info mt-3 py-2">
+        ต้องเลือกอย่างใดอย่างหนึ่ง: ไฟล์ หรือ ลิงก์
+      </div>
+    </div>
+    <div class="card-footer d-flex gap-2">
+      <a href="/down" class="btn btn-outline-secondary">ยกเลิก</a>
+      <button type="submit" class="btn btn-primary">บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function() {
+    const srcFile = document.getElementById('source_file');
+    const srcLink = document.getElementById('source_link');
+    const wrapFile = document.getElementById('wrap_file');
+    const wrapLink = document.getElementById('wrap_link');
+    const inFile = document.getElementById('down_file');
+    const inLink = document.getElementById('down_link');
+
+    function syncMode() {
+      const useFile = srcFile.checked;
+      wrapFile.classList.toggle('d-none', !useFile);
+      wrapLink.classList.toggle('d-none', useFile);
+      inFile.disabled = !useFile;
+      inLink.disabled = useFile;
+      if (useFile) inLink.value = '';
+    }
+    srcFile.addEventListener('change', syncMode);
+    srcLink.addEventListener('change', syncMode);
+    syncMode();
+
+    // Final guard before submit
+    const form = document.querySelector('form[action="/down/edit/<%= down.down_id %>"]');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        const hasFile = inFile.files.length > 0;
+        const hasLink = inLink.value.trim() !== '';
+        const currentFile = '<%= (down.down_file && down.down_file !== '-') ? down.down_file : '' %>';
+        const currentLink = '<%= (down.down_link && down.down_link !== '-') ? down.down_link : '' %>';
+
+        // Allow form submission if: has new file OR has new link OR has existing file OR has existing link
+        const hasAnyFile = hasFile || currentFile;
+        const hasAnyLink = hasLink || currentLink;
+        const hasEitherData = hasAnyFile || hasAnyLink;
+
+        if (!hasEitherData || (hasFile && hasLink)) {
+          e.preventDefault();
+          alert('กรุณาเลือกอย่างใดอย่างหนึ่ง และกรอกข้อมูลให้ครบถ้วน');
+        }
+      });
+    }
+  })();
+</script>
+<%- include('../partials/footer') %>

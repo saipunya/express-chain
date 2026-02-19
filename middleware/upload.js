@@ -13,24 +13,30 @@ const storage = multer.diskStorage({
   }
 });
 
-const allowed = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/zip',
-  'application/x-rar-compressed'
-];
-
 const uploadDown = multer({
   storage,
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
   fileFilter: (req, file, cb) => {
-    if (!allowed.includes(file.mimetype)) {
-      return cb(new Error('ชนิดไฟล์ไม่รองรับ'));
+    const allowedMimes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/zip',
+      'application/x-rar-compressed',
+      'image/png',
+      'image/jpeg',
+      'image/jpg'
+    ];
+
+    const allowedExts = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.png', '.jpg', '.jpeg'];
+
+    if (allowedMimes.includes(file.mimetype) && allowedExts.includes(path.extname(file.originalname).toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new Error('ชนิดไฟล์ไม่รองรับ'));
     }
-    cb(null, true);
   }
 });
 

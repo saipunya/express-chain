@@ -1,4 +1,5 @@
 <%- include('../partials/header') %>
+<% const canEditServer = (user && (user.mClass === 'kbs' || user.mClass === 'admin')); %>
 
 <div class="container-fluid mt-4">
   <!-- Toast Notification -->
@@ -8,21 +9,18 @@
     </div>
   </div>
 
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
       <div class="row align-items-center">
         <div class="col-md-6">
-          <h5 class="m-0 font-weight-bold text-primary">
+          <h5 class="m-0 fw-bold text-primary">
             <i class="fas fa-users me-2"></i>การประชุมใหญ่สหกรณ์และกลุ่มเกษตรกร
           </h5>
         </div>
         <div class="col-md-6 text-end">
-          <span class="me-3 text-muted">
-            <!-- back to dashboard -->
-            <a href="/dashboard" class="btn btn-secondary btn-sm">
-              <i class="fas fa-arrow-left me-1"></i>กลับหน้าหลัก
-            </a>
-          </span>
+          <a href="/dashboard" class="btn btn-secondary btn-sm me-2">
+            <i class="fas fa-arrow-left me-1"></i>กลับหน้าหลัก
+          </a>
           <a href="/bigmeet/new" class="btn btn-success btn-sm">
             <i class="fas fa-plus me-1"></i>เพิ่มข้อมูล
           </a>
@@ -30,519 +28,435 @@
       </div>
     </div>
     <div class="card-body">
-      <!-- Search and Filter -->
-      <div class="row mb-3">ry -->
-        <div class="col-md-4">n-items-end mb-3">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์...">
-          </div> เติมด้วย JS -->
-        </div>lect>
-        <div class="col-md-3">
-          <select id="yearFilter" class="form-select">
-          <div class="border rounded p-2 bg-light">
-            <div class="row text-center">
-              <div class="col-md-4">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <div class="d-flex flex-wrap align-items-center gap-3">
+            <div>
+              <label class="form-label small text-muted mb-1">ปีงบประมาณ</label>
+              <select id="fySelect" class="form-select form-select-sm"></select>
+            </div>
+            <div class="small text-muted">
+              สรุปสถานะจากปีงบฯ ที่เลือก
+            </div>
+          </div>
+          <div class="border rounded p-3 bg-light mt-2">
+            <div class="row text-center g-2">
+              <div class="col-12 col-md-4">
                 <div class="text-muted small">จำนวนทั้งหมด (ในรายการนี้)</div>
                 <div class="fw-bold" id="sumTotal">-</div>
               </div>
-              <div class="col-md-4">
-                <div class="text-muted small">ประชุมใหญ่แล้ว (ปีงบฯ ที่เลือก)</div>
+              <div class="col-12 col-md-4">
+                <div class="text-muted small">ประชุมใหญ่แล้ว</div>
                 <div class="fw-bold text-success" id="sumMet">-</div>
               </div>
-              <div class="col-md-4">
+              <div class="col-12 col-md-4">
                 <div class="text-muted small">ยังไม่ได้ประชุมใหญ่</div>
                 <div class="fw-bold text-danger" id="sumNotMet">-</div>
               </div>
             </div>
-            <div class="text-center small text-muted mt-1" id="sumRange"></div>
+            <div class="text-center small text-muted mt-1" id="sumRange">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-6">
+              <label class="form-label small text-muted mb-1">ค้นหา</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์หรือรหัส...">
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small text-muted mb-1">ปีสิ้นสุด</label>
+              <select id="yearFilter" class="form-select">
+                <option value="">ทุกปี</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small text-muted mb-1">ประเภท</label>
+              <select id="typeFilter" class="form-select">
+                <option value="">ทุกประเภท</option>
+                <option value="มีงบการเงิน">มีงบการเงิน</option>
+                <option value="ไม่มีงบการเงิน">ไม่มีงบการเงิน</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <button id="clearFilters" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="fas fa-times me-1"></i>ล้างตัวกรอง
+              </button>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Search and Filter -->
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์...">
-          </div>
-        </div>
-        <div class="col-md-3">
-          <select id="yearFilter" class="form-select">
-            <option value="">ทุกปี</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <select id="typeFilter" class="form-select">
-            <option value="">ทุกประเภท</option>
-            <option value="มีงบการเงิน">มีงบการเงิน</option>
-            <option value="ไม่มีงบการเงิน">ไม่มีงบการเงิน</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <button id="clearFilters" class="btn btn-outline-secondary btn-sm w-100">
-            <i class="fas fa-times me-1"></i>ล้าง
-          </button>
-        </div>
-      </div>
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner" class="text-center py-4" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
 
-      <!-- Loading Spinner -->
-      <div id="loadingSpinner" class="text-center py-4" style="display: none;">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
-
-      <!-- Table -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle" width="100%" cellspacing="0">
+        <table class="table table-hover table-striped align-middle mb-0" width="100%" cellspacing="0">
           <thead class="table-light">
             <tr>
-              <th class="text-center" style="width: 60px;">#</th>
+              <th class="text-center" style="width: 70px;">#</th>
               <th>ชื่อสหกรณ์</th>
-              <th class="text-center" style="width: 100px;">ปีสิ้นสุด</th>
-              <th class="text-center" style="width: 120px;">ประเภท</th>
-              <th class="text-center" style="width: 120px;">วันที่ประชุม</th>
-              <th class="text-center" style="width: 120px;">วันที่บันทึก</th>
-                    <% if (user && (user.mClass === 'kbs' || user.mClass === 'admin')) { %>
-
-              <th class="text-center" style="width: 80px;">แก้ไข</th>
-              <th class="text-center" style="width: 80px;">ลบ</th>
-                    <% } %> 
+              <th class="text-center" style="width: 140px;">ปีสิ้นสุด</th>
+              <th class="text-center" style="width: 140px;">ประเภท</th>
+              <th class="text-center" style="width: 160px;">วันที่ประชุม</th>
+              <th class="text-center" style="width: 140px;">วันที่บันทึก</th>
+              <% if (canEditServer) { %>
+                <th class="text-center" style="width: 90px;">แก้ไข</th>
+                <th class="text-center" style="width: 90px;">ลบ</th>
+              <% } %>
             </tr>
           </thead>
-          <tbody id="dataTable">
-            <% if (Array.isArray(items) && items.length) { %>
-              <% items.forEach(function(item, index){ %>
-                <tr data-id="<%= item.big_id %>">
-                  <td class="text-center">
-                    <span class="badge bg-primary rounded-pill"><%= index + 1 %></span>
-                  </td>
-                  <td>
-                    <div class="fw-bold"><%= item.c_name || item.big_code %></div>
-                    <small class="text-muted">รหัส: <%= item.big_code %></small>
-                  </td>
-                  <td class="text-center">
-                    <!-- DEBUG: end_date="<%= item.end_date %>" big_endyear="<%= item.big_endyear %>" -->
-                    <% 
-                      let displayEndDateBE = item.big_endyear || '-';
-                      const endDayVal = item.end_day ? String(item.end_day).trim() : '';
-                      
-                      if (item.big_endyear && endDayVal && endDayVal.includes('-')) {
-                        try {
-                          // big_endyear = "2569" (พ.ศ.) -> 2026 (ค.ศ.)
-                          const ceYear = parseInt(item.big_endyear) - 543;
-                          // end_day = "02-28" (MM-DD)
-                          // รวมเป็น "2026-02-28"
-                          const isoStr = ceYear + '-' + endDayVal;
-                          const dateObj = new Date(isoStr + 'T00:00:00');
-                          
-                          if (!isNaN(dateObj.getTime())) {
-                            displayEndDateBE = dateObj.toLocaleDateString('th-TH', { 
-                              day: 'numeric', month: 'long', year: 'numeric' 
-                            });
-                          }
-                        } catch(e) { /* keep default */ }
-                      }
-                    %>
-                    <div class="text-nowrap"><%= displayEndDateBE %></div>
-                  </td>
-                  <td class="text-center">
-                    <% if (item.big_type === 'มีงบการเงิน') { %>
-                      <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i><%= item.big_type %></span>
-                    <% } else { %>
-                      <span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i><%= item.big_type %></span>
-                    <% } %>
-                  </td>
-                  <td class="text-center">
-                    <% 
-                      let validBigDate = '-';
-                      if (item.big_date) {
-                        const d = new Date(item.big_date);
-                        if (!isNaN(d.getTime())) validBigDate = d.toLocaleDateString('th-TH');
-                      }
-                    %>
-                    <div><%= validBigDate %></div>
-                    <small class="text-muted"><%= item.big_saveby %></small>
-                  </td>
-                  <td class="text-center">
-                    <% 
-                      let validSaveDate = '-';
-                      if (item.big_savedate) {
-                        const d = new Date(item.big_savedate);
-                        if (!isNaN(d.getTime())) validSaveDate = d.toLocaleDateString('th-TH');
-                      }
-                    %>
-                    <%= validSaveDate %>
-                  </td>
-                    <% if (user && ['kbs', 'admin'].includes(user.mClass)) { %>
-                    <td class="text-center">
-                      <a href="/bigmeet/edit/<%= item.big_id %>" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-                      <i class="fas fa-edit"></i>แก้ไข
-                      </a>
-                    </td>
-                    <td class="text-center">
-                      <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(<%= item.big_id %>)" title="ลบ">
-                      <i class="fas fa-trash"></i>ลบ
-                      </button>
-                    </td>
-                    <% } %>
-                </tr>
-              <% }) %>
-            <% } else { %>
-              <tr>
-                <td colspan="8" class="text-center py-5">
-                  <div class="text-muted">
-                    <i class="fas fa-inbox fa-3x mb-3"></i>
-                    <div class="h5">ไม่พบข้อมูลการประชุม</div>
-                    <div>คลิก "เพิ่มข้อมูล" เพื่อเริ่มบันทึกข้อมูล</div>
-                  </div>
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
+          <tbody id="dataTable"></tbody>
         </table>
       </div>
-ess message
-      <!-- Pagination -->h);
-      <nav aria-label="Page navigation" class="mt-3">f (urlParams.get('success')) {
-        <ul class="pagination justify-content-center" id="pagination"> showToast(urlParams.get('success') || 'ดำเนินการสำเร็จ');
-          <!-- Pagination will be generated by JavaScript -->  }
-        </ul>
-      </nav>
     </div>
-  </div>et(allItems.map(item => item.big_endyear))].sort().reverse();
-</div>lter');
-{
-<script>eateElement('option');
-// Data management
-let currentPage = 1;ption.textContent = year;
-const itemsPerPage = 10;   yearFilter.appendChild(option);
-let allItems = <%- JSON.stringify(items || []) %>;  });
-let filteredItems = [...allItems];
+  </div>
 
-// User permission
-const userClass = '<%= user ? user.mClass : "" %>';// Search
-const canEdit = (userClass === 'kbs' || userClass === 'admin');etElementById('searchInput').addEventListener('input', filterAndRender);
+  <!-- Pagination -->
+  <nav aria-label="Page navigation" class="mt-3">
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+</div>
 
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {document.getElementById('yearFilter').addEventListener('change', filterAndRender);
-  populateYearFilter();entById('typeFilter').addEventListener('change', filterAndRender);
-  renderTable();
-  setupEventListeners();
-  tener('click', function() {
-  // Show toast if there's a success message;
-  const urlParams = new URLSearchParams(window.location.search);tById('yearFilter').value = '';
-  if (urlParams.get('success')) {ocument.getElementById('typeFilter').value = '';
-    showToast(urlParams.get('success') || 'ดำเนินการสำเร็จ');   filterAndRender();
-  }  });
-});
+<script>
+  // Data management
+  let currentPage = 1;
+  const itemsPerPage = 10;
+  let allItems = <%- JSON.stringify(items || []) %>;
+  let filteredItems = [...allItems];
 
-function populateYearFilter() {
-  const years = [...new Set(allItems.map(item => item.big_endyear))].sort().reverse();.toLowerCase();
-  const yearFilter = document.getElementById('yearFilter');const yearFilter = document.getElementById('yearFilter').value;
-  years.forEach(year => {d('typeFilter').value;
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    yearFilter.appendChild(option);  (item.c_name && item.c_name.toLowerCase().includes(searchTerm)) ||
-  });));
-}
-const matchesYear = !yearFilter || item.big_endyear === yearFilter;
-function setupEventListeners() {= typeFilter;
-  // Search
-  document.getElementById('searchInput').addEventListener('input', filterAndRender);  return matchesSearch && matchesYear && matchesType;
-  
-  // Filters
-  document.getElementById('yearFilter').addEventListener('change', filterAndRender); currentPage = 1;
-  document.getElementById('typeFilter').addEventListener('change', filterAndRender);  renderTable();
-  
-  // Clear filters
-  document.getElementById('clearFilters').addEventListener('click', function() {
-    document.getElementById('searchInput').value = '';Table');
-    document.getElementById('yearFilter').value = '';
-    document.getElementById('typeFilter').value = '';const endIndex = startIndex + itemsPerPage;
-    filterAndRender();ms.slice(startIndex, endIndex);
+  // User permission
+  const userClass = '<%= user ? user.mClass : "" %>';
+  const canEdit = (userClass === 'kbs' || userClass === 'admin');
+
+  document.addEventListener('DOMContentLoaded', function() {
+    populateYearFilter();
+    setupEventListeners();
+    filterAndRender();
+    initFiscalYearSummary();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const successMessage = urlParams.get('success');
+    if (successMessage) {
+      showToast(successMessage || 'ดำเนินการสำเร็จ');
+    }
   });
-}Items.length === 0) {
 
-function filterAndRender() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  const yearFilter = document.getElementById('yearFilter').value;
-  const typeFilter = document.getElementById('typeFilter').value;
-   class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
-  filteredItems = allItems.filter(item => {div>ลองปรับเปลี่ยนตัวกรองหรือคำค้นหา</div>
-    const matchesSearch = !searchTerm || /div>
-      (item.c_name && item.c_name.toLowerCase().includes(searchTerm)) ||  </td>
-      (item.big_code && item.big_code.toLowerCase().includes(searchTerm));>
-    
-    const matchesYear = !yearFilter || item.big_endyear === yearFilter;
-    const matchesType = !typeFilter || item.big_type === typeFilter;ody.innerHTML = pageItems.map((item, index) => {
-    
-    return matchesSearch && matchesYear && matchesType;
-  });วันที่ไทย
-  let displayEndDateBE = item.big_endyear || '';
-  currentPage = 1;'';
-  renderTable();
-}des('-')) {
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
-function renderTable() {;
-  const tbody = document.getElementById('dataTable');const isoStr = ceYear + '-' + endDayVal;
-  const startIndex = (currentPage - 1) * itemsPerPage;+ 'T00:00:00');
-  const endIndex = startIndex + itemsPerPage;
-  const pageItems = filteredItems.slice(startIndex, endIndex);
-  playEndDateBE = dateObj.toLocaleDateString('th-TH', { 
-  if (pageItems.length === 0) {   day: 'numeric', month: 'long', year: 'numeric' 
-    tbody.innerHTML = `
-      <tr>   }
-        <td colspan="8" class="text-center py-5">        } catch(e) { /* keep default */ }
-          <div class="text-muted">
-            <i class="fas fa-search fa-3x mb-3"></i>
-            <div class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div> safely
-            <div>ลองปรับเปลี่ยนตัวกรองหรือคำค้นหา</div>=> {
-          </div>
-        </td>const d = new Date(dStr);
-      </tr>        return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
-    `;
-  } else {
+  function populateYearFilter() {
+    const years = [...new Set(allItems.map(item => item.big_endyear).filter(Boolean))]
+      .sort()
+      .reverse();
+    const yearFilter = document.getElementById('yearFilter');
+    years.forEach(year => {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearFilter.appendChild(option);
+    });
+  }
+
+  function setupEventListeners() {
+    document.getElementById('searchInput').addEventListener('input', filterAndRender);
+    document.getElementById('yearFilter').addEventListener('change', filterAndRender);
+    document.getElementById('typeFilter').addEventListener('change', filterAndRender);
+
+    document.getElementById('clearFilters').addEventListener('click', function() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('yearFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      filterAndRender();
+    });
+  }
+
+  function filterAndRender() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+
+    filteredItems = allItems.filter(item => {
+      const name = String(item.c_name || '').toLowerCase();
+      const code = String(item.big_code || '').toLowerCase();
+      const matchesSearch = !searchTerm || name.includes(searchTerm) || code.includes(searchTerm);
+      const matchesYear = !yearFilter || String(item.big_endyear || '') === yearFilter;
+      const matchesType = !typeFilter || item.big_type === typeFilter;
+      return matchesSearch && matchesYear && matchesType;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  function formatLocalDate(dateValue) {
+    if (!dateValue) return '-';
+    const d = new Date(dateValue);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
+  }
+
+  function formatEndDate(item) {
+    let displayEndDateBE = item.big_endyear || '-';
+    const endDayVal = item.end_day ? String(item.end_day).trim() : '';
+
+    if (item.big_endyear && endDayVal && endDayVal.includes('-')) {
+      try {
+        const ceYear = parseInt(item.big_endyear, 10) - 543;
+        const isoStr = ceYear + '-' + endDayVal;
+        const dateObj = new Date(isoStr + 'T00:00:00');
+        if (!isNaN(dateObj.getTime())) {
+          displayEndDateBE = dateObj.toLocaleDateString('th-TH', {
+            day: 'numeric', month: 'long', year: 'numeric'
+          });
+        }
+      } catch (e) {
+        displayEndDateBE = item.big_endyear || '-';
+      }
+    }
+
+    return displayEndDateBE;
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('dataTable');
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageItems = filteredItems.slice(startIndex, endIndex);
+    const colCount = canEdit ? 8 : 6;
+
+    if (pageItems.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="${colCount}" class="text-center py-5">
+            <div class="text-muted">
+              <i class="fas fa-search fa-3x mb-3"></i>
+              <div class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
+              <div>ลองปรับเปลี่ยนตัวกรองหรือคำค้นหา</div>
+            </div>
+          </td>
+        </tr>
+      `;
+      renderPagination();
+      return;
+    }
+
     tbody.innerHTML = pageItems.map((item, index) => {
       const globalIndex = startIndex + index + 1;
-      lass="text-center">
-      // big_endyear (พ.ศ.) + end_day (MM-DD) -> "YYYY-MM-DD" (ค.ศ.) -> วันที่ไทยpan class="badge bg-primary rounded-pill">${globalIndex}</span>
-      let displayEndDateBE = item.big_endyear || '';
-      const endDayVal = item.end_day ? String(item.end_day).trim() : '';
-      v class="fw-bold">${item.c_name || item.big_code}</div>
-      if (item.big_endyear && endDayVal && endDayVal.includes('-')) {ed">รหัส: ${item.big_code}</small>
-        try {
-          const ceYear = parseInt(item.big_endyear) - 543;lass="text-center">
-          const isoStr = ceYear + '-' + endDayVal;p">${displayEndDateBE}</div>
-          const dateObj = new Date(isoStr + 'T00:00:00');
-          
-          if (!isNaN(dateObj.getTime())) {
-            displayEndDateBE = dateObj.toLocaleDateString('th-TH', {  ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>' + item.big_type + '</span>'
-              day: 'numeric', month: 'long', year: 'numeric'  '<span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i>' + item.big_type + '</span>'
-            });
-          }
-        } catch(e) { /* keep default */ }
-      }v>${formatLocal(item.big_date)}</div>
-ed">${item.big_saveby || ''}</small>
-      // Format standard dates safely
-      const formatLocal = (dStr) => {lass="text-center">
-        if (!dStr) return '-';al(item.big_savedate)}
-        const d = new Date(dStr);
-        return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
-      };
-ref="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-      return `i class="fas fa-edit"></i>แก้ไข
+      const name = escapeHtml(item.c_name || item.big_code || '-');
+      const code = escapeHtml(item.big_code || '-');
+      const typeText = escapeHtml(item.big_type || '-');
+      const displayEndDateBE = formatEndDate(item);
+      const meetingDate = formatLocalDate(item.big_date);
+      const savedDate = formatLocalDate(item.big_savedate);
+      const saveBy = escapeHtml(item.big_saveby || '');
+
+      return `
         <tr data-id="${item.big_id}">
           <td class="text-center">
             <span class="badge bg-primary rounded-pill">${globalIndex}</span>
-          </td>lass="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
-          <td>i class="fas fa-trash"></i>ลบ
-            <div class="fw-bold">${item.c_name || item.big_code}</div>ton>
-            <small class="text-muted">รหัส: ${item.big_code}</small>d>
-          </td>  ` : ''}
-          <td class="text-center">
-            <div class="text-nowrap">${displayEndDateBE}</div>   `;
-          </td>  }).join('');
-          <td class="text-center">
-            ${item.big_type === 'มีงบการเงิน'  
-              ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>' + item.big_type + '</span>'  renderPagination();
-              : '<span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i>' + item.big_type + '</span>'
-            }
           </td>
-          <td class="text-center">const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-            <div>${formatLocal(item.big_date)}</div>ument.getElementById('pagination');
-            <small class="text-muted">${item.big_saveby || ''}</small>
-          </td>Pages <= 1) {
-          <td class="text-center"> pagination.innerHTML = '';
-            ${formatLocal(item.big_savedate)}  return;
+          <td>
+            <div class="fw-bold">${name}</div>
+            <small class="text-muted">รหัส: ${code}</small>
           </td>
+          <td class="text-center">
+            <div class="text-nowrap">${displayEndDateBE}</div>
+          </td>
+          <td class="text-center">
+            ${item.big_type === 'มีงบการเงิน'
+              ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>' + typeText + '</span>'
+              : '<span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i>' + typeText + '</span>'}
+          </td>
+          <td class="text-center">
+            <div>${meetingDate}</div>
+            <small class="text-muted">${saveBy}</small>
+          </td>
+          <td class="text-center">${savedDate}</td>
           ${canEdit ? `
-          <td class="text-center">'';
-            <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-              <i class="fas fa-edit"></i>แก้ไข
-            </a>
-          </td>lass="page-item ${currentPage === 1 ? 'disabled' : ''}">
-          <td class="text-center">  <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">ก่อนหน้า</a>
-            <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">  </li>
-              <i class="fas fa-trash"></i>ลบ
-            </button>
-          </td>
-          ` : ''}1; i <= totalPages; i++) {
-        </tr>= currentPage + 2)) {
+            <td class="text-center">
+              <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
+                <i class="fas fa-edit"></i>แก้ไข
+              </a>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
+                <i class="fas fa-trash"></i>ลบ
+              </button>
+            </td>
+          ` : ''}
+        </tr>
       `;
-    }).join('');lass="page-item ${i === currentPage ? 'active' : ''}">
-  }  <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-  
-  renderPagination();
-} else if (i === currentPage - 3 || i === currentPage + 3) {
-   html += '<li class="page-item disabled"><a class="page-link">...</a></li>';
-function renderPagination() {  }
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const pagination = document.getElementById('pagination');
-  
-  if (totalPages <= 1) {
-    pagination.innerHTML = '';lass="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-    return;  <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">ถัดไป</a>
-  }  </li>
-  
-  let html = ''; 
-    pagination.innerHTML = html;
-  // Previous
-  html += `
-    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-      <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">ก่อนหน้า</a>const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-    </li>e > totalPages) return;
-  `;
-  
-  // Page numbers renderTable();
-  for (let i = 1; i <= totalPages; i++) {  window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-      html += `
-        <li class="page-item ${i === currentPage ? 'active' : ''}">ete(id) {
-          <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>f (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
-        </li>   deleteItem(id);
-      `;  }
-    } else if (i === currentPage - 3 || i === currentPage + 3) {
-      html += '<li class="page-item disabled"><a class="page-link">...</a></li>';
-    }ync function deleteItem(id) {
-  }oading(true);
-  
-  // Next
-  html += `se = await fetch(`/bigmeet/delete/${id}`, {
-    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-      <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">ถัดไป</a>eaders: {
-    </li> 'Content-Type': 'application/json'
-  `;  }
-  
-  pagination.innerHTML = html;
-}
+    }).join('');
 
-function changePage(page) {allItems = allItems.filter(item => item.big_id !== id);
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);= filteredItems.filter(item => item.big_id !== id);
-  if (page < 1 || page > totalPages) return;
-  Table();
-  currentPage = page;
-  renderTable(); else {
-  window.scrollTo({ top: 0, behavior: 'smooth' });or('Delete failed');
-}
-
-function confirmDelete(id) {rror('Delete error:', error);
-  if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {ไม่สำเร็จ กรุณาลองใหม่', 'error');
-    deleteItem(id); finally {
-  }   showLoading(false);
-}  }
-
-async function deleteItem(id) {
-  showLoading(true);
-  
-  try {const toastMessage = document.getElementById('toastMessage');
-    const response = await fetch(`/bigmeet/delete/${id}`, {or('.toast-body');
-      method: 'POST',
-      headers: {toastMessage.textContent = message;
-        'Content-Type': 'application/json'ody ${type === 'success' ? 'bg-success' : 'bg-danger'} text-white`;
-      }
-    });toast.style.display = 'block';
-    d('show');
-    if (response.ok) {
-      // Remove from local data
-      allItems = allItems.filter(item => item.big_id !== id);
-      filteredItems = filteredItems.filter(item => item.big_id !== id);ut(() => {
-      .style.display = 'none';
-      renderTable();   }, 300);
-      showToast('ลบข้อมูลสำเร็จ');  }, 3000);
-    } else {
-      throw new Error('Delete failed');
-    }
-  } catch (error) {const spinner = document.getElementById('loadingSpinner');
-    console.error('Delete error:', error); = document.querySelector('.table-responsive');
-    showToast('ลบข้อมูลไม่สำเร็จ กรุณาลองใหม่', 'error');
-  } finally {
-    showLoading(false);r.style.display = 'block';
+    renderPagination();
   }
-}
- spinner.style.display = 'none';
-function showToast(message, type = 'success') {   table.style.opacity = '1';
-  const toast = document.getElementById('toast');
-  const toastMessage = document.getElementById('toastMessage');}
-  const toastBody = toast.querySelector('.toast-body');
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+      pagination.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    html += `
+      <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">ก่อนหน้า</a>
+      </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        html += `
+          <li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+          </li>
+        `;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += '<li class="page-item disabled"><a class="page-link">...</a></li>';
+      }
+    }
+
+    html += `
+      <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">ถัดไป</a>
+      </li>
+    `;
+
+    pagination.innerHTML = html;
+  }
+
+  function changePage(page) {
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function confirmDelete(id) {
+    if (confirm('คุณต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
+      deleteItem(id);
+    }
+  }
+
+  async function deleteItem(id) {
+    showLoading(true);
+    try {
+      const response = await fetch(`/bigmeet/delete/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        allItems = allItems.filter(item => item.big_id !== id);
+        filteredItems = filteredItems.filter(item => item.big_id !== id);
+        renderTable();
+        showToast('ลบข้อมูลสำเร็จ');
+      } else {
+        throw new Error('Delete failed');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      showToast('ลบข้อมูลไม่สำเร็จ กรุณาลองใหม่', 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastBody = toast.querySelector('.toast-body');
+    toastMessage.textContent = message;
+    toastBody.className = `toast-body ${type === 'success' ? 'bg-success' : 'bg-danger'} text-white`;
+    toast.style.display = 'block';
+    toast.classList.add('show');
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 300);
+    }, 3000);
+  }
+
+  function showLoading(show) {
+    const spinner = document.getElementById('loadingSpinner');
+    const table = document.querySelector('.table-responsive');
+    if (show) {
+      spinner.style.display = 'block';
+      table.style.opacity = '0.5';
+    } else {
+      spinner.style.display = 'none';
+      table.style.opacity = '1';
+    }
+  }
+
   function initFiscalYearSummary() {
+    const fySelect = document.getElementById('fySelect');
+    if (!fySelect) return;
 
+    const now = new Date();
+    const nowBE = now.getFullYear() + 543;
+    const guessFY = (now.getMonth() + 1) >= 9 ? nowBE + 1 : nowBE;
+    const fys = [guessFY - 1, guessFY, guessFY + 1].filter((v, i, a) => a.indexOf(v) === i);
 
+    fySelect.innerHTML = fys.map(fy => `<option value="${fy}">${fy}</option>`).join('');
+    fySelect.value = String(guessFY);
 
+    fySelect.addEventListener('change', () => loadFiscalYearSummary(fySelect.value));
+    loadFiscalYearSummary(fySelect.value);
+  }
 
+  async function loadFiscalYearSummary(fy) {
+    try {
+      const res = await fetch(`/bigmeet/summary?fy=${encodeURIComponent(fy)}`);
+      const json = await res.json();
+      if (!json || !json.success) throw new Error(json && json.error ? json.error : 'Failed');
 
+      const d = json.data;
+      document.getElementById('sumTotal').textContent = d.totalCoopsInList;
+      document.getElementById('sumMet').textContent = d.metInFiscalYear;
+      document.getElementById('sumNotMet').textContent = d.notMetInFiscalYear;
 
+      const fmt = (iso) => {
+        if (!iso) return '-';
+        const dt = new Date(iso + 'T00:00:00');
+        return isNaN(dt.getTime()) ? iso : dt.toLocaleDateString('th-TH');
+      };
+      const rangeText = d.range
+        ? `ช่วงวันที่: ${fmt(d.range.start)} - ${fmt(d.range.end)}`
+        : '-';
+      document.getElementById('sumRange').textContent = rangeText;
+    } catch (e) {
+      console.error('loadFiscalYearSummary:', e);
+      document.getElementById('sumTotal').textContent = allItems.length;
+      document.getElementById('sumMet').textContent = '-';
+      document.getElementById('sumNotMet').textContent = '-';
+      document.getElementById('sumRange').textContent = 'โหลดสรุปไม่สำเร็จ';
+    }
+  }
+</script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<%- include('../partials/footer') %></script>}  }    console.error('loadFiscalYearSummary:', e);    document.getElementById('sumRange').textContent = 'โหลดสรุปไม่สำเร็จ';    document.getElementById('sumNotMet').textContent = '-';    document.getElementById('sumMet').textContent = '-';    document.getElementById('sumTotal').textContent = '-';  } catch (e) {      `ช่วงวันที่: ${fmt(d.range.start)} - ${fmt(d.range.end)}`;    document.getElementById('sumRange').textContent =    };      return isNaN(dt.getTime()) ? iso : dt.toLocaleDateString('th-TH');      const dt = new Date(iso + 'T00:00:00');    const fmt = (iso) => {    // range เป็น ค.ศ. แปลงให้เป็นไทยแบบสั้น    document.getElementById('sumNotMet').textContent = d.notMetInFiscalYear;
-
-
-
-<%- include('../partials/footer') %></script>}  }    table.style.opacity = '1';    spinner.style.display = 'none';  } else {    table.style.opacity = '0.5';    spinner.style.display = 'block';  if (show) {    const table = document.querySelector('.table-responsive');  const spinner = document.getElementById('loadingSpinner');function showLoading(show) {}  }, 3000);    }, 300);      toast.style.display = 'none';    setTimeout(() => {    toast.classList.remove('show');  setTimeout(() => {    toast.classList.add('show');  toast.style.display = 'block';    toastBody.className = `toast-body ${type === 'success' ? 'bg-success' : 'bg-danger'} text-white`;  toastMessage.textContent = message;  const fySelect = document.getElementById('fySelect');
-  if (!fySelect) return;
-
-  // เดา FY จาก "วันนี้" (ถ้าเดือน >= ก.ย. => FY = ปีปัจจุบัน+1 (พ.ศ.))
-  const now = new Date();
-  const nowBE = now.getFullYear() + 543;
-  const guessFY = (now.getMonth() + 1) >= 9 ? nowBE + 1 : nowBE;
-
-  const fys = [guessFY - 1, guessFY, guessFY + 1].filter((v, i, a) => a.indexOf(v) === i);
-
-  fySelect.innerHTML = fys.map(fy => `<option value="${fy}">${fy}</option>`).join('');
-  fySelect.value = String(guessFY);
-
-  fySelect.addEventListener('change', () => loadFiscalYearSummary(fySelect.value));
-  loadFiscalYearSummary(fySelect.value);
-}
-
-async function loadFiscalYearSummary(fy) {
-  try {
-    const res = await fetch(`/bigmeet/summary?fy=${encodeURIComponent(fy)}`);
-    const json = await res.json();
-    if (!json || !json.success) throw new Error(json?.error || 'Failed');
-
-    const d = json.data;
-    document.getElementById('sumTotal').textContent = d.totalCoopsInList;
-    document.getElementById('sumMet').textContent = d.metInFiscalYear;
+<%- include('../partials/footer') %>

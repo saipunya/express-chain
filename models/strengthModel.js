@@ -44,7 +44,7 @@ exports.getGradeCounts = async (year = null) => {
   return rows;
 };
 
-// Get latest st_year present in tbl_strength
+// Get latest st_year present in strength
 exports.getLatestYear = async () => {
   const [rows] = await db.query('SELECT MAX(st_year) AS latest FROM tbl_strength');
   return rows[0]?.latest || null;
@@ -75,4 +75,90 @@ exports.getInstitutionProfile = async (code) => {
     FROM active_coop ac WHERE ac.c_code = ? LIMIT 1
   `, [code]);
   return rows[0] || null;
+};
+
+const getYears = async () => {
+  const [rows] = await db.query('SELECT DISTINCT st_year FROM tbl_strength ORDER BY st_year DESC');
+  return rows.map(r => r.st_year);
+};
+
+const getListByYearAndGroup = async (year, group) => {
+  const [rows] = await db.query(`
+    SELECT s.st_code, s.st_fullname, s.st_point, s.st_grade, ac.coop_group as st_group, s.st_year
+    FROM tbl_strength s
+    LEFT JOIN active_coop ac ON s.st_code = ac.c_code
+    WHERE s.st_year = ? AND ac.coop_group = ? 
+    ORDER BY s.st_point DESC, s.st_fullname ASC
+  `, [year, group]);
+  return rows || [];
+};
+
+const getSummaryByYear = async (year) => {
+  const [rows] = await db.query(`
+    SELECT 
+      CASE 
+        WHEN ac.coop_group = 'สหกรณ์' AND ac.in_out_group = 'ภาคการเกษตร' THEN 'สหกรณ์ภาคการเกษตร'
+        WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
+        WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
+        WHEN ac.coop_group IS NOT NULL THEN ac.coop_group
+        ELSE 'ไม่ระบุประเภท'
+      END AS org_type,
+      COUNT(DISTINCT s.st_code) AS total_count,
+      COUNT(DISTINCT CASE WHEN s.st_grade = 'ชั้น1' THEN s.st_code END) AS grade_1_count,
+      COUNT(DISTINCT CASE WHEN s.st_grade = 'ชั้น2' THEN s.st_code END) AS grade_2_count,
+      COUNT(DISTINCT CASE WHEN s.st_grade = 'ชั้น3' THEN s.st_code END) AS grade_3_count,
+      ROUND(AVG(s.st_point), 2) AS avg_point,
+      ROUND(MAX(s.st_point), 2) AS max_point,
+      ROUND(MIN(s.st_point), 2) AS min_point
+    FROM tbl_strength s
+    LEFT JOIN active_coop ac ON s.st_code = ac.c_code
+    WHERE s.st_year = ?
+    GROUP BY org_type
+    ORDER BY FIELD(org_type, 'สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร')
+  `, [year]);
+  return rows;
+};
+
+const getGradeSummaryByInOutGroup = async (year) => {
+  let sql = `
+    SELECT 
+      CASE 
+        WHEN ac.coop_group = 'สหกรณ์' AND ac.in_out_group = 'ภาคการเกษตร' THEN 'สหกรณ์ภาคการเกษตร'
+        WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
+        WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
+        WHEN ac.coop_group IS NOT NULL THEN ac.coop_group
+        ELSE 'ไม่ระบุประเภท'
+      END AS group_name,
+      COUNT(*) AS total_count,
+      SUM(CASE WHEN s.st_grade = 'ชั้น1' THEN 1 ELSE 0 END) AS grade_1_count,
+      SUM(CASE WHEN s.st_grade = 'ชั้น2' THEN 1 ELSE 0 END) AS grade_2_count,
+      SUM(CASE WHEN s.st_grade = 'ชั้น3' THEN 1 ELSE 0 END) AS grade_3_count
+    FROM tbl_strength s
+    LEFT JOIN active_coop ac ON s.st_code = ac.c_code
+  `;
+  const params = [];
+  if (year) {
+    sql += ` WHERE s.st_year = ?`;
+    params.push(year);
+  }
+  sql += `
+    GROUP BY group_name
+    ORDER BY FIELD(group_name, 'สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร')
+  `;
+  const [rows] = await db.query(sql, params);
+  return rows;
+};
+
+module.exports = {
+  bulkUpsert: exports.bulkUpsert,
+  getRecent: exports.getRecent,
+  getGradeCounts: exports.getGradeCounts,
+  getLatestYear: exports.getLatestYear,
+  getDetailsByGroupAndYear: exports.getDetailsByGroupAndYear,
+  getByCode: exports.getByCode,
+  getInstitutionProfile: exports.getInstitutionProfile,
+  getYears,
+  getListByYearAndGroup,
+  getSummaryByYear,
+  getGradeSummaryByInOutGroup,
 };

@@ -157,3 +157,41 @@ exports.showInstitutionDetail = async (req, res) => {
     res.status(500).send('พลาดโหลดข้อมูล');
   }
 };
+
+exports.showListPage = async (req, res) => {
+  try {
+    const { year, group } = req.query;
+    const selectedGroup = group || 'สหกรณ์';
+    const years = await strengthModel.getYears();
+
+    // Always resolve a year for summary tables (default to latest)
+    const latestYear = await strengthModel.getLatestYear();
+    const summaryYear = year || latestYear;
+
+    // Always fetch summary tables
+    const gradeSummary = summaryYear
+      ? await strengthModel.getGradeSummaryByInOutGroup(summaryYear)
+      : [];
+    const summary = summaryYear
+      ? await strengthModel.getSummaryByYear(summaryYear)
+      : [];
+
+    // Detail list only when year is explicitly selected
+    const items = year
+      ? await strengthModel.getListByYearAndGroup(year, selectedGroup)
+      : [];
+
+    res.render('strengthList', {
+      items: items || [],
+      years: years || [],
+      year: year || null,
+      selectedGroup,
+      summary: summary || [],
+      gradeSummary: gradeSummary || [],
+      summaryYear,
+    });
+  } catch (error) {
+    console.error('Error in showListPage:', error);
+    res.status(500).send('Error fetching data');
+  }
+};

@@ -137,7 +137,7 @@ const getGradeSummaryByInOutGroup = async (year) => {
         CASE
           WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
           WHEN ac.coop_group = 'สหกรณ์'
-            AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร'
+            AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'ใน'
             THEN 'สหกรณ์ภาคการเกษตร'
           WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
           ELSE 'ไม่ทราบประเภท'

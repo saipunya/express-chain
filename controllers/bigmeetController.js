@@ -304,24 +304,92 @@ module.exports = {
 
       const total = items.length;
 
-      const inRangeCount = items.reduce((acc, item) => {
-        if (!item.big_date) return acc;
+      // คำนวณแยกตามประเภทสหกรณ์
+      const summary = {
+        fiscalYear: range.fy,
+        range: { start: range.start, end: range.end },
+        totalCoopsInList: total,
+        metInFiscalYear: 0,
+        notMetInFiscalYear: 0,
+        agriMet: 0,
+        agriNotMet: 0,
+        nonAgriMet: 0,
+        nonAgriNotMet: 0,
+        farmerMet: 0,
+        farmerNotMet: 0
+      };
+
+      // ดึงข้อมูล in_out_group สำหรับทุกรายการในครั้งเดียว
+      const coopCodes = items.map(item => item.big_code).filter(Boolean);
+      const coopTypeMap = new Map();
+      
+      if (coopCodes.length > 0) {
+        const placeholders = coopCodes.map(() => '?').join(',');
+        const [coopTypeData] = await db.query(`
+SELECT c_code, REPLACE(TRIM(COALESCE(in_out_group, '')), CHAR(160), '') AS in_out_group
+FROM active_coop 
+WHERE c_code IN (${placeholders})
+        `, coopCodes);
+        
+        // สร้าง map สำหรับการค้นหาประเภท
+        coopTypeData.forEach(row => {
+          coopTypeMap.set(row.c_code, row.in_out_group || '');
+        });
+      }
+
+      items.forEach(item => {
+        if (!item.big_date) return;
+        
         // เทียบแบบ string ISO (YYYY-MM-DD) ได้ ถ้า big_date เป็น date/datetime มาตรฐาน
         const d = String(item.big_date).slice(0, 10);
-        return d >= range.start && d <= range.end ? acc + 1 : acc;
-      }, 0);
+        const inRange = d >= range.start && d <= range.end;
 
-      const notMetCount = Math.max(0, total - inRangeCount);
+        // จัดประเภท
+        let coopType = 'unknown';
+        const inOutGroup = coopTypeMap.get(item.big_code) || '';
+        
+        if (item.c_name && item.c_name.includes('กลุ่มเกษตรกร')) {
+          coopType = 'farmer';
+        } else if (inOutGroup === 'ใน') {
+          coopType = 'agri';
+        } else if (inOutGroup === 'นอก') {
+          coopType = 'non_agri';
+        } else {
+          coopType = 'non_agri'; // default
+        }
+
+        if (inRange) {
+          summary.metInFiscalYear++;
+          switch (coopType) {
+            case 'agri':
+              summary.agriMet++;
+              break;
+            case 'non_agri':
+              summary.nonAgriMet++;
+              break;
+            case 'farmer':
+              summary.farmerMet++;
+              break;
+          }
+        } else {
+          summary.notMetInFiscalYear++;
+          switch (coopType) {
+            case 'agri':
+              summary.agriNotMet++;
+              break;
+            case 'non_agri':
+              summary.nonAgriNotMet++;
+              break;
+            case 'farmer':
+              summary.farmerNotMet++;
+              break;
+          }
+        }
+      });
 
       return res.json({
         success: true,
-        data: {
-          fiscalYear: range.fy,
-          range: { start: range.start, end: range.end },
-          totalCoopsInList: total,
-          metInFiscalYear: inRangeCount,
-          notMetInFiscalYear: notMetCount
-        }
+        data: summary
       });
     } catch (err) {
       console.error('bigmeet:summaryByFiscalYear', err);

@@ -54,7 +54,7 @@ exports.list = async (req, res) => {
         SUM(
           CASE
             WHEN ac.coop_group = 'สหกรณ์'
-              AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร'
+              AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'ใน'
             THEN COALESCE(a.addmem_saman, 0)
             ELSE 0
           END
@@ -62,7 +62,7 @@ exports.list = async (req, res) => {
         SUM(
           CASE
             WHEN ac.coop_group = 'สหกรณ์'
-              AND COALESCE(ac.in_out_group, '') = 'ภาคการเกษตร'
+              AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'ใน'
             THEN COALESCE(a.addmem_somtob, 0)
             ELSE 0
           END
@@ -70,7 +70,7 @@ exports.list = async (req, res) => {
         SUM(
           CASE
             WHEN ac.coop_group = 'สหกรณ์'
-              AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร'
+              AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'นอก'
             THEN COALESCE(a.addmem_saman, 0)
             ELSE 0
           END
@@ -78,7 +78,7 @@ exports.list = async (req, res) => {
         SUM(
           CASE
             WHEN ac.coop_group = 'สหกรณ์'
-              AND COALESCE(ac.in_out_group, '') = 'นอกภาคเกษตร'
+              AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'นอก'
             THEN COALESCE(a.addmem_somtob, 0)
             ELSE 0
           END

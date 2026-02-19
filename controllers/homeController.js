@@ -57,7 +57,7 @@ const homeController = {
 
       // --- NEW approach: like st_grade summary (CASE + GROUP BY) ---
       // Normalize in_out_group once (trim + remove NBSP). For coop_group='สหกรณ์':
-      // - 'ภาคการเกษตร' => agri
+      // - 'ใน' => agri (ภาคการเกษตร)
       // - everything else (including NULL/empty/typos) => non_agri (prevents undercount)
       const [coopTypeSummaryAgg] = await db.query(`
         SELECT
@@ -69,7 +69,7 @@ const homeController = {
             coop_group,
             CASE
               WHEN coop_group <> 'สหกรณ์' THEN NULL
-              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร' THEN 'agri'
+              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ใน' THEN 'agri'
               ELSE 'non_agri'
             END AS inout_bucket
           FROM active_coop
@@ -95,7 +95,7 @@ const homeController = {
             coop_group,
             CASE
               WHEN coop_group <> 'สหกรณ์' THEN NULL
-              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร' THEN 'agri'
+              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ใน' THEN 'agri'
               ELSE 'non_agri'
             END AS inout_bucket
           FROM active_coop

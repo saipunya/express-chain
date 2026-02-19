@@ -112,73 +112,295 @@
   </div>
 
 <style>
-  /* ===== Stat Cards (small) ===== */
-  .stat-card-sm { transition: transform .15s, box-shadow .15s; }
-  .stat-card-sm:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.1) !important; }
-  .stat-icon-sm {
-    width: 2.75rem; height: 2.75rem; border-radius: .75rem;
-    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-    flex-shrink: 0;
+  :root {
+    --primary: #10b981;
+    --primary-light: #d1fae5;
+    --primary-lighter: #ecfdf5;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --bg-lighter: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
-  .stat-val-sm { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-  .stat-lbl-sm { font-size: .78rem; color: #6c757d; }
+
+  /* ===== Page Header ===== */
+  .page-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .page-header h1 {
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .page-header p {
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+  }
+  /* ===== Stat Cards (small) ===== */
+  .stat-card-sm {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    background: var(--bg-lighter);
+  }
+  
+  .stat-card-sm:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+  }
+  
+  .stat-icon-sm {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-card-sm:hover .stat-icon-sm {
+    transform: scale(1.1);
+  }
+  
+  .stat-val-sm {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    transition: color 0.3s ease;
+  }
+  
+  .stat-card-sm:hover .stat-val-sm {
+    color: var(--primary);
+  }
+  
+  .stat-lbl-sm {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
   /* ===== Hover Cards ===== */
-  .hover-card { transition: box-shadow .2s; }
-  .hover-card:hover { box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.1) !important; }
+  .hover-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    background: var(--bg-lighter);
+  }
+  
+  .hover-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
 
   /* ===== Dashboard Chip ===== */
   .dashboard-chip {
-    width: 2.5rem; height: 2.5rem; border-radius: .75rem;
-    display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
   }
-  .chip-info { background: rgba(13,202,240,.15); color: #0dcaf0; }
-  .chip-warning { background: rgba(255,193,7,.15); color: #f0ad4e; }
-  .chip-primary { background: rgba(13,110,253,.1); color: #0d6efd; }
+  
+  .dashboard-chip:hover {
+    transform: scale(1.1);
+  }
+  
+  .chip-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+  }
+  
+  .chip-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+  }
+  
+  .chip-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+  }
 
   /* ===== Status Pills ===== */
-  .status-pills { display: flex; flex-direction: column; gap: 1rem; }
+  .status-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
   .pill-item {
-    display: flex; align-items: center; gap: 1rem;
-    padding: .75rem; border-radius: 1rem; background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
   }
+  
+  .pill-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+  }
+  
   .pill-icon {
-    width: 3rem; height: 3rem; border-radius: 1rem;
-    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
   }
-  .pill-label { margin: 0; color: #6c757d; font-size: .85rem; }
-  .pill-value { font-size: 1.4rem; font-weight: 700; }
+  
+  .pill-item:hover .pill-icon {
+    transform: scale(1.1);
+  }
+  
+  .pill-label {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  
+  .pill-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
 
   /* ===== Charts ===== */
-  .chart-wrapper { background: #f8f9fa; border-radius: 1rem; padding: 1rem; }
-  .card-chart { background: #f8f9fa; border-radius: 1rem; padding: 1rem; }
+  .chart-wrapper {
+    background: var(--bg-light);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+  }
+  
+  .card-chart {
+    background: var(--bg-light);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+  }
 
   /* ===== Activity Lines ===== */
   .activity-line {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: .75rem 0; border-bottom: 1px solid #f1f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
   }
-  .activity-line:last-child { border-bottom: 0; }
+  
+  .activity-line:hover {
+    background: var(--bg-light);
+    padding-left: 0.5rem;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .activity-line:last-child {
+    border-bottom: 0;
+  }
 
   /* ===== Section Header ===== */
   .section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 
   /* ===== Dashboard Table ===== */
-  .dashboard-table thead { background: #f8f9fa; }
-  .dashboard-table th { font-size: .82rem; text-transform: uppercase; letter-spacing: .03em; color: #6c757d; border: 0; }
-  .dashboard-table td { border-top: 1px solid #f1f3f5; vertical-align: middle; }
+  .dashboard-table thead {
+    background: var(--bg-light);
+  }
+  
+  .dashboard-table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    border: 0;
+    font-weight: 700;
+    padding: 1rem 0.75rem;
+  }
+  
+  .dashboard-table td {
+    border-top: 1px solid var(--border-color);
+    vertical-align: middle;
+    padding: 0.75rem;
+  }
+  
+  .dashboard-table tbody tr {
+    transition: all 0.3s ease;
+  }
+  
+  .dashboard-table tbody tr:hover {
+    background: var(--bg-light);
+  }
 
   /* ===== Progress ===== */
-  .progress-thin { height: 6px; background: #e9ecef; border-radius: 999px; }
-  .progress-thin .progress-bar { border-radius: 999px; }
+  .progress-thin {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  
+  .progress-thin .progress-bar {
+    border-radius: 999px;
+    transition: width 0.6s ease;
+  }
 
   /* ===== Metric Pills ===== */
   .metric-pill {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 3rem; padding: .35rem .75rem; border-radius: 999px; font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
   }
-  .pill-info { background: rgba(13,202,240,.15); color: #0dcaf0; }
-  .pill-success { background: rgba(25,135,84,.15); color: #198754; }
+  
+  .metric-pill:hover {
+    transform: scale(1.05);
+  }
+  
+  .pill-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+  }
+  
+  .pill-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+  }
 
   /* ===== Project Month Cards ===== */
   .project-month-list { display: flex; flex-direction: column; gap: 1rem; }
@@ -227,6 +449,58 @@
   @media (max-width: 575px) {
     h1 { font-size: 1.3rem !important; }
   }
+
+  /* ===== Dropdown Fix ===== */
+/* วิธีการใหม่ - ลบ table-responsive และใช้ overflow-x แทน */
+.table-responsive {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* ใช้ z-index มาตรฐาน Bootstrap */
+.dropdown-menu {
+  z-index: 1050 !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: auto !important;
+  right: 0 !important;
+  margin-top: 0.25rem !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
+}
+
+/* ปรับปรุง dropdown container */
+.dropdown {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* ปรับปรุง table cells */
+.dashboard-table td {
+  position: static !important;
+  overflow: visible !important;
+}
+
+/* ปรับปรุง action buttons */
+.action-btn-group {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Mobile fix */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90vw !important;
+    max-width: 400px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    z-index: 1050 !important;
+  }
+}
 </style>
 
   <!-- ===== Status Distribution + Charts ===== -->

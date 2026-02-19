@@ -24,6 +24,10 @@
                   <a href="/strength" class="btn btn-outline-primary btn-action"><i class="bi bi-shield-lock me-1"></i> จัดการความเข้มแข็ง</a>
                   <!-- จัดการ suggestion menu -->
                   <a href="/suggestion" class="btn btn-outline-info btn-action"><i class="bi bi-lightbulb me-1"></i> คำแนะนำนายทะเบียนสหกรณ์</a>
+                  <!-- ผลประชุมใหญ่ -->
+                  <a href="/bigmeet/list" class="btn btn-outline-success btn-action"><i class="bi bi-calendar-check me-1"></i> ผลประชุมใหญ่</a>
+                  <!-- จำนวนสมาชิก -->
+                  <a href="/addmem/list" class="btn btn-outline-secondary btn-action"><i class="bi bi-person-plus me-1"></i> จำนวนสมาชิก</a>
                 <% } %>
                 <a href="/gitgum/add" class="btn btn-outline-secondary btn-action"><i class="bi bi-plus-circle me-1"></i> เพิ่มกิจกรรมสำนักงาน</a>
               </div>
@@ -93,6 +97,19 @@
     
 
       <!-- Menu Blocks -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <a href="/bigmeet/list" class="menu-link">
+            <div class="menu-card">
+              <div class="menu-icon"><i class="bi bi-calendar-check"></i></div>
+              <div>
+                <p class="menu-title">ผลประชุมใหญ่</p>
+                <p class="menu-desc">ดูรายการประชุมใหญ่</p>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
           <h4 class="mb-0"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>เมนูใช้งาน</h4>
@@ -174,6 +191,28 @@
                   <div>
                     <p class="menu-title">วงกู้ยืม/ค้ำประกัน</p>
                     <p class="menu-desc">สหกรณ์/กลุ่มเกษตรกร</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="/bigmeet/list" class="menu-link">
+                <div class="menu-card">
+                  <div class="menu-icon"><i class="bi bi-calendar-check"></i></div>
+                  <div>
+                    <p class="menu-title">ผลประชุมใหญ่</p>
+                    <p class="menu-desc">ดูรายการประชุมใหญ่</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="/addmem/list" class="menu-link">
+                <div class="menu-card">
+                  <div class="menu-icon"><i class="bi bi-person-plus"></i></div>
+                  <div>
+                    <p class="menu-title">จำนวนสมาชิก</p>
+                    <p class="menu-desc">ข้อมูลสมาชิกสหกรณ์</p>
                   </div>
                 </div>
               </a>
@@ -317,6 +356,28 @@
                     <div>
                       <p class="menu-title">Audit Log</p>
                       <p class="menu-desc">บันทึกการใช้งานระบบ</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/bigmeet/list" class="menu-link">
+                  <div class="menu-card">
+                    <div class="menu-icon"><i class="bi bi-calendar-check"></i></div>
+                    <div>
+                      <p class="menu-title">ผลประชุมใหญ่</p>
+                      <p class="menu-desc">สรุปผลการประชุมสหกรณ์</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/addmem/list" class="menu-link">
+                  <div class="menu-card">
+                    <div class="menu-icon"><i class="bi bi-person-plus"></i></div>
+                    <div>
+                      <p class="menu-title">จำนวนสมาชิก</p>
+                      <p class="menu-desc">ข้อมูลสมาชิกสหกรณ์</p>
                     </div>
                   </div>
                 </a>

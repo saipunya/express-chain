@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const coopProfileModel = require('../models/coopProfileModel');
 const addmemModel = require('../models/addmemModel');
+const ExcelJS = require('exceljs');
 
 // Render profile by c_code
 exports.profile = async (req, res, next) => {
@@ -163,5 +164,84 @@ exports.group = async (req, res) => {
     res.status(500).render('error_page', { 
       message: 'ไม่สามารถโหลดข้อมูลได้: ' + err.message 
     });
+  }
+};
+
+// Export active_coop (c_status='ดำเนินการ') to Excel (.xlsx)
+exports.exportActiveCoopExcel = async (req, res) => {
+  try {
+    const search = req.query.q ? String(req.query.q).trim() : '';
+    const currentGroup = req.query.group ? String(req.query.group).trim() : '';
+
+    const TABLE_NAME = 'active_coop';
+    const COL_CODE = 'c_code';
+    const COL_NAME = 'c_name';
+    const COL_NO = 'c_no';
+    const COL_END_DATE = 'end_date';
+    const COL_TYPE = 'coop_group';
+    const COL_GROUP = 'c_group';
+    const COL_STATUS = 'c_status';
+
+    let query = `
+      SELECT ${COL_CODE}, ${COL_NAME}, ${COL_NO}, ${COL_END_DATE}, ${COL_TYPE}
+      FROM ${TABLE_NAME}
+      WHERE ${COL_STATUS} = 'ดำเนินการ'
+    `;
+    const params = [];
+
+    if (currentGroup) {
+      query += ` AND ${COL_GROUP} = ?`;
+      params.push(currentGroup);
+    }
+
+    if (search) {
+      query += ` AND (${COL_CODE} LIKE ? OR ${COL_NAME} LIKE ? OR ${COL_GROUP} LIKE ?)`;
+      const w = `%${search}%`;
+      params.push(w, w, w);
+    }
+
+    query += ` ORDER BY ${COL_CODE} ASC`;
+
+    const connection = await db.getConnection();
+    const [rows] = await connection.query(query, params);
+    connection.release();
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'express-chain';
+    wb.created = new Date();
+
+    const ws = wb.addWorksheet('active_coop');
+    ws.columns = [
+      { header: 'c_code', key: 'c_code', width: 16 },
+      { header: 'c_name', key: 'c_name', width: 50 },
+      { header: 'c_no', key: 'c_no', width: 16 },
+      { header: 'end_date', key: 'end_date', width: 18 },
+      { header: 'coop_group', key: 'coop_group', width: 22 }
+    ];
+
+    ws.getRow(1).font = { bold: true };
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+    (rows || []).forEach((r) => {
+      ws.addRow({
+        c_code: r[COL_CODE] ?? '',
+        c_name: r[COL_NAME] ?? '',
+        c_no: r[COL_NO] ?? '',
+        end_date: r[COL_END_DATE] ?? '',
+        coop_group: r[COL_TYPE] ?? ''
+      });
+    });
+
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const filename = `active_coop_${stamp}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('ERROR exportActiveCoopExcel:', err);
+    res.status(500).send('Export failed');
   }
 };

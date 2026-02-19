@@ -29,6 +29,12 @@
   const others = allCoops.filter(c => 
     !cooperatives.includes(c) && !farmerGroups.includes(c)
   );
+
+  // for export link (keep current filters)
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set('q', search);
+  if (currentGroup) exportParams.set('group', currentGroup);
+  const exportExcelLink = '/allcoop/export/excel' + (exportParams.toString() ? ('?' + exportParams.toString()) : '');
 %>
 
 <div class="container py-3" id="allcoop-page">
@@ -52,6 +58,9 @@
       <!-- add a link big meeting -->
       <a href="/bigmeet" class="btn btn-outline-info btn-sm" aria-label="เพิ่มการประชุมใหญ่"><i class="bi bi-calendar-check me-1"></i> เพิ่มการประชุมใหญ่</a>
       <a href="/addmem/add" class="btn btn-outline-info btn-sm" aria-label="เพิ่มจำนวนสมาชิก"><i class="bi bi-person-plus me-1"></i> เพิ่มจำนวนสมาชิก</a>
+      <a href="<%= exportExcelLink %>" class="btn btn-success btn-sm" aria-label="ส่งออกข้อมูล Excel">
+        <i class="bi bi-file-earmark-excel me-1"></i> ส่งออก Excel
+      </a>
       <button id="toggleGroupPanel" class="btn btn-outline-primary btn-sm" type="button"><i class="bi bi-layout-sidebar"></i> ซ่อนกล่องกลุ่ม</button>
     </div>
   </div>

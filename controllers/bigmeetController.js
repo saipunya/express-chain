@@ -22,33 +22,12 @@ function validatePagination(page, limit) {
 module.exports = {
   async list(req, res) {
     try {
-      const { page = 1, limit = 10, search, year, type } = req.query;
-      const pagination = validatePagination(page, limit);
-      
-      const filters = {};
-      if (search) filters.search = search;
-      if (year) filters.year = year;
-      if (type) filters.type = type;
-      
-      const [items, total] = await Promise.all([
-        Bigmeet.findPage(pagination.limit, pagination.offset, filters),
-        Bigmeet.countAll(filters)
-      ]);
-      
-     
-      const totalPages = Math.ceil(total / pagination.limit);
-      
-      res.render('bigmeet/list', { 
-        items, 
-        pagination: {
-          currentPage: pagination.page,
-          totalPages,
-          totalItems: total,
-          itemsPerPage: pagination.limit,
-          hasNextPage: pagination.page < totalPages,
-          hasPrevPage: pagination.page > 1
-        },
-        filters
+      const items = await Bigmeet.findAll();
+
+      res.render('bigmeet/list', {
+        items,
+        pagination: null, // ไม่ใช้แล้ว (หน้าเดิม paginate ฝั่ง client จาก allItems)
+        filters: {}
       });
     } catch (err) {
       console.error('bigmeet:list', err);

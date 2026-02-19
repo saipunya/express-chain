@@ -22,7 +22,10 @@ module.exports = {
       SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day 
       FROM bigmeet b
       LEFT JOIN active_coop c ON b.big_code = c.c_code
-      ORDER BY b.big_id DESC
+      ORDER BY 
+        (b.big_date IS NULL) ASC,
+        b.big_date DESC,
+        b.big_id DESC
     `);
     return rows;
   },
@@ -100,7 +103,6 @@ module.exports = {
     const [result] = await db.query(
       `INSERT INTO ${table} (big_code, big_endyear, big_type, big_date, big_saveby, big_savedate)
        VALUES (?, ?, ?, ?, ?, ?)`,
-
       [
         payload.big_code,
         payload.big_endyear,

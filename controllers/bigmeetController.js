@@ -300,9 +300,17 @@ module.exports = {
         return res.status(400).json({ success: false, error: 'Invalid fiscal year (fy)' });
       }
 
-      const items = await Bigmeet.findAll();
+      // ดึงข้อมูลใหญ่พร้อมข้อมูลประเภทจาก active_coop
+      const [itemsWithTypes] = await db.query(`
+        SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day,
+               REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
+               c.coop_group
+        FROM bigmeet b
+        LEFT JOIN active_coop c ON b.big_code = c.c_code
+        ORDER BY b.big_id DESC
+      `);
 
-      const total = items.length;
+      const total = itemsWithTypes.length;
 
       // คำนวณแยกตามประเภทสหกรณ์
       const summary = {
@@ -319,41 +327,25 @@ module.exports = {
         farmerNotMet: 0
       };
 
-      // ดึงข้อมูล in_out_group สำหรับทุกรายการในครั้งเดียว
-      const coopCodes = items.map(item => item.big_code).filter(Boolean);
-      const coopTypeMap = new Map();
-      
-      if (coopCodes.length > 0) {
-        const placeholders = coopCodes.map(() => '?').join(',');
-        const [coopTypeData] = await db.query(`
-SELECT c_code, REPLACE(TRIM(COALESCE(in_out_group, '')), CHAR(160), '') AS in_out_group
-FROM active_coop 
-WHERE c_code IN (${placeholders})
-        `, coopCodes);
-        
-        // สร้าง map สำหรับการค้นหาประเภท
-        coopTypeData.forEach(row => {
-          coopTypeMap.set(row.c_code, row.in_out_group || '');
-        });
-      }
-
-      items.forEach(item => {
+      itemsWithTypes.forEach(item => {
         if (!item.big_date) return;
         
         // เทียบแบบ string ISO (YYYY-MM-DD) ได้ ถ้า big_date เป็น date/datetime มาตรฐาน
         const d = String(item.big_date).slice(0, 10);
         const inRange = d >= range.start && d <= range.end;
 
-        // จัดประเภท
-        let coopType = 'unknown';
-        const inOutGroup = coopTypeMap.get(item.big_code) || '';
-        
-        if (item.c_name && item.c_name.includes('กลุ่มเกษตรกร')) {
+        // จัดประเภทตามที่ผู้ใช้ต้องการ
+        let coopType;
+        if (item.coop_group === 'กลุ่มเกษตรกร') {
           coopType = 'farmer';
-        } else if (inOutGroup === 'ใน') {
-          coopType = 'agri';
-        } else if (inOutGroup === 'นอก') {
-          coopType = 'non_agri';
+        } else if (item.coop_group === 'สหกรณ์') {
+          if (item.in_out_group === 'ใน') {
+            coopType = 'agri';
+          } else if (item.in_out_group === 'นอก') {
+            coopType = 'non_agri';
+          } else {
+            coopType = 'non_agri'; // default
+          }
         } else {
           coopType = 'non_agri'; // default
         }

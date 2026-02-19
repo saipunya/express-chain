@@ -1828,6 +1828,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
                 <th class="text-end">สหกรณ์ภาคการเกษตร</th>
                 <th class="text-end">สหกรณ์นอกภาคการเกษตร</th>
                 <th class="text-end">กลุ่มเกษตรกร</th>
+                <th class="text-end">รวม</th>
               </tr>
             </thead>
             <tbody>
@@ -1838,6 +1839,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
                     <td class="text-end"><%= Number(row.coop_agri || 0).toLocaleString() %></td>
                     <td class="text-end"><%= Number(row.coop_non_agri || 0).toLocaleString() %></td>
                     <td class="text-end"><%= Number(row.farmer_group || 0).toLocaleString() %></td>
+                    <td class="text-end fw-bold"><%= Number((row.coop_agri || 0) + (row.coop_non_agri || 0) + (row.farmer_group || 0)).toLocaleString() %></td>
                   </tr>
                 <% }) %>
               <% } else { %>
@@ -1852,6 +1854,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
                 <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_agri) || 0).toLocaleString() %></th>
                 <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></th>
                 <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.farmer_group) || 0).toLocaleString() %></th>
+                <th class="text-end fw-bold"><%= Number((Number(coopTypeSummary?.coop_agri || 0) + Number(coopTypeSummary?.coop_non_agri || 0) + Number(coopTypeSummary?.farmer_group || 0))).toLocaleString() %></th>
               </tr>
             </tfoot>
           </table>

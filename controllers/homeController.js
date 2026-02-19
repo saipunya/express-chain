@@ -54,39 +54,78 @@ const homeController = {
       const coopGroupChart = await coopModel.getByCoopGroup();
       const cGroupChart = await coopModel.getByGroup();
       const coopGroupStats = await activeCoopModel.getGroupStats();
-      const [coopTypeSummaryRows] = await db.query(`
+
+      // --- NEW approach: like st_grade summary (CASE + GROUP BY) ---
+      // Normalize in_out_group once (trim + remove NBSP). For coop_group='สหกรณ์':
+      // - 'ภาคการเกษตร' => agri
+      // - everything else (including NULL/empty/typos) => non_agri (prevents undercount)
+      const [coopTypeSummaryAgg] = await db.query(`
         SELECT
-          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'ภาคการเกษตร' THEN 1 ELSE 0 END) AS coop_agri,
-          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'นอกภาคเกษตร' THEN 1 ELSE 0 END) AS coop_non_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND inout_bucket = 'agri' THEN 1 ELSE 0 END) AS coop_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND inout_bucket = 'non_agri' THEN 1 ELSE 0 END) AS coop_non_agri,
           SUM(CASE WHEN coop_group = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmer_group
-        FROM active_coop
-        WHERE c_status = 'ดำเนินการ'
+        FROM (
+          SELECT
+            coop_group,
+            CASE
+              WHEN coop_group <> 'สหกรณ์' THEN NULL
+              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร' THEN 'agri'
+              ELSE 'non_agri'
+            END AS inout_bucket
+          FROM active_coop
+          WHERE c_status = 'ดำเนินการ'
+        ) t
       `);
-      const coopTypeSummary = coopTypeSummaryRows && coopTypeSummaryRows[0] ? coopTypeSummaryRows[0] : {
+
+      const coopTypeSummary = (coopTypeSummaryAgg && coopTypeSummaryAgg[0]) ? coopTypeSummaryAgg[0] : {
         coop_agri: 0,
         coop_non_agri: 0,
         farmer_group: 0
       };
+
       const [coopTypeByGroupRows] = await db.query(`
         SELECT
           c_group,
-          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'ภาคการเกษตร' THEN 1 ELSE 0 END) AS coop_agri,
-          SUM(CASE WHEN coop_group = 'สหกรณ์' AND COALESCE(in_out_group, '') = 'นอกภาคเกษตร' THEN 1 ELSE 0 END) AS coop_non_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND inout_bucket = 'agri' THEN 1 ELSE 0 END) AS coop_agri,
+          SUM(CASE WHEN coop_group = 'สหกรณ์' AND inout_bucket = 'non_agri' THEN 1 ELSE 0 END) AS coop_non_agri,
           SUM(CASE WHEN coop_group = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmer_group
-        FROM active_coop
-        WHERE c_status = 'ดำเนินการ'
-          AND c_group IS NOT NULL
-          AND c_group <> ''
+        FROM (
+          SELECT
+            c_group,
+            coop_group,
+            CASE
+              WHEN coop_group <> 'สหกรณ์' THEN NULL
+              WHEN REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') = 'ภาคการเกษตร' THEN 'agri'
+              ELSE 'non_agri'
+            END AS inout_bucket
+          FROM active_coop
+          WHERE c_status = 'ดำเนินการ'
+            AND c_group IS NOT NULL
+            AND c_group <> ''
+        ) t
         GROUP BY c_group
         ORDER BY c_group
       `);
+
       const coopTypeByGroup = (coopTypeByGroupRows || []).map((row) => ({
         c_group: row.c_group,
         coop_agri: Number(row.coop_agri || 0),
         coop_non_agri: Number(row.coop_non_agri || 0),
         farmer_group: Number(row.farmer_group || 0)
       }));
-      
+
+      // Debug: เปิดใช้เพื่อดูว่าค่าไหนถูกจัดเป็น non_agri (กัน “ยังไม่ครบถ้วน”)
+      // const [inOutDist] = await db.query(`
+      //   SELECT
+      //     REPLACE(TRIM(COALESCE(in_out_group,'')), CHAR(160), '') AS in_out_norm,
+      //     COUNT(*) AS total
+      //   FROM active_coop
+      //   WHERE c_status='ดำเนินการ' AND coop_group='สหกรณ์'
+      //   GROUP BY in_out_norm
+      //   ORDER BY total DESC
+      // `);
+      // console.log('[homeController] in_out_group distribution:', inOutDist);
+
       // ข้อมูลการใช้ออนไลน์
       const onlineUsers = await onlineModel.getOnlineUsers();
       const onlineCount = await onlineModel.getOnlineCount();

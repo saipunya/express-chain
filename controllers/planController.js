@@ -300,6 +300,51 @@ exports.index = async function (req, res) {
             };
         });
 
+        // ── KPI items per project ─────────────────────────────────────────
+        const allProCodes = projectReportingWithMonths.map(p => p.pro_code).filter(Boolean);
+        let kpiItemsMap = {};
+
+        if (allProCodes.length) {
+            const placeholders = allProCodes.map(() => '?').join(',');
+            const [kpiRows] = await db.query(
+                `SELECT
+                    k.kp_id,
+                    k.kp_procode,
+                    k.kp_subject  AS kpi_name,
+                    k.kp_unit     AS unit,
+                    k.kp_plan     AS target,
+                    COALESCE(SUM(m.actual_value), 0) AS actual,
+                    CASE
+                        WHEN k.kp_plan > 0
+                        THEN ROUND(COALESCE(SUM(m.actual_value), 0) / k.kp_plan * 100, 2)
+                        ELSE 0
+                    END AS percent
+                FROM plan_kpi k
+                LEFT JOIN plan_kpi_monthly m ON m.kp_id = k.kp_id
+                WHERE k.kp_procode IN (${placeholders})
+                GROUP BY k.kp_id, k.kp_procode, k.kp_subject, k.kp_unit, k.kp_plan
+                ORDER BY k.kp_procode, k.kp_number`,
+                allProCodes
+            );
+
+            kpiRows.forEach(row => {
+                if (!kpiItemsMap[row.kp_procode]) kpiItemsMap[row.kp_procode] = [];
+                kpiItemsMap[row.kp_procode].push({
+                    kp_id:    row.kp_id,
+                    kpi_name: row.kpi_name,
+                    unit:     row.unit,
+                    target:   Number(row.target || 0),
+                    actual:   Number(row.actual  || 0),
+                    percent:  Number(row.percent  || 0)
+                });
+            });
+        }
+
+        const projectReportingFinal = projectReportingWithMonths.map(p => ({
+            ...p,
+            kpiItems: kpiItemsMap[p.pro_code] || []
+        }));
+
         res.render('plan', {
             title: 'แดชบอร์ดแผนงาน',
             planStats: {
@@ -313,11 +358,11 @@ exports.index = async function (req, res) {
                 total: activityRow?.total_activities || 0,
                 status: activityStatus,
             },
-        kpiStats: {
+            kpiStats: {
                 total: kpiRow?.total_kpis || 0,
             },
             planOverview,
-            projectReporting: projectReportingWithMonths,
+            projectReporting: projectReportingFinal,   // ← ใช้ final แทน
             fiscalMonths,
             selectedFiscalYear,
             fiscalRangeLabel,

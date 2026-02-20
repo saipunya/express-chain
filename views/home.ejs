@@ -2898,48 +2898,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
     </div>
   </section>
 
-  <!-- List of activity -->
-  <section>
-    <div class="container">
-      <div class="col-12">
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <h5 class="text-primary"><i class="bi bi-calendar-event me-2 text-success"></i> กิจกรรมล่าสุด</h5>
-            <% 
-              const now = new Date(); 
-              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            %>
-            <ul class="list-group list-group-flush">
-              <% activity
-                .filter(acti => { 
-                  const d = new Date(acti.date_act); 
-                  const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                  return actDateOnly >= today && actDateOnly <= lastDayOfMonth; 
-                })
-                .forEach(acti => { %>
-              <li class="list-group-item">
-                <i class="bi bi-calendar-event me-2 text-success"></i>
-                <% const actDate = new Date(acti.date_act); %>
-                <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> -
-                <%= acti.activity %>
-                <% if (actDate.toDateString() === now.toDateString()) { %>
-                <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-                <% } %>
-              </li>
-              <% }) %>
-            </ul>
-          </div>
-        </div>
-        <div class="text-end mt-2">
-          <a href="/gitgum/list" class="btn btn-primary btn-sm px-4 shadow-sm">
-            ดูทั้งหมด
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
 <!-- ================= Activities Calendar (RESTORE) ================= -->
 <section id="activities" class="section-block bg-white">
@@ -3038,6 +2997,50 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
   </div>
 </div>
 
+
+<section id="rules" class="section-block bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-file-earmark-text me-2"></i> ปฏิทินกิจกรรมประจำเดือน <%= new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' }) %>
+      </div>
+      <div class="card-body">
+        <% 
+          const rulesNow = new Date();
+          const rulesToday = new Date(rulesNow.getFullYear(), rulesNow.getMonth(), rulesNow.getDate());
+          const rulesLastDayOfMonth = new Date(rulesNow.getFullYear(), rulesNow.getMonth() + 1, 0);
+        %>
+        <ul class="list-group list-group-flush">
+          <% (activity || [])
+            .filter(acti => { 
+              const d = new Date(acti.date_act); 
+              const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+              return actDateOnly >= rulesToday && actDateOnly <= rulesLastDayOfMonth; 
+            })
+            .forEach(acti => { %>
+          <li class="list-group-item">
+            <i class="bi bi-calendar-event me-2 text-success"></i>
+            <% const actDate = new Date(acti.date_act); %>
+            <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> -
+            <%= acti.activity %>
+            <% if (actDate.toDateString() === rulesNow.toDateString()) { %>
+            <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
+            <% } %>
+          </li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="text-end mt-2">
+        <a href="/gitgum/list" class="btn btn-primary btn-sm px-4 shadow-sm">
+          ดูทั้งหมด
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <!-- ================= Latest Projects & Commands ================= -->
 <section id="projects" class="section-block bg-light">
   <div class="container-lg">
@@ -3113,63 +3116,8 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
   </div>
 </section>
 
-<section id="rules" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-white">
-        <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
-      </div>
-      <div class="card-body">
-        <% 
-          // Helper: return true when date is within last N days (defaults to 3)
-          function isRecentDate(dstr, days=3){
-            if(!dstr) return false;
-            if(typeof dstr === 'string'){
-              if(dstr === '0000-00-00') return false;
-              if(/^1899-11-30/.test(dstr)) return false;
-            }
-            const d = new Date(dstr);
-            if(isNaN(d.getTime())) return false;
-            const diff = Date.now() - d.getTime();
-            return diff >= 0 && diff <= (days * 24 * 60 * 60 * 1000);
-          }
 
-            const rulesNow = new Date();
-            const rulesToday = new Date(rulesNow.getFullYear(), rulesNow.getMonth(), rulesNow.getDate());
-            const rulesLastDayOfMonth = new Date(rulesNow.getFullYear(), rulesNow.getMonth() + 1, 0);
-          %>
-          <ul class="list-group list-group-flush">
-            <% activity
-              .filter(acti => { 
-                const d = new Date(acti.date_act); 
-                const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-                return actDateOnly >= rulesToday && actDateOnly <= rulesLastDayOfMonth; 
-              })
-              .forEach(acti => { %>
-            <li class="list-group-item">
-              <i class="bi bi-calendar-event me-2 text-success"></i>
-              <% const actDate = new Date(acti.date_act); %>
-              <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> -
-              <%= acti.activity %>
-              <% if (actDate.toDateString() === rulesNow.toDateString()) { %>
-              <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-              <% } %>
-            </li>
-            <% }) %>
-          </ul>
-        </div>
-      </div>
-      <div class="text-end mt-2">
-        <a href="/gitgum/list" class="btn btn-primary btn-sm px-4 shadow-sm">
-          ดูทั้งหมด
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- Activity single detail modal -->
 <div class="modal fade modal-elevated" id="activityModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content">

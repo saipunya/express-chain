@@ -96,6 +96,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// (แนะนำ) request id แบบเบาๆ สำหรับไล่ log
+app.use((req, res, next) => {
+  req._rid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  res.setHeader('X-Request-Id', req._rid);
+  next();
+});
+
 // เรียกใช้ routes/index.js
 require('./routes/index')(app);
 
@@ -143,6 +150,33 @@ app.use((req, res) => {
   });
 });
 
+// หลังจาก app.use('/...', routes) ทั้งหมดแล้ว ให้เพิ่ม error handler ท้ายสุด
+
+app.use((err, req, res, next) => {
+  // eslint-disable-next-line no-console
+  console.error(`[EXPRESS_ERROR rid=${req && req._rid ? req._rid : '-'}]`, err && (err.stack || err));
+
+  // ถ้า headers ส่งไปแล้ว ให้ส่งต่อให้ express จัดการ
+  if (res.headersSent) return next(err);
+
+  // สำหรับ API (json) vs หน้าเว็บ
+  const wantsJson = req.xhr || (req.headers.accept || '').includes('application/json');
+  if (wantsJson) return res.status(500).json({ error: 'Internal Server Error', rid: req._rid });
+
+  return res.status(500).send('Internal Server Error');
+});
+
+// process-level (กันพวก error ที่ไม่ผ่าน express middleware)
+process.on('unhandledRejection', (reason) => {
+  // eslint-disable-next-line no-console
+  console.error('[UNHANDLED_REJECTION]', reason && (reason.stack || reason));
+});
+
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('[UNCAUGHT_EXCEPTION]', err && (err.stack || err));
+});
+
 // อย่าง cron job ส่ง Telegram
 require('./cron/gitgumNotifier');
 require('./cron/dailyTelegramNotify'); // <- เพิ่มบรรทัดนี้
@@ -173,35 +207,6 @@ io.on('connection', (socket) => {
   });
 });
 
-
-
-
-// // เล่ม server
-// const DEFAULT_PORT = parseInt(process.env.PORT || '5500', 10);
-// let port = DEFAULT_PORT;
-// let attempts = 0;
-// const maxAttempts = 5;
-
-// function start(p){
-//   server.listen(p, () => {
-//     console.log(`✅ Server is running on http://localhost:${p}`);
-//   });
-// }
-
-// server.on('error', (err) => {
-//   if (err && err.code === 'EADDRINUSE' && attempts < maxAttempts) {
-//     console.warn(`⚠️ Port ${port} is in use. Retrying on ${port + 1}...`);
-//     attempts += 1;
-//     port += 1;
-//     setTimeout(() => start(port), 300);
-//     return;
-//   }
-//   console.error('Server error:', err);
-//   process.exit(1);
-// });
-
-// start(port);
-
 // Use PORT env if provided, otherwise default to 3000 for local development
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000;
 let port = DEFAULT_PORT;
@@ -227,8 +232,6 @@ server.on('error', (err) => {
 });
 
 start(port);
-
-
 
 // ทำความสะอาดข้อมูลออนไลน์เก่า (5 นาที)
 setInterval(async () => {

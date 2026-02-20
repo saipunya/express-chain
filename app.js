@@ -143,38 +143,10 @@ app.use('/addmem', addmemRoutes); // ใช้งานเส้นทาง add
 app.use('/chamra', chamraExportRoute);
 app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
 
-// เปิด/ปิดการโชว์ stack บนหน้าเพจ (แนะนำ: true เฉพาะ dev)
-app.set('showStack', process.env.NODE_ENV !== 'production');
-
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {
     message: 'เส้นทางเข้าไม่อยู่ในระบบ'
-  });
-});
-
-// Global error handler (must be last)
-app.use((err, req, res, next) => {
-  // eslint-disable-next-line no-console
-  console.error('[global-error]', err && (err.stack || err));
-
-  const status = err && err.status ? err.status : 500;
-  const showStack = !!req.app.get('showStack');
-
-  // ถ้า client ต้องการ JSON (เช่น API) ให้ส่งเป็น JSON
-  const accept = (req.headers.accept || '').toLowerCase();
-  if (accept.includes('application/json')) {
-    return res.status(status).json({
-      message: err && err.message ? err.message : 'Internal Server Error',
-      ...(showStack ? { stack: err.stack } : {})
-    });
-  }
-
-  return res.status(status).render('error', {
-    status,
-    message: err && err.message ? err.message : 'Internal Server Error',
-    stack: showStack ? (err && err.stack) : null,
-    user: req.session && req.session.user
   });
 });
 

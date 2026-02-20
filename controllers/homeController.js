@@ -404,6 +404,88 @@ const homeController = {
         .sort((a, b) => a.closingDeadlineMs - b.closingDeadlineMs);
       const closingThisMonthGroups = groupByCoopGroup(closingThisMonth);
 
+      // Get latest year member summary from addmem table
+      const [latestYearRows] = await db.query(`
+        SELECT DISTINCT addmem_year 
+        FROM addmem 
+        ORDER BY addmem_year DESC 
+        LIMIT 1
+      `);
+      
+      const latestYear = latestYearRows && latestYearRows[0] ? latestYearRows[0].addmem_year : new Date().getFullYear();
+      
+      const [memberSummaryRows] = await db.query(`
+        SELECT
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'สหกรณ์'
+                AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'ใน'
+              THEN COALESCE(a.addmem_saman, 0)
+              ELSE 0
+            END
+          ) AS coop_agri_saman,
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'สหกรณ์'
+                AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'ใน'
+              THEN COALESCE(a.addmem_somtob, 0)
+              ELSE 0
+            END
+          ) AS coop_agri_somtob,
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'สหกรณ์'
+                AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'นอก'
+              THEN COALESCE(a.addmem_saman, 0)
+              ELSE 0
+            END
+          ) AS coop_non_agri_saman,
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'สหกรณ์'
+                AND REPLACE(TRIM(COALESCE(ac.in_out_group, '')), CHAR(160), '') = 'นอก'
+              THEN COALESCE(a.addmem_somtob, 0)
+              ELSE 0
+            END
+          ) AS coop_non_agri_somtob,
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'กลุ่มเกษตรกร'
+              THEN COALESCE(a.addmem_saman, 0)
+              ELSE 0
+            END
+          ) AS farmer_group_saman,
+          SUM(
+            CASE
+              WHEN ac.coop_group = 'กลุ่มเกษตรกร'
+              THEN COALESCE(a.addmem_somtob, 0)
+              ELSE 0
+            END
+          ) AS farmer_group_somtob
+        FROM addmem a
+        JOIN active_coop ac ON a.addmem_code = ac.c_code
+        WHERE ac.c_status = 'ดำเนินการ'
+          AND a.addmem_year = ?
+      `, [latestYear]);
+      
+      const memberSummaryRaw = memberSummaryRows && memberSummaryRows[0] ? memberSummaryRows[0] : {
+        coop_agri_saman: 0,
+        coop_agri_somtob: 0,
+        coop_non_agri_saman: 0,
+        coop_non_agri_somtob: 0,
+        farmer_group_saman: 0,
+        farmer_group_somtob: 0
+      };
+
+      const memberSummary = {
+        coop_agri_saman: Number(memberSummaryRaw.coop_agri_saman || 0),
+        coop_agri_somtob: Number(memberSummaryRaw.coop_agri_somtob || 0),
+        coop_non_agri_saman: Number(memberSummaryRaw.coop_non_agri_saman || 0),
+        coop_non_agri_somtob: Number(memberSummaryRaw.coop_non_agri_somtob || 0),
+        farmer_group_saman: Number(memberSummaryRaw.farmer_group_saman || 0),
+        farmer_group_somtob: Number(memberSummaryRaw.farmer_group_somtob || 0)
+      };
+
       res.render('home', { 
         finances, 
         ruleFiles,
@@ -443,6 +525,8 @@ const homeController = {
         closingWithin30Groups,
         closingThisMonthGroups,
         closingDeadlineMonthLabel: meetingDeadlineMonthLabel,
+        memberSummary,
+        latestYear,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

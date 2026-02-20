@@ -8,6 +8,43 @@
 
   <div class="row g-4">
     <div class="col-lg-9">
+      <% if (pro_code && existingActivities && existingActivities.length) { %>
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+              <i class="bi bi-list-check me-2"></i>กิจกรรมที่มีอยู่แล้วในโครงการ <span class="badge bg-info text-dark"><%= pro_code %></span>
+            </div>
+            <span class="text-muted small">ทั้งหมด <%= existingActivities.length %> รายการ</span>
+          </div>
+          <div class="table-responsive mb-0">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:70px;">ลำดับ</th>
+                  <th>ชื่อกิจกรรม</th>
+                  <th style="width:160px;" class="text-center">สถานะ</th>
+                  
+                </tr>
+              </thead>
+              <tbody>
+                <% existingActivities.forEach((ac, idx) => { %>
+                  <% const status = ac.ac_status === 2 ? { label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' }
+                    : ac.ac_status === 1 ? { label: 'อยู่ระหว่างดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' }
+                    : { label: 'ยังไม่ดำเนินการ', badge: 'secondary', icon: 'clock' }; %>
+                  <tr>
+                    <td class="text-muted">#<%= ac.ac_number || idx + 1 %></td>
+                    <td><%= ac.ac_subject || '-' %></td>
+                    <td class="text-center">
+                      <span class="badge bg-<%= status.badge %>"><i class="bi bi-<%= status.icon %> me-1"></i><%= status.label %></span>
+                    </td>
+                    
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } %>
       <% if (pro_code) { %>
         <div class="alert alert-success d-flex align-items-center" role="alert">
           <i class="bi bi-check-circle me-2 fs-5"></i>

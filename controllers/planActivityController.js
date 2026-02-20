@@ -4,6 +4,7 @@ const PlanActivityMonthly = require('../models/planActivityMonthly');
 const PlanKpi = require('../models/planKpi');
 const PlanKpiMonthly = require('../models/planKpiMonthly');
 const AttachmentModel = require('../models/planActivityMonthlyAttachment');
+const db = require('../config/db');
 
 const STATUS_OPTIONS = [
   { value: 2, label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
@@ -86,13 +87,52 @@ const extractFieldMap = (payload, fieldName) => {
 ========================= */
 
 exports.index = async (req, res) => {
-  const activities = await PlanActivity.findAll();
-  res.render('planActivity/index', { activities });
+  const [activities, projects] = await Promise.all([
+    PlanActivity.findAll(),
+    PlanProject.findAll()
+  ]);
+
+  const projectMap = new Map(projects.map((p) => [p.pro_code, p]));
+  const grouped = activities.reduce((acc, ac) => {
+    const code = ac.ac_procode || 'N/A';
+    if (!acc[code]) {
+      const proj = projectMap.get(code) || {};
+      acc[code] = {
+        pro_code: code,
+        project_name: proj.pro_subject || proj.pro_name || '-',
+        activities: []
+      };
+    }
+    acc[code].activities.push(ac);
+    return acc;
+  }, {});
+
+  const groupedProjects = Object.values(grouped).sort((a, b) => a.pro_code.localeCompare(b.pro_code));
+  const totalActivities = activities.length;
+
+  res.render('planActivity/index', { groupedProjects, totalActivities });
 };
 
 exports.selectProjectPage = async (req, res) => {
-  const projects = await PlanProject.findAll();
-  res.render('planActivity/select-project', { projects });
+  const [rows] = await db.query(
+    `SELECT p.pro_code, p.pro_subject, p.pro_macode, m.ma_subject
+     FROM plan_project p
+     LEFT JOIN plan_main m ON m.ma_code = p.pro_macode
+     ORDER BY p.pro_macode, p.pro_code`
+  );
+
+  const planMap = new Map();
+  rows.forEach((row) => {
+    const planCode = row.pro_macode || 'N/A';
+    const planName = row.ma_subject || '-';
+    const plan = planMap.get(planCode) || { ma_code: planCode, plan_name: planName, projects: [] };
+    plan.projects.push({ pro_code: row.pro_code, pro_subject: row.pro_subject });
+    planMap.set(planCode, plan);
+  });
+
+  const plans = Array.from(planMap.values());
+
+  res.render('planActivity/select-project', { plans });
 };
 
 exports.create = async (req, res) => {
@@ -106,10 +146,13 @@ exports.create = async (req, res) => {
 
 exports.createMany = async (req, res) => {
   const projects = await PlanProject.findAll();
+  const pro_code = req.query.pro_code || '';
+  const existingActivities = pro_code ? await PlanActivity.findWithLatestMonthly(pro_code) : [];
   res.render('planActivity/create-many', {
     projects,
-    pro_code: req.query.pro_code || '',
-    ac_saveby: req.session?.user?.username || req.session?.user?.fullname || 'system'
+    pro_code,
+    ac_saveby: req.session?.user?.username || req.session?.user?.fullname || 'system',
+    existingActivities
   });
 };
 

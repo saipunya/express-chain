@@ -1,6 +1,27 @@
 <%- include('../partials/header') %>
 
 <div class="py-4">
+  <% const groups = Array.isArray(groupedProjects) ? groupedProjects : []; %>
+  <% const totalCount = typeof totalActivities !== 'undefined' ? totalActivities : (Array.isArray(activities) ? activities.length : 0); %>
+  <% const STATUS_OPTIONS = [
+    { value: 2, label: 'ดำเนินการเรียบร้อย', badge: 'success', icon: 'check-circle' },
+    { value: 1, label: 'อยู่ระหว่างดำเนินการ', badge: 'warning text-dark', icon: 'hourglass-split' },
+    { value: 0, label: 'ยังไม่ดำเนินการ', badge: 'secondary', icon: 'clock' }
+  ]; %>
+  <% const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']; %>
+  <% const formatThaiDate = (v) => {
+    if (!v) return '-';
+    const str = v.toString().slice(0,10);
+    const parts = str.split('-');
+    if (parts.length < 3) return str;
+    const [y,m,d] = parts;
+    const dayNum = Number(d);
+    const monthNum = Number(m);
+    if (!Number.isFinite(dayNum) || !Number.isFinite(monthNum)) return str;
+    const monthName = TH_MONTHS[monthNum - 1] || m;
+    const byear = Number(y) + 543;
+    return `${dayNum} ${monthName} ${Number.isFinite(byear) ? byear : y}`;
+  }; %>
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <div>
       <h1 class="h3 mb-1"><i class="bi bi-list-check me-2"></i>กิจกรรมโครงการ</h1>
@@ -10,74 +31,70 @@
       <a href="/plan" class="btn btn-outline-info btn-lg">
         <i class="bi bi-clipboard-data me-2"></i>กลับหน้าหลักโครงการ
       </a>
-      <a href="/planactivity/select" class="btn btn-success btn-lg"></a>
+      <a href="/planactivity/select" class="btn btn-success btn-lg">
         <i class="bi bi-folder2-open me-2"></i> เพิ่มกิจกรรม (เลือกโครงการ)
       </a>
-      <a href="/planactivity/create" class="btn btn-outline-primary btn-lg">
-        <i class="bi bi-plus-square me-2"></i>เพิ่มกิจกรรม 1 รายการ
-      </a>
+     
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0 align-middle">
-          <thead class="table-light fw-semibold">
-            <tr>
-              <th style="width: 70px;">#</th>
-              <th style="width: 90px;">ลำดับ</th>
-              <th>ชื่อกิจกรรม</th>
-              <th style="width: 170px;">สถานะ</th>
-              <th style="width: 140px;">รหัสโครงการ</th>
-              <th style="width: 140px;">บันทึกโดย</th>
-              <th style="width: 120px;">วันที่</th>
-              <th style="width: 200px;">การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% activities.forEach(a => { %>
-              <% const st = Number(a.ac_status); %>
-              <tr>
-                <td><%= a.ac_id %></td>
-                <td><%= a.ac_number %></td>
-                <td class="text-truncate" style="max-width: 520px;"><%= a.ac_subject %></td>
-                <td>
-                  <% if (st === 2) { %>
-                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>ดำเนินการแล้ว</span>
-                  <% } else if (st === 1) { %>
-                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>อยู่ระหว่างดำเนินการ</span>
-                  <% } else { %>
-                    <span class="badge bg-secondary"><i class="bi bi-clock me-1"></i>ยังไม่ดำเนินการ</span>
-                  <% } %>
-                </td>
-                <td><span class="badge bg-info text-dark"><%= a.ac_procode %></span></td>
-                <td class="text-muted"><%= a.ac_saveby || '' %></td>
-                <td class="text-muted">
-                  <% if (a.ac_savedate) { %>
-                    <%= a.ac_savedate.toISOString ? a.ac_savedate.toISOString().slice(0,10) : String(a.ac_savedate).slice(0,10) %>
-                  <% } %>
-                </td>
-                <td>
-                  <div class="d-flex gap-1 flex-wrap">
-                    <a href="/planactivity/<%= a.ac_id %>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>ดู</a>
-                    <a href="/planactivity/<%= a.ac_id %>/edit" class="btn btn-sm btn-warning"><i class="bi bi-pencil-square me-1"></i>แก้ไข</a>
-                    <form action="/planactivity/<%= a.ac_id %>/delete" method="post" class="d-inline">
-                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบกิจกรรมนี้?')">
-                        <i class="bi bi-trash me-1"></i>ลบ
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+  <% if (!groups.length) { %>
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+      <div>ยังไม่มีกิจกรรมในระบบ</div>
+    </div>
+  <% } else { %>
+    <% groups.forEach((proj) => { %>
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <div>
+            <span class="badge bg-primary-subtle text-primary me-2">โครงการ</span>
+            <span class="fw-semibold text-primary"><%= proj.pro_code %></span>
+            <span class="text-dark ms-2"><%= proj.project_name || '-' %></span>
+          </div>
+          <span class="text-muted small">กิจกรรมทั้งหมด <%= proj.activities.length %> รายการ</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 90px;">รหัส</th>
+                  <th>ชื่อกิจกรรม</th>
+                  <th style="width: 140px;" class="text-center">สถานะ</th>
+                  <th style="width: 140px;" class="text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% proj.activities.forEach((activity, idx) => { %>
+                  <% const status = STATUS_OPTIONS.find((s) => s.value === activity.ac_status) || STATUS_OPTIONS[2]; %>
+                  <tr>
+                    <td class="text-muted">#<%= activity.ac_number || idx + 1 %></td>
+                    <td>
+                      <div class="fw-semibold"><%= activity.ac_subject %></div>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-<%= status.badge %>"><i class="bi bi-<%= status.icon %> me-1"></i><%= status.label %></span>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="/planactivity/<%= activity.ac_id %>/edit" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i></a>
+                        <form method="POST" action="/planactivity/<%= activity.ac_id %>/delete" onsubmit="return confirm('ยืนยันการลบกิจกรรมนี้?');" class="d-inline">
+                          <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card-footer bg-light text-muted small text-center py-2">
-      <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= activities.length %> กิจกรรม
-    </div>
+    <% }) %>
+  <% } %>
+  <div class="card-footer bg-light text-muted small text-center py-2">
+    <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= totalCount %> กิจกรรม
   </div>
 </div>
 

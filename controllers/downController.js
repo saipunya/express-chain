@@ -4,37 +4,30 @@ const path = require('path');
 const fs = require('fs');
 const fileService = require('../services/fileService');
 
-exports.list = async (req, res) => {
+exports.list = async (req, res, next) => {
   try {
     const search = req.query.search || '';
     const downs = await downModel.searchBySubject(search);
-    res.render('down/list', { downs, search, user: req.session.user });
+    return res.render('down/list', { downs, search, user: req.session.user });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[down.list] error:', err && (err.stack || err));
-    return res.status(500).send('Internal Server Error');
+    return next(err);
   }
 };
 
-exports.view = async (req, res) => {
+exports.view = async (req, res, next) => {
   try {
     const down = await downModel.getById(req.params.id);
     return res.render('down/view', { down, user: req.session.user });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[down.view] error:', err && (err.stack || err));
-    return res.status(500).send('Internal Server Error');
+    return next(err);
   }
 };
 
-exports.createForm = (req, res) => {
+exports.createForm = (req, res, next) => {
   try {
     return res.render('down/create', { user: req.session.user, error: null });
   } catch (err) {
-    // กรณี view หาย/templating พัง จะมาจบตรงนี้
-    // eslint-disable-next-line no-console
-    console.error('[down.createForm] render error:', err && (err.stack || err));
-    return res.status(500).send('Internal Server Error');
+    return next(err);
   }
 };
 
@@ -96,14 +89,12 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.editForm = async (req, res) => {
+exports.editForm = async (req, res, next) => {
   try {
     const down = await downModel.getById(req.params.id);
     return res.render('down/edit', { down, user: req.session.user });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[down.editForm] error:', err && (err.stack || err));
-    return res.status(500).send('Internal Server Error');
+    return next(err);
   }
 };
 

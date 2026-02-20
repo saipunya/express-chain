@@ -4,6 +4,14 @@ const { PDFDocument, rgb, degrees } = require('pdf-lib');
 const fontkit = require('@pdf-lib/fontkit');
 const { uploadDownDir, watermarkFont } = require('../config/paths');
 
+const ALLOWED_EXTENSIONS = new Set([
+  '.pdf',
+]);
+
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+]);
+
 function getDownFilePath(filename) {
   return path.join(uploadDownDir, filename);
 }

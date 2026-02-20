@@ -12,6 +12,23 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
 ]);
 
+function validateUpload(file) {
+  if (!file) return { ok: false, message: 'ไม่พบไฟล์อัปโหลด (req.file ว่าง)' };
+
+  const original = (file.originalname || '').toLowerCase();
+  const ext = path.extname(original);
+  const mime = (file.mimetype || '').toLowerCase();
+
+  // ต้องผ่านอย่างน้อย 1 เงื่อนไข (กันบาง client ส่ง mimetype เพี้ยน)
+  const extOk = !!ext && ALLOWED_EXTENSIONS.has(ext);
+  const mimeOk = !!mime && ALLOWED_MIME_TYPES.has(mime);
+
+  if (!extOk && !mimeOk) {
+    return { ok: false, message: `ชนิดไฟล์ไม่รองรับ: ext=${ext || '-'} mime=${mime || '-'}` };
+  }
+  return { ok: true };
+}
+
 function getDownFilePath(filename) {
   return path.join(uploadDownDir, filename);
 }
@@ -84,6 +101,7 @@ async function streamDownloadOrWatermarked(req, res, filename) {
 }
 
 module.exports = {
+  validateUpload,
   getDownFilePath,
   deleteIfExists,
   streamDownloadOrWatermarked

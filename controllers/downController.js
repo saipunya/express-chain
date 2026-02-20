@@ -24,8 +24,26 @@ exports.create = async (req, res) => {
     const { down_subject, down_link } = req.body;
     if (!down_subject) throw new Error('ต้องระบุเรื่อง');
 
+    // ช่วย debug กรณี 500 จากการอัปโหลด/ตัว parser
+    // (ปลอดภัย: ไม่ log ไฟล์ทั้งก้อน แค่ meta)
+    // eslint-disable-next-line no-console
+    console.log('[down.create] body keys=', Object.keys(req.body || {}), 'file=', req.file && {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      filename: req.file.filename
+    });
+
     const hasFile = !!req.file;
     const hasLink = !!(down_link && down_link.trim() !== '');
+
+    if (hasFile) {
+      const v = fileService.validateUpload(req.file);
+      if (!v.ok) {
+        fileService.deleteIfExists(fileService.getDownFilePath(req.file.filename));
+        return res.status(400).render('down/create', { user: req.session.user, error: v.message });
+      }
+    }
 
     if (!hasFile && !hasLink) throw new Error('ต้องแนบไฟล์หรือกรอกลิงก์อย่างน้อย 1 อย่าง');
     if (hasFile && hasLink) {
@@ -53,6 +71,8 @@ exports.create = async (req, res) => {
 
     res.redirect('/down');
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[down.create] error:', err && (err.stack || err));
     return res.status(400).render('down/create', { user: req.session.user, error: err.message });
   }
 };
@@ -69,6 +89,14 @@ exports.update = async (req, res) => {
   const bodyLink = req.body.down_link ? req.body.down_link.trim() : '';
   const hasNewFile = !!req.file;
   const hasLink = !!(bodyLink);
+
+  if (hasNewFile) {
+    const v = fileService.validateUpload(req.file);
+    if (!v.ok) {
+      fileService.deleteIfExists(fileService.getDownFilePath(req.file.filename));
+      return res.status(400).render('down/edit', { down: current, user: req.session.user, error: v.message });
+    }
+  }
 
   if (hasNewFile && hasLink) {
     // both provided -> reject and clean uploaded file

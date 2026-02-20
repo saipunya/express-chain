@@ -2,471 +2,165 @@
 <% const hasActions = user && (user.mClass=='pbt' || user.mClass=='admin'); %>
 
 <style>
-  :root {
-    --primary: #60a5fa;
-    --primary-light: #f0f9ff;
-    --primary-lighter: #f8fcff;
-    --text-primary: #334155;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    --border-color: #e2e8f0;
-    --bg-light: #fafbfc;
-    --bg-lighter: #fcfdfe;
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
-    --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.05);
-    --shadow-lg: 0 4px 8px rgba(15, 23, 42, 0.06);
+  :root{
+    --primary:#3b82f6;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --bg:#ffffff;
+    --bg-soft:#f8fafc;
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .page-header{
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 0;
+    margin-bottom: 1.25rem;
+  }
+  .page-header h1{ color:var(--text); font-weight:800; letter-spacing:-.5px; text-shadow:none; }
+  .page-header p{ color:var(--muted); font-weight:500; text-shadow:none; }
+
+  .search-card{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: none;
+  }
+  .search-card:hover{ transform:none; box-shadow:none; }
+  .search-card .form-control{
+    border:1px solid var(--border);
+    border-radius:.6rem;
+    background: var(--bg);
+    padding:.7rem .9rem;
+  }
+  .search-card .form-control:focus{
+    border-color: rgba(59,130,246,.6);
+    box-shadow: 0 0 0 .2rem rgba(59,130,246,.15);
+    transform:none;
+    animation:none;
   }
 
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
+  .stats-bar{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    padding:.85rem 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    margin-bottom: 1rem;
+    box-shadow:none;
+  }
+  .stats-bar::before{ display:none; }
+  .stats-bar i{ font-size:1.25rem; color:var(--primary); filter:none; animation:none; }
+  .stats-number{ font-size:1.25rem; color:var(--text); text-shadow:none; }
+  .stats-text{ color:var(--muted); font-size:.9rem; font-weight:600; letter-spacing:0; text-transform:none; }
+
+  /* list (single column) */
+  .command-list{ display:flex; flex-direction:column; gap:.75rem; }
+  .list-item{
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    padding: 1rem;
+  }
+  .list-item:hover{ border-color: rgba(59,130,246,.45); }
+  .list-item-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:1rem;
   }
 
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  .command-no-badge{
+    background: var(--bg-soft);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow:none;
+    border-radius: 999px;
+    padding: .35rem .65rem;
+    font-weight:700;
+    font-size:.85rem;
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+  }
+  .command-no-badge:hover{ transform:none; }
+
+  .command-title{
+    margin:.6rem 0 .35rem 0;
+    font-size:1.05rem;
+    font-weight:750;
+    color: var(--text);
   }
 
-  .page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2.5rem 0;
-    margin-bottom: 2.5rem;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
-    position: relative;
-    overflow: hidden;
-    animation: fadeInUp 0.8s ease-out;
+  .command-date{
+    margin:.35rem 0 0 0;
+    padding:0;
+    background:transparent;
+    border:none;
+    color: var(--muted);
+    font-size:.9rem;
+    gap:.5rem;
+  }
+  .command-date i{ color: var(--muted); font-size:1rem; }
+
+  .command-meta{
+    margin:.75rem 0 0 0;
+    padding-top:.75rem;
+    border-top:1px solid var(--border);
+    gap:.75rem;
+    font-size:.9rem;
+  }
+  .meta-item{ gap:.5rem; }
+  .meta-item:hover{ color:inherit; transform:none; }
+  .meta-item i{ color: var(--muted); font-size:1rem; }
+
+  .action-buttons{
+    margin-top:.85rem;
+    padding-top:.85rem;
+    border-top:1px solid var(--border);
+    display:flex;
+    justify-content:flex-end;
+    gap:.5rem;
   }
 
-  .page-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-    opacity: 0.3;
+  .btn-action{
+    flex:0 0 auto;
+    min-width:auto;
+    border-radius:.6rem;
+    text-transform:none;
+    letter-spacing:0;
+    font-weight:600;
+    border:1px solid rgba(59,130,246,.35);
+    color: var(--primary);
+    background: #fff;
+  }
+  .btn-action::before{ display:none; }
+  .btn-action:hover{
+    transform:none;
+    box-shadow:none;
+    border-color: rgba(59,130,246,.7);
+    background: rgba(59,130,246,.06);
+    color: var(--primary);
   }
 
-  .page-header h1 {
-    font-weight: 800;
-    letter-spacing: -1px;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    position: relative;
-    z-index: 1;
+  .dropdown-menu{ border-radius:.6rem; border:1px solid var(--border); box-shadow:none; }
+
+  .empty-state{
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius:.75rem;
+    padding: 2.5rem 1.25rem;
+    animation:none;
   }
+  .empty-state i{ animation:none; opacity:.55; }
 
-  .page-header p {
-    opacity: 0.95;
-    font-weight: 600;
-    color: rgba(255,255,255,0.9);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 1;
-  }
-
-  .search-card {
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    animation: slideInLeft 0.8s ease-out 0.2s both;
-  }
-
-  .search-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-  }
-
-  .search-card .form-control {
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    background: rgba(255,255,255,0.9);
-    color: #1a202c;
-    transition: all 0.3s ease;
-    padding: 0.75rem 1rem;
-  }
-
-  .search-card .form-control::placeholder {
-    color: var(--text-muted);
-  }
-
-  .search-card .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-    outline: none;
-    transform: scale(1.02);
-    animation: pulse 0.3s ease-out;
-  }
-
-  .command-card {
-    background: rgba(255,255,255,0.98);
-    border: 1px solid rgba(102, 126, 234, 0.1);
-    border-radius: 1rem;
-    padding: 2rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    animation: fadeInUp 0.8s ease-out;
-    animation-fill-mode: both;
-  }
-
-  .command-card:nth-child(1) { animation-delay: 0.1s; }
-  .command-card:nth-child(2) { animation-delay: 0.2s; }
-  .command-card:nth-child(3) { animation-delay: 0.3s; }
-  .command-card:nth-child(4) { animation-delay: 0.4s; }
-  .command-card:nth-child(5) { animation-delay: 0.5s; }
-  .command-card:nth-child(6) { animation-delay: 0.6s; }
-
-  .command-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    border-radius: 1rem 1rem 0 0;
-  }
-
-  .command-card:hover {
-    border-color: #667eea;
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
-    transform: translateY(-4px) scale(1.02);
-  }
-
-  .command-card:hover .command-no-badge {
-    animation: pulse 0.5s ease-out;
-  }
-
-  .command-no-badge {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    padding: 0.6rem 1rem;
-    border-radius: 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: fit-content;
-    border: none;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    transition: all 0.3s ease;
-  }
-
-  .command-no-badge:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  }
-
-  .command-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 1.25rem 0 0.75rem 0;
-    line-height: 1.5;
-    word-break: break-word;
-    transition: color 0.3s ease;
-  }
-
-  .command-card:hover .command-title {
-    color: #667eea;
-  }
-
-  .command-date {
-    font-size: 0.9rem;
-    color: #64748b;
-    margin: 1rem 0 1.25rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(102, 126, 234, 0.05);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    border-left: 3px solid #667eea;
-  }
-
-  .command-date i {
-    color: #667eea;
-    font-size: 1.1rem;
-  }
-
-  .command-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    margin: 1.25rem 0;
-    padding-top: 1.25rem;
-    border-top: 1px solid rgba(102, 126, 234, 0.1);
-    font-size: 0.9rem;
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: #64748b;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .meta-item:hover {
-    color: #667eea;
-    transform: scale(1.05);
-  }
-
-  .meta-item i {
-    color: #667eea;
-    font-size: 1.2rem;
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: auto;
-    padding-top: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .btn-action {
-    flex: 1;
-    min-width: 160px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-radius: 0.75rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-action::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    transition: left 0.3s ease;
-    z-index: -1;
-  }
-
-  .btn-action:hover::before {
-    left: 0;
-  }
-
-  .btn-action {
-    background: rgba(255,255,255,0.95);
-    color: #667eea;
-    border: 2px solid #667eea;
-    position: relative;
-    z-index: 1;
-  }
-
-  .btn-action:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  .btn-action:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  }
-
-  .stats-bar {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.5rem 2rem;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    border-radius: 1rem;
-    margin-bottom: 2.5rem;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
-    position: relative;
-    animation: slideInLeft 0.8s ease-out 0.4s both;
-  }
-
-  .stats-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    border-radius: 1rem 1rem 0 0;
-  }
-
-  .stats-bar i {
-    font-size: 1.8rem;
-    color: #667eea;
-    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
-    animation: pulse 2s infinite;
-  }
-
-  .stats-number {
-    font-weight: 800;
-    color: #1a202c;
-    font-size: 1.8rem;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-  }
-
-  .stats-bar:hover .stats-number {
-    transform: scale(1.1);
-    color: #667eea;
-  }
-
-  .stats-text {
-    color: #64748b;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: rgba(102, 126, 234, 0.03);
-    border: 2px dashed rgba(102, 126, 234, 0.2);
-    border-radius: 1rem;
-    position: relative;
-    animation: fadeInUp 0.8s ease-out;
-  }
-
-  .empty-state i {
-    font-size: 3.5rem;
-    color: #667eea;
-    margin-bottom: 1.5rem;
-    display: block;
-    opacity: 0.7;
-    animation: pulse 2s infinite;
-  }
-
-  .empty-state h5 {
-    color: #1a202c;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-    font-size: 1.2rem;
-  }
-
-  .empty-state p {
-    color: #64748b;
-    margin-bottom: 2rem;
-    font-size: 0.95rem;
-    line-height: 1.6;
-  }
-
-  .dropdown-menu {
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color);
-    background: white;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .dropdown-item {
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    padding: 0.6rem 1rem;
-    transition: all 0.2s ease;
-  }
-
-  .dropdown-item:hover {
-    background-color: #f0f9ff;
-    color: #0369a1;
-  }
-
-  .btn.btn-primary {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .btn.btn-primary:hover {
-    background: #3b82f6;
-    border-color: #3b82f6;
-  }
-
-  .btn.btn-success {
-    background: #86efac;
-    border-color: #86efac;
-    color: #15803d;
-    font-weight: 500;
-  }
-
-  .btn.btn-success:hover {
-    background: #65e892;
-    border-color: #65e892;
-  }
-
-  @media (max-width: 768px) {
-    .page-header {
-      padding: 1.5rem 0 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .search-card {
-      padding: 1.25rem;
-    }
-
-    .command-card {
-      margin-bottom: 0.5rem;
-      padding: 1.25rem;
-    }
-
-    .action-buttons {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .btn-action {
-      min-width: auto;
-      width: 100%;
-    }
-
-    .stats-bar {
-      flex-direction: column;
-      text-align: center;
-      gap: 0.75rem;
-    }
+  @media (max-width: 768px){
+    .action-buttons{ justify-content:stretch; }
+    .action-buttons .btn-action{ width:100%; }
   }
 </style>
 
@@ -480,23 +174,32 @@
 
 <div class="container">
   <!-- Search & Filter -->
-  <div class="row justify-content-center mb-4">
+  <div class="row justify-content-center mb-3">
     <div class="col-lg-8">
       <div class="search-card">
-        <form method="GET" action="" class="row g-2 align-items-end">
+        <form method="GET" action="" class="row g-2 align-items-end" id="commandSearchForm">
           <div class="col-12 col-md">
             <div class="position-relative">
               <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-              <input type="text" class="form-control ps-5" 
-                     name="search" placeholder="ค้นหาเลขที่ หรือ เรื่อง..." value="<%= search || '' %>">
+              <input
+                type="text"
+                class="form-control ps-5"
+                id="commandSearchInput"
+                name="search"
+                placeholder="ค้นหาเลขที่ หรือ เรื่อง..."
+                value="<%= search || '' %>"
+                autocomplete="off"
+              >
             </div>
           </div>
+
+          <!-- ปุ่มค้นหา: เอาออกเพราะค้นหาอัตโนมัติ -->
           <div class="col-auto d-flex gap-2">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i><span class="d-none d-sm-inline ms-2">ค้นหา</span></button>
             <% if(search) { %>
               <a href="/command" class="btn btn-outline-secondary" title="ล้างค่าค้นหา"><i class="bi bi-x-lg"></i></a>
             <% } %>
           </div>
+
           <% if(hasActions){ %>
             <div class="col-12 col-md-auto">
               <a href="/command/create" class="btn btn-success w-100 w-md-auto"><i class="bi bi-plus-lg me-2"></i>สร้างใหม่</a>
@@ -515,75 +218,103 @@
   </div>
 
   <!-- Command List -->
-  <div class="row g-3">
+  <div class="command-list">
     <% if (commands && commands.length) { %>
       <% commands.forEach(c => { %>
-        <div class="col-12 col-lg-6">
-          <div class="command-card">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+        <div class="list-item">
+          <div class="list-item-top">
+            <div class="flex-grow-1">
               <span class="command-no-badge"><i class="bi bi-hash"></i><%= c.com_no %></span>
-              <% if(hasActions){ %>
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-light text-muted p-2" type="button" data-bs-toggle="dropdown" aria-label="เมนูการกระทำ">
-                    <i class="bi bi-three-dots-vertical"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="/command/edit/<%= c.command_id %>"><i class="bi bi-pencil me-2"></i>แก้ไข</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                      <form action="/command/delete/<%= c.command_id %>" method="POST" onsubmit="return confirm('ยืนยันการลบ?')">
-                        <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>
-                      </form>
-                    </li>
-                  </ul>
+
+              <h5 class="command-title"><%= c.com_story %></h5>
+
+              <% const thaiDate = new Date(c.com_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
+              <div class="command-date"><i class="bi bi-calendar3"></i><%= thaiDate %></div>
+
+              <div class="command-meta">
+                <div class="meta-item">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <span>คำสั่งสำนักงาน</span>
                 </div>
-              <% } %>
-            </div>
-
-            <!-- Title & Date -->
-            <h5 class="command-title"><%= c.com_story %></h5>
-            <% const thaiDate = new Date(c.com_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); %>
-            <div class="command-date"><i class="bi bi-calendar3"></i><%= thaiDate %></div>
-
-            <!-- Meta -->
-            <div class="command-meta">
-              <div class="meta-item">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>คำสั่งสำนักงาน</span>
               </div>
             </div>
 
-            <!-- Actions -->
-            <div class="action-buttons">
-              <% if (user) { %>
-                <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-action" target="_blank">
-                  <i class="bi bi-file-earmark-pdf-fill me-2"></i>เปิดอ่าน
-                </a>
-              <% } else { %>
-                <a href="/auth/login" class="btn btn-sm btn-action">
-                  <i class="bi bi-lock-fill me-2"></i>เข้าสู่ระบบ
-                </a>
-              <% } %>
-            </div>
+            <% if(hasActions){ %>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-light text-muted p-2" type="button" data-bs-toggle="dropdown" aria-label="เมนูการกระทำ">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="/command/edit/<%= c.command_id %>"><i class="bi bi-pencil me-2"></i>แก้ไข</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <form action="/command/delete/<%= c.command_id %>" method="POST" onsubmit="return confirm('ยืนยันการลบ?')">
+                      <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>
+                    </form>
+                  </li>
+                </ul>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="action-buttons">
+            <% if (user) { %>
+              <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-action" target="_blank">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>เปิดอ่าน
+              </a>
+            <% } else { %>
+              <a href="/auth/login" class="btn btn-sm btn-action">
+                <i class="bi bi-lock-fill me-2"></i>เข้าสู่ระบบ
+              </a>
+            <% } %>
           </div>
         </div>
       <% }) %>
     <% } else { %>
-      <div class="col-12">
-        <div class="empty-state">
-          <i class="bi bi-inbox"></i>
-          <h5>ไม่พบข้อมูลคำสั่ง</h5>
-          <p class="text-muted">ลองเปลี่ยนคำค้นหา หรือเพิ่มรายการใหม่</p>
-          <% if(hasActions){ %>
-            <a href="/command/create" class="btn btn-primary">
-              <i class="bi bi-plus-lg me-2"></i>สร้างคำสั่งใหม่
-            </a>
-          <% } %>
-        </div>
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h5>ไม่พบข้อมูลคำสั่ง</h5>
+        <p class="text-muted">ลองเปลี่ยนคำค้นหา หรือเพิ่มรายการใหม่</p>
+        <% if(hasActions){ %>
+          <a href="/command/create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>สร้างคำสั่งใหม่
+          </a>
+        <% } %>
       </div>
     <% } %>
   </div>
 </div>
+
+<script>
+  // Auto-search with debounce (submit GET form)
+  (function () {
+    const form = document.getElementById('commandSearchForm');
+    const input = document.getElementById('commandSearchInput');
+    if (!form || !input) return;
+
+    let t = null;
+    let last = input.value || '';
+
+    input.addEventListener('input', function () {
+      const v = input.value || '';
+      if (v === last) return;
+
+      clearTimeout(t);
+      t = setTimeout(function () {
+        last = v;
+        form.submit();
+      }, 400);
+    });
+
+    // Enter => search immediately (no debounce)
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      clearTimeout(t);
+      last = input.value || '';
+      form.submit();
+    });
+  })();
+</script>
 
 <%- include('../partials/footer') %>

@@ -284,7 +284,7 @@
   }
 
   .table tbody td {
-    color: var(--text-secondary);
+    color: var (--text-secondary);
     vertical-align: middle;
   }
 
@@ -2458,16 +2458,20 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
 <!-- vong_coop link -->
 <div class="container mb-4 reveal in">
   <div class="row my-2">
-    <div class="col-md-6">
+    <div class="col-md-6 mb-2 mb-md-0">
       <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100">
         <i class="bi bi-globe2"></i>
-        ประกาศหลักเกณฑ์การกำหนดวงเงินกู้ยืมหรือค้ำประกัน[กลุ่มเกษตรกร]
+        <span class="text-wrap" style="font-size: 16px;">
+        หลักเกณฑ์การกำหนดวงเงินกู้ยืม[กลุ่มเกษตรกร]
+        </span>
       </a>
     </div>
     <div class="col-md-6">
       <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100">
         <i class="bi bi-globe2"></i>
-        ประกาศหลักเกณฑ์การกำหนดวงเงินดำเนินกิจการ[กลุ่มเกษตรกร]
+        <span class="text-wrap" style="font-size: 16px;">
+        หลักเกณฑ์การกำหนดวงเงินดำเนินกิจการ[กลุ่มเกษตรกร]
+        </span>
       </a>
     </div>
   </div>
@@ -2785,7 +2789,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
                 <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">จำนวนทั้งหมด</th>
                 <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 1</th>
                 <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 2</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 3</th>
+                <th style="text-align: center; color: var (--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 3</th>
               </tr>
             </thead>
             <tbody>
@@ -2937,173 +2941,199 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
     </div>
   </section>
 
-  <!-- Activity single detail modal -->
-  <div class="modal fade modal-elevated" id="activityModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header modal-gradient py-2">
-          <h5 class="modal-title mb-0"><i class="bi bi-info-circle me-1"></i> รายละเอียดกิจกรรม</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <dl class="row mb-0">
-            <dt class="col-4">วันที่</dt>
-            <dd class="col-8" id="acDate">-</dd>
-            <dt class="col-4">เวลา</dt>
-            <dd class="col-8" id="acTime">-</dd>
-            <dt class="col-4">สถานที่</dt>
-            <dd class="col-8" id="acPlace">-</dd>
-            <dt class="col-4">กิจกรรม</dt>
-            <dd class="col-8" id="acTitle">-</dd>
-            <!-- Added: show participants / co_person -->
-            <dt class="col-4">ผู้เข้าร่วม</dt>
-            <dd class="col-8" id="acParticipants">-</dd>
-          </dl>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+<!-- ================= Activities Calendar (RESTORE) ================= -->
+<section id="activities" class="section-block bg-white">
+  <div class="container-lg">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-calendar3 me-2 text-success"></i> ปฏิทินงาน
+        </h5>
+        <button type="button" id="openActivityListBtn" class="btn btn-sm btn-outline-primary rounded-pill">
+          <i class="bi bi-list-ul me-1"></i> ดูรายการ
+        </button>
+      </div>
+      <div class="card-body">
+        <!-- สำคัญ: จุดวาง FullCalendar -->
+        <div id="activitiesCalendar" aria-label="ปฏิทินงาน"></div>
+
+        <!-- fallback ถ้า FullCalendar/JS โหลดไม่สำเร็จ -->
+        <div id="activitiesCalendarFallback" class="alert alert-light border mt-3 d-none">
+          ไม่สามารถโหลดปฏิทินได้ กรุณารีเฟรชหน้า หรือแจ้งผู้ดูแลระบบ
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Activity list modal -->
-  <div class="modal fade modal-elevated" id="activityListModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header modal-gradient py-2">
-          <h5 class="modal-title mb-0"><i class="bi bi-list-ul me-1"></i> รายการกิจกรรม</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Activity single detail modal (KEEP only ONE) -->
+<div class="modal fade modal-elevated" id="activityModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-info-circle me-1"></i> รายละเอียดกิจกรรม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row mb-0">
+          <dt class="col-4">วันที่</dt>
+          <dd class="col-8" id="acDate">-</dd>
+          <dt class="col-4">เวลา</dt>
+          <dd class="col-8" id="acTime">-</dd>
+          <dt class="col-4">สถานที่</dt>
+          <dd class="col-8" id="acPlace">-</dd>
+          <dt class="col-4">กิจกรรม</dt>
+          <dd class="col-8" id="acTitle">-</dd>
+          <!-- Added: show participants / co_person -->
+          <dt class="col-4">ผู้เข้าร่วม</dt>
+          <dd class="col-8" id="acParticipants">-</dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity list modal (KEEP only ONE) -->
+<div class="modal fade modal-elevated" id="activityListModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-list-ul me-1"></i> รายการกิจกรรม</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <input type="text" class="modal-search-bar" id="activityFilter" placeholder="🔍 ค้นหากิจกรรม..." />
+          <div class="small text-muted" id="activityCount"></div>
         </div>
-        <div class="modal-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <input type="text" class="modal-search-bar" id="activityFilter" placeholder="🔍 ค้นหากิจกรรม..." />
-            <div class="small text-muted" id="activityCount"></div>
-          </div>
-          <div class="table-responsive">
-            <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
-              <thead>
-                <tr class="text-center">
-                  <th class="col-index d-none d-sm-table-cell">#</th>
-                  <th class="text-start">วันที่</th>
-                  <th class="text-start">กิจกรรม</th>
-                </tr>
-              </thead>
-              <tbody id="activityTbody">
-                <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
-                <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
-                  <td class="text-center"><%= i+1 %></td>
-                  <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
-                  <td><%= a.activity %></td>
-                </tr>
-                <% }) %>
-              </tbody>
-            </table>
+        <div class="table-responsive">
+          <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-center">
+                <th class="col-index d-none d-sm-table-cell">#</th>
+                <th class="text-start">วันที่</th>
+                <th class="text-start">กิจกรรม</th>
+              </tr>
+            </thead>
+            <tbody id="activityTbody">
+              <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
+              <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
+                <td class="text-center"><%= i+1 %></td>
+                <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
+                <td><%= a.activity %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Latest Projects & Commands ================= -->
+<section id="projects" class="section-block bg-light">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% (lastProjects || []).forEach((p, idx)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <strong>
+                    <%= idx + 1 %>.
+                  </strong>
+                  <%= p.pro_story %>
+                  <span class="badge bg-secondary ms-2">
+                    <%= p.pro_no %>
+                  </span>
+                </span>
+                <% if(user){ %>
+                <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="bi bi-file-pdf-fill"></i>
+                </a>
+                <% } %>
+              </li>
+              <% }) %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+
+      <div class="col-md-6">
+        <h2 class="mb-4 text-center text-primary section-title">
+          <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
+        </h2>
+        <div class="card modern-card shadow-sm border-0">
+          <div class="card-gradient-bar"></div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <% (lastCommands || []).forEach((c, idx)=> { %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  <strong>
+                    <%= idx + 1 %>.
+                  </strong>
+                  <%= c.com_story %>
+                  <span class="badge bg-secondary ms-2">
+                    <%= c.com_no %>
+                  </span>
+                </span>
+                <% if(user){ %>
+                <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="bi bi-file-earmark-arrow-down"></i>
+                </a>
+                <% } %>
+              </li>
+              <% }) %>
+            </ul>
+            <div class="text-end mt-2">
+              <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- ================= Latest Projects & Commands ================= -->
-  <section id="projects" class="section-block bg-light">
-    <div class="container-lg">
-      <div class="row">
-        <div class="col-md-6">
-          <h2 class="mb-4 text-center text-primary section-title">
-            <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
-          </h2>
-          <div class="card modern-card shadow-sm border-0">
-            <div class="card-gradient-bar"></div>
-            <div class="card-body">
-              <ul class="list-group list-group-flush">
-                <% (lastProjects || []).forEach((p, idx)=> { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>
-                    <strong>
-                      <%= idx + 1 %>.
-                    </strong>
-                    <%= p.pro_story %>
-                    <span class="badge bg-secondary ms-2">
-                      <%= p.pro_no %>
-                    </span>
-                  </span>
-                  <% if(user){ %>
-                  <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                    <i class="bi bi-file-pdf-fill"></i>
-                  </a>
-                  <% } %>
-                </li>
-                <% }) %>
-              </ul>
-              <div class="text-end mt-2">
-                <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <h2 class="mb-4 text-center text-primary section-title">
-            <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
-          </h2>
-          <div class="card modern-card shadow-sm border-0">
-            <div class="card-gradient-bar"></div>
-            <div class="card-body">
-              <ul class="list-group list-group-flush">
-                <% (lastCommands || []).forEach((c, idx)=> { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>
-                    <strong>
-                      <%= idx + 1 %>.
-                    </strong>
-                    <%= c.com_story %>
-                    <span class="badge bg-secondary ms-2">
-                      <%= c.com_no %>
-                    </span>
-                  </span>
-                  <% if(user){ %>
-                  <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                    <i class="bi bi-file-earmark-arrow-down"></i>
-                  </a>
-                  <% } %>
-                </li>
-                <% }) %>
-              </ul>
-              <div class="text-end mt-2">
-                <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-              </div>
-            </div>
-          </div>
-        </div>
+<section id="rules" class="section-block bg-white">
+  <div class="container-lg">
+    <div class="card modern-card mb-4">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
       </div>
-    </div>
-  </section>
-
-  <section id="rules" class="section-block bg-white">
-    <div class="container-lg">
-      <div class="card modern-card mb-4">
-        <div class="card-gradient-bar"></div>
-        <div class="card-header bg-success text-white">
-          <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
-        </div>
-        <div class="card-body">
-          <% 
-            // Helper: return true when date is within last N days (defaults to 3)
-            function isRecentDate(dstr, days=3){
-              if(!dstr) return false;
-              if(typeof dstr === 'string'){
-                if(dstr === '0000-00-00') return false;
-                if(/^1899-11-30/.test(dstr)) return false;
-              }
-              const d = new Date(dstr);
-              if(isNaN(d.getTime())) return false;
-              const diff = Date.now() - d.getTime();
-              return diff >= 0 && diff <= (days * 24 * 60 * 60 * 1000);
+      <div class="card-body">
+        <% 
+          // Helper: return true when date is within last N days (defaults to 3)
+          function isRecentDate(dstr, days=3){
+            if(!dstr) return false;
+            if(typeof dstr === 'string'){
+              if(dstr === '0000-00-00') return false;
+              if(/^1899-11-30/.test(dstr)) return false;
             }
+            const d = new Date(dstr);
+            if(isNaN(d.getTime())) return false;
+            const diff = Date.now() - d.getTime();
+            return diff >= 0 && diff <= (days * 24 * 60 * 60 * 1000);
+          }
 
             const rulesNow = new Date();
             const rulesToday = new Date(rulesNow.getFullYear(), rulesNow.getMonth(), rulesNow.getDate());
@@ -4176,23 +4206,28 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
 <script>
   (function() {
     const calEl = document.getElementById('activitiesCalendar');
+    const fallbackEl = document.getElementById('activitiesCalendarFallback');
     if (!calEl) return;
+
     let inited = false;
+
     const start = () => {
       if (inited) return;
       inited = true;
-      if (typeof FullCalendar === 'undefined') return; // library not ready
+
+      if (typeof FullCalendar === 'undefined') {
+        if (fallbackEl) fallbackEl.classList.remove('d-none');
+        return;
+      }
+
       function formatThaiDate(d) {
         try {
-          return d.toLocaleDateString('th-TH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
+          return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
         } catch (e) {
           return d.toISOString().slice(0, 10);
         }
       }
+
       const tDataEl = document.getElementById('template-data');
       let activities = [];
       try {
@@ -4201,57 +4236,55 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
       } catch (e) {
         activities = [];
       }
+
       const events = (activities || []).map((a, idx) => ({
         id: String(idx + 1),
         title: a.activity || '-',
         start: a.date_act,
         allDay: true,
-        extendedProps: {
-          raw: a
-        }
+        extendedProps: { raw: a }
       }));
+
       const calendar = new FullCalendar.Calendar(calEl, {
         initialView: 'dayGridMonth',
-        initialDate: new Date(), // แสดงเดือนปัจจุบัน
+        initialDate: new Date(),
         locale: 'th',
         height: 'auto',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: ''
-        },
-        buttonText: {
-          today: 'วันนี้'
-        },
+        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+        buttonText: { today: 'วันนี้' },
         navLinks: true,
         editable: false,
-        fixedWeekCount: false, // ไม่โชว์วันที่ของเดือนอื่นจาง ๆ
-        showNonCurrentDates: false, // ไม่โชว์วันที่ของเดือนอื่นจาง ๆ
+        fixedWeekCount: false,
+        showNonCurrentDates: false,
         dayMaxEventRows: 2,
         events,
         eventClick(info) {
           const ev = info.event;
           const raw = ev.extendedProps?.raw || {};
           const d = ev.start ? new Date(ev.start) : null;
+
           const modalEl = document.getElementById('activityModal');
           if (!modalEl) return;
+
           document.getElementById('acDate').textContent = d ? formatThaiDate(d) : '-';
           document.getElementById('acTitle').textContent = raw.activity || ev.title || '-';
           document.getElementById('acTime').textContent = raw.act_time ? (raw.act_time + ' น.') : '-';
           document.getElementById('acPlace').textContent = raw.place || '-';
           document.getElementById('acParticipants').textContent = raw.co_person || '-';
-          const modal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
+
+          const modal = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(modalEl) : null;
           if (modal) modal.show();
         }
       });
+
       calendar.render();
 
-      // List modal open button (unchanged)
+      // List modal open button
       const btnList = document.getElementById('openActivityListBtn');
       if (btnList) {
         btnList.addEventListener('click', function() {
           const el = document.getElementById('activityListModal');
-          const m = bootstrap && bootstrap.Modal ? new bootstrap.Modal(el) : null;
+          const m = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(el) : null;
           if (m) m.show();
           const countEl = document.getElementById('activityCount');
           const rows = document.querySelectorAll('#activityTbody tr');
@@ -4259,15 +4292,14 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
         });
       }
     };
+
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver((entries, obs) => {
         if (entries.some(e => e.isIntersecting)) {
           obs.disconnect();
           start();
         }
-      }, {
-        rootMargin: '200px'
-      });
+      }, { rootMargin: '200px' });
       io.observe(calEl);
     } else {
       window.addEventListener('load', start);

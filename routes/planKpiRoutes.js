@@ -11,6 +11,7 @@ const requireAdminOrPbt = requireLevel(['admin', 'pbt']);
 const requireAdminOrResponForKpi = requireAdminOrResponsibleByKpiId((req) => req.params.id);
 
 router.get('/', requireAdminOrPbt, controller.index);
+router.get('/overview', requireAdminOrPbt, controller.overview);
 router.get('/create', requireAdminOrPbt, controller.create);
 router.post('/store', requireAdminOrPbt, controller.store);
 

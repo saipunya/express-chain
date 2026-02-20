@@ -1,0 +1,176 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-1">ภาพรวมตัวชี้วัดโครงการ (KPI Overview)</h1>
+      <p class="text-muted mb-0">รวมตัวชี้วัดของทุกโครงการ พร้อมความก้าวหน้ารวม</p>
+    </div>
+    <a href="/plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแผน</a>
+  </div>
+
+  <% if (!plans || !plans.length) { %>
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-clipboard-x fs-1 d-block mb-3"></i>
+      <div>ยังไม่มีข้อมูลตัวชี้วัด</div>
+    </div>
+  <% } else { %>
+    <% plans.forEach((plan) => { %>
+      <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+          <span class="badge bg-primary-subtle text-primary me-2">แผนงาน</span>
+          <h2 class="h5 mb-0"><%= plan.plan_name || '-' %> (<%= plan.ma_code %>)</h2>
+        </div>
+        <div class="row g-4">
+          <% plan.projects.forEach((proj) => { %>
+            <div class="col-12">
+              <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary bg-opacity-10 border-0 d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="fw-semibold text-primary">รหัสโครงการ: <%= proj.pro_code %></div>
+                    <div class="text-dark"><%= proj.project_name || '-' %></div>
+                  </div>
+                  <a class="btn btn-outline-primary btn-sm" href="/planproject/summary/<%= encodeURIComponent(proj.pro_code) %>">
+                    <i class="bi bi-speedometer2 me-1"></i>ดูรายละเอียดโครงการ
+                  </a>
+                </div>
+                <div class="card-body p-0">
+                  <div class="p-3 pb-0">
+                    <div class="card-chart mb-3" style="height: 220px;">
+                      <canvas id="kpiChart-<%= proj.pro_code %>"></canvas>
+                    </div>
+                  </div>
+                  <% if (!proj.kpis || !proj.kpis.length) { %>
+                    <div class="text-center text-muted py-4">ยังไม่มีตัวชี้วัดในโครงการนี้</div>
+                  <% } else { %>
+                    <div class="table-responsive mb-0">
+                      <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th style="width:80px">#</th>
+                            <th>ตัวชี้วัด</th>
+                            <th style="width:120px" class="text-end">เป้าหมาย</th>
+                            <th style="width:120px" class="text-end">ผลงานรวม</th>
+                            <th style="width:140px" class="text-end">ความก้าวหน้า</th>
+                            <th style="width:160px" class="text-end">รายงานล่าสุด</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% proj.kpis.forEach((kpi, idx) => { %>
+                            <tr>
+                              <td class="text-muted">KPI <%= kpi.kp_number || (idx + 1) %></td>
+                              <td>
+                                <div class="fw-semibold"><%= kpi.kpi_name || '-' %></div>
+                                <div class="text-muted small">หน่วย: <%= kpi.unit || '-' %></div>
+                              </td>
+                              <td class="text-end">
+                                <%= Number(kpi.target || 0).toLocaleString('th-TH') %> <span class="text-muted small"><%= kpi.unit || '' %></span>
+                              </td>
+                              <td class="text-end">
+                                <%= Number(kpi.actual || 0).toLocaleString('th-TH') %> <span class="text-muted small"><%= kpi.unit || '' %></span>
+                              </td>
+                              <td class="text-end">
+                                <% const pct = kpi.achievement_percent != null ? Math.round(kpi.achievement_percent) : null; %>
+                                <% if (pct === null) { %>
+                                  <span class="text-muted">-</span>
+                                <% } else { %>
+                                  <% const color = pct >= 100 ? 'success' : pct >= 70 ? 'warning' : 'danger'; %>
+                                  <span class="badge bg-<%= color %>-subtle text-<%= color %>"><%= pct %>%</span>
+                                <% } %>
+                              </td>
+                              <td class="text-end text-muted">
+                                <%= kpi.latest_month_label || '-' %>
+                              </td>
+                            </tr>
+                          <% }) %>
+                        </tbody>
+                      </table>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+      <hr>
+    <% }) %>
+  <% } %>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.Chart === 'undefined') return;
+    if (typeof window.ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+    }
+
+    const plans = JSON.parse('<%- JSON.stringify(Array.isArray(plans) ? plans : []) %>');
+
+    plans.forEach((plan) => {
+      if (!Array.isArray(plan.projects)) return;
+      plan.projects.forEach((proj) => {
+        const el = document.getElementById(`kpiChart-${proj.pro_code}`);
+        if (!el || !Array.isArray(proj.kpis) || !proj.kpis.length) return;
+
+        const labels = proj.kpis.map(k => `K${k.kp_number || ''} ${k.kpi_name || ''}`);
+        const targets = proj.kpis.map(k => Number(k.target || 0));
+        const actuals = proj.kpis.map(k => Number(k.actual || 0));
+
+        new Chart(el.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'เป้าหมาย',
+                data: targets,
+                backgroundColor: 'rgba(13,110,253,0.25)',
+                borderColor: 'rgba(13,110,253,0.8)',
+                borderWidth: 1
+              },
+              {
+                label: 'ผลงานรวม',
+                data: actuals,
+                backgroundColor: 'rgba(25,135,84,0.6)',
+                borderColor: 'rgba(25,135,84,0.9)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: (v) => v.toLocaleString('th-TH') }
+              },
+              x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 } }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              datalabels: typeof window.ChartDataLabels === 'undefined' ? false : {
+                anchor: 'end',
+                align: 'end',
+                offset: -2,
+                color: '#111',
+                font: { weight: '600', size: 11 },
+                formatter: (v) => v.toLocaleString('th-TH')
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('th-TH')}`
+                }
+              }
+            }
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

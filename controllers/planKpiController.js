@@ -1,6 +1,7 @@
 const PlanKpi = require('../models/planKpi');
 const PlanProject = require('../models/planProject');
 const PlanKpiMonthly = require('../models/planKpiMonthly');
+const db = require('../config/db');
 
 const TH_MONTHS = [
   'มกราคม',
@@ -143,6 +144,77 @@ exports.destroy = async (req, res) => {
   await PlanKpi.destroy(req.params.id);
   const redirectCode = existing?.kp_procode ? `?pro_code=${encodeURIComponent(existing.kp_procode)}` : '';
   res.redirect('/plankpi' + redirectCode);
+};
+
+// KPI overview across all projects
+exports.overview = async (req, res) => {
+  const overviewSql = `
+    SELECT
+      ma.ma_code,
+      ma.ma_subject AS plan_name,
+      p.pro_code,
+      p.pro_subject AS project_name,
+      k.kp_id,
+      k.kp_number,
+      k.kp_subject AS kpi_name,
+      k.kp_unit,
+      k.kp_plan,
+      COALESCE(SUM(m.actual_value), 0) AS actual_total,
+      MAX(m.report_month) AS latest_month
+    FROM plan_project p
+    JOIN plan_main ma ON ma.ma_code = p.pro_macode
+    JOIN plan_kpi k ON k.kp_procode = p.pro_code
+    LEFT JOIN plan_kpi_monthly m ON m.kp_id = k.kp_id
+    GROUP BY ma.ma_code, ma.ma_subject, p.pro_code, p.pro_subject, k.kp_id, k.kp_number, k.kp_subject, k.kp_unit, k.kp_plan
+    ORDER BY ma.ma_code, p.pro_code, k.kp_number, k.kp_id
+  `;
+
+  const [rows] = await db.query(overviewSql);
+
+  const plansMap = new Map();
+
+  rows.forEach((row) => {
+    const achievementPercent = row.kp_plan ? (Number(row.actual_total || 0) / Number(row.kp_plan)) * 100 : null;
+    const plan = plansMap.get(row.ma_code) || {
+      ma_code: row.ma_code,
+      plan_name: row.plan_name,
+      projects: new Map()
+    };
+    const project = plan.projects.get(row.pro_code) || {
+      pro_code: row.pro_code,
+      project_name: row.project_name,
+      kpis: []
+    };
+
+    const latestMonthIso = row.latest_month
+      ? (row.latest_month instanceof Date
+          ? row.latest_month.toISOString().slice(0, 7)
+          : String(row.latest_month).slice(0, 7))
+      : null;
+    const latestMonthLabel = row.latest_month ? toMonthLabel(row.latest_month) : '-';
+
+    project.kpis.push({
+      kp_id: row.kp_id,
+      kp_number: row.kp_number,
+      kpi_name: row.kpi_name,
+      unit: row.kp_unit,
+      target: Number(row.kp_plan || 0),
+      actual: Number(row.actual_total || 0),
+      achievement_percent: achievementPercent,
+      latest_month_iso: latestMonthIso,
+      latest_month_label: latestMonthLabel
+    });
+
+    plan.projects.set(row.pro_code, project);
+    plansMap.set(row.ma_code, plan);
+  });
+
+  const plans = Array.from(plansMap.values()).map((plan) => ({
+    ...plan,
+    projects: Array.from(plan.projects.values())
+  }));
+
+  res.render('planKpi/overview', { plans });
 };
 
 exports.report = async (req, res) => {

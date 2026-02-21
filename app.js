@@ -240,6 +240,7 @@ const uploadDirs = [
   'uploads/suggestion',
   'uploads/activity',
   'uploads/down',
+  'uploads/turnover',
   'uploads/vong', // added for vong files
 ];
 

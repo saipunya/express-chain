@@ -2650,6 +2650,9 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     </div>
   </section>
 
+
+
+
   <!-- ================= Charts ================= -->
   <section id="charts" class="section-block">
     <div class="container-lg">
@@ -2964,7 +2967,49 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     </div>
   </section>
 
+<!-- ================= Turnover Fiscal Summary ================= -->
+<% const tfSummary = Array.isArray(turnoverFiscalSummary) ? turnoverFiscalSummary : []; %>
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h5 mb-1"><i class="bi bi-cash-stack me-2"></i>สรุปปริมาณธุรกิจรวมรายปี (ปีงบประมาณ)</h2>
+      <div class="text-muted small">นับปีงบประมาณ ก.ย. - ส.ค. (เฉพาะข้อมูลปริมาณธุรกิจ)</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/turnover" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-spreadsheet me-1"></i>ดูรายละเอียด</a>
+    </div>
+  </div>
 
+  <% if (!tfSummary.length) { %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-info-circle me-2"></i>
+      <div>ยังไม่มีข้อมูลปริมาณธุรกิจ</div>
+    </div>
+  <% } else { %>
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive mb-0">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 160px;">ปีงบประมาณ</th>
+              <th class="text-end" style="width: 140px;">จำนวนแห่ง</th>
+              <th class="text-end">ปริมาณธุรกิจรวม</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% tfSummary.forEach((row) => { %>
+              <tr>
+                <td class="fw-medium">พ.ศ. <%= (row.fiscal_year + 543).toString() %></td>
+                <td class="text-end"><%= Number(row.coop_count || 0).toLocaleString() %></td>
+                <td class="text-end fw-semibold"><%= Number(row.total_amount || 0).toLocaleString() %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+</section>
 
 <!-- ================= Activities Calendar (RESTORE) ================= -->
 <section id="activities" class="section-block bg-white">

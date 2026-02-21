@@ -23,6 +23,7 @@ const strengthModel = require('../models/strengthModel'); // NEW strength summar
 const coopProfileModel = require('../models/coopProfileModel'); // NEW: for homepage mini list
 const gitgumModel = require('../models/gitgumModel'); // NEW: for calendar activities
 const bigmeetModel = require('../models/bigmeetModel');
+const turnoverModel = require('../models/turnoverModel');
 
 // controllers/homeController.js
 
@@ -148,6 +149,7 @@ const homeController = {
         co_person: r.git_respon
       }));
       const lastArticles = await articleModel.getLast(4);
+      const turnoverFiscalSummary = await turnoverModel.getSummaryByFiscalYear();
       const homeProcesses = await Chamra.getRecentProcesses(8);
       // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)
       const chamraAllProcesses = await Chamra.getAllProcess();
@@ -536,6 +538,7 @@ const homeController = {
         closingDeadlineMonthLabel: meetingDeadlineMonthLabel,
         memberSummary,
         latestYear,
+        turnoverFiscalSummary,
         title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ'
       });
       //console.log('coopGroupStats', coopGroupStats); // ดูข้อมูลที่ได้

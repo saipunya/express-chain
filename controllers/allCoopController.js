@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const coopProfileModel = require('../models/coopProfileModel');
 const addmemModel = require('../models/addmemModel');
+const turnoverModel = require('../models/turnoverModel');
 const ExcelJS = require('exceljs');
 
 // Render profile by c_code
@@ -85,6 +86,13 @@ exports.profile = async (req, res, next) => {
       data.bigmeetDateThai = null;
       data.bigmeetDatesByYear = [];
     }
+
+    const [turnoverMonthly, turnoverYearly] = await Promise.all([
+      turnoverModel.getCoopMonthlySummary(c_code),
+      turnoverModel.getCoopYearlySummary(c_code)
+    ]);
+    data.turnoverMonthly = turnoverMonthly;
+    data.turnoverYearly = turnoverYearly;
 
     res.render('allCoop/profile', { data });
   } catch (e) {

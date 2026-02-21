@@ -1,4 +1,30 @@
 <%- include('../partials/header') %>
+<%
+  const monthMap = {
+    '1': 'มกราคม',
+    '2': 'กุมภาพันธ์',
+    '3': 'มีนาคม',
+    '4': 'เมษายน',
+    '5': 'พฤษภาคม',
+    '6': 'มิถุนายน',
+    '7': 'กรกฎาคม',
+    '8': 'สิงหาคม',
+    '9': 'กันยายน',
+    '10': 'ตุลาคม',
+    '11': 'พฤศจิกายน',
+    '12': 'ธันวาคม'
+  };
+  const toThaiMonth = (val) => {
+    const key = val == null ? '' : String(val).trim();
+    return monthMap[key] || key;
+  };
+  const toThaiYear = (val) => {
+    const num = Number(val);
+    if (Number.isFinite(num) && num > 0 && num < 2400) return num + 543;
+    return val || '';
+  };
+%>
+
 <div class="container py-4">
   <style>
     /* Responsive enhancements specific to this page */
@@ -22,6 +48,16 @@
     /* Stacked section layout */
     .section-block {scroll-margin-top: 80px;}
     .section-title {display:flex; align-items:center; gap:.5rem; margin: .75rem 0; color: var(--bs-secondary-color);}    
+
+    /* Cleaner card/table styling */
+    .card {border: 1px solid var(--bs-border-color); box-shadow: none;}
+    .card-header {background: #f8f9fa; border-bottom: 1px solid var(--bs-border-color);} 
+    .card-header h5, .card-header h6 {font-weight: 600;}
+    .table {font-size: .9rem;}
+    .table thead th {font-weight: 600; color: #495057;}
+    .table-clean tbody tr {border-bottom: 1px solid #eef0f2;}
+    .table-clean tbody tr:last-child {border-bottom: 0;}
+    .badge {font-weight: 500;}
 
     /* Subtle card hover */
     .quick-stats .card{transition: transform .15s ease, box-shadow .15s ease;}
@@ -145,6 +181,74 @@
         <% } %>
       </div>
     </div>
+
+    <!-- Turnover Section -->
+    <section class="section-block" id="turnover-section">
+      <div class="card mb-4">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
+          <div>
+            <h5 class="card-title mb-1"><i class="bi bi-cash-stack me-2 text-success"></i>ปริมาณธุรกิจ</h5>
+            <div class="small text-muted">สรุปรายเดือนและรายปี</div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="row g-3 p-3">
+            <div class="col-lg-7">
+              <h6 class="fw-semibold mb-2">รายเดือน</h6>
+              <% if (data.turnoverMonthly && data.turnoverMonthly.length) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-clean align-middle mb-0 responsive-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th>ปี</th>
+                        <th>เดือน</th>
+                        <th class="text-end">ยอดเงินรวม</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.turnoverMonthly.forEach(t => { %>
+                        <tr>
+                          <td data-label="ปี"><%= toThaiYear(t.tur_year) %></td>
+                          <td data-label="เดือน"><%= toThaiMonth(t.tur_month) %></td>
+                          <td class="text-end" data-label="ยอดเงินรวม"><%= Number(t.total_amount || 0).toLocaleString() %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="text-muted">ไม่มีข้อมูลรายเดือน</div>
+              <% } %>
+            </div>
+            <div class="col-lg-5">
+              <h6 class="fw-semibold mb-2">รายปี</h6>
+              <% if (data.turnoverYearly && data.turnoverYearly.length) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-clean align-middle mb-0 responsive-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th>ปี</th>
+                        <th class="text-end">ยอดเงินรวม</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.turnoverYearly.forEach(t => { %>
+                        <tr>
+                          <td data-label="ปี"><%= toThaiYear(t.tur_year) %></td>
+                          <td class="text-end" data-label="ยอดเงินรวม"><%= Number(t.total_amount || 0).toLocaleString() %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="text-muted">ไม่มีข้อมูลรายปี</div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   
     <!-- Strength Section -->

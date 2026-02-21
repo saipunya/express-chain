@@ -10,7 +10,12 @@
           <p class="text-muted small mb-0">จัดการตัวชี้วัดของโครงการ</p>
         <% } %>
       </div>
-      <a href="/plankpi/create<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มตัวชี้วัด</a>
+      <div class="d-flex gap-2 flex-wrap">
+        <!-- back to /plan -->
+        <a href="/plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแผน</a>
+        <!-- add kpi -->
+        <a href="/plankpi/create<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มตัวชี้วัด</a>
+      </div>
     </div>
 
     <div class="card border-0 shadow-sm">

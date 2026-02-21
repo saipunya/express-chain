@@ -3456,7 +3456,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                           <%= usecar.act_car %>
                         </small>
 
-                        <button type="button" class="btn btn-outline-primary btn-sm js-open-usecar" data-bs-toggle="modal" data-bs-target="#usecarModal" data-id="<%= usecar.id_usecar %>" data-date="<%= thaiDate %>" data-time="<%= usecar.time_car %>" data-place="<%= usecar.place_car %>" data-act="<%= usecar.act_car %>" data-respon="<%= usecar.respon_car %>">
+                        <button type="button" class="btn btn-outline-primary btn-sm js-open-usecar" data-bs-toggle="modal" data-bs-target="#usecarModal" data-id="<%= usecar.id_usecar %>" data-date="<%= thaiDate %>" data-time="<%= usecar.time_car %>" data-place="<%= usecar.place_car %>" data-act="<%= usecar.act_car %>" data-respon="<%= usecar.respon_car %>" data-no-car="<%= usecar.no_car %>">
                           <i class="bi bi-info-circle me-1"></i> ดูข้อมูลเพิ่ม
                         </button>
                       </div>
@@ -3514,6 +3514,8 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           <dd class="col-8" id="ucDate">-</dd>
           <dt class="col-4">เวลา</dt>
           <dd class="col-8" id="ucTime">-</dd>
+          <dt class="col-4">ทะเบียนรถ</dt>
+          <dd class="col-8" id="ucNoCar">-</dd>
           <dt class="col-4">สถานที่</dt>
           <dd class="col-8" id="ucPlace">-</dd>
           <dt class="col-4">กิจกรรม</dt>
@@ -3537,8 +3539,10 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       const place = btn.getAttribute('data-place') || '-';
       const act = btn.getAttribute('data-act') || '-';
       const respon = btn.getAttribute('data-respon') || '-';
+      const noCar = btn.getAttribute('data-no-car') || '-';
       document.getElementById('ucDate').textContent = date;
       document.getElementById('ucTime').textContent = time + ' น.';
+      document.getElementById('ucNoCar').textContent = noCar;
       document.getElementById('ucPlace').textContent = place;
       document.getElementById('ucAct').textContent = act;
       document.getElementById('ucRespon').textContent = respon;

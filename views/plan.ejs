@@ -31,29 +31,34 @@
       </h1>
       <p class="text-muted mb-0 small">ภาพรวมแผนงานหลัก โครงการ กิจกรรม และตัวชี้วัด</p>
     </div>
-    <div class="d-flex flex-wrap gap-2 w-100 w-lg-auto justify-content-lg-end">
-      <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="รีเฟรชหน้า">
-        <i class="bi bi-arrow-repeat me-1"></i>รีเฟรช
-      </a>
-       <a href="/planmain" class="btn btn-primary btn-sm rounded-pill px-3">
-        <i class="bi bi-plus-lg me-1"></i>แผนงาน
-      </a>
-      <a href="/planproject/activities-overview" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-        <i class="bi bi-diagram-3 me-1"></i>โครงการ
-      </a>
-      <!-- ภาพรวมตัวชี้วัด -->
-      <a href="/plankpi/overview" class="btn btn-outline-warning btn-sm rounded-pill px-3">
-        <i class="bi bi-graph-up-arrow me-1"></i>ภาพรวมตัวชี้วัด
-      </a>
-      <a href="/planactivity/report" class="btn btn-outline-info btn-sm rounded-pill px-3">
-        <i class="bi bi-clipboard-data me-1"></i>รายงาน
-      </a>
-     
-      
-     
-       <a href="/planproject/disbursal-dashboard" class="btn btn-outline-success btn-sm rounded-pill px-3">
-        <i class="bi bi-cash-stack me-1"></i>การเบิกจ่าย
-      </a>
+    <div class="d-flex flex-wrap gap-2 w-100 w-lg-auto justify-content-lg-end plan-nav">
+      <div class="btn-group" role="group" aria-label="ทั่วไป">
+        <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="รีเฟรชหน้า">
+          <i class="bi bi-arrow-repeat me-1"></i>รีเฟรช
+        </a>
+        <a href="/planmain" class="btn btn-primary btn-sm rounded-pill px-3">
+          <i class="bi bi-plus-lg me-1"></i>แผนงาน
+        </a>
+      </div>
+      <div class="btn-group" role="group" aria-label="จัดการแผน">
+        <a href="/planproject" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+          <i class="bi bi-diagram-3 me-1"></i>โครงการ
+        </a>
+        <a href="/planactivity" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+          <i class="bi bi-diagram-3 me-1"></i>+ กิจกรรม
+        </a>
+      </div>
+      <div class="btn-group" role="group" aria-label="รายงาน">
+        <a href="/plankpi/overview" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+          <i class="bi bi-graph-up-arrow me-1"></i>ภาพรวมตัวชี้วัด
+        </a>
+        <a href="/planactivity/report" class="btn btn-outline-info btn-sm rounded-pill px-3">
+          <i class="bi bi-clipboard-data me-1"></i>รายงาน
+        </a>
+        <a href="/planproject/disbursal-dashboard" class="btn btn-outline-success btn-sm rounded-pill px-3">
+          <i class="bi bi-cash-stack me-1"></i>การเบิกจ่าย
+        </a>
+      </div>
     </div>
   </div>
 
@@ -100,18 +105,13 @@
     </div>
     <div class="col-6 col-md-3">
       <div class="card border-0 shadow-sm h-100 stat-card-sm">
-        <div class="card-body p-3">
-          <div class="d-flex align-items-center gap-3 mb-2">
-            <div class="stat-icon-sm bg-warning bg-opacity-10 text-warning">
-              <i class="bi bi-speedometer2"></i>
-            </div>
-            <div>
-              <div class="stat-val-sm text-warning"><%= overallPercent %>%</div>
-              <div class="stat-lbl-sm">ความสำเร็จรวม</div>
-            </div>
+        <div class="card-body d-flex align-items-center gap-3 p-3">
+          <div class="stat-icon-sm bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-graph-up"></i>
           </div>
-          <div class="progress progress-thin">
-            <div class="progress-bar bg-warning" style="width: <%= overallPercent %>%;"></div>
+          <div>
+            <div class="stat-val-sm text-warning"><%= (kpiStats && Number(kpiStats.total)) || 0 %></div>
+            <div class="stat-lbl-sm">ตัวชี้วัดทั้งหมด</div>
           </div>
         </div>
       </div>
@@ -153,6 +153,37 @@
   .page-header p {
     color: rgba(255,255,255,0.9);
     font-weight: 500;
+  }
+
+  /* ===== Plan Navbar ===== */
+  .plan-nav .btn-group {
+    background: var(--bg-lighter);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: .2rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .plan-nav .btn-group .btn {
+    border: none;
+    border-radius: 999px;
+    padding: .35rem .9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .plan-nav .btn-group .btn i { opacity: .85; }
+  .plan-nav .btn-group .btn:hover,
+  .plan-nav .btn-group .btn:focus {
+    background: var(--primary-light);
+    color: var(--text-primary);
+  }
+  .plan-nav .btn-group .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+  .plan-nav .btn-group .btn-primary:hover,
+  .plan-nav .btn-group .btn-primary:focus {
+    background: #0ea371;
+    color: #fff;
   }
   /* ===== Stat Cards (small) ===== */
   .stat-card-sm {
@@ -679,9 +710,6 @@
             <p class="text-muted small mb-0">ดูความคืบหน้าของกิจกรรมและ KPI</p>
           </div>
         </div>
-        <a href="/planactivity/report" class="btn btn-outline-info btn-sm rounded-pill px-3">
-          <i class="bi bi-clipboard-data me-1"></i>จัดการรายงานรายเดือน
-        </a>
       </div>
 
       <div class="card-chart mb-4">
@@ -787,121 +815,7 @@
     </div>
   </div>
 
-  <!-- ===== KPI Progress Section ===== -->
-  <div class="card border-0 shadow-sm mb-4 hover-card">
-    <div class="card-body p-4">
-      <div class="section-header">
-        <div class="d-flex align-items-center gap-2">
-          <span class="dashboard-chip" style="background: rgba(111,66,193,.12); color: #6f42c1;">
-            <i class="bi bi-graph-up"></i>
-          </span>
-          <div>
-            <h2 class="h5 mb-0">ตัวชี้วัดโครงการ (KPI Progress)</h2>
-            <p class="text-muted small mb-0">ความก้าวหน้าของตัวชี้วัดแต่ละรายการแยกตามโครงการ</p>
-          </div>
-        </div>
-        <a href="/plankpi" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-          <i class="bi bi-gear me-1"></i>จัดการตัวชี้วัด
-        </a>
-      </div>
 
-      <% if (projectReports.length) { %>
-        <% projectReports.forEach((report, rIdx) => {
-          const kpiItems = Array.isArray(report.kpiItems) ? report.kpiItems : [];
-        %>
-          <div class="kpi-project-block">
-            <!-- Project header (clickable toggle) -->
-            <div class="kpi-project-block__header" onclick="toggleKpiBlock(<%= rIdx %>)" role="button" aria-expanded="true" aria-controls="kpi-block-<%= rIdx %>">
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">
-                  <%= report.pro_code %>
-                </span>
-                <div>
-                  <span class="fw-semibold"><%= report.pro_name || '-' %></span>
-                  <span class="badge bg-light text-muted border ms-2">
-                    KPI <%= kpiItems.length %> รายการ
-                  </span>
-                </div>
-              </div>
-              <i class="bi bi-chevron-up kpi-collapse-icon open" id="kpi-icon-<%= rIdx %>"></i>
-            </div>
-
-            <!-- KPI bars -->
-            <div id="kpi-block-<%= rIdx %>">
-              <% if (kpiItems.length) { %>
-                <div class="kpi-bar-wrapper">
-                  <% kpiItems.forEach((kpi, kpiIdx) => {
-                    const rawPct = Number(kpi.percent ?? (kpi.target > 0 ? (kpi.actual / kpi.target * 100) : 0));
-                    const pct = isFinite(rawPct) ? Math.max(0, Math.min(rawPct, 100)) : 0;
-                    const displayPct = isFinite(rawPct) ? Math.max(0, rawPct) : 0;
-                    let fillColor, statusLabel, statusClass;
-                    if (displayPct === 0) {
-                      fillColor = '#dc3545'; statusLabel = 'ยังไม่มีความก้าวหน้า'; statusClass = 'text-danger';
-                    } else if (displayPct >= 100) {
-                      fillColor = '#198754'; statusLabel = 'บรรลุเป้าหมายแล้ว ✓'; statusClass = 'text-success';
-                    } else {
-                      fillColor = '#ffc107'; statusLabel = `อยู่ระหว่างดำเนินการ (${displayPct.toFixed(1)}%)`; statusClass = 'text-warning';
-                    }
-                  %>
-                    <div class="kpi-bar-item">
-                      <div class="kpi-bar-item__header">
-                        <div class="kpi-bar-item__name">
-                          <%= kpi.kpi_name || `ตัวชี้วัดที่ ${kpiIdx + 1}` %>
-                          <% if (kpi.unit) { %>
-                            <span class="text-muted fw-normal small ms-1">(<%= kpi.unit %>)</span>
-                          <% } %>
-                        </div>
-                        <span class="kpi-bar-item__pct <%= statusClass %>">
-                          <%= displayPct.toFixed(1) %>%
-                        </span>
-                      </div>
-                      <div class="kpi-bar-item__track">
-                        <div class="kpi-bar-item__fill" style="width: <%= pct %>%; background-color: <%= fillColor %>;"></div>
-                      </div>
-                      <div class="d-flex justify-content-between align-items-center">
-                        <span class="kpi-bar-item__status <%= statusClass %>">
-                          <% if (displayPct === 0) { %>
-                            <i class="bi bi-x-circle me-1"></i>
-                          <% } else if (displayPct >= 100) { %>
-                            <i class="bi bi-check-circle-fill me-1"></i>
-                          <% } else { %>
-                            <i class="bi bi-hourglass-split me-1"></i>
-                          <% } %>
-                          <%= statusLabel %>
-                        </span>
-                        <% if (kpi.target > 0) { %>
-                          <small class="text-muted">
-                            <%= Number(kpi.actual || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %>
-                            / <%= Number(kpi.target).toLocaleString('th-TH', { maximumFractionDigits: 2 }) %>
-                            <% if (kpi.unit) { %><%= kpi.unit %><% } %>
-                          </small>
-                        <% } %>
-                      </div>
-                    </div>
-                  <% }) %>
-                </div>
-              <% } else { %>
-                <div class="text-center text-muted py-4">
-                  <i class="bi bi-graph-up fs-3 d-block mb-2 opacity-25"></i>
-                  ยังไม่มีตัวชี้วัดสำหรับโครงการนี้
-                  <div class="mt-2">
-                    <a href="/plankpi?pro_code=<%= encodeURIComponent(report.pro_code) %>" class="btn btn-sm btn-outline-primary rounded-pill">
-                      <i class="bi bi-plus-lg me-1"></i>เพิ่มตัวชี้วัด
-                    </a>
-                  </div>
-                </div>
-              <% } %>
-            </div>
-          </div>
-        <% }) %>
-      <% } else { %>
-        <div class="text-center text-muted py-5">
-          <i class="bi bi-graph-up fs-2 d-block mb-2 opacity-25"></i>
-          ยังไม่มีข้อมูลตัวชี้วัด
-        </div>
-      <% } %>
-    </div>
-  </div>
 
   <!-- ===== Fiscal Year Monthly Report ===== -->
   <div class="card border-0 shadow-sm mb-4 hover-card">
@@ -1110,7 +1024,8 @@
       const tbody = document.getElementById('activitiesTableBody');
       tbody.innerHTML = '';
       activities.forEach((activity, i) => {
-        const status = STATUS_MAP[activity.ac_status] || STATUS_MAP[0];
+        const statusKey = Number(activity.monthly_status ?? activity.ac_status ?? 0);
+        const status = STATUS_MAP[statusKey] || STATUS_MAP[0];
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${i + 1}</td>
@@ -1287,6 +1202,24 @@
         return isFinite(p) ? Math.max(0, Math.min(100, p)) : 0;
       });
 
+      const valueLabelPlugin = {
+        id: 'valueLabelPlugin',
+        afterDatasetsDraw(chart) {
+          const { ctx } = chart;
+          ctx.save();
+          ctx.fillStyle = '#1f2937';
+          ctx.font = '12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          chart.getDatasetMeta(0).data.forEach((bar, index) => {
+            const value = percents[index] ?? 0;
+            const { x, y } = bar.tooltipPosition();
+            ctx.fillText(`${Number(value).toFixed(2)}%`, x, y - 4);
+          });
+          ctx.restore();
+        }
+      };
+
       new Chart(elProg.getContext('2d'), {
         type: 'bar',
         data: {
@@ -1308,7 +1241,8 @@
             tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` } }
           },
           responsive: true, maintainAspectRatio: false
-        }
+        },
+        plugins: [valueLabelPlugin]
       });
     }
   });

@@ -1,7 +1,5 @@
 <% const isEmbedSafe = typeof isEmbed !== 'undefined' && isEmbed; %>
-<% if (!isEmbedSafe) { %>
-  <%- include('../partials/header') %>
-<% } %>
+<%- include('../partials/header2') %>
 
 <% const formatMonth = typeof formatMonthLabel === 'function' ? formatMonthLabel : (value => value || '-'); %>
 
@@ -451,6 +449,4 @@
   }
 </script>
 
-<% if (!isEmbedSafe) { %>
-  <%- include('../partials/footer') %>
-<% } %>
+<%- include('../partials/footer2') %>

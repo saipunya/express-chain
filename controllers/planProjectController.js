@@ -652,7 +652,9 @@ exports.summaryPage = async (req, res) => {
       monthlyBudgetSummary = [];
     }
 
-    res.render('plan_project/summary', {
+    const isEmbed = String(req.query.embed || '') === '1';
+
+    res.render('plan_project/summary2', {
       title: `สรุปโครงการ ${project.pro_subject}`,
       project,
       mainPlan,
@@ -667,7 +669,8 @@ exports.summaryPage = async (req, res) => {
       thaiDate,
       formatMonthLabel: toThaiMonthLabel,
       budgetDisbursalData,
-      monthlyBudgetSummary
+      monthlyBudgetSummary,
+      isEmbed
     });
   } catch (error) {
     console.error('Error loading project summary:', error);

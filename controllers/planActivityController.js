@@ -609,8 +609,32 @@ exports.getActivitiesByProject = async (req, res) => {
     }
 
     const activities = await PlanActivity.findByProjectCode(pro_code);
-    
-    return res.json(activities || []);
+    if (!activities.length) {
+      return res.json([]);
+    }
+
+    const latestMonth = await PlanActivityMonthly.getLatestReportMonthByProject(pro_code);
+    let monthlyMap = {};
+    if (latestMonth) {
+      const rows = await PlanActivityMonthly.findByActivitiesAndMonth(
+        activities.map((a) => a.ac_id),
+        latestMonth
+      );
+      monthlyMap = rows.reduce((acc, row) => {
+        if (!acc[row.ac_id]) {
+          acc[row.ac_id] = row;
+        }
+        return acc;
+      }, {});
+    }
+
+    const response = activities.map((activity) => ({
+      ...activity,
+      monthly_status: monthlyMap[activity.ac_id]?.status ?? null,
+      report_month: monthlyMap[activity.ac_id]?.report_month ?? null
+    }));
+
+    return res.json(response);
   } catch (error) {
     console.error('Error in getActivitiesByProject:', error);
     return res.status(500).json({ error: 'Failed to fetch activities', details: error.message });

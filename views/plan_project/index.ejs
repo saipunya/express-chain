@@ -7,7 +7,7 @@
         <p class="text-muted small mb-0">จัดการและติดตามโครงการต่างๆ</p>
       </div>
       <div class="d-flex gap-2 flex-wrap">
-        <a href="/planproject/activities-overview" class="btn btn-outline-primary"><i class="bi bi-collection me-2"></i>ดูโครงการพร้อมกิจกรรม</a>
+        <a href="/planactivity" class="btn btn-outline-primary"><i class="bi bi-collection me-2"></i>ดูโครงการพร้อมกิจกรรม</a>
         <a href="/planproject/new" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มโครงการใหม่</a>
       </div>
     </div>
@@ -41,7 +41,7 @@
             <thead class="table-light fw-semibold">
               <tr>
                 <th class="text-center" style="width: 5%">#</th>
-                <th style="width: 8%">รหัส</th>
+              
                 <th style="width: 15%">ชื่อโครงการ</th>
                 <th style="width: 12%">เป้าหมาย</th>
                 <th style="width: 10%">งบประมาณ</th>
@@ -49,8 +49,8 @@
                 <th style="width: 10%">ผู้รับผิดชอบ</th>
                 <th class="text-center" style="width: 8%">สถานะ</th>
                 <th style="width: 8%">แผนงาน</th>
-                <th style="width: 8%">โดย</th>
-                <th class="text-center" style="width: 8%">วันที่</th>
+
+                
                 <% if (user && user.mClass === 'admin') { %>
                   <th class="text-center" style="width: 10%">จัดการ</th>
                 <% } %>
@@ -60,7 +60,6 @@
               <% projects.forEach((p, idx) => { %>
                 <tr class="align-middle">
                   <td class="text-center text-muted small"><%= idx + 1 %></td>
-                  <td><span class="badge bg-info text-dark"><%= p.pro_code %></span></td>
                   <td class="fw-500"><%= p.pro_subject %></td>
                   <td><small><%= p.pro_target %></small></td>
                   <td><small class="text-success fw-bold"><%= p.pro_budget ? p.pro_budget.toLocaleString('th-TH') : '-' %></small></td>
@@ -81,10 +80,15 @@
                     <% } %>
                   </td>
                   <td><small><%= p.pro_macode %></small></td>
-                  <td><small class="text-muted"><%= p.pro_saveby %></small></td>
-                  <td class="text-center"><small class="text-muted"><%= thaiDate(p.pro_savedate) %></small></td>
+                  <!-- ดูรายละเอียด planproject/summary -->
+                 
+                   
+                
                   <% if (user && user.mClass === 'admin') { %>
                     <td class="text-center">
+                    <a href="/planproject/summary/<%= p.pro_code %>?embed=1" class="btn btn-sm btn-outline-info me-1 js-open-summary" title="ดูรายละเอียด" data-bs-toggle="modal" data-bs-target="#planProjectSummaryModal" data-title="<%= p.pro_subject %>">
+                      <i class="bi bi-info-circle"></i>
+                    </a>
                       <a href="/planproject/edit/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary me-1" title="แก้ไข">
                         <i class="bi bi-pencil-square"></i>
                       </a>
@@ -106,5 +110,32 @@
       </div>
     </div>
 </div>
+
+<!-- Summary Modal (iframe) -->
+<div class="modal fade" id="planProjectSummaryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-body p-0 position-relative">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" aria-label="Close"></button>
+        <iframe id="summaryModalFrame" src="" style="width:100%; height:85vh; border:0;" title="รายละเอียดโครงการ"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-open-summary');
+    if (!btn) return;
+    const frame = document.getElementById('summaryModalFrame');
+    const title = document.getElementById('summaryModalTitle');
+    if (frame) frame.src = btn.getAttribute('href');
+    if (title) title.textContent = btn.dataset.title || 'รายละเอียดโครงการ';
+  });
+  document.getElementById('planProjectSummaryModal')?.addEventListener('hidden.bs.modal', function () {
+    const frame = document.getElementById('summaryModalFrame');
+    if (frame) frame.src = '';
+  });
+</script>
 
 <%- include('../partials/footer') %>

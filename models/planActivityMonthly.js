@@ -108,6 +108,22 @@ class PlanActivityMonthly {
       }
     });
   }
+
+  /**
+   * Get latest reported month for a project
+   * @param {string} proCode
+   * @returns {Promise<string|null>}
+   */
+  static async getLatestReportMonthByProject(proCode) {
+    if (!proCode) return null;
+    const [rows] = await db.query(
+      `SELECT MAX(report_month) AS latest_month
+       FROM activity_monthly
+       WHERE pro_code = ?`,
+      [proCode]
+    );
+    return rows?.[0]?.latest_month || null;
+  }
 }
 
 module.exports = PlanActivityMonthly;

@@ -37,7 +37,48 @@ exports.index = async (req, res) => {
      LEFT JOIN active_coop ac ON ac.c_code = ns.str_code
      ORDER BY ns.str_id DESC`
   );
-  res.render('newStrength/index', { items: rows });
+
+  // สรุปข้อมูลแยกตามประเภทสหกรณ์ (สหกรณ์ภาคการเกษตร, นอกภาคการเกษตร, กลุ่มเกษตรกร)
+  const [summaryRows] = await db.query(`
+    SELECT
+      CASE
+        WHEN ac.coop_group = 'กลุ่มเกษตรกร' THEN 'กลุ่มเกษตรกร'
+        WHEN REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'ใน' THEN 'สหกรณ์ภาคการเกษตร'
+        ELSE 'สหกรณ์นอกภาคการเกษตร'
+      END AS coop_type,
+      SUM(CASE WHEN ns.str_grade = 'ชั้น1' THEN 1 ELSE 0 END) AS grade_1_count,
+      SUM(CASE WHEN ns.str_grade = 'ชั้น2' THEN 1 ELSE 0 END) AS grade_2_count,
+      SUM(CASE WHEN ns.str_grade = 'ชั้น3' THEN 1 ELSE 0 END) AS grade_3_count,
+      COUNT(ns.str_id) AS total_count
+    FROM new_strength ns
+    LEFT JOIN active_coop ac ON ac.c_code = ns.str_code
+    WHERE ac.c_status = 'ดำเนินการ'
+    GROUP BY coop_type
+  `);
+
+  const summaryMap = {};
+  summaryRows.forEach(r => {
+    summaryMap[r.coop_type] = r;
+  });
+
+  const summaryTypes = ['สหกรณ์ภาคการเกษตร', 'สหกรณ์นอกภาคการเกษตร', 'กลุ่มเกษตรกร'];
+  const formattedSummary = summaryTypes.map(type => {
+    const data = summaryMap[type] || { grade_1_count: 0, grade_2_count: 0, grade_3_count: 0, total_count: 0 };
+    return {
+      typeLabel: type,
+      counts: {
+        'ชั้น1': Number(data.grade_1_count) || 0,
+        'ชั้น2': Number(data.grade_2_count) || 0,
+        'ชั้น3': Number(data.grade_3_count) || 0
+      },
+      total: Number(data.total_count) || 0
+    };
+  });
+
+  res.render('newStrength/index', { 
+    items: rows,
+    summary: formattedSummary
+  });
 };
 
 exports.create = async (req, res) => {

@@ -2347,11 +2347,14 @@ function displayGroupName(code){
 const _meetingsToday = (typeof meetingsToday !== 'undefined' && Array.isArray(meetingsToday)) ? meetingsToday : [];
 const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && meetingroomTodayDate) ? meetingroomTodayDate : '';
 const _coopTypeByGroup = (typeof coopTypeByGroup !== 'undefined' && Array.isArray(coopTypeByGroup)) ? coopTypeByGroup : [];
+const _coopTypeSummary = (typeof coopTypeSummary !== 'undefined' && coopTypeSummary) ? coopTypeSummary : null;
 const _strengthTypeGrades = (typeof strengthTypeGrades !== 'undefined' && Array.isArray(strengthTypeGrades)) ? strengthTypeGrades : [];
 const _strengthTypeRows = (typeof strengthTypeRows !== 'undefined' && Array.isArray(strengthTypeRows)) ? strengthTypeRows : [];
 const _strengthTypeYear = (typeof strengthTypeYear !== 'undefined' && strengthTypeYear) ? strengthTypeYear : '';
 const _gradeSummary = (typeof gradeSummary !== 'undefined' && Array.isArray(gradeSummary)) ? gradeSummary : [];
 const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summaryYear : (typeof _strengthTypeYear !== 'undefined' ? _strengthTypeYear : '-');
+const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
+const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
 %>
 
 <!-- ================= Hero ================= -->
@@ -2540,44 +2543,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
   </div>
 </div>
 
-<!-- ================= New Strength Snapshot ================ -->
-<% const nsRaw = (typeof newStrengthList !== 'undefined') ? newStrengthList : []; %>
-<% const nsList = Array.isArray(nsRaw) ? nsRaw : []; %>
-<section class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h2 class="h5 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569 </h2>
-      <p class="text-muted small mb-0">เป็นผลการประมาณการเท่านั้น</p>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="/newstrength" class="btn btn-outline-primary btn-sm"><i class="bi bi-list-ul me-1"></i>รายการทั้งหมด</a>
-      <a href="/newstrength/create" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>เพิ่ม</a>
-    </div>
-  </div>
 
-  <% if (!nsList.length) { %>
-    <div class="alert alert-info d-flex align-items-center" role="alert">
-      <i class="bi bi-info-circle me-2"></i>
-      <div>ยังไม่มีข้อมูลเข้มแข็งประมาณการ</div>
-    </div>
-  <% } else { %>
-    <div class="row g-3">
-      <% nsList.forEach((row) => { %>
-        <div class="col-md-6 col-lg-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="fw-semibold text-primary"><%= row.c_name || '-' %></div>
-                <span class="badge bg-success-subtle text-success">เกรด <%= row.str_grade || '-' %></span>
-              </div>
-              <div class="text-muted small">รหัส: <%= row.str_code %> | กลุ่ม: <%= row.str_group %></div>
-            </div>
-          </div>
-        </div>
-      <% }) %>
-    </div>
-  <% } %>
-</section>
 
 
 
@@ -2739,8 +2705,8 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
               </tr>
             </thead>
             <tbody>
-              <% if ((coopTypeByGroup || []).length) { %>
-              <% coopTypeByGroup.forEach((row) => { %>
+              <% if ((_coopTypeByGroup || []).length) { %>
+              <% _coopTypeByGroup.forEach((row) => { %>
               <tr>
                 <td><%= displayGroupName(row.c_group) %></td>
                 <td class="text-end"><%= Number(row.coop_agri || 0).toLocaleString() %></td>
@@ -2758,10 +2724,10 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
             <tfoot class="table-light">
               <tr>
                 <th>รวมทั้งหมด</th>
-                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_agri) || 0).toLocaleString() %></th>
-                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></th>
-                <th class="text-end"><%= Number((coopTypeSummary && coopTypeSummary.farmer_group) || 0).toLocaleString() %></th>
-                <th class="text-end fw-bold"><%= Number((Number(coopTypeSummary?.coop_agri || 0) + Number(coopTypeSummary?.coop_non_agri || 0) + Number(coopTypeSummary?.farmer_group || 0))).toLocaleString() %></th>
+                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_agri) || 0).toLocaleString() %></th>
+                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></th>
+                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.farmer_group) || 0).toLocaleString() %></th>
+                <th class="text-end fw-bold"><%= Number((Number(_coopTypeSummary?.coop_agri || 0) + Number(_coopTypeSummary?.coop_non_agri || 0) + Number(_coopTypeSummary?.farmer_group || 0))).toLocaleString() %></th>
               </tr>
             </tfoot>
           </table>
@@ -2811,7 +2777,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
       <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
       <% } %>
     </div>
-     <div class="card modern-card shadow-sm border-0  mt-3">
+     <div class="card modern-card shadow-sm border-0  mt-1">
       <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0">
           <i class="bi bi-award me-2" style="color: var(--primary);"></i>สรุปความเข้มแข็ง (st_grade) แยกตามประเภทสถาบัน
@@ -2873,6 +2839,57 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
     </div>
   </section>
 
+
+<!-- ================= New Strength Snapshot ================ -->
+<% const nsRaw = (typeof newStrengthList !== 'undefined') ? newStrengthList : []; %>
+<% const nsList = Array.isArray(nsRaw) ? nsRaw : []; %>
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h5 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569 </h2>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/newstrength" class="btn btn-outline-primary btn-sm"><i class="bi bi-list-ul me-1"></i>รายการทั้งหมด</a>
+    </div>
+  </div>
+
+  <% if (!nsList.length) { %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-info-circle me-2"></i>
+      <div>ยังไม่มีข้อมูลเข้มแข็งประมาณการ</div>
+    </div>
+  <% } else { %>
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive mb-0">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;" class="text-center">#</th>
+              <th style="width: 120px;">รหัส</th>
+              <th>ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
+              <th>กลุ่ม</th>
+              <th style="width: 100px;" class="text-center">ผลจัดชั้น</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% nsList.forEach((row, idx) => { %>
+              <tr>
+                <td class="text-center text-muted small"><%= idx + 1 %></td>
+                <td><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
+                <td class="fw-medium text-primary"><%= row.c_name || '-' %></td>
+                <td><span class="text-muted"><%= row.str_group %></span></td>
+                <td class="text-center">
+                  <span class="badge <%= row.str_grade ? 'bg-success' : 'bg-secondary' %>"><%= row.str_grade || '-' %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+</section>
+
   <!-- ================= Member Summary ================= -->
   <section id="member-summary" class="section-block bg-light">
     <div class="container">
@@ -2881,48 +2898,54 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
           <h5 class="mb-0">
             <i class="bi bi-people-fill me-2 text-success"></i>สรุปจำนวนสมาชิกปีล่าสุด
           </h5>
-          <span class="small text-muted">ปี <%= latestYear %> | ฐานข้อมูล addmem</span>
+          <span class="small text-muted">ปี <%= _latestYear %> | ฐานข้อมูล addmem</span>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0 deadline-table">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
               <thead class="table-light">
                 <tr>
-                  <th>ประเภท</th>
-                  <th class="text-end">สามัญ</th>
-                  <th class="text-end">สมทบ</th>
-                  <th class="text-end">รวม</th>
+                  <th rowspan="2" class="align-middle border-end text-center">ประเภทสถาบัน</th>
+                  <th colspan="2" class="text-center border-end">สหกรณ์</th>
+                  <th colspan="2" class="text-center">กลุ่มเกษตรกร</th>
+                </tr>
+                <tr>
+                  <th class="text-end text-muted fw-normal">สามัญ</th>
+                  <th class="text-end text-muted fw-normal border-end">สมทบ</th>
+                  <th class="text-end text-muted fw-normal">สามัญ</th>
+                  <th class="text-end text-muted fw-normal">สมทบ</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>สหกรณ์ภาคการเกษตร (ใน)</td>
-                  <td class="text-end"><%= Number(memberSummary.coop_agri_saman || 0).toLocaleString() %></td>
-                  <td class="text-end"><%= Number(memberSummary.coop_agri_somtob || 0).toLocaleString() %></td>
-                  <td class="text-end fw-bold"><%= Number((memberSummary.coop_agri_saman || 0) + (memberSummary.coop_agri_somtob || 0)).toLocaleString() %></td>
+                  <td class="border-end fw-medium"><i class="bi bi-tree me-2 text-success"></i>ภาคการเกษตร</td>
+                  <td class="text-end"><%= Number(_memberSummary.coop_agri_saman || 0).toLocaleString() %></td>
+                  <td class="text-end border-end"><%= Number(_memberSummary.coop_agri_somtob || 0).toLocaleString() %></td>
+                  <td class="text-end text-muted bg-light">-</td>
+                  <td class="text-end text-muted bg-light">-</td>
                 </tr>
                 <tr>
-                  <td>สหกรณ์นอกภาคการเกษตร (นอก)</td>
-                  <td class="text-end"><%= Number(memberSummary.coop_non_agri_saman || 0).toLocaleString() %></td>
-                  <td class="text-end"><%= Number(memberSummary.coop_non_agri_somtob || 0).toLocaleString() %></td>
-                  <td class="text-end fw-bold"><%= Number((memberSummary.coop_non_agri_saman || 0) + (memberSummary.coop_non_agri_somtob || 0)).toLocaleString() %></td>
+                  <td class="border-end fw-medium"><i class="bi bi-building me-2 text-primary"></i>นอกภาคการเกษตร</td>
+                  <td class="text-end"><%= Number(_memberSummary.coop_non_agri_saman || 0).toLocaleString() %></td>
+                  <td class="text-end border-end"><%= Number(_memberSummary.coop_non_agri_somtob || 0).toLocaleString() %></td>
+                  <td class="text-end text-muted bg-light">-</td>
+                  <td class="text-end text-muted bg-light">-</td>
                 </tr>
                 <tr>
-                  <td>กลุ่มเกษตรกร</td>
-                  <td class="text-end"><%= Number(memberSummary.farmer_group_saman || 0).toLocaleString() %></td>
-                  <td class="text-end"><%= Number(memberSummary.farmer_group_somtob || 0).toLocaleString() %></td>
-                  <td class="text-end fw-bold"><%= Number((memberSummary.farmer_group_saman || 0) + (memberSummary.farmer_group_somtob || 0)).toLocaleString() %></td>
+                  <td class="border-end fw-medium"><i class="bi bi-flower1 me-2 text-warning"></i>กลุ่มเกษตรกร</td>
+                  <td class="text-end text-muted bg-light">-</td>
+                  <td class="text-end text-muted bg-light border-end">-</td>
+                  <td class="text-end"><%= Number(_memberSummary.farmer_group_saman || 0).toLocaleString() %></td>
+                  <td class="text-end"><%= Number(_memberSummary.farmer_group_somtob || 0).toLocaleString() %></td>
                 </tr>
               </tbody>
               <tfoot class="table-light">
                 <tr>
-                  <th>รวมทั้งหมด</th>
-                  <th class="text-end"><%= Number((memberSummary.coop_agri_saman || 0) + (memberSummary.coop_non_agri_saman || 0) + (memberSummary.farmer_group_saman || 0)).toLocaleString() %></th>
-                  <th class="text-end"><%= Number((memberSummary.coop_agri_somtob || 0) + (memberSummary.coop_non_agri_somtob || 0) + (memberSummary.farmer_group_somtob || 0)).toLocaleString() %></th>
-                  <th class="text-end fw-bold"><%= Number(
-                    (memberSummary.coop_agri_saman || 0) + (memberSummary.coop_non_agri_saman || 0) + (memberSummary.farmer_group_saman || 0) +
-                    (memberSummary.coop_agri_somtob || 0) + (memberSummary.coop_non_agri_somtob || 0) + (memberSummary.farmer_group_somtob || 0)
-                  ).toLocaleString() %></th>
+                  <th class="border-end text-end">รวมทั้งหมด</th>
+                  <th class="text-end text-primary"><%= Number((_memberSummary.coop_agri_saman || 0) + (_memberSummary.coop_non_agri_saman || 0)).toLocaleString() %></th>
+                  <th class="text-end text-primary border-end"><%= Number((_memberSummary.coop_agri_somtob || 0) + (_memberSummary.coop_non_agri_somtob || 0)).toLocaleString() %></th>
+                  <th class="text-end text-primary"><%= Number(_memberSummary.farmer_group_saman || 0).toLocaleString() %></th>
+                  <th class="text-end text-primary"><%= Number(_memberSummary.farmer_group_somtob || 0).toLocaleString() %></th>
                 </tr>
               </tfoot>
             </table>
@@ -2931,7 +2954,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
         <div class="card-footer bg-light d-flex justify-content-between align-items-center">
           <small class="text-muted">
             <i class="bi bi-info-circle me-1"></i>
-            แสดงข้อมูลสมาชิกปี <%= latestYear %> จากฐานข้อมูล addmem
+            แสดงข้อมูลสมาชิกปี <%= _latestYear %> จากฐานข้อมูล addmem
           </small>
           <a href="/addmem/list" class="btn btn-success btn-sm">
             ดูข้อมูลสมาชิกทั้งหมด
@@ -3231,80 +3254,7 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
   </div>
 </div>
 
-<!-- ================= Latest Projects & Commands ================= -->
-<section id="projects" class="section-block bg-light">
-  <div class="container-lg">
-    <div class="row">
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
-        </h2>
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastProjects || []).forEach((p, idx)=> { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <strong>
-                    <%= idx + 1 %>.
-                  </strong>
-                  <%= p.pro_story %>
-                  <span class="badge bg-secondary ms-2">
-                    <%= p.pro_no %>
-                  </span>
-                </span>
-                <% if(user){ %>
-                <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                  <i class="bi bi-file-pdf-fill"></i>
-                </a>
-                <% } %>
-              </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
-        </h2>
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastCommands || []).forEach((c, idx)=> { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <strong>
-                    <%= idx + 1 %>.
-                  </strong>
-                  <%= c.com_story %>
-                  <span class="badge bg-secondary ms-2">
-                    <%= c.com_no %>
-                  </span>
-                </span>
-                <% if(user){ %>
-                <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                  <i class="bi bi-file-earmark-arrow-down"></i>
-                </a>
-                <% } %>
-              </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section id="rules" class="section-block bg-white">
   <div class="container-lg">

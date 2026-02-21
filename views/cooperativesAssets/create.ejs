@@ -1,0 +1,300 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-plus-lg me-2"></i><%= title %></h1>
+      <p class="text-muted small mb-0">เพิ่มครุภัณฑ์และทรัพย์สินใหม่ในระบบ</p>
+    </div>
+    <div>
+      <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>กลับรายการ
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form action="/cooperatives-assets" method="POST">
+            <!-- Basic Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-info-circle me-2"></i>ข้อมูลพื้นฐาน
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">กลุ่มสหกรณ์ <span class="text-danger">*</span></label>
+                  <select class="form-control" id="coopGroup" name="coop_group" required>
+                    <option value="">เลือกกลุ่มสหกรณ์</option>
+                    <% Object.keys(coopGroups).sort().forEach(group => { %>
+                      <option value="<%= group %>"><%= group %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">รหัสสหกรณ์ <span class="text-danger">*</span></label>
+                  <select class="form-control" id="coopCode" name="coop_code" required>
+                    <option value="">เลือกรหัสสหกรณ์</option>
+                  </select>
+                  <input type="hidden" id="coopName" name="coop_name">
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">รหัสครุภัณฑ์</label>
+                  <input type="text" class="form-control" id="assetCode" name="asset_code" readonly>
+                  <small class="form-text text-muted">รหัสครุภัณฑ์จะถูกกำหนดอัตโนมัติจากรหัสสหกรณ์</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">หมวดหมู่</label>
+                  <select class="form-select" name="category">
+                    <option value="">เลือกหมวดหมู่</option>
+                    <option value="เครื่องจักรกล">เครื่องจักรกล</option>
+                    <option value="อุปกรณ์การตลาด">อุปกรณ์การตลาด</option>
+                    <option value="สิ่งปลูกสร้าง">สิ่งปลูกสร้าง</option>
+                    <option value="ยานพาหนะ">ยานพาหนะ</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ประเภทเครื่องจักร</label>
+                  <input type="text" class="form-control" name="machine_type">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">สถานะ</label>
+                  <select class="form-select" name="status">
+                    <option value="">เลือกสถานะ</option>
+                    <option value="ใช้งานได้">ใช้งานได้</option>
+                    <option value="ใช้งานไม่ได้">ใช้งานไม่ได้</option>
+                    <option value="ส่งซ่อม">ส่งซ่อม</option>
+                    <option value="ชำรุด">ชำรุด</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">รายละเอียด</label>
+                  <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-geo-alt me-2"></i>ข้อมูลที่ตั้ง
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label">ที่อยู่</label>
+                  <input type="text" class="form-control" name="address">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ตำบล/แขวง</label>
+                  <input type="text" class="form-control" name="subdistrict">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">อำเภอ/เขต</label>
+                  <input type="text" class="form-control" name="district">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">จังหวัด</label>
+                  <input type="text" class="form-control" name="province">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">รหัสไปรษณีย์</label>
+                  <input type="text" class="form-control" name="postcode">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ละติจูด</label>
+                  <input type="number" step="any" class="form-control" name="latitude">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ลองจิจูด</label>
+                  <input type="number" step="any" class="form-control" name="longitude">
+                </div>
+              </div>
+            </div>
+
+            <!-- Technical Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-gear me-2"></i>ข้อมูลทางเทคนิค
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">จำนวน</label>
+                  <input type="number" step="0.01" class="form-control" name="quantity">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของจำนวน</label>
+                  <input type="text" class="form-control" name="quantity_unit" placeholder="เช่น คัน, หลัง, เครื่อง">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ความจุ</label>
+                  <input type="text" class="form-control" name="capacity_value">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของความจุ</label>
+                  <input type="text" class="form-control" name="capacity_unit" placeholder="เช่น ตัน, ตารางเมตร">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">กลุ่มการใช้งาน</label>
+                  <select class="form-select" name="usage_group">
+                    <option value="">เลือกกลุ่ม</option>
+                    <option value="1">กลุ่มที่ 1</option>
+                    <option value="2">กลุ่มที่ 2</option>
+                    <option value="3">กลุ่มที่ 3</option>
+                    <option value="4">กลุ่มที่ 4</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">พืชผล</label>
+                  <input type="text" class="form-control" name="crop">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ค่าจำเพาะ</label>
+                  <input type="text" class="form-control" name="spec_value">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของค่าจำเพาะ</label>
+                  <input type="text" class="form-control" name="spec_unit">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ปี พ.ศ.</label>
+                  <input type="number" class="form-control" name="year_be" placeholder="เช่น 2567">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">รหัสการจัดซื้อ</label>
+                  <input type="number" class="form-control" name="procurement_code">
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-currency-exchange me-2"></i>ข้อมูลการเงิน
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label">โครงการ</label>
+                  <input type="text" class="form-control" name="project">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">มูลค่ารวม (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_total">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">เงินอุดหนุน (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_support">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">เงินส่วนสหกรณ์ (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_coop">
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-person me-2"></i>ข้อมูลติดต่อ
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">ชื่อผู้ติดต่อ</label>
+                  <input type="text" class="form-control" name="contact_name">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">เบอร์โทรศัพท์</label>
+                  <input type="text" class="form-control" name="contact_phone">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">วันที่อัปเดต</label>
+                  <input type="date" class="form-control" name="updated_date" value="<%= new Date().toISOString().split('T')[0] %>">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">หมายเหตุ</label>
+                  <textarea class="form-control" name="remark" rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>บันทึกข้อมูล
+              </button>
+              <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>ยกเลิก
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title text-warning mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>คำแนะนำ
+          </h6>
+          <ul class="small text-muted mb-0">
+            <li>กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง</li>
+            <li>รหัสสหกรณ์เป็นข้อมูลที่จำเป็นต้องกรอก</li>
+            <li>สามารถกรอกข้อมูลพิกัด GPS เพื่อใช้ในการแสดงแผนที่</li>
+            <li>ค่าเงินสามารถกรอกเป็นทศนิยมได้</li>
+            <li>วันที่จะถูกบันทึกเป็นวันที่อัปเดตล่าสุด</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Cooperative data for cascading dropdowns
+const coopData = <%- JSON.stringify(coopGroups) %>;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const coopGroupSelect = document.getElementById('coopGroup');
+  const coopCodeSelect = document.getElementById('coopCode');
+  const coopNameInput = document.getElementById('coopName');
+
+  // When group is selected, populate cooperative codes
+  coopGroupSelect.addEventListener('change', function() {
+    const selectedGroup = this.value;
+    coopCodeSelect.innerHTML = '<option value="">เลือกรหัสสหกรณ์</option>';
+    coopNameInput.value = '';
+    
+    if (selectedGroup && coopData[selectedGroup]) {
+      coopData[selectedGroup].forEach(coop => {
+        const option = document.createElement('option');
+        option.value = coop.c_code;
+        option.textContent = coop.c_code + ' - ' + coop.c_name;
+        coopCodeSelect.appendChild(option);
+      });
+    }
+  });
+
+  // When cooperative code is selected, set the name and asset code
+  coopCodeSelect.addEventListener('change', function() {
+    const selectedGroup = coopGroupSelect.value;
+    const selectedCode = this.value;
+    
+    if (selectedGroup && selectedCode && coopData[selectedGroup]) {
+      const coop = coopData[selectedGroup].find(c => c.c_code === selectedCode);
+      if (coop) {
+        coopNameInput.value = coop.c_name;
+        // Set asset code to be the same as cooperative code
+        document.getElementById('assetCode').value = coop.c_code;
+      }
+    } else {
+      coopNameInput.value = '';
+      document.getElementById('assetCode').value = '';
+    }
+  });
+});
+</script>
+
+<%- include('../partials/footer') %>

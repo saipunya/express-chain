@@ -118,6 +118,7 @@ const memberCoopRoutes = require('./routes/memberCoopRoutes'); // เพิ่�
 const rabiabRoutes = require('./routes/rabiabRoutes'); // เพิ่ม route rabiab
 const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route addmem
 const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
+const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); // เพิ่ม route cooperatives assets
 
 // Public routes that don't require authentication
 const publicRoutes = [
@@ -142,6 +143,7 @@ app.use('/rabiab', rabiabRoutes); // ใช้งานเส้นทาง rab
 app.use('/addmem', addmemRoutes); // ใช้งานเส้นทาง addmem (สมาชิกเพิ่มเติม)
 app.use('/chamra', chamraExportRoute);
 app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
+app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งานเส้นทาง cooperatives assets
 
 // 404 handler
 app.use((req, res) => {

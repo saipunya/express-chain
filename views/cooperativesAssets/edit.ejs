@@ -1,0 +1,326 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-pencil me-2"></i><%= title %></h1>
+      <p class="text-muted small mb-0">แก้ไขข้อมูลครุภัณฑ์: <%= asset.asset_code || asset.coop_name %></p>
+    </div>
+    <div>
+      <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>กลับรายการ
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <form action="/cooperatives-assets/<%= asset.id %>?_method=PUT" method="POST">
+            <!-- Basic Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-info-circle me-2"></i>ข้อมูลพื้นฐาน
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">กลุ่มสหกรณ์ <span class="text-danger">*</span></label>
+                  <select class="form-control" id="coopGroup" name="coop_group" required>
+                    <option value="">เลือกกลุ่มสหกรณ์</option>
+                    <% Object.keys(coopGroups).sort().forEach(group => { %>
+                      <option value="<%= group %>" <%= asset.coop_group === group ? 'selected' : '' %>><%= group %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">รหัสสหกรณ์ <span class="text-danger">*</span></label>
+                  <select class="form-control" id="coopCode" name="coop_code" required>
+                    <option value="">เลือกรหัสสหกรณ์</option>
+                  </select>
+                  <input type="hidden" id="coopName" name="coop_name">
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">รหัสครุภัณฑ์</label>
+                  <input type="text" class="form-control" id="assetCode" name="asset_code" value="<%= asset.asset_code || '' %>" readonly>
+                  <small class="form-text text-muted">รหัสครุภัณฑ์จะถูกกำหนดอัตโนมัติจากรหัสสหกรณ์</small>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">หมวดหมู่</label>
+                  <select class="form-select" name="category">
+                    <option value="">เลือกหมวดหมู่</option>
+                    <option value="เครื่องจักรกล" <%= asset.category === 'เครื่องจักรกล' ? 'selected' : '' %>>เครื่องจักรกล</option>
+                    <option value="อุปกรณ์การตลาด" <%= asset.category === 'อุปกรณ์การตลาด' ? 'selected' : '' %>>อุปกรณ์การตลาด</option>
+                    <option value="สิ่งปลูกสร้าง" <%= asset.category === 'สิ่งปลูกสร้าง' ? 'selected' : '' %>>สิ่งปลูกสร้าง</option>
+                    <option value="ยานพาหนะ" <%= asset.category === 'ยานพาหนะ' ? 'selected' : '' %>>ยานพาหนะ</option>
+                    <option value="อื่นๆ" <%= asset.category === 'อื่นๆ' ? 'selected' : '' %>>อื่นๆ</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ประเภทเครื่องจักร</label>
+                  <input type="text" class="form-control" name="machine_type" value="<%= asset.machine_type || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">สถานะ</label>
+                  <select class="form-select" name="status">
+                    <option value="">เลือกสถานะ</option>
+                    <option value="ใช้งานได้" <%= asset.status === 'ใช้งานได้' ? 'selected' : '' %>>ใช้งานได้</option>
+                    <option value="ใช้งานไม่ได้" <%= asset.status === 'ใช้งานไม่ได้' ? 'selected' : '' %>>ใช้งานไม่ได้</option>
+                    <option value="ส่งซ่อม" <%= asset.status === 'ส่งซ่อม' ? 'selected' : '' %>>ส่งซ่อม</option>
+                    <option value="ชำรุด" <%= asset.status === 'ชำรุด' ? 'selected' : '' %>>ชำรุด</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">รายละเอียด</label>
+                  <textarea class="form-control" name="description" rows="3"><%= asset.description || '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-geo-alt me-2"></i>ข้อมูลที่ตั้ง
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label">ที่อยู่</label>
+                  <input type="text" class="form-control" name="address" value="<%= asset.address || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ตำบล/แขวง</label>
+                  <input type="text" class="form-control" name="subdistrict" value="<%= asset.subdistrict || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">อำเภอ/เขต</label>
+                  <input type="text" class="form-control" name="district" value="<%= asset.district || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">จังหวัด</label>
+                  <input type="text" class="form-control" name="province" value="<%= asset.province || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">รหัสไปรษณีย์</label>
+                  <input type="text" class="form-control" name="postcode" value="<%= asset.postcode || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ละติจูด</label>
+                  <input type="number" step="any" class="form-control" name="latitude" value="<%= asset.latitude || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ลองจิจูด</label>
+                  <input type="number" step="any" class="form-control" name="longitude" value="<%= asset.longitude || '' %>">
+                </div>
+              </div>
+            </div>
+
+            <!-- Technical Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-gear me-2"></i>ข้อมูลทางเทคนิค
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">จำนวน</label>
+                  <input type="number" step="0.01" class="form-control" name="quantity" value="<%= asset.quantity || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของจำนวน</label>
+                  <input type="text" class="form-control" name="quantity_unit" value="<%= asset.quantity_unit || '' %>" placeholder="เช่น คัน, หลัง, เครื่อง">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ความจุ</label>
+                  <input type="text" class="form-control" name="capacity_value" value="<%= asset.capacity_value || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของความจุ</label>
+                  <input type="text" class="form-control" name="capacity_unit" value="<%= asset.capacity_unit || '' %>" placeholder="เช่น ตัน, ตารางเมตร">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">กลุ่มการใช้งาน</label>
+                  <select class="form-select" name="usage_group">
+                    <option value="">เลือกกลุ่ม</option>
+                    <option value="1" <%= asset.usage_group == 1 ? 'selected' : '' %>>กลุ่มที่ 1</option>
+                    <option value="2" <%= asset.usage_group == 2 ? 'selected' : '' %>>กลุ่มที่ 2</option>
+                    <option value="3" <%= asset.usage_group == 3 ? 'selected' : '' %>>กลุ่มที่ 3</option>
+                    <option value="4" <%= asset.usage_group == 4 ? 'selected' : '' %>>กลุ่มที่ 4</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">พืชผล</label>
+                  <input type="text" class="form-control" name="crop" value="<%= asset.crop || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ค่าจำเพาะ</label>
+                  <input type="text" class="form-control" name="spec_value" value="<%= asset.spec_value || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">หน่วยของค่าจำเพาะ</label>
+                  <input type="text" class="form-control" name="spec_unit" value="<%= asset.spec_unit || '' %>">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">ปี พ.ศ.</label>
+                  <input type="number" class="form-control" name="year_be" value="<%= asset.year_be || '' %>" placeholder="เช่น 2567">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">รหัสการจัดซื้อ</label>
+                  <input type="number" class="form-control" name="procurement_code" value="<%= asset.procurement_code || '' %>">
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-currency-exchange me-2"></i>ข้อมูลการเงิน
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="form-label">โครงการ</label>
+                  <input type="text" class="form-control" name="project" value="<%= asset.project || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">มูลค่ารวม (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_total" value="<%= asset.price_total || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">เงินอุดหนุน (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_support" value="<%= asset.price_support || '' %>">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">เงินส่วนสหกรณ์ (บาท)</label>
+                  <input type="number" step="0.01" class="form-control" name="price_coop" value="<%= asset.price_coop || '' %>">
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="mb-4">
+              <h5 class="card-title text-primary mb-3">
+                <i class="bi bi-person me-2"></i>ข้อมูลติดต่อ
+              </h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">ชื่อผู้ติดต่อ</label>
+                  <input type="text" class="form-control" name="contact_name" value="<%= asset.contact_name || '' %>">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">เบอร์โทรศัพท์</label>
+                  <input type="text" class="form-control" name="contact_phone" value="<%= asset.contact_phone || '' %>">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">วันที่อัปเดต</label>
+                  <input type="date" class="form-control" name="updated_date" value="<%= asset.updated_date || new Date().toISOString().split('T')[0] %>">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">หมายเหตุ</label>
+                  <textarea class="form-control" name="remark" rows="2"><%= asset.remark || '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>บันทึกการแก้ไข
+              </button>
+              <a href="/cooperatives-assets/<%= asset.id %>" class="btn btn-outline-info">
+                <i class="bi bi-eye me-1"></i>ดูรายละเอียด
+              </a>
+              <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>ยกเลิก
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title text-info mb-3">
+            <i class="bi bi-info-circle me-2"></i>ข้อมูลปัจจุบัน
+          </h6>
+          <table class="table table-sm small">
+            <tr>
+              <td class="text-muted" style="width: 40%;">รหัส:</td>
+              <td><%= asset.id %></td>
+            </tr>
+            <tr>
+              <td class="text-muted">สร้างเมื่อ:</td>
+              <td><%= asset.updated_date ? new Date(asset.updated_date).toLocaleDateString('th-TH') : '-' %></td>
+            </tr>
+            <tr>
+              <td class="text-muted">สถานะปัจจุบัน:</td>
+              <td><%= asset.status || '-' %></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Cooperative data for cascading dropdowns
+const coopData = <%- JSON.stringify(coopGroups) %>;
+const currentCoopCode = '<%- asset.coop_code || "" %>';
+const currentCoopGroup = '<%- asset.coop_group || "" %>';
+
+document.addEventListener('DOMContentLoaded', function() {
+  const coopGroupSelect = document.getElementById('coopGroup');
+  const coopCodeSelect = document.getElementById('coopCode');
+  const coopNameInput = document.getElementById('coopName');
+
+  // When group is selected, populate cooperative codes
+  coopGroupSelect.addEventListener('change', function() {
+    const selectedGroup = this.value;
+    coopCodeSelect.innerHTML = '<option value="">เลือกรหัสสหกรณ์</option>';
+    coopNameInput.value = '';
+    
+    if (selectedGroup && coopData[selectedGroup]) {
+      coopData[selectedGroup].forEach(coop => {
+        const option = document.createElement('option');
+        option.value = coop.c_code;
+        option.textContent = coop.c_code + ' - ' + coop.c_name;
+        coopCodeSelect.appendChild(option);
+      });
+    }
+  });
+
+  // When cooperative code is selected, set the name and asset code
+  coopCodeSelect.addEventListener('change', function() {
+    const selectedGroup = coopGroupSelect.value;
+    const selectedCode = this.value;
+    
+    if (selectedGroup && selectedCode && coopData[selectedGroup]) {
+      const coop = coopData[selectedGroup].find(c => c.c_code === selectedCode);
+      if (coop) {
+        coopNameInput.value = coop.c_name;
+        // Set asset code to be the same as cooperative code
+        document.getElementById('assetCode').value = coop.c_code;
+      }
+    } else {
+      coopNameInput.value = '';
+      document.getElementById('assetCode').value = '';
+    }
+  });
+
+  // Initialize with current values
+  if (currentCoopGroup) {
+    coopGroupSelect.value = currentCoopGroup;
+    coopGroupSelect.dispatchEvent(new Event('change'));
+    
+    // Set current cooperative code after options are loaded
+    setTimeout(() => {
+      if (currentCoopCode) {
+        coopCodeSelect.value = currentCoopCode;
+        coopCodeSelect.dispatchEvent(new Event('change'));
+      }
+    }, 100);
+  }
+});
+</script>
+
+<%- include('../partials/footer') %>

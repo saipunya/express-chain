@@ -1,0 +1,347 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-eye me-2"></i><%= title %></h1>
+      <p class="text-muted small mb-0">รายละเอียดครุภัณฑ์: <%= asset.asset_code || asset.coop_name %></p>
+    </div>
+    <div>
+      <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>กลับรายการ
+      </a>
+      <a href="/cooperatives-assets/<%= asset.id %>/edit" class="btn btn-warning">
+        <i class="bi bi-pencil me-1"></i>แก้ไข
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Asset Details Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 text-primary">
+            <i class="bi bi-info-circle me-2"></i>ข้อมูลทั่วไป
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted">รหัสสหกรณ์</label>
+              <div class="fw-semibold"><%= asset.coop_code %></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted">รหัสครุภัณฑ์</label>
+              <div class="fw-semibold"><%= asset.asset_code || '-' %></div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label small text-muted">ชื่อสหกรณ์</label>
+              <div class="fw-semibold"><%= asset.coop_name || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">หมวดหมู่</label>
+              <div>
+                <% if (asset.category) { %>
+                  <span class="badge bg-light text-dark"><%= asset.category %></span>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">ประเภทเครื่องจักร</label>
+              <div class="fw-semibold"><%= asset.machine_type || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">สถานะ</label>
+              <div>
+                <% if (asset.status === 'ใช้งานได้') { %>
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= asset.status %></span>
+                <% } else if (asset.status === 'ใช้งานไม่ได้') { %>
+                  <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i><%= asset.status %></span>
+                <% } else { %>
+                  <span class="badge bg-secondary"><%= asset.status || '-' %></span>
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label small text-muted">รายละเอียด</label>
+              <div><%= asset.description || '-' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 text-primary">
+            <i class="bi bi-geo-alt me-2"></i>ข้อมูลที่ตั้ง
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label small text-muted">ที่อยู่</label>
+              <div class="fw-semibold"><%= asset.address || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">ตำบล/แขวง</label>
+              <div class="fw-semibold"><%= asset.subdistrict || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">อำเภอ/เขต</label>
+              <div class="fw-semibold"><%= asset.district || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">จังหวัด</label>
+              <div class="fw-semibold"><%= asset.province || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">รหัสไปรษณีย์</label>
+              <div class="fw-semibold"><%= asset.postcode || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">พิกัด GPS</label>
+              <div class="fw-semibold">
+                <% if (asset.latitude && asset.longitude) { %>
+                  <%= asset.latitude %>, <%= asset.longitude %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <% if (asset.latitude && asset.longitude) { %>
+              <div class="col-md-12">
+                <div class="mt-3">
+                  <a href="https://www.google.com/maps?q=<%= asset.latitude %>,<%= asset.longitude %>" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-map me-1"></i>ดูแผนที่
+                  </a>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical Information Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 text-primary">
+            <i class="bi bi-gear me-2"></i>ข้อมูลทางเทคนิค
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small text-muted">จำนวน</label>
+              <div class="fw-semibold">
+                <% if (asset.quantity) { %>
+                  <%= asset.quantity %> <%= asset.quantity_unit || 'หน่วย' %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">ความจุ</label>
+              <div class="fw-semibold">
+                <% if (asset.capacity_value) { %>
+                  <%= asset.capacity_value %> <%= asset.capacity_unit || '' %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">กลุ่มการใช้งาน</label>
+              <div class="fw-semibold">
+                <% if (asset.usage_group) { %>
+                  กลุ่มที่ <%= asset.usage_group %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted">พืชผล</label>
+              <div class="fw-semibold"><%= asset.crop || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">ค่าจำเพาะ</label>
+              <div class="fw-semibold">
+                <% if (asset.spec_value) { %>
+                  <%= asset.spec_value %> <%= asset.spec_unit || '' %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">ปี พ.ศ.</label>
+              <div class="fw-semibold"><%= asset.year_be || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">รหัสการจัดซื้อ</label>
+              <div class="fw-semibold"><%= asset.procurement_code || '-' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 text-primary">
+            <i class="bi bi-currency-exchange me-2"></i>ข้อมูลการเงิน
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label small text-muted">โครงการ</label>
+              <div class="fw-semibold"><%= asset.project || '-' %></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">มูลค่ารวม</label>
+              <div class="fw-semibold text-success">
+                <% if (asset.price_total) { %>
+                  <%= Number(asset.price_total).toLocaleString('th-TH') %> บาท
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">เงินอุดหนุน</label>
+              <div class="fw-semibold text-info">
+                <% if (asset.price_support) { %>
+                  <%= Number(asset.price_support).toLocaleString('th-TH') %> บาท
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">เงินส่วนสหกรณ์</label>
+              <div class="fw-semibold text-warning">
+                <% if (asset.price_coop) { %>
+                  <%= Number(asset.price_coop).toLocaleString('th-TH') %> บาท
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information Card -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0 text-primary">
+            <i class="bi bi-person me-2"></i>ข้อมูลติดต่อ
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted">ชื่อผู้ติดต่อ</label>
+              <div class="fw-semibold"><%= asset.contact_name || '-' %></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted">เบอร์โทรศัพท์</label>
+              <div class="fw-semibold">
+                <% if (asset.contact_phone) { %>
+                  <a href="tel:<%= asset.contact_phone %>"><%= asset.contact_phone %></a>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted">วันที่อัปเดต</label>
+              <div class="fw-semibold">
+                <% if (asset.updated_date) { %>
+                  <%= new Date(asset.updated_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                <% } else { %>
+                  -
+                <% } %>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label small text-muted">หมายเหตุ</label>
+              <div><%= asset.remark || '-' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Quick Actions Card -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title text-primary mb-3">
+            <i class="bi bi-lightning me-2"></i>ดำเนินการด่วน
+          </h6>
+          <div class="d-grid gap-2">
+            <a href="/cooperatives-assets/<%= asset.id %>/edit" class="btn btn-warning">
+              <i class="bi bi-pencil me-1"></i>แก้ไขข้อมูล
+            </a>
+            <form action="/cooperatives-assets/<%= asset.id %>?_method=DELETE" method="POST" onsubmit="return confirm('คุณต้องการลบครุภัณฑ์นี้ใช่หรือไม่?');">
+              <button type="submit" class="btn btn-danger w-100">
+                <i class="bi bi-trash me-1"></i>ลบครุภัณฑ์
+              </button>
+            </form>
+            <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+              <i class="bi bi-list me-1"></i>กลับรายการ
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Summary Card -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title text-info mb-3">
+            <i class="bi bi-info-circle me-2"></i>สรุปสถานะ
+          </h6>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted">สถานะปัจจุบัน:</span>
+              <% if (asset.status === 'ใช้งานได้') { %>
+                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= asset.status %></span>
+              <% } else if (asset.status === 'ใช้งานไม่ได้') { %>
+                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i><%= asset.status %></span>
+              <% } else { %>
+                <span class="badge bg-secondary"><%= asset.status || '-' %></span>
+              <% } %>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted">รหัสครุภัณฑ์:</span>
+              <span class="fw-semibold"><%= asset.id %></span>
+            </div>
+          </div>
+          <div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted">อัปเดตล่าสุด:</span>
+              <span class="small">
+                <% if (asset.updated_date) { %>
+                  <%= new Date(asset.updated_date).toLocaleDateString('th-TH') %>
+                <% } else { %>
+                  -
+                <% } %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

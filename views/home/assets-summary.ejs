@@ -1,0 +1,193 @@
+<section class="py-2 bg-white">
+  <div class="container-lg">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-box-seam me-2"></i> สรุปข้อมูลอุปกรณ์การตลาดตามสหกรณ์</h6>
+        <a href="/cooperatives-assets" class="btn btn-sm btn-light">ทั้งหมด</a>
+      </div>
+      <div class="card-body">
+        <div id="assetsSummaryContent">
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">กำลังโหลด...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-light small text-muted">
+        อัปเดตอัตโนมัติเมื่อเปิดหน้า | แสดงข้อมูลอุปกรณ์การตลาดทั้งหมด
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const content = document.getElementById('assetsSummaryContent');
+  if(!content) return;
+  
+  fetch('/cooperatives-assets/api/assets')
+    .then(r => r.json())
+    .then(assets => {
+      if(!Array.isArray(assets) || !assets.length){
+        content.innerHTML = '<div class="text-center py-5"><i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i><h6 class="text-muted">ไม่มีข้อมูลอุปกรณ์การตลาด</h6></div>';
+        return;
+      }
+      
+      // Group assets by cooperative
+      const coopSummary = {};
+      const groupSummary = {};
+      
+      assets.forEach(asset => {
+        const coopKey = asset.coop_code;
+        const groupKey = asset.c_group || asset.coop_group || 'uncategorized'; // Use c_group from active_coop
+        
+        // Cooperative summary
+        if (!coopSummary[coopKey]) {
+          coopSummary[coopKey] = {
+            coop_name: asset.coop_name,
+            coop_group: asset.coop_group,
+            c_group: asset.c_group,
+            c_type: asset.c_type,
+            total_count: 0,
+            total_value: 0,
+            working_count: 0,
+            not_working_count: 0
+          };
+        }
+        coopSummary[coopKey].total_count++;
+        coopSummary[coopKey].total_value += Number(asset.price_total || 0);
+        if (asset.status === 'ใช้งานได้') {
+          coopSummary[coopKey].working_count++;
+        } else if (asset.status === 'ใช้งานไม่ได้') {
+          coopSummary[coopKey].not_working_count++;
+        }
+        
+        // Group summary by c_group
+        if (!groupSummary[groupKey]) {
+          groupSummary[groupKey] = {
+            coops: {},
+            total_count: 0,
+            total_value: 0,
+            working_count: 0,
+            working_value: 0,
+            not_working_count: 0,
+            not_working_value: 0,
+            c_type: asset.c_type
+          };
+        }
+        if (!groupSummary[groupKey].coops[coopKey]) {
+          groupSummary[groupKey].coops[coopKey] = coopSummary[coopKey];
+        }
+        groupSummary[groupKey].total_count++;
+        groupSummary[groupKey].total_value += Number(asset.price_total || 0);
+        if (asset.status === 'ใช้งานได้') {
+          groupSummary[groupKey].working_count++;
+          groupSummary[groupKey].working_value += Number(asset.price_total || 0);
+        } else if (asset.status === 'ใช้งานไม่ได้') {
+          groupSummary[groupKey].not_working_count++;
+          groupSummary[groupKey].not_working_value += Number(asset.price_total || 0);
+        }
+      });
+      
+      let html = '';
+      
+      // Sort groups
+      const sortedGroups = Object.keys(groupSummary).sort();
+      
+      sortedGroups.forEach(groupKey => {
+        const group = groupSummary[groupKey];
+        const sortedCoops = Object.keys(group.coops).sort();
+        
+        html += `
+          <div class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+              <h6 class="mb-0 text-primary">
+                <i class="bi bi-people-fill me-2"></i>กลุ่มส่งเสริมสหกรณ์ ${groupKey.replace('group', '')}
+              </h6>
+              <span class="badge bg-primary ms-2">${group.total_count} รายการ (${group.total_value.toLocaleString('th-TH')} บาท)</span>
+              <span class="badge bg-success ms-1">${group.working_count} ใช้ได้ (${group.working_value.toLocaleString('th-TH')} บาท)</span>
+              <span class="badge bg-danger ms-1">${group.not_working_count} ใช้ไม่ได้ (${group.not_working_value.toLocaleString('th-TH')} บาท)</span>
+            
+              </div>
+           
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>รหัสสหกรณ์</th>
+                    <th>ชื่อสหกรณ์</th>
+                    <th class="text-center">จำนวน</th>
+                    <th class="text-end">มูลค่ารวม</th>
+                    <th class="text-center">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        sortedCoops.forEach(coopCode => {
+          const coop = group.coops[coopCode];
+          html += `
+            <tr>
+              <td class="fw-semibold">${coopCode}</td>
+              <td>${coop.coop_name}</td>
+              <td class="text-center">
+                <span class="badge bg-primary">${coop.total_count}</span>
+              </td>
+              <td class="text-end fw-semibold text-success">
+                ${coop.total_value.toLocaleString('th-TH')}
+              </td>
+              <td class="text-center">
+                ${coop.working_count > 0 ? `<span class="badge bg-success">${coop.working_count}</span>` : '<span class="text-muted">-</span>'}
+                ${coop.not_working_count > 0 ? `<span class="badge bg-danger ms-1">${coop.not_working_count}</span>` : ''}
+              </td>
+            </tr>
+          `;
+        });
+        
+        html += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      });
+      
+      // Overall summary
+      const totalAssets = assets.length;
+      const totalValue = assets.reduce((sum, asset) => sum + Number(asset.price_total || 0), 0);
+      const totalWorking = assets.filter(a => a.status === 'ใช้งานได้').length;
+      const totalNotWorking = assets.filter(a => a.status === 'ใช้งานไม่ได้').length;
+      
+      html = `
+        <div class="alert alert-info mb-3">
+          <div class="row text-center">
+            <div class="col-3">
+              <div class="fw-bold text-primary">${totalAssets}</div>
+              <small class="text-muted">อุปกรณ์การตลาดทั้งหมด</small>
+            </div>
+            <div class="col-3">
+              <div class="fw-bold text-success">${totalValue.toLocaleString('th-TH')}</div>
+              <small class="text-muted">มูลค่ารวม</small>
+            </div>
+            <div class="col-3">
+              <div class="fw-bold text-success">${totalWorking}</div>
+              <small class="text-muted">ใช้งานได้</small>
+            </div>
+            <div class="col-3">
+              <div class="fw-bold text-danger">${totalNotWorking}</div>
+              <small class="text-muted">ใช้งานไม่ได้</small>
+            </div>
+          </div>
+        </div>
+      ` + html;
+      
+      content.innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Error loading assets summary:', err);
+      content.innerHTML = '<div class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i><h6>โหลดข้อมูลไม่สำเร็จ</h6></div>';
+    });
+})();
+</script>

@@ -1,0 +1,524 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-box-seam me-2"></i><%= title %></h1>
+      <p class="text-muted small mb-0">จัดการครุภัณฑ์และทรัพย์สินของสหกรณ์</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/cooperatives-assets/api/assets" class="btn btn-outline-secondary" target="_blank">
+        <i class="bi bi-download me-1"></i>ดึงข้อมูล JSON
+      </a>
+     
+      <a href="/cooperatives-assets/new" class="btn btn-success">
+        <i class="bi bi-plus-lg me-1"></i>เพิ่มครุภัณฑ์ใหม่
+      </a>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <% if (success) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle me-2"></i><%= success %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title text-primary mb-3">
+            <i class="bi bi-bar-chart me-2"></i>สรุปจำนวนครุภัณฑ์ตามสหกรณ์
+          </h5>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>รหัสสหกรณ์</th>
+                  <th>ชื่อสหกรณ์</th>
+                  <th class="text-center">จำนวนครุภัณฑ์</th>
+                  <th class="text-end">มูลค่ารวม (บาท)</th>
+                  <th class="text-center">สถานะใช้งานได้</th>
+                  <th class="text-center">สถานะใช้งานไม่ได้</th>
+                  <th class="text-center">ดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% 
+                // Group assets by cooperative
+                const coopSummary = {};
+                assets.forEach(asset => {
+                  const key = asset.coop_code;
+                  if (!coopSummary[key]) {
+                    coopSummary[key] = {
+                      coop_name: asset.coop_name,
+                      total_count: 0,
+                      total_value: 0,
+                      working_count: 0,
+                      not_working_count: 0
+                    };
+                  }
+                  coopSummary[key].total_count++;
+                  coopSummary[key].total_value += Number(asset.price_total || 0);
+                  if (asset.status === 'ใช้งานได้') {
+                    coopSummary[key].working_count++;
+                  } else if (asset.status === 'ใช้งานไม่ได้') {
+                    coopSummary[key].not_working_count++;
+                  }
+                });
+                
+                // Sort by cooperative code
+                const sortedCoops = Object.keys(coopSummary).sort();
+                %>
+                <% sortedCoops.forEach(coopCode => { %>
+                  <% const summary = coopSummary[coopCode]; %>
+                  <tr>
+                    <td class="fw-semibold"><%= coopCode %></td>
+                    <td><%= summary.coop_name %></td>
+                    <td class="text-center">
+                      <span class="badge bg-primary"><%= summary.total_count %></span>
+                    </td>
+                    <td class="text-end fw-semibold text-success">
+                      <%= summary.total_value.toLocaleString('th-TH') %>
+                    </td>
+                    <td class="text-center">
+                      <% if (summary.working_count > 0) { %>
+                        <span class="badge bg-success"><%= summary.working_count %></span>
+                      <% } else { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </td>
+                    <td class="text-center">
+                      <% if (summary.not_working_count > 0) { %>
+                        <span class="badge bg-danger"><%= summary.not_working_count %></span>
+                      <% } else { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-info" onclick="showCoopAssetsModal('<%= coopCode %>', '<%= summary.coop_name %>')" title="ดูรายการครุภัณฑ์">
+                          <i class="bi bi-list-ul"></i>
+                        </button>
+                        <a href="/cooperatives-assets/new?coop_code=<%= coopCode %>" class="btn btn-outline-success" title="เพิ่มครุภัณฑ์">
+                          <i class="bi bi-plus"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+              <tfoot class="table-light">
+                <tr class="fw-bold">
+                  <td colspan="2">รวมทั้งหมด</td>
+                  <td class="text-center">
+                    <span class="badge bg-dark"><%= assets.length %></span>
+                  </td>
+                  <td class="text-end text-success">
+                    <%= assets.reduce((sum, asset) => sum + Number(asset.price_total || 0), 0).toLocaleString('th-TH') %>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-success">
+                      <%= assets.filter(a => a.status === 'ใช้งานได้').length %>
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-danger">
+                      <%= assets.filter(a => a.status === 'ใช้งานไม่ได้').length %>
+                    </span>
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="GET" action="/cooperatives-assets" class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label small text-muted">รหัสสหกรณ์</label>
+          <input type="text" class="form-control" name="coop_code" value="<%= filters.coop_code || '' %>" placeholder="กรอกรหัสสหกรณ์">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">หมวดหมู่</label>
+          <select class="form-select" name="category">
+            <option value="">ทั้งหมด</option>
+            <% categories.forEach(cat => { %>
+              <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">ประเภทเครื่องจักร</label>
+          <select class="form-select" name="machine_type">
+            <option value="">ทั้งหมด</option>
+            <% machineTypes.forEach(type => { %>
+              <option value="<%= type %>" <%= filters.machine_type === type ? 'selected' : '' %>><%= type %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted">สถานะ</label>
+          <select class="form-select" name="status">
+            <option value="">ทั้งหมด</option>
+            <% statuses.forEach(status => { %>
+              <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= status %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-12">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-funnel me-1"></i>กรองข้อมูล
+            </button>
+            <a href="/cooperatives-assets" class="btn btn-outline-secondary">
+              <i class="bi bi-x-circle me-1"></i>ล้างตัวกรอง
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assets Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <% if (assets.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-nowrap">รหัสสหกรณ์</th>
+                <th class="text-nowrap">ชื่อสหกรณ์</th>
+                <th class="text-nowrap">รหัสครุภัณฑ์</th>
+                <th class="text-nowrap">หมวดหมู่</th>
+                <th class="text-nowrap">ประเภทเครื่องจักร</th>
+                <th class="text-nowrap">รายละเอียด</th>
+                <th class="text-nowrap">จำนวน</th>
+                <th class="text-nowrap">สถานะ</th>
+                <th class="text-nowrap">ปี</th>
+                <th class="text-nowrap text-end">มูลค่ารวม</th>
+                <th class="text-nowrap text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% assets.forEach(asset => { %>
+                <tr>
+                  <td class="text-nowrap"><%= asset.coop_code %></td>
+                  <td class="text-nowrap">
+                    <div class="fw-semibold"><%= asset.coop_name %></div>
+                    <small class="text-muted"><%= asset.district || '-' %>, <%= asset.province || '-' %></small>
+                  </td>
+                  <td class="text-nowrap"><%= asset.asset_code || '-' %></td>
+                  <td class="text-nowrap">
+                    <span class="badge bg-light text-dark"><%= asset.category || '-' %></span>
+                  </td>
+                  <td class="text-nowrap"><%= asset.machine_type || '-' %></td>
+                  <td>
+                    <div class="text-truncate" style="max-width: 200px;" title="<%= asset.description || '-' %>">
+                      <%= asset.description || '-' %>
+                    </div>
+                  </td>
+                  <td class="text-nowrap">
+                    <% if (asset.quantity) { %>
+                      <%= asset.quantity %> <%= asset.quantity_unit || 'หน่วย' %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td class="text-nowrap">
+                    <% if (asset.status === 'ใช้งานได้') { %>
+                      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= asset.status %></span>
+                    <% } else if (asset.status === 'ใช้งานไม่ได้') { %>
+                      <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i><%= asset.status %></span>
+                    <% } else { %>
+                      <span class="badge bg-secondary"><%= asset.status || '-' %></span>
+                    <% } %>
+                  </td>
+                  <td class="text-nowrap"><%= asset.year_be || '-' %></td>
+                  <td class="text-nowrap text-end">
+                    <% if (asset.price_total) { %>
+                      <%= Number(asset.price_total).toLocaleString('th-TH') %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td class="text-nowrap text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a href="/cooperatives-assets/<%= asset.id %>" class="btn btn-outline-info" title="ดูรายละเอียด">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a href="/cooperatives-assets/<%= asset.id %>/edit" class="btn btn-outline-warning" title="แก้ไข">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <form action="/cooperatives-assets/<%= asset.id %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('คุณต้องการลบครุภัณฑ์นี้ใช่หรือไม่?');">
+                        <button type="submit" class="btn btn-outline-danger" title="ลบ">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="text-center py-5">
+          <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
+          <h5 class="text-muted">ไม่พบข้อมูลครุภัณฑ์</h5>
+          <p class="text-muted">ยังไม่มีข้อมูลครุภัณฑ์ในระบบ หรือไม่ตรงกับเงื่อนไขการค้นหา</p>
+          <a href="/cooperatives-assets/new" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มครุภัณฑ์แรก
+          </a>
+        </div>
+      <% } %>
+    </div>
+    <% if (assets.length > 0) { %>
+      <div class="card-footer bg-light">
+        <small class="text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          พบข้อมูลทั้งหมด <%= assets.length %> รายการ
+        </small>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Individual Cooperative Assets Modal -->
+<div class="modal fade" id="coopAssetsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-box-seam me-2"></i>รายการครุภัณฑ์: <span id="coopName"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div id="coopAssetsContent">
+          <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">กำลังโหลด...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assets List Modal -->
+<div class="modal fade" id="assetsListModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-list-ul me-2"></i>รายการครุภัณฑ์ทั้งหมด
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <% if (assets.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th class="text-nowrap">รหัสสหกรณ์</th>
+                  <th class="text-nowrap">ชื่อสหกรณ์</th>
+                  <th class="text-nowrap">รหัสครุภัณฑ์</th>
+                  <th class="text-nowrap">หมวดหมู่</th>
+                  <th class="text-nowrap">ประเภทเครื่องจักร</th>
+                  <th class="text-nowrap">รายละเอียด</th>
+                  <th class="text-nowrap">จำนวน</th>
+                  <th class="text-nowrap">สถานะ</th>
+                  <th class="text-nowrap">ปี</th>
+                  <th class="text-nowrap text-end">มูลค่ารวม</th>
+                  <th class="text-nowrap text-center">ดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% assets.forEach(asset => { %>
+                  <tr>
+                    <td class="text-nowrap"><%= asset.coop_code %></td>
+                    <td class="text-nowrap">
+                      <div class="fw-semibold"><%= asset.coop_name %></div>
+                      <small class="text-muted"><%= asset.district || '-' %>, <%= asset.province || '-' %></small>
+                    </td>
+                    <td class="text-nowrap"><%= asset.asset_code || '-' %></td>
+                    <td class="text-nowrap">
+                      <span class="badge bg-light text-dark"><%= asset.category || '-' %></span>
+                    </td>
+                    <td class="text-nowrap"><%= asset.machine_type || '-' %></td>
+                    <td>
+                      <div class="text-truncate" style="max-width: 200px;" title="<%= asset.description || '-' %>">
+                        <%= asset.description || '-' %>
+                      </div>
+                    </td>
+                    <td class="text-nowrap">
+                      <% if (asset.quantity) { %>
+                        <%= asset.quantity %> <%= asset.quantity_unit || 'หน่วย' %>
+                      <% } else { %>
+                        -
+                      <% } %>
+                    </td>
+                    <td class="text-nowrap">
+                      <% if (asset.status === 'ใช้งานได้') { %>
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= asset.status %></span>
+                      <% } else if (asset.status === 'ใช้งานไม่ได้') { %>
+                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i><%= asset.status %></span>
+                      <% } else { %>
+                        <span class="badge bg-secondary"><%= asset.status || '-' %></span>
+                      <% } %>
+                    </td>
+                    <td class="text-nowrap"><%= asset.year_be || '-' %></td>
+                    <td class="text-nowrap text-end">
+                      <% if (asset.price_total) { %>
+                        <%= Number(asset.price_total).toLocaleString('th-TH') %>
+                      <% } else { %>
+                        -
+                      <% } %>
+                    </td>
+                    <td class="text-nowrap text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="/cooperatives-assets/<%= asset.id %>" target="_blank" class="btn btn-outline-info" title="ดูรายละเอียด">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/cooperatives-assets/<%= asset.id %>/edit" target="_blank" class="btn btn-outline-warning" title="แก้ไข">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="text-center py-5">
+            <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
+            <h5 class="text-muted">ไม่พบข้อมูลครุภัณฑ์</h5>
+            <p class="text-muted">ยังไม่มีข้อมูลครุภัณฑ์ในระบบ</p>
+          </div>
+        <% } %>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          พบข้อมูลทั้งหมด <%= assets.length %> รายการ
+        </small>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+// Assets data for modal
+const allAssets = <%- JSON.stringify(assets) %>;
+
+// Show individual cooperative assets modal
+function showCoopAssetsModal(coopCode, coopName) {
+  document.getElementById('coopName').textContent = coopName;
+  
+  // Filter assets for this cooperative
+  const coopAssets = allAssets.filter(asset => asset.coop_code === coopCode);
+  
+  // Generate HTML for assets table
+  let html = '';
+  if (coopAssets.length > 0) {
+    html = `
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light sticky-top">
+            <tr>
+              <th class="text-nowrap">รหัสครุภัณฑ์</th>
+              <th class="text-nowrap">หมวดหมู่</th>
+              <th class="text-nowrap">ประเภทเครื่องจักร</th>
+              <th class="text-nowrap">รายละเอียด</th>
+              <th class="text-nowrap">จำนวน</th>
+              <th class="text-nowrap">สถานะ</th>
+              <th class="text-nowrap text-end">มูลค่ารวม</th>
+              <th class="text-nowrap text-center">ดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    coopAssets.forEach(asset => {
+      html += `
+        <tr>
+          <td class="text-nowrap">${asset.asset_code || '-'}</td>
+          <td class="text-nowrap">
+            <span class="badge bg-light text-dark">${asset.category || '-'}</span>
+          </td>
+          <td class="text-nowrap">${asset.machine_type || '-'}</td>
+          <td>
+            <div class="text-truncate" style="max-width: 200px;" title="${asset.description || '-'}">
+              ${asset.description || '-'}
+            </div>
+          </td>
+          <td class="text-nowrap">
+            ${asset.quantity ? `${asset.quantity} ${asset.quantity_unit || 'หน่วย'}` : '-'}
+          </td>
+          <td class="text-nowrap">
+            ${asset.status === 'ใช้งานได้' ? 
+              '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>' + asset.status + '</span>' : 
+              asset.status === 'ใช้งานไม่ได้' ? 
+              '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>' + asset.status + '</span>' : 
+              '<span class="badge bg-secondary">' + (asset.status || '-') + '</span>'
+            }
+          </td>
+          <td class="text-nowrap text-end">
+            ${asset.price_total ? Number(asset.price_total).toLocaleString('th-TH') : '-'}
+          </td>
+          <td class="text-nowrap text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              <a href="/cooperatives-assets/${asset.id}" target="_blank" class="btn btn-outline-info" title="ดูรายละเอียด">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="/cooperatives-assets/${asset.id}/edit" target="_blank" class="btn btn-outline-warning" title="แก้ไข">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+    
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    html = `
+      <div class="text-center py-5">
+        <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
+        <h5 class="text-muted">ไม่พบข้อมูลครุภัณฑ์</h5>
+        <p class="text-muted">สหกรณ์นี้ยังไม่มีข้อมูลครุภัณฑ์</p>
+      </div>
+    `;
+  }
+  
+  document.getElementById('coopAssetsContent').innerHTML = html;
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('coopAssetsModal'));
+  modal.show();
+}
+</script>

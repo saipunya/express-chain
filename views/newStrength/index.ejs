@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร (new_strength)</h1>
+      <p class="text-muted small mb-0">รายการ str_code / str_group / str_grade</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/newstrength/create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>เพิ่มรายการ</a>
+    </div>
+  </div>
+
+  <% if (!items || !items.length) { %>
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+      <div>ยังไม่มีข้อมูล</div>
+    </div>
+  <% } else { %>
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive mb-0">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:70px;">#</th>
+              <th>รหัส (str_code)</th>
+              <th>กลุ่ม (str_group)</th>
+              <th>เกรด (str_grade)</th>
+              <th>หน่วยงาน</th>
+              <th style="width:160px;" class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach((row, idx) => { %>
+              <tr>
+                <td class="text-muted"><%= idx + 1 %></td>
+                <td><span class="badge bg-info text-dark"><%= row.str_code %></span></td>
+                <td><%= row.str_group %></td>
+                <td><%= row.str_grade %></td>
+                <td class="text-muted"><%= row.c_name || '-' %></td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <a class="btn btn-outline-primary" href="/newstrength/<%= row.str_id %>/edit"><i class="bi bi-pencil-square"></i></a>
+                    <form method="POST" action="/newstrength/<%= row.str_id %>/delete" onsubmit="return confirm('ยืนยันลบรายการนี้?');" class="d-inline">
+                      <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

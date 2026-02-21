@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-pencil-square me-2"></i>แก้ไขกำลังพล (new_strength)</h1>
+      <p class="text-muted small mb-0">ปรับข้อมูล str_code / str_group / str_grade</p>
+    </div>
+    <a href="/newstrength" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับ</a>
+  </div>
+
+  <form action="/newstrength/<%= item.str_id %>/update" method="post" class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">กลุ่มสหกรณ์ (str_group)</label>
+          <select name="str_group" id="str_group" class="form-select" required>
+            <% (groups || []).forEach(g => { %>
+              <option value="<%= g %>" <%= g === selectedGroup ? 'selected' : '' %>><%= g %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">สหกรณ์ (str_code)</label>
+          <select name="str_code" id="str_code" class="form-select" required>
+            <% (codes || []).forEach(c => { %>
+              <option value="<%= c.c_code %>" <%= c.c_code === selectedCode ? 'selected' : '' %>><%= c.c_name %> (<%= c.c_code %>)</option>
+            <% }) %>
+          </select>
+          <div class="form-text">แสดงชื่อสหกรณ์ แต่จะบันทึก str_code</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">เกรด (str_grade)</label>
+          <input type="text" name="str_grade" class="form-control" value="<%= str_grade || '' %>" required>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="text-muted small">บันทึกโดย: จะบันทึกชื่อผู้ใช้ปัจจุบัน | วันที่: วันนี้</div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  async function loadCodes(group) {
+    const res = await fetch(`/newstrength/api/codes?group=${encodeURIComponent(group)}`);
+    const data = await res.json();
+    const sel = document.getElementById('str_code');
+    sel.innerHTML = '';
+    data.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.c_code;
+      opt.textContent = `${c.c_name} (${c.c_code})`;
+      if (c.c_code === '<%= selectedCode %>') opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('str_group').addEventListener('change', (e) => {
+    loadCodes(e.target.value);
+  });
+</script>
+
+<%- include('../partials/footer') %>

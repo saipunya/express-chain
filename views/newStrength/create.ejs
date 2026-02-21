@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-plus-circle me-2"></i>เพิ่มผลจัดชั้นความเข้มแข็ง (new_strength)</h1>
+      <p class="text-muted small mb-0">เลือกกลุ่มสหกรณ์ แล้วเลือกรายการเพื่อบันทึก</p>
+    </div>
+    <a href="/newstrength" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับ</a>
+  </div>
+
+  <form action="/newstrength/store" method="post" class="card shadow-sm border-0">
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-triangle me-2"></i><%= error %>
+        </div>
+      <% } %>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">กลุ่มสหกรณ์ (str_group)</label>
+          <select name="str_group" id="str_group" class="form-select" required>
+            <% (groups || []).forEach(g => { %>
+              <option value="<%= g %>" <%= g === selectedGroup ? 'selected' : '' %>><%= g %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">สหกรณ์ (str_code)</label>
+          <select name="str_code" id="str_code" class="form-select" required>
+            <% (codes || []).forEach(c => { %>
+              <option value="<%= c.c_code %>" <%= c.c_code === selectedCode ? 'selected' : '' %>><%= c.c_name %> (<%= c.c_code %>)</option>
+            <% }) %>
+          </select>
+          <div class="form-text">แสดงชื่อสหกรณ์ แต่จะบันทึก str_code</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">เกรด (str_grade)</label>
+          <!-- select ให้เลือก ชั้น1-ชั้น3 -->
+          <select name="str_grade" id="str_grade" class="form-select" required>
+            <option value="">เลือก</option>
+            <% for (let i = 1; i <= 3; i++) { %>
+              <option value="ชั้น<%= i %>" <%= `ชั้น${i}` === selectedGrade ? 'selected' : '' %>>ชั้น<%= i %></option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-light d-flex justify-content-end gap-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  async function loadCodes(group) {
+    const res = await fetch(`/newstrength/api/codes?group=${encodeURIComponent(group)}`);
+    const data = await res.json();
+    const sel = document.getElementById('str_code');
+    sel.innerHTML = '';
+    data.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.c_code;
+      opt.textContent = `${c.c_name} (${c.c_code})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  document.getElementById('str_group').addEventListener('change', (e) => {
+    loadCodes(e.target.value);
+  });
+</script>
+
+<%- include('../partials/footer') %>

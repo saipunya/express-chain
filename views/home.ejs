@@ -2221,6 +2221,8 @@
   }
 </style>
 
+
+
 <!-- Added: Light theme & contrast fixes -->
 <style>
   /* Force light theme to avoid unreadable dark auto-scheme */
@@ -2537,6 +2539,47 @@ const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summa
     </div>
   </div>
 </div>
+
+<!-- ================= New Strength Snapshot ================ -->
+<% const nsRaw = (typeof newStrengthList !== 'undefined') ? newStrengthList : []; %>
+<% const nsList = Array.isArray(nsRaw) ? nsRaw : []; %>
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h5 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569 </h2>
+      <p class="text-muted small mb-0">เป็นผลการประมาณการเท่านั้น</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/newstrength" class="btn btn-outline-primary btn-sm"><i class="bi bi-list-ul me-1"></i>รายการทั้งหมด</a>
+      <a href="/newstrength/create" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>เพิ่ม</a>
+    </div>
+  </div>
+
+  <% if (!nsList.length) { %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-info-circle me-2"></i>
+      <div>ยังไม่มีข้อมูลเข้มแข็งประมาณการ</div>
+    </div>
+  <% } else { %>
+    <div class="row g-3">
+      <% nsList.forEach((row) => { %>
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="fw-semibold text-primary"><%= row.c_name || '-' %></div>
+                <span class="badge bg-success-subtle text-success">เกรด <%= row.str_grade || '-' %></span>
+              </div>
+              <div class="text-muted small">รหัส: <%= row.str_code %> | กลุ่ม: <%= row.str_group %></div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+
 
 
 <section>

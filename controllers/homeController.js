@@ -151,6 +151,14 @@ const homeController = {
       const homeProcesses = await Chamra.getRecentProcesses(8);
       // NEW: fetch all processes for chart aggregation (use all rows from chamra_process)
       const chamraAllProcesses = await Chamra.getAllProcess();
+      // NEW: latest new_strength entries (limit 6)
+      const [newStrengthList] = await db.query(
+        `SELECT ns.*, ac.c_name
+         FROM new_strength ns
+         LEFT JOIN active_coop ac ON ac.c_code = ns.str_code
+         ORDER BY ns.str_id DESC
+         LIMIT 6`
+      );
       // NEW strength grade aggregation
       const latestStrengthYear = await strengthModel.getLatestYear();
       const gradeCounts = latestStrengthYear ? await strengthModel.getGradeCounts(latestStrengthYear).catch(() => []) : [];
@@ -518,6 +526,7 @@ const homeController = {
         strengthData,     // NEW mapping { coop_group: { grade: count } }
         strengthYear,     // NEW selected year for display
         homeCoops,        // NEW variable for view
+        newStrengthList,  // NEW: homepage snapshot
         meetingsToday,
         meetingroomTodayDate,
         meetingDeadlineGroups,
@@ -604,6 +613,7 @@ exports.home = async (req, res) => {
     const activity = await getActivity(); // ดึงข้อมูล activity จาก model หรือ service
     res.render('home', {
       activity, // เพิ่มบรรทัดนี้
+      newStrengthList: []
     });
   } catch (err) {
     console.error('Error fetching home data:', err);
@@ -657,7 +667,8 @@ exports.showDashboard = async (req, res) => {
     res.render('home', {
       statusStats,
       groupStats,
-      typeStats
+      typeStats,
+      newStrengthList: []
     });
 
   } catch (err) {

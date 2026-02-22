@@ -4034,13 +4034,13 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     <div class="card shadow-sm border-0">
       <div class="table-responsive mb-0">
         <table class="table align-middle mb-0">
-          <thead class="table-light">
+          <thead style=" border-bottom: 2px solid var(--border-color);" class="bg-success bg-opacity-10">
             <tr>
-              <th style="width: 50px;" class="text-center">#</th>
-              <th style="width: 120px;">รหัส</th>
-              <th>ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
-              <th>กลุ่ม</th>
-              <th style="width: 100px;" class="text-center">ผลจัดชั้น</th>
+               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">#</th>
+               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">รหัส</th>
+               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
+               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">กลุ่ม</th>
+               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ผลจัดชั้น</th>
             </tr>
           </thead>
           <tbody>
@@ -4163,7 +4163,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   <div class="container-lg">
     <div class="card modern-card mb-4">
       <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-white">
+      <div class="card-header bg-success text-dark">
         <i class="bi bi-file-earmark-text me-2"></i> ปฏิทินกิจกรรมประจำเดือน <%= new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' }) %>
       </div>
       <div class="card-body">
@@ -4209,7 +4209,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   <div class="container-lg">
     <div class="card modern-card">
       <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-white">
+      <div class="card-header bg-success text-dark">
         <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
       </div>
       <div class="card-body">
@@ -4924,6 +4924,11 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     const canvas = document.getElementById('chamraStageChart');
     if (!tdata || !canvas || typeof Chart === 'undefined') return;
 
+    // Register the datalabels plugin
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+    }
+
     let stages = null;
     try {
       const raw = tdata.getAttribute('data-chamra-stages');
@@ -4965,14 +4970,20 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             enabled: true
           },
           datalabels: {
+            display: true,
             anchor: 'end',
             align: 'top',
             color: '#1f2937',
             font: {
               weight: 'bold',
-              size: 11
+              size: 12
             },
-            formatter: (value) => value.toLocaleString('th-TH')
+            formatter: (value) => value.toLocaleString('th-TH'),
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: 4
           }
         },
         scales: {

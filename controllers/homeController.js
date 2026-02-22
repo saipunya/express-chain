@@ -508,12 +508,12 @@ const homeController = {
         stats,
         onlineUsers,
         onlineCount,
-        coopGroupChart, // ✅ ส่งไปที่ view
-        cGroupChart,    // ✅ ส่งไปที่ view
+        coopGroupChart, // ส่งไปที่ view
+        cGroupChart,    // ส่งไปที่ view
         activity,
-        lastArticles,    // ✅ ส่งไปที่ view
-        closedCoops,     // ✅ ส่ง closed coops to view
-        coopGroupStats,   // ✅ ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+        lastArticles,    // ส่งไปที่ view
+        closedCoops,     // ส่ง closed coops to view
+        coopGroupStats,   // ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
         coopTypeSummary,
         coopTypeByGroup,
         strengthTypeGrades,
@@ -549,6 +549,96 @@ const homeController = {
   },
 };
 
+exports.home = async (req, res) => {
+  try {
+    const startDate = '2025-10-01';
+    const endDate = '2026-09-30';
+    const summaryData = await Chamra.getProcessesInDateRange(startDate, endDate);
+    const formattedData = summaryData.map(item => ({ ...item, step: showStepServer(item.step) }));
+    res.render('home', { 
+      finances: await Finance.getAll(), 
+      ruleFiles: await ruleModel.getLastUploads(),
+      rabiabFiles: await rabiabModel.getLastUploads(),
+      businessFiles: await businessModel.getLastUploads(10),
+      allUsecars: await UseCar.getAll() || [],
+      usecars: (await UseCar.getAll() || []).slice(0, 5),
+      lastProjects: await Project.getLast(10),
+      lastRq2: await Rq2.getLast(10),
+      lastCommands: await Command.getLast(10),
+      stats: {
+        coop: (await coopModel.getCoopStats()).find(item => item.coop_group === 'สหกรณ์')?.count || 0,
+        farmer: (await coopModel.getCoopStats()).find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
+        closing: await coopModel.getClosingStats(),
+        closingCoop: (await coopModel.getClosingStatsByGroup()).coop,          // NEW
+        closingFarmer: (await coopModel.getClosingStatsByGroup()).farmer       // NEW
+      },
+      onlineUsers: await onlineModel.getOnlineUsers(),
+      onlineCount: await onlineModel.getOnlineCount(),
+      coopGroupChart: await coopModel.getByCoopGroup(), // ส่งไปที่ view
+      cGroupChart: await coopModel.getByGroup(),    // ส่งไปที่ view
+      activity: (await gitgumModel.findAll() || []).map(r => ({
+        date_act: r.git_date,
+        act_time: r.git_time,
+        activity: r.git_act,
+        place: r.git_place,
+        co_person: r.git_respon
+      })),
+      lastArticles: await articleModel.getLast(4),
+      closedCoops: await activeCoopModel.getClosedCoops(),     // ส่ง closed coops to view
+      coopGroupStats: await activeCoopModel.getGroupStats(),   // ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
+      coopTypeSummary: {
+        coop_agri: 0,
+        coop_non_agri: 0,
+        farmer_group: 0
+      },
+      coopTypeByGroup: [],
+      strengthTypeGrades: [],
+      strengthTypeRows: [],
+      strengthTypeYear: '',
+      gradeSummary: [],          // NEW: same as strengthList
+      summaryYear: '', 
+      homeProcesses: await Chamra.getRecentProcesses(8),
+      chamraAllProcesses: await Chamra.getAllProcess(), // NEW: all rows for chart
+      closingByGroup: await coopModel.getClosingStatsByGroup(),   // NEW expose raw
+      strengthGrades: [],   // NEW list of grade labels
+      strengthData: {},     // NEW mapping { coop_group: { grade: count } }
+      strengthYear: '',     // NEW selected year for display
+      homeCoops: (await coopProfileModel.searchCoopsPaged({ page:1, pageSize:6 })).rows,        // NEW variable for view
+      newStrengthList: (await db.query(
+        `SELECT ns.*, ac.c_name
+         FROM new_strength ns
+         LEFT JOIN active_coop ac ON ac.c_code = ns.str_code
+         ORDER BY ns.str_id DESC
+         LIMIT 6`
+      ))[0],  // NEW: homepage snapshot
+      meetingsToday: [],
+      meetingroomTodayDate: null,
+      meetingDeadlineGroups: [],
+      meetingDeadlineMonthLabel: '',
+      closingWithin30Groups: [],
+      closingThisMonthGroups: [],
+      closingDeadlineMonthLabel: '',
+      memberSummary: {
+        coop_agri_saman: 0,
+        coop_agri_somtob: 0,
+        coop_non_agri_saman: 0,
+        coop_non_agri_somtob: 0,
+        farmer_group_saman: 0,
+        farmer_group_somtob: 0
+      },
+      latestYear: new Date().getFullYear(),
+      turnoverFiscalSummary: await turnoverModel.getSummaryByFiscalYear(),
+      title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ',
+      summaryData: formattedData, 
+      startDate, 
+      endDate
+    });
+  } catch (error) {
+    console.error('Error in home controller:', error);
+    res.render('home', { ...res.locals, summaryData: [] }); // Fallback to empty data
+  }
+};
+
 exports.downloadById = async (req, res) => {
   const fileId = req.params.id;
 
@@ -570,10 +660,10 @@ exports.downloadById = async (req, res) => {
     let finalPdfBytes;
 
     if (isAdmin) {
-      // 🔹 Admin: ไม่ลายน้ำ
+      // Admin: ไม่ลายน้ำ
       finalPdfBytes = pdfBytes;
     } else {
-      // 🔸 ้ใช้ วไป: เ่่มลายน้ำ
+      // ้ใช้ วไป: เ่่มลายน้ำ
       const fontPath = path.join(__dirname, '..', 'fonts', 'THSarabunNew.ttf');
       const fontBytes = fs.readFileSync(fontPath);
 
@@ -601,26 +691,13 @@ exports.downloadById = async (req, res) => {
       finalPdfBytes = await pdfDoc.save();
     }
 
-    // ✅ แสดง PDF ใน browser (inline)
+    // แสดง PDF ใน browser (inline)
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.send(Buffer.from(finalPdfBytes));
   } catch (err) {
     console.error('Download error:', err);
     res.status(500).send('ข้อพลาดในการแสดงไฟล์');
-  }
-};
-
-exports.home = async (req, res) => {
-  try {
-    const activity = await getActivity(); // ดึงข้อมูล activity จาก model หรือ service
-    res.render('home', {
-      activity, // เพิ่มบรรทัดนี้
-      newStrengthList: []
-    });
-  } catch (err) {
-    console.error('Error fetching home data:', err);
-    res.status(500).send('Server Error');
   }
 };
 

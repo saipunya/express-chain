@@ -427,18 +427,19 @@ const isRequestAuthenticated = (req) => {
 // helper: step label for server-side exports
 function showStepServer(n) {
   const num = Number(n);
+  if (isNaN(num)) return '-';
   switch (num) {
-    case 1: return 'ประกาศผู้ชำระบัญชี';
-    case 2: return 'รับมอบทรัพย์สิน';
-    case 3: return 'ส่งงบ ม.80';
-    case 4: return 'ผู้สอบบัญชีรับรองงบการเงิน';
-    case 5: return 'ประชุมใหญ่อนุมัติงบ ม.80';
-    case 6: return 'จัดการทรัพย์สิน / หนี้สิน';
-    case 7: return 'ส่งรายงานย่อ / รายงานชำระบัญชี';
-    case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
-    case 9: return 'ถอนชื่อออกจากทะเบียน';
-    case 10: return 'ส่งมอบเอกสารหลักฐาน';
-    default: return num ? ('ขั้นที่ ' + num) : '-';
+    case 1: return `ขั้นที่ ${num}: ประกาศผู้ชำระบัญชี`;
+    case 2: return `ขั้นที่ ${num}: รับมอบทรัพย์สิน`;
+    case 3: return `ขั้นที่ ${num}: ส่งงบ ม.80`;
+    case 4: return `ขั้นที่ ${num}: ผู้สอบบัญชีรับรองงบการเงิน`;
+    case 5: return `ขั้นที่ ${num}: ประชุมใหญ่อนุมัติงบ ม.80`;
+    case 6: return `ขั้นที่ ${num}: จัดการทรัพย์สิน / หนี้สิน`;
+    case 7: return `ขั้นที่ ${num}: ส่งรายงานย่อ / รายงานชำระบัญชี`;
+    case 8: return `ขั้นที่ ${num}: ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี`;
+    case 9: return `ขั้นที่ ${num}: ถอนชื่อออกจากทะเบียน`;
+    case 10: return `ขั้นที่ ${num}: ส่งมอบเอกสารหลักฐาน`;
+    default: return `ขั้นที่ ${num}: ไม่ทราบ`;
   }
 }
 
@@ -457,7 +458,7 @@ chamraController.exportChamraPdf = async (req, res) => {
     const isValidProcessDate = (v) => { 
       if (!v) return false; 
       if (typeof v === 'string') { 
-        if (v === '0000-00-00' || v === '0000-00-00 00:00:00' || v === 'Invalid date' || /^1899-11-30/.test(v)) return false; 
+        if (v === '0000-00-00' || v === '0000-00-00 00:00:00' || /^1899-11-30/.test(v) || v === 'Invalid date') return false; 
         const parts = v.slice(0,10).split('-'); 
         if (parts.length !== 3) return false; 
         const d = new Date(parts[0], parts[1]-1, parts[2]); 
@@ -723,6 +724,24 @@ chamraController.process = async (req, res) => {
     res.status(500).render('error_page', {
       message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล'
     });
+  }
+};
+
+// New route for summary table of processes in date range
+chamraController.getChamraSummary = async (req, res) => {
+  const startDate = '2025-10-01'; // October 1, 2025
+  const endDate = '2026-09-30'; // September 30, 2026
+  try {
+    let data = await Chamra.getProcessesInDateRange(startDate, endDate);
+    // Format step names using showStepServer
+    data = data.map(item => ({
+      ...item,
+      step: showStepServer(item.step)
+    }));
+    res.render('chamra/summary', { data, startDate, endDate });
+  } catch (error) {
+    console.error('Error fetching summary data:', error);
+    res.status(500).send('Error generating summary');
   }
 };
 

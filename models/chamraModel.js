@@ -198,9 +198,42 @@ const Chamra = {
       [limit]
     );
     return rows;
+  },
+
+  async getProcessesInDateRange(startDate, endDate) {
+    const query = `
+      SELECT ac.c_code AS institution_code, ac.c_name AS institution_name, s.step, s.date
+      FROM (
+        SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 BETWEEN ? AND ? AND pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '2' AS step, pr_s2 AS date FROM chamra_process WHERE pr_s2 BETWEEN ? AND ? AND pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '3' AS step, pr_s3 AS date FROM chamra_process WHERE pr_s3 BETWEEN ? AND ? AND pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '4' AS step, pr_s4 AS date FROM chamra_process WHERE pr_s4 BETWEEN ? AND ? AND pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '5' AS step, pr_s5 AS date FROM chamra_process WHERE pr_s5 BETWEEN ? AND ? AND pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '6' AS step, pr_s6 AS date FROM chamra_process WHERE pr_s6 BETWEEN ? AND ? AND pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '7' AS step, pr_s7 AS date FROM chamra_process WHERE pr_s7 BETWEEN ? AND ? AND pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '8' AS step, pr_s8 AS date FROM chamra_process WHERE pr_s8 BETWEEN ? AND ? AND pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '9' AS step, pr_s9 AS date FROM chamra_process WHERE pr_s9 BETWEEN ? AND ? AND pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
+        UNION ALL
+        SELECT pr_code, '10' AS step, pr_s10 AS date FROM chamra_process WHERE pr_s10 BETWEEN ? AND ? AND pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
+      ) s
+      JOIN active_coop ac ON ac.c_code = s.pr_code
+      ORDER BY s.date ASC
+    `;
+    const params = [];
+    for (let i = 0; i < 10; i++) {
+      params.push(startDate, endDate);
+    }
+    const [rows] = await db.query(query, params);
+    return rows;
   }
 };
 
 module.exports = Chamra;
-
-

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const DATA_FILE = path.join(__dirname, '..', 'public', 'csv', 'member6667.json');
 const meetingRoomModel = require('../models/meetingRoomModel');
+const Project = require('../models/projectModel');
 
 function loadData() {
 	// อ่านไฟล์ JSON (sync แบบง่าย)
@@ -38,7 +39,15 @@ exports.home = async (req, res) => {
 		console.error('[memberCoopController.home] meetingroom error:', e);
 	}
 
-	res.render('home', { summaryByYear, top, meetingsToday, meetingroomTodayDate });
+	// Get last 10 projects
+	let lastProjects = [];
+	try {
+		lastProjects = await Project.getLast(10);
+	} catch (e) {
+		console.error('[memberCoopController.home] projects error:', e);
+	}
+
+	res.render('home', { summaryByYear, top, meetingsToday, meetingroomTodayDate, lastProjects });
 };
 
 exports.list = (req, res) => {

@@ -30,6 +30,9 @@ router.get('/poblem/check-exist', chamraController.checkPoblemExist);
 // get available coop
 router.get('/poblem/available-coop', chamraController.getAvailableCoop);
 
+// Route for summary table
+router.get('/summary', requireLogin, chamraController.getChamraSummary);
+
 // ---- chamra_process routes ----
 // Route for process page - PUBLIC ACCESS (no auth required)
 // Verify that chamraController.process exists; if not, define it or redirect

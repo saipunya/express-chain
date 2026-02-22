@@ -83,64 +83,185 @@
   h1 {
     font-size: 2.5rem;
     font-weight: 800;
-    letter-spacing: -0.05em;
-    background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
   }
 
   h2 {
     font-size: 2rem;
     font-weight: 700;
-    position: relative;
-    padding-bottom: 0.5rem;
-  }
-
-  h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary) 0%, #059669 100%);
-    border-radius: 2px;
   }
 
   h3 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 600;
-    color: var(--text-secondary);
   }
 
   h4 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
   }
 
   h5 {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
   }
 
   h6 {
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 600;
-    color: var(--text-secondary);
   }
 
   p {
-    line-height: 1.7;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.8;
   }
 
   .lead {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 400;
     line-height: 1.6;
     color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .card-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .small {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .text-muted {
+    color: var(--text-secondary) !important;
+    font-weight: 400;
+  }
+
+  /* Enhanced Spacing */
+  .section-block {
+    padding-block: 3rem;
+  }
+
+  .modern-card {
+    margin-bottom: 2rem;
+  }
+
+  .modern-card .card-body {
+    padding: 2rem;
+  }
+
+  .modern-card .card-header {
+    padding: 1.25rem 2rem;
+  }
+
+  .modern-card .card-footer {
+    padding: 1rem 2rem;
+  }
+
+  .table-responsive {
+    margin-bottom: 1.5rem;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table th,
+  .table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+  }
+
+  .table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--primary);
+  }
+
+  /* Enhanced Lists */
+  .list-group-item {
+    padding: 1rem 1.25rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .list-group-item:hover {
+    border-left-color: var(--primary);
+    background-color: var(--primary-light);
+  }
+
+  /* Enhanced Forms */
+  .form-control {
+    border-radius: 0.5rem;
+    border: 2px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Enhanced Modal Typography */
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .modal-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* Enhanced Button Typography */
+  .btn {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: none;
+  }
+
+  .btn-sm {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* Enhanced Badge Typography */
+  .badge {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 0.75rem;
+  }
+
+  /* Enhanced Alert Typography */
+  .alert {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border-radius: 0.75rem;
+    border: none;
+  }
+
+  .alert-heading {
+    font-size: 1.125rem;
+    font-weight: 700;
   }
 
   .display-1 {
@@ -236,7 +357,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    right: 0;
+    width: 60px;
     height: 3px;
     background: linear-gradient(90deg, var(--primary) 0%, #059669 50%, transparent 100%);
     border-radius: 2px;
@@ -585,11 +706,128 @@
     overflow: visible;
   }
 
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .section-block {
+      padding-block: 1.5rem;
+    }
+
+    .hero-section {
+      padding: 2rem 0;
+    }
+
+    .hero-title {
+      font-size: 2rem !important;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem !important;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .stats-card {
+      padding: 1.5rem 1rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem !important;
+    }
+
+    .card-header {
+      padding: 0.75rem 1rem;
+    }
+
+    .btn-group-vertical {
+      flex-direction: column;
+    }
+
+    .table-responsive {
+      font-size: 0.875rem;
+    }
+
+    .chart-container {
+      height: 200px !important;
+    }
+
+    .chart-container--sm {
+      height: 150px !important;
+    }
+
+    .avatar {
+      width: 35px !important;
+      height: 35px !important;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .container-lg {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .hero-section .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .hero-title {
+      font-size: 1.75rem !important;
+    }
+
+    .section-title {
+      font-size: 1.25rem !important;
+    }
+
+    .stats-card h3 {
+      font-size: 1.5rem !important;
+    }
+
+    .stats-card p {
+      font-size: 0.875rem !important;
+    }
+
+    .table-responsive {
+      font-size: 0.8rem;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .card-body {
+      padding: 1rem 0.75rem;
+    }
+  }
+
   /* Section layout */
   .section-block {
-    padding-block: 3rem;
+    padding-block: 2rem;
     content-visibility: auto;
     contain-intrinsic-size: 800px;
+  }
+
+  /* Enhanced colors and gradients */
+  :root {
+    --primary: #059669;
+    --primary-light: #ecfdf5;
+    --secondary: #6b7280;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #3b82f6;
+    --light: #f9fafb;
+    --dark: #111827;
+    --gradient-primary: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --gradient-secondary: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   .section-block.compact {
@@ -704,7 +942,7 @@
 
     to {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateY(0);
     }
   }
 
@@ -1051,130 +1289,8 @@
     color: #dc2626 !important;
   }
 
-  .shadow-focus:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 3px;
-  }
-
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--color-border) 50%, transparent 100%);
-    margin: 2rem 0;
-  }
-
-  /* Enhanced Micro-interactions and Transitions */
-  .btn {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-  }
-
-  .btn:hover::before {
-    width: 300px;
-    height: 300px;
-  }
-
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .btn:active {
-    transform: translateY(0);
-    transition: transform 0.1s;
-  }
-
-  /* Metric Icon Animations */
-  .metric-icon {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .modern-card:hover .metric-icon {
-    transform: scale(1.1);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Table Row Hover Effects */
-  .table tbody tr {
-    transition: all 0.2s ease;
-  }
-
-  .table tbody tr:hover {
-    background-color: var(--primary-lighter);
-    transform: scale(1.01);
-  }
-
-  /* Badge Hover Effects */
-  .badge {
-    transition: all 0.2s ease;
-  }
-
-  .badge:hover {
-    transform: scale(1.05);
-    filter: brightness(1.1);
-  }
-
-  /* Smooth Scroll Behavior */
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Loading Animation */
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .fade-in-scale {
-    animation: fadeInScale 0.5s ease-out;
-  }
-
-  /* Pulse Animation for Live Elements */
-  @keyframes pulse-ring {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.3);
-      opacity: 0.3;
-    }
-    100% {
-      transform: scale(1.5);
-      opacity: 0;
-    }
-  }
-
-  .pulse-indicator::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: currentColor;
-    transform: translate(-50%, -50%);
-    animation: pulse-ring 2s infinite;
+  .text-info {
+    color: #0284c7 !important;
   }
 
   /* Enhanced Focus States */
@@ -1234,58 +1350,319 @@
     width: 80%;
   }
 
-  /* Buttons Enhancement */
+  /* Enhanced Buttons and Links Styling */
   .btn {
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.3px;
     border-radius: 0.5rem;
-    transition: var(--transition-fast);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: none;
+    cursor: pointer;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn:hover::before {
+    left: 100%;
   }
 
   .btn:hover {
-    transform: none;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   }
 
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid rgba(5, 150, 105, 0.5);
+    outline-offset: 2px;
+  }
+
+  /* Primary Button */
   .btn-primary {
-    background: #0d6efd;
-    border-color: #0d6efd;
-    box-shadow: none;
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
   }
 
   .btn-primary:hover {
-    background: #0b5ed7;
-    border-color: #0a58ca;
-    box-shadow: none;
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
   }
 
+  /* Success Button */
   .btn-success {
-    background: #198754;
-    border-color: #198754;
-    box-shadow: none;
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
   }
 
   .btn-success:hover {
-    background: #157347;
-    border-color: #146c43;
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
   }
 
+  /* Outline Buttons */
   .btn-outline-primary {
-    border: 1px solid #0d6efd;
-    color: #0d6efd;
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    position: relative;
+  }
+
+  .btn-outline-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+    z-index: -1;
+  }
+
+  .btn-outline-primary:hover::after {
+    width: 100%;
   }
 
   .btn-outline-primary:hover {
-    background: #0d6efd;
-    color: #fff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
   }
 
   .btn-outline-success {
-    border: 1px solid #198754;
-    color: #198754;
+    background: transparent;
+    color: var(--success);
+    border: 2px solid var(--success);
+    position: relative;
+  }
+
+  .btn-outline-success::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+    z-index: -1;
+  }
+
+  .btn-outline-success:hover::after {
+    width: 100%;
   }
 
   .btn-outline-success:hover {
-    background: #198754;
-    color: #fff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+  }
+
+  /* Small Buttons */
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* Links Enhancement */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+  }
+
+  a:hover {
+    color: #047857;
+  }
+
+  a:hover::after {
+    width: 100%;
+  }
+
+  /* Links with Icons */
+  a i {
+    transition: transform 0.3s ease;
+  }
+
+  a:hover i {
+    transform: translateX(2px);
+  }
+
+  /* Button Groups */
+  .btn-group .btn {
+    border-radius: 0;
+  }
+
+  .btn-group .btn:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+  }
+
+  .btn-group .btn:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+  }
+
+  /* Pill Buttons */
+  .btn.rounded-pill {
+    border-radius: 2rem;
+    padding: 0.5rem 1.25rem;
+  }
+
+  /* Icon Buttons */
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-icon.btn-sm {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Loading State */
+  .btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-left: 0.5rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Mobile Button Optimizations */
+  @media (max-width: 768px) {
+    .btn {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .btn.rounded-pill {
+      padding: 0.375rem 1rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .btn-icon.btn-sm {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  /* Enhanced Link Cards */
+  .link-card {
+    display: block;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .link-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gradient-primary);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .link-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .link-card:hover::before {
+    transform: translateY(0);
   }
 
   @media (max-width: 575.98px) {
@@ -1418,60 +1795,446 @@
       margin-bottom: 8px;
     }
 
-    /* Charts Mobile */
+    /* Enhanced Chart Responsive Design */
+  .chart-container {
+    position: relative;
+    height: 300px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+
+  .chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .chart-container--sm {
+    height: 250px;
+    padding: 1rem;
+  }
+
+  .chart-container canvas {
+    max-height: 100%;
+    width: 100% !important;
+  }
+
+  /* Chart Section Styling */
+  #charts .modern-card {
+    overflow: hidden;
+  }
+
+  #charts .card-body {
+    padding: 1.5rem;
+  }
+
+  #charts h4 {
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #charts h4 i {
+    font-size: 1.25rem;
+  }
+
+  /* Chamra Chart Specific */
+  #chamra-stage-chart .chart-container {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid var(--primary);
+  }
+
+  #chamra-stage-chart h4 {
+    background: var(--gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* Mobile Chart Optimizations */
+  @media (max-width: 768px) {
+    .chart-container {
+      height: 250px !important;
+      padding: 1rem;
+    }
+
+    .chart-container--sm {
+      height: 200px !important;
+      padding: 0.75rem;
+    }
+
+    #charts .card-body {
+      padding: 1rem;
+    }
+
+    #charts h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    #charts h4 i {
+      font-size: 1rem;
+    }
+
+    #charts .col-lg-8,
+    #charts .col-lg-4 {
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  @media (max-width: 576px) {
     .chart-container {
       height: 200px !important;
+      padding: 0.75rem;
     }
 
     .chart-container--sm {
       height: 180px !important;
+      padding: 0.5rem;
     }
 
-    #charts .col-md-8,
-    #charts .col-md-4 {
-      padding: 0 8px;
+    #charts .card-body {
+      padding: 0.75rem;
     }
 
-    /* Tables Mobile */
-    .table {
+    #charts h4 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      flex-direction: column;
+      text-align: center;
+      gap: 0.25rem;
+    }
+
+    #charts h4 i {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Chart Loading State */
+  .chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .chart-loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border-color: var(--primary);
+    border-right-color: transparent;
+  }
+
+  .chart-loading .text-muted {
+    margin-left: 1rem;
+    color: var(--text-secondary);
+  }
+
+  /* Chart Error State */
+  .chart-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+  }
+
+  .chart-error i {
+    font-size: 2rem;
+    margin-right: 1rem;
+  }
+
+  /* Chart Empty State */
+  .chart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    color: var(--text-secondary);
+  }
+
+  .chart-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: var(--primary);
+  }
+
+  .chart-empty p {
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  /* Chart Responsive Grid */
+  @media (max-width: 992px) {
+    #charts .row {
+      gap: 1.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    #charts .row {
+      gap: 1rem;
+    }
+  }
+
+  /* Enhanced Chart Animations */
+  .chart-container {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  .chart-container:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  .chart-container:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .chart-container:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Enhanced Table Responsive Design */
+  .table-responsive {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
+
+  .table thead th {
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem;
+    border: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .table tbody tr:hover {
+    background-color: var(--primary-light);
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.1);
+  }
+
+  .table tbody td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Chamra Process Table Specific */
+  #chamra-process .table {
+    font-size: 0.9rem;
+  }
+
+  #chamra-process .table thead th {
+    min-width: 80px;
+    text-align: center;
+  }
+
+  #chamra-process .table thead th:first-child {
+    min-width: 150px;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    background: var(--gradient-primary);
+  }
+
+  #chamra-process .table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+    font-weight: 600;
+    border-right: 2px solid #e5e7eb;
+  }
+
+  #chamra-process .table tbody td:not(:first-child) {
+    min-width: 80px;
+    text-align: center;
+  }
+
+  #chamra-process .badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+  }
+
+  #chamra-process .badge.bg-success {
+    background: var(--gradient-primary) !important;
+    border: 1px solid var(--primary);
+    color: white;
+  }
+
+  #chamra-process .badge.bg-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%) !important;
+    border: 1px solid #6b7280;
+  }
+
+  /* Mobile Table Optimizations */
+  @media (max-width: 768px) {
+    .table-responsive {
       font-size: 0.8rem;
+      margin: 0 -1rem;
+      padding: 0 1rem;
     }
 
     .table thead th {
-      padding: 8px 6px;
+      padding: 0.75rem 0.5rem;
       font-size: 0.75rem;
     }
 
     .table tbody td {
-      padding: 8px 6px;
+      padding: 0.75rem 0.5rem;
     }
 
-    .table-responsive {
-      margin: 0 -12px;
-      padding: 0 12px;
+    #chamra-process .table {
+      font-size: 0.75rem;
     }
 
-    /* Chamra Table Mobile - Horizontal Scroll */
-    #chamra .table thead th,
-    #chamra .table tbody td {
+    #chamra-process .table thead th {
       min-width: 60px;
+    }
+
+    #chamra-process .table thead th:first-child {
+      min-width: 100px;
+    }
+
+    #chamra-process .table tbody td:not(:first-child) {
+      min-width: 60px;
+    }
+
+    #chamra-process .badge {
+      font-size: 0.6rem;
+      padding: 0.25rem 0.35rem;
+    }
+
+    #chamra-process .badge svg {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .table-responsive {
+      font-size: 0.75rem;
+    }
+
+    .table thead th {
+      padding: 0.5rem 0.25rem;
       font-size: 0.7rem;
-      padding: 6px 4px;
     }
 
-    #chamra .table thead th:first-child,
-    #chamra .table tbody td:first-child {
-      min-width: 120px;
-      position: sticky;
-      left: 0;
-      background: #fff;
-      z-index: 2;
+    .table tbody td {
+      padding: 0.5rem 0.25rem;
     }
 
-    .hp-badge {
-      font-size: 0.6rem !important;
-      padding: 2px 4px !important;
+    #chamra-process .table {
+      font-size: 0.7rem;
     }
+
+    #chamra-process .table thead th {
+      min-width: 50px;
+    }
+
+    #chamra-process .table thead th:first-child {
+      min-width: 80px;
+    }
+
+    #chamra-process .table tbody td:not(:first-child) {
+      min-width: 50px;
+    }
+
+    #chamra-process .badge {
+      font-size: 0.55rem;
+      padding: 0.2rem 0.3rem;
+    }
+  }
+
+  /* Table Empty State */
+  .table-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+  }
+
+  .table-empty-state i {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .table-empty-state p {
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  /* Enhanced Table Footer */
+  .table-footer-info {
+    background: var(--primary-light);
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--primary);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  .table-footer-info i {
+    color: var(--primary);
+    margin-right: 0.5rem;
+  }
 
     /* Groups Section Mobile */
     #groups .col-md-4 {
@@ -1689,11 +2452,11 @@
     }
 
     .chart-container {
-      height: 180px !important;
+      height: 240px !important;
     }
 
-    .table {
-      font-size: 0.7rem;
+    .chart-container--sm {
+      height: 200px !important;
     }
 
     #activitiesCalendar {
@@ -1701,20 +2464,12 @@
     }
   }
 
-  /* Extra polish */
-  .table-hover tbody tr:hover {
-    background: #f1f5f9;
-    transition: .2s;
-  }
-
-  .modern-card .card-header {
-    border-top-left-radius: inherit;
-    border-top-right-radius: inherit;
-  }
-
+  /* Enhanced Colors and Visual Hierarchy */
   .section-title {
     position: relative;
     padding-bottom: 1rem;
+    color: var(--primary);
+    font-weight: 700;
   }
 
   .section-title:after {
@@ -1725,8 +2480,184 @@
     bottom: 0;
     width: 80px;
     height: 4px;
-    background: var(--grad-accent);
+    background: var(--gradient-primary);
     border-radius: 4px;
+  }
+
+  /* Enhanced Card Headers */
+  .modern-card .card-header {
+    background: linear-gradient(135deg, var(--primary-light) 0%, #f0fdf4 100%);
+    border-bottom: 2px solid var(--primary);
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .modern-card .card-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  /* Icon Colors */
+  .text-primary i,
+  .bi.text-primary {
+    color: var(--primary) !important;
+  }
+
+  .text-success i,
+  .bi.text-success {
+    color: var(--success) !important;
+  }
+
+  .text-warning i,
+  .bi.text-warning {
+    color: var(--warning) !important;
+  }
+
+  .text-danger i,
+  .bi.text-danger {
+    color: var(--danger) !important;
+  }
+
+  .text-info i,
+  .bi.text-info {
+    color: var(--info) !important;
+  }
+
+  /* Enhanced Badges */
+  .badge.bg-success {
+    background: var(--gradient-primary) !important;
+    border: 1px solid var(--primary);
+  }
+
+  .badge.bg-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+    border: 1px solid #2563eb;
+  }
+
+  .badge.bg-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+    border: 1px solid #f59e0b;
+    color: #78350f !important;
+  }
+
+  .badge.bg-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%) !important;
+    border: 1px solid #ef4444;
+  }
+
+  .badge.bg-info {
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%) !important;
+    border: 1px solid #3b82f6;
+  }
+
+  .badge.bg-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%) !important;
+    border: 1px solid #6b7280;
+  }
+
+  /* Enhanced Table Headers */
+  .table-dark {
+    background: var(--gradient-primary) !important;
+  }
+
+  .table-dark th {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* Enhanced Buttons */
+  .btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  }
+
+  .btn-success {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+
+  .btn-success:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  }
+
+  .btn-outline-primary {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--gradient-primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+
+  .btn-outline-success {
+    border: 2px solid var(--success);
+    color: var(--success);
+    background: transparent;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-success:hover {
+    background: var(--gradient-primary);
+    border-color: var(--success);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  }
+
+  /* Section Backgrounds */
+  .section-block.bg-light {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  .section-block.bg-white {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  }
+
+  /* Enhanced Links */
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    color: #047857;
+    text-decoration: underline;
+  }
+
+  /* Enhanced Stats Display */
+  .display-4 {
+    background: var(--gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    font-weight: 800;
+  }
+
+  /* Enhanced Chart Containers */
+  .chart-container {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   /* Back to Top Button */
@@ -2597,7 +3528,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             </p>
             <span class="badge bg-success bg-opacity-10 text-white mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-success rounded-pill px-3" href="/allCoop/group">
+              <a class="btn btn-sm btn-outline-success rounded-pill" href="/allCoop/group">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -2619,7 +3550,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             </p>
             <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-info rounded-pill px-3" href="/allCoop/group">
+              <a class="btn btn-sm btn-outline-info rounded-pill" href="/allCoop/group">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -2641,7 +3572,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             </p>
             <span class="badge bg-warning bg-opacity-10 text-warning mb-3">แห่ง</span>
             <div class="mt-2">
-              <a class="btn btn-sm btn-outline-warning rounded-pill px-3" href="/chamra">
+              <a class="btn btn-sm btn-outline-warning rounded-pill" href="/chamra">
                 <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
               </a>
             </div>
@@ -2649,6 +3580,8 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       </div>
     </div>
   </section>
+
+ 
 
 
 
@@ -2686,6 +3619,8 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       </div>
     </div>
   </section>
+
+
   <section>
     <div class="container">
        <div class="card modern-card shadow-sm border-0 mb-4">
@@ -2780,118 +3715,123 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       <div class="alert alert-light border text-center">ไม่มีข้อมูล</div>
       <% } %>
     </div>
-     <div class="card modern-card shadow-sm border-0  mt-1">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0">
-          <i class="bi bi-award me-2" style="color: var(--primary);"></i>สรุปความเข้มแข็ง (st_grade) แยกตามประเภทสถาบัน
-          <span class="small text-muted">(สหกรณ์ภาคการเกษตร/สหกรณ์นอกภาคการเกษตร/กลุ่มเกษตรกร)</span>
-        </h5>
-        <div class="d-flex align-items-center gap-2">
-          <span class="small text-muted">ปี <%= _summaryYear %></span>
-          <a href="/strength/list" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">ดูทั้งหมด</a>
+     
+  </section>
+
+
+  <!-- ================= Chamra Stages Chart ================= -->
+  <section class="section-block bg-light">
+    <div class="container">
+      <div class="card modern-card shadow-sm border-0">
+        <div class="card-gradient-bar"></div>
+        <div class="card-body p-4">
+          <h4 class="mb-4 text-center text-primary fw-semibold">
+            <i class="bi bi-bar-chart-steps me-2"></i> กราฟขั้นตอนการชำระบัญชี (S1-S10)
+          </h4>
+          <div class="chart-container">
+            <canvas id="chamraStageChart" height="120"></canvas>
+          </div>
         </div>
-      </div>
-      <div class="card-body p-0">
-        <% if (_gradeSummary.length > 0) { %>
-        <div class="table-responsive">
-          <table class="table table-sm mb-0">
-            <thead style="background: var(--bg-light); border-bottom: 2px solid var(--border-color);">
-              <tr>
-                <th style="color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ประเภทสหกรณ์</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">จำนวนทั้งหมด</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 1</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 2</th>
-                <th style="text-align: center; color: var (--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 3</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% _gradeSummary.forEach((row) => { %>
-              <tr style="border-bottom: 1px solid var(--border-color); transition: var(--transition);">
-                <td style="padding: 12px; font-weight: 600; color: var(--text-primary); text-align: left;">
-                  <i class="bi bi-building me-2" style="color: var(--primary);"></i><%= row.group_name %>
-                </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; border: 1px solid var(--primary);">
-                    <%= row.total_count %>
-                  </span>
-                </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #d1fae5; color: #059669; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #10b981;">
-                    <%= row.grade_1_count %>
-                  </span>
-                </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #fef3c7; color: #d97706; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #f59e0b;">
-                    <%= row.grade_2_count %>
-                  </span>
-                </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #ef4444;">
-                    <%= row.grade_3_count %>
-                  </span>
-                </td>
-              </tr>
-              <% }); %>
-            </tbody>
-          </table>
-        </div>
-        <% } else { %>
-        <div class="text-center text-muted py-3">ไม่มีข้อมูล</div>
-        <% } %>
       </div>
     </div>
   </section>
 
 
-<!-- ================= New Strength Snapshot ================ -->
-<% const nsRaw = (typeof newStrengthList !== 'undefined') ? newStrengthList : []; %>
-<% const nsList = Array.isArray(nsRaw) ? nsRaw : []; %>
-<section class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h2 class="h5 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569 </h2>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="/newstrength" class="btn btn-outline-primary btn-sm"><i class="bi bi-list-ul me-1"></i>รายการทั้งหมด</a>
-    </div>
-  </div>
-
-  <% if (!nsList.length) { %>
-    <div class="alert alert-info d-flex align-items-center" role="alert">
-      <i class="bi bi-info-circle me-2"></i>
-      <div>ยังไม่มีข้อมูลเข้มแข็งประมาณการ</div>
-    </div>
-  <% } else { %>
-    <div class="card shadow-sm border-0">
-      <div class="table-responsive mb-0">
-        <table class="table align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 50px;" class="text-center">#</th>
-              <th style="width: 120px;">รหัส</th>
-              <th>ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
-              <th>กลุ่ม</th>
-              <th style="width: 100px;" class="text-center">ผลจัดชั้น</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% nsList.forEach((row, idx) => { %>
-              <tr>
-                <td class="text-center text-muted small"><%= idx + 1 %></td>
-                <td><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
-                <td class="fw-medium text-primary"><%= row.c_name || '-' %></td>
-                <td><span class="text-muted"><%= row.str_group %></span></td>
-                <td class="text-center">
-                  <span class="badge <%= row.str_grade ? 'bg-success' : 'bg-secondary' %>"><%= row.str_grade || '-' %></span>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+   <!-- ================= Chamra Process Table ================= -->
+  <section id="chamra-process" class="section-block bg-white">
+    <div class="container">
+      <div class="card modern-card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0">
+            <i class="bi bi-file-earmark-check me-2 text-success"></i> ตารางสถานะการชำระบัญชี (Chamra Process)
+          </h5>
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted">ขั้นตอน S1-S10</span>
+            <a href="/chamra/process" class="btn btn-sm btn-outline-success rounded-pill">
+              <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover align-middle mb-0">
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>รหัส</th>
+                  <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
+                  <th>S6</th><th>S7</th><th>S8</th><th>S9</th><th>S10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% 
+                  const isEmptyDate = (v) => {
+                    if (!v) return true;
+                    if (typeof v === 'string') {
+                      if (v === '0000-00-00') return true;
+                      if (/^1899-11-30/.test(v)) return true;
+                    }
+                    if (v instanceof Date) {
+                      const y = v.getFullYear();
+                      if (y < 1950) return true;
+                    }
+                    return false;
+                  };
+                  const formatThai = (v) => {
+                    const raw = isEmptyDate(v) ? null : v;
+                    if (!raw) return '-';
+                    const d = raw instanceof Date ? raw : new Date(raw);
+                    if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
+                    const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+                    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+                  };
+                %>
+                <% (chamraAllProcesses || []).slice(0, 10).forEach(p => { %>
+                  <tr>
+                    <td class="fw-semibold text-start">
+                      <div class="small text-muted fw-normal"><%= p.c_name || '-' %></div>
+                    </td>
+                    <% for (let i=1;i<=10;i++){ 
+                         const key='pr_s'+i; 
+                         const raw = p[key];
+                         const showDash = isEmptyDate(raw);
+                    %>
+                      <td class="text-center">
+                        <% if (showDash) { %>
+                          <span class="badge bg-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                              <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>  
+                            </svg>
+                          </span>
+                        <% } else { %>
+                          <span class="badge bg-success hp-badge"><%= formatThai(raw) %></span>
+                        <% } %>
+                      </td>
+                    <% } %>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <% if (!chamraAllProcesses || chamraAllProcesses.length === 0) { %>
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-info-circle me-2"></i>
+              ไม่มีข้อมูลกระบวนการชำระบัญชี
+            </div>
+          <% } else if (chamraAllProcesses.length > 10) { %>
+            <div class="card-footer bg-light text-end">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                แสดง <%= Math.min(10, chamraAllProcesses.length) %> รายการจากทั้งหมด <%= chamraAllProcesses.length %> รายการ
+              </small>
+            </div>
+          <% } %>
+        </div>
       </div>
     </div>
-  <% } %>
-</section>
+  </section>
+
+
+
 
   <!-- ================= Member Summary ================= -->
   <section id="member-summary" class="section-block bg-light">
@@ -3010,6 +3950,117 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     </div>
   <% } %>
 </section>
+<section class="container py-4">
+  <div class="card modern-card shadow-sm border-0  mt-1">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-award me-2" style="color: var(--primary);"></i>สรุปความเข้มแข็ง (st_grade) แยกตามประเภทสถาบัน
+          <span class="small text-muted">(สหกรณ์ภาคการเกษตร/สหกรณ์นอกภาคการเกษตร/กลุ่มเกษตรกร)</span>
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-muted">ปี <%= _summaryYear %></span>
+          <a href="/strength/list" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">ดูทั้งหมด</a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <% if (_gradeSummary.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead style="background: var(--bg-light); border-bottom: 2px solid var(--border-color);">
+              <tr>
+                <th style="color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ประเภทสหกรณ์</th>
+                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">จำนวนทั้งหมด</th>
+                <th style="text-align: center; color: var (--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 1</th>
+                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 2</th>
+                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 3</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% _gradeSummary.forEach((row) => { %>
+              <tr style="border-bottom: 1px solid var(--border-color); transition: var(--transition);">
+                <td style="padding: 12px; font-weight: 600; color: var(--text-primary); text-align: left;">
+                  <i class="bi bi-building me-2" style="color: var(--primary);"></i><%= row.group_name %>
+                </td>
+                <td style="text-align: center; padding: 12px;">
+                  <span style="background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid var(--primary);">
+                    <%= row.total_count %>
+                  </span>
+                </td>
+                <td style="text-align: center; padding: 12px;">
+                  <span style="background: #d1fae5; color: #059669; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #10b981;">
+                    <%= row.grade_1_count %>
+                  </span>
+                </td>
+                <td style="text-align: center; padding: 12px;">
+                  <span style="background: #fef3c7; color: #d97706; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #f59e0b;">
+                    <%= row.grade_2_count %>
+                  </span>
+                </td>
+                <td style="text-align: center; padding: 12px;">
+                  <span style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #ef4444;">
+                    <%= row.grade_3_count %>
+                  </span>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div class="text-center text-muted py-3">ไม่มีข้อมูล</div>
+        <% } %>
+      </div>
+    </div>
+</section>
+  <!-- ================= New Strength Snapshot ================ -->
+  <% const nsRaw = (typeof newStrengthList !== 'undefined') ? newStrengthList : []; %>
+  <% const nsList = Array.isArray(nsRaw) ? nsRaw : []; %>
+  <section class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="h5 mb-1"><i class="bi bi-bar-chart-steps me-2"></i>ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569 </h2>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/newstrength" class="btn btn-outline-primary btn-sm"><i class="bi bi-list-ul me-1"></i>รายการทั้งหมด</a>
+      </div>
+    </div>
+
+    <% if (!nsList.length) { %>
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-info-circle me-2"></i>
+      <div>ยังไม่มีข้อมูลเข้มแข็งประมาณการ</div>
+    </div>
+    <% } else { %>
+    <div class="card shadow-sm border-0">
+      <div class="table-responsive mb-0">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;" class="text-center">#</th>
+              <th style="width: 120px;">รหัส</th>
+              <th>ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
+              <th>กลุ่ม</th>
+              <th style="width: 100px;" class="text-center">ผลจัดชั้น</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% nsList.forEach((row, idx) => { %>
+              <tr>
+                <td class="text-center text-muted small"><%= idx + 1 %></td>
+                <td><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
+                <td class="fw-medium text-primary"><%= row.c_name || '-' %></td>
+                <td><span class="text-muted"><%= row.str_group %></span></td>
+                <td class="text-center">
+                  <span class="badge <%= row.str_grade ? 'bg-success' : 'bg-secondary' %>"><%= row.str_grade || '-' %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+</section>
 
 <!-- ================= Activities Calendar (RESTORE) ================= -->
 <section id="activities" class="section-block bg-white">
@@ -3108,7 +4159,6 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   </div>
 </div>
 
-
 <section id="rules" class="section-block bg-white">
   <div class="container-lg">
     <div class="card modern-card mb-4">
@@ -3143,235 +4193,9 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         </ul>
       </div>
       <div class="text-end mt-2">
-        <a href="/gitgum/list" class="btn btn-primary btn-sm px-4 shadow-sm">
+        <a href="/gitgum/list" class="btn btn-primary btn-sm">
           ดูทั้งหมด
         </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ================= Latest Projects & Commands ================= -->
-<section id="projects" class="section-block bg-light">
-  <div class="container-lg">
-    <div class="row">
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-file-earmark-pdf me-2"></i> โครงการล่าสุด
-        </h2>
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastProjects || []).forEach((p, idx)=> { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <strong>
-                    <%= idx + 1 %>.
-                  </strong>
-                  <%= p.pro_story %>
-                  <span class="badge bg-secondary ms-2">
-                    <%= p.pro_no %>
-                  </span>
-                </span>
-                <% if(user){ %>
-                <a href="/project/download/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                  <i class="bi bi-file-pdf-fill"></i>
-                </a>
-                <% } %>
-              </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/project" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-megaphone-fill me-2"></i> คำสั่งล่าสุด
-        </h2>
-        <div class="card modern-card shadow-sm border-0">
-          <div class="card-gradient-bar"></div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <% (lastCommands || []).forEach((c, idx)=> { %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                  <strong>
-                    <%= idx + 1 %>.
-                  </strong>
-                  <%= c.com_story %>
-                  <span class="badge bg-secondary ms-2">
-                    <%= c.com_no %>
-                  </span>
-                </span>
-                <% if(user){ %>
-                <a href="/command/download/<%= c.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank">
-                  <i class="bi bi-file-earmark-arrow-down"></i>
-                </a>
-                <% } %>
-              </li>
-              <% }) %>
-            </ul>
-            <div class="text-end mt-2">
-              <a href="/command" class="btn btn-primary btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
-<div class="modal fade modal-elevated" id="activityModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-md modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header modal-gradient py-2">
-        <h5 class="modal-title mb-0"><i class="bi bi-info-circle me-1"></i> รายละเอียดกิจกรรม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <dl class="row mb-0">
-          <dt class="col-4">วันที่</dt>
-          <dd class="col-8" id="acDate">-</dd>
-          <dt class="col-4">เวลา</dt>
-          <dd class="col-8" id="acTime">-</dd>
-          <dt class="col-4">สถานที่</dt>
-          <dd class="col-8" id="acPlace">-</dd>
-          <dt class="col-4">กิจกรรม</dt>
-          <dd class="col-8" id="acTitle">-</dd>
-          <!-- Added: show participants / co_person -->
-          <dt class="col-4">ผู้เข้าร่วม</dt>
-          <dd class="col-8" id="acParticipants">-</dd>
-        </dl>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Activity list modal -->
-<div class="modal fade modal-elevated" id="activityListModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header modal-gradient py-2">
-        <h5 class="modal-title mb-0"><i class="bi bi-list-ul me-1"></i> รายการกิจกรรม</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <input type="text" class="modal-search-bar" id="activityFilter" placeholder="🔍 ค้นหากิจกรรม..." />
-          <div class="small text-muted" id="activityCount"></div>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
-            <thead>
-              <tr class="text-center">
-                <th class="col-index d-none d-sm-table-cell">#</th>
-                <th class="text-start">วันที่</th>
-                <th class="text-start">กิจกรรม</th>
-              </tr>
-            </thead>
-            <tbody id="activityTbody">
-              <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
-              <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
-                <td class="text-center"><%= i+1 %></td>
-                <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
-                <td><%= a.activity %></td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-<section id="rules" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-white">
-        <i class="bi bi-file-earmark-text me-2"></i> ข้อบังคับ/แก้ไขเพิ่มเติมล่าสุด
-      </div>
-      <div class="card-body">
-        <% 
-          // Helper: return true when date is within last N days (defaults to 3)
-          function isRecentDate(dstr, days=3){
-            if(!dstr) return false;
-            if(typeof dstr === 'string'){
-              if(dstr === '0000-00-00') return false;
-              if(/^1899-11-30/.test(dstr)) return false;
-            }
-            const d = new Date(dstr);
-            if(isNaN(d.getTime())) return false;
-            const now = Date.now();
-            const diff = now - d.getTime();
-            return diff >= 0 && diff <= (days * 24 * 60 * 60 * 1000);
-          }
-        %>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>ชื่อข้อบังคับ</th>
-                <th>ประเภท</th>
-                <th>ปี</th>
-                <th>ลิงก์ไฟล์</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% (ruleFiles || []).forEach(rule => { 
-                   // try common date fields if present
-                   const dateField = rule.rule_savedate || rule.savedate || rule.created_at || rule.rule_date;
-                   const isNew = isRecentDate(dateField, 3);
-              %>
-              <tr>
-                <td>
-                  <%= rule.rule_name %>
-                  <% if(isNew) { %>
-                  <span class="badge bg-danger ms-2">new</span>
-                  <% } %>
-                </td>
-                <td>
-                  <% if(rule.rule_type === 'ER') { %>
-                  แก้ไขเพิ่มเติม <%= rule.er_no %>
-                  <% } else { %>
-                  ข้อบังคับหลัก
-                  <% } %>
-                </td>
-                <td><%= rule.rule_year %></td>
-                <td>
-                  <% if(rule.rule_id) { %>
-                  <a href="/rule/file/<%= rule.rule_id %>" target="_blank" class="btn btn-sm btn-outline-primary">
-                    ดูไฟล์
-                  </a>
-                  <% } else { %>
-                  <span class="text-muted">-</span>
-                  <% } %>
-                </td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <div class="text-end mt-2">
-          <a href="/rule" class="btn btn-success btn-sm px-4 shadow-sm">ดูทั้งหมด</a>
-        </div>
       </div>
     </div>
   </div>
@@ -3414,7 +4238,131 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     </div>
   </div>
 </section>
+
+<!-- ================= Latest Commands ================= -->
+<section id="latest-commands" class="section-block bg-light">
+  <div class="container">
+    <h2 class="my-4 text-center text-primary section-title">
+      <i class="bi bi-file-earmark-text me-2"></i> 10 คำสั่งล่าสุด
+    </h2>
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-file-earmark-text me-2 text-primary"></i> คำสั่งล่าสุด
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-muted">ดูทั้งหมด</span>
+          <a href="/command" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">
+            ดูทั้งหมด
+          </a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">เลขที่</th>
+                <th>เรื่อง</th>
+              
+                <th class="text-center">ดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (lastCommands && lastCommands.length > 0) { %>
+                <% lastCommands.forEach((command, index) => { %>
+                  <tr>
+                    <td class="text-center"><%= command.com_no || '-' %></td>
+                    <td>
+                     
+                      
+                      <% if (command.com_story) { %>
+                        <div class="text-truncate" title="<%= command.com_story %>"><%= command.com_story %></div>
+                      <% } %>
+                    </td>
+                    <td class="text-center">
+                      <% if (command.com_filename) { %>
+                        <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="เปิดอ่านไฟล์">
+                          <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+                      <% } else { %>
+                        <span class="text-muted small">ไม่มีไฟล์</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลคำสั่งล่าสุด</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Latest Projects ================= -->
+<section id="latest-projects" class="section-block bg-light">
+  <div class="container">
+    <h2 class="text-center text-primary section-title">
+      <i class="bi bi-file-earmark-text me-2"></i> 10 โครงการล่าสุด
+    </h2>
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-file-earmark-text me-2 text-primary"></i> โครงการล่าสุด
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-muted">ดูทั้งหมด</span>
+          <a href="/projects" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">
+            ดูทั้งหมด
+          </a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">ลำดับ</th>
+                <th>โครงการ</th>
+             
+              </tr>
+            </thead>
+            <tbody>
+              <% if (lastProjects && lastProjects.length > 0) { %>
+                <% lastProjects.forEach((project, index) => { %>
+                  <tr>
+                    <td class="text-center"><%= index + 1 %></td>
+                    <td>
+                      <%= project.pro_story || '-' %>
+                      <% if (project.pro_filename) { %>
+                        <a href="/project/download/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary ms-2" target="_blank">
+                          <i class="bi bi-download"></i> ดาวน์โหลด
+                        </a>
+                      <% } %>
+                    </td>
+             
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลโครงการล่าสุด</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= Articles (List View) ================= -->
+
 
 
 <section id="usecar" class="section-block">
@@ -3637,13 +4585,6 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 </section>
 
 
-<div id="template-data" data-stats='{"coop": <%= JSON.stringify(stats.coop) %>, "farmer": <%= JSON.stringify(stats.farmer) %>, "closing": <%= JSON.stringify(stats.closing) %>}' data-coop-group-stats='<%- JSON.stringify(coopGroupStats) %>' data-online-count="<%= typeof onlineCount !== 'undefined' ? onlineCount : 0 %>" data-logged-in="<%= user ? 'true' : 'false' %>" <% if ((chamraAllProcesses||[]).length) { %> data-chamra-stages='<%- JSON.stringify(__chamraCounts) %>' <% } %> data-activities='<%- JSON.stringify(activity || []) %>'>
-</div>
-
-<!-- Back To Top Button -->
-<button type="button" id="backToTop" aria-label="กลับขึ้นบน" class="back-to-top">
-  <i class="bi bi-arrow-up"></i>
-</button>
 
 <!-- ================= SCRIPTS (Enhancements added before existing scripts end) ================= -->
 <!-- Load socket.io client for realtime online counter -->
@@ -3714,7 +4655,9 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     });
     activate();
   })();
+</script>
 
+<script>
   // Reveal on scroll (with fallback when IntersectionObserver is unavailable)
   (function() {
     const revealEls = document.querySelectorAll('.reveal');
@@ -3742,161 +4685,6 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 
 <script>
   (function() {
-    const loggedIn = document.getElementById('template-data').getAttribute('data-logged-in') === 'true';
-
-    function escapeHtml(str) {
-      return String(str ?? '').replace(/[&<>"']/g, s => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        '\'': '&#39;'
-      } [s]));
-    }
-
-    function fmtDate(d) {
-      if (!d) return '-';
-      const dt = new Date(d);
-      if (isNaN(dt)) return escapeHtml(String(d));
-      try {
-        return dt.toLocaleDateString('th-TH', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        });
-      } catch (e) {
-        const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-        return `${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
-      }
-    }
-
-    const run = () => {
-      fetch('/down/top10')
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.getElementById('topDownloadsTbody');
-          if (!Array.isArray(data) || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
-            return;
-          }
-          tbody.innerHTML = data.map((d, idx) => {
-            const isNew = d.down_savedate && (Date.now() < new Date(d.down_savedate).getTime() + 7 * 24 * 60 * 60 * 1000);
-            const newBadge = isNew ? `<span class="badge ms-2 p-2" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-weight: 700;" title="ใหม่">ใหม่</span>` : '';
-            return `
-          <tr>
-            <td class="d-none d-sm-table-cell">${idx + 1}</td>
-            <td>${escapeHtml(d.down_subject || '-')} ${newBadge}</td>
-            <td class="text-nowrap">
-              ${
-                d.down_file && d.down_file !== '-' ? (
-                  loggedIn
-                    ? `<a href="/down/download/${d.down_id}" target="_blank" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">
-                         <i class="bi bi-file-earmark-arrow-down"></i> ไฟล์
-                       </a>`
-                    : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary">
-                         <i class="bi bi-lock"></i> เข้าสู่ระบบ
-                       </a>`
-                ) : '<span class="text-muted">-</span>'
-              }
-            </td>
-            <td class="text-center">
-              ${
-                d.down_link && d.down_link !== '-'
-                  ? `<a href="${escapeHtml(d.down_link)}" target="_blank" class="btn btn-sm btn-outline-info">
-                       <i class="bi bi-link-45deg"></i> ลิงก์
-                     </a>`
-                  : '<span class="text-muted">-</span>'
-              }
-            </td>
-            <td class="text-nowrap">${fmtDate(d.down_savedate)}</td>
-          </tr>
-        `;
-          }).join('');
-        })
-        .catch(() => {
-          const tbody = document.getElementById('topDownloadsTbody');
-          tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
-        });
-    };
-
-    const downloadsSection = document.getElementById('downloads');
-    if ('IntersectionObserver' in window && downloadsSection) {
-      let done = false;
-      const io = new IntersectionObserver((entries) => {
-        if (done) return;
-        if (entries.some(e => e.isIntersecting)) {
-          done = true;
-          io.disconnect();
-          run();
-        }
-      }, {
-        rootMargin: '200px'
-      });
-      io.observe(downloadsSection);
-    } else {
-      // Fallback
-      window.addEventListener('load', run);
-    }
-  })();
-</script>
-
-<script>
-  (function() {
-    document.addEventListener('click', function(e) {
-      const btn = e.target.closest('.js-show-group-items');
-      if (!btn) return;
-      const group = btn.getAttribute('data-group');
-      const type = btn.getAttribute('data-type');
-      const label = btn.getAttribute('data-group-label');
-
-      const modalEl = document.getElementById('groupItemsModal');
-      const titleEl = document.getElementById('groupItemsModalLabel');
-      const listEl = document.getElementById('groupItemsList');
-      const loadingEl = document.getElementById('groupItemsLoading');
-      const errorEl = document.getElementById('groupItemsError');
-
-      titleEl.textContent = label + ' - ' + type;
-      listEl.innerHTML = '';
-      listEl.classList.add('d-none');
-      errorEl.classList.add('d-none');
-      loadingEl.classList.remove('d-none');
-
-      fetch(`/activeCoop/group/${encodeURIComponent(group)}/items?type=${encodeURIComponent(type)}`)
-        .then(r => {
-          if (!r.ok) throw new Error('network');
-          return r.json();
-        })
-        .then(data => {
-          loadingEl.classList.add('d-none');
-          if (!data.items || !data.items.length) {
-            errorEl.textContent = 'ไม่มีข้อมูล';
-            errorEl.classList.remove('d-none');
-            return;
-          }
-          listEl.innerHTML = data.items.map((it, i) => `<li class="list-group-item d-flex justify-content-between align-items-start">
-              <div>
-                <span class="fw-semibold">${i+1}. ${it.c_name}</span>
-                <small class="text-muted ms-1">(${it.c_code || '-'})</small>
-              </div>
-              <span class="badge bg-${it.coop_group==='สหกรณ์'?'success':'info'}">${it.coop_group}</span>
-            </li>`).join('');
-          listEl.classList.remove('d-none');
-        })
-        .catch(err => {
-          loadingEl.classList.add('d-none');
-          errorEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
-          errorEl.classList.remove('d-none');
-        });
-
-      const bsModal = bootstrap && bootstrap.Modal ? new bootstrap.Modal(modalEl) : null;
-      if (bsModal) bsModal.show();
-    });
-  })();
-</script>
-
-
-<script>
-  (function() {
     document.addEventListener('click', function(e) {
       const link = e.target.closest('.js-coop-detail');
       if (!link) return;
@@ -3915,10 +4703,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       contentEl.innerHTML = '';
 
       fetch('/allCoop/profile/' + encodeURIComponent(code))
-        .then(r => {
-          if (!r.ok) throw new Error('network');
-          return r.text();
-        })
+        .then(r => r.text())
         .then(html => {
           loadingEl.classList.add('d-none');
           try {
@@ -3950,22 +4735,37 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   })();
 </script>
 
-<!-- Back To Top behavior -->
 <script>
+  // Quick Nav Active State + Smooth Scroll
   (function() {
-    const btn = document.getElementById('backToTop');
-    if (!btn) return;
-    const onScroll = () => {
-      btn.classList.toggle('show', window.scrollY > 300);
-    };
-    window.addEventListener('scroll', onScroll, {
+    const links = [...document.querySelectorAll('#quickNav a')];
+    const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    function activate() {
+      const y = window.scrollY + 120;
+      let cur = null;
+      sections.forEach(sec => {
+        if (sec.offsetTop <= y) cur = sec;
+      });
+      if (!cur) return;
+      links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur.id));
+    }
+    links.forEach(l => {
+      l.addEventListener('click', e => {
+        const target = document.querySelector(l.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          window.scrollTo({
+            top: target.offsetTop - 70,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+    window.addEventListener('scroll', activate, {
       passive: true
     });
-    onScroll();
-    btn.addEventListener('click', () => window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    }));
+    activate();
   })();
 </script>
 
@@ -4296,6 +5096,75 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       window.addEventListener('load', start);
     }
   })();
+
+  // Load Top 10 Downloads
+  (function() {
+    async function loadTopDownloads() {
+      try {
+        const response = await fetch('/down/top10');
+        if (!response.ok) throw new Error('Failed to load downloads');
+        
+        const downloads = await response.json();
+        const tbody = document.getElementById('topDownloadsTbody');
+        
+        if (!tbody) return;
+        
+        if (downloads && downloads.length > 0) {
+          tbody.innerHTML = downloads.map((down, index) => {
+            const hasFile = down.down_file && down.down_file !== '-';
+            const hasLink = down.down_link && down.down_link !== '-';
+            const downloadUrl = hasFile ? `/down/download/${down.down_id}` : down.down_link;
+            const linkTarget = hasFile ? '_blank' : '_blank';
+            const linkText = hasFile ? 'ดาวน์โหลด' : 'เปิดลิงก์';
+            const linkIcon = hasFile ? 'bi-download' : 'bi-link-45deg';
+            
+            return `
+              <tr>
+                <td class="col-index d-none d-sm-table-cell text-center">${index + 1}</td>
+                <td>
+                  <div class="fw-medium">${down.down_subject || '-'}</div>
+                </td>
+                <td class="text-nowrap">
+                  ${hasFile ? '<span class="badge bg-success"><i class="bi bi-file-earmark me-1"></i>ไฟล์</span>' : '<span class="badge bg-info"><i class="bi bi-link me-1"></i>ลิงก์</span>'}
+                </td>
+                <td class="text-center">
+                  <a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
+                    <i class="bi ${linkIcon}"></i>
+                  </a>
+                </td>
+                <td class="text-nowrap small text-muted">
+                  ${down.down_savedate ? new Date(down.down_savedate).toLocaleDateString('th-TH') : '-'}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูลดาวน์โหลด</td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading top downloads:', error);
+        const tbody = document.getElementById('topDownloadsTbody');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+        }
+      }
+    }
+
+    // Load downloads when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadTopDownloads);
+    } else {
+      loadTopDownloads();
+    }
+  })();
 </script>
+
+<!-- Data template for charts and other components -->
+<div id="template-data" 
+  data-stats='<%= JSON.stringify(stats) %>'
+  data-chamra-stages='<%= JSON.stringify(__chamraCounts || {}) %>'
+  data-activities='<%= JSON.stringify(activity || []) %>'
+  style="display: none;">
+</div>
 
 <%- include('partials/footer') %>

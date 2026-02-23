@@ -59,7 +59,7 @@ exports.getCoopYearlySummary = async (coopCode) => {
 exports.bulkInsert = async (rows = [], batchSize = 200) => {
   if (!rows.length) return { inserted: 0 };
 
-  const fields = ['tur_code', 'tur_name', 'tur_year', 'tur_month', 'tur_amount', 'tur_saveby', 'tur_savedate'];
+  const fields = ['tur_code', 'tur_name', 'tur_budyear', 'tur_month', 'tur_year', 'tur_amount', 'tur_saveby', 'tur_savedate'];
   let totalInserted = 0;
 
   for (const batch of chunk(rows, batchSize)) {
@@ -86,14 +86,14 @@ exports.getExistingKeys = async (keys = []) => {
   const placeholders = keys.map(() => '(?, ?, ?)').join(',');
   const flat = keys.flat();
   const [rows] = await db.query(
-    `SELECT tur_code, tur_year, tur_month
+    `SELECT tur_code, tur_budyear, tur_month
      FROM tbl_turnover
-     WHERE (tur_code, tur_year, tur_month) IN (${placeholders})`,
+     WHERE (tur_code, tur_budyear, tur_month) IN (${placeholders})`,
     flat
   );
   const set = new Set();
   (rows || []).forEach((r) => {
-    set.add(`${r.tur_code}__${r.tur_year}__${r.tur_month}`);
+    set.add(`${r.tur_code}__${r.tur_budyear}__${r.tur_month}`);
   });
   return set;
 };

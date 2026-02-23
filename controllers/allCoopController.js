@@ -97,6 +97,15 @@ exports.profile = async (req, res, next) => {
     res.render('allCoop/profile', { data });
   } catch (e) {
     console.error('profile error', e);
+    
+    // Handle specific database connection errors
+    if (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED' || e.code === 'ETIMEDOUT') {
+      console.error('Database connection lost, attempting to render error page');
+      return res.status(503).render('error_page', { 
+        message: 'การเชื่อมต่อฐานข้อมูลขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' 
+      });
+    }
+    
     next(e);
   }
 };

@@ -3932,7 +3932,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           <thead class="table-light">
             <tr>
               <th style="width: 160px;">ปีงบประมาณ</th>
-              <th class="text-end" style="width: 140px;">จำนวนแห่ง</th>
+              <th class="text-end" style="width: 140px;">จำนวนรายการ</th>
               <th class="text-end">ปริมาณธุรกิจรวม</th>
             </tr>
           </thead>
@@ -4197,6 +4197,210 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           ดูทั้งหมด
         </a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Closing Accounts Within 30 Days ================= -->
+<section class="section-block bg-white">
+  <div class="container-lg">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-calendar-x me-2 text-danger"></i> สถาบันที่จะปิดบัญชีภายใน 30 วัน
+          <span class="small text-muted">(เดือนปัจจุบันและเดือนหน้า)</span>
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-muted">ณ วันที่ <%= new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+          <a href="/activeCoop/list" class="btn btn-sm btn-outline-primary rounded-pill">
+            <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <% 
+          const closingGroups = closingWithin30Groups || [];
+          const totalClosingCount = closingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
+        %>
+        
+        <% if (totalClosingCount === 0) { %>
+          <div class="alert alert-success d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <div>ไม่มีสถาบันที่จะปิดบัญชีภายใน 30 วันข้างหน้า</div>
+          </div>
+        <% } else { %>
+          <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>พบ <%= totalClosingCount %> สถาบันที่จะปิดบัญชีภายใน 30 วันข้างหน้า</div>
+          </div>
+          
+          <% closingGroups.forEach((group) => { %>
+            <% if (group.rows && group.rows.length > 0) { %>
+              <div class="mb-4">
+                <h6 class="text-primary mb-3">
+                  <i class="bi bi-building me-2"></i><%= group.groupName %>
+                  <span class="badge bg-danger ms-2"><%= group.rows.length %></span>
+                </h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 80px;">รหัส</th>
+                        <th>ชื่อสถาบัน</th>
+                        <th style="width: 120px;">ประเภท</th>
+                        <th style="width: 140px;">วันสิ้นสุดบัญชี</th>
+                        <th style="width: 140px;">กำหนดปิดบัญชี</th>
+                        <th style="width: 100px;">คงเหลือ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% group.rows.forEach((coop) => { %>
+                        <% 
+                          const today = new Date();
+                          const deadlineDate = new Date(coop.closingDeadlineYmd);
+                          const daysRemaining = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+                          const urgencyClass = daysRemaining <= 7 ? 'table-danger' : daysRemaining <= 15 ? 'table-warning' : '';
+                        %>
+                        <tr class="<%= urgencyClass %>">
+                          <td>
+                            <span class="badge bg-light text-dark border"><%= coop.c_code %></span>
+                          </td>
+                          <td class="fw-medium">
+                            <%= coop.c_name %>
+                          </td>
+                          <td>
+                            <span class="badge <%= coop.coop_group === 'สหกรณ์' ? 'bg-primary' : 'bg-success' %>">
+                              <%= coop.coop_group || '-' %>
+                            </span>
+                          </td>
+                          <td class="text-nowrap">
+                            <%= coop.endDateThai %>
+                          </td>
+                          <td class="text-nowrap">
+                            <strong><%= coop.closingDeadlineThai %></strong>
+                          </td>
+                          <td class="text-center">
+                            <% if (daysRemaining <= 7) { %>
+                              <span class="badge bg-danger"><%= daysRemaining %> วัน</span>
+                            <% } else if (daysRemaining <= 15) { %>
+                              <span class="badge bg-warning text-dark"><%= daysRemaining %> วัน</span>
+                            <% } else { %>
+                              <span class="badge bg-info"><%= daysRemaining %> วัน</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ประชุมใหญ่ภายใน 150 วัน ================= -->
+<section class="container-lg py-4">
+  <div class="card modern-card shadow-sm border-0">
+    <div class="card-gradient-bar"></div>
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0">
+        <i class="bi bi-people-fill me-2 text-warning"></i> ประชุมใหญ่ภายใน 150 วัน
+        <span class="small text-muted">(เดือนปัจจุบันและเดือนหน้า)</span>
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-warning text-dark">150 วัน</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <% 
+        const meetingGroups = meetingDeadlineGroups || [];
+        const totalMeetingCount = meetingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
+      %>
+      
+      <% if (totalMeetingCount === 0) { %>
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+          <i class="bi bi-check-circle me-2"></i>
+          <div>ไม่มีสถาบันที่ต้องประชุมใหญ่ภายใน 150 วันข้างหน้า</div>
+        </div>
+      <% } else { %>
+        <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+          <i class="bi bi-info-circle me-2"></i>
+          <div>พบ <%= totalMeetingCount %> สถาบันที่ต้องประชุมใหญ่ภายใน 150 วันข้างหน้า</div>
+        </div>
+        
+        <% meetingGroups.forEach((group) => { %>
+          <% if (group.rows && group.rows.length > 0) { %>
+            <div class="mb-4">
+              <h6 class="text-primary mb-3">
+                <i class="bi bi-building me-2"></i><%= group.groupName %>
+                <span class="badge bg-warning text-dark ms-2"><%= group.rows.length %></span>
+              </h6>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 80px;">รหัส</th>
+                      <th>ชื่อสถาบัน</th>
+                      <th style="width: 120px;">ประเภท</th>
+                      <th style="width: 140px;">วันสิ้นสุดบัญชี</th>
+                      <th style="width: 140px;">กำหนดประชุม</th>
+                      <th style="width: 120px;">สถานะการประชุม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% group.rows.forEach((coop) => { %>
+                      <% 
+                        const today = new Date();
+                        const deadlineDate = new Date(coop.deadlineYmd);
+                        const daysRemaining = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+                        const urgencyClass = daysRemaining <= 30 ? 'table-danger' : daysRemaining <= 60 ? 'table-warning' : daysRemaining <= 90 ? 'table-info' : '';
+                      %>
+                      <tr class="<%= urgencyClass %>">
+                        <td>
+                          <span class="badge bg-light text-dark border"><%= coop.c_code %></span>
+                        </td>
+                        <td class="fw-medium">
+                          <%= coop.c_name %>
+                          <% if (coop.coop_group === 'สหกรณ์') { %>
+                            <span class="badge bg-success ms-1">สหกรณ์</span>
+                          <% } else { %>
+                            <span class="badge bg-info ms-1">กลุ่มเกษตรกร</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <span class="small text-muted"><%= coop.c_group || '-' %></span>
+                        </td>
+                        <td class="text-nowrap">
+                          <span class="small"><%= coop.endDateThai %></span>
+                        </td>
+                        <td class="text-nowrap">
+                          <strong><%= coop.deadlineThai %></strong>
+                        </td>
+                        <td class="text-center">
+                          <% if (coop.meetingDateThai) { %>
+                            <span class="badge bg-success">
+                              <i class="bi bi-check-circle me-1"></i><%= coop.meetingDateThai %>
+                            </span>
+                          <% } else { %>
+                            <span class="badge bg-danger">
+                              <i class="bi bi-x-circle me-1"></i>ยังไม่ประชุม
+                            </span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% } %>
+        <% }) %>
+      <% } %>
     </div>
   </div>
 </section>

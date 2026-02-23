@@ -19,6 +19,20 @@ const isHeaderRow = (cells = []) => {
   return joined.includes('รหัสสหกรณ์') || joined.includes('ชื่อสหกรณ์') || joined.includes('ยอดเงิน');
 };
 
+const getColumnMapping = (headerRow) => {
+  const mapping = {};
+  headerRow.forEach((cell, index) => {
+    const header = normalizeText(cell.value).toLowerCase();
+    if (header.includes('tur_code') || header.includes('รหัสสหกรณ์')) mapping.code = index + 1;
+    if (header.includes('tur_name') || header.includes('ชื่อสหกรณ์')) mapping.name = index + 1;
+    if (header.includes('tur_budyear') || header.includes('ปีงบประมาณ')) mapping.budyear = index + 1;
+    if (header.includes('tur_month') || header.includes('เดือน')) mapping.month = index + 1;
+    if (header.includes('tur_year') || header.includes('ปี')) mapping.year = index + 1;
+    if (header.includes('tur_value') || header.includes('tur_amount') || header.includes('ยอดเงิน')) mapping.amount = index + 1;
+  });
+  return mapping;
+};
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 exports.showImportForm = async (req, res) => {
@@ -38,22 +52,32 @@ exports.importExcel = async (req, res) => {
     if (!sheet) return res.redirect('/turnover?msg=ไม่พบชีตข้อมูล');
 
     const records = [];
+    let columnMapping = null;
+    
     sheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return;
-      const code = normalizeCommaText(row.getCell(1).value);
-      const name = normalizeCommaText(row.getCell(2).value);
-      const year = normalizeCommaText(row.getCell(3).value);
-      const month = normalizeCommaText(row.getCell(4).value);
-      const amount = parseAmount(row.getCell(5).value);
+      if (rowNumber === 1) {
+        columnMapping = getColumnMapping(row.values);
+        return;
+      }
+      
+      if (!columnMapping) return;
+      
+      const code = normalizeCommaText(row.getCell(columnMapping.code || 1).value);
+      const name = normalizeCommaText(row.getCell(columnMapping.name || 2).value);
+      const budyear = normalizeCommaText(row.getCell(columnMapping.budyear || 3).value);
+      const month = normalizeCommaText(row.getCell(columnMapping.month || 4).value);
+      const year = normalizeCommaText(row.getCell(columnMapping.year || 5).value);
+      const amount = parseAmount(row.getCell(columnMapping.amount || 6).value);
 
-      if (!code && !name && !year && !month && !amount) return;
-      if (!code || !name || !year || !month) return;
+      if (!code && !name && !budyear && !month && !year && !amount) return;
+      if (!code || !name || !budyear || !month || !year) return;
 
       records.push({
         tur_code: code,
         tur_name: name,
-        tur_year: year,
+        tur_budyear: budyear,
         tur_month: month,
+        tur_year: year,
         tur_amount: amount,
         tur_saveby: 'admin',
         tur_savedate: today()
@@ -64,9 +88,9 @@ exports.importExcel = async (req, res) => {
       return res.redirect('/turnover?msg=ไม่พบข้อมูลที่นำเข้าได้');
     }
 
-    const keys = records.map((r) => [r.tur_code, r.tur_year, r.tur_month]);
+    const keys = records.map((r) => [r.tur_code, r.tur_budyear, r.tur_month]);
     const existing = await turnoverModel.getExistingKeys(keys);
-    const deduped = records.filter((r) => !existing.has(`${r.tur_code}__${r.tur_year}__${r.tur_month}`));
+    const deduped = records.filter((r) => !existing.has(`${r.tur_code}__${r.tur_budyear}__${r.tur_month}`));
     const skipped = records.length - deduped.length;
 
     if (!deduped.length) {

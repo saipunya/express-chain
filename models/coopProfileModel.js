@@ -2,52 +2,60 @@ const db = require('../config/db');
 // Aggregate full profile of a cooperative / farmer group by c_code
 // Returns: { coop, finance:[], business:[], rules:[], vong:[], rabiab:[], strength:[], rq2:[], assets:[] }
 exports.getProfileByCode = async (c_code) => {
-  // Parallel queries
-  const coopPromise = db.query('SELECT * FROM active_coop WHERE c_code = ? LIMIT 1', [c_code]);
-  const financePromise = db.query('SELECT id, c_code, c_name, end_year, file_name, link_file, saveby, savedate FROM kb_finance WHERE c_code = ? ORDER BY end_year DESC, id DESC', [c_code]);
-  const businessPromise = db.query('SELECT bu_id, bu_code, bu_name, bu_endyear, bu_filename, bu_saveby, bu_savedate FROM kb_allbusiness WHERE bu_code = ? ORDER BY bu_endyear DESC, bu_id DESC', [c_code]);
-  const rulesPromise = db.query('SELECT rule_id, rule_code, rule_name, rule_type, rule_year, er_no, rule_file, rule_saveby, rule_savedate FROM kt_rule WHERE rule_code = ? ORDER BY rule_year DESC, rule_id DESC', [c_code]);
-  // vong (เงินกองทุน)
-  const vongPromise = db.query('SELECT vong_id, vong_year, vong_money, vong_date, vong_filename FROM vong_coop WHERE vong_code = ? ORDER BY vong_year DESC, vong_id DESC', [c_code]);
-  // rabiab (ระเบียบ) ใหม่
-  const rabiabPromise = db.query('SELECT ra_id, ra_code, ra_name, ra_year, ra_approvedate, ra_filename, ra_saveby, ra_savedate FROM tbl_rabiab WHERE ra_code = ? AND ra_status = "active" ORDER BY ra_year DESC, ra_id DESC', [c_code]);
-  // strength (ศักยภาพ)
-  const strengthPromise = db.query('SELECT s.st_code, s.st_fullname, s.st_year, s.st_no1, s.st_no2, s.st_no3, s.st_no4, s.st_cpd, s.st_cad, s.st_point, s.st_grade FROM tbl_strength s WHERE s.st_code = ? ORDER BY s.st_year DESC', [c_code]);
-  // rq2
-  const rq2Promise = db.query('SELECT rq_id, rq_code, rq_name, rq_year, rq_file, rq_saveby, rq_savedate FROM tbl_rq2 WHERE rq_code = ? ORDER BY rq_year DESC, rq_id DESC', [c_code]);
-  // cooperatives_assets: join by asset_code = c_code (NOT coop_code)
-  const assetsPromise = db.query(
-    `SELECT id, coop_code, asset_code, category, coop_name, address, subdistrict, district, province, postcode,
-            machine_type, description, quantity, quantity_unit, capacity_value, capacity_unit, status,
-            latitude, longitude, usage_group, crop, spec_value, spec_unit, year_be, procurement_code,
-            project, price_total, price_support, price_coop, remark, contact_name, contact_phone, updated_date
-     FROM cooperatives_assets
-     WHERE asset_code = ?
-     ORDER BY category, machine_type, updated_date DESC, id DESC`,
-    [c_code]
-  );
-  const [[coopRows], [financeRows], [businessRows], [ruleRows], [vongRows], [rabiabRows], [strengthRows], [rq2Rows], [assetsRows]] = await Promise.all([
-    coopPromise,
-    financePromise,
-    businessPromise,
-    rulesPromise,
-    vongPromise,
-    rabiabPromise,
-    strengthPromise,
-    rq2Promise,
-    assetsPromise
-  ]);
-  return {
-    coop: coopRows[0] || null,
-    finance: financeRows,
-    business: businessRows,
-    rules: ruleRows,
-    vong: vongRows,
-    rabiab: rabiabRows,
-    strength: strengthRows,
-    rq2: rq2Rows,
-    assets: assetsRows
-  };
+  try {
+    // Parallel queries with error handling
+    const coopPromise = db.query('SELECT * FROM active_coop WHERE c_code = ? LIMIT 1', [c_code]);
+    const financePromise = db.query('SELECT id, c_code, c_name, end_year, file_name, link_file, saveby, savedate FROM kb_finance WHERE c_code = ? ORDER BY end_year DESC, id DESC', [c_code]);
+    const businessPromise = db.query('SELECT bu_id, bu_code, bu_name, bu_endyear, bu_filename, bu_saveby, bu_savedate FROM kb_allbusiness WHERE bu_code = ? ORDER BY bu_endyear DESC, bu_id DESC', [c_code]);
+    const rulesPromise = db.query('SELECT rule_id, rule_code, rule_name, rule_type, rule_year, er_no, rule_file, rule_saveby, rule_savedate FROM kt_rule WHERE rule_code = ? ORDER BY rule_year DESC, rule_id DESC', [c_code]);
+    // vong (เงินกองทุน)
+    const vongPromise = db.query('SELECT vong_id, vong_year, vong_money, vong_date, vong_filename FROM vong_coop WHERE vong_code = ? ORDER BY vong_year DESC, vong_id DESC', [c_code]);
+    // rabiab (ระเบียบ) ใหม่
+    const rabiabPromise = db.query('SELECT ra_id, ra_code, ra_name, ra_year, ra_approvedate, ra_filename, ra_saveby, ra_savedate FROM tbl_rabiab WHERE ra_code = ? AND ra_status = "active" ORDER BY ra_year DESC, ra_id DESC', [c_code]);
+    // strength (ศักยภาพ)
+    const strengthPromise = db.query('SELECT s.st_code, s.st_fullname, s.st_year, s.st_no1, s.st_no2, s.st_no3, s.st_no4, s.st_cpd, s.st_cad, s.st_point, s.st_grade FROM tbl_strength s WHERE s.st_code = ? ORDER BY s.st_year DESC', [c_code]);
+    // rq2
+    const rq2Promise = db.query('SELECT rq_id, rq_code, rq_name, rq_year, rq_file, rq_saveby, rq_savedate FROM tbl_rq2 WHERE rq_code = ? ORDER BY rq_year DESC, rq_id DESC', [c_code]);
+    // cooperatives_assets: join by asset_code = c_code (NOT coop_code)
+    const assetsPromise = db.query(
+      `SELECT id, coop_code, asset_code, category, coop_name, address, subdistrict, district, province, postcode,
+              machine_type, description, quantity, quantity_unit, capacity_value, capacity_unit, status,
+              latitude, longitude, usage_group, crop, spec_value, spec_unit, year_be, procurement_code,
+              project, price_total, price_support, price_coop, remark, contact_name, contact_phone, updated_date
+       FROM cooperatives_assets
+       WHERE asset_code = ?
+       ORDER BY category, machine_type, updated_date DESC, id DESC`,
+      [c_code]
+    );
+    
+    const [[coopRows], [financeRows], [businessRows], [ruleRows], [vongRows], [rabiabRows], [strengthRows], [rq2Rows], [assetsRows]] = await Promise.all([
+      coopPromise,
+      financePromise,
+      businessPromise,
+      rulesPromise,
+      vongPromise,
+      rabiabPromise,
+      strengthPromise,
+      rq2Promise,
+      assetsPromise
+    ]);
+    
+    return {
+      coop: coopRows[0] || null,
+      finance: financeRows,
+      business: businessRows,
+      rules: ruleRows,
+      vong: vongRows,
+      rabiab: rabiabRows,
+      strength: strengthRows,
+      rq2: rq2Rows,
+      assets: assetsRows
+    };
+  } catch (error) {
+    console.error('Error in getProfileByCode:', error);
+    // Re-throw with additional context
+    throw new Error(`Failed to fetch profile for c_code ${c_code}: ${error.message}`);
+  }
 };
 // List cooperatives by group for navigation (legacy)
 exports.getCoopsByGroup = async (group) => {

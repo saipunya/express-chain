@@ -1,3 +1,5 @@
+<%- include('../partials/header',{title : 'สรุปขั้นตอนการชำระบัญชี'}) %>
+
 <style>
   table {
     width: 100%;
@@ -50,23 +52,51 @@
 </style>
 <div class="row my-2">
   <div class="col-12 text-center fw-bold">
-    <h3>สรุปผลความเคลื่อนไหว ประจำปีงบประมาณ พ.ศ. 2569</h3>
+    <h3>เปรียบเทียบสถานะการชำระบัญชี</h3>
+    <p class="text-muted">แสดงเฉพาะสหกรณ์ที่เลิกกิจการและมีการเคลื่อนไหวของขั้นตอนชำระบัญชีหลังวันที่ 1 ต.ค. 2568</p>
   </div>
 </div>
 <table>
   <thead>
     <tr>
-      <th>Date</th>    
-      <th>Institution Name</th>
-      <th>Step</th>
+      <th>Date(ต.ค.2568 - ก.ย.2569)</th>    
+      <th>Institution Name(group by)</th>
+      <th>สถานะ 1 ต.ค. 2568</th>
+      <th>ขั้นสูงสุดปัจจุบัน</th>
     </tr>
   </thead>
   <tbody>
     <% data.forEach(item => { %>
       <tr>
-        <td data-label="Date"><%= new Date(item.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+        <td data-label="Date">
+          <% if (item.date) { %>
+            <%= new Date(item.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+          <% } else { %>
+            <span class="text-muted">-</span>
+          <% } %>
+        </td>
         <td data-label="Institution Name"><%= item.institution_name %></td>
-        <td data-label="Step"><%= item.step %></td>
+        <td data-label="สถานะ 1 ต.ค. 2568">
+          
+          <% if (item.oct1_step === '0' || !item.oct1_step) { %>
+            <br><small class="text-muted">ยังไม่เริ่ม</small>
+          <% } else { %>
+          <span class="badge bg-danger"><small class="text-muted">ขั้นที่ <%= item.oct1_step %></small></span>
+            <% if (item.oct1_date) { %>
+              <br><small class="text-muted">วันที่: <%= new Date(item.oct1_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
+            <% } %>
+          <% } %>
+        </td>
+        <td data-label="ขั้นสูงสุดปัจจุบัน">
+          <% if (item.current_max_step === '0' || !item.current_max_step) { %>
+            <span class="badge bg-secondary">ยังไม่เริ่ม</span>
+          <% } else { %>
+            <span class="badge bg-primary">ขั้นที่ <%= item.current_max_step %></span>
+            <% if (item.current_max_date) { %>
+              <br><small class="text-muted">วันที่: <%= new Date(item.current_max_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
+            <% } %>
+          <% } %>
+        </td>
       </tr>
     <% }) %>
   </tbody>
@@ -78,3 +108,5 @@
        <i class="bi bi-arrow-left me-2"></i> กลับไปยังหน้าหลัก
      </a>
  </div>
+
+<%- include('../partials/footer') %>

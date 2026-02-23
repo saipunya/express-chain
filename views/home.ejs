@@ -4892,7 +4892,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                 formatter: (value, context) => {
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
                   const percentage = ((value / total) * 100).toFixed(1);
-                  return `${value}\n(${percentage}%)`;
+                  return ``;
                 }
               }
             }

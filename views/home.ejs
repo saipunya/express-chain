@@ -3908,7 +3908,16 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   </section>
 
 <!-- ================= Turnover Fiscal Summary ================= -->
-<% const tfSummary = Array.isArray(turnoverFiscalSummary) ? turnoverFiscalSummary : []; %>
+<% 
+  const tfSummary = Array.isArray(turnoverFiscalSummary) ? turnoverFiscalSummary : []; 
+  const getFiscalYearRange = (budyear) => {
+    const year = Number(budyear);
+    if (!Number.isFinite(year)) return budyear;
+    const startYear = year - 1;
+    const endYear = year;
+    return `ปีงบประมาณ ${year + 543} (กันยายน ${startYear + 543} - สิงหาคม ${endYear + 543})`;
+  };
+%>
 <section class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -3931,16 +3940,16 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         <table class="table align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width: 160px;">ปีงบประมาณ</th>
-              <th class="text-end" style="width: 140px;">จำนวนรายการ</th>
+              <th >ปีงบประมาณ</th>
+              <th class="text-end" style="width: 140px;">จำนวนเดือนที่มีข้อมูล</th>
               <th class="text-end">ปริมาณธุรกิจรวม</th>
             </tr>
           </thead>
           <tbody>
             <% tfSummary.forEach((row) => { %>
               <tr>
-                <td class="fw-medium">พ.ศ. <%= (row.fiscal_year + 543).toString() %></td>
-                <td class="text-end"><%= Number(row.coop_count || 0).toLocaleString() %></td>
+                <td class="fw-medium"><%= getFiscalYearRange(row.tur_budyear) %></td>
+                <td class="text-end"><%= Number(row.months_with_data || 0).toLocaleString() %> เดือน</td>
                 <td class="text-end fw-semibold"><%= Number(row.total_amount || 0).toLocaleString() %></td>
               </tr>
             <% }) %>

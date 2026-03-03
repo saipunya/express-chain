@@ -1,5 +1,5 @@
 <%- include('../partials/header') %>
-
+<%- include('../partials/plan-navbar', { currentPage: 'index' }) %>
 <div class="py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
@@ -10,76 +10,164 @@
           <p class="text-muted small mb-0">จัดการตัวชี้วัดของโครงการ</p>
         <% } %>
       </div>
-      <div class="d-flex gap-2 flex-wrap">
-        <!-- back to /plan -->
-        <a href="/plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแผน</a>
-        <!-- add kpi -->
-        <a href="/plankpi/create<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มตัวชี้วัด</a>
-      </div>
+     
     </div>
 
-    <div class="card border-0 shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover table-sm mb-0">
-            <thead class="table-light fw-semibold">
-          <tr>
-            <th>#</th>
-            <th>ลำดับ</th>
-            <th>ชื่อตัวชี้วัด</th>
-            <th>ค่าเป้าหมาย</th>
-            <th>ผลการดำเนินงาน</th>
-            <th>ผลสะสมรายเดือน</th>
-            <th>% เทียบเป้า</th>
-            <th>หน่วย</th>
-            <th>รหัสโครงการ</th>
-            <th>บันทึกโดย</th>
-            <th>วันที่</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% kpis.forEach(k => { %>
+    <% if (pro_code) { %>
+      <!-- Single project view - existing table format -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+              <thead class="table-light fw-semibold">
             <tr>
-              <td><%= k.kp_id %></td>
-              <td><%= k.kp_number %></td>
-              <td><%= k.kp_subject %></td>
-              <td><%= k.kp_plan %></td>
-              <td><%= k.kp_action %></td>
-              <td>
-                <div class="fw-semibold"><%= k.monthly_total || 0 %></div>
-                <small class="text-muted">รวมจากรายงานรายเดือน</small>
-              </td>
-              <td>
-                <% if (k.achievement_percent !== null && !Number.isNaN(k.achievement_percent)) { %>
-                  <span class="fw-semibold <%= k.achievement_percent >= 100 ? 'text-success' : 'text-warning' %>">
-                    <%= k.achievement_percent.toFixed(1) %>%
-                  </span>
-                <% } else { %>
-                  <span class="text-muted">-</span>
-                <% } %>
-              </td>
-              <td><%= k.kp_unit %></td>
-              <td><%= k.kp_procode %></td>
-              <td><%= k.kp_saveby %></td>
-              <td><%= k.kp_savedate.toISOString().slice(0,10) %></td>
-              <td>
-                <a href="/plankpi/<%= k.kp_id %>/report" class="btn btn-sm btn-outline-primary mb-1">รายงานรายเดือน</a>
-                <a href="/plankpi/<%= k.kp_id %>/edit" class="btn btn-sm btn-warning">แก้ไข</a>
-                <form action="/plankpi/<%= k.kp_id %>/delete" method="post" class="d-inline">
-                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบตัวชี้วัดนี้?')">ลบ</button>
-                </form>
-              </td>
+  
+              
+              <th>ชื่อตัวชี้วัด</th>
+              <th>ค่าเป้าหมาย</th>
+       
+              <th>ผลสะสมรายเดือน</th>
+              <th>% เทียบเป้า</th>
+              <th>หน่วย</th>
+              <th>รหัสโครงการ</th>
+              <th>บันทึกโดย</th>
+              <th>วันที่</th>
+              <th>การจัดการ</th>
             </tr>
-          <% }) %>
-        </tbody>
-          </table>
+          </thead>
+          <tbody>
+            <% kpis.forEach(k => { %>
+              <tr>
+             
+             
+                <td><%= k.kp_subject %></td>
+                <td><%= k.kp_plan %></td>
+                <td>
+                  <div class="fw-semibold"><%= k.monthly_total || 0 %></div>
+                  <small class="text-muted">รวมจากรายงานรายเดือน</small>
+                </td>
+                <td>
+                  <% if (k.achievement_percent !== null && !Number.isNaN(k.achievement_percent)) { %>
+                    <span class="fw-semibold <%= k.achievement_percent >= 100 ? 'text-success' : 'text-warning' %>">
+                      <%= k.achievement_percent.toFixed(1) %>%
+                    </span>
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td><%= k.kp_unit %></td>
+                <td><%= k.kp_procode %></td>
+                <td><%= k.kp_saveby %></td>
+                <td><%= k.kp_savedate.toISOString().slice(0,10) %></td>
+                <td>
+                  <a href="/plankpi/<%= k.kp_id %>/report" class="btn btn-sm btn-outline-primary mb-1">รายงานรายเดือน</a>
+                  <a href="/plankpi/<%= k.kp_id %>/edit" class="btn btn-sm btn-warning">แก้ไข</a>
+                  <form action="/plankpi/<%= k.kp_id %>/delete" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบตัวชี้วัดนี้?')">ลบ</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-light text-muted small text-center py-2">
+          <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= kpis.length %> ตัวชี้วัด
         </div>
       </div>
-      <div class="card-footer bg-light text-muted small text-center py-2">
-        <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= kpis.length %> ตัวชี้วัด
-      </div>
-    </div>
+    <% } else { %>
+      <!-- Grouped by projects view -->
+      <% if (!groupedProjects || !Array.isArray(groupedProjects) || groupedProjects.length === 0) { %>
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-clipboard-x fs-1 d-block mb-3"></i>
+          <div>ยังไม่มีข้อมูลตัวชี้วัด</div>
+        </div>
+      <% } else { %>
+        <% groupedProjects.forEach((project) => { %>
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary bg-opacity-10 border-0 d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold text-primary">
+                  <i class="bi bi-folder me-2"></i>รหัสโครงการ: <%= project.pro_code %>
+                </div>
+                <div class="text-dark small">จำนวนตัวชี้วัด: <%= project.kpis.length %> รายการ</div>
+              </div>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-primary btn-sm" href="/plankpi?pro_code=<%= encodeURIComponent(project.pro_code) %>">
+                  <i class="bi bi-list-ul me-1"></i>ดูเฉพาะโครงการนี้
+                </a>
+                <a href="/plankpi/create?pro_code=<%= encodeURIComponent(project.pro_code) %>" class="btn btn-success btn-sm">
+                  <i class="bi bi-plus-lg me-1"></i>เพิ่มตัวชี้วัด
+                </a>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <% if (!project.kpis || !project.kpis.length) { %>
+                <div class="text-center text-muted py-4">ยังไม่มีตัวชี้วัดในโครงการนี้</div>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light fw-semibold">
+                      <tr>
+                        <th>#</th>
+                        <th>ลำดับ</th>
+                        <th>ชื่อตัวชี้วัด</th>
+                        <th>ค่าเป้าหมาย</th>
+                        <th>ผลการดำเนินงาน</th>
+                        <th>ผลสะสมรายเดือน</th>
+                        <th>% เทียบเป้า</th>
+                        <th>หน่วย</th>
+                        <th>บันทึกโดย</th>
+                        <th>วันที่</th>
+                        <th>การจัดการ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% project.kpis.forEach(k => { %>
+                        <tr>
+                          <td><%= k.kp_id %></td>
+                          <td><%= k.kp_number %></td>
+                          <td><%= k.kp_subject %></td>
+                          <td><%= k.kp_plan %></td>
+                          <td><%= k.kp_action %></td>
+                          <td>
+                            <div class="fw-semibold"><%= k.monthly_total || 0 %></div>
+                            <small class="text-muted">รวมจากรายงานรายเดือน</small>
+                          </td>
+                          <td>
+                            <% if (k.achievement_percent !== null && !Number.isNaN(k.achievement_percent)) { %>
+                              <span class="fw-semibold <%= k.achievement_percent >= 100 ? 'text-success' : 'text-warning' %>">
+                                <%= k.achievement_percent.toFixed(1) %>%
+                              </span>
+                            <% } else { %>
+                              <span class="text-muted">-</span>
+                            <% } %>
+                          </td>
+                          <td><%= k.kp_unit %></td>
+                          <td><%= k.kp_saveby %></td>
+                          <td><%= k.kp_savedate.toISOString().slice(0,10) %></td>
+                          <td>
+                            <a href="/plankpi/<%= k.kp_id %>/report" class="btn btn-sm btn-outline-primary mb-1">รายงานรายเดือน</a>
+                            <a href="/plankpi/<%= k.kp_id %>/edit" class="btn btn-sm btn-warning">แก้ไข</a>
+                            <form action="/plankpi/<%= k.kp_id %>/delete" method="post" class="d-inline">
+                              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบตัวชี้วัดนี้?')">ลบ</button>
+                            </form>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } %>
+            </div>
+            <div class="card-footer bg-light text-muted small text-center py-2">
+              <i class="bi bi-info-circle me-1"></i>โครงการ <%= project.pro_code %> มีทั้งหมด <%= project.kpis.length %> ตัวชี้วัด
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    <% } %>
 </div>
 
 <%- include('../partials/footer') %>

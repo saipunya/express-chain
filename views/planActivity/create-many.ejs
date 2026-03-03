@@ -1,6 +1,6 @@
 <%- include('../partials/header') %>
-
-<div class="py-4">
+  <%- include('../partials/plan-navbar', { currentPage: 'create-many' }) %>
+<div class="py-2">
   <div class="mb-4">
     <h1 class="h3 mb-1"><i class="bi bi-stack me-2"></i>เพิ่มกิจกรรมหลายรายการ</h1>
     <p class="text-muted mb-0">เลือกโครงการ แล้วเพิ่มกิจกรรมได้หลายรายการในครั้งเดียว</p>
@@ -14,7 +14,17 @@
             <div>
               <i class="bi bi-list-check me-2"></i>กิจกรรมที่มีอยู่แล้วในโครงการ <span class="badge bg-info text-dark"><%= pro_code %></span>
             </div>
-            <span class="text-muted small">ทั้งหมด <%= existingActivities.length %> รายการ</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small">ทั้งหมด <%= existingActivities.length %> รายการ</span>
+              <% if (existingActivities.length > 0) { %>
+                <form action="/planactivity/delete-all" method="post" style="display: inline;" onsubmit="return confirm('คุณต้องการลบกิจกรรมทั้งหมดของโครงการนี้ใช่หรือไม่? การลบนี้ไม่สามารถย้อนกลับได้!');">
+                  <input type="hidden" name="pro_code" value="<%= pro_code %>">
+                  <button type="submit" class="btn btn-sm btn-danger" title="ลบกิจกรรมทั้งหมด">
+                    <i class="bi bi-trash3 me-1"></i>ลบทั้งหมด
+                  </button>
+                </form>
+              <% } %>
+            </div>
           </div>
           <div class="table-responsive mb-0">
             <table class="table table-sm align-middle mb-0">
@@ -23,6 +33,7 @@
                   <th style="width:70px;">ลำดับ</th>
                   <th>ชื่อกิจกรรม</th>
                   <th style="width:160px;" class="text-center">สถานะ</th>
+                  <th style="width:120px;" class="text-center">จัดการ</th>
                   
                 </tr>
               </thead>
@@ -36,6 +47,18 @@
                     <td><%= ac.ac_subject || '-' %></td>
                     <td class="text-center">
                       <span class="badge bg-<%= status.badge %>"><i class="bi bi-<%= status.icon %> me-1"></i><%= status.label %></span>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="/planactivity/<%= ac.ac_id %>/edit" class="btn btn-outline-primary" title="แก้ไข">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="/planactivity/<%= ac.ac_id %>/delete" method="post" style="display: inline;" onsubmit="return confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?');">
+                          <button type="submit" class="btn btn-outline-danger" title="ลบ">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </form>
+                      </div>
                     </td>
                     
                   </tr>
@@ -121,7 +144,7 @@
               <a href="/planactivity/select" class="btn btn-outline-primary btn-lg">
                 <i class="bi bi-arrow-repeat me-2"></i>เปลี่ยนโครงการ
               </a>
-              <a href="/planactivity" class="btn btn-outline-secondary btn-lg">
+              <a href="/planactivity/select" class="btn btn-outline-secondary btn-lg">
                 <i class="bi bi-x-circle me-2"></i>ยกเลิก
               </a>
             </div>

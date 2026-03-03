@@ -1,24 +1,77 @@
 <%- include('../partials/header') %>
 
+<style>
+  :root {
+    --primary: #10b981;
+    --primary-light: #d1fae5;
+    --primary-lighter: #ecfdf5;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --bg-lighter: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+
+  /* ===== Hover Row ===== */
+  .hover-row {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-row:hover {
+    background: var(--bg-light);
+    transform: translateX(4px);
+  }
+
+  /* ===== Avatar ===== */
+  .avatar-sm {
+    width: 2rem;
+    height: 2rem;
+  }
+</style>
+
 <div class="py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <!-- ===== PLAN NAVIGATION MENU ===== -->
+  <%- include('../partials/plan-navbar', { currentPage: 'planproject' }) %>
+
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <div>
-        <h1 class="h3 mb-1"><i class="bi bi-folder2 me-2"></i><%= title %></h1>
-        <p class="text-muted small mb-0">จัดการและติดตามโครงการต่างๆ</p>
+        <h1 class="h2 mb-2 d-flex align-items-center gap-2">
+          <span class="p-2 bg-primary bg-opacity-10 rounded-circle flex-shrink-0">
+            <i class="bi bi-folder2 text-primary fs-4"></i>
+          </span>
+          <span><%= title %></span>
+        </h1>
+        <p class="text-muted mb-0">จัดการและติดตามโครงการต่างๆ พร้อมตัวกรองข้อมูลและรายงาน</p>
       </div>
-      <div class="d-flex gap-2 flex-wrap">
-        <a href="/planactivity" class="btn btn-outline-primary"><i class="bi bi-collection me-2"></i>ดูโครงการพร้อมกิจกรรม</a>
-        <a href="/planproject/new" class="btn btn-success btn-lg"><i class="bi bi-plus-lg me-2"></i>เพิ่มโครงการใหม่</a>
-      </div>
+      
     </div>
 
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card border-0 shadow-sm hover-card mb-4">
       <div class="card-body">
-        <form class="row g-2 align-items-end" method="GET" action="/planproject">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <h5 class="mb-2 d-flex align-items-center gap-2">
+              <span class="p-2 bg-info bg-opacity-10 rounded-circle flex-shrink-0">
+                <i class="bi bi-funnel text-info"></i>
+              </span>
+              <span>ตัวกรองข้อมูล</span>
+            </h5>
+            <p class="text-muted mb-0">ค้นหาโครงการตามผู้รับผิดชอบ</p>
+          </div>
+          <a href="/planproject/new" class="btn btn-success rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i>เพิ่มโครงการใหม่
+          </a>
+        </div>
+        <form class="row g-3 align-items-end" method="GET" action="/planproject">
           <div class="col-md-4">
-            <label class="form-label small text-muted">กรองตามผู้รับผิดชอบ</label>
-            <select class="form-select" name="pro_respon_id">
-              <option value="" <%= selectedResponId ? '' : 'selected' %>>ทั้งหมด</option>
+            <label class="form-label fw-semibold text-primary">ผู้รับผิดชอบ</label>
+            <select class="form-select form-select-lg" name="pro_respon_id">
+              <option value="" <%= selectedResponId ? '' : 'selected' %>>🔍 ทั้งหมด</option>
               <% (users || []).forEach((u) => { %>
                 <option value="<%= u.m_id %>" <%= Number(selectedResponId) === Number(u.m_id) ? 'selected' : '' %>>
                   <%= u.m_name %><%= u.m_user ? ' (@' + u.m_user + ')' : '' %>
@@ -27,29 +80,43 @@
             </select>
           </div>
           <div class="col-md-8 d-flex gap-2">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-2"></i>กรอง</button>
-            <a class="btn btn-outline-secondary" href="/planproject"><i class="bi bi-x-circle me-2"></i>ล้างตัวกรอง</a>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm" type="submit">
+              <i class="bi bi-search me-2"></i>ค้นหา
+            </button>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="/planproject">
+              <i class="bi bi-arrow-clockwise me-2"></i>รีเซ็ต
+            </a>
           </div>
         </form>
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm hover-card">
+      <div class="card-header bg-white border-0 pt-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 d-flex align-items-center gap-2">
+            <span class="p-2 bg-primary bg-opacity-10 rounded-circle flex-shrink-0">
+              <i class="bi bi-list-ul text-primary"></i>
+            </span>
+            <span>รายการโครงการ</span>
+          </h5>
+          <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+            <i class="bi bi-database me-1"></i><%= projects.length %> โครงการ
+          </span>
+        </div>
+      </div>
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover table-sm mb-0">
-            <thead class="table-light fw-semibold">
+          <table class="table align-middle mb-0 dashboard-table">
+            <thead>
               <tr>
                 <th class="text-center" style="width: 5%">#</th>
-              
                 <th style="width: 15%">ชื่อโครงการ</th>
-                <th style="width: 12%">เป้าหมาย</th>
                 <th style="width: 10%">งบประมาณ</th>
                 <th style="width: 8%">กลุ่ม</th>
                 <th style="width: 10%">ผู้รับผิดชอบ</th>
                 <th class="text-center" style="width: 8%">สถานะ</th>
-                <th style="width: 8%">แผนงาน</th>
-
+         
                 
                 <% if (user && user.mClass === 'admin') { %>
                   <th class="text-center" style="width: 10%">จัดการ</th>
@@ -58,45 +125,83 @@
             </thead>
             <tbody>
               <% projects.forEach((p, idx) => { %>
-                <tr class="align-middle">
-                  <td class="text-center text-muted small"><%= idx + 1 %></td>
-                  <td class="fw-500"><%= p.pro_subject %></td>
-                  <td><small><%= p.pro_target %></small></td>
-                  <td><small class="text-success fw-bold"><%= p.pro_budget ? p.pro_budget.toLocaleString('th-TH') : '-' %></small></td>
-                  <td><small><%= p.pro_group %></small></td>
+                <tr class="hover-row">
+                  <td class="text-center">
+                    <span class="badge bg-light text-muted fw-bold"><%= idx + 1 %></span>
+                  </td>
                   <td>
-                    <div class="small"><%= p.respon_name || '-' %></div>
-                    <% if (p.respon_username) { %>
-                      <div class="small text-muted">@<%= p.respon_username %></div>
-                    <% } %>
+                    <div class="d-flex flex-column align-items-start">
+                      <h6 class="mb-0 fw-semibold text-primary"><%= p.pro_subject %></h6>
+                      <div class="d-flex align-items-center mb-2">
+                        <a href="/planproject/summary/<%= p.pro_code %>?embed=1" class="btn btn-sm btn-outline-info rounded-pill js-open-summary" title="ดูสรุปโครงการ" data-bs-toggle="modal" data-bs-target="#planProjectSummaryModal" data-title="<%= p.pro_subject %>">
+                          <i class="bi bi-speedometer2 me-1"></i>สรุป
+                        </a>
+                        <a href="/planactivity/create-many?pro_code=<%= p.pro_code %>" class="btn btn-sm btn-outline-success rounded-pill ms-2" title="เพิ่มกิจกรรม">
+                          <i class="bi bi-plus-circle me-1"></i>กิจกรรม
+                        </a>
+                      </div>
+                      <small class="text-muted"><i class="bi bi-hash me-1"></i>รหัส: <%= p.pro_code %></small>
+                    </div>
+                  </td>
+                
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-cash-stack text-success small"></i>
+                      <span class="fw-bold text-success">
+                        <%= p.pro_budget ? p.pro_budget.toLocaleString('th-TH') : '-' %>
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark border"><%= p.pro_group || '-' %></span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person text-primary small"></i>
+                      </div>
+                      <div>
+                        <div class="fw-semibold small"><%= p.respon_name || '-' %></div>
+                        <% if (p.respon_username) { %>
+                          <div class="text-muted small">@<%= p.respon_username %></div>
+                        <% } %>
+                      </div>
+                    </div>
                   </td>
                   <td class="text-center">
                     <% if (p.pro_status === 2) { %>
-                      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>เสร็จแล้ว</span>
+                      <span class="badge bg-success d-flex align-items-center gap-1 mx-auto" style="width: fit-content;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>เสร็จแล้ว</span>
+                      </span>
                     <% } else if (p.pro_status === 1) { %>
-                      <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>กำลังทำ</span>
+                      <span class="badge bg-warning text-dark d-flex align-items-center gap-1 mx-auto" style="width: fit-content;">
+                        <i class="bi bi-hourglass-split"></i>
+                        <span>กำลังทำ</span>
+                      </span>
                     <% } else { %>
-                      <span class="badge bg-secondary"><i class="bi bi-clock me-1"></i>รอดำเนิน</span>
+                      <span class="badge bg-secondary d-flex align-items-center gap-1 mx-auto" style="width: fit-content;">
+                        <i class="bi bi-clock"></i>
+                        <span>รอดำเนิน</span>
+                      </span>
                     <% } %>
                   </td>
-                  <td><small><%= p.pro_macode %></small></td>
+               
                   <!-- ดูรายละเอียด planproject/summary -->
-                 
-                   
                 
                   <% if (user && user.mClass === 'admin') { %>
                     <td class="text-center">
-                    <a href="/planproject/summary/<%= p.pro_code %>?embed=1" class="btn btn-sm btn-outline-info me-1 js-open-summary" title="ดูรายละเอียด" data-bs-toggle="modal" data-bs-target="#planProjectSummaryModal" data-title="<%= p.pro_subject %>">
-                      <i class="bi bi-info-circle"></i>
-                    </a>
-                      <a href="/planproject/edit/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary me-1" title="แก้ไข">
-                        <i class="bi bi-pencil-square"></i>
-                      </a>
-                      <form method="POST" action="/planproject/delete/<%= p.pro_id %>" class="d-inline" onsubmit="return confirm('ยืนยันการลบโครงการนี้?');">
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบ">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </form>
+                      <div class="action-btn-group justify-content-center">
+                      
+                        <a href="/planproject/edit/<%= p.pro_id %>" class="btn btn-sm btn-outline-primary rounded-pill" title="แก้ไขโครงการ">
+                          <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <form method="POST" action="/planproject/delete/<%= p.pro_id %>" class="d-inline" onsubmit="return confirm('⚠️ ยืนยันการลบโครงการ: <%= p.pro_subject %>');">
+                          <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="ลบโครงการ">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   <% } %>
                 </tr>
@@ -105,8 +210,13 @@
           </table>
         </div>
       </div>
-      <div class="card-footer bg-light text-muted small text-center py-2">
-        <i class="bi bi-info-circle me-1"></i>มีทั้งหมด <%= projects.length %> โครงการ
+      <div class="card-footer bg-light border-0 py-3">
+        <div class="text-center">
+          <span class="text-muted">
+            <i class="bi bi-info-circle me-2"></i>
+            แสดง <%= projects.length %> จากทั้งหมด <%= projects.length %> โครงการ
+          </span>
+        </div>
       </div>
     </div>
 </div>
@@ -115,8 +225,11 @@
 <div class="modal fade" id="planProjectSummaryModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-body p-0 position-relative">
-        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header">
+        <h5 class="modal-title" id="summaryModalTitle">รายละเอียดโครงการ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
         <iframe id="summaryModalFrame" src="" style="width:100%; height:85vh; border:0;" title="รายละเอียดโครงการ"></iframe>
       </div>
     </div>

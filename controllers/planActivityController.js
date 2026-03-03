@@ -239,6 +239,17 @@ exports.destroy = async (req, res) => {
   res.redirect('/planactivity');
 };
 
+exports.deleteAll = async (req, res) => {
+  const { pro_code } = req.body;
+  
+  if (!pro_code) {
+    return res.status(400).send('ไม่พบรหัสโครงการ');
+  }
+  
+  await PlanActivity.deleteByProjectCode(pro_code);
+  res.redirect(`/planactivity/create-many?pro_code=${encodeURIComponent(pro_code)}`);
+};
+
 exports.show = async (req, res) => {
   const activity = await PlanActivity.findByPk(req.params.id);
   res.render('planActivity/show', { activity });
@@ -296,7 +307,7 @@ exports.monthlyReport = async (req, res) => {
         acc[row.kp_id] = row;
         return acc;
       }, {});
-      const totals = await PlanKpiMonthly.sumForIds(kpiIds);
+      const totals = await PlanKpiMonthly.sumForIdsByFiscalYear(kpiIds, normalizedMonth);
 
       kpiMetrics = kpis.map((kpi) => {
         const cumulativeTotal = Number(totals[kpi.kp_id] ?? 0);
@@ -634,7 +645,7 @@ exports.getActivitiesByProject = async (req, res) => {
       report_month: monthlyMap[activity.ac_id]?.report_month ?? null
     }));
 
-    return res.json(response);
+    return res.json({ activities: response });
   } catch (error) {
     console.error('Error in getActivitiesByProject:', error);
     return res.status(500).json({ error: 'Failed to fetch activities', details: error.message });

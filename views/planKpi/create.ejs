@@ -1,11 +1,11 @@
 <%- include('../partials/header') %>
-
+<%- include('../partials/plan-navbar', { currentPage: 'create' }) %>
 <div class="py-4">
     <div class="mb-4">
       <h1 class="h3 mb-1"><i class="bi bi-plus-square me-2"></i>เพิ่มตัวชี้วัดโครงการ</h1>
       <p class="text-muted">กรุณากรอกข้อมูลตัวชี้วัดให้ครบถ้วน</p>
     </div>
-    <form action="/plankpi/store" method="post" class="row g-3" novalidate>
+    <form action="/planKpi/store" method="post" class="row g-3" novalidate>
       <div class="col-md-6">
         <label class="form-label">รหัสโครงการ</label>
         <select name="kp_procode" class="form-select" required>
@@ -17,7 +17,7 @@
       </div>
       <div class="col-md-3">
         <label class="form-label">ลำดับ</label>
-        <input type="number" name="kp_number" class="form-control" required>
+        <input type="number" name="kp_number" class="form-control" value="<%= typeof nextSequence !== 'undefined' ? nextSequence : 1 %>" readonly required>
       </div>
       <div class="col-md-9">
         <label class="form-label">ชื่อตัวชี้วัด</label>
@@ -42,10 +42,127 @@
       <div class="col-12 pt-3">
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save me-2"></i>บันทึกตัวชี้วัด</button>
-          <a href="/plankpi<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+          <a href="/planKpi<%= pro_code ? ('?pro_code=' + encodeURIComponent(pro_code)) : '' %>" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
         </div>
       </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const projectSelect = document.querySelector('select[name="kp_procode"]');
+    const sequenceInput = document.querySelector('input[name="kp_number"]');
+    const subjectInput = document.querySelector('input[name="kp_subject"]');
+    const planInput = document.querySelector('input[name="kp_plan"]');
+    const unitInput = document.querySelector('input[name="kp_unit"]');
+    const dateInput = document.querySelector('input[name="kp_savedate"]');
+
+    // Function to validate form
+    function validateForm() {
+        let isValid = true;
+        let firstInvalidField = null;
+
+        // Clear previous validation states
+        form.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.invalid-feedback').forEach(feedback => {
+            feedback.remove();
+        });
+
+        // Validate project selection
+        if (!projectSelect.value) {
+            showInvalid(projectSelect, 'กรุณาเลือกรหัสโครงการ');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = projectSelect;
+        }
+
+        // Validate KPI subject
+        if (!subjectInput.value.trim()) {
+            showInvalid(subjectInput, 'กรุณาระบุชื่อตัวชี้วัด');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = subjectInput;
+        }
+
+        // Validate target value
+        if (!planInput.value || parseFloat(planInput.value) <= 0) {
+            showInvalid(planInput, 'กรุณาระบุค่าเป้าหมายที่มากกว่า 0');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = planInput;
+        }
+
+        // Validate unit
+        if (!unitInput.value.trim()) {
+            showInvalid(unitInput, 'กรุณาระบุหน่วย');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = unitInput;
+        }
+
+        // Validate date
+        if (!dateInput.value) {
+            showInvalid(dateInput, 'กรุณาระบุวันที่บันทึก');
+            isValid = false;
+            if (!firstInvalidField) firstInvalidField = dateInput;
+        }
+
+        // Focus first invalid field
+        if (firstInvalidField) {
+            firstInvalidField.focus();
+        }
+
+        return isValid;
+    }
+
+    // Function to show invalid feedback
+    function showInvalid(field, message) {
+        field.classList.add('is-invalid');
+        
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.textContent = message;
+        
+        field.parentNode.appendChild(feedback);
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+    // Handle project change for sequence number
+    projectSelect.addEventListener('change', async function() {
+        const proCode = this.value;
+        
+        if (!proCode) {
+            sequenceInput.value = '1';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/planKpi/next-sequence?pro_code=${encodeURIComponent(proCode)}`);
+            const data = await response.json();
+            sequenceInput.value = data.nextSequence;
+        } catch (error) {
+            console.error('Error fetching next sequence:', error);
+            sequenceInput.value = '1';
+        }
+    });
+
+    // Clear validation on input
+    [projectSelect, subjectInput, planInput, unitInput, dateInput].forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.remove();
+            }
+        });
+    });
+});
+</script>
 
 <%- include('../partials/footer') %>

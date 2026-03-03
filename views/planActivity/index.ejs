@@ -1,6 +1,6 @@
 <%- include('../partials/header') %>
-
-<div class="py-4">
+  <%- include('../partials/plan-navbar', { currentPage: 'index' }) %>
+<div class="py-2">
   <% const groups = Array.isArray(groupedProjects) ? groupedProjects : []; %>
   <% const totalCount = typeof totalActivities !== 'undefined' ? totalActivities : (Array.isArray(activities) ? activities.length : 0); %>
   <% const STATUS_OPTIONS = [
@@ -26,15 +26,6 @@
     <div>
       <h1 class="h3 mb-1"><i class="bi bi-list-check me-2"></i>กิจกรรมโครงการ</h1>
       <p class="text-muted small mb-0">จัดการกิจกรรมทั้งหมดในระบบ</p>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="/plan" class="btn btn-outline-info btn-lg">
-        <i class="bi bi-clipboard-data me-2"></i>กลับหน้าหลักโครงการ
-      </a>
-      <a href="/planactivity/select" class="btn btn-success btn-lg">
-        <i class="bi bi-folder2-open me-2"></i> เพิ่มกิจกรรม (เลือกโครงการ)
-      </a>
-     
     </div>
   </div>
 

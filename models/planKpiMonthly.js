@@ -127,6 +127,62 @@ module.exports = {
     }, {});
   },
 
+  async sumForIdsExcludingMonth(ids, excludeMonth) {
+    if (!ids?.length) {
+      return {};
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await db.query(
+      `SELECT kp_id, COALESCE(SUM(actual_value), 0) AS total FROM plan_kpi_monthly WHERE kp_id IN (${placeholders}) AND report_month != ? GROUP BY kp_id`,
+      [...ids, excludeMonth]
+    );
+
+    return rows.reduce((acc, row) => {
+      acc[row.kp_id] = row.total;
+      return acc;
+    }, {});
+  },
+
+  async sumForIdsByFiscalYear(ids, currentMonth) {
+    if (!ids?.length) {
+      return {};
+    }
+
+    const [year, month] = currentMonth.split('-').map(Number);
+    const fiscalYearStart = month >= 10
+      ? `${year}-10-01`
+      : `${year - 1}-10-01`;
+
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await db.query(
+      `SELECT kp_id, COALESCE(SUM(actual_value), 0) AS total
+       FROM plan_kpi_monthly
+       WHERE kp_id IN (${placeholders})
+       AND report_month >= ?
+       AND report_month < ?
+       GROUP BY kp_id`,
+      [...ids, fiscalYearStart, currentMonth]
+    );
+
+    return rows.reduce((acc, row) => {
+      acc[row.kp_id] = row.total;
+      return acc;
+    }, {});
+  },
+
+  async deleteOldKpiData(proCode, cutoffDate) {
+    const [result] = await db.query(
+      `DELETE FROM plan_kpi_monthly 
+       WHERE kp_id IN (
+         SELECT kp_id FROM plan_kpi WHERE pro_code = ?
+       ) 
+       AND report_month < ?`,
+      [proCode, cutoffDate]
+    );
+    return result.affectedRows;
+  },
+
   /**
    * Get historical monthly records for KPI by project (last N months)
    * @param {string} proCode - Project code

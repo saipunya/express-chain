@@ -77,6 +77,10 @@ module.exports = {
     await db.query('DELETE FROM plan_activity WHERE ac_id=?', [id]);
   },
 
+  async deleteByProjectCode(proCode) {
+    await db.query('DELETE FROM plan_activity WHERE ac_procode=?', [proCode]);
+  },
+
   async updateStatuses(statusRows) {
     if (!Array.isArray(statusRows) || statusRows.length === 0) {
       return 0;

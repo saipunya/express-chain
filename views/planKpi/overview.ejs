@@ -1,5 +1,5 @@
 <%- include('../partials/header') %>
-
+  <%- include('../partials/plan-navbar', { currentPage: 'overview' }) %>
 <div class="container py-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
@@ -7,8 +7,7 @@
       <p class="text-muted mb-0">รวมตัวชี้วัดของทุกโครงการ พร้อมความก้าวหน้ารวม</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-    <a href="/plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแผน</a>
-    <!-- เพิ่มตัวชี้วัด -->
+   <!-- เพิ่มตัวชี้วัด -->
     <a href="/plankpi" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>เพิ่มตัวชี้วัด</a>
     </div>
  

@@ -21,8 +21,10 @@
 <div class="py-3 py-md-4">
 
   <!-- ===== PAGE HEADER ===== -->
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
-    <div>
+  <%- include('partials/plan-navbar', { currentPage: 'plan' }) %>
+<hr>
+  <section>
+     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
       <h1 class="h3 mb-1 d-flex align-items-center flex-wrap gap-2">
         <span class="p-2 bg-primary bg-opacity-10 rounded-circle flex-shrink-0">
           <i class="bi bi-clipboard-check text-primary fs-5"></i>
@@ -31,36 +33,7 @@
       </h1>
       <p class="text-muted mb-0 small">ภาพรวมแผนงานหลัก โครงการ กิจกรรม และตัวชี้วัด</p>
     </div>
-    <div class="d-flex flex-wrap gap-2 w-100 w-lg-auto justify-content-lg-end plan-nav">
-      <div class="btn-group" role="group" aria-label="ทั่วไป">
-        <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="รีเฟรชหน้า">
-          <i class="bi bi-arrow-repeat me-1"></i>รีเฟรช
-        </a>
-        <a href="/planmain" class="btn btn-primary btn-sm rounded-pill px-3">
-          <i class="bi bi-plus-lg me-1"></i>แผนงาน
-        </a>
-      </div>
-      <div class="btn-group" role="group" aria-label="จัดการแผน">
-        <a href="/planproject" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-          <i class="bi bi-diagram-3 me-1"></i>โครงการ
-        </a>
-        <a href="/planactivity" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-          <i class="bi bi-diagram-3 me-1"></i>+ กิจกรรม
-        </a>
-      </div>
-      <div class="btn-group" role="group" aria-label="รายงาน">
-        <a href="/plankpi/overview" class="btn btn-outline-warning btn-sm rounded-pill px-3">
-          <i class="bi bi-graph-up-arrow me-1"></i>ภาพรวมตัวชี้วัด
-        </a>
-        <a href="/planactivity/report" class="btn btn-outline-info btn-sm rounded-pill px-3">
-          <i class="bi bi-clipboard-data me-1"></i>รายงาน
-        </a>
-        <a href="/planproject/disbursal-dashboard" class="btn btn-outline-success btn-sm rounded-pill px-3">
-          <i class="bi bi-cash-stack me-1"></i>การเบิกจ่าย
-        </a>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <!-- ===== SUMMARY STAT CARDS ===== -->
   <div class="row g-3 mb-4">
@@ -155,37 +128,7 @@
     font-weight: 500;
   }
 
-  /* ===== Plan Navbar ===== */
-  .plan-nav .btn-group {
-    background: var(--bg-lighter);
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    padding: .2rem;
-    box-shadow: var(--shadow-sm);
-  }
-  .plan-nav .btn-group .btn {
-    border: none;
-    border-radius: 999px;
-    padding: .35rem .9rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-  .plan-nav .btn-group .btn i { opacity: .85; }
-  .plan-nav .btn-group .btn:hover,
-  .plan-nav .btn-group .btn:focus {
-    background: var(--primary-light);
-    color: var(--text-primary);
-  }
-  .plan-nav .btn-group .btn-primary {
-    background: var(--primary);
-    color: #fff;
-  }
-  .plan-nav .btn-group .btn-primary:hover,
-  .plan-nav .btn-group .btn-primary:focus {
-    background: #0ea371;
-    color: #fff;
-  }
-  /* ===== Stat Cards (small) ===== */
+    /* ===== Stat Cards (small) ===== */
   .stat-card-sm {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-color);
@@ -541,95 +484,7 @@
 }
 </style>
 
-  <!-- ===== Status Distribution + Charts ===== -->
-  <div class="row g-3 g-lg-4 mb-4">
-    <div class="col-12 col-xl-8">
-      <div class="card border-0 shadow-sm h-100 hover-card">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-              <span class="dashboard-chip chip-info"><i class="bi bi-kanban"></i></span>
-              <div>
-                <h2 class="h5 mb-0">สถานะโครงการ</h2>
-                <p class="text-muted small mb-0">สัดส่วนโครงการในแต่ละสถานะ</p>
-              </div>
-            </div>
-            <a href="/planproject" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-              <i class="bi bi-arrow-right me-1"></i>ดูรายละเอียดโครงการ
-            </a>
-          </div>
-          <div class="row g-4">
-            <div class="col-12 col-md-6">
-              <div class="status-pills">
-                <div class="pill-item">
-                  <div class="pill-icon bg-light text-secondary"><i class="bi bi-clock"></i></div>
-                  <div>
-                    <p class="pill-label">ยังไม่ดำเนินการ</p>
-                    <strong class="pill-value"><%= projectStats.status.notStarted %></strong>
-                  </div>
-                </div>
-                <div class="pill-item">
-                  <div class="pill-icon bg-warning-subtle text-warning"><i class="bi bi-hourglass-split"></i></div>
-                  <div>
-                    <p class="pill-label">ระหว่างดำเนินการ</p>
-                    <strong class="pill-value"><%= projectStats.status.inProgress %></strong>
-                  </div>
-                </div>
-                <div class="pill-item">
-                  <div class="pill-icon bg-success-subtle text-success"><i class="bi bi-check-circle"></i></div>
-                  <div>
-                    <p class="pill-label">สำเร็จแล้ว</p>
-                    <strong class="pill-value"><%= projectStats.status.done %></strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-md-6">
-              <div class="chart-wrapper">
-                <canvas id="chartProjectStatus" height="220"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-xl-4">
-      <div class="card border-0 shadow-sm h-100 hover-card">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center gap-2 mb-4">
-            <span class="dashboard-chip chip-warning"><i class="bi bi-list-task"></i></span>
-            <div>
-              <h2 class="h5 mb-0">ภาพรวมกิจกรรม</h2>
-              <p class="text-muted small mb-0">แยกตามสถานะล่าสุด</p>
-            </div>
-          </div>
-          <ul class="list-unstyled mb-0">
-            <li class="activity-line">
-              <div>
-                <p class="mb-0 fw-semibold">อยู่ระหว่างดำเนินการ</p>
-                <small class="text-muted">รอดูผลลัพธ์ต่อเนื่อง</small>
-              </div>
-              <span class="badge bg-warning-subtle text-warning fs-6 px-3"><%= activityStats.status.inProgress %></span>
-            </li>
-            <li class="activity-line">
-              <div>
-                <p class="mb-0 fw-semibold">ยังไม่ดำเนินการ</p>
-                <small class="text-muted">รอเริ่มดำเนินการ</small>
-              </div>
-              <span class="badge bg-secondary-subtle text-dark fs-6 px-3"><%= activityStats.status.notStarted %></span>
-            </li>
-            <li class="activity-line">
-              <div>
-                <p class="mb-0 fw-semibold">เสร็จสมบูรณ์</p>
-                <small class="text-muted">กิจกรรมที่จบแล้ว</small>
-              </div>
-              <span class="badge bg-success-subtle text-success fs-6 px-3"><%= activityStats.status.done %></span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- ===== Overview by Main Plan ===== -->
   <div class="card border-0 shadow-sm mb-4 hover-card">

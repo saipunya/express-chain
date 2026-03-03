@@ -81,14 +81,67 @@ exports.index = async (req, res) => {
     };
   });
 
-  res.render('planKpi/index', { kpis: enrichedKpis, pro_code });
+  // Group KPIs by project if not filtering by specific project
+  if (!pro_code) {
+    const projectsMap = new Map();
+    
+    enrichedKpis.forEach((kpi) => {
+      const projectCode = kpi.kp_procode || 'unknown';
+      const project = projectsMap.get(projectCode) || {
+        pro_code: projectCode,
+        kpis: []
+      };
+      project.kpis.push(kpi);
+      projectsMap.set(projectCode, project);
+    });
+
+    const groupedProjects = Array.from(projectsMap.values());
+    console.log('Grouped projects:', groupedProjects); // Debug log
+    res.render('planKpi/index', { groupedProjects, pro_code });
+  } else {
+    res.render('planKpi/index', { kpis: enrichedKpis, pro_code });
+  }
 };
 
 // Show create form
 exports.create = async (req, res) => {
   const projects = await PlanProject.findAll();
   const pro_code = req.query.pro_code || '';
-  res.render('planKpi/create', { projects, pro_code });
+  
+  let nextSequence = 1;
+  try {
+    if (pro_code) {
+      console.log('Getting next sequence for project:', pro_code);
+      nextSequence = await PlanKpi.getNextSequenceNumber(pro_code);
+      console.log('Calculated next sequence:', nextSequence);
+    }
+  } catch (error) {
+    console.error('Error getting next sequence:', error);
+    nextSequence = 1;
+  }
+  
+  res.render('planKpi/create', { 
+    projects, 
+    pro_code, 
+    nextSequence: nextSequence || 1 
+  });
+};
+
+// Get next sequence number for AJAX requests
+exports.getNextSequence = async (req, res) => {
+  const { pro_code } = req.query;
+  
+  if (!pro_code) {
+    return res.json({ nextSequence: 1 });
+  }
+  
+  try {
+    const nextSequence = await PlanKpi.getNextSequenceNumber(pro_code);
+    res.json({ nextSequence });
+  } catch (error) {
+    console.error('Error getting next sequence:', error);
+    res.json({ nextSequence: 1 });
+  }
 };
 
 // Store new KPI

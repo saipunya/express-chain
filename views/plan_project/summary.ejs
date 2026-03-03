@@ -21,7 +21,7 @@
     </div>
     <% if (!isEmbedSafe) { %>
       <div class="d-flex flex-wrap gap-2">
-        <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>กลับแดชบอร์ด</a>
+        <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-arrow-left me-1"></i>กลับหน้าหลักแผนงาน</a>
         <a href="/plankpi/overview" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="bi bi-graph-up me-1"></i>ภาพรวมตัวชี้วัด</a>
         <a href="/planproject/budget_disbursal?pro_code=<%= encodeURIComponent(project.pro_code) %>" class="btn btn-outline-warning btn-sm rounded-pill px-3"><i class="bi bi-cash-flow me-1"></i>การเบิกเงิน</a>
         <% if (canEdit) { %>

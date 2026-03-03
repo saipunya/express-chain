@@ -1,8 +1,8 @@
 <%- include('../partials/header') %>
-
+  <%- include('../partials/plan-navbar', { currentPage: 'select-project' }) %>
 <div class="py-4">
   <div class="mb-4">
-    <h1 class="h3 mb-1"><i class="bi bi-folder2-open me-2"></i>เลือกโครงการเพื่อเพิ่มกิจกรรม</h1>
+    <h1 class="h4 mb-1"><i class="bi bi-folder2-open me-2"></i>เลือกโครงการเพื่อเพิ่มกิจกรรม</h1>
     <p class="text-muted">เลือกโครงการที่ต้องการเพิ่มกิจกรรม เพื่อดำเนินการต่อ</p>
   </div>
 
@@ -24,26 +24,23 @@
       <div class="mb-4">
         <div class="d-flex align-items-center mb-2">
           <span class="badge bg-primary-subtle text-primary me-2">แผนงาน</span>
-          <h2 class="h6 mb-0"><%= plan.plan_name || '-' %> (<%= plan.ma_code %>)</h2>
+          <h2 class="small mb-0 fw-semibold"><%= plan.plan_name || '-' %> (<%= plan.ma_code %>)</h2>
         </div>
-        <div class="row g-3">
+        <div class="list-group">
           <% (plan.projects || []).forEach((project) => { %>
-            <div class="col-md-6 col-lg-4">
-              <div class="card border-0 shadow-sm h-100 hover-shadow transition" style="cursor: pointer;" onclick="window.location.href='/planactivity/create-many?pro_code=<%= project.pro_code %>'">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                      <h5 class="card-title mb-1"><%= project.pro_subject || '-' %></h5>
-                      <span class="badge bg-info text-dark"><%= project.pro_code %></span>
-                    </div>
-                    <i class="bi bi-arrow-right text-muted fs-5"></i>
+            <div class="list-group-item list-group-item-action hover-shadow transition">
+              <div class="d-flex justify-content-between align-items-center" onclick="window.location.href='/planactivity/create-many?pro_code=<%= project.pro_code %>'" style="cursor: pointer;">
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <h6 class="mb-0"><%= project.pro_subject || '-' %></h6>
+                    <span class="badge bg-info text-dark"><small><%= project.pro_code %></small></span>
                   </div>
-                  <div class="small text-muted mb-2">
-                    <i class="bi bi-stack me-1"></i>เพิ่มกิจกรรมหลายรายการ
-                  </div>
-                  <div class="d-flex justify-content-between align-items-center text-muted small">
-                    <span><i class="bi bi-person me-1"></i><%= project.pro_respon || '-' %></span>
-                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation()">
+                  <button class="btn btn-sm btn-outline-info" onclick="showActivitiesModal('<%= project.pro_code %>', '<%= project.pro_subject || '-' %>')">
+                    <i class="bi bi-list-ul me-1"></i>ดูกิจกรรม
+                  </button>
+                  <i class="bi bi-arrow-right text-muted fs-5"></i>
                 </div>
               </div>
             </div>
@@ -53,9 +50,40 @@
       </div>
     <% }) %>
   <% } %>
+</div>
 
-  <div class="mt-4">
-    <a href="/planactivity" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>กลับไปหน้ากิจกรรม</a>
+<!-- Activities Modal -->
+<div class="modal fade" id="activitiesModal" tabindex="-1" aria-labelledby="activitiesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activitiesModalLabel">
+          <i class="bi bi-list-ul me-2"></i>กิจกรรมของโครงการ: <span id="modalProjectName"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="activitiesLoading" class="text-center py-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">กำลังโหลด...</span>
+          </div>
+          <p class="mt-2 text-muted">กำลังโหลดข้อมูลกิจกรรม...</p>
+        </div>
+        <div id="activitiesContent" style="display: none;">
+          <div id="activitiesList"></div>
+        </div>
+        <div id="activitiesEmpty" style="display: none;" class="text-center py-4">
+          <i class="bi bi-inbox text-muted fs-1"></i>
+          <p class="text-muted mt-2">ไม่มีกิจกรรมในโครงการนี้</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+        <button type="button" class="btn btn-primary" id="addActivityBtn">
+          <i class="bi bi-plus-circle me-1"></i>เพิ่มกิจกรรม
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -63,10 +91,142 @@
   .hover-shadow {
     transition: all 0.3s ease;
   }
-  .card:hover {
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
-    transform: translateY(-4px);
+  .list-group-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    transform: translateX(4px);
+    background-color: #f8f9fa;
   }
 </style>
+
+<script>
+let currentProjectCode = '';
+
+function showActivitiesModal(proCode, projectName) {
+  currentProjectCode = proCode;
+  document.getElementById('modalProjectName').textContent = projectName;
+  
+  // แสดง loading state
+  document.getElementById('activitiesLoading').style.display = 'block';
+  document.getElementById('activitiesContent').style.display = 'none';
+  document.getElementById('activitiesEmpty').style.display = 'none';
+  
+  // เปิด modal
+  const modal = new bootstrap.Modal(document.getElementById('activitiesModal'));
+  modal.show();
+  
+  // ดึงข้อมูลกิจกรรม
+  fetch(`/planactivity/api/by-project?pro_code=${proCode}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('activitiesLoading').style.display = 'none';
+      
+      if (data.activities && data.activities.length > 0) {
+        displayActivities(data.activities);
+      } else {
+        document.getElementById('activitiesEmpty').style.display = 'block';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('activitiesLoading').style.display = 'none';
+      document.getElementById('activitiesEmpty').style.display = 'block';
+    });
+}
+
+function displayActivities(activities) {
+  const activitiesList = document.getElementById('activitiesList');
+  activitiesList.innerHTML = '';
+  
+  activities.forEach((activity, index) => {
+    const activityItem = document.createElement('div');
+    activityItem.className = 'card mb-2';
+    activityItem.innerHTML = `
+      <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1">${activity.act_subject || activity.ac_subject || '-'}</h6>
+            <small class="text-muted">รหัส: ${activity.act_code || activity.ac_code || '-'}</small>
+            ${activity.monthly_status !== null ? `
+              <div class="mt-1">
+                <span class="badge ${getStatusBadge(activity.monthly_status)}">
+                  <i class="bi ${getStatusIcon(activity.monthly_status)} me-1"></i>
+                  ${getStatusText(activity.monthly_status)}
+                </span>
+              </div>
+            ` : ''}
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="editActivity('${activity.ac_id}')">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteActivity('${activity.ac_id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    activitiesList.appendChild(activityItem);
+  });
+  
+  document.getElementById('activitiesContent').style.display = 'block';
+}
+
+function getStatusBadge(status) {
+  const statusMap = {
+    2: 'bg-success',
+    1: 'bg-warning text-dark',
+    0: 'bg-secondary'
+  };
+  return statusMap[status] || 'bg-secondary';
+}
+
+function getStatusIcon(status) {
+  const iconMap = {
+    2: 'bi-check-circle',
+    1: 'bi-hourglass-split',
+    0: 'bi-clock'
+  };
+  return iconMap[status] || 'bi-clock';
+}
+
+function getStatusText(status) {
+  const textMap = {
+    2: 'ดำเนินการเรียบร้อย',
+    1: 'อยู่ระหว่างดำเนินการ',
+    0: 'ยังไม่ดำเนินการ'
+  };
+  return textMap[status] || 'ไม่ทราบสถานะ';
+}
+
+// Event listener สำหรับปุ่มเพิ่มกิจกรรม
+document.getElementById('addActivityBtn').addEventListener('click', function() {
+  window.location.href = `/planactivity/create-many?pro_code=${currentProjectCode}`;
+});
+
+function editActivity(actId) {
+  window.location.href = `/planactivity/${actId}/edit`;
+}
+
+function deleteActivity(actId) {
+  if (confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?')) {
+    fetch(`/planactivity/${actId}/delete`, {
+      method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showActivitiesModal(currentProjectCode, document.getElementById('modalProjectName').textContent);
+      } else {
+        alert('เกิดข้อผิดพลาดในการลบกิจกรรม');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('เกิดข้อผิดพลาดในการลบกิจกรรม');
+    });
+  }
+}
+</script>
 
 <%- include('../partials/footer') %>

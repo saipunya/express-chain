@@ -1,0 +1,80 @@
+<style>
+  :root {
+    --primary: #10b981;
+    --primary-light: #d1fae5;
+    --primary-lighter: #ecfdf5;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --bg-lighter: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* ===== Plan Navbar ===== */
+  .plan-nav .btn-group {
+    background: var(--bg-lighter);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: .2rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .plan-nav .btn-group .btn {
+    border: none;
+    border-radius: 999px;
+    padding: .35rem .9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .plan-nav .btn-group .btn i { opacity: .85; }
+  .plan-nav .btn-group .btn:hover,
+  .plan-nav .btn-group .btn:focus {
+    background: var(--primary-light);
+    color: var(--text-primary);
+  }
+  .plan-nav .btn-group .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+  .plan-nav .btn-group .btn-primary:hover,
+  .plan-nav .btn-group .btn-primary:focus {
+    background: #0ea371;
+    color: #fff;
+  }
+</style>
+
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+  <div class="d-flex flex-wrap gap-2 w-100 w-lg-auto justify-content-lg-end plan-nav">
+    <div class="btn-group" role="group" aria-label="ทั่วไป">
+      <a href="/plan" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="รีเฟรชหน้า">
+        <i class="bi bi-arrow-repeat me-1"></i>หน้าหลักแผนงาน
+      </a>
+
+      <a href="/planmain" class="btn btn-<%= currentPage === 'planmain' ? 'primary' : 'outline-primary' %> btn-sm rounded-pill px-3">
+        <i class="bi bi-plus-lg me-1"></i>เพิ่มแผนงาน
+      </a>
+    </div>
+    <div class="btn-group" role="group" aria-label="จัดการแผน">
+      <a href="/planproject" class="btn btn-<%= currentPage === 'planproject' ? 'primary' : 'outline-primary' %> btn-sm rounded-pill px-3">
+        <i class="bi bi-diagram-3 me-1"></i>โครงการ
+      </a>
+      <a href="/planactivity/select" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        <i class="bi bi-diagram-3 me-1"></i>+ กิจกรรม
+      </a>
+    </div>
+    <div class="btn-group" role="group" aria-label="รายงาน">
+      <a href="/plankpi/overview" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+        <i class="bi bi-graph-up-arrow me-1"></i>ภาพรวมตัวชี้วัด
+      </a>
+      <a href="/planactivity/report" class="btn btn-outline-info btn-sm rounded-pill px-3">
+        <i class="bi bi-clipboard-data me-1"></i>รายงาน
+      </a>
+      <a href="/planproject/disbursal-dashboard" class="btn btn-outline-success btn-sm rounded-pill px-3">
+        <i class="bi bi-cash-stack me-1"></i>การเบิกจ่าย
+      </a>
+    </div>
+  </div>
+</div>

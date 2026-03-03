@@ -13,6 +13,7 @@ const requireAdminOrResponForKpi = requireAdminOrResponsibleByKpiId((req) => req
 router.get('/', requireAdminOrPbt, controller.index);
 router.get('/overview', requireAdminOrPbt, controller.overview);
 router.get('/create', requireAdminOrPbt, controller.create);
+router.get('/next-sequence', requireAdminOrPbt, controller.getNextSequence);
 router.post('/store', requireAdminOrPbt, controller.store);
 
 // Reporting: only admin or project responsible

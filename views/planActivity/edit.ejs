@@ -1,4 +1,5 @@
 <%- include('../partials/header') %>
+  <%- include('../partials/plan-navbar', { currentPage: 'edit' }) %>
 
 <div class="py-4">
   <div class="mb-4">
@@ -42,7 +43,7 @@
     <div class="col-12 pt-3">
       <div class="d-flex gap-2">
         <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง</button>
-        <a href="/planactivity" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+        <a href="/planactivity/select" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
       </div>
     </div>
   </form>

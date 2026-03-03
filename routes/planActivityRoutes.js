@@ -42,6 +42,7 @@ router.post('/report/all', controller.storeMonthlyAll);
 router.get('/:id/edit', requireAdminOrPbt, controller.edit);
 router.post('/:id/update', requireAdminOrPbt, controller.update);
 router.post('/:id/delete', requireAdminOrPbt, controller.destroy);
+router.post('/delete-all', requireAdminOrPbt, controller.deleteAll);
 router.get('/:id', requireAdminOrPbt, controller.show);
 
 module.exports = router;

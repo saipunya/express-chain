@@ -57,6 +57,15 @@ module.exports = {
     );
   },
 
+  async getNextSequenceNumber(proCode) {
+    const [rows] = await db.query(
+      'SELECT MAX(kp_number) as max_number FROM plan_kpi WHERE kp_procode = ?',
+      [proCode]
+    );
+    const maxNumber = rows[0]?.max_number || 0;
+    return maxNumber + 1;
+  },
+
   async destroy(id) {
     await db.query('DELETE FROM plan_kpi WHERE kp_id=?', [id]);
   }

@@ -1,6 +1,11 @@
 <%- include('../partials/header.ejs') %>
 
 <% const isAdmin = (user && (user.mClass === 'pbt' || user.mClass === 'admin')); %>
+<% function canDelete(meeting) {
+  if (!user) return false;
+  if (isAdmin) return true;
+  return meeting.mee_saveby === user.fullname || meeting.mee_saveby === user.username;
+} %>
 <% function formatDate(d){ try { const dt = new Date(d); if (isNaN(dt)) return ''; return dt.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); } catch(e){ return ''; } } %>
 
 <div class="meetingroom-wrapper py-3 py-md-4">
@@ -23,7 +28,7 @@
                 <i class="bi bi-calendar-check me-1"></i>แสดงตั้งแต่วันนี้เป็นต้นไป
               </span>
               <span class="text-muted small">
-                <i class="bi bi-info-circle me-1"></i>แก้ไข/ลบ: เฉพาะผู้ดูแล
+                <i class="bi bi-info-circle me-1"></i>แก้ไข: เฉพาะผู้ดูแล | ลบ: ผู้ดูแลและเจ้าของการจอง
               </span>
             </div>
           </div>
@@ -147,6 +152,13 @@
                       data-bs-toggle="modal" data-bs-target="#detailModal">
                       <i class="bi bi-eye me-1"></i>ดูเพิ่มเติม
                     </button>
+                    <% if (canDelete(m)) { %>
+                      <button type="button" class="btn btn-sm btn-outline-danger rounded-pill btn-delete"
+                        data-id="<%= m.mee_id %>"
+                        data-subject="<%- (m.mee_subject || '').replace(/"/g,'&quot;') %>">
+                        <i class="bi bi-trash me-1"></i>ลบ
+                      </button>
+                    <% } %>
                   </td>
                 </tr>
               <% }) %>
@@ -240,20 +252,29 @@
                         <i class="bi bi-pencil-square me-1"></i>
                         <strong class="text-dark"><%= m.mee_saveby %></strong>
                       </small>
-                      <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 btn-detail w-auto"
-                        data-id="<%= m.mee_id %>"
-                        data-date="<%= isoDate %>"
-                        data-date-display="<%= formatDate(m.mee_date) %>"
-                        data-time="<%= m.mee_time %>"
-                        data-subject="<%- (m.mee_subject || '').replace(/"/g,'&quot;') %>"
-                        data-room="<%- (m.mee_room || '').replace(/"/g,'&quot;') %>"
-                        data-respon="<%- (m.mee_respon || '').replace(/"/g,'&quot;') %>"
-                        data-saveby="<%- (m.mee_saveby || '').replace(/"/g,'&quot;') %>"
-                        data-savedate="<%= saveDateIso %>"
-                        data-savedate-display="<%= formatDate(m.mee_savedate) %>"
-                        data-bs-toggle="modal" data-bs-target="#detailModal">
-                        <i class="bi bi-eye me-1"></i>ดูเพิ่มเติม
-                      </button>
+                      <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 btn-detail"
+                          data-id="<%= m.mee_id %>"
+                          data-date="<%= isoDate %>"
+                          data-date-display="<%= formatDate(m.mee_date) %>"
+                          data-time="<%= m.mee_time %>"
+                          data-subject="<%- (m.mee_subject || '').replace(/"/g,'&quot;') %>"
+                          data-room="<%- (m.mee_room || '').replace(/"/g,'&quot;') %>"
+                          data-respon="<%- (m.mee_respon || '').replace(/"/g,'&quot;') %>"
+                          data-saveby="<%- (m.mee_saveby || '').replace(/"/g,'&quot;') %>"
+                          data-savedate="<%= saveDateIso %>"
+                          data-savedate-display="<%= formatDate(m.mee_savedate) %>"
+                          data-bs-toggle="modal" data-bs-target="#detailModal">
+                          <i class="bi bi-eye me-1"></i>ดู
+                        </button>
+                        <% if (canDelete(m)) { %>
+                          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill btn-delete"
+                            data-id="<%= m.mee_id %>"
+                            data-subject="<%- (m.mee_subject || '').replace(/"/g,'&quot;') %>">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        <% } %>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -366,12 +387,12 @@
               <a id="md-edit" href="#" class="btn btn-primary">
                 <i class="bi bi-pencil-square me-1"></i>แก้ไข
               </a>
-              <form id="md-delete-form" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันการลบรายการนี้?')">
-                <button type="submit" class="btn btn-outline-danger">
-                  <i class="bi bi-trash me-1"></i>ลบ
-                </button>
-              </form>
             <% } %>
+            <form id="md-delete-form" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันการลบรายการนี้?')">
+              <button type="submit" class="btn btn-outline-danger" id="md-delete-btn" style="display: none;">
+                <i class="bi bi-trash me-1"></i>ลบ
+              </button>
+            </form>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               <i class="bi bi-x-circle me-1"></i>ปิด
             </button>
@@ -679,6 +700,7 @@
           const mdSavedate = document.getElementById('md-savedate');
           const mdEdit = document.getElementById('md-edit');
           const mdDeleteForm = document.getElementById('md-delete-form');
+          const mdDeleteBtn = document.getElementById('md-delete-btn');
 
           if (mdSubject) mdSubject.textContent = d.subject || '';
           if (mdDatetime) {
@@ -692,12 +714,50 @@
           if (mdEdit && d.id) mdEdit.href = '/meetingroom/edit/' + d.id;
           if (mdDeleteForm && d.id) mdDeleteForm.action = '/meetingroom/delete/' + d.id;
 
+          // Check if current user can delete this meeting
+          const currentUser = <%- user ? JSON.stringify({
+            fullname: user.fullname,
+            username: user.username,
+            mClass: user.mClass
+          }) : 'null' %>;
+          
+          const canDelete = currentUser && (
+            currentUser.mClass === 'admin' || 
+            currentUser.mClass === 'pbt' ||
+            currentUser.fullname === d.saveby || 
+            currentUser.username === d.saveby
+          );
+          
+          if (mdDeleteBtn) {
+            mdDeleteBtn.style.display = canDelete ? 'inline-block' : 'none';
+          }
+
           // Ensure modal is shown even if data-bs-toggle doesn't fire
           if (hasBootstrapModal) {
             const instance = bootstrap.Modal.getOrCreateInstance(modal);
             instance.show();
           } else {
             showFallbackModal();
+          }
+        });
+      });
+    })();
+
+    // Delete button handler
+    (function(){
+      const deleteButtons = document.querySelectorAll('.btn-delete');
+      
+      deleteButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.dataset.id;
+          const subject = this.dataset.subject;
+          
+          if (confirm(`ยืนยันการลบการจอง: "${subject}"?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/meetingroom/delete/${id}`;
+            document.body.appendChild(form);
+            form.submit();
           }
         });
       });

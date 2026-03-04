@@ -29,8 +29,8 @@ exports.list = async (req, res) => {
 
 // แสดงฟอร์มเพิ่ม
 exports.showAddForm = async (req, res) => {
-  // ดึงข้อมูล 5 รายการล่าสุดมาแสดง
-  const recentData = await gitgumModel.findRecent(5);
+  // ดึงข้อมูล 20 รายการล่าสุดมาแสดง
+  const recentData = await gitgumModel.findRecent(20);
   
   res.render('gitgum_form', { 
     title: 'เพิ่มกิจกรรม',
@@ -65,8 +65,13 @@ exports.updateGitgum = async (req, res) => {
 
 // ลบ
 exports.deleteGitgum = async (req, res) => {
-  await gitgumModel.delete(req.params.id);
-  res.redirect('/gitgum/list');
+  try {
+    await gitgumModel.delete(req.params.id);
+    res.redirect('/gitgum/add');
+  } catch (error) {
+    console.error('Error deleting gitgum:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+  }
 };
 
 // แสดงปฏิทินกิจกรรมทั้งหมด (responsive)

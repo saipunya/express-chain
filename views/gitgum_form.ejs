@@ -71,9 +71,10 @@
               <th>เวลา</th>
               <th>กิจกรรม</th>
               <th>สถานที่</th>
+              <th>ผู้เข้าร่วม</th>
               <th>ผู้รับผิดชอบ</th>
            
-              <% if(user && user.mClass=='kjs'){ %>
+              <% if(user){ %>
               <th>จัดการ</th>
               <% } %>
             </tr>
@@ -93,14 +94,15 @@
                   <% } %>
                 </td>
                 <td><%= item.git_place || '-' %></td>
-                <td><%= item.git_goto || item.git_respon || '-' %></td>
+                <td><%= item.git_goto || '-' %></td>
+                <td><%= item.git_respon || '-' %></td>
                 <td>
                   <small class="text-muted">
                     <%= item.git_saveby %>
                     <br><%= new Date(item.git_savedate).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit' }) %>
                   </small>
                 </td>
-                <% if(user && (user.mClass=='kjs' || user.mClass=='admin')){ %>
+                <% if(user){ %>
                 <td class="text-center text-nowrap">
                   <div class="btn-group btn-group-sm" role="group">
                     <a href="/gitgum/view/<%= item.git_id %>" class="btn btn-outline-info" title="ดูรายละเอียด">

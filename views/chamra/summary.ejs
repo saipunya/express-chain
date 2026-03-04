@@ -66,6 +66,11 @@
     </tr>
   </thead>
   <tbody>
+    <% if (!data || data.length === 0) { %>
+      <tr>
+        <td colspan="4" class="text-center text-muted">ไม่พบข้อมูลในช่วงวันที่ที่กำหนด</td>
+      </tr>
+    <% } %>
     <% data.forEach(item => { %>
       <tr>
         <td data-label="Date">
@@ -81,7 +86,7 @@
           <% if (item.oct1_step === '0' || !item.oct1_step) { %>
             <br><small class="text-muted">ยังไม่เริ่ม</small>
           <% } else { %>
-          <span class="badge bg-danger"><small class="text-muted">ขั้นที่ <%= item.oct1_step %></small></span>
+          <span class="badge bg-danger"><small><%= item.oct1_step_label || (`ขั้นที่ ${item.oct1_step}`) %></small></span>
             <% if (item.oct1_date) { %>
               <br><small class="text-muted">วันที่: <%= new Date(item.oct1_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
             <% } %>
@@ -91,7 +96,7 @@
           <% if (item.current_max_step === '0' || !item.current_max_step) { %>
             <span class="badge bg-secondary">ยังไม่เริ่ม</span>
           <% } else { %>
-            <span class="badge bg-primary">ขั้นที่ <%= item.current_max_step %></span>
+            <span class="badge bg-primary"><%= item.current_max_step_label || (`ขั้นที่ ${item.current_max_step}`) %></span>
             <% if (item.current_max_date) { %>
               <br><small class="text-muted">วันที่: <%= new Date(item.current_max_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></small>
             <% } %>

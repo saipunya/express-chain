@@ -733,10 +733,11 @@ chamraController.getChamraSummary = async (req, res) => {
   const endDate = '2026-09-30'; // September 30, 2026
   try {
     let data = await Chamra.getProcessesInDateRange(startDate, endDate);
-    // Format step names using showStepServer
+    // Format step labels for display in summary view
     data = data.map(item => ({
       ...item,
-      step: showStepServer(item.step)
+      oct1_step_label: item.oct1_step ? showStepServer(item.oct1_step) : null,
+      current_max_step_label: item.current_max_step ? showStepServer(item.current_max_step) : null
     }));
     res.render('chamra/summary', { data, startDate, endDate });
   } catch (error) {

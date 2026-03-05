@@ -9,16 +9,12 @@ const chunk = (arr, size) => {
 exports.getSummaryByFiscalYear = async () => {
   const [rows] = await db.query(
     `SELECT
-        CASE
-          WHEN tur_month IN ('กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม')
-            THEN CAST(NULLIF(tur_year, '') AS SIGNED) + 1
-          ELSE CAST(NULLIF(tur_year, '') AS SIGNED)
-        END AS fiscal_year,
-        COUNT(*) AS coop_count,
+        tur_budyear,
+        COUNT(DISTINCT CONCAT(tur_year, '-', tur_month)) AS months_with_data,
         SUM(tur_amount) AS total_amount
      FROM tbl_turnover
-     GROUP BY fiscal_year
-     ORDER BY fiscal_year DESC`
+     GROUP BY tur_budyear
+     ORDER BY CAST(NULLIF(tur_budyear, '') AS SIGNED) DESC`
   );
   return rows || [];
 };

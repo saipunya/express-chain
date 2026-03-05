@@ -38,7 +38,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 exports.showImportForm = async (req, res) => {
   const msg = req.query.msg || '';
   const rows = await turnoverModel.getRecent(100);
-  const summary = await turnoverModel.getSummaryByFiscalYear();
+  const summary = await turnoverModel.getSummaryByMonthYear();
   res.render('turnover/import', { msg, rows, summary });
 };
 

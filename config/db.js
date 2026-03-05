@@ -13,9 +13,12 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 30000, // Increased timeout
+  acquireTimeout: 30000,  // Added acquire timeout
+  timeout: 60000,         // Added query timeout
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
   charset: 'utf8mb4', // ensure driver requests utf8mb4
+  reconnect: true,       // Auto-reconnect
   idleTimeout: 300000,   // 5 minutes idle timeout
   maxIdle: 5            // Max idle connections
 });

@@ -24,13 +24,6 @@
     if (Number.isFinite(num) && num > 0 && num < 2400) return num + 543;
     return val || '';
   };
-  const getFiscalYearRange = (budyear) => {
-    const year = Number(budyear);
-    if (!Number.isFinite(year)) return budyear;
-    const startYear = year - 1;
-    const endYear = year;
-    return `ปีงบประมาณ ${year + 543} (กันยายน ${startYear + 543} - สิงหาคม ${endYear + 543})`;
-  };
 %>
 
 <div class="container py-4">
@@ -44,22 +37,24 @@
   <% if (summary && summary.length) { %>
     <div class="card shadow-sm border-0 mt-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0">สรุปประจำปีงบประมาณ</h6>
+        <h6 class="mb-0">สรุปประจำเดือน</h6>
       </div>
       <div class="table-responsive">
         <table class="table table-sm table-bordered table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>ปีงบประมาณ</th>
-              <th class="text-end">จำนวนเดือนที่มีข้อมูล</th>
+              <th>ปี</th>
+              <th>เดือน</th>
+              <th class="text-end">จำนวนแห่ง</th>
               <th class="text-end">ปริมาณธุรกิจรวม</th>
             </tr>
           </thead>
           <tbody>
             <% summary.forEach(row => { %>
               <tr>
-                <td><%= getFiscalYearRange(row.tur_budyear) %></td>
-                <td class="text-end"><%= Number(row.months_with_data || 0).toLocaleString() %> เดือน</td>
+                <td><%= toThaiYear(row.tur_year) %></td>
+                <td><%= toThaiMonth(row.tur_month) %></td>
+                <td class="text-end"><%= Number(row.coop_count || 0).toLocaleString() %></td>
                 <td class="text-end"><%= Number(row.total_amount || 0).toLocaleString() %></td>
               </tr>
             <% }) %>

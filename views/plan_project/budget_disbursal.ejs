@@ -9,8 +9,8 @@
       <p class="mb-0 text-muted">งบประมาณทั้งหมด: <span class="fw-semibold text-success"><%= Number(project.pro_budget || 0).toLocaleString('th-TH') %> บาท</span></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-      <a href="/planproject/summary/<%= encodeURIComponent(project.pro_code) %>" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-        <i class="bi bi-arrow-left me-1"></i>กลับไป
+      <a href="/planproject/disbursal-dashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i>กลับหน้าเบิกจ่าย
       </a>
       <a href="/planproject/budget_disbursal/export?pro_code=<%= encodeURIComponent(project.pro_code) %>" class="btn btn-outline-info btn-sm rounded-pill px-3">
         <i class="bi bi-download me-1"></i>ส่งออก CSV

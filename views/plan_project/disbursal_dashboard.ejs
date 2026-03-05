@@ -233,6 +233,7 @@
                 <th class="text-center">ความก้าวหน้า</th>
                 <th class="text-center">ครั้ง</th>
                 <th class="text-center">ล่าสุด</th>
+                <th class="text-center">จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -259,6 +260,11 @@
                   </td>
                   <td class="text-center"><%= project.disbursalCount %></td>
                   <td class="text-center"><%= project.lastDisbursalLabel %></td>
+                  <td class="text-center">
+                    <a href="/planproject/budget_disbursal?pro_code=<%= project.pro_code %>" class="btn btn-primary btn-sm" title="บันทึกการเบิกจ่าย">
+                      <i class="bi bi-plus-circle"></i>
+                    </a>
+                  </td>
                 </tr>
               <% }) %>
             </tbody>
@@ -267,6 +273,8 @@
       <% } %>
     </div>
   </section>
+
+  
 </div>
 
 <style>

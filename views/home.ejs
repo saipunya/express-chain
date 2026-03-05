@@ -4150,13 +4150,27 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
               </tr>
             </thead>
             <tbody id="activityTbody">
-              <% (activity||[]).forEach((a,i)=>{ const d=new Date(a.date_act); %>
+              <% 
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set to start of day
+                const todayActivities = (activity||[]).filter(a => {
+                  const actDate = new Date(a.date_act);
+                  actDate.setHours(0, 0, 0, 0); // Set to start of day
+                  return actDate >= today;
+                });
+              %>
+              <% todayActivities.forEach((a,i)=>{ const d=new Date(a.date_act); %>
               <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
                 <td class="text-center"><%= i+1 %></td>
                 <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
                 <td><%= a.activity %></td>
               </tr>
               <% }) %>
+              <% if (todayActivities.length === 0) { %>
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-3">ไม่มีกิจกรรมที่กำลังจะมาถึง</td>
+                </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
@@ -4495,9 +4509,15 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                     </td>
                     <td class="text-center">
                       <% if (command.com_filename) { %>
-                        <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="เปิดอ่านไฟล์">
-                          <i class="bi bi-file-earmark-pdf"></i>
-                        </a>
+                        <% if (user) { %>
+                          <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="เปิดอ่านไฟล์">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                          </a>
+                        <% } else { %>
+                          <button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                          </button>
+                        <% } %>
                       <% } else { %>
                         <span class="text-muted small">ไม่มีไฟล์</span>
                       <% } %>
@@ -4553,9 +4573,15 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                     <td>
                       <%= project.pro_story || '-' %>
                       <% if (project.pro_filename) { %>
-                        <a href="/project/download/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary ms-2" target="_blank">
-                          <i class="bi bi-download"></i> ดาวน์โหลด
-                        </a>
+                        <% if (user) { %>
+                          <a href="/project/download/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary ms-2" target="_blank">
+                            <i class="bi bi-download"></i> ดาวน์โหลด
+                          </a>
+                        <% } else { %>
+                          <button class="btn btn-sm btn-outline-secondary ms-2" disabled title="ต้องเข้าสู่ระบบก่อน">
+                            <i class="bi bi-download"></i> ดาวน์โหลด
+                          </button>
+                        <% } %>
                       <% } %>
                     </td>
              
@@ -5302,7 +5328,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           const m = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(el) : null;
           if (m) m.show();
           const countEl = document.getElementById('activityCount');
-          const rows = document.querySelectorAll('#activityTbody tr');
+          const rows = document.querySelectorAll('#activityTbody tr:not([style*="display: none"])');
           if (countEl) countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';
         });
       }
@@ -5334,6 +5360,8 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         if (!tbody) return;
         
         if (downloads && downloads.length > 0) {
+          const tDataEl = document.getElementById('template-data');
+          const isLoggedIn = tDataEl ? JSON.parse(tDataEl.getAttribute('data-is-logged-in') || 'false') : false;
           tbody.innerHTML = downloads.map((down, index) => {
             const hasFile = down.down_file && down.down_file !== '-';
             const hasLink = down.down_link && down.down_link !== '-';
@@ -5352,9 +5380,14 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                   ${hasFile ? '<span class="badge bg-success"><i class="bi bi-file-earmark me-1"></i>ไฟล์</span>' : '<span class="badge bg-info"><i class="bi bi-link me-1"></i>ลิงก์</span>'}
                 </td>
                 <td class="text-center">
-                  <a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
-                    <i class="bi ${linkIcon}"></i>
-                  </a>
+                  ${isLoggedIn ? 
+                    `<a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
+                      <i class="bi ${linkIcon}"></i>
+                    </a>` : 
+                    `<button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
+                      <i class="bi ${linkIcon}"></i>
+                    </button>`
+                  }
                 </td>
                 <td class="text-nowrap small text-muted">
                   ${down.down_savedate ? new Date(down.down_savedate).toLocaleDateString('th-TH') : '-'}
@@ -5388,6 +5421,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   data-stats='<%= JSON.stringify(stats) %>'
   data-chamra-stages='<%= JSON.stringify(__chamraCounts || {}) %>'
   data-activities='<%= JSON.stringify(activity || []) %>'
+  data-is-logged-in='<%= JSON.stringify(!!user) %>'
   style="display: none;">
 </div>
 

@@ -4381,8 +4381,19 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             <% if (group.rows && group.rows.length > 0) { %>
               <div class="mb-4">
                 <h6 class="text-primary mb-3">
-                  <i class="bi bi-building me-2"></i><%= group.groupName %>
-                  <span class="badge bg-danger ms-2"><%= group.rows.length %></span>
+                  <i class="bi bi-building me-2"></i>
+                 
+                  <% if(group.groupName === 'group1') { %>
+                    <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 1</span>
+                  <% } else if (group.groupName === 'group2') { %>
+                    <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 2</span>
+                  <% } else if (group.groupName === 'group3') { %>
+                    <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 3</span>
+                  <% } else if (group.groupName === 'group4') { %>
+                    <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 4</span>
+                  <% } else { %>
+                    <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 5</span>
+                  <% } %>
                 </h6>
                 <div class="table-responsive">
                   <table class="table table-sm table-bordered table-hover align-middle">
@@ -4479,8 +4490,19 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           <% if (group.rows && group.rows.length > 0) { %>
             <div class="mb-4">
               <h6 class="text-primary mb-3">
-                <i class="bi bi-building me-2"></i><%= group.groupName %>
-                <span class="badge bg-warning text-dark ms-2"><%= group.rows.length %></span>
+                <i class="bi bi-building me-2"></i>
+            
+                <% if(group.groupName === 'group1') { %>
+                  <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 1</span>
+                <% } else if (group.groupName === 'group2') { %>
+                  <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 2</span>
+                <% } else if (group.groupName === 'group3') { %>
+                  <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 3</span>
+                <% } else if (group.groupName === 'group4') { %>
+                  <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 4</span>
+                <% } else { %>
+                  <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 5</span>
+                <% } %>
               </h6>
               <div class="table-responsive">
                 <table class="table table-sm table-bordered table-hover align-middle">

@@ -1,4 +1,106 @@
 const CooperativesAssets = require('../models/cooperativesAssets');
+const db = require('../config/db');
+
+function toNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildMarketingAssetSummary(assets = []) {
+  const cooperativeMap = {};
+  const groupMap = {};
+
+  const totals = {
+    total_count: 0,
+    total_value: 0,
+    working_count: 0,
+    not_working_count: 0
+  };
+
+  assets.forEach(asset => {
+    const coopCode = asset.coop_code || asset.asset_code || 'ไม่ระบุ';
+    const coopName = asset.coop_name || asset.active_coop_name || '-';
+    const groupName = asset.c_group || asset.coop_group || 'ไม่ระบุ';
+    const assetValue = toNumber(asset.price_total);
+    const status = asset.status || '-';
+
+    if (!cooperativeMap[coopCode]) {
+      cooperativeMap[coopCode] = {
+        coop_code: coopCode,
+        coop_name: coopName,
+        c_group: groupName,
+        total_count: 0,
+        total_value: 0,
+        working_count: 0,
+        not_working_count: 0
+      };
+    }
+
+    if (!groupMap[groupName]) {
+      groupMap[groupName] = {
+        c_group: groupName,
+        total_count: 0,
+        total_value: 0,
+        working_count: 0,
+        not_working_count: 0,
+        cooperativeCodes: new Set()
+      };
+    }
+
+    const coopSummary = cooperativeMap[coopCode];
+    const groupSummary = groupMap[groupName];
+
+    coopSummary.total_count += 1;
+    coopSummary.total_value += assetValue;
+    groupSummary.total_count += 1;
+    groupSummary.total_value += assetValue;
+    groupSummary.cooperativeCodes.add(coopCode);
+
+    totals.total_count += 1;
+    totals.total_value += assetValue;
+
+    if (status === 'ใช้งานได้') {
+      coopSummary.working_count += 1;
+      groupSummary.working_count += 1;
+      totals.working_count += 1;
+    } else if (status === 'ใช้งานไม่ได้') {
+      coopSummary.not_working_count += 1;
+      groupSummary.not_working_count += 1;
+      totals.not_working_count += 1;
+    }
+  });
+
+  const cooperativeSummaries = Object.values(cooperativeMap).sort((a, b) => {
+    const groupCompare = (a.c_group || '').localeCompare(b.c_group || '', 'th');
+    if (groupCompare !== 0) return groupCompare;
+    const nameCompare = (a.coop_name || '').localeCompare(b.coop_name || '', 'th');
+    if (nameCompare !== 0) return nameCompare;
+    return (a.coop_code || '').localeCompare(b.coop_code || '', 'th');
+  });
+
+  const groupSummaries = Object.values(groupMap)
+    .map(group => ({
+      c_group: group.c_group,
+      total_count: group.total_count,
+      total_value: group.total_value,
+      working_count: group.working_count,
+      not_working_count: group.not_working_count,
+      cooperatives: [...group.cooperativeCodes]
+        .map(code => cooperativeMap[code])
+        .sort((a, b) => (a.coop_name || '').localeCompare(b.coop_name || '', 'th') || (a.coop_code || '').localeCompare(b.coop_code || '', 'th'))
+    }))
+    .sort((a, b) => (a.c_group || '').localeCompare(b.c_group || '', 'th'));
+
+  return {
+    overall: {
+      ...totals,
+      total_groups: groupSummaries.length,
+      total_cooperatives: cooperativeSummaries.length
+    },
+    groupSummaries,
+    cooperativeSummaries
+  };
+}
 
 // Index - List all assets with optional filters
 exports.index = async (req, res) => {
@@ -51,6 +153,76 @@ exports.show = async (req, res) => {
   } catch (error) {
     console.error('Error showing asset:', error);
     res.status(500).send('เกิดข้อผิดพลาดในการแสดงข้อมูล');
+  }
+};
+
+// Summary - overall marketing equipment summary
+exports.summary = async (req, res) => {
+  try {
+    const [assets] = await db.query(`
+      SELECT 
+        ca.*,
+        ac.c_group,
+        ac.c_type,
+        ac.c_name AS active_coop_name
+      FROM cooperatives_assets ca
+      LEFT JOIN active_coop ac ON ca.asset_code = ac.c_code
+      ORDER BY COALESCE(ac.c_group, 'ไม่ระบุ'), ca.coop_name, ca.coop_code, ca.asset_code, ca.id
+    `);
+
+    const { overall, groupSummaries, cooperativeSummaries } = buildMarketingAssetSummary(assets || []);
+
+    res.render('cooperativesAssets/summary', {
+      title: 'สรุปอุปกรณ์การตลาด',
+      overall,
+      groupSummaries,
+      cooperativeSummaries
+    });
+  } catch (error) {
+    console.error('Error loading marketing asset summary:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าสรุปอุปกรณ์การตลาด');
+  }
+};
+
+// Detail - cooperative marketing equipment detail page
+exports.detail = async (req, res) => {
+  try {
+    const { coopCode } = req.params;
+
+    const [assets] = await db.query(
+      `SELECT 
+        ca.*,
+        ac.c_group,
+        ac.c_type,
+        ac.c_name AS active_coop_name,
+        ac.c_person,
+        ac.c_person2
+      FROM cooperatives_assets ca
+      LEFT JOIN active_coop ac ON ca.asset_code = ac.c_code
+      WHERE ca.coop_code = ?
+      ORDER BY ca.asset_code, ca.category, ca.machine_type, ca.id`,
+      [coopCode]
+    );
+
+    if (!assets || assets.length === 0) {
+      return res.status(404).send('ไม่พบข้อมูลอุปกรณ์การตลาดของสหกรณ์นี้');
+    }
+
+    const summary = buildMarketingAssetSummary(assets);
+    const firstAsset = assets[0];
+
+    res.render('cooperativesAssets/detail', {
+      title: `รายละเอียดอุปกรณ์การตลาด - ${firstAsset.coop_name || coopCode}`,
+      coopCode,
+      coopName: firstAsset.coop_name || firstAsset.active_coop_name || coopCode,
+      groupName: firstAsset.c_group || firstAsset.coop_group || 'ไม่ระบุ',
+      summary: summary.overall,
+      assets,
+      firstAsset
+    });
+  } catch (error) {
+    console.error('Error loading marketing asset detail:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้ารายละเอียดอุปกรณ์การตลาด');
   }
 };
 
@@ -188,7 +360,6 @@ exports.delete = async (req, res) => {
 // API endpoint for JSON data
 exports.api = async (req, res) => {
   try {
-    const db = require('../config/db');
     // Join with active_coop table to get complete information
     const [assets] = await db.query(`
       SELECT 

@@ -1,0 +1,159 @@
+<%- include('../partials/header') %>
+
+<div class="py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-collection me-2"></i><%= title %></h1>
+      <p class="text-muted small mb-0">
+        <%= coopCode %> · <%= coopName %> · กลุ่ม <%= groupName %>
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/cooperatives-assets/summary" class="btn btn-outline-primary">
+        <i class="bi bi-bar-chart-line me-1"></i>หน้าสรุป
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">จำนวนรายการ</div>
+          <div class="display-6 fw-bold text-primary"><%= summary.total_count %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">มูลค่ารวม</div>
+          <div class="display-6 fw-bold text-success"><%= Number(summary.total_value || 0).toLocaleString('th-TH') %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">ใช้งานได้</div>
+          <div class="display-6 fw-bold text-success"><%= summary.working_count %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">ใช้งานไม่ได้</div>
+          <div class="display-6 fw-bold text-danger"><%= summary.not_working_count %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0 text-primary"><i class="bi bi-info-circle me-2"></i>ข้อมูลสหกรณ์</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-muted small">รหัสสหกรณ์</div>
+              <div class="fw-semibold"><%= coopCode %></div>
+            </div>
+            <div class="col-6">
+              <div class="text-muted small">กลุ่มส่งเสริม</div>
+              <div class="fw-semibold"><%= groupName %></div>
+            </div>
+            <div class="col-12">
+              <div class="text-muted small">ชื่อสหกรณ์</div>
+              <div class="fw-semibold"><%= coopName %></div>
+            </div>
+            <div class="col-12">
+              <div class="text-muted small">จำนวนรายการในหน้าต่างนี้</div>
+              <div class="fw-semibold"><%= assets.length %> รายการ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0 text-primary"><i class="bi bi-person-lines-fill me-2"></i>ผู้ติดต่อ</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-muted small">ชื่อผู้ติดต่อ</div>
+              <div class="fw-semibold"><%= firstAsset.contact_name || '-' %></div>
+            </div>
+            <div class="col-6">
+              <div class="text-muted small">เบอร์โทร</div>
+              <div class="fw-semibold"><%= firstAsset.contact_phone || '-' %></div>
+            </div>
+            <div class="col-12">
+              <div class="text-muted small">หมายเหตุ</div>
+              <div class="fw-semibold"><%= firstAsset.remark || '-' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0 text-primary"><i class="bi bi-table me-2"></i>รายการอุปกรณ์การตลาด</h5>
+          <span class="badge bg-secondary"><%= assets.length %> รายการ</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+               
+                <th>หมวดหมู่</th>
+                <th>เครื่องจักร</th>
+                <th>สถานะ</th>
+                <th class="text-end">มูลค่ารวม</th>
+                <th class="text-center">รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% assets.forEach(asset => { %>
+                <tr>
+                  <td><span class="badge bg-light text-dark"><%= asset.category || '-' %></span></td>
+                  <td>
+                    <div class="fw-semibold"><%= asset.machine_type || '-' %></div>
+                    <small class="text-muted text-truncate d-inline-block" style="max-width: 240px;">
+                      <%= asset.description || '-' %>
+                    </small>
+                  </td>
+                  <td>
+                    <% if (asset.status === 'ใช้งานได้') { %>
+                      <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= asset.status %></span>
+                    <% } else if (asset.status === 'ใช้งานไม่ได้') { %>
+                      <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i><%= asset.status %></span>
+                    <% } else { %>
+                      <span class="badge bg-secondary"><%= asset.status || '-' %></span>
+                    <% } %>
+                  </td>
+                  <td class="text-end fw-semibold text-success">
+                    <%= Number(asset.price_total || 0).toLocaleString('th-TH') %>
+                  </td>
+                  <td class="text-center">
+                    <a href="/cooperatives-assets/<%= asset.id %>" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-eye me-1"></i>ดูรายละเอียด
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

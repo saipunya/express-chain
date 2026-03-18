@@ -10,10 +10,14 @@
       <a href="/cooperatives-assets/api/assets" class="btn btn-outline-secondary" target="_blank">
         <i class="bi bi-download me-1"></i>ดึงข้อมูล JSON
       </a>
-     
+        <a href="/cooperatives-assets/summary" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-left me-1"></i>หน้าสรุป
+        </a>
+     <% if (user && user.mClass === 'kps') { %> 
       <a href="/cooperatives-assets/new" class="btn btn-success">
         <i class="bi bi-plus-lg me-1"></i>เพิ่มครุภัณฑ์ใหม่
       </a>
+      <% } %>
     </div>
   </div>
 

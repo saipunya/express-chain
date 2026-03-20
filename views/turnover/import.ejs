@@ -26,66 +26,153 @@
   };
 %>
 
+<style>
+  body {
+    background: radial-gradient(circle at top, rgba(13,110,253,0.12), transparent 55%),
+      radial-gradient(circle at 20% 20%, rgba(32,201,151,0.18), transparent 40%);
+  }
+
+  .page-hero {
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(13,110,253,0.15), rgba(32,201,151,0.15));
+    border: 1px solid rgba(13,110,253,0.15);
+  }
+
+  .card {
+    border-radius: 1rem;
+  }
+
+  .table thead th {
+    background: #f5f7fb;
+    border-bottom: 2px solid rgba(13,110,253,0.15);
+  }
+
+  .badge-soft {
+    background-color: rgba(13,110,253,0.12);
+    color: #0d6efd;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .info-list li + li {
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .stack-table table thead {
+      display: none;
+    }
+    .stack-table table tbody tr {
+      display: block;
+      border-bottom: 1px solid #dee2e6;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+    }
+    .stack-table table tbody tr:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .stack-table table tbody td {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      border-top: none !important;
+      padding: 0.4rem 0;
+    }
+    .stack-table table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #6c757d;
+    }
+  }
+</style>
+
 <div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <div>
-      <h1 class="h4 mb-1"><i class="bi bi-file-earmark-spreadsheet me-2"></i>นำเข้าไฟล์ปริมาณธุรกิจ</h1>
-      <div class="text-muted small">ตาราง: tbl_turnover</div>
+  <div class="page-hero p-4 p-md-5 mb-4 text-white">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div>
+        <p class="badge-soft mb-2 d-inline-flex align-items-center gap-2">
+          <i class="bi bi-arrow-repeat"></i>
+          นำเข้าปริมาณธุรกิจ
+        </p>
+        <h1 class="h4 text-dark mb-2">จัดการข้อมูลปริมาณธุรกิจได้อย่างมั่นใจ</h1>
+        <p class="text-muted mb-0">รองรับไฟล์ Excel พร้อมสรุปภาพรวมแบบเรียลไทม์</p>
+      </div>
+      <ul class="info-list text-dark small">
+        <li><i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>รองรับ .xls และ .xlsx</li>
+        <li><i class="bi bi-shield-check me-2 text-success"></i>ตรวจสอบคอลัมน์อัตโนมัติ</li>
+        <li><i class="bi bi-lightning-charge me-2 text-warning"></i>รวมข้อมูลล่าสุด 100 แถว</li>
+      </ul>
     </div>
   </div>
 
-  <% if (summary && summary.length) { %>
-    <div class="card shadow-sm border-0 mt-4">
-      <div class="card-header bg-white">
-        <h6 class="mb-0">สรุปประจำเดือน</h6>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>ปี</th>
-              <th>เดือน</th>
-              <th class="text-end">จำนวนแห่ง</th>
-              <th class="text-end">ปริมาณธุรกิจรวม</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% summary.forEach(row => { %>
-              <tr>
-                <td><%= toThaiYear(row.tur_year) %></td>
-                <td><%= toThaiMonth(row.tur_month) %></td>
-                <td class="text-end"><%= Number(row.coop_count || 0).toLocaleString() %></td>
-                <td class="text-end"><%= Number(row.total_amount || 0).toLocaleString() %></td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  <% } %>
-
-  <% if (msg) { %>
-    <div class="alert alert-info py-2"><%= msg %></div>
-  <% } %>
-
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-      <form action="/turnover/import" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label class="form-label">ไฟล์ Excel (.xlsx หรือ .xls)</label>
-          <input type="file" name="file" accept=".xls,.xlsx" class="form-control" required>
-          <div class="form-text">คอลัมน์ที่ต้องมี: tur_code (รหัสสหกรณ์), tur_name (ชื่อสหกรณ์), tur_budyear (ปีงบประมาณ), tur_month (เดือน), tur_year (ปี), tur_value/tur_amount (ยอดเงิน) - สามารถจัดเรียงคอลัมน์ในลำดับใดก็ได้</div>
+  <div class="row g-4 mt-1">
+    <% if (summary && summary.length) { %>
+      <div class="col-12 col-xl-5">
+        <div class="card shadow-sm border-0 h-100 p-2">
+          <div class="card-header bg-white">
+            <h6 class="mb-0">สรุปตามปีงบประมาณ</h6>
+          </div>
+          <div class="table-responsive stack-table">
+            <table class="table table-sm table-bordered table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ปีงบประมาณ</th>
+                  <th class="text-end">จำนวนเดือนที่มีข้อมูล</th>
+                  <th class="text-end">ปริมาณธุรกิจรวม</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% summary.forEach(row => { %>
+                  <tr>
+                    <td data-label="ปีงบประมาณ"><%= toThaiYear(row.tur_budyear) %></td>
+                    <td data-label="จำนวนเดือนที่มีข้อมูล" class="text-end"><%= Number(row.months_with_data || 0).toLocaleString() %></td>
+                    <td data-label="ปริมาณธุรกิจรวม" class="text-end"><%= Number(row.total_amount || 0).toLocaleString() %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <button class="btn btn-primary">นำเข้า</button>
-      </form>
+      </div>
+    <% } %>
+
+    <div class="col-12 <%= summary && summary.length ? 'col-xl-7' : 'col-xl-6 offset-xl-3' %>">
+      <% if (msg) { %>
+        <div class="alert alert-info py-2 mb-3 mb-xl-4"><%= msg %></div>
+      <% } %>
+      <div class="card shadow-sm border-0 h-100 mb-2">
+        <div class="card-body  p-2">
+          <form action="/turnover/import" method="POST" enctype="multipart/form-data">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">ไฟล์ Excel (.xlsx หรือ .xls)</label>
+                <input type="file" name="file" accept=".xls,.xlsx" class="form-control" required>
+                <div class="form-text">คอลัมน์ที่ต้องมี: tur_code (รหัสสหกรณ์), tur_name (ชื่อสหกรณ์), tur_budyear (ปีงบประมาณ), tur_month (เดือน), tur_year (ปี), tur_value/tur_amount (ยอดเงิน) - สามารถจัดเรียงคอลัมน์ในลำดับใดก็ได้</div>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-primary w-100 w-sm-auto">นำเข้า</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="card shadow-sm border-0">
-    <div class="card-header bg-white">
+  <div class="card shadow-sm border-0 mt-2">
+    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center p-2">
       <h6 class="mb-0">ข้อมูลล่าสุด (<%= rows.length %> แถว)</h6>
+      <small class="text-muted">อัปเดตอัตโนมัติจากการนำเข้า</small>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive stack-table p-2">
       <table class="table table-sm table-bordered table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
@@ -105,12 +192,12 @@
           <% } else { %>
             <% rows.forEach(r => { %>
               <tr>
-                <td><%= r.tur_code %></td>
-                <td><%= r.tur_name %></td>
-                <td><%= r.tur_budyear %></td>
-                <td><%= toThaiMonth(r.tur_month) %></td>
-                <td><%= toThaiYear(r.tur_year) %></td>
-                <td class="text-end"><%= Number(r.tur_amount || 0).toLocaleString() %></td>
+                <td data-label="รหัสสหกรณ์"><%= r.tur_code %></td>
+                <td data-label="ชื่อสหกรณ์"><%= r.tur_name %></td>
+                <td data-label="ปีงบประมาณ"><%= parseInt(r.tur_budyear) + 543 %></td>
+                <td data-label="เดือน"><%= toThaiMonth(r.tur_month) %></td>
+                <td data-label="ปี"><%= toThaiYear(r.tur_year) %></td>
+                <td data-label="ยอดเงิน" class="text-end"><%= Number(r.tur_amount || 0).toLocaleString() %></td>
               </tr>
             <% }) %>
           <% } %>

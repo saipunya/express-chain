@@ -6,6 +6,7 @@ const controller = require('../controllers/cooperativesAssetsController');
 router.get('/', controller.index);
 router.get('/new', controller.create);
 router.get('/summary', controller.summary);
+router.get('/summary/group/:groupName', controller.groupSummary);
 router.get('/detail/:coopCode', controller.detail);
 router.get('/api/assets', controller.api);
 router.post('/', controller.store);

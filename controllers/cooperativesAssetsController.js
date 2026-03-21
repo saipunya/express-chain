@@ -159,7 +159,9 @@ exports.show = async (req, res) => {
 // Summary - overall marketing equipment summary
 exports.summary = async (req, res) => {
   try {
-    const [assets] = await db.query(`
+    const { group } = req.query;
+    
+    let query = `
       SELECT 
         ca.*,
         ac.c_group,
@@ -167,16 +169,28 @@ exports.summary = async (req, res) => {
         ac.c_name AS active_coop_name
       FROM cooperatives_assets ca
       LEFT JOIN active_coop ac ON ca.asset_code = ac.c_code
-      ORDER BY COALESCE(ac.c_group, 'ไม่ระบุ'), ca.coop_name, ca.coop_code, ca.asset_code, ca.id
-    `);
+    `;
+    
+    let params = [];
+    
+    // If group parameter is provided, filter by that group
+    if (group) {
+      query += ` WHERE ac.c_group = ?`;
+      params = [group];
+    }
+    
+    query += ` ORDER BY COALESCE(ac.c_group, 'ไม่ระบุ'), ca.coop_name, ca.coop_code, ca.asset_code, ca.id`;
+
+    const [assets] = await db.query(query, params);
 
     const { overall, groupSummaries, cooperativeSummaries } = buildMarketingAssetSummary(assets || []);
 
     res.render('cooperativesAssets/summary', {
-      title: 'สรุปอุปกรณ์การตลาด',
+      title: group ? `สรุปอุปกรณ์การตลาด - ${group.replace('group', 'กลุ่มส่งเสริมสหกรณ์ ')}` : 'สรุปอุปกรณ์การตลาด',
       overall,
       groupSummaries,
-      cooperativeSummaries
+      cooperativeSummaries,
+      selectedGroup: group || null
     });
   } catch (error) {
     console.error('Error loading marketing asset summary:', error);
@@ -354,6 +368,56 @@ exports.delete = async (req, res) => {
   } catch (error) {
     console.error('Error deleting asset:', error);
     res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+  }
+};
+
+// Group Summary - Show specific group details
+exports.groupSummary = async (req, res) => {
+  try {
+    const { groupName } = req.params;
+    
+    // Query assets for specific group
+    const [assets] = await db.query(`
+      SELECT 
+        ca.*,
+        ac.c_group,
+        ac.c_type,
+        ac.c_name AS active_coop_name,
+        ac.c_person,
+        ac.c_person2
+      FROM cooperatives_assets ca
+      LEFT JOIN active_coop ac ON ca.asset_code = ac.c_code
+      WHERE ac.c_group = ?
+      ORDER BY ca.coop_name, ca.coop_code, ca.asset_code, ca.id
+    `, [groupName]);
+
+    if (!assets || assets.length === 0) {
+      return res.status(404).send('ไม่พบข้อมูลอุปกรณ์การตลาดของกลุ่มนี้');
+    }
+
+    const summary = buildMarketingAssetSummary(assets);
+    const firstAsset = assets[0];
+    
+    // Extract unique machine types for this group
+    const machineTypes = [...new Set(assets.map(a => a.machine_type).filter(Boolean))];
+    
+    // Extract unique crops for this group
+    const crops = [...new Set(assets.map(a => a.crop).filter(Boolean))];
+
+    res.render('cooperativesAssets/groupSummary', {
+      title: `สรุปอุปกรณ์การตลาด - กลุ่มส่งเสริมสหกรณ์ ${groupName}`,
+      groupName,
+      groupDisplayName: groupName.replace('group', 'กลุ่ม '),
+      summary: summary.overall,
+      cooperatives: summary.cooperativeSummaries,
+      assets,
+      machineTypes,
+      crops,
+      firstAsset
+    });
+  } catch (error) {
+    console.error('Error loading group summary:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าสรุปกลุ่ม');
   }
 };
 

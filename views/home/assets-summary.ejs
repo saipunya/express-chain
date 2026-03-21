@@ -43,6 +43,70 @@
       const totalGroups = new Set(assets.map(asset => asset.c_group || asset.coop_group || 'ไม่ระบุ')).size;
       const totalCoops = new Set(assets.map(asset => asset.coop_code).filter(Boolean)).size;
       
+      // Group assets by group number (1-5)
+      const groupData = {};
+      for (let i = 1; i <= 5; i++) {
+        groupData[i] = {
+          assets: assets.filter(a => {
+            const groupField = a.c_group || a.coop_group || '';
+            // Handle both "group5" and "5" formats
+            return groupField === `group${i}` || groupField === i.toString();
+          }),
+          count: 0,
+          value: 0,
+          working: 0,
+          notWorking: 0
+        };
+      }
+
+      // Calculate statistics for each group
+      for (let i = 1; i <= 5; i++) {
+        const groupAssets = groupData[i].assets;
+        groupData[i].count = groupAssets.length;
+        groupData[i].value = groupAssets.reduce((sum, asset) => sum + Number(asset.price_total || 0), 0);
+        groupData[i].working = groupAssets.filter(a => a.status === 'ใช้งานได้').length;
+        groupData[i].notWorking = groupAssets.filter(a => a.status === 'ใช้งานไม่ได้').length;
+      }
+
+      // Generate group summary HTML
+      let groupsHtml = '';
+      for (let i = 1; i <= 5; i++) {
+        const group = groupData[i];
+        const groupColor = ['primary', 'success', 'warning', 'info', 'secondary'][i - 1];
+        groupsHtml += `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card border-${groupColor} h-100">
+              <div class="card-header bg-${groupColor} text-white py-2 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-people-fill me-1"></i> กลุ่ม ${i}</h6>
+                <a href="/cooperatives-assets/summary?group=group${i}" class="btn btn-sm btn-light">
+                  <i class="bi bi-eye"></i> ดูรายละเอียด
+                </a>
+              </div>
+              <div class="card-body p-2">
+                <div class="row text-center g-2">
+                  <div class="col-6">
+                    <div class="fw-bold text-${groupColor}">${group.count}</div>
+                    <small class="text-muted d-block">อุปกรณ์</small>
+                  </div>
+                  <div class="col-6">
+                    <div class="fw-bold text-success">${group.value.toLocaleString('th-TH')}</div>
+                    <small class="text-muted d-block">มูลค่า(บาท)</small>
+                  </div>
+                  <div class="col-6">
+                    <div class="fw-bold text-success">${group.working}</div>
+                    <small class="text-muted d-block">ใช้งานได้</small>
+                  </div>
+                  <div class="col-6">
+                    <div class="fw-bold text-danger">${group.notWorking}</div>
+                    <small class="text-muted d-block">ใช้งานไม่ได้</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       const html = `
         <div class="alert alert-info mb-3">
           <div class="row text-center">
@@ -52,7 +116,7 @@
             </div>
             <div class="col-3">
               <div class="fw-bold text-success">${totalValue.toLocaleString('th-TH')}</div>
-              <small class="text-muted">มูลค่ารวม</small>
+              <small class="text-muted">มูลค่ารวม(บาท)</small>
             </div>
             <div class="col-3">
               <div class="fw-bold text-success">${totalWorking}</div>
@@ -64,6 +128,14 @@
             </div>
           </div>
         </div>
+        
+        <div class="mb-3">
+          <h6 class="text-muted mb-2"><i class="bi bi-layers me-1"></i> สรุปอุปกรณ์การตลาดแยกตามกลุ่ม</h6>
+          <div class="row g-2">
+            ${groupsHtml}
+          </div>
+        </div>
+        
         <div class="row g-3">
           <div class="col-md-6">
             <div class="p-3 rounded-3 bg-light h-100">

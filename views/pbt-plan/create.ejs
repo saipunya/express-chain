@@ -1,0 +1,163 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-folder-plus me-2"></i>เพิ่มข้อมูล pbt_plan</h1>
+      <p class="text-muted mb-0">เพิ่มได้เฉพาะแผนที่ต้องการ ไม่จำเป็นต้องกรอกครบทั้ง 4 แผนพร้อมกัน</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/pbt-plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับไปหน้ารายการ</a>
+    </div>
+  </div>
+
+  <% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <form action="/pbt-plan/create" method="post" enctype="multipart/form-data" id="pbtPlanForm">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-2">
+            <label class="form-label">เดือน</label>
+            <select name="p_month" class="form-select" required>
+              <% for (let i = 1; i <= 12; i++) { const value = String(i).padStart(2, '0'); %>
+                <option value="<%= value %>" <%= defaultMonth === value ? 'selected' : '' %>><%= value %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">ปี</label>
+            <input type="text" name="p_year" class="form-control" value="<%= defaultYear %>" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">ผู้บันทึก</label>
+            <input type="text" name="p_saveby" class="form-control" value="<%= defaultSaveby %>" readonly>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">วันที่บันทึก</label>
+            <input type="date" name="p_savedate" class="form-control" value="<%= defaultSavedate %>" required>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100"><i class="bi bi-save me-1"></i>บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <% planOptions.forEach((plan) => { %>
+        <div class="col-12 col-xl-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <strong><%= plan.label %></strong>
+                <span class="badge bg-primary ms-2" id="count-<%= plan.value %>">0 รายการ</span>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm" data-add-row="<%= plan.value %>">
+                <i class="bi bi-plus-circle me-1"></i>เพิ่มโครงการ
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 120px;">รหัส</th>
+                      <th>โครงการ</th>
+                      <th style="width: 170px;">รูป/ไฟล์</th>
+                      <th style="width: 70px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-<%= plan.value %>"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </form>
+</div>
+
+<script type="application/json" id="pbtPlanOptions"><%- JSON.stringify(planOptions) %></script>
+
+<script>
+  (function () {
+    const planDataEl = document.getElementById('pbtPlanOptions');
+    const planOptions = JSON.parse(planDataEl.textContent || '[]');
+    const form = document.getElementById('pbtPlanForm');
+    let rowCounter = 0;
+
+    function makeRow(planValue, preset = {}) {
+      const key = preset.key || String(rowCounter++);
+      const row = document.createElement('tr');
+      row.dataset.rowKey = key;
+      row.dataset.plan = planValue;
+      row.innerHTML = `
+        <td>
+          <input type="text" name="rows[${key}][p_code]" class="form-control form-control-sm" placeholder="เช่น ${planValue.toUpperCase()}01" value="${preset.p_code || ''}" required>
+          <input type="hidden" name="rows[${key}][p_plan]" value="${planValue}">
+        </td>
+        <td>
+          <input type="text" name="rows[${key}][p_project]" class="form-control form-control-sm" placeholder="ชื่อโครงการ" value="${preset.p_project || ''}" required>
+        </td>
+        <td>
+          <input type="file" name="p_img_${key}" class="form-control form-control-sm" required>
+          <div class="form-text">เก็บเป็นไฟล์รูป/เอกสาร</div>
+        </td>
+        <td class="text-end">
+          <button type="button" class="btn btn-outline-danger btn-sm" data-remove-row>
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+      return row;
+    }
+
+    function getTbody(planValue) {
+      return document.getElementById(`tbody-${planValue}`);
+    }
+
+    function updateCount(planValue) {
+      const tbody = getTbody(planValue);
+      const badge = document.getElementById(`count-${planValue}`);
+      const count = tbody ? tbody.querySelectorAll('tr').length : 0;
+      if (badge) badge.textContent = `${count} รายการ`;
+    }
+
+    function addRow(planValue) {
+      const tbody = getTbody(planValue);
+      if (!tbody) return;
+      const row = makeRow(planValue);
+      tbody.appendChild(row);
+      updateCount(planValue);
+    }
+
+    document.querySelectorAll('[data-add-row]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        addRow(btn.dataset.addRow);
+      });
+    });
+
+    form.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('[data-remove-row]');
+      if (!removeBtn) return;
+      const tr = removeBtn.closest('tr');
+      if (!tr) return;
+      const planValue = tr.dataset.plan;
+      tr.remove();
+      updateCount(planValue);
+    });
+
+    form.addEventListener('submit', (e) => {
+      const anyRows = planOptions.some((plan) => getTbody(plan.value).querySelectorAll('tr').length > 0);
+      if (!anyRows) {
+        e.preventDefault();
+        alert('กรุณาเพิ่มข้อมูลอย่างน้อย 1 รายการ');
+      }
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

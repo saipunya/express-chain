@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-pencil-square me-2"></i>แก้ไขข้อมูล pbt_plan</h1>
+      <p class="text-muted mb-0">ปรับปรุงข้อมูลรายการเดียว</p>
+    </div>
+    <div>
+      <a href="/pbt-plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับไปหน้ารายการ</a>
+    </div>
+  </div>
+
+  <form action="/pbt-plan/edit/<%= plan.p_id %>" method="post" enctype="multipart/form-data" class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">แผน</label>
+      <select name="p_plan" class="form-select" required>
+        <% planOptions.forEach((opt) => { %>
+          <option value="<%= opt.value %>" <%= String(plan.p_plan) === opt.value ? 'selected' : '' %>><%= opt.label %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">เดือน</label>
+      <input type="text" name="p_month" class="form-control" value="<%= plan.p_month %>" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">ปี</label>
+      <input type="text" name="p_year" class="form-control" value="<%= plan.p_year %>" required>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">รหัสโครงการ</label>
+      <input type="text" name="p_code" class="form-control" value="<%= plan.p_code %>" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">ชื่อโครงการ</label>
+      <input type="text" name="p_project" class="form-control" value="<%= plan.p_project %>" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">ไฟล์ใหม่</label>
+      <input type="file" name="p_img" class="form-control">
+      <div class="form-text">ถ้าไม่เลือกไฟล์ใหม่ ระบบจะเก็บไฟล์เดิมไว้</div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">ไฟล์ปัจจุบัน</label>
+      <div class="border rounded p-3 bg-light">
+        <% if (plan.p_img) { %>
+          <a href="/uploads/pbt-plan/<%= plan.p_img %>" target="_blank" rel="noopener"><%= plan.p_img %></a>
+        <% } else { %>
+          <span class="text-muted">-</span>
+        <% } %>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">ผู้บันทึก</label>
+      <input type="text" class="form-control" value="<%= plan.p_saveby %>" readonly>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">วันที่บันทึก</label>
+      <input type="date" name="p_savedate" class="form-control" value="<%= plan.p_savedate %>" required>
+    </div>
+    <div class="col-12 pt-2">
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save me-2"></i>บันทึกการแก้ไข</button>
+        <a href="/pbt-plan" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>ยกเลิก</a>
+      </div>
+    </div>
+  </form>
+</div>
+<%- include('../partials/footer') %>

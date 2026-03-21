@@ -1,0 +1,153 @@
+<%- include('../partials/header') %>
+<% const safeSelectedPeriod = typeof selectedPeriod !== 'undefined' ? selectedPeriod : 'latest'; %>
+<% const safePeriodOptions = typeof periodOptions !== 'undefined' ? periodOptions : []; %>
+<% const safeSummary = typeof summary !== 'undefined' ? summary : []; %>
+<% const safeSections = typeof sections !== 'undefined' ? sections : []; %>
+<% const safeActivePeriodLabel = typeof activePeriodLabel !== 'undefined' ? activePeriodLabel : 'เดือนล่าสุดของแต่ละแผน'; %>
+<% const safeTotalRows = typeof totalRows !== 'undefined' ? totalRows : 0; %>
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="bi bi-table me-2"></i>รายการ pbt_plan</h1>
+      <p class="text-muted mb-0">แสดงเดือนล่าสุดของแต่ละแผนเป็นค่าเริ่มต้น และเลือกดูรายเดือนย้อนหลังได้</p>
+    </div>
+    <div>
+      <a href="/pbt-plan/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>เพิ่มข้อมูล</a>
+    </div>
+  </div>
+
+  <form action="/pbt-plan" method="get" class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">เลือกช่วงเวลา</label>
+          <select name="period" class="form-select" onchange="this.form.submit()">
+            <option value="latest" <%= safeSelectedPeriod === 'latest' ? 'selected' : '' %>>เดือนล่าสุดของแต่ละแผน</option>
+            <% safePeriodOptions.forEach((period) => { %>
+              <option value="<%= period.value %>" <%= safeSelectedPeriod === period.value ? 'selected' : '' %>><%= period.label %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-8 text-md-end">
+          <div class="text-muted small">กำลังแสดง: <span class="fw-semibold text-dark"><%= safeActivePeriodLabel %></span></div>
+          <div class="fw-semibold">รวม <%= safeTotalRows %> รายการ</div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  
+
+  <% safeSections.forEach((section) => { %>
+    <% const rows = section.rows || []; %>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+          <div>
+            <div class="fw-bold fs-5"><%= section.label %></div>
+            <div class="text-muted small">ช่วงเวลา: <%= section.periodLabel || 'ไม่มีข้อมูล' %></div>
+          </div>
+          <div class="text-md-end">
+            <div class="badge bg-primary mb-2"><%= rows.length %> รายการ</div>
+            <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+              <% if (section.codes && section.codes.length) { %>
+                <% section.codes.forEach((code) => { %>
+                  <span class="badge rounded-pill text-bg-light border"><%= code %></span>
+                <% }) %>
+              <% } else { %>
+                <span class="text-muted small">ไม่มีรหัสโครงการ</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <% if (rows.length === 0) { %>
+          <div class="alert alert-light border text-muted mb-0">ไม่มีข้อมูลในแผนนี้สำหรับช่วงเวลาที่เลือก</div>
+        <% } else { %>
+          <div class="d-grid gap-3">
+            <% rows.forEach((row) => { %>
+              <% const fileName = row.p_img || ''; %>
+              <% const fileExt = fileName ? fileName.split('.').pop().toLowerCase() : ''; %>
+              <% const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(fileExt); %>
+              <div class="border rounded-3 overflow-hidden bg-white">
+                <div class="row g-0">
+                  <div class="col-12 col-md-4 col-lg-5">
+                    <a href="/uploads/pbt-plan/<%= fileName %>" target="_blank" rel="noopener" class="d-block h-100 text-decoration-none bg-light">
+                      <% if (fileName) { %>
+                        <% if (isImage) { %>
+                          <img src="/uploads/pbt-plan/<%= fileName %>" alt="<%= fileName %>" class="w-100 h-100" style="min-height: 220px; max-height: 320px; object-fit: cover;">
+                        <% } else { %>
+                          <div class="d-flex align-items-center justify-content-center text-muted" style="min-height: 220px; max-height: 320px;">
+                            <div class="text-center">
+                              <i class="bi bi-file-earmark-text" style="font-size: 4rem;"></i>
+                              <div class="small mt-2"><%= fileName %></div>
+                            </div>
+                          </div>
+                        <% } %>
+                      <% } else { %>
+                        <div class="d-flex align-items-center justify-content-center text-muted" style="min-height: 220px; max-height: 320px;">
+                          <div class="text-center">
+                            <i class="bi bi-image" style="font-size: 4rem;"></i>
+                            <div class="small mt-2">ไม่มีรูปภาพ</div>
+                          </div>
+                        </div>
+                      <% } %>
+                    </a>
+                  </div>
+                  <div class="col-12 col-md-8 col-lg-7">
+                    <div class="p-3 p-lg-4 h-100 d-flex flex-column gap-3">
+                      <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                          <span class="badge text-bg-primary">แผน <%= String(row.p_plan || '').toUpperCase() %></span>
+                          <span class="badge text-bg-secondary"><%= row.p_month %>/<%= row.p_year %></span>
+                          <span class="badge text-bg-light border text-dark">รหัส <%= row.p_code %></span>
+                        </div>
+                        <h3 class="h5 mb-1"><%= row.p_project %></h3>
+                        <div class="text-muted small">บันทึกโดย <%= row.p_saveby %> | <%= row.p_savedate %></div>
+                      </div>
+
+                      <div class="row g-2 small">
+                        <div class="col-12 col-sm-6">
+                          <div class="p-3 rounded border bg-light h-100">
+                            <div class="text-muted">แผน</div>
+                            <div class="fw-semibold">แผน <%= String(row.p_plan || '').toUpperCase() %></div>
+                          </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                          <div class="p-3 rounded border bg-light h-100">
+                            <div class="text-muted">ช่วงเวลา</div>
+                            <div class="fw-semibold"><%= row.p_month %>/<%= row.p_year %></div>
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div class="p-3 rounded border bg-light h-100">
+                            <div class="text-muted">รหัสโครงการ</div>
+                            <div class="fw-semibold text-break"><%= row.p_code %></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mt-auto d-flex flex-wrap gap-2">
+                        <a href="/pbt-plan/edit/<%= row.p_id %>" class="btn btn-outline-primary">
+                          <i class="bi bi-pencil me-1"></i>แก้ไข
+                        </a>
+                        <form action="/pbt-plan/delete/<%= row.p_id %>" method="post" onsubmit="return confirm('ยืนยันการลบข้อมูลนี้ใช่หรือไม่?');">
+                          <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i>ลบ
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<%- include('../partials/footer') %>

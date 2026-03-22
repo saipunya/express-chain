@@ -35,6 +35,16 @@ const PbtPlan = {
     return rows[0];
   },
 
+  getByPeriod: async (p_year, p_month) => {
+    const [rows] = await db.query(
+      `SELECT *
+       FROM ${TABLE}
+       WHERE p_year = ? AND p_month = ?`,
+      [String(p_year ?? '').trim(), String(p_month ?? '').trim()]
+    );
+    return rows;
+  },
+
   create: async (data) => {
     const row = normalizeRow(data);
     const [result] = await db.query(

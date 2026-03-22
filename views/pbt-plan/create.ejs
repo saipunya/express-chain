@@ -3,7 +3,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1"><i class="bi bi-folder-plus me-2"></i>เพิ่มข้อมูล pbt_plan</h1>
-      <p class="text-muted mb-0">เพิ่มได้เฉพาะแผนที่ต้องการ ไม่จำเป็นต้องกรอกครบทั้ง 4 แผนพร้อมกัน</p>
+      <p class="text-muted mb-0">สร้างข้อมูลได้หลายรายการในครั้งเดียว แยกตามแผน a, b, c, d</p>
     </div>
     <div class="d-flex gap-2">
       <a href="/pbt-plan" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>กลับไปหน้ารายการ</a>
@@ -89,6 +89,52 @@
     const form = document.getElementById('pbtPlanForm');
     let rowCounter = 0;
 
+    const PROJECT_OPTIONS = [
+      { code: 'a01', name: 'สหกรณ์และกลุ่มเกษตรกรได้รับการส่งเสริมและพัฒนาให้มีความเข้มแข็งตามศักยภาพ' },
+      { code: 'a02', name: 'ส่งเสริมสหกรณ์/กลุ่มเกษตรกรสู่ดีเด่น' },
+      { code: 'a03', name: 'แผนฟื้นฟูให้สหกรณ์มีกำไรสุทธิประจำปี' },
+      { code: 'a04', name: 'การจัดทำแผนกลยุทธ์สหกรณ์' },
+      { code: 'b01', name: 'โครงการส่งเสริมการดำเนินงานอันเนื่องมาจากพระราชดำริ' },
+      { code: 'c01', name: 'โครงการส่งเสริมและพัฒนาอาชีพเพื่อแก้ไขปัญหาที่ดินทำกินของเกษตรกร' },
+      { code: 'c02', name: 'โครงการพัฒนาผลิตภัณฑ์ชุมชนของสถาบันเกษตรกรและสมาชิก' },
+      { code: 'c03', name: 'โครงการส่งเสริมการเป็นหุ้นส่วนเศรษฐกิจกับภาคเอกชนของสหกรณ์และชุมนุมสหกรณ์เดินรถ' },
+      { code: 'c04', name: 'โครงการเสริมสร้างศักยภาพสหกรณ์สู่การเป็นองค์กรสมรรถนะสูงด้วยนวัตกรรมและเทคโนโลยีที่เหมาะสม' },
+      { code: 'c05', name: 'โครงการแก้ไขปัญหาหนี้สินและพัฒนาคุณภาพชีวิตสมาชิกสหกรณ์และกลุ่มเกษตรกรด้วยระบบสหกรณ์' },
+      { code: 'd01', name: 'โครงการส่งเสริมและพัฒนาสถาบันเกษตรกร' },
+      { code: 'd02', name: 'โครงการยกระดับสถาบันเกษตรกรให้เป็นผู้ประกอบการธุรกิจเกษตร' },
+      { code: 'd03', name: 'โครงการเพิ่มประสิทธิภาพด้านการผลิตและการขนส่งของสหกรณ์เพื่อเป็นต้นแบบในการบริหารจัดการ' },
+      { code: 'd04', name: 'โครงการส่งเสริมและพัฒนาสินค้าเกษตรอัตลักษณ์พื้นถิ่น' },
+      { code: 'd05', name: 'โครงการพัฒนาศักยภาพดำเนินธุรกิจเพื่อสร้างความเข้มแข็งให้กับสหกรณ์ผู้เลี้ยงโค' },
+      { code: 'd06', name: 'โครงการสร้างมูลค่าเพิ่มจากวัสดุเหลือใช้ทางการเกษตร' },
+      { code: 'd07', name: 'โครงการส่งเสริมการแปรรูปสินค้าเกษตร' },
+      { code: 'd08', name: 'โครงการระบบส่งเสริมการเกษตรแบบแปลงใหญ่' },
+      { code: 'd09', name: 'โครงการยกระดับศักยภาพสถาบันเกษตรกรให้เป็นผู้ให้บริการทางการเกษตรแบบครบวงจร' },
+      { code: 'd10', name: 'โครงการพัฒนาศักยภาพการดำเนินธุรกิจสถาบันเกษตรกรด้วยเทคโนโลยีและนวัตกรรม' }
+    ];
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function buildProjectOptions(planValue, selectedValue = '') {
+      const allowedPrefix = String(planValue || '').toLowerCase();
+      const options = ['<option value="">เลือกโครงการ</option>'];
+      PROJECT_OPTIONS
+        .filter((project) => String(project.code || '').toLowerCase().startsWith(allowedPrefix))
+        .forEach((project) => {
+          const selected = String(selectedValue || '') === String(project.code || '') ? 'selected' : '';
+          options.push(
+            `<option value="${escapeHtml(project.code)}" ${selected}>${escapeHtml(project.name)}</option>`
+          );
+        });
+      return options.join('');
+    }
+
     function makeRow(planValue, preset = {}) {
       const key = preset.key || String(rowCounter++);
       const row = document.createElement('tr');
@@ -100,7 +146,10 @@
           <input type="hidden" name="rows[${key}][p_plan]" value="${planValue}">
         </td>
         <td>
-          <input type="text" name="rows[${key}][p_project]" class="form-control form-control-sm" placeholder="ชื่อโครงการ" value="${preset.p_project || ''}" required>
+          <select class="form-select form-select-sm" data-project-select required>
+            ${buildProjectOptions(planValue, preset.p_code || '')}
+          </select>
+          <input type="hidden" name="rows[${key}][p_project]" value="${preset.p_project || ''}">
         </td>
         <td>
           <input type="file" name="p_img_${key}" class="form-control form-control-sm" required>
@@ -131,13 +180,33 @@
       if (!tbody) return;
       const row = makeRow(planValue);
       tbody.appendChild(row);
+      syncProjectSelection(row);
       updateCount(planValue);
+    }
+
+    function syncProjectSelection(row) {
+      const select = row.querySelector('[data-project-select]');
+      const codeInput = row.querySelector('input[name$="[p_code]"]');
+      const projectInput = row.querySelector('input[name$="[p_project]"]');
+      if (!select || !codeInput || !projectInput) return;
+
+      const selectedOption = select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0] : null;
+      codeInput.value = select.value || codeInput.value || '';
+      projectInput.value = selectedOption ? (selectedOption.textContent || '').trim() : projectInput.value || '';
     }
 
     document.querySelectorAll('[data-add-row]').forEach((btn) => {
       btn.addEventListener('click', () => {
         addRow(btn.dataset.addRow);
       });
+    });
+
+    form.addEventListener('change', (e) => {
+      const select = e.target.closest('[data-project-select]');
+      if (!select) return;
+      const row = select.closest('tr');
+      if (!row) return;
+      syncProjectSelection(row);
     });
 
     form.addEventListener('click', (e) => {

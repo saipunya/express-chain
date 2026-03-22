@@ -3,10 +3,10 @@ const path = require('path');
 const PbtPlan = require('../models/pbtPlanModel');
 
 const PLAN_OPTIONS = [
-  { value: 'a', label: 'แผน a' },
-  { value: 'b', label: 'แผน b' },
-  { value: 'c', label: 'แผน c' },
-  { value: 'd', label: 'แผน d' }
+  { value: 'a', label: 'แผนงานพื้นฐานด้านการสร้างความสามารถในการแข่งขัน' },
+  { value: 'b', label: 'แผนงานยุทธศาสตร์เสริมสร้างพลังทางสังคม' },
+  { value: 'c', label: 'แผนงานพัฒนาและส่งเสริมเศรษฐกิจฐานราก' },
+  { value: 'd', label: 'แผนงานยุทธศาสตร์การเกษตรสร้างมูลค่า' }
 ];
 
 const getThaiYear = () => String(new Date().getFullYear() + 543);
@@ -31,6 +31,41 @@ const getFileMap = (files = []) => {
     acc[file.fieldname] = file;
     return acc;
   }, {});
+};
+
+const buildDuplicateKey = (row = {}) => {
+  const year = (row.p_year ?? '').toString().trim();
+  const month = (row.p_month ?? '').toString().trim();
+  const plan = (row.p_plan ?? '').toString().trim();
+  const code = (row.p_code ?? '').toString().trim();
+  return `${year}|${month}|${plan}|${code}`;
+};
+
+const findDuplicateRows = async (items = [], excludeId = null) => {
+  if (!items.length) return [];
+
+  const [firstItem] = items;
+  const periodRows = await PbtPlan.getByPeriod(firstItem.p_year, firstItem.p_month);
+  const existingKeys = new Set(
+    periodRows
+      .filter((row) => String(row.p_id ?? '') !== String(excludeId ?? ''))
+      .map(buildDuplicateKey)
+  );
+
+  const seenKeys = new Set();
+  return items.filter((item) => {
+    const key = buildDuplicateKey(item);
+    if (!key) return false;
+    if (seenKeys.has(key) || existingKeys.has(key)) return true;
+    seenKeys.add(key);
+    return false;
+  });
+};
+
+const formatDuplicateLabel = (row = {}) => {
+  const plan = (row.p_plan ?? '').toString().trim().toUpperCase();
+  const code = (row.p_code ?? '').toString().trim();
+  return `${plan || '-'} / ${code || '-'}`;
 };
 
 const getUploadPath = (filename) => path.join(__dirname, '..', 'uploads', 'pbt-plan', filename);
@@ -214,6 +249,20 @@ exports.create = async (req, res) => {
       })
       .filter((row) => row.p_plan && row.p_code && row.p_project);
 
+    const duplicateRows = await findDuplicateRows(items);
+    if (duplicateRows.length) {
+      const duplicateText = [...new Set(duplicateRows.map(formatDuplicateLabel))].join(', ');
+      return res.status(400).render('pbt-plan/create', {
+        title: 'เพิ่มข้อมูล pbt_plan',
+        planOptions: PLAN_OPTIONS,
+        defaultMonth: p_month || getSavedate().slice(5, 7),
+        defaultYear: p_year || getThaiYear(),
+        defaultSavedate: savedate,
+        defaultSaveby: saveby,
+        error: `ข้อมูลเดือน/ปีนี้ซ้ำแล้ว: ${duplicateText}`
+      });
+    }
+
     if (!items.length) {
       return res.status(400).render('pbt-plan/create', {
         title: 'เพิ่มข้อมูล pbt_plan',
@@ -263,7 +312,7 @@ exports.update = async (req, res) => {
       p_img = newFile.filename;
     }
 
-    await PbtPlan.update(req.params.id, {
+    const nextRow = {
       p_plan: req.body.p_plan,
       p_month: req.body.p_month,
       p_year: req.body.p_year,
@@ -272,7 +321,24 @@ exports.update = async (req, res) => {
       p_img,
       p_saveby: getSaveBy(req),
       p_savedate: req.body.p_savedate || current.p_savedate || getSavedate()
-    });
+    };
+
+    const duplicateRows = await findDuplicateRows([nextRow], current.p_id);
+    if (duplicateRows.length) {
+      return res.status(400).render('pbt-plan/edit', {
+        title: 'แก้ไขข้อมูล pbt_plan',
+        plan: {
+          ...current,
+          ...req.body,
+          p_img,
+          p_saveby: current.p_saveby
+        },
+        planOptions: PLAN_OPTIONS,
+        error: 'ข้อมูลเดือน/ปีนี้ซ้ำกับรายการเดิม'
+      });
+    }
+
+    await PbtPlan.update(req.params.id, nextRow);
 
     res.redirect('/pbt-plan');
   } catch (error) {

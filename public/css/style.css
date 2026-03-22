@@ -210,3 +210,201 @@ footer { backdrop-filter: saturate(160%) blur(2px); }
 .navbar-dark .navbar-toggler { border-color: rgba(255,255,255,.35); }
 .navbar-dark .navbar-toggler:focus { box-shadow: 0 0 0 .2rem rgba(255,255,255,.25); }
 .navbar-dark .nav-link .bi { opacity: .95; }
+
+/* Gitgum list page */
+.gitgum-page { max-width: 1320px; }
+.letter-spacing-1 { letter-spacing: .08em; }
+
+.gitgum-hero {
+  background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(240,249,244,.95));
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+}
+
+.gitgum-hero-icon,
+.gitgum-stat-icon,
+.gitgum-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.gitgum-hero-icon {
+  width: 54px;
+  height: 54px;
+  color: #198754;
+  background: rgba(25, 135, 84, .12);
+  font-size: 1.35rem;
+}
+
+.gitgum-stat-card {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 1rem;
+  padding: .95rem 1rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, .05);
+}
+
+.gitgum-stat-icon {
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+}
+
+.gitgum-table-shell {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, .08);
+}
+
+.gitgum-table thead th {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef6f1 100%);
+  color: #334155;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(15, 23, 42, .08);
+  white-space: nowrap;
+}
+
+.gitgum-table tbody tr {
+  transition: transform .2s ease, background-color .2s ease;
+}
+
+.gitgum-table tbody tr:hover {
+  background-color: rgba(25, 135, 84, .03);
+}
+
+.gitgum-table td,
+.gitgum-table th {
+  padding: .95rem 1rem;
+}
+
+.gitgum-actions .btn {
+  border-radius: .75rem;
+}
+
+.btn-soft-warning {
+  color: #b45309;
+  background: rgba(245, 158, 11, .1);
+  border-color: rgba(245, 158, 11, .22);
+}
+
+.btn-soft-warning:hover {
+  color: #92400e;
+  background: rgba(245, 158, 11, .16);
+}
+
+.gitgum-empty-icon {
+  width: 72px;
+  height: 72px;
+  font-size: 2rem;
+  color: #0f766e;
+  background: rgba(13, 202, 240, .12);
+}
+
+.gitgum-list-shell {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, .08);
+}
+
+.gitgum-list-item {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.gitgum-list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, .08);
+  border-color: rgba(25, 135, 84, .18);
+}
+
+.gitgum-list-content {
+  padding: 1rem 1.15rem;
+}
+
+.gitgum-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: .85rem 1rem;
+}
+
+.gitgum-list-row-secondary {
+  margin-top: .8rem;
+  padding-top: .8rem;
+  border-top: 1px dashed rgba(148, 163, 184, .35);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, .9fr);
+}
+
+.gitgum-field {
+  min-width: 0;
+}
+
+.gitgum-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
+  margin-bottom: .3rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.gitgum-field-value {
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.gitgum-actions-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .5rem;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(240,249,244,.9));
+  border-left: 1px solid rgba(15, 23, 42, .08);
+}
+
+.gitgum-actions-panel .btn {
+  border-radius: .8rem;
+}
+
+.gitgum-actions-panel .btn + .btn {
+  margin-left: 0;
+}
+
+@media (max-width: 767.98px) {
+  .gitgum-hero { padding: 1rem; }
+  .gitgum-table td,
+  .gitgum-table th { padding: .85rem .8rem; }
+  .gitgum-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+  }
+  .gitgum-list-row,
+  .gitgum-list-row-secondary {
+    grid-template-columns: 1fr;
+  }
+  .gitgum-actions-panel {
+    border-left: 0;
+    border-top: 1px solid rgba(15, 23, 42, .08);
+  }
+  .gitgum-list-content,
+  .gitgum-actions-panel {
+    padding: .95rem 1rem;
+  }
+}

@@ -3479,7 +3479,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 
 
 
-<section>
+
 <% // Precompute chamra stage counts once (S1..S10)
   let __chamraCounts = null;
   if ((chamraAllProcesses||[]).length) {
@@ -3503,6 +3503,13 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     });
   }
 %>
+<section class="section-block pt-4">
+  <div class="container">
+    <a href="/pbt-plan" class="nav-link">
+    <img src="/images/planpon.png" alt="แผน" class="img-fluid">
+    </a>
+  </div>
+</section>
 
 
 <!-- ================= Stats ================= -->

@@ -11,7 +11,7 @@ const PLAN_OPTIONS = [
 
 const getThaiYear = () => String(new Date().getFullYear() + 543);
 
-const getSaveBy = (req) => req.session?.user?.username || req.session?.user?.fullname || 'system';
+const getSaveBy = (req) => req.session?.user?.fullname || req.session?.user?.username || 'system';
 
 const getSavedate = () => new Date().toISOString().slice(0, 10);
 
@@ -227,7 +227,7 @@ exports.create = async (req, res) => {
     const fileMap = getFileMap(req.files || []);
     const p_month = (req.body.p_month || '').toString().trim();
     const p_year = (req.body.p_year || '').toString().trim();
-    const savedate = (req.body.p_savedate || getSavedate()).toString().slice(0, 10);
+    const savedate = getSavedate();
     const saveby = getSaveBy(req);
 
     const items = rows
@@ -320,7 +320,7 @@ exports.update = async (req, res) => {
       p_project: req.body.p_project,
       p_img,
       p_saveby: getSaveBy(req),
-      p_savedate: req.body.p_savedate || current.p_savedate || getSavedate()
+      p_savedate: getSavedate()
     };
 
     const duplicateRows = await findDuplicateRows([nextRow], current.p_id);

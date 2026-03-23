@@ -65,12 +65,18 @@
   const progressPercent = totalSteps ? Math.round((completedSteps/ totalSteps) * 100) : 0;
 %>
 <div class="container py-4">
+
+  <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+<div class="d-flex justify-content-start">
   <% if (data) { %>
-  <div class="d-flex align-items-start flex-wrap gap-2 mb-3">
     <h1 class="h4 page-title mb-0"><%= data.c_name || 'ข้อมูลไม่ระบุ' %></h1>
     <% if(latestProcessStep){ %>
       <span class="badge bg-success status-badge align-self-center">ขั้นล่าสุด: <strong><%= latestProcessStep %></strong> / 10</span>
     <% } %>
+</div>
+
+    <a href="../../chamra" class="btn btn-outline-secondary btn-sm">← กลับหน้ารายการ</a>
+
   </div>
   <div class="card mb-4 card-section shadow-sm">
     <div class="card-body small">
@@ -216,7 +222,6 @@
     <p class="text-muted">ไม่พบข้อมูล</p>
   <% } %>
   <div class="d-flex gap-2 mt-3">
-    <a href="../../chamra" class="btn btn-outline-secondary btn-sm">← กลับหน้ารายการ</a>
     <button id="exportPdfBtn" class="btn btn-primary btn-sm" data-code="<%= data && (data.de_code || data.c_code) %>">Export PDF</button>
   </div>
 </div>

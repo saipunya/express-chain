@@ -1,24 +1,101 @@
 <%- include('../partials/header',{title : 'สรุปขั้นตอนการชำระบัญชี'}) %>
 
 <style>
+  .chamra-summary-page {
+    background: #f5f7fb;
+  }
+  .summary-hero {
+    border: 0;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1e3a5f 0%, #29527f 100%);
+    color: #fff;
+  }
+  .summary-hero .summary-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .summary-stat {
+    min-width: 190px;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    backdrop-filter: blur(6px);
+  }
+  .summary-stat .text-muted {
+    color: rgba(255, 255, 255, 0.75) !important;
+  }
+  .summary-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #fff;
+    color: #1e3a5f;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+  .summary-legend {
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+  }
+  .summary-table-card {
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+  }
+  .summary-table-wrap {
+    max-height: calc(100vh - 340px);
+    overflow: auto;
+    background: #fff;
+  }
+  .movement-table {
+    margin-bottom: 0;
+  }
   .movement-table thead th {
-    background-color: #1e3a5f;
-    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: #17324e;
+    color: #fff;
     padding: 12px 10px;
     text-align: center;
     white-space: nowrap;
     font-size: 0.88rem;
     font-weight: 600;
     border: 1px solid #2c4e7e;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.08);
   }
   .movement-table tbody td {
     border: 1px solid #dee2e6;
     padding: 10px 12px;
     vertical-align: middle;
     font-size: 0.92rem;
+    background: #fff;
   }
   .movement-table tbody tr:hover td {
     background-color: #f0f7ff;
+  }
+  .movement-table tbody tr.institution-row td {
+    background: #f3f7fb;
+  }
+  .movement-table tbody tr.start-row td {
+    background: #fff;
+  }
+  .movement-table tbody tr.current-row td {
+    background: #f4fff8;
+  }
+  .movement-table tbody td.row-label {
+    background: #f8f9fa;
+    color: #5b6472;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .movement-table tbody tr.current-row td.row-label {
+    background: #eefaf1;
   }
   .step-pill {
     display: inline-block;
@@ -32,10 +109,10 @@
     text-align: center;
     min-width: 52px;
     padding: 8px 4px !important;
-    color: #ced4da;
+    color: #a8b0bb;
   }
   .month-cell.has-activity {
-    background-color: #d4edda;
+    background-color: #ecf9f1;
   }
   .month-dot {
     display: inline-flex;
@@ -49,34 +126,55 @@
     font-size: 0.7rem;
     cursor: default;
     margin: 1px;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.12);
   }
 </style>
 
-<div class="container-fluid px-3 py-3">
+<div class="container-fluid px-3 py-3 chamra-summary-page">
 
-  <!-- Header bar -->
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-      <h5 class="mb-0 fw-bold">ตารางความเคลื่อนไหวการชำระบัญชี</h5>
-      <p class="text-muted mb-0 small">ปีงบประมาณ 2569 &nbsp;(ต.ค. 2568 – ก.ย. 2569) &nbsp;·&nbsp; แสดงเฉพาะสหกรณ์ที่มีการเปลี่ยนแปลงขั้นตอน</p>
-    </div>
-    <div class="d-flex gap-2 align-items-center">
-      <span class="badge bg-secondary fs-6"><%= data ? data.length : 0 %> สหกรณ์</span>
-      <a href="/chamra" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-        <i class="bi bi-arrow-left me-1"></i> กลับ
-      </a>
+  <div class="card summary-hero shadow-sm mb-3">
+    <div class="card-body p-3 p-md-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+        <div>
+          <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            <span class="badge rounded-pill bg-white text-primary border border-white">สรุปขั้นตอน</span>
+            <span class="badge rounded-pill bg-warning text-dark">ปีงบประมาณ 2569</span>
+          </div>
+          <h5 class="mb-1 fw-bold">ตารางความเคลื่อนไหวการชำระบัญชี</h5>
+          <p class="summary-subtitle mb-0 small">แสดงภาพรวมการเปลี่ยนแปลงตั้งแต่ ต.ค. 2568 ถึง ก.ย. 2569 โดยแยกสถานะเริ่มต้นและสถานะปัจจุบันให้ดูต่อเนื่อง</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="summary-stat d-inline-flex align-items-center gap-3 px-3 py-2 shadow-sm">
+            <span class="summary-stat-icon"><i class="bi bi-building"></i></span>
+            <div>
+              <div class="small text-muted">สหกรณ์ที่แสดง</div>
+              <div class="fw-bold"><%= data ? data.length : 0 %></div>
+            </div>
+          </div>
+          <a href="/chamra" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-arrow-left me-1"></i> กลับ
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Legend -->
-  <div class="d-flex flex-wrap gap-3 align-items-center mb-3 small text-muted border rounded p-2 bg-light">
-    <span><span class="step-pill bg-secondary text-white">ขั้นที่ X</span> &nbsp;สถานะ ณ 1 ต.ค. 2568</span>
-    <i class="bi bi-arrow-down"></i>
-    <span><span class="step-pill bg-success text-white">ขั้นที่ Y</span> &nbsp;ขั้นสูงสุดปัจจุบัน</span>
-    <span class="ms-1">
-      <span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#28a745;color:white;align-items:center;justify-content:center;font-size:0.65rem">✓</span>
-      &nbsp;เดือนที่มีวันที่บันทึก
-    </span>
+  <div class="card summary-legend shadow-sm mb-3">
+    <div class="card-body py-2 px-3 d-flex flex-wrap gap-3 align-items-center small text-muted">
+      <span class="d-inline-flex align-items-center gap-2">
+        <span class="step-pill bg-secondary text-white">ขั้นที่ X</span>
+        <span>สถานะ ณ 1 ต.ค. 2568</span>
+      </span>
+      <span class="text-muted"><i class="bi bi-arrow-right-short"></i></span>
+      <span class="d-inline-flex align-items-center gap-2">
+        <span class="step-pill bg-success text-white">ขั้นที่ Y</span>
+        <span>ขั้นสูงสุดปัจจุบัน</span>
+      </span>
+      <span class="ms-auto d-inline-flex align-items-center gap-2">
+        <span style="display:inline-flex;width:16px;height:16px;border-radius:50%;background:#28a745;color:white;align-items:center;justify-content:center;font-size:0.65rem">✓</span>
+        <span>เดือนที่มีวันที่บันทึก</span>
+      </span>
+    </div>
   </div>
 
   <% const fiscalMonths = [
@@ -94,144 +192,139 @@
     { label: 'ก.ย. 69', value: 8 }
   ]; %>
 
-  <div class="table-responsive">
-    <table class="movement-table table table-bordered align-middle mb-0">
-      <thead>
-        <tr>
-          <th style="width:40px">#</th>
-          <th style="min-width:170px;text-align:left">สถาบัน</th>
-          <th style="min-width:155px;text-align:left">ขั้นที่</th>
-          <th style="min-width:155px;text-align:left">วันที่บันทึก</th>
-          <th style="width:72px">ดู</th>
-          <% fiscalMonths.forEach(m => { %><th class="month-cell"><%= m.label %></th><% }) %>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (!data || data.length === 0) { %>
+  <div class="card summary-table-card shadow-sm">
+    <div class="summary-table-wrap table-responsive">
+      <table class="movement-table table table-bordered table-hover align-middle">
+        <thead>
           <tr>
-            <td colspan="17" class="text-center text-muted py-5">
-              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-              ไม่พบข้อมูลในช่วงปีงบประมาณที่กำหนด
-            </td>
+            <th style="width:40px">#</th>
+            <th style="min-width:170px;text-align:left">สถาบัน</th>
+            <th style="min-width:155px;text-align:left">ขั้นที่</th>
+            <th style="min-width:155px;text-align:left">วันที่บันทึก</th>
+            <th style="width:72px">ดู</th>
+            <% fiscalMonths.forEach(m => { %><th class="month-cell"><%= m.label %></th><% }) %>
           </tr>
-        <% } else { %>
-          <% let globalIdx = 1; %>
-          <% data.forEach((item) => {
-            const activityDate = item.date ? new Date(item.date) : null;
-          %>
-            <!-- Row: Institution Name (merged) -->
-            <tr style="background-color:#f8f9fa">
-              <td class="text-center text-muted small"><%= globalIdx %></td>
-              <td colspan="4" class="fw-semibold">
-                <a href="/chamra/detail/<%= item.institution_code %>" class="text-decoration-none text-dark">
-                  <%= item.institution_name || '-' %>
-                </a>
-              </td>
-              <% fiscalMonths.forEach(month => { %>
-                <td class="month-cell"></td>
-              <% }) %>
-            </tr>
-
-            <!-- Row: สถานะ ณ 1 ต.ค. 68 -->
+        </thead>
+        <tbody>
+          <% if (!data || data.length === 0) { %>
             <tr>
-              <td></td>
-              <td></td>
-              <td>
-                <% if (item.oct1_step && item.oct1_step !== '0') { %>
-                  <span class="step-pill bg-secondary text-white"><%= item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` %></span>
-                <% } else { %>
-                  <span class="text-muted small">ยังไม่เริ่ม</span>
-                <% } %>
+              <td colspan="17" class="text-center text-muted py-5 bg-white">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                ไม่พบข้อมูลในช่วงปีงบประมาณที่กำหนด
               </td>
-              <td>
-                <% if (item.oct1_date) { %>
-                  <%= new Date(item.oct1_date).toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'2-digit'}) %>
-                <% } else { %>
-                  <span class="text-muted">-</span>
-                <% } %>
-              </td>
-              <td></td>
-              <% fiscalMonths.forEach(month => {
-                const datesInMonth = [];
-                // Check oct1_date
-                if (item.oct1_date && new Date(item.oct1_date).getMonth() === month.value) {
-                  datesInMonth.push({ date: new Date(item.oct1_date), type: 'oct1', label: item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` });
-                }
-                // Check current_max_date
-                if (item.current_max_date && new Date(item.current_max_date).getMonth() === month.value) {
-                  datesInMonth.push({ date: new Date(item.current_max_date), type: 'current', label: item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` });
-                }
-              %>
-                <td class="month-cell <%= datesInMonth.length > 0 ? 'has-activity' : '' %>">
-                  <% if (datesInMonth.length > 0) { %>
-                    <% datesInMonth.forEach((d, i) => { %>
-                      <span class="month-dot" title="<%= d.label %>: <%= d.date.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) %>">✓</span>
-                      <% if (i < datesInMonth.length - 1) { %><br><% } %>
-                    <% }) %>
-                  <% } %>
-                </td>
-              <% }) %>
             </tr>
+          <% } else { %>
+            <% let globalIdx = 1; %>
+            <% data.forEach((item) => {
+              const activityDate = item.date ? new Date(item.date) : null;
+            %>
+              <tr class="institution-row">
+                <td class="text-center text-muted small"><%= globalIdx %></td>
+                <td colspan="4" class="fw-semibold">
+                  <a href="/chamra/detail/<%= item.institution_code %>" class="text-decoration-none text-dark">
+                    <%= item.institution_name || '-' %>
+                  </a>
+                </td>
+                <% fiscalMonths.forEach(() => { %>
+                  <td class="month-cell"></td>
+                <% }) %>
+              </tr>
 
-            <!-- Row: ขั้นสูงสุดปัจจุบัน -->
-            <tr class="table-success">
-              <td></td>
-              <td></td>
-              <td>
-                <% if (item.current_max_step && item.current_max_step !== '0') { %>
-                  <span class="step-pill bg-success text-white"><%= item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` %></span>
-                <% } else { %>
-                  <span class="text-muted small">ยังไม่เริ่ม</span>
-                <% } %>
-              </td>
-              <td>
-                <% if (item.current_max_date) { %>
-                  <%= new Date(item.current_max_date).toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'2-digit'}) %>
-                <% } else { %>
-                  <span class="text-muted">-</span>
-                <% } %>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-outline-primary btn-sm px-2 py-1"
-                  data-bs-toggle="modal" data-bs-target="#detailModal"
-                  data-code="<%= item.institution_code %>"
-                  data-name="<%= item.institution_name %>"
-                  data-oct1step="<%= item.oct1_step_label || (item.oct1_step && item.oct1_step !== '0' ? `ขั้นที่ ${item.oct1_step}` : 'ยังไม่เริ่ม') %>"
-                  data-oct1date="<%= item.oct1_date ? new Date(item.oct1_date).toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
-                  data-curstep="<%= item.current_max_step_label || (item.current_max_step && item.current_max_step !== '0' ? `ขั้นที่ ${item.current_max_step}` : 'ยังไม่เริ่ม') %>"
-                  data-curdate="<%= item.current_max_date ? new Date(item.current_max_date).toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
-                  data-actdate="<%= activityDate ? activityDate.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
-                  data-status="<%= item.status_1oct || '-' %>"
-                  title="ดูรายละเอียด">
-                  <i class="bi bi-eye"></i>
-                </button>
-              </td>
-              <% fiscalMonths.forEach(month => {
-                const datesInMonth = [];
-                // Check oct1_date
-                if (item.oct1_date && new Date(item.oct1_date).getMonth() === month.value) {
-                  datesInMonth.push({ date: new Date(item.oct1_date), type: 'oct1', label: item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` });
-                }
-                // Check current_max_date
-                if (item.current_max_date && new Date(item.current_max_date).getMonth() === month.value) {
-                  datesInMonth.push({ date: new Date(item.current_max_date), type: 'current', label: item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` });
-                }
-              %>
-                <td class="month-cell <%= datesInMonth.length > 0 ? 'has-activity' : '' %>">
-                  <% if (datesInMonth.length > 0) { %>
-                    <% datesInMonth.forEach((d, i) => { %>
-                      <span class="month-dot" title="<%= d.label %>: <%= d.date.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) %>">✓</span>
-                      <% if (i < datesInMonth.length - 1) { %><br><% } %>
-                    <% }) %>
+              <tr class="start-row">
+                <td></td>
+                <td class="row-label">สถานะ ณ 1 ต.ค. 2568</td>
+                <td>
+                  <% if (item.oct1_step && item.oct1_step !== '0') { %>
+                    <span class="step-pill bg-secondary text-white"><%= item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` %></span>
+                  <% } else { %>
+                    <span class="text-muted small">ยังไม่เริ่ม</span>
                   <% } %>
                 </td>
-              <% }) %>
-            </tr>
-            <% globalIdx++; %>
-          <% }) %>
-        <% } %>
-      </tbody>
-    </table>
+                <td>
+                  <% if (item.oct1_date) { %>
+                    <%= new Date(item.oct1_date).toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'2-digit'}) %>
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td></td>
+                <% fiscalMonths.forEach(month => {
+                  const datesInMonth = [];
+                  if (item.oct1_date && new Date(item.oct1_date).getMonth() === month.value) {
+                    datesInMonth.push({ date: new Date(item.oct1_date), type: 'oct1', label: item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` });
+                  }
+                  if (item.current_max_date && new Date(item.current_max_date).getMonth() === month.value) {
+                    datesInMonth.push({ date: new Date(item.current_max_date), type: 'current', label: item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` });
+                  }
+                %>
+                  <td class="month-cell <%= datesInMonth.length > 0 ? 'has-activity' : '' %>">
+                    <% if (datesInMonth.length > 0) { %>
+                      <% datesInMonth.forEach((d, i) => { %>
+                        <span class="month-dot" title="<%= d.label %>: <%= d.date.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) %>">✓</span>
+                        <% if (i < datesInMonth.length - 1) { %><br><% } %>
+                      <% }) %>
+                    <% } %>
+                  </td>
+                <% }) %>
+              </tr>
+
+              <tr class="current-row">
+                <td></td>
+                <td class="row-label">ขั้นสูงสุดปัจจุบัน</td>
+                <td>
+                  <% if (item.current_max_step && item.current_max_step !== '0') { %>
+                    <span class="step-pill bg-success text-white"><%= item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` %></span>
+                  <% } else { %>
+                    <span class="text-muted small">ยังไม่เริ่ม</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (item.current_max_date) { %>
+                    <%= new Date(item.current_max_date).toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'2-digit'}) %>
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-outline-primary btn-sm px-2 py-1"
+                    data-bs-toggle="modal" data-bs-target="#detailModal"
+                    data-code="<%= item.institution_code %>"
+                    data-name="<%= item.institution_name %>"
+                    data-oct1step="<%= item.oct1_step_label || (item.oct1_step && item.oct1_step !== '0' ? `ขั้นที่ ${item.oct1_step}` : 'ยังไม่เริ่ม') %>"
+                    data-oct1date="<%= item.oct1_date ? new Date(item.oct1_date).toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
+                    data-curstep="<%= item.current_max_step_label || (item.current_max_step && item.current_max_step !== '0' ? `ขั้นที่ ${item.current_max_step}` : 'ยังไม่เริ่ม') %>"
+                    data-curdate="<%= item.current_max_date ? new Date(item.current_max_date).toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
+                    data-actdate="<%= activityDate ? activityDate.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) : '-' %>"
+                    data-status="<%= item.status_1oct || '-' %>"
+                    title="ดูรายละเอียด">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </td>
+                <% fiscalMonths.forEach(month => {
+                  const datesInMonth = [];
+                  if (item.oct1_date && new Date(item.oct1_date).getMonth() === month.value) {
+                    datesInMonth.push({ date: new Date(item.oct1_date), type: 'oct1', label: item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` });
+                  }
+                  if (item.current_max_date && new Date(item.current_max_date).getMonth() === month.value) {
+                    datesInMonth.push({ date: new Date(item.current_max_date), type: 'current', label: item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` });
+                  }
+                %>
+                  <td class="month-cell <%= datesInMonth.length > 0 ? 'has-activity' : '' %>">
+                    <% if (datesInMonth.length > 0) { %>
+                      <% datesInMonth.forEach((d, i) => { %>
+                        <span class="month-dot" title="<%= d.label %>: <%= d.date.toLocaleDateString('th-TH', {day:'numeric',month:'long',year:'numeric'}) %>">✓</span>
+                        <% if (i < datesInMonth.length - 1) { %><br><% } %>
+                      <% }) %>
+                    <% } %>
+                  </td>
+                <% }) %>
+              </tr>
+              <% globalIdx++; %>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -239,7 +332,7 @@
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
-      <div class="modal-header" style="background-color:#1e3a5f">
+      <div class="modal-header" style="background-color:#17324e">
         <h6 class="modal-title text-white fw-bold">
           <i class="bi bi-building me-2"></i><span id="modal-name"></span>
         </h6>

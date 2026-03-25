@@ -3,6 +3,7 @@ const path = require('path');
 const { PDFDocument, rgb, degrees } = require('pdf-lib');
 const fontkit = require('@pdf-lib/fontkit');
 const model = require('../models/vongBusinessModel');
+const activeCoopModel = require('../models/activeCoopModel');
 
 const uploadPath = path.join(__dirname, '..', 'uploads', 'vong_business');
 
@@ -16,6 +17,15 @@ function removeFileIfExists(filename) {
       console.error('Failed to remove file:', err);
     }
   }
+}
+
+async function getFormOptions() {
+  return activeCoopModel.getActiveFarmerGroupCoops();
+}
+
+function normalizeMoneyInput(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/,/g, '').trim();
 }
 
 exports.index = async (req, res) => {
@@ -48,16 +58,25 @@ exports.index = async (req, res) => {
 };
 
 exports.showForm = async (req, res) => {
-  res.render('vong_business/form', { vongBusiness: null });
+  try {
+    const activeCoops = await getFormOptions();
+    res.render('vong_business/form', { vongBusiness: null, activeCoops });
+  } catch (err) {
+    console.error('vong_business showForm error:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดฟอร์ม');
+  }
 };
 
 exports.editForm = async (req, res) => {
   try {
-    const vongBusiness = await model.getById(req.params.id);
+    const [vongBusiness, activeCoops] = await Promise.all([
+      model.getById(req.params.id),
+      getFormOptions()
+    ]);
     if (!vongBusiness) {
       return res.status(404).send('ไม่พบข้อมูล');
     }
-    res.render('vong_business/form', { vongBusiness });
+    res.render('vong_business/form', { vongBusiness, activeCoops });
   } catch (err) {
     console.error('vong_business editForm error:', err);
     res.status(500).send('เกิดข้อผิดพลาด');
@@ -73,7 +92,7 @@ exports.create = async (req, res) => {
     const data = {
       vongb_code,
       vongb_year,
-      vongb_money,
+      vongb_money: normalizeMoneyInput(vongb_money),
       vongb_date,
       vongb_filename: req.file.filename,
       vongb_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',
@@ -105,7 +124,7 @@ exports.update = async (req, res) => {
     const data = {
       vongb_code,
       vongb_year,
-      vongb_money,
+      vongb_money: normalizeMoneyInput(vongb_money),
       vongb_date,
       vongb_filename,
       vongb_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',

@@ -114,6 +114,17 @@ exports.getByGroup = async (group) => {
   return rows;
 };
 
+exports.getActiveFarmerGroupCoops = async () => {
+  const [rows] = await pool.query(
+    `SELECT c_code, c_name, c_group
+     FROM active_coop
+     WHERE c_status = 'ดำเนินการ'
+       AND coop_group = 'กลุ่มเกษตรกร'
+     ORDER BY c_group ASC, c_name ASC`
+  );
+  return rows;
+};
+
 exports.getClosedCoops = async () => {
   const [rows] = await pool.query(
     "SELECT * FROM active_coop WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY coop_group DESC , c_name ASC"

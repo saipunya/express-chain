@@ -6,7 +6,26 @@
 
     <div class="mb-3">
       <label for="vongb_code" class="form-label">รหัสเอกสาร</label>
-      <input name="vongb_code" id="vongb_code" value="<%= vongBusiness ? vongBusiness.vongb_code : '' %>" class="form-control" required>
+      <select name="vongb_code" id="vongb_code" class="form-select" required>
+        <option value="">-- เลือกกลุ่มเกษตรกร --</option>
+        <% 
+          const groupedCoops = (activeCoops || []).reduce((acc, coop) => {
+            const groupName = coop.c_group || 'ไม่ระบุกลุ่ม';
+            if (!acc[groupName]) acc[groupName] = [];
+            acc[groupName].push(coop);
+            return acc;
+          }, {});
+        %>
+        <% Object.keys(groupedCoops).forEach(groupName => { %>
+          <optgroup label="<%= groupName %>">
+            <% groupedCoops[groupName].forEach(coop => { %>
+              <option value="<%= coop.c_code %>" <%= vongBusiness && vongBusiness.vongb_code === coop.c_code ? 'selected' : '' %>>
+                <%= coop.c_name %> (<%= coop.c_code %>)
+              </option>
+            <% }) %>
+          </optgroup>
+        <% }) %>
+      </select>
     </div>
 
     <div class="mb-3">
@@ -21,7 +40,8 @@
 
     <div class="mb-3">
       <label for="vongb_money" class="form-label">วงเงิน (บาท)</label>
-      <input name="vongb_money" id="vongb_money" value="<%= vongBusiness?.vongb_money || '' %>" placeholder="วงเงิน ไม่ต้องใส่ comma (, )" class="form-control" required>
+      <% const moneyDisplay = vongBusiness && vongBusiness.vongb_money !== null && vongBusiness.vongb_money !== undefined && !isNaN(Number(vongBusiness.vongb_money)) ? Number(vongBusiness.vongb_money).toLocaleString('th-TH') : ''; %>
+      <input name="vongb_money" id="vongb_money" value="<%= moneyDisplay %>" placeholder="วงเงิน ไม่ต้องใส่ comma (, )" class="form-control" required>
       <script>
         const vongBusinessMoneyInput = document.querySelector('input[name="vongb_money"]');
         vongBusinessMoneyInput.addEventListener('input', function() {

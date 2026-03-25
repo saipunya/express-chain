@@ -173,11 +173,16 @@ exports.latestJson = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit || '10', 10);
     const rows = await Vong.getLatest(limit);
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      Pragma: 'no-cache',
+      Expires: '0'
+    });
     // Minimal field exposure
     const data = rows.map(r => ({
       id: r.vong_id,
       code: r.vong_code,
-      name: r.c_name || r.vong_code,
+      name: r.c_name || '-',
       year: r.vong_year,
       end_date: r.end_date,
       date: r.vong_date,

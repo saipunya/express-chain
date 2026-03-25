@@ -3,9 +3,10 @@ const db = require('../config/db');
 exports.countAll = async (search = '') => {
   const [rows] = await db.query(
     `SELECT COUNT(*) AS total
-     FROM vong_business
-     WHERE vongb_code LIKE ? OR vongb_year LIKE ?`,
-    [`%${search}%`, `%${search}%`]
+     FROM vong_business vb
+     LEFT JOIN active_coop ac ON ac.c_code = vb.vongb_code
+     WHERE vb.vongb_code LIKE ? OR vb.vongb_year LIKE ? OR ac.c_name LIKE ?`,
+    [`%${search}%`, `%${search}%`, `%${search}%`]
   );
   return rows[0].total || 0;
 };
@@ -14,17 +15,25 @@ exports.getPaged = async (search = '', page = 1, pageSize = 20) => {
   const offset = (page - 1) * pageSize;
   const [rows] = await db.query(
     `SELECT *
-     FROM vong_business
-     WHERE vongb_code LIKE ? OR vongb_year LIKE ?
-     ORDER BY vongb_id DESC
+     , ac.c_name AS vongb_name
+     FROM vong_business vb
+     LEFT JOIN active_coop ac ON ac.c_code = vb.vongb_code
+     WHERE vb.vongb_code LIKE ? OR vb.vongb_year LIKE ? OR ac.c_name LIKE ?
+     ORDER BY vb.vongb_id DESC
      LIMIT ? OFFSET ?`,
-    [`%${search}%`, `%${search}%`, Number(pageSize), Number(offset)]
+    [`%${search}%`, `%${search}%`, `%${search}%`, Number(pageSize), Number(offset)]
   );
   return rows;
 };
 
 exports.getById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM vong_business WHERE vongb_id = ?', [id]);
+  const [rows] = await db.query(
+    `SELECT vb.*, ac.c_name AS vongb_name
+     FROM vong_business vb
+     LEFT JOIN active_coop ac ON ac.c_code = vb.vongb_code
+     WHERE vb.vongb_id = ?`,
+    [id]
+  );
   return rows[0];
 };
 
@@ -62,8 +71,10 @@ exports.delete = async (id) => {
 exports.getLatest = async (limit = 10) => {
   const [rows] = await db.query(
     `SELECT *
-     FROM vong_business
-     ORDER BY vongb_id DESC
+     , ac.c_name AS vongb_name
+     FROM vong_business vb
+     LEFT JOIN active_coop ac ON ac.c_code = vb.vongb_code
+     ORDER BY vb.vongb_id DESC
      LIMIT ?`,
     [Number(limit) || 10]
   );

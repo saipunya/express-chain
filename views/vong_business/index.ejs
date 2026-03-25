@@ -58,7 +58,7 @@
       <table class="table table-bordered table-striped align-middle mb-0">
         <thead class="table-light">
           <tr class="text-center">
-            <th>รหัส</th>
+            <th>ชื่อกลุ่มเกษตรกร</th>
             <th>ปี</th>
             <th class="text-end">วงเงิน</th>
             <th>วันที่</th>
@@ -75,7 +75,7 @@
           <% data.forEach(row => { %>
             <% const formattedMoney = Number(row.vongb_money || 0).toLocaleString('th-TH'); %>
             <tr>
-              <td><%= row.vongb_code %></td>
+              <td><%= row.vongb_name || row.vongb_code || '-' %></td>
               <td class="text-center"><span class="badge badge-year p-2"><%= row.vongb_year %></span></td>
               <% if(user) { %>
               <td class="text-end money-cell"><%= formattedMoney %></td>

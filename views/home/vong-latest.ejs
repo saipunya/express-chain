@@ -35,7 +35,7 @@
   const tbody = document.getElementById('vongLatestTbody');
   if(!tbody) return;
   const loggedIn = <%= !!user %>;
-  fetch('/vong/latest/json?limit=10')
+  fetch(`/vong/latest/json?limit=10&_=${Date.now()}`, { cache: 'no-store' })
     .then(r=>r.json())
     .then(rows=>{
       if(!Array.isArray(rows) || !rows.length){
@@ -52,7 +52,7 @@
       tbody.innerHTML = rows.map((r,i)=>`
         <tr>
           <td class="text-center">${i+1}</td>
-          <td>${(r.name||'').replace(/</g,'&lt;')}</td>
+          <td>${(r.name||'-').replace(/</g,'&lt;')}</td>
           <td class="text-nowrap">${fmtYear(r)}</td>
          
           <td class="text-end">${ loggedIn ? fmtMoney(r.money) : '<span class="text-muted"><i class="bi bi-cash-coin"></i></span>' }</td>

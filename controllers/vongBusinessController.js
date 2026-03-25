@@ -226,6 +226,7 @@ exports.latestJson = async (req, res) => {
     const data = rows.map(r => ({
       id: r.vongb_id,
       code: r.vongb_code,
+      name: r.vongb_name || r.vongb_code || '-',
       year: r.vongb_year,
       date: r.vongb_date,
       money: r.vongb_money,

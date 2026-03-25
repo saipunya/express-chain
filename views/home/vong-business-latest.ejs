@@ -12,7 +12,7 @@
             <thead class="table-light">
               <tr>
                 <th style="width:46px;" class="text-center">#</th>
-                <th>รหัส</th>
+                <th>ชื่อกลุ่มเกษตรกร</th>
                 <th class="text-nowrap">ปี</th>
                 <th class="text-end text-nowrap">วงเงิน</th>
                 <th class="text-center text-nowrap">ไฟล์</th>
@@ -61,7 +61,7 @@
       tbody.innerHTML = rows.map((r, i) => `
         <tr>
           <td class="text-center">${i + 1}</td>
-          <td>${escapeHtml(r.code || '-')}</td>
+          <td>${escapeHtml(r.name || '-')}</td>
           <td class="text-nowrap">${escapeHtml(r.year || '-')}</td>
           <td class="text-end">${loggedIn ? fmtMoney(r.money) : '<span class="text-muted"><i class="bi bi-lock-fill"></i></span>'}</td>
           <td class="text-center">

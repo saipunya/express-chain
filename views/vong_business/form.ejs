@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: (vongBusiness ? 'แก้ไข' : 'สร้าง') + ' ข้อมูลวงเงินดำเนินกิจการ' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4"><%= vongBusiness ? 'แก้ไข' : 'เพิ่ม' %> ข้อมูลวงเงินดำเนินกิจการ</h1>
+  <form method="POST" enctype="multipart/form-data" action="<%= vongBusiness ? '/vong-business/edit/' + vongBusiness.vongb_id : '/vong-business/create' %>">
+
+    <div class="mb-3">
+      <label for="vongb_code" class="form-label">รหัสเอกสาร</label>
+      <input name="vongb_code" id="vongb_code" value="<%= vongBusiness ? vongBusiness.vongb_code : '' %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="vongb_year" class="form-label">ปี พ.ศ.</label>
+      <% const nowYear = new Date().getFullYear(); const selectedYear = vongBusiness ? String(vongBusiness.vongb_year) : String(nowYear + 543); %>
+      <select name="vongb_year" id="vongb_year" class="form-select" required>
+        <option value="<%= nowYear + 542 %>" <%= selectedYear === String(nowYear + 542) ? 'selected' : '' %>><%= nowYear + 542 %></option>
+        <option value="<%= nowYear + 543 %>" <%= selectedYear === String(nowYear + 543) ? 'selected' : '' %>><%= nowYear + 543 %></option>
+        <option value="<%= nowYear + 544 %>" <%= selectedYear === String(nowYear + 544) ? 'selected' : '' %>><%= nowYear + 544 %></option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="vongb_money" class="form-label">วงเงิน (บาท)</label>
+      <input name="vongb_money" id="vongb_money" value="<%= vongBusiness?.vongb_money || '' %>" placeholder="วงเงิน ไม่ต้องใส่ comma (, )" class="form-control" required>
+      <script>
+        const vongBusinessMoneyInput = document.querySelector('input[name="vongb_money"]');
+        vongBusinessMoneyInput.addEventListener('input', function() {
+          this.value = this.value.replace(/,/g, '');
+        });
+      </script>
+    </div>
+
+    <div class="mb-3">
+      <label for="vongb_date" class="form-label">วันที่อนุมัติ</label>
+      <input name="vongb_date" id="vongb_date" type="date" value="<%= vongBusiness && vongBusiness.vongb_date ? String(vongBusiness.vongb_date).slice(0, 10) : '' %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="vongb_file" class="form-label">แนบไฟล์ (PDF, DOCX, ฯลฯ)</label>
+      <input type="file" name="vongb_file" id="vongb_file" class="form-control" <%= vongBusiness ? '' : 'required' %>>
+      <% if (vongBusiness && vongBusiness.vongb_filename) { %>
+        <a href="/uploads/vong_business/<%= vongBusiness.vongb_filename %>" target="_blank" class="mt-2 d-block">ไฟล์ปัจจุบัน: <%= vongBusiness.vongb_filename %></a>
+      <% } %>
+    </div>
+
+    <button type="submit" class="btn btn-success">บันทึก</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

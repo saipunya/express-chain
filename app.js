@@ -246,6 +246,7 @@ const uploadDirs = [
   'uploads/down',
   'uploads/turnover',
   'uploads/vong', // added for vong files
+  'uploads/vong_business',
 ];
 
 uploadDirs.forEach(dir => {

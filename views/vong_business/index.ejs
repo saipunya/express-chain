@@ -1,0 +1,141 @@
+<%- include('../partials/header', { title: 'วงเงินดำเนินกิจการ' }) %>
+
+<style>
+  .page-title {
+    font-weight: 400;
+    letter-spacing: .5px;
+    background: linear-gradient(90deg,#198754,#0dcaf0);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    padding-bottom: 1rem;
+  }
+  .data-card { border: none; box-shadow: 0 4px 18px rgba(0,0,0,.06); border-radius: 1rem; }
+  .search-wrapper { position: relative; }
+  .search-wrapper .clear-btn { position:absolute; right:.5rem; top:50%; transform:translateY(-50%); border:none; background:transparent; color:#999; }
+  .search-wrapper .clear-btn:hover { color:#dc3545; }
+  table thead th { white-space: nowrap; }
+  table tbody tr { transition: background .25s, transform .25s; }
+  table tbody tr:hover { background:#f8f9fc; }
+  .money-cell { font-weight:600; font-variant-numeric: tabular-nums; }
+  .file-link i { transition: color .25s, transform .25s; }
+  .file-link:hover i { color:#d63384; transform: scale(1.15); }
+  .badge-year { background:#198754; }
+  .pagination-wrapper { padding: .85rem 1rem; display:flex; flex-direction:column; gap:.75rem; }
+  @media (min-width: 576px){ .pagination-wrapper { flex-direction:row; align-items:center; justify-content:space-between; } }
+  @media (max-width: 768px) {
+    .search-wrapper { margin-bottom:1rem; }
+  }
+</style>
+
+<div class="container my-5">
+  <h3 class="text-center mb-4 page-title mb-2 text-dark">ข้อมูลวงเงินดำเนินกิจการ</h3>
+  <% if(user && user.mClass === 'kbs') { %>
+  <div class="mb-3 text-end">
+    <a href="/vong-business/create" class="btn btn-success shadow-sm"><i class="bi bi-plus-circle me-1"></i> เพิ่มข้อมูล</a>
+  </div>
+  <% } %>
+
+  <div class="card data-card">
+    <div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <div class="search-wrapper flex-grow-1">
+        <form method="GET" action="/vong-business" class="d-flex gap-2">
+          <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="ค้นหารหัส, ปี หรือรายการ..." value="<%= search || '' %>">
+            <% if(search){ %>
+              <a href="/vong-business" class="btn btn-outline-secondary" title="ล้างการค้นหา"><i class="bi bi-x-circle"></i></a>
+            <% } %>
+            <button class="btn btn-success" type="submit"><i class="bi bi-search me-1"></i>ค้นหา</button>
+          </div>
+        </form>
+      </div>
+      <div class="text-muted small text-nowrap">
+        ทั้งหมด <%= pagination.totalItems %> รายการ
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle mb-0">
+        <thead class="table-light">
+          <tr class="text-center">
+            <th>รหัส</th>
+            <th>ปี</th>
+            <th class="text-end">วงเงิน</th>
+            <th>วันที่</th>
+            <th>ไฟล์</th>
+            <th>ผู้บันทึก</th>
+            <th>วันที่บันทึก</th>
+            <% if(user && user.mClass === 'admin') { %>
+            <th>จัดการ</th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+        <% if(data && data.length) { %>
+          <% data.forEach(row => { %>
+            <% const formattedMoney = Number(row.vongb_money || 0).toLocaleString('th-TH'); %>
+            <tr>
+              <td><%= row.vongb_code %></td>
+              <td class="text-center"><span class="badge badge-year p-2"><%= row.vongb_year %></span></td>
+              <% if(user) { %>
+              <td class="text-end money-cell"><%= formattedMoney %></td>
+              <td class="text-center"><%= row.vongb_date ? new Date(row.vongb_date).toLocaleDateString('th-TH') : '-' %></td>
+              <td class="text-center file-link">
+                <a href="/vong-business/download/<%= row.vongb_id %>" title="ดาวน์โหลดไฟล์"><i class="bi bi-file-earmark-pdf-fill fs-5"></i></a>
+              </td>
+              <% } else { %>
+              <td class="text-end"><i class="bi bi-lock-fill me-1 text-secondary"></i> <span class="text-muted">ดูข้อมูล</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><a href="/auth/login" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-file-earmark-pdf fs-5"></i></a></td>
+              <% } %>
+              <td><%= row.vongb_saveby || '-' %></td>
+              <td class="text-center"><%= row.vongb_savedate ? new Date(row.vongb_savedate).toLocaleDateString('th-TH') : '-' %></td>
+              <% if(user && user.mClass === 'admin') { %>
+              <td class="text-center">
+                <a href="/vong-business/edit/<%= row.vongb_id %>" class="me-1 text-decoration-none"><i class="bi bi-pencil-square"></i></a>
+                <a href="/vong-business/delete/<%= row.vongb_id %>" onclick="return confirm('ลบข้อมูล?')" class="text-danger text-decoration-none"><i class="bi bi-trash"></i></a>
+              </td>
+              <% } %>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="<%= user && user.mClass === 'admin' ? 8 : 7 %>" class="text-center text-muted py-4">ไม่พบข้อมูล</td>
+          </tr>
+        <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if(pagination.totalPages > 1) { %>
+    <div class="card-footer pagination-wrapper">
+      <div class="text-muted small">
+        หน้า <%= pagination.page %> จาก <%= pagination.totalPages %>
+      </div>
+      <nav aria-label="pagination">
+        <ul class="pagination justify-content-center mb-0 flex-wrap gap-1">
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="/vong-business?page=1<%= search ? '&search=' + encodeURIComponent(search) : '' %>"><i class="bi bi-chevron-double-left"></i></a>
+          </li>
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="/vong-business?page=<%= pagination.page - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><i class="bi bi-chevron-left"></i></a>
+          </li>
+          <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+            <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+              <a class="page-link" href="/vong-business?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
+            </li>
+          <% } %>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="/vong-business?page=<%= pagination.page + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><i class="bi bi-chevron-right"></i></a>
+          </li>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="/vong-business?page=<%= pagination.totalPages %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><i class="bi bi-chevron-double-right"></i></a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -15,6 +15,7 @@ module.exports = (app) => {
     // ถ้าเป็น homeRoutes.js ให้ใช้ '/' แทน
     if (file === 'homeRoutes.js') baseRoute = '/';
     if (file === 'activeCoopRoutes.js') baseRoute = '/activeCoop';
+    if (file === 'vongBusinessRoutes.js') baseRoute = '/vong-business';
 
     app.use(baseRoute, route);
   });

@@ -1,0 +1,81 @@
+<section class="py-2 bg-white" data-logged-in="<%= user ? '1' : '0' %>">
+  <div class="container-lg">
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar"></div>
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> วงเงินดำเนินกิจการกลุ่มเกษตรกร (10 สถาบันล่าสุด)</h6>
+        <a href="/vong-business" class="btn btn-sm btn-outline-light">ทั้งหมด</a>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:46px;" class="text-center">#</th>
+                <th>รหัส</th>
+                <th class="text-nowrap">ปี</th>
+                <th class="text-end text-nowrap">วงเงิน</th>
+                <th class="text-center text-nowrap">ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody id="vongBusinessLatestTbody">
+              <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-light small text-muted">
+        อัปเดตอัตโนมัติเมื่อเปิดหน้า | แสดงสูงสุด 10 รายการล่าสุด
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  const section = document.querySelector('section[data-logged-in]');
+  const tbody = document.getElementById('vongBusinessLatestTbody');
+  if(!tbody) return;
+  const loggedIn = section?.dataset?.loggedIn === '1';
+  fetch('/vong-business/latest/json?limit=10')
+    .then(r => r.json())
+    .then(rows => {
+      if(!Array.isArray(rows) || !rows.length){
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+        return;
+      }
+
+      const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+      const fmtMoney = n => {
+        if(n == null) return '-';
+        const num = Number(n);
+        if(isNaN(num)) return escapeHtml(n);
+        return num.toLocaleString('th-TH', { minimumFractionDigits: 0 });
+      };
+
+      tbody.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td class="text-center">${i + 1}</td>
+          <td>${escapeHtml(r.code || '-')}</td>
+          <td class="text-nowrap">${escapeHtml(r.year || '-')}</td>
+          <td class="text-end">${loggedIn ? fmtMoney(r.money) : '<span class="text-muted"><i class="bi bi-lock-fill"></i></span>'}</td>
+          <td class="text-center">
+            ${r.file ? (loggedIn
+              ? `<a href="/vong-business/download/${r.id}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-pdf"></i></a>`
+              : `<a href="/auth/login" class="btn btn-sm btn-outline-secondary"><i class="bi bi-lock"></i></a>`
+            ) : '<span class="text-muted">-</span>'}
+          </td>
+        </tr>
+      `).join('');
+    })
+    .catch(err => {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+    });
+})();
+</script>

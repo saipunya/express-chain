@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="<%= themeColor || '#2f5f7a' %>" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="กฎหมายสหกรณ์" />
+  <link rel="manifest" href="<%= manifestPath || '/manifest-law-chatbot.json' %>" />
+  <link rel="apple-touch-icon" href="/icon/calendar-icon-192.svg" />
+  <title><%= title || 'แชตบอทกฎหมายสหกรณ์' %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-start: #eef4f8;
+      --bg-end: #f8fafc;
+      --surface: #ffffff;
+      --surface-soft: #f4f7fa;
+      --primary: #1e5f86;
+      --primary-soft: #d8e8f3;
+      --text-main: #1f2a37;
+      --text-sub: #5d6a79;
+      --border: #d8e2ea;
+      --ok: #1d7a52;
+      --warn: #8b2e2e;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100%;
+      background: linear-gradient(160deg, var(--bg-start), var(--bg-end));
+      color: var(--text-main);
+    }
+
+    .lawbot-app {
+      min-height: 100dvh;
+      padding: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .top-status {
+      width: min(980px, 100%);
+      display: flex;
+      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-chip {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.25rem 0.65rem;
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .chat-shell {
+      width: min(980px, 100%);
+      border-radius: 1.2rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      box-shadow: 0 14px 36px rgba(32, 56, 81, 0.08);
+    }
+
+    .chat-header {
+      padding: 1rem 1.1rem;
+      background: linear-gradient(145deg, #edf5fb, #e6f0f7);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .target-law-wrap .btn {
+      white-space: normal;
+      line-height: 1.3;
+      font-size: 0.83rem;
+    }
+
+    .chat-messages {
+      height: calc(100dvh - 350px);
+      min-height: 340px;
+      overflow-y: auto;
+      background: var(--surface-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      padding: 1rem;
+    }
+
+    .bubble {
+      max-width: 90%;
+      border-radius: 0.95rem;
+      padding: 0.68rem 0.9rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: bubbleFadeIn 220ms ease-out both;
+    }
+
+    .bubble-user {
+      align-self: flex-end;
+      color: #fff;
+      background: linear-gradient(140deg, #2e78aa, #1d5d86);
+      border-bottom-right-radius: 0.25rem;
+    }
+
+    .bubble-bot {
+      align-self: flex-start;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      background: #fff;
+      border-bottom-left-radius: 0.25rem;
+    }
+
+    .bubble-loading {
+      color: var(--text-sub);
+      font-style: italic;
+    }
+
+    .hl-hit {
+      background: #fff2a2;
+      border-radius: 0.2rem;
+      padding: 0 0.1rem;
+      animation: markGlow 420ms ease-out both;
+    }
+
+    .chat-input-wrap {
+      border-top: 1px solid var(--border);
+      padding: 0.8rem;
+      background: #fff;
+    }
+
+    .btn-install {
+      display: none;
+    }
+
+    @keyframes bubbleFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes markGlow {
+      from { background-color: #ffe57c; }
+      to { background-color: #fff2a2; }
+    }
+
+    @media (max-width: 768px) {
+      .lawbot-app { padding: 0; gap: 0.45rem; }
+      .top-status { padding: 0.55rem 0.55rem 0; }
+      .chat-shell { border-radius: 0; border-left: none; border-right: none; }
+      .chat-messages { height: calc(100dvh - 390px); min-height: 310px; }
+      .bubble { max-width: 95%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bubble, .hl-hit { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lawbot-app">
+    <div class="top-status">
+      <div class="status-chip"><i class="bi bi-robot"></i>แชตบอทกฎหมายสหกรณ์</div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button id="installBtn" class="btn btn-sm btn-success btn-install"><i class="bi bi-download me-1"></i>ติดตั้งแอป</button>
+        <span id="onlineBadge" class="status-chip"><i class="bi bi-wifi"></i>ออนไลน์</span>
+      </div>
+    </div>
+
+    <div class="chat-shell">
+      <div class="chat-header">
+        <h1 class="h5 mb-1">แชตบอทกฎหมายสหกรณ์</h1>
+        <p class="mb-0 small text-muted">ระบบค้นหากฎหมายแบบ PWA สำหรับมือถือและเดสก์ท็อป</p>
+      </div>
+
+      <div class="quick-questions px-3 py-2 border-bottom">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="small text-secondary">คำถามด่วน</div>
+          <button type="button" id="clearChatBtn" class="btn btn-sm btn-outline-danger">ล้างประวัติแชต</button>
+        </div>
+        <div class="target-law-wrap mb-2">
+          <div class="small text-secondary mb-1">เลือกฐานกฎหมายก่อนค้นหา</div>
+          <div class="btn-group btn-group-sm w-100" role="group" aria-label="เลือกฐานกฎหมาย">
+            <button type="button" class="btn btn-primary target-law-btn active" data-target="coop">กฎหมายสหกรณ์ (พระราชบัญญัติสหกรณ์ พ.ศ. 2542)</button>
+            <button type="button" class="btn btn-outline-primary target-law-btn" data-target="group">กฎหมายกลุ่มเกษตรกร (พระราชกฤษฎีกาว่าด้วยกลุ่มเกษตรกร พ.ศ. 2547)</button>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary quick-btn" data-question="จัดตั้งสหกรณ์">จัดตั้ง</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary quick-btn" data-question="เงินปันผล">เงินปันผล</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary quick-btn" data-question="การกู้เงิน">การกู้เงิน</button>
+        </div>
+      </div>
+
+      <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+
+      <form id="chatForm" class="chat-input-wrap" autocomplete="off">
+        <div class="input-group">
+          <input id="chatInput" type="text" class="form-control" placeholder="พิมพ์คำถามเกี่ยวกับกฎหมาย..." maxlength="500" required />
+          <button id="sendBtn" type="submit" class="btn btn-primary px-4">ส่ง</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const CHAT_CACHE_KEY = 'lawbot-chat-cache-v1';
+      const CHAT_CACHE_LIMIT = 20;
+
+      const chatMessages = document.getElementById('chatMessages');
+      const chatForm = document.getElementById('chatForm');
+      const chatInput = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const clearChatBtn = document.getElementById('clearChatBtn');
+      const quickButtons = document.querySelectorAll('.quick-btn');
+      const targetLawButtons = document.querySelectorAll('.target-law-btn');
+      const installBtn = document.getElementById('installBtn');
+      const onlineBadge = document.getElementById('onlineBadge');
+
+      let selectedTarget = 'coop';
+      let deferredInstallPrompt = null;
+
+      function setOnlineState() {
+        const online = navigator.onLine;
+        onlineBadge.innerHTML = online
+          ? '<i class="bi bi-wifi"></i>ออนไลน์'
+          : '<i class="bi bi-wifi-off"></i>ออฟไลน์';
+        onlineBadge.style.color = online ? 'var(--ok)' : 'var(--warn)';
+      }
+
+      function updateTargetButtons() {
+        targetLawButtons.forEach((button) => {
+          const isActive = button.dataset.target === selectedTarget;
+          button.classList.toggle('active', isActive);
+          button.classList.toggle('btn-primary', isActive);
+          button.classList.toggle('btn-outline-primary', !isActive);
+        });
+      }
+
+      function autoScroll() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function escapeHtml(text) {
+        return String(text || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function escapeRegExp(text) {
+        return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function buildHighlightTerms(query) {
+        const source = String(query || '').trim();
+        if (!source) return [];
+        const terms = new Set([source]);
+        source
+          .split(/\s+/)
+          .map((part) => part.trim())
+          .filter((part) => part.length >= 2)
+          .forEach((part) => terms.add(part));
+        return Array.from(terms).sort((a, b) => b.length - a.length);
+      }
+
+      function applyHighlightHtml(text, terms) {
+        let html = escapeHtml(text);
+        if (!Array.isArray(terms) || !terms.length) return html;
+        terms.forEach((term) => {
+          if (!term) return;
+          const re = new RegExp(`(${escapeRegExp(escapeHtml(term))})`, 'gi');
+          html = html.replace(re, '<mark class="hl-hit">$1</mark>');
+        });
+        return html;
+      }
+
+      function addBubble(text, role, isLoading = false, highlightTerms = []) {
+        const div = document.createElement('div');
+        div.className = `bubble ${role === 'user' ? 'bubble-user' : 'bubble-bot'}${isLoading ? ' bubble-loading' : ''}`;
+        if (role === 'bot' && !isLoading) div.innerHTML = applyHighlightHtml(text, highlightTerms);
+        else div.textContent = text;
+        chatMessages.appendChild(div);
+        autoScroll();
+      }
+
+      function saveRecentChats() {
+        const items = Array.from(chatMessages.querySelectorAll('.bubble'))
+          .map((node) => ({ text: node.textContent || '', role: node.classList.contains('bubble-user') ? 'user' : 'bot' }))
+          .slice(-CHAT_CACHE_LIMIT);
+        localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(items));
+      }
+
+      function restoreRecentChats() {
+        try {
+          const raw = localStorage.getItem(CHAT_CACHE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return;
+          parsed.forEach((item) => {
+            if (item && item.text && (item.role === 'user' || item.role === 'bot')) addBubble(item.text, item.role);
+          });
+        } catch (_) {}
+      }
+
+      async function submitMessage(message) {
+        const trimmed = String(message || '').trim();
+        if (!trimmed) return;
+
+        addBubble(trimmed, 'user');
+        chatInput.value = '';
+        sendBtn.disabled = true;
+        addBubble('กำลังพิมพ์...', 'bot', true);
+
+        try {
+          const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: trimmed, target: selectedTarget })
+          });
+          const data = await response.json();
+          chatMessages.lastElementChild.remove();
+          addBubble(data && data.answer ? data.answer : 'ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล', 'bot', false, buildHighlightTerms(trimmed));
+        } catch (_) {
+          chatMessages.lastElementChild.remove();
+          addBubble('ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล', 'bot');
+        } finally {
+          sendBtn.disabled = false;
+          chatInput.focus();
+          saveRecentChats();
+        }
+      }
+
+      chatForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitMessage(chatInput.value);
+      });
+
+      quickButtons.forEach((button) => button.addEventListener('click', () => submitMessage(button.dataset.question || '')));
+
+      targetLawButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          selectedTarget = button.dataset.target || 'coop';
+          updateTargetButtons();
+        });
+      });
+
+      clearChatBtn.addEventListener('click', () => {
+        chatMessages.innerHTML = '';
+        localStorage.removeItem(CHAT_CACHE_KEY);
+        addBubble('ล้างประวัติแชตเรียบร้อยแล้ว', 'bot');
+      });
+
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installBtn.style.display = 'inline-block';
+      });
+
+      installBtn.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installBtn.style.display = 'none';
+      });
+
+      window.addEventListener('online', setOnlineState);
+      window.addEventListener('offline', setOnlineState);
+
+      updateTargetButtons();
+      setOnlineState();
+      restoreRecentChats();
+      if (!chatMessages.querySelector('.bubble')) addBubble('สวัสดีค่ะ/ครับ กรุณาถามเกี่ยวกับกฎหมายได้เลย', 'bot');
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-law-chatbot.js').catch(() => {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

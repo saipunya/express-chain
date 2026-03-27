@@ -4406,10 +4406,10 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                   <table class="table table-sm table-bordered table-hover align-middle">
                     <thead class="table-light">
                       <tr>
-                        <th style="width: 80px;">รหัส</th>
+                      
                         <th>ชื่อสถาบัน</th>
-                        <th style="width: 120px;">ประเภท</th>
-                        <th style="width: 140px;">วันสิ้นสุดบัญชี</th>
+                    
+                       
                         <th style="width: 140px;">กำหนดปิดบัญชี</th>
                         <th style="width: 100px;">คงเหลือ</th>
                       </tr>
@@ -4423,20 +4423,12 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                           const urgencyClass = daysRemaining <= 7 ? 'table-danger' : daysRemaining <= 15 ? 'table-warning' : '';
                         %>
                         <tr class="<%= urgencyClass %>">
-                          <td>
-                            <span class="badge bg-light text-dark border"><%= coop.c_code %></span>
-                          </td>
                           <td class="fw-medium">
-                            <%= coop.c_name %>
+                            <strong><%= coop.c_name %></strong>
+                            <br>
+                            <small><%= coop.endDateThai %></small>
                           </td>
-                          <td>
-                            <span class="badge <%= coop.coop_group === 'สหกรณ์' ? 'bg-primary' : 'bg-success' %>">
-                              <%= coop.coop_group || '-' %>
-                            </span>
-                          </td>
-                          <td class="text-nowrap">
-                            <%= coop.endDateThai %>
-                          </td>
+                         
                           <td class="text-nowrap">
                             <strong><%= coop.closingDeadlineThai %></strong>
                           </td>
@@ -4515,10 +4507,10 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                 <table class="table table-sm table-bordered table-hover align-middle">
                   <thead class="table-light">
                     <tr>
-                      <th style="width: 80px;">รหัส</th>
+                 
                       <th>ชื่อสถาบัน</th>
-                      <th style="width: 120px;">ประเภท</th>
-                      <th style="width: 140px;">วันสิ้นสุดบัญชี</th>
+                  
+                      
                       <th style="width: 140px;">กำหนดประชุม</th>
                       <th style="width: 120px;">สถานะการประชุม</th>
                     </tr>
@@ -4532,23 +4524,14 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                         const urgencyClass = daysRemaining <= 30 ? 'table-danger' : daysRemaining <= 60 ? 'table-warning' : daysRemaining <= 90 ? 'table-info' : '';
                       %>
                       <tr class="<%= urgencyClass %>">
-                        <td>
-                          <span class="badge bg-light text-dark border"><%= coop.c_code %></span>
-                        </td>
+                      
                         <td class="fw-medium">
-                          <%= coop.c_name %>
-                          <% if (coop.coop_group === 'สหกรณ์') { %>
-                            <span class="badge bg-success ms-1">สหกรณ์</span>
-                          <% } else { %>
-                            <span class="badge bg-info ms-1">กลุ่มเกษตรกร</span>
-                          <% } %>
+                          <strong><%= coop.c_name %></strong>
+                          <br>
+                          <small><%= coop.endDateThai %></small>
+                         
                         </td>
-                        <td>
-                          <span class="small text-muted"><%= coop.c_group || '-' %></span>
-                        </td>
-                        <td class="text-nowrap">
-                          <span class="small"><%= coop.endDateThai %></span>
-                        </td>
+                       
                         <td class="text-nowrap">
                           <strong><%= coop.deadlineThai %></strong>
                         </td>

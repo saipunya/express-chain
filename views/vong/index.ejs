@@ -86,7 +86,7 @@
             </td>
             <td class="text-center" data-label="ไฟล์"><a href="/auth/login" title="เข้าสู่ระบบเพื่อดาวน์โหลด"><i class="bi bi-file-pdf fs-5"></i></a></td>
             <% } %>
-            <% if(user && user.mClass === 'admin') { %>
+            <% if(user && (user.mClass === 'admin' || user.mClass === 'kbs')) { %>
             <td data-label="จัดการ" class="text-center">
               <a href="/vong/edit/<%= row.vong_id %>" class="me-1 text-decoration-none"><i class="bi bi-pencil-square"></i></a>
               <a href="/vong/delete/<%= row.vong_id %>" onclick="return confirm('ลบข้อมูล?')" class="text-danger text-decoration-none"><i class="bi bi-trash"></i></a>

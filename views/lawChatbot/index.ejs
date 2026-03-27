@@ -302,6 +302,7 @@
       let deferredInstallPrompt = null;
       let recognition = null;
       let isListening = false;
+      let isSubmitting = false;
       let shouldSubmitVoiceOnEnd = false;
 
       function setOnlineState() {
@@ -346,6 +347,10 @@
         voiceBtn.innerHTML = isListening ? '<i class="bi bi-stop-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
         voiceBtn.title = isListening ? 'หยุดฟังเสียง' : 'ค้นหาด้วยเสียง';
         voiceBtn.setAttribute('aria-label', isListening ? 'หยุดฟังเสียง' : 'ค้นหาด้วยเสียง');
+      }
+
+      function updateSendButtonState() {
+        sendBtn.disabled = isListening || isSubmitting;
       }
 
       function initVoiceRecognition() {
@@ -541,9 +546,14 @@
         const trimmed = String(message || '').trim();
         if (!trimmed) return;
 
+        if (recognition && isListening) {
+          shouldSubmitVoiceOnEnd = false;
+          recognition.stop();
+        }
+
+        isSubmitting = true;
+        updateSendButtonState();
         addBubble(trimmed, 'user');
-        chatInput.value = '';
-        sendBtn.disabled = true;
         addBubble('กำลังพิมพ์...', 'bot', true);
 
         try {
@@ -566,7 +576,8 @@
             target: selectedTarget
           });
         } finally {
-          sendBtn.disabled = false;
+          isSubmitting = false;
+          updateSendButtonState();
           chatInput.focus();
           if (SpeechRecognition && !isListening) {
             setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
@@ -577,7 +588,9 @@
 
       chatForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        submitMessage(chatInput.value);
+        const currentMessage = chatInput.value;
+        chatInput.value = '';
+        submitMessage(currentMessage);
       });
 
       voiceBtn.addEventListener('click', () => {
@@ -587,12 +600,14 @@
         }
 
         if (!recognition) initVoiceRecognition();
-        if (!recognition || sendBtn.disabled) return;
+        if (!recognition) return;
 
         if (isListening) {
           recognition.stop();
           return;
         }
+
+        if (isSubmitting) return;
 
         try {
           setVoiceStatus('กำลังเปิดไมโครโฟน...');
@@ -637,6 +652,7 @@
       updateTargetButtons();
       setOnlineState();
       updateVoiceButton();
+      updateSendButtonState();
       if (SpeechRecognition) {
         setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
         initVoiceRecognition();

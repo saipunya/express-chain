@@ -1,101 +1,203 @@
 <%- include('../../partials/header.ejs') %>
 <div class="container mt-4">
-  <h2 class="mb-4">➕ เพิ่มปัญหา Chamra</h2>
-  <form method="POST" action="/chamra/poblem/add">
-    <table class="table">
-       
-        <th>ปี</th>
-        <td><input type="number" name="po_year" required></td>
-      </tr>
-      <tr>
-        <th>ครั้งที่ประชุม</th>
-        <td><input type="number" name="po_meeting" required></td>
-      </tr>
-      <tr>
-        <% if (!exist) { %>
-            <tr>
-              <th>ชื่อสถาบัน</th>
-              <td>
-                <select name="po_code" required>
-                    <option value="">++โปรดเลือก++</option>
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-gradient-primary text-white py-3">
+          <h2 class="mb-0 d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            เพิ่มปัญหา Chamra
+          </h2>
+        </div>
+        <div class="card-body p-4">
+          <form method="POST" action="/chamra/poblem/add" id="problemForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="po_year" class="form-label fw-bold">
+                  <i class="fas fa-calendar-alt me-1 text-primary"></i>ปี
+                </label>
+                <select name="po_year" id="po_year" class="form-select" required>
+                  <option value="">โปรดเลือกปี</option>
+                  <option value="<%= (new Date().getFullYear() - 1) + 543 %>"><%= (new Date().getFullYear() - 1) + 543 %></option>
+                  <option value="<%= new Date().getFullYear() + 543 %>" selected><%= new Date().getFullYear() + 543 %></option>
+                  <option value="<%= (new Date().getFullYear() + 1) + 543 %>"><%= (new Date().getFullYear() + 1) + 543 %></option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="po_meeting" class="form-label fw-bold">
+                  <i class="fas fa-users me-1 text-primary"></i>ครั้งที่ประชุม
+                </label>
+                <select name="po_meeting" id="po_meeting" class="form-select" required>
+                  <option value="">โปรดเลือกครั้งที่ประชุม</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3" id="coopSection">
+              <label for="po_code" class="form-label fw-bold">
+                <i class="fas fa-building me-1 text-primary"></i>ชื่อสถาบัน
+              </label>
+              <% if (!exist) { %>
+                <select name="po_code" id="po_code" class="form-select" required>
+                  <option value="">โปรดเลือกสถาบัน</option>
                   <% coopList.forEach(coop => { %>
                     <option value="<%= coop.c_code %>"><%= coop.c_name %></option>
                   <% }) %>
                 </select>
-              </td>
-            </tr>
-            <% } else { %>
-            <tr>
-              <th>ชื่อสถาบัน</th>
-              <td>
-                <span class="text-danger">มีข้อมูลปีและครั้งประชุมนี้แล้ว</span>
-              </td>
-            </tr>
-            <% } %>
-        <th>รายละเอียด</th>
-        <td><textarea name="po_detail" rows="3" required></textarea></td>
-      </tr>
-      <tr>
-        <th>ปัญหา</th>
-        <td><textarea name="po_problem" rows="3" required></textarea></td>
-      </tr>
-      <tr>
-        <th>ผู้บันทึก</th>
-        <td><input type="text" name="po_saveby" value="<%= user ? user.fullname : 'ผู้ใช้ทั่วไป' %>" required></td>
-      </tr>
-      <tr>
-        <th>วันที่บันทึก</th>
-        <td><input type="date" name="po_savedate" value="<%= new Date().toISOString().slice(0,10) %>" required></td>
-      </tr>
-    </table>
-    <button type="submit" class="btn btn-primary">💾 บันทึกข้อมูล</button>
-    <a href="/chamra/poblem" class="btn btn-secondary">← กลับหน้ารายการ</a>
-  </form>
-  <span id="exist-warning" class="text-danger" style="display:none;">มีข้อมูลปีและครั้งประชุมนี้แล้ว</span>
+              <% } else { %>
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <div>มีข้อมูลปีและครั้งประชุมนี้แล้ว</div>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="mb-3">
+              <label for="po_detail" class="form-label fw-bold">
+                <i class="fas fa-info-circle me-1 text-primary"></i>รายละเอียด
+              </label>
+              <textarea name="po_detail" id="po_detail" class="form-control" rows="4" 
+                        placeholder="กรุณาระบุรายละเอียดเพิ่มเติม..." required></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="po_problem" class="form-label fw-bold">
+                <i class="fas fa-bug me-1 text-danger"></i>ปัญหา
+              </label>
+              <textarea name="po_problem" id="po_problem" class="form-control" rows="4" 
+                        placeholder="กรุณาระบุปัญหาที่พบ..." required></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <input type="hidden" name="po_saveby" id="po_saveby" 
+                       value="<%= user ? user.fullname : 'ผู้ใช้ทั่วไป' %>">
+              </div>
+              <div class="col-md-6 mb-3">
+                <input type="hidden" name="po_savedate" id="po_savedate" 
+                       value="<%= new Date().toISOString().slice(0,10) %>">
+              </div>
+            </div>
+
+          
+
+            <div class="d-flex justify-content-between mt-4">
+              <a href="/chamra/poblem" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>กลับหน้ารายการ
+              </a>
+              <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                <i class="fas fa-save me-2"></i>บันทึกข้อมูล
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
 function checkPoblemExist() {
-  const po_code = document.querySelector('[name="po_code"]').value;
-  const po_year = document.querySelector('[name="po_year"]').value;
-  const po_meeting = document.querySelector('[name="po_meeting"]').value;
+  const po_code = document.getElementById('po_code').value;
+  const po_year = document.getElementById('po_year').value;
+  const po_meeting = document.getElementById('po_meeting').value;
   if (!po_code || !po_year || !po_meeting) return;
 
   fetch(`/chamra/poblem/check-exist?po_code=${po_code}&po_year=${po_year}&po_meeting=${po_meeting}`)
     .then(res => res.json())
     .then(data => {
       const warn = document.getElementById('exist-warning');
+      const submitBtn = document.getElementById('submitBtn');
       if (data.exist) {
         warn.style.display = 'block';
-        document.querySelector('button[type="submit"]').disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-secondary');
       } else {
         warn.style.display = 'none';
-        document.querySelector('button[type="submit"]').disabled = false;
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
       }
+    })
+    .catch(err => {
+      console.error('Error checking existence:', err);
     });
 }
 
 function updateCoopList() {
-  const po_year = document.querySelector('[name="po_year"]').value;
-  const po_meeting = document.querySelector('[name="po_meeting"]').value;
-  const select = document.querySelector('[name="po_code"]');
+  const po_year = document.getElementById('po_year').value;
+  const po_meeting = document.getElementById('po_meeting').value;
+  const select = document.getElementById('po_code');
   if (!po_year || !po_meeting) return;
+
+  // Show loading state
+  select.innerHTML = '<option value="">กำลังโหลด...</option>';
+  select.disabled = true;
 
   fetch(`/chamra/poblem/available-coop?po_year=${po_year}&po_meeting=${po_meeting}`)
     .then(res => res.json())
     .then(list => {
-      select.innerHTML = '<option value="">++โปรดเลือก++</option>';
+      select.innerHTML = '<option value="">โปรดเลือกสถาบัน</option>';
       list.forEach(coop => {
         select.innerHTML += `<option value="${coop.c_code}">${coop.c_name}</option>`;
       });
+      select.disabled = false;
+    })
+    .catch(err => {
+      console.error('Error loading coop list:', err);
+      select.innerHTML = '<option value="">เกิดข้อผิดพลาด</option>';
+      select.disabled = true;
     });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelector('[name="po_code"]').addEventListener('change', checkPoblemExist);
-  document.querySelector('[name="po_year"]').addEventListener('input', checkPoblemExist);
-  document.querySelector('[name="po_meeting"]').addEventListener('input', checkPoblemExist);
-  document.querySelector('[name="po_year"]').addEventListener('input', updateCoopList);
-  document.querySelector('[name="po_meeting"]').addEventListener('input', updateCoopList);
+  const po_code = document.getElementById('po_code');
+  const po_year = document.getElementById('po_year');
+  const po_meeting = document.getElementById('po_meeting');
+  
+  if (po_code) {
+    po_code.addEventListener('change', checkPoblemExist);
+  }
+  po_year.addEventListener('change', function() {
+    checkPoblemExist();
+    updateCoopList();
+  });
+  po_meeting.addEventListener('change', function() {
+    checkPoblemExist();
+    updateCoopList();
+  });
+
+  // Add form validation styling
+  const form = document.getElementById('problemForm');
+  const inputs = form.querySelectorAll('input, select, textarea');
+  
+  inputs.forEach(input => {
+    input.addEventListener('blur', function() {
+      if (this.hasAttribute('required') && !this.value) {
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+      }
+    });
+    
+    input.addEventListener('focus', function() {
+      this.classList.remove('is-invalid');
+    });
+  });
+
+  // Auto-resize textareas
+  const textareas = form.querySelectorAll('textarea');
+  textareas.forEach(textarea => {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+  });
 });
 </script>
 <%- include('../../partials/footer.ejs') %>

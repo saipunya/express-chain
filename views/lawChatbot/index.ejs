@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="<%= themeColor || '#2f5f7a' %>" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="กฎหมายสหกรณ์" />
   <link rel="manifest" href="<%= manifestPath || '/manifest-law-chatbot.json' %>" />
   <link rel="apple-touch-icon" href="/icon/calendar-icon-192.svg" />
@@ -40,6 +40,7 @@
     .lawbot-app {
       min-height: 100dvh;
       padding: 0.7rem;
+      padding-top: max(0.7rem, env(safe-area-inset-top));
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -75,6 +76,9 @@
       background: var(--surface);
       overflow: hidden;
       box-shadow: 0 14px 36px rgba(32, 56, 81, 0.08);
+      min-height: calc(100dvh - 82px);
+      display: flex;
+      flex-direction: column;
     }
 
     .chat-header {
@@ -90,8 +94,8 @@
     }
 
     .chat-messages {
-      height: calc(100dvh - 350px);
-      min-height: 340px;
+      flex: 1;
+      min-height: 420px;
       overflow-y: auto;
       background: var(--surface-soft);
       display: flex;
@@ -158,10 +162,19 @@
     }
 
     @media (max-width: 768px) {
-      .lawbot-app { padding: 0; gap: 0.45rem; }
+      .lawbot-app {
+        padding: 0;
+        padding-top: env(safe-area-inset-top);
+        gap: 0.45rem;
+      }
       .top-status { padding: 0.55rem 0.55rem 0; }
-      .chat-shell { border-radius: 0; border-left: none; border-right: none; }
-      .chat-messages { height: calc(100dvh - 390px); min-height: 310px; }
+      .chat-shell {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        min-height: calc(100dvh - 52px);
+      }
+      .chat-messages { min-height: 0; }
       .bubble { max-width: 95%; }
     }
 

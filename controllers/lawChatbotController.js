@@ -25,3 +25,52 @@ exports.chat = async (req, res) => {
     });
   }
 };
+
+exports.feedbackListPage = async (req, res) => {
+  try {
+    const feedback = await lawChatbotService.getChatbotFeedbackList(req.query || {});
+
+    return res.render('lawChatbot/feedback', {
+      title: 'ข้อมูลฟีดแบ็กแชตบอทกฎหมาย',
+      feedbackRows: feedback.rows,
+      page: feedback.page,
+      pageSize: feedback.pageSize,
+      total: feedback.total,
+      totalPages: feedback.totalPages,
+      filters: {
+        target: req.query && req.query.target ? String(req.query.target) : '',
+        helpful: req.query && req.query.helpful ? String(req.query.helpful) : ''
+      }
+    });
+  } catch (error) {
+    console.error('lawChatbot feedback list error:', error);
+    return res.status(500).render('error_page', {
+      message: 'ไม่สามารถโหลดรายการข้อเสนอแนะได้'
+    });
+  }
+};
+
+exports.chatFeedback = async (req, res) => {
+  try {
+    const payload = req.body && typeof req.body === 'object' ? req.body : {};
+    const result = await lawChatbotService.saveChatbotFeedback(payload);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.message
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: result.message
+    });
+  } catch (error) {
+    console.error('lawChatbot feedback error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'ไม่สามารถบันทึกข้อเสนอแนะได้'
+    });
+  }
+};

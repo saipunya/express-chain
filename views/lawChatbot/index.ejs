@@ -134,6 +134,19 @@
       font-style: italic;
     }
 
+    .feedback-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .feedback-actions .btn {
+      --bs-btn-padding-y: 0.2rem;
+      --bs-btn-padding-x: 0.55rem;
+      --bs-btn-font-size: 0.76rem;
+    }
+
     .hl-hit {
       background: #fff2a2;
       border-radius: 0.2rem;
@@ -149,6 +162,12 @@
 
     .btn-install {
       display: none;
+    }
+
+    .voice-btn-listening {
+      color: #fff !important;
+      background: #b42318 !important;
+      border-color: #b42318 !important;
     }
 
     @keyframes bubbleFadeIn {
@@ -186,7 +205,7 @@
 <body>
   <div class="lawbot-app">
     <div class="top-status">
-      <div class="status-chip"><i class="bi bi-robot"></i>แชตบอทกฎหมายสหกรณ์</div>
+      <div class="status-chip"><i class="bi bi-robot"></i>แชตบอทกฎหมายสหกรณ์ Version 1.0</div>
       <div class="d-flex gap-2 flex-wrap">
         <button id="installBtn" class="btn btn-sm btn-success btn-install"><i class="bi bi-download me-1"></i>ติดตั้งแอป</button>
         <span id="onlineBadge" class="status-chip"><i class="bi bi-wifi"></i>ออนไลน์</span>
@@ -250,8 +269,12 @@
       <form id="chatForm" class="chat-input-wrap" autocomplete="off">
         <div class="input-group">
           <input id="chatInput" type="text" class="form-control" placeholder="พิมพ์คำถามเกี่ยวกับกฎหมาย..." maxlength="500" required />
+          <button id="voiceBtn" type="button" class="btn btn-outline-secondary" title="ค้นหาด้วยเสียง" aria-label="ค้นหาด้วยเสียง">
+            <i class="bi bi-mic-fill"></i>
+          </button>
           <button id="sendBtn" type="submit" class="btn btn-primary px-4">ส่ง</button>
         </div>
+        <div id="voiceStatus" class="small text-muted mt-1"></div>
       </form>
     </div>
   </div>
@@ -265,15 +288,21 @@
       const chatMessages = document.getElementById('chatMessages');
       const chatForm = document.getElementById('chatForm');
       const chatInput = document.getElementById('chatInput');
+      const voiceBtn = document.getElementById('voiceBtn');
+      const voiceStatus = document.getElementById('voiceStatus');
       const sendBtn = document.getElementById('sendBtn');
       const clearChatBtn = document.getElementById('clearChatBtn');
       const quickButtons = document.querySelectorAll('.quick-btn');
       const targetLawButtons = document.querySelectorAll('.target-law-btn');
       const installBtn = document.getElementById('installBtn');
       const onlineBadge = document.getElementById('onlineBadge');
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
       let selectedTarget = 'coop';
       let deferredInstallPrompt = null;
+      let recognition = null;
+      let isListening = false;
+      let shouldSubmitVoiceOnEnd = false;
 
       function setOnlineState() {
         const online = navigator.onLine;
@@ -294,6 +323,93 @@
 
       function autoScroll() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function setVoiceStatus(text = '', isError = false) {
+        if (!voiceStatus) return;
+        voiceStatus.textContent = text;
+        voiceStatus.classList.toggle('text-danger', !!isError);
+        voiceStatus.classList.toggle('text-muted', !isError);
+      }
+
+      function updateVoiceButton() {
+        if (!voiceBtn) return;
+
+        if (!SpeechRecognition) {
+          voiceBtn.disabled = true;
+          setVoiceStatus('เบราว์เซอร์นี้ไม่รองรับการค้นหาด้วยเสียง', true);
+          return;
+        }
+
+        voiceBtn.disabled = false;
+        voiceBtn.classList.toggle('voice-btn-listening', isListening);
+        voiceBtn.innerHTML = isListening ? '<i class="bi bi-stop-fill"></i>' : '<i class="bi bi-mic-fill"></i>';
+        voiceBtn.title = isListening ? 'หยุดฟังเสียง' : 'ค้นหาด้วยเสียง';
+        voiceBtn.setAttribute('aria-label', isListening ? 'หยุดฟังเสียง' : 'ค้นหาด้วยเสียง');
+      }
+
+      function initVoiceRecognition() {
+        if (!SpeechRecognition || recognition) return;
+
+        recognition = new SpeechRecognition();
+        recognition.lang = 'th-TH';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 1;
+
+        let finalTranscript = '';
+
+        recognition.onstart = () => {
+          isListening = true;
+          finalTranscript = '';
+          shouldSubmitVoiceOnEnd = true;
+          setVoiceStatus('กำลังฟัง... พูดคำค้นหาได้เลย');
+          updateVoiceButton();
+        };
+
+        recognition.onresult = (event) => {
+          let interimTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i += 1) {
+            const result = event.results[i];
+            const text = result[0] && result[0].transcript ? result[0].transcript : '';
+            if (result.isFinal) finalTranscript += `${text} `;
+            else interimTranscript += text;
+          }
+          chatInput.value = `${finalTranscript}${interimTranscript}`.trim();
+        };
+
+        recognition.onerror = (event) => {
+          isListening = false;
+          shouldSubmitVoiceOnEnd = false;
+          updateVoiceButton();
+
+          const errorMap = {
+            'not-allowed': 'ไม่ได้รับอนุญาตไมโครโฟน กรุณาอนุญาตสิทธิ์การใช้ไมค์',
+            'service-not-allowed': 'ไม่สามารถใช้ไมโครโฟนได้ในอุปกรณ์นี้',
+            'audio-capture': 'ไม่พบไมโครโฟน',
+            'no-speech': 'ไม่ได้ยินเสียงพูด ลองใหม่อีกครั้ง',
+            network: 'เครือข่ายมีปัญหาในการรับเสียง'
+          };
+
+          setVoiceStatus(errorMap[event.error] || 'เกิดข้อผิดพลาดในการค้นหาด้วยเสียง', true);
+        };
+
+        recognition.onend = () => {
+          const hasText = String(chatInput.value || '').trim().length > 0;
+          const keepTranscript = shouldSubmitVoiceOnEnd && hasText;
+
+          isListening = false;
+          shouldSubmitVoiceOnEnd = false;
+          updateVoiceButton();
+
+          if (keepTranscript) {
+            setVoiceStatus('ถอดเสียงสำเร็จ กรุณากดปุ่มส่ง');
+            chatInput.focus();
+            return;
+          }
+
+          if (!hasText) setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
+        };
       }
 
       function escapeHtml(text) {
@@ -332,11 +448,72 @@
         return html;
       }
 
-      function addBubble(text, role, isLoading = false, highlightTerms = []) {
+      async function submitFeedback({ question, answerShown, isHelpful, target }) {
+        const payload = {
+          message: question,
+          answerShown,
+          isHelpful,
+          target
+        };
+
+        if (!isHelpful) {
+          payload.expectedAnswer = window.prompt('คำตอบที่ต้องการให้ระบบตอบ (ถ้ามี):', '') || '';
+          payload.suggestedLawNumber = window.prompt('มาตราที่เกี่ยวข้อง (ถ้าทราบ):', '') || '';
+        }
+
+        const response = await fetch('/chat-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.message) || 'ไม่สามารถบันทึกข้อเสนอแนะได้');
+        }
+      }
+
+      function attachFeedbackActions(container, { question, answerShown, target }) {
+        if (!question || !answerShown) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'feedback-actions';
+        wrap.innerHTML = `
+          <button type="button" class="btn btn-outline-success btn-sm" data-helpful="1">มีประโยชน์</button>
+          <button type="button" class="btn btn-outline-warning btn-sm" data-helpful="0">ควรปรับปรุง</button>
+        `;
+
+        wrap.querySelectorAll('button').forEach((button) => {
+          button.addEventListener('click', async () => {
+            if (wrap.dataset.sent === '1') return;
+            const isHelpful = button.dataset.helpful === '1';
+            try {
+              await submitFeedback({ question, answerShown, isHelpful, target });
+              wrap.dataset.sent = '1';
+              wrap.innerHTML = '<span class="text-success small">ขอบคุณสำหรับข้อเสนอแนะ</span>';
+            } catch (_) {
+              wrap.innerHTML = '<span class="text-danger small">บันทึกข้อเสนอแนะไม่สำเร็จ</span>';
+            }
+          });
+        });
+
+        container.appendChild(wrap);
+      }
+
+      function addBubble(text, role, isLoading = false, highlightTerms = [], feedbackContext = null) {
         const div = document.createElement('div');
         div.className = `bubble ${role === 'user' ? 'bubble-user' : 'bubble-bot'}${isLoading ? ' bubble-loading' : ''}`;
         if (role === 'bot' && !isLoading) div.innerHTML = applyHighlightHtml(text, highlightTerms);
         else div.textContent = text;
+
+        if (role === 'bot' && !isLoading && feedbackContext && feedbackContext.question) {
+          attachFeedbackActions(div, {
+            question: feedbackContext.question,
+            answerShown: text,
+            target: feedbackContext.target || selectedTarget
+          });
+        }
+
         chatMessages.appendChild(div);
         autoScroll();
       }
@@ -377,13 +554,23 @@
           });
           const data = await response.json();
           chatMessages.lastElementChild.remove();
-          addBubble(data && data.answer ? data.answer : 'ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล', 'bot', false, buildHighlightTerms(trimmed));
+          const answerText = data && data.answer ? data.answer : 'ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล ขอให้ท่านตรวจสอบ...';
+          addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
+            question: trimmed,
+            target: selectedTarget
+          });
         } catch (_) {
           chatMessages.lastElementChild.remove();
-          addBubble('ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล', 'bot');
+          addBubble('ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล ขอให้ท่านตรวจสอบ...', 'bot', false, [], {
+            question: trimmed,
+            target: selectedTarget
+          });
         } finally {
           sendBtn.disabled = false;
           chatInput.focus();
+          if (SpeechRecognition && !isListening) {
+            setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
+          }
           saveRecentChats();
         }
       }
@@ -391,6 +578,28 @@
       chatForm.addEventListener('submit', (event) => {
         event.preventDefault();
         submitMessage(chatInput.value);
+      });
+
+      voiceBtn.addEventListener('click', () => {
+        if (!SpeechRecognition) {
+          setVoiceStatus('เบราว์เซอร์นี้ไม่รองรับการค้นหาด้วยเสียง', true);
+          return;
+        }
+
+        if (!recognition) initVoiceRecognition();
+        if (!recognition || sendBtn.disabled) return;
+
+        if (isListening) {
+          recognition.stop();
+          return;
+        }
+
+        try {
+          setVoiceStatus('กำลังเปิดไมโครโฟน...');
+          recognition.start();
+        } catch (_) {
+          setVoiceStatus('ไม่สามารถเริ่มไมโครโฟนได้ ลองใหม่อีกครั้ง', true);
+        }
       });
 
       quickButtons.forEach((button) => button.addEventListener('click', () => submitMessage(button.dataset.question || '')));
@@ -405,7 +614,7 @@
       clearChatBtn.addEventListener('click', () => {
         chatMessages.innerHTML = '';
         localStorage.removeItem(CHAT_CACHE_KEY);
-        addBubble('ล้างประวัติแชตเรียบร้อยแล้ว', 'bot');
+        addBubble('ใช้คำที่เกี่ยวข้องเท่านั้น', 'bot');
       });
 
       window.addEventListener('beforeinstallprompt', (event) => {
@@ -427,8 +636,13 @@
 
       updateTargetButtons();
       setOnlineState();
+      updateVoiceButton();
+      if (SpeechRecognition) {
+        setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
+        initVoiceRecognition();
+      }
       restoreRecentChats();
-      if (!chatMessages.querySelector('.bubble')) addBubble('สวัสดีค่ะ/ครับ กรุณาถามเกี่ยวกับกฎหมายได้เลย', 'bot');
+      if (!chatMessages.querySelector('.bubble')) addBubble('กรุณาใส่คำที่เกี่ยวข้องเท่านั้น !', 'bot');
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

@@ -4,7 +4,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "node app.js",
+    "export:law-feedback": "node scripts/export_law_chatbot_feedback_jsonl.js",
+    "split:law-feedback": "node scripts/split_law_chatbot_feedback_dataset.js"
   },
   "repository": {
     "type": "git",

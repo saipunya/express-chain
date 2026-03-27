@@ -23,6 +23,20 @@ const APPROX_STOP_TERMS = new Set([
   'ทั้งหมด'
 ]);
 
+const CORE_SEARCH_STOP_TERMS = new Set([
+  'และ',
+  'หรือ',
+  'ของ',
+  'ใน',
+  'ที่',
+  'ให้',
+  'ได้',
+  'ตาม',
+  'กับ',
+  'อย่างไร',
+  'อะไร'
+]);
+
 function normalizeLimit(limit) {
   const n = Number(limit) || 5;
   return Math.max(1, Math.min(MAX_LIMIT, n));
@@ -110,6 +124,13 @@ function buildApproximateTerms(message) {
     .slice(0, 16);
 }
 
+function buildCoreSearchTerms(message) {
+  return tokenizeQuery(message)
+    .map((term) => normalizeForCompare(term))
+    .filter((term) => term.length >= 2)
+    .filter((term) => !CORE_SEARCH_STOP_TERMS.has(term));
+}
+
 function extractLegalReference(message) {
   const text = String(message || '').trim();
   const match = text.match(/มาตรา\s*([0-9]+(?:\/[0-9]+)?)/i);
@@ -189,9 +210,49 @@ function scoreCandidateRow(row, terms, legalRef) {
   return score;
 }
 
+function filterRowsByCoreFieldMatch(rows, message, legalRef) {
+  if (!rows.length) return [];
+
+  const terms = buildCoreSearchTerms(message);
+  if (!terms.length) return rows;
+
+  return rows.filter((row) => {
+    if (isStrictArticleMatch(row.law_number, legalRef)) return true;
+
+    const searchable = normalizeForCompare([row.law_detail, row.law_search].join(' '));
+    if (!searchable) return false;
+
+    const matchedTerms = terms.filter((term) => searchable.includes(term));
+    const minimumMatches = terms.length >= 3 ? 2 : 1;
+
+    return matchedTerms.length >= minimumMatches;
+  });
+}
+
+function scoreCoreFieldSimilarity(row, terms, legalRef) {
+  const searchable = normalizeForCompare([row.law_detail, row.law_search].join(' '));
+  if (!searchable) return 0;
+
+  let score = 0;
+  terms.forEach((term) => {
+    if (!term || !searchable.includes(term)) return;
+    if (term.length >= 6) score += 4;
+    else if (term.length >= 4) score += 2;
+    else score += 0.5;
+  });
+
+  if (isStrictArticleMatch(row.law_number, legalRef)) {
+    score += 30;
+  }
+
+  return score;
+}
+
 async function searchApproximate(message, limit, legalRef, target = 'coop') {
   const terms = buildApproximateTerms(message);
   if (!terms.length) return [];
+  const hasExplicitLegalRef = Boolean(legalRef.articleNo || legalRef.articleLabel || legalRef.lawPart);
+  const minScore = hasExplicitLegalRef ? 1 : 4;
 
   const lawConditions = terms.map(() => '(law_number LIKE ? OR law_part LIKE ? OR law_detail LIKE ? OR law_search LIKE ?)');
   const glawConditions = terms.map(() => '(glaw_number LIKE ? OR glaw_part LIKE ? OR glaw_detail LIKE ?)');
@@ -242,7 +303,7 @@ async function searchApproximate(message, limit, legalRef, target = 'coop') {
 
   const ranked = scopedRows
     .map((row) => ({ row, score: scoreCandidateRow(row, terms, legalRef) }))
-    .filter((item) => item.score > 0)
+    .filter((item) => item.score >= minScore)
     .sort((a, b) => b.score - a.score)
     .map((item) => item.row);
 
@@ -358,7 +419,8 @@ async function searchWithFullText(message, limit, target = 'coop') {
   );
 
   const scopedRows = filterRowsByTarget(rows, target);
-  return prioritizeStrictArticleRows(scopedRows, legalRef, limit);
+  const prioritizedRows = prioritizeStrictArticleRows(scopedRows, legalRef, limit);
+  return filterRowsByCoreFieldMatch(prioritizedRows, message, legalRef).slice(0, normalizeLimit(limit));
 }
 
 async function searchWithLikeOnly(message, limit, target = 'coop') {
@@ -457,7 +519,8 @@ async function searchWithLikeOnly(message, limit, target = 'coop') {
   );
 
   const scopedRows = filterRowsByTarget(rows, target);
-  return prioritizeStrictArticleRows(scopedRows, legalRef, limit);
+  const prioritizedRows = prioritizeStrictArticleRows(scopedRows, legalRef, limit);
+  return filterRowsByCoreFieldMatch(prioritizedRows, message, legalRef).slice(0, normalizeLimit(limit));
 }
 
 exports.searchPenaltyLaws = async (limit = 20, target = 'coop') => {
@@ -521,7 +584,7 @@ exports.searchRelevantLaws = async (message, limit = 5, target = 'coop') => {
   try {
     const rows = await searchWithFullText(safeMessage, limit, safeTarget);
     if (rows.length) return rows;
-    return searchApproximate(safeMessage, limit, legalRef, safeTarget);
+    return [];
   } catch (error) {
     const text = String(error && error.message ? error.message : '');
     const missingFullText =
@@ -532,6 +595,84 @@ exports.searchRelevantLaws = async (message, limit = 5, target = 'coop') => {
 
     const rows = await searchWithLikeOnly(safeMessage, limit, safeTarget);
     if (rows.length) return rows;
-    return searchApproximate(safeMessage, limit, legalRef, safeTarget);
+    return [];
   }
+};
+
+exports.suggestNearbyLaws = async (message, limit = 3, target = 'coop') => {
+  const safeMessage = String(message || '').trim();
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 3, 10));
+  const safeTarget = normalizeTarget(target);
+  if (!safeMessage) return [];
+
+  const legalRef = extractLegalReference(safeMessage);
+  const terms = buildApproximateTerms(safeMessage);
+  if (!terms.length) return [];
+
+  const lawConditions = terms.map(() => '(law_detail LIKE ? OR law_search LIKE ?)');
+  const glawConditions = terms.map(() => '(glaw_detail LIKE ?)');
+
+  const lawParams = terms.flatMap((term) => {
+    const like = `%${term}%`;
+    return [like, like];
+  });
+
+  const glawParams = terms.flatMap((term) => {
+    const like = `%${term}%`;
+    return [like];
+  });
+
+  const [rows] = await db.query(
+    `
+      SELECT *
+      FROM (
+        SELECT
+          'tbl_laws' AS source_table,
+          law_number AS law_number,
+          law_part AS law_part,
+          law_detail AS law_detail,
+          law_comment AS law_comment,
+          law_search AS law_search,
+          0 AS relevance_score
+        FROM tbl_laws
+        WHERE ${lawConditions.join(' OR ')}
+
+        UNION ALL
+
+        SELECT
+          'tbl_glaws' AS source_table,
+          glaw_number AS law_number,
+          glaw_part AS law_part,
+          glaw_detail AS law_detail,
+          glaw_comment AS law_comment,
+          '' AS law_search,
+          0 AS relevance_score
+        FROM tbl_glaws
+        WHERE ${glawConditions.join(' OR ')}
+      ) nearby_candidates
+      LIMIT ?
+    `,
+    [...lawParams, ...glawParams, APPROX_CANDIDATE_LIMIT]
+  );
+
+  const scopedRows = filterRowsByTarget(rows, safeTarget);
+  if (!scopedRows.length) return [];
+
+  const ranked = scopedRows
+    .map((row) => ({ row, score: scoreCoreFieldSimilarity(row, terms, legalRef) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.row);
+  if (!ranked.length) return [];
+
+  const unique = [];
+  const seen = new Set();
+  ranked.forEach((row) => {
+    const key = `${row.source_table}|${normalizeText(row.law_number)}|${normalizeText(row.law_part)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push(row);
+  });
+
+  return unique.slice(0, safeLimit);
 };

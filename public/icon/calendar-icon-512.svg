@@ -1,4 +1,21 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#4A90A4" rx="100"/>
-  <text x="256" y="320" font-size="320" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial">📅</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e3a58"/>
+      <stop offset="100%" stop-color="#2f6f95"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+
+  <rect x="154" y="156" width="204" height="178" rx="46" fill="#e8f3fb"/>
+  <rect x="132" y="352" width="248" height="68" rx="34" fill="#d0e6f7"/>
+  <rect x="124" y="208" width="30" height="72" rx="15" fill="#9ec6df"/>
+  <rect x="358" y="208" width="30" height="72" rx="15" fill="#9ec6df"/>
+
+  <circle cx="220" cy="237" r="24" fill="#0f4f79"/>
+  <circle cx="292" cy="237" r="24" fill="#0f4f79"/>
+  <rect x="220" y="284" width="72" height="16" rx="8" fill="#2f6f95"/>
+
+  <rect x="246" y="96" width="20" height="42" rx="10" fill="#9ec6df"/>
+  <circle cx="256" cy="86" r="20" fill="#3fd0ff"/>
 </svg>

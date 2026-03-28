@@ -189,38 +189,26 @@
   <% } %>
   <h2 class="h6 mt-4 mb-2">รายการปัญหา (Problems)</h2>
   <% if (poblems && poblems.length) { %>
-    <div class="card shadow-sm mb-4">
-      <div class="card-body p-0">
-        <div class="table-responsive mb-0">
-          <table class="table table-bordered table-striped table-sm align-middle bg-white mb-0">
-            <thead class="table-light">
-              <tr>
-              
-                <th style="width:120px;">ครั้งประชุม</th>
-                <th>รายละเอียด</th>
-                <th style="width:80px;">ปัญหา</th>
-              </tr>
-            </thead>
-            <tbody>
-            <% poblems.forEach(p => { %>
-              <tr>
-            
-                <td><%= p.po_meeting %>/<%= p.po_year %></td>
-                <td><%= p.po_detail || '-' %></td>
-                <td><%= p.po_problem || '-' %></td>
-              </tr>
-            <% }) %>
-            </tbody>
-          </table>
+    <% poblems.forEach(p => { %>
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success-subtle  d-flex justify-content-between align-items-center">
+          <span>ประชุมครั้งที่ <strong><%= p.po_meeting %>/<%= p.po_year %></strong></span>
+        </div>
+        <div class="card-body">
+          <p class="mb-2"><strong>รายละเอียด:</strong> <%= p.po_detail || '-' %></p>
+          <p class="mb-2"><strong>ปัญหาที่พบ:</strong> <%= p.po_problem || '-' %></p>
         </div>
       </div>
-    </div>
+    <% }) %>
+
   <% } else { %>
     <div class="problems-empty small">ยังไม่มีรายการปัญหา</div>
   <% } %>
   <% } else { %>
     <p class="text-muted">ไม่พบข้อมูล</p>
   <% } %>
+         
+  </div>
   <div class="d-flex gap-2 mt-3">
     <button id="exportPdfBtn" class="btn btn-primary btn-sm" data-code="<%= data && (data.de_code || data.c_code) %>">Export PDF</button>
   </div>

@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-const MAX_LIMIT = 5;
+const MAX_LIMIT = 80;
 const APPROX_CANDIDATE_LIMIT = 300;
 
 const SYNONYM_MAP = {

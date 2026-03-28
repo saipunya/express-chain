@@ -2,6 +2,7 @@ const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 
 const NOT_FOUND_MESSAGE = 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
+const DEFAULT_SEARCH_LIMIT = 80;
 
 function summarizeLaw(row) {
   const comment = String(row.law_comment || '').trim();
@@ -179,7 +180,7 @@ exports.askLawChatbot = async (message, target = 'coop') => {
   }
 
   if (!matchedRows.length) {
-    matchedRows = await lawChatbotModel.searchRelevantLaws(safeMessage, 5, safeTarget);
+    matchedRows = await lawChatbotModel.searchRelevantLaws(safeMessage, DEFAULT_SEARCH_LIMIT, safeTarget);
   }
 
   if (!matchedRows.length) {

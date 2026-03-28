@@ -31,7 +31,7 @@ self.addEventListener('fetch', (event) => {
   if (request.url.includes('/chat')) {
     event.respondWith(
       fetch(request).catch(() =>
-        new Response(JSON.stringify({ answer: 'ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล' }), {
+        new Response(JSON.stringify({ answer: 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json; charset=utf-8' }
         })

@@ -1,7 +1,7 @@
 const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 
-const NOT_FOUND_MESSAGE = 'ไม่พบข้อมูลที่ชัดเจนในฐานข้อมูล';
+const NOT_FOUND_MESSAGE = 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
 
 function summarizeLaw(row) {
   const comment = String(row.law_comment || '').trim();
@@ -66,7 +66,7 @@ function formatNotFoundWithSuggestions(suggestions) {
     })
     .join('\n\n');
 
-  return `${NOT_FOUND_MESSAGE}\n\nมาตราที่ใกล้เคียง:\n${lines}`;
+  return `${NOT_FOUND_MESSAGE}\n\nผมขอแนะนำมาตราอื่นๆ ดังนี้:\n${lines}`;
 }
 
 function sanitizeInput(message) {

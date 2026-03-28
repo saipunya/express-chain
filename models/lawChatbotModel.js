@@ -59,6 +59,49 @@ function normalizeForCompare(value) {
     .trim();
 }
 
+function parseLawNumberForSort(lawNumber) {
+  const text = String(lawNumber || '');
+  const match = text.match(/([0-9]+)(?:\s*\/\s*([0-9]+))?/);
+
+  if (!match) {
+    return {
+      main: Number.MAX_SAFE_INTEGER,
+      sub: Number.MAX_SAFE_INTEGER,
+      hasSub: false,
+      raw: normalizeForCompare(text)
+    };
+  }
+
+  const main = Number(match[1]);
+  const hasSub = match[2] !== undefined;
+  const sub = hasSub ? Number(match[2]) : 0;
+
+  return {
+    main: Number.isFinite(main) ? main : Number.MAX_SAFE_INTEGER,
+    sub: Number.isFinite(sub) ? sub : Number.MAX_SAFE_INTEGER,
+    hasSub,
+    raw: normalizeForCompare(text)
+  };
+}
+
+function compareLawNumberAsc(a, b) {
+  const parsedA = parseLawNumberForSort(a && a.law_number);
+  const parsedB = parseLawNumberForSort(b && b.law_number);
+
+  if (parsedA.main !== parsedB.main) return parsedA.main - parsedB.main;
+  if (parsedA.hasSub !== parsedB.hasSub) return parsedA.hasSub ? 1 : -1;
+  if (parsedA.sub !== parsedB.sub) return parsedA.sub - parsedB.sub;
+
+  const partCompare = normalizeForCompare(a && a.law_part).localeCompare(normalizeForCompare(b && b.law_part), 'th');
+  if (partCompare !== 0) return partCompare;
+
+  return parsedA.raw.localeCompare(parsedB.raw, 'th');
+}
+
+function sortRowsByLawNumberAsc(rows) {
+  return [...rows].sort(compareLawNumberAsc);
+}
+
 function normalizeTarget(target) {
   const safeTarget = String(target || '').trim().toLowerCase();
   if (safeTarget === 'group') return 'group';
@@ -169,16 +212,17 @@ function prioritizeStrictArticleRows(rows, legalRef, limit) {
 
   const strictRows = rows.filter((row) => isStrictArticleMatch(row.law_number, legalRef));
   if (!strictRows.length) return rows;
+  const orderedStrictRows = sortRowsByLawNumberAsc(strictRows);
 
   if (legalRef.lawPart) {
     const normalizedPart = normalizeText(legalRef.lawPart);
-    const strictPartRows = strictRows.filter((row) => normalizeText(row.law_part).includes(normalizedPart));
+    const strictPartRows = orderedStrictRows.filter((row) => normalizeText(row.law_part).includes(normalizedPart));
     if (strictPartRows.length) {
       return strictPartRows.slice(0, normalizeLimit(limit));
     }
   }
 
-  return strictRows.slice(0, normalizeLimit(limit));
+  return orderedStrictRows.slice(0, normalizeLimit(limit));
 }
 
 function scoreCandidateRow(row, terms, legalRef) {
@@ -572,7 +616,8 @@ exports.searchPenaltyLaws = async (limit = 20, target = 'coop') => {
   );
 
   const scopedRows = filterRowsByTarget(rows, safeTarget);
-  return scopedRows.slice(0, safeLimit);
+  const orderedRows = sortRowsByLawNumberAsc(scopedRows);
+  return orderedRows.slice(0, safeLimit);
 };
 
 exports.searchRelevantLaws = async (message, limit = 5, target = 'coop') => {
@@ -674,5 +719,6 @@ exports.suggestNearbyLaws = async (message, limit = 3, target = 'coop') => {
     unique.push(row);
   });
 
-  return unique.slice(0, safeLimit);
+  const orderedUnique = sortRowsByLawNumberAsc(unique);
+  return orderedUnique.slice(0, safeLimit);
 };

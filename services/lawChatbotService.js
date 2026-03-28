@@ -4,6 +4,44 @@ const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 const NOT_FOUND_MESSAGE = 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
 const DEFAULT_SEARCH_LIMIT = 80;
 
+function parseLawNumberForSort(lawNumber) {
+  const text = String(lawNumber || '');
+  const match = text.match(/([0-9]+)(?:\s*\/\s*([0-9]+))?/);
+
+  if (!match) {
+    return {
+      main: Number.MAX_SAFE_INTEGER,
+      sub: Number.MAX_SAFE_INTEGER,
+      hasSub: false,
+      raw: text
+    };
+  }
+
+  const main = Number(match[1]);
+  const hasSub = match[2] !== undefined;
+  const sub = hasSub ? Number(match[2]) : 0;
+
+  return {
+    main: Number.isFinite(main) ? main : Number.MAX_SAFE_INTEGER,
+    sub: Number.isFinite(sub) ? sub : Number.MAX_SAFE_INTEGER,
+    hasSub,
+    raw: text
+  };
+}
+
+function sortRowsByLawNumberAsc(rows) {
+  return [...rows].sort((a, b) => {
+    const parsedA = parseLawNumberForSort(a && a.law_number);
+    const parsedB = parseLawNumberForSort(b && b.law_number);
+
+    if (parsedA.main !== parsedB.main) return parsedA.main - parsedB.main;
+    if (parsedA.hasSub !== parsedB.hasSub) return parsedA.hasSub ? 1 : -1;
+    if (parsedA.sub !== parsedB.sub) return parsedA.sub - parsedB.sub;
+
+    return String(parsedA.raw).localeCompare(String(parsedB.raw), 'th');
+  });
+}
+
 function summarizeLaw(row) {
   const comment = String(row.law_comment || '').trim();
   if (comment) return comment;
@@ -44,7 +82,9 @@ function formatSuggestionDetail(detailText) {
 function formatAnswer(rows) {
   if (!rows.length) return NOT_FOUND_MESSAGE;
 
-  return rows
+  const orderedRows = sortRowsByLawNumberAsc(rows);
+
+  return orderedRows
     .map((row) => {
       const title = buildLawTitle(row) || 'ไม่ระบุมาตรา';
       const detail = String(row.law_detail || '').trim() || '-';

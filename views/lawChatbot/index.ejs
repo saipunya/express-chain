@@ -680,6 +680,7 @@
         }
         chatMessages.appendChild(row);
         autoScroll();
+        return row;
       }
 
       function saveRecentChats() {
@@ -724,17 +725,19 @@
           const data = await response.json();
           chatMessages.lastElementChild.remove();
           const answerText = data && data.answer ? data.answer : 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
-          addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
+          const botRow = addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
             question: trimmed,
             target: selectedTarget
           });
+          botRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (_) {
           chatMessages.lastElementChild.remove();
-          addBubble('ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา', 'bot', false, [], {
+          const botRow = addBubble('ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา', 'bot', false, [], {
 
             question: trimmed,
             target: selectedTarget
           });
+          botRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } finally {
           isSubmitting = false;
           updateSendButtonState();

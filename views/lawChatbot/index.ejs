@@ -294,7 +294,7 @@
     <div class="top-status">
       <div class="status-chip"><i class="bi bi-robot"></i>แชตบอทกฎหมายสหกรณ์ Version 1.0</div>
       <div class="d-flex gap-2 flex-wrap">
-        <button id="installBtn" class="btn btn-sm btn-success btn-install"><i class="bi bi-download me-1"></i>ติดตั้งแอป</button>
+        <button id="installBtn" class="btn btn-sm btn-success btn-install"><i class="bi bi-android2 me-1"></i>ติดตั้งบน Android</button>
         <button id="iosInstallBtn" type="button" class="btn btn-sm btn-outline-primary btn-install-ios" data-bs-toggle="modal" data-bs-target="#iosInstallModal">
           <i class="bi bi-phone me-1"></i>ติดตั้งบน iPhone/iPad
         </button>
@@ -407,6 +407,7 @@
       const iosInstallBtn = document.getElementById('iosInstallBtn');
       const onlineBadge = document.getElementById('onlineBadge');
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const isAndroidDevice = /android/i.test(window.navigator.userAgent || '');
       const isIosDevice = /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
 
       let selectedTarget = 'coop';
@@ -443,7 +444,7 @@
 
       function updateInstallButtons() {
         const inStandalone = isStandaloneMode();
-        installBtn.style.display = deferredInstallPrompt && !inStandalone ? 'inline-block' : 'none';
+        installBtn.style.display = isAndroidDevice && deferredInstallPrompt && !inStandalone ? 'inline-block' : 'none';
         if (iosInstallBtn) {
           iosInstallBtn.style.display = isIosDevice && !inStandalone ? 'inline-block' : 'none';
         }

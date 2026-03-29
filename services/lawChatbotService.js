@@ -222,7 +222,11 @@ function ensureStructuredBulletSummary(summaryText) {
   let hasSectionTitle = false;
 
   normalizedLines.forEach((line) => {
-    const matchedSection = sectionConfig.find((section) => section.match.test(line));
+    const matchedSection = sectionConfig.find((section) => {
+      if (!section.match.test(line)) return false;
+      const remainder = line.replace(section.match, '').replace(/^[:：\s\d).'-]+|[:：\s]+$/u, '').trim();
+      return remainder.length <= 15;
+    });
 
     if (matchedSection) {
       hasSectionTitle = true;

@@ -382,6 +382,59 @@
       color: #163247;
     }
 
+    .ai-summary-header {
+      font-weight: 700;
+      color: #1a5276;
+      font-size: 0.9rem;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .ai-section {
+      margin-bottom: 0.85rem;
+    }
+
+    .ai-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .ai-section-title {
+      font-weight: 700;
+      color: #1a5276;
+      font-size: 0.82rem;
+      padding: 0.18rem 0.55rem;
+      background: rgba(47, 127, 184, 0.12);
+      border-left: 3px solid #2f7fb8;
+      border-radius: 0 0.3rem 0.3rem 0;
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .ai-bullets {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ai-bullets li {
+      position: relative;
+      padding: 0.12rem 0 0.12rem 1.15rem;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      color: #163247;
+    }
+
+    .ai-bullets li::before {
+      content: '›';
+      position: absolute;
+      left: 0.3rem;
+      color: #2f7fb8;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
     .bubble-loading {
       color: var(--text-sub);
       font-style: italic;
@@ -974,6 +1027,61 @@
         return decorateBotFallbackHtml(highlighted);
       }
 
+      const AI_SECTION_ICONS = {
+        'ข้อมูลจากฐานข้อมูลรอง': '📄',
+        'ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ': '🔍',
+        'สรุปสาระสำคัญ': '✅'
+      };
+
+      function formatAiSummaryHtml(text, terms) {
+        const raw = String(text || '');
+        const allLines = raw.split('\n').map((l) => l.trimEnd());
+
+        let headerLine = '';
+        let bodyLines = allLines;
+        if (allLines.length && /^[🤖🧠]/.test(allLines[0])) {
+          headerLine = allLines[0];
+          bodyLines = allLines.slice(1);
+        }
+
+        const sections = [];
+        let current = null;
+        bodyLines.forEach((line) => {
+          const sub = line.match(/^ {2,}-\s+(.+)$/) || line.match(/^\t-\s+(.+)$/);
+          const top = !sub && line.match(/^-\s+(.+)$/);
+          if (top) {
+            current = { title: top[1].trim(), items: [] };
+            sections.push(current);
+          } else if (sub && current) {
+            current.items.push(sub[1].trim());
+          } else if (line.trim() && current) {
+            current.items.push(line.trim());
+          }
+        });
+
+        let html = '';
+        if (headerLine) {
+          html += `<div class="ai-summary-header">${escapeHtml(headerLine)}</div>`;
+        }
+
+        if (sections.length) {
+          sections.forEach((section) => {
+            const icon = AI_SECTION_ICONS[section.title] || '📌';
+            const titleHtml = applyHighlightHtml(section.title, terms);
+            const itemsHtml = section.items
+              .map((item) => `<li>${applyHighlightHtml(item, terms)}</li>`)
+              .join('');
+            html += `<div class="ai-section"><span class="ai-section-title">${icon} ${titleHtml}</span>`;
+            if (itemsHtml) html += `<ul class="ai-bullets">${itemsHtml}</ul>`;
+            html += `</div>`;
+          });
+        } else {
+          html += applyHighlightHtml(bodyLines.join('\n'), terms);
+        }
+
+        return html;
+      }
+
       async function submitFeedback({ question, answerShown, isHelpful, target }) {
         const payload = {
           message: question,
@@ -1042,7 +1150,10 @@
 
         const message = document.createElement('span');
         message.className = 'bubble-message';
-        if (role === 'bot' && !isLoading) message.innerHTML = formatBotMessageHtml(text, highlightTerms);
+        const isAiVariant = feedbackContext && feedbackContext.variant === 'ai';
+        if (role === 'bot' && !isLoading) message.innerHTML = isAiVariant
+          ? formatAiSummaryHtml(text, highlightTerms)
+          : formatBotMessageHtml(text, highlightTerms);
         else message.textContent = text;
 
         content.appendChild(message);

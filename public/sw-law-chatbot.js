@@ -1,4 +1,4 @@
-const CACHE_NAME = 'law-chatbot-pwa-v1';
+const CACHE_NAME = 'law-chatbot-pwa-v2';
 const STATIC_URLS = [
   '/law-chatbot',
   '/manifest-law-chatbot.json',

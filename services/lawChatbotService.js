@@ -121,6 +121,19 @@ function formatSuggestionDetail(detailText) {
     .join('\n');
 }
 
+function formatDbDisplayDetail(detailText) {
+  const raw = String(detailText || '').trim();
+  if (!raw) return '-';
+
+  const lines = raw
+    .replace(/\r/g, '')
+    .split(/\s*\/\/\s*|\n+/)
+    .map((part) => part.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  return lines.length ? lines.join('\n') : '-';
+}
+
 function formatAnswer(rows) {
   if (!rows.length) return NOT_FOUND_MESSAGE;
 
@@ -130,9 +143,7 @@ function formatAnswer(rows) {
     .map((row) => {
       const title = buildLawTitle(row) || 'ไม่ระบุมาตรา';
 
-      const detail = String(row.law_detail || '')
-        .replace(/\s+/g, ' ')
-        .trim() || '-';
+      const detail = formatDbDisplayDetail(row.law_detail);
       return `📌 ${title}\n${detail}`;
     })
     .join('\n\n--------------------\n\n');

@@ -53,7 +53,9 @@
     }
 
     .lawbot-app {
-      min-height: 100dvh;
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
       padding: 0.75rem;
       padding-top: max(0.7rem, env(safe-area-inset-top));
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
@@ -61,6 +63,43 @@
       flex-direction: column;
       align-items: center;
       gap: 0.8rem;
+    }
+
+    .floating-controls {
+      position: fixed;
+      top: calc(env(safe-area-inset-top) + 0.6rem);
+      right: 0.75rem;
+      z-index: 80;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .header-toggle-btn {
+      border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(34, 63, 87, 0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.82rem;
+      font-size: 0.8rem;
+      min-height: 2.35rem;
+    }
+
+    .header-toggle-btn span {
+      white-space: nowrap;
+    }
+
+    .lawbot-app.headers-collapsed .page-header {
+      display: none;
+    }
+
+    .lawbot-app.headers-collapsed .chat-header {
+      display: none !important;
+    }
+
+    .lawbot-app.headers-collapsed .chat-shell {
+      min-height: calc(100dvh - 1.5rem);
     }
 
     .page-header {
@@ -458,7 +497,7 @@
       to { background-color: #fff2a2; }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767.98px) {
       .lawbot-app {
         padding: 0.3rem;
         padding-top: env(safe-area-inset-top);
@@ -470,6 +509,32 @@
         padding: 0.45rem 0.55rem;
         border-radius: 0.8rem;
         align-items: flex-start;
+      }
+
+      .floating-controls {
+        top: auto;
+        bottom: calc(env(safe-area-inset-bottom) + 6.2rem);
+        right: 0.6rem;
+        gap: 0.5rem;
+      }
+
+      .header-toggle-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        padding: 0;
+        font-size: 0.98rem;
+        justify-content: center;
+        gap: 0;
+      }
+
+      .header-toggle-btn span {
+        display: none;
+      }
+
+      .floating-controls #clearChatBtn {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.98rem;
       }
       .brand-title p {
         display: none;
@@ -544,6 +609,16 @@
 </head>
 <body>
   <div class="lawbot-app">
+    <div class="floating-controls">
+      <button type="button" id="toggleHeaderBtn" class="btn btn-sm btn-outline-secondary header-toggle-btn" title="ซ่อนส่วนหัวของระบบ" aria-label="ซ่อนส่วนหัวของระบบ" aria-pressed="false">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+        <span>ซ่อนหัวระบบ</span>
+      </button>
+      <button type="button" id="clearChatBtn" class="btn btn-sm btn-outline-danger icon-chip-btn" title="ล้างประวัติแชต" aria-label="ล้างประวัติแชต">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </div>
+
     <div class="page-header">
       <div class="page-brand">
         <div class="brand-icon"><i class="bi bi-robot"></i></div>
@@ -561,9 +636,6 @@
         <button id="installBtn" class="btn btn-sm btn-success btn-install"><i class="bi bi-android2 me-1"></i>ติดตั้ง</button>
         <button id="iosInstallBtn" type="button" class="btn btn-sm btn-outline-primary btn-install-ios" data-bs-toggle="modal" data-bs-target="#iosInstallModal">
           <i class="bi bi-apple me-1"></i>iPhone/iPad
-        </button>
-         <button type="button" id="clearChatBtn" class="btn btn-sm btn-outline-danger icon-chip-btn" title="ล้างประวัติแชต" aria-label="ล้างประวัติแชต">
-          <i class="bi bi-trash3"></i>
         </button>
       </div>
     </div>
@@ -653,6 +725,7 @@
     (() => {
       const CHAT_CACHE_KEY = 'lawbot-chat-cache-v1';
       const CHAT_CACHE_LIMIT = 20;
+      const HEADER_COLLAPSE_KEY = 'lawbot-header-collapsed-v1';
 
       const chatMessages = document.getElementById('chatMessages');
       const chatForm = document.getElementById('chatForm');
@@ -661,6 +734,8 @@
       const voiceStatus = document.getElementById('voiceStatus');
       const sendBtn = document.getElementById('sendBtn');
       const clearChatBtn = document.getElementById('clearChatBtn');
+      const toggleHeaderBtn = document.getElementById('toggleHeaderBtn');
+      const lawbotApp = document.querySelector('.lawbot-app');
       const quickButtons = document.querySelectorAll('.quick-btn');
       const targetLawButtons = document.querySelectorAll('.target-law-btn');
       const installBtn = document.getElementById('installBtn');
@@ -703,6 +778,24 @@
         const topOffset = 10;
         const targetTop = Math.max(0, row.offsetTop - topOffset);
         chatMessages.scrollTo({ top: targetTop, behavior: 'smooth' });
+      }
+
+      function setHeaderCollapsed(collapsed) {
+        if (!lawbotApp || !toggleHeaderBtn) return;
+        lawbotApp.classList.toggle('headers-collapsed', collapsed);
+        toggleHeaderBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+
+        if (collapsed) {
+          toggleHeaderBtn.innerHTML = '<i class="bi bi-layout-sidebar-inset"></i><span>แสดงหัวระบบ</span>';
+          toggleHeaderBtn.title = 'แสดงส่วนหัวของระบบ';
+          toggleHeaderBtn.setAttribute('aria-label', 'แสดงส่วนหัวของระบบ');
+        } else {
+          toggleHeaderBtn.innerHTML = '<i class="bi bi-layout-text-sidebar-reverse"></i><span>ซ่อนหัวระบบ</span>';
+          toggleHeaderBtn.title = 'ซ่อนส่วนหัวของระบบ';
+          toggleHeaderBtn.setAttribute('aria-label', 'ซ่อนส่วนหัวของระบบ');
+        }
+
+        localStorage.setItem(HEADER_COLLAPSE_KEY, collapsed ? '1' : '0');
       }
 
       function isStandaloneMode() {
@@ -1122,6 +1215,13 @@
         addBubble('สวัสดีครับ! ยินดีรับใช้ท่านเสมอครับ', 'bot');
       });
 
+      if (toggleHeaderBtn) {
+        toggleHeaderBtn.addEventListener('click', () => {
+          const collapsed = lawbotApp && lawbotApp.classList.contains('headers-collapsed');
+          setHeaderCollapsed(!collapsed);
+        });
+      }
+
       window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
         deferredInstallPrompt = event;
@@ -1149,6 +1249,7 @@
       updateInstallButtons();
       updateVoiceButton();
       updateSendButtonState();
+      setHeaderCollapsed(localStorage.getItem(HEADER_COLLAPSE_KEY) === '1');
       if (SpeechRecognition) {
         setVoiceStatus('กดปุ่มไมค์เพื่อเริ่มค้นหาด้วยเสียง');
         initVoiceRecognition();

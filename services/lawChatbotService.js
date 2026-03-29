@@ -2,7 +2,7 @@ const axios = require('axios');
 const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 
-const NOT_FOUND_MESSAGE = 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
+const NOT_FOUND_MESSAGE = 'ไม่พบข้อมูล! ลองเปลี่ยนหรือลดคำค้นหาให้น้อยลง';
 const DEFAULT_SEARCH_LIMIT = 80;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
@@ -206,8 +206,8 @@ function buildGeminiSummaryPrompt(message, target, rows = []) {
     '- ใช้รูปแบบสั้น กระชับ เน้นใจความสำคัญ ไม่คัดลอกข้อความจาก DB ตรง ๆ',
     '- แต่ละส่วนควรเป็น 1-2 ประโยคที่สมบูรณ์ ห้ามตอบเป็นวลีสั้น ๆ ตัดกลางความหมาย',
     broadMode
-      ? '- รูปแบบคำตอบ: 1) สรุปจาก DB 2) ข้อมูลเพิ่มเติมจากอินเทอร์เน็ต 3) ใจความสำคัญ/ข้อควรรู้'
-      : '- แนะนำรูปแบบ: 1) สรุปจาก DB 2) ข้อมูลเพิ่มเติมจากอินเทอร์เน็ต 3) ใจความสำคัญ',
+      ? '- รูปแบบคำตอบ: 1) สรุปข้อมูลจากฐานข้อมูล 2) ข้อมูลเพิ่มเติม 3) สรุปสาระสำคัญ/ข้อควรรู้'
+      : '- แนะนำรูปแบบ: 1) สรุปข้อมูลจากฐานข้อมูล 2) ข้อมูลเพิ่มเติม 3) สรุปสาระสำคัญ',
     '- ใช้ภาษาที่เข้าใจง่าย ไม่จำเป็นต้องใช้ศัพท์ทางกฎหมายมากเกินไป',
     '- ถ้าข้อมูลไม่ชัดเจน ให้บอกตรง ๆ ว่าไม่พบข้อมูลที่แน่ชัด และสรุปเฉพาะสิ่งที่ยืนยันได้',
     '- ห้ามตัดคำกลางประโยคหรือกลางตัวเลขมาตรา เช่น 2542 ต้องเขียนให้ครบ',
@@ -296,20 +296,7 @@ async function generateGeminiSummary(message, target, rows = []) {
 }
 
 function formatNotFoundWithSuggestions(suggestions) {
-  if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    return NOT_FOUND_MESSAGE;
-  }
-
-  const lines = suggestions
-    .slice(0, 3)
-    .map((row, index) => {
-      const title = buildLawTitle(row) || String(row.law_number || '').trim() || 'ไม่ระบุมาตรา';
-      const detail = formatSuggestionDetail(row.law_detail);
-      return `${index + 1}. ${title}\n${detail || '-'}`;
-    })
-    .join('\n\n');
-
-  return `${NOT_FOUND_MESSAGE}\n\nผมขอแนะนำมาตราอื่นๆ ดังนี้:\n${lines}`;
+  return NOT_FOUND_MESSAGE;
 }
 
 function sanitizeInput(message) {

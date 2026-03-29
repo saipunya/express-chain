@@ -48,3 +48,62 @@ exports.insertChunks = async (chunks = []) => {
     insertedCount: values.length
   };
 };
+
+function buildSearchTerms(message) {
+  return String(message || '')
+    .split(/[\s,;|/\\()\[\]{}]+/)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2)
+    .slice(0, 8);
+}
+
+exports.searchRelevantChunks = async (message, limit = 5) => {
+  await ensureTable();
+
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 5, 20));
+  const terms = buildSearchTerms(message);
+
+  if (!terms.length) {
+    const [latestRows] = await db.query(
+      `
+        SELECT id, chunk_text, created_at
+        FROM pdf_chunks
+        ORDER BY id DESC
+        LIMIT ?
+      `,
+      [safeLimit]
+    );
+
+    return latestRows;
+  }
+
+  const whereSql = terms.map(() => 'chunk_text LIKE ?').join(' OR ');
+  const whereParams = terms.map((term) => `%${term}%`);
+
+  const [rows] = await db.query(
+    `
+      SELECT id, chunk_text, created_at
+      FROM pdf_chunks
+      WHERE ${whereSql}
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+    [...whereParams, safeLimit]
+  );
+
+  if (rows.length) {
+    return rows;
+  }
+
+  const [fallbackRows] = await db.query(
+    `
+      SELECT id, chunk_text, created_at
+      FROM pdf_chunks
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+    [safeLimit]
+  );
+
+  return fallbackRows;
+};

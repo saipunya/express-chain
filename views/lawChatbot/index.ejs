@@ -1118,12 +1118,16 @@
           });
           const data = await response.json();
           chatMessages.lastElementChild.remove();
-          const answerText = data && data.answer ? data.answer : 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
-          const botRow = addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
-            question: trimmed,
-            target: selectedTarget
-          });
-          focusFirstAnswer(botRow);
+          const hasContext = Boolean(data && data.hasContext);
+          const answerText = data && typeof data.answer === 'string' ? data.answer.trim() : '';
+
+          if (hasContext && answerText) {
+            const botRow = addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
+              question: trimmed,
+              target: selectedTarget
+            });
+            focusFirstAnswer(botRow);
+          }
 
           const aiLoadingRow = addBubble('🤖 รอสักครู่! กำลังประมวลผล...', 'bot', true, [], null, false);
 

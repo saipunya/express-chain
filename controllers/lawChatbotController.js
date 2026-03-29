@@ -19,10 +19,14 @@ exports.chat = async (req, res) => {
     const message = req.body && typeof req.body.message === 'string' ? req.body.message : '';
     const target = req.body && typeof req.body.target === 'string' ? req.body.target : 'coop';
 
-    const result = await lawChatbotService.askLawChatbot(message, target, { includeAiSummary: false });
+    const result = await lawChatbotService.askLawChatbot(message, target, {
+      includeAiSummary: false,
+      suppressNotFoundAnswer: true
+    });
 
     return res.json({
-      answer: result.answer
+      answer: result.answer,
+      hasContext: Array.isArray(result.context) && result.context.length > 0
     });
   } catch (error) {
     console.error('lawChatbot chat error:', error);
@@ -46,6 +50,29 @@ exports.chatSummary = async (req, res) => {
     console.error('lawChatbot summary error:', error);
     return res.status(500).json({
       summary: ''
+    });
+  }
+};
+
+exports.relevantPdfChunks = async (req, res) => {
+  try {
+    const queryText = req.query && typeof req.query.q === 'string' ? req.query.q : '';
+    const limit = req.query && req.query.limit !== undefined ? req.query.limit : undefined;
+
+    const rows = await lawChatbotService.getRelevantPdfChunks(queryText, limit);
+
+    return res.json({
+      success: true,
+      query: queryText,
+      limit: Math.max(1, Math.min(Number(limit) || 4, 20)),
+      count: rows.length,
+      rows
+    });
+  } catch (error) {
+    console.error('lawChatbot relevant pdf chunks error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'ไม่สามารถดึงข้อมูล chunks ได้'
     });
   }
 };

@@ -13,6 +13,8 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_A
 const GEMINI_TIMEOUT_MS = 60000;
 
 const GEMINI_SUMMARY_ROW_LIMIT = 6;
+const PDF_CHUNK_CONTEXT_LIMIT = 4;
+const PDF_CHUNK_CONTEXT_MAX_CHARS = 900;
 
 function normalizeGeminiModelName(modelName) {
   let raw = String(modelName || '').trim();
@@ -179,7 +181,14 @@ function isBroadSummaryQuery(message) {
   return normalized.length <= 24 && broadKeywords.some((keyword) => normalized.includes(keyword));
 }
 
-function buildGeminiSummaryPrompt(message, target, rows = []) {
+function formatPdfChunkSnippet(text) {
+  const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return '';
+  if (cleaned.length <= PDF_CHUNK_CONTEXT_MAX_CHARS) return cleaned;
+  return `${cleaned.slice(0, PDF_CHUNK_CONTEXT_MAX_CHARS).trim()}...`;
+}
+
+function buildGeminiSummaryPrompt(message, target, rows = [], pdfChunkRows = []) {
   const targetLabelMap = {
     coop: 'พระราชบัญญัติสหกรณ์ พ.ศ. 2542',
     group: 'พระราชกฤษฎีกาว่าด้วยกลุ่มเกษตรกร พ.ศ. 2547',
@@ -191,7 +200,8 @@ function buildGeminiSummaryPrompt(message, target, rows = []) {
     ? rows.map(normalizeLawRow).filter((row) => row && (row.law_number || row.law_detail || row.law_comment))
     : [];
   const limitedRows = safeRows.slice(0, GEMINI_SUMMARY_ROW_LIMIT);
-  const dbContext = limitedRows.length
+  const hasDbContext = limitedRows.length > 0;
+  const dbContext = hasDbContext
     ? limitedRows
         .map((row, index) => {
           const title = buildLawTitle(row) || `รายการที่ ${index + 1}`;
@@ -199,47 +209,75 @@ function buildGeminiSummaryPrompt(message, target, rows = []) {
           return `${index + 1}. ${title}: ${detail}`;
         })
         .join('\n')
-    : 'ไม่พบข้อมูลจากฐานข้อมูลที่ตรงกับคำค้นอย่างชัดเจน';
+    : '';
 
-  return [
-    'คุณเป็นผู้ช่วยด้านกฎหมายสหกรณ์ที่ต้องอธิบายข้อมูลจากฐานข้อมูล และค้นหาข้อมูลเพิ่มเติมจากอินเทอร์เน็ตเพื่อสรุปให้เข้าใจง่าย ครบถ้วน และอ่านจบในครั้งเดียว',
+  const safePdfChunkRows = Array.isArray(pdfChunkRows)
+    ? pdfChunkRows.filter((row) => row && row.chunk_text)
+    : [];
+  const hasPdfChunkContext = safePdfChunkRows.length > 0;
+  const pdfChunkContext = hasPdfChunkContext
+    ? safePdfChunkRows
+        .slice(0, PDF_CHUNK_CONTEXT_LIMIT)
+        .map((row, index) => {
+          const snippet = formatPdfChunkSnippet(row.chunk_text);
+          return snippet ? `${index + 1}. ${snippet}` : '';
+        })
+        .filter(Boolean)
+        .join('\n')
+    : '';
+
+  const promptSections = [
+    'คุณเป็นผู้ช่วยด้านกฎหมายสหกรณ์ที่ต้องอธิบายข้อมูลจากฐานข้อมูลหลัก ฐานข้อมูลรอง และค้นหาข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ เพื่อสรุปให้เข้าใจง่าย ครบถ้วน และอ่านจบในครั้งเดียว',
     `คำถามผู้ใช้: ${String(message || '').trim()}`,
-    `ฐานกฎหมายที่เกี่ยวข้อง: ${targetLabelMap[target] || targetLabelMap.coop}`,
-    '',
-    'ข้อมูลจากฐานข้อมูล:',
-    dbContext,
+    `ฐานกฎหมายที่เกี่ยวข้อง: ${targetLabelMap[target] || targetLabelMap.coop}`
+  ];
+
+  if (hasDbContext) {
+    promptSections.push('', 'ข้อมูลจากฐานข้อมูลหลัก:', dbContext);
+  }
+
+  if (hasPdfChunkContext) {
+    promptSections.push('', 'ข้อมูลจากฐานข้อมูลรอง พบว่า :', pdfChunkContext);
+  }
+
+  promptSections.push(
     '',
     'คำแนะนำในการตอบ:',
     broadMode
-      ? '- คำถามนี้ค่อนข้างกว้าง ดังนั้นให้ขยายความจาก DB และอินเทอร์เน็ตแบบเข้าใจง่าย แต่ไม่ยืดเยื้อ'
+      ? '- คำถามนี้ค่อนข้างกว้าง ดังนั้นให้ขยายความจากข้อมูลที่มีและฐานข้อมูลอื่นๆ แบบเข้าใจง่าย แต่ไม่ยืดเยื้อ'
       : '- ตอบเป็นภาษาไทยแบบสรุปที่ครบประเด็น แต่ไม่ยืดเยื้อ',
     broadMode
-      ? '- ให้เริ่มด้วยภาพรวมสั้น ๆ จากข้อมูลใน DB แล้วค่อยเสริมข้อมูลจากอินเทอร์เน็ต'
-      : '- ให้เริ่มจากข้อเท็จจริงใน DB แล้วเสริมข้อมูลจากอินเทอร์เน็ตเฉพาะส่วนที่ช่วยอธิบาย',
-    '- ต้องอธิบายทั้งสิ่งที่พบใน DB และข้อมูลเพิ่มเติมจากอินเทอร์เน็ต',
+      ? '- ให้เริ่มด้วยภาพรวมสั้น ๆ จากข้อมูลที่มี แล้วค่อยเสริมข้อมูลจากฐานข้อมูลอื่นๆ'
+      : '- ให้เริ่มจากข้อเท็จจริงที่มี แล้วค่อยเสริมข้อมูลจากฐานข้อมูลอื่นๆ เฉพาะส่วนที่ช่วยอธิบาย',
+    '- ต้องอธิบายทั้งข้อมูลจากฐานข้อมูลหลัก/ฐานข้อมูลรอง และข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ',
     '- ใช้รูปแบบสั้น กระชับ เน้นใจความสำคัญ ไม่คัดลอกข้อความจาก DB ตรง ๆ',
     '- แต่ละส่วนควรเป็น 1-2 ประโยคที่สมบูรณ์ ห้ามตอบเป็นวลีสั้น ๆ ตัดกลางความหมาย',
     broadMode
-      ? '- รูปแบบคำตอบ: 1) สรุปข้อมูลจากฐานข้อมูล 2) ข้อมูลเพิ่มเติม 3) สรุปสาระสำคัญ/ข้อควรรู้'
-      : '- แนะนำรูปแบบ: 1) สรุปข้อมูลจากฐานข้อมูล 2) ข้อมูลเพิ่มเติม 3) สรุปสาระสำคัญ',
+      ? '- รูปแบบคำตอบ: 1) สรุปข้อมูลจากฐานข้อมูลรอง 2) ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ 3) สรุปสาระสำคัญ/ข้อควรรู้'
+      : '- แนะนำรูปแบบ: 1) สรุปข้อมูลจากฐานข้อมูลรอง 2) ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ 3) สรุปสาระสำคัญ',
+    '- เมื่อต้องเกริ่นส่วนข้อมูลเพิ่มเติม ให้ใช้คำว่า "สำหรับข้อมูลที่เพิ่มเติมที่ค้นหานั้น"',
+    '- ในคำตอบให้เรียกข้อมูลจาก PDF ว่า "ฐานข้อมูลรอง" และเรียกข้อมูลจากอินเทอร์เน็ตว่า "ฐานข้อมูลอื่นๆ"',
+    '- ห้ามใช้คำว่า "ข้อมูลจากไฟล์ PDF ที่อัปโหลดมา" และ "จากไฟล์ PDF และอินเทอร์เน็ต"',
     '- ใช้ภาษาที่เข้าใจง่าย ไม่จำเป็นต้องใช้ศัพท์ทางกฎหมายมากเกินไป',
-    '- ถ้าข้อมูลไม่ชัดเจน ให้บอกตรง ๆ ว่าไม่พบข้อมูลที่แน่ชัด และสรุปเฉพาะสิ่งที่ยืนยันได้',
+    '- ถ้าไม่พบข้อมูลในฐานข้อมูลบางส่วน ให้ข้ามส่วนนั้นไปโดยไม่ต้องระบุว่าไม่พบข้อมูล',
     '- ห้ามตัดคำกลางประโยคหรือกลางตัวเลขมาตรา เช่น 2542 ต้องเขียนให้ครบ',
     '- ถ้าคำตอบยังไม่ครบ ให้เขียนต่อจนจบประเด็นสำคัญก่อนหยุด',
     '- ให้พยายามตอบให้ครบ 2 ย่อหน้า หรืออย่างน้อย 4 หัวข้อย่อยถ้ามีข้อมูลเพียงพอ'
-  ].join('\n');
+  );
+
+  return promptSections.join('\n');
 }
 
 
 
 
-async function generateGeminiSummary(message, target, rows = []) {
+async function generateGeminiSummary(message, target, rows = [], pdfChunkRows = []) {
   if (!GEMINI_API_KEY) {
     console.warn('No Gemini API key');
     return '';
   }
 
-  const prompt = buildGeminiSummaryPrompt(message, target, rows);
+  const prompt = buildGeminiSummaryPrompt(message, target, rows, pdfChunkRows);
   const modelName = normalizeGeminiModelName(GEMINI_MODEL);
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
@@ -389,25 +427,30 @@ exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
   const safeMessage = sanitizeInput(message);
   const safeTarget = normalizeTarget(target);
   const includeAiSummary = options.includeAiSummary !== false;
+  const suppressNotFoundAnswer = options.suppressNotFoundAnswer === true;
+
+  function resolveNotFoundAnswer() {
+    return suppressNotFoundAnswer ? '' : NOT_FOUND_MESSAGE;
+  }
 
   async function buildNotFoundPayload() {
     const suggestions = await lawChatbotModel.suggestNearbyLaws(safeMessage, 3, safeTarget);
     return {
-      answer: formatNotFoundWithSuggestions(suggestions),
+      answer: suppressNotFoundAnswer ? '' : formatNotFoundWithSuggestions(suggestions),
       context: []
     };
   }
 
   if (!safeMessage) {
     return {
-      answer: NOT_FOUND_MESSAGE,
+      answer: resolveNotFoundAnswer(),
       context: []
     };
   }
 
   if (isSmallTalkIntent(safeMessage)) {
     return {
-      answer: NOT_FOUND_MESSAGE,
+      answer: resolveNotFoundAnswer(),
       context: []
     };
   }
@@ -439,7 +482,8 @@ exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
     };
   }
 
-  const aiSummary = await generateGeminiSummary(safeMessage, safeTarget, matchedRows);
+  const pdfChunkRows = await lawChatbotPdfChunkModel.searchRelevantChunks(safeMessage, PDF_CHUNK_CONTEXT_LIMIT);
+  const aiSummary = await generateGeminiSummary(safeMessage, safeTarget, matchedRows, pdfChunkRows);
   const answer = aiSummary
     ? `${baseAnswer}
 
@@ -464,8 +508,16 @@ exports.getInternetSummary = async (message, target = 'coop', rows = []) => {
   }
 
   const safeRows = Array.isArray(rows) ? rows.map(normalizeLawRow) : [];
+  const pdfChunkRows = await lawChatbotPdfChunkModel.searchRelevantChunks(safeMessage, PDF_CHUNK_CONTEXT_LIMIT);
 
-  return generateGeminiSummary(safeMessage, safeTarget, safeRows);
+  return generateGeminiSummary(safeMessage, safeTarget, safeRows, pdfChunkRows);
+};
+
+exports.getRelevantPdfChunks = async (queryText, limit = PDF_CHUNK_CONTEXT_LIMIT) => {
+  const safeQuery = sanitizeInput(queryText || '');
+  const safeLimit = Math.max(1, Math.min(Number(limit) || PDF_CHUNK_CONTEXT_LIMIT, 20));
+
+  return lawChatbotPdfChunkModel.searchRelevantChunks(safeQuery, safeLimit);
 };
 
 exports.saveChatbotFeedback = async (payload = {}) => {

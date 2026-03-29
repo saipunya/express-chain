@@ -174,6 +174,48 @@ function buildCoreSearchTerms(message) {
     .filter((term) => !CORE_SEARCH_STOP_TERMS.has(term));
 }
 
+function extractKeywordQuery(message) {
+  const text = String(message || '').trim();
+  if (!text) return '';
+
+  const cleaned = text
+    .replace(/^(อยากทราบ|สอบถาม|ขอสอบถาม|ขอถาม|รบกวนถาม|ช่วยบอก|ช่วยอธิบาย|เรื่อง|กรณี|เกี่ยวกับ)\s*/u, '')
+    .replace(/^การ/u, '')
+    .replace(/[?？]/g, ' ')
+    .replace(/(ครับ|ค่ะ|คะ|นะครับ|นะคะ|หน่อย|ที)\s*$/u, '')
+    .replace(/(ใช้เวลานานเท่าไร|ใช้เวลากี่วัน|ใช้เวลากี่ปี|กี่วัน|กี่ปี|เท่าไร|เท่าไหร่|อย่างไร|ยังไง|หรือไม่|ได้ไหม|ไหม|มั้ย|หรือเปล่า)\s*$/u, '')
+    .replace(/(ใช้เวลานานเท่าไร|ใช้เวลากี่วัน|ใช้เวลากี่ปี|กี่วัน|กี่ปี|เท่าไร|เท่าไหร่|อย่างไร|ยังไง|หรือไม่|ได้ไหม|ไหม|มั้ย|หรือเปล่า)/gu, ' ')
+    .replace(/[?？]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const terms = buildCoreSearchTerms(cleaned).filter((term) => term.length >= 3);
+  if (!terms.length) {
+    return cleaned || text;
+  }
+
+  return terms.slice(0, 4).join(' ');
+}
+
+function extractHighlightTerms(message) {
+  const keywordQuery = extractKeywordQuery(message);
+  const baseTerms = String(keywordQuery || '')
+    .split(/\s+/)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2);
+
+  const terms = new Set([
+    keywordQuery,
+    String(keywordQuery || '').replace(/\s+/g, ''),
+    ...baseTerms
+  ]);
+
+  return Array.from(terms)
+    .map((term) => String(term || '').trim())
+    .filter((term) => term.length >= 2)
+    .sort((a, b) => b.length - a.length);
+}
+
 function extractLegalReference(message) {
   const text = String(message || '').trim();
   const match = text.match(/มาตรา\s*([0-9]+(?:\/[0-9]+)?)/i);
@@ -259,6 +301,7 @@ function filterRowsByCoreFieldMatch(rows, message, legalRef) {
 
   const terms = buildCoreSearchTerms(message);
   if (!terms.length) return rows;
+  if (terms.length === 1) return rows;
 
   return rows.filter((row) => {
     if (isStrictArticleMatch(row.law_number, legalRef)) return true;
@@ -623,13 +666,22 @@ exports.searchPenaltyLaws = async (limit = 20, target = 'coop') => {
 exports.searchRelevantLaws = async (message, limit = 5, target = 'coop') => {
   const safeMessage = String(message || '').trim();
   if (!safeMessage) return [];
-  const legalRef = extractLegalReference(safeMessage);
   const safeTarget = normalizeTarget(target);
+  const keywordQuery = extractKeywordQuery(safeMessage);
+  const legalRef = extractLegalReference(safeMessage);
+  const searchCandidates = [
+    keywordQuery,
+    String(keywordQuery || '').replace(/\s+/g, ''),
+    safeMessage
+  ]
+    .map((value) => String(value || '').trim())
+    .filter((value, index, list) => value && list.indexOf(value) === index);
 
   try {
-    const rows = await searchWithFullText(safeMessage, limit, safeTarget);
-    if (rows.length) return rows;
-    return [];
+    for (const searchText of searchCandidates) {
+      const rows = await searchWithFullText(searchText, limit, safeTarget);
+      if (rows.length) return rows;
+    }
   } catch (error) {
     const text = String(error && error.message ? error.message : '');
     const missingFullText =
@@ -638,11 +690,16 @@ exports.searchRelevantLaws = async (message, limit = 5, target = 'coop') => {
 
     if (!missingFullText) throw error;
 
-    const rows = await searchWithLikeOnly(safeMessage, limit, safeTarget);
-    if (rows.length) return rows;
-    return [];
+    for (const searchText of searchCandidates) {
+      const rows = await searchWithLikeOnly(searchText, limit, safeTarget);
+      if (rows.length) return rows;
+    }
   }
+
+  return searchApproximate(safeMessage, limit, legalRef, safeTarget);
 };
+
+exports.extractHighlightTerms = (message) => extractHighlightTerms(message);
 
 exports.suggestNearbyLaws = async (message, limit = 3, target = 'coop') => {
   const safeMessage = String(message || '').trim();

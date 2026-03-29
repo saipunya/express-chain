@@ -1,9 +1,15 @@
 const axios = require('axios');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 const pdfParse = require('pdf-parse');
 const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 const lawChatbotPdfChunkModel = require('../models/lawChatbotPdfChunkModel');
+
+const execFileAsync = promisify(execFile);
 
 const NOT_FOUND_MESSAGE = 'ไม่พบข้อมูล! ลองเปลี่ยนหรือลดคำค้นหาให้น้อยลง';
 const DEFAULT_SEARCH_LIMIT = 80;
@@ -163,6 +169,90 @@ function sanitizeGeminiSummary(summaryText) {
     .trim();
 }
 
+function ensureBulletSummary(summaryText) {
+  const cleaned = sanitizeGeminiSummary(summaryText);
+  if (!cleaned) return '';
+
+  const normalized = cleaned
+    .replace(/\s*(\d+)\)\s+/g, '\n$1) ')
+    .replace(/\s*(\d+)\.\s+/g, '\n$1. ')
+    .trim();
+
+  const lines = normalized
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return '';
+
+  const hasBullets = lines.some((line) => /^([-*•]|\d+[.)])\s+/u.test(line));
+  if (hasBullets) return normalized;
+
+  return lines.map((line) => `- ${line}`).join('\n');
+}
+
+function ensureStructuredBulletSummary(summaryText) {
+  const bulletText = ensureBulletSummary(summaryText);
+  if (!bulletText) return '';
+
+  const sectionConfig = [
+    {
+      title: 'ข้อมูลจากฐานข้อมูลรอง',
+      match: /(ข้อมูลจากฐานข้อมูลรอง|ฐานข้อมูลรอง|ข้อมูลรอง)/u
+    },
+    {
+      title: 'ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ',
+      match: /(ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ|ฐานข้อมูลอื่นๆ|ข้อมูลเพิ่มเติม)/u
+    },
+    {
+      title: 'สรุปสาระสำคัญ',
+      match: /(สรุปสาระสำคัญ|สรุปสำคัญ|บทสรุป)/u
+    }
+  ];
+
+  const lines = bulletText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const normalizedLines = lines.map((line) => line.replace(/^[-*•\d.)\s]+/u, '').replace(/\*\*/g, '').trim());
+
+  const structuredLines = [];
+  let currentSectionTitle = '';
+  let hasSectionTitle = false;
+
+  normalizedLines.forEach((line) => {
+    const matchedSection = sectionConfig.find((section) => section.match.test(line));
+
+    if (matchedSection) {
+      hasSectionTitle = true;
+      currentSectionTitle = matchedSection.title;
+      structuredLines.push(`- ${matchedSection.title}`);
+
+      const suffix = line.replace(matchedSection.match, '').replace(/^[:：-]+/u, '').trim();
+      if (suffix) {
+        structuredLines.push(`  - ${suffix}`);
+      }
+      return;
+    }
+
+    if (currentSectionTitle) {
+      structuredLines.push(`  - ${line}`);
+    }
+  });
+
+  if (hasSectionTitle && structuredLines.length) {
+    return structuredLines.join('\n');
+  }
+
+  return [
+    '- ข้อมูลจากฐานข้อมูลรอง',
+    '- ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ',
+    '- สรุปสาระสำคัญ',
+    ...normalizedLines.map((line) => `  - ${line}`)
+  ].join('\n');
+}
+
 function isBroadSummaryQuery(message) {
   const normalized = String(message || '').trim().replace(/\s+/g, '');
   if (!normalized) return false;
@@ -262,7 +352,13 @@ function buildGeminiSummaryPrompt(message, target, rows = [], pdfChunkRows = [])
     '- ถ้าไม่พบข้อมูลในฐานข้อมูลบางส่วน ให้ข้ามส่วนนั้นไปโดยไม่ต้องระบุว่าไม่พบข้อมูล',
     '- ห้ามตัดคำกลางประโยคหรือกลางตัวเลขมาตรา เช่น 2542 ต้องเขียนให้ครบ',
     '- ถ้าคำตอบยังไม่ครบ ให้เขียนต่อจนจบประเด็นสำคัญก่อนหยุด',
-    '- ให้พยายามตอบให้ครบ 2 ย่อหน้า หรืออย่างน้อย 4 หัวข้อย่อยถ้ามีข้อมูลเพียงพอ'
+    '- รูปแบบการแสดงผลต้องเป็น bullet points เท่านั้น โดยใช้ "- " นำหน้าทุกบรรทัด',
+    '- ห้ามตอบเป็นย่อหน้ายาวต่อเนื่อง',
+    '- ต้องจัดคำตอบตามหัวข้อคงที่ต่อไปนี้เท่านั้น:',
+    '  - ข้อมูลจากฐานข้อมูลรอง',
+    '  - ข้อมูลเพิ่มเติมจากฐานข้อมูลอื่นๆ',
+    '  - สรุปสาระสำคัญ',
+    '- ในแต่ละหัวข้อให้มี bullet ย่อย 1-3 ข้อ โดยสั้น กระชับ และอ่านง่าย'
   );
 
   return promptSections.join('\n');
@@ -340,7 +436,7 @@ async function generateGeminiSummary(message, target, rows = [], pdfChunkRows = 
       return '';
     }
 
-    return sanitizeGeminiSummary(text);
+    return ensureStructuredBulletSummary(text);
   } catch (error) {
     console.warn('Gemini summary failed:', error.response?.data || error.message);
     return '';
@@ -426,6 +522,7 @@ function isSmallTalkIntent(message) {
 exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
   const safeMessage = sanitizeInput(message);
   const safeTarget = normalizeTarget(target);
+  const highlightTerms = lawChatbotModel.extractHighlightTerms(safeMessage);
   const includeAiSummary = options.includeAiSummary !== false;
   const suppressNotFoundAnswer = options.suppressNotFoundAnswer === true;
 
@@ -437,21 +534,24 @@ exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
     const suggestions = await lawChatbotModel.suggestNearbyLaws(safeMessage, 3, safeTarget);
     return {
       answer: suppressNotFoundAnswer ? '' : formatNotFoundWithSuggestions(suggestions),
-      context: []
+      context: [],
+      highlightTerms: []
     };
   }
 
   if (!safeMessage) {
     return {
       answer: resolveNotFoundAnswer(),
-      context: []
+      context: [],
+      highlightTerms: []
     };
   }
 
   if (isSmallTalkIntent(safeMessage)) {
     return {
       answer: resolveNotFoundAnswer(),
-      context: []
+      context: [],
+      highlightTerms: []
     };
   }
 
@@ -478,7 +578,8 @@ exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
   if (!includeAiSummary) {
     return {
       answer: baseAnswer,
-      context: matchedRows
+      context: matchedRows,
+      highlightTerms
     };
   }
 
@@ -495,7 +596,8 @@ ${aiSummary}`
 
   return {
     answer,
-    context: matchedRows
+    context: matchedRows,
+    highlightTerms
   };
 };
 
@@ -599,6 +701,43 @@ async function parsePdfText(pdfBuffer) {
   throw new Error('ไม่รองรับ pdf-parse เวอร์ชันปัจจุบัน');
 }
 
+function isOcrEnabled() {
+  const raw = String(process.env.LAW_CHATBOT_OCR_ENABLED || '').trim().toLowerCase();
+  if (!raw) return true;
+  return !(raw === '0' || raw === 'false' || raw === 'no' || raw === 'off');
+}
+
+async function runOcrOnPdf(filePath) {
+  const tempKey = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  const sidecarPath = path.join(os.tmpdir(), `lawchatbot-ocr-${tempKey}.txt`);
+  const outputPdfPath = path.join(os.tmpdir(), `lawchatbot-ocr-${tempKey}.pdf`);
+
+  try {
+    await execFileAsync(
+      'ocrmypdf',
+      ['--skip-text', '--sidecar', sidecarPath, filePath, outputPdfPath],
+      {
+        maxBuffer: 20 * 1024 * 1024
+      }
+    );
+
+    const text = await fs.promises.readFile(sidecarPath, 'utf8');
+    return String(text || '').trim();
+  } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      throw new Error('ไม่พบข้อความจาก PDF และระบบยังไม่ได้ติดตั้ง OCR (ocrmypdf)');
+    }
+
+    const stderr = String((error && error.stderr) || '').trim();
+    throw new Error(stderr || 'ไม่สามารถประมวลผล OCR จากไฟล์ PDF ได้');
+  } finally {
+    await Promise.all([
+      fs.promises.unlink(sidecarPath).catch(() => {}),
+      fs.promises.unlink(outputPdfPath).catch(() => {})
+    ]);
+  }
+}
+
 exports.processUploadedPdf = async (filePath) => {
   const safePath = String(filePath || '').trim();
   if (!safePath) {
@@ -606,10 +745,16 @@ exports.processUploadedPdf = async (filePath) => {
   }
 
   const pdfBuffer = await fs.promises.readFile(safePath);
-  const rawText = await parsePdfText(pdfBuffer);
+  let rawText = await parsePdfText(pdfBuffer);
+  let usedOcr = false;
+
+  if (!rawText && isOcrEnabled()) {
+    rawText = await runOcrOnPdf(safePath);
+    usedOcr = Boolean(rawText);
+  }
 
   if (!rawText) {
-    throw new Error('ไม่พบข้อความที่อ่านได้จากไฟล์ PDF');
+    throw new Error('ไม่พบข้อความที่อ่านได้จากไฟล์ PDF (อาจเป็นไฟล์สแกนที่ต้องผ่าน OCR)');
   }
 
   const chunks = chunkText(rawText, 1000);
@@ -617,7 +762,8 @@ exports.processUploadedPdf = async (filePath) => {
 
   return {
     chunkCount: chunks.length,
-    insertedCount: saved.insertedCount
+    insertedCount: saved.insertedCount,
+    usedOcr
   };
 };
 

@@ -1120,9 +1120,12 @@
           chatMessages.lastElementChild.remove();
           const hasContext = Boolean(data && data.hasContext);
           const answerText = data && typeof data.answer === 'string' ? data.answer.trim() : '';
+          const dbHighlightTerms = data && Array.isArray(data.highlightTerms) && data.highlightTerms.length
+            ? data.highlightTerms
+            : buildHighlightTerms(trimmed);
 
           if (hasContext && answerText) {
-            const botRow = addBubble(answerText, 'bot', false, buildHighlightTerms(trimmed), {
+            const botRow = addBubble(answerText, 'bot', false, dbHighlightTerms, {
               question: trimmed,
               target: selectedTarget
             });

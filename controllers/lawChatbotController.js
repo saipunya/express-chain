@@ -26,7 +26,8 @@ exports.chat = async (req, res) => {
 
     return res.json({
       answer: result.answer,
-      hasContext: Array.isArray(result.context) && result.context.length > 0
+      hasContext: Array.isArray(result.context) && result.context.length > 0,
+      highlightTerms: Array.isArray(result.highlightTerms) ? result.highlightTerms : []
     });
   } catch (error) {
     console.error('lawChatbot chat error:', error);
@@ -136,10 +137,13 @@ exports.uploadPdf = async (req, res) => {
     }
 
     const result = await lawChatbotService.processUploadedPdf(req.file.path);
+    const message = result.usedOcr
+      ? 'อัปโหลดและบันทึกข้อมูลจาก PDF เรียบร้อยแล้ว (ประมวลผลด้วย OCR)'
+      : 'อัปโหลดและบันทึกข้อมูลจาก PDF เรียบร้อยแล้ว';
 
     return res.json({
       success: true,
-      message: 'อัปโหลดและบันทึกข้อมูลจาก PDF เรียบร้อยแล้ว',
+      message,
       fileName: req.file.filename,
       ...result
     });

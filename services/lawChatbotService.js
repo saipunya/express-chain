@@ -526,6 +526,27 @@ function chunkText(text, maxWords = 1000) {
   return chunks;
 }
 
+async function parsePdfText(pdfBuffer) {
+  if (typeof pdfParse === 'function') {
+    const parsed = await pdfParse(pdfBuffer);
+    return String((parsed && parsed.text) || '').trim();
+  }
+
+  if (pdfParse && typeof pdfParse.PDFParse === 'function') {
+    const parser = new pdfParse.PDFParse({ data: pdfBuffer });
+    try {
+      const parsed = await parser.getText();
+      return String((parsed && parsed.text) || '').trim();
+    } finally {
+      if (typeof parser.destroy === 'function') {
+        await parser.destroy();
+      }
+    }
+  }
+
+  throw new Error('ไม่รองรับ pdf-parse เวอร์ชันปัจจุบัน');
+}
+
 exports.processUploadedPdf = async (filePath) => {
   const safePath = String(filePath || '').trim();
   if (!safePath) {
@@ -533,8 +554,7 @@ exports.processUploadedPdf = async (filePath) => {
   }
 
   const pdfBuffer = await fs.promises.readFile(safePath);
-  const parsed = await pdfParse(pdfBuffer);
-  const rawText = String((parsed && parsed.text) || '').trim();
+  const rawText = await parsePdfText(pdfBuffer);
 
   if (!rawText) {
     throw new Error('ไม่พบข้อความที่อ่านได้จากไฟล์ PDF');

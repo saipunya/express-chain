@@ -1,8 +1,50 @@
+const axios = require('axios');
 const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
 
 const NOT_FOUND_MESSAGE = 'ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา';
 const DEFAULT_SEARCH_LIMIT = 80;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+
+const GEMINI_TIMEOUT_MS = 60000;
+
+const GEMINI_SUMMARY_ROW_LIMIT = 6;
+
+function normalizeGeminiModelName(modelName) {
+  let raw = String(modelName || '').trim();
+  // ลบเครื่องหมายคำพูด และอักขระควบคุมที่มองไม่เห็น
+  raw = raw.replace(/^["']|["']$/g, '').replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+  const lower = raw.toLowerCase();
+
+  if (!raw) {
+    return 'gemini-2.5-flash';
+  }
+
+  if (
+    lower.includes('gemini 2.5 flash') ||
+    lower.includes('gemini-2.5-flash') ||
+    lower.includes('2.5 flash') ||
+    lower.includes('2.5-flash') ||
+    lower.includes('gemini 2.5') ||
+    lower.includes('gemini-2.5')
+  ) {
+    return 'gemini-2.5-flash';
+  }
+
+  const segments = raw.split('/').filter(Boolean);
+  const lastSegment = segments.pop() || '';
+  const cleaned = lastSegment.trim().replace(/^["']|["']$/g, '');
+
+  if (!cleaned) return 'gemini-2.5-flash';
+
+  const cleanedLower = cleaned.toLowerCase();
+  if (cleanedLower.includes('gemini') && cleanedLower.includes('2.5')) {
+    return 'gemini-2.5-flash';
+  }
+
+  return cleaned;
+}
 
 function parseLawNumberForSort(lawNumber) {
   const text = String(lawNumber || '');
@@ -87,10 +129,170 @@ function formatAnswer(rows) {
   return orderedRows
     .map((row) => {
       const title = buildLawTitle(row) || 'ไม่ระบุมาตรา';
-      const detail = String(row.law_detail || '').trim() || '-';
+
+      const detail = String(row.law_detail || '')
+        .replace(/\s+/g, ' ')
+        .trim() || '-';
       return `📌 ${title}\n${detail}`;
     })
     .join('\n\n--------------------\n\n');
+}
+
+function sanitizeGeminiSummary(summaryText) {
+  return String(summaryText || '')
+    .replace(/```/g, '')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function isBroadSummaryQuery(message) {
+  const normalized = String(message || '').trim().replace(/\s+/g, '');
+  if (!normalized) return false;
+
+  const broadKeywords = [
+    'ประชุมกรรมการ',
+    'ประชุมใหญ่',
+    'ประชุม',
+    'กรรมการ',
+    'คณะกรรมการ',
+    'องค์ประชุม',
+    'มติที่ประชุม',
+    'ที่ประชุม'
+  ];
+
+  return normalized.length <= 24 && broadKeywords.some((keyword) => normalized.includes(keyword));
+}
+
+function buildGeminiSummaryPrompt(message, target, rows = []) {
+  const targetLabelMap = {
+    coop: 'พระราชบัญญัติสหกรณ์ พ.ศ. 2542',
+    group: 'พระราชกฤษฎีกาว่าด้วยกลุ่มเกษตรกร พ.ศ. 2547',
+    all: 'ทุกฐานกฎหมายที่เกี่ยวข้อง'
+  };
+
+  const broadMode = isBroadSummaryQuery(message);
+  const safeRows = Array.isArray(rows)
+    ? rows.map(normalizeLawRow).filter((row) => row && (row.law_number || row.law_detail || row.law_comment))
+    : [];
+  const limitedRows = safeRows.slice(0, GEMINI_SUMMARY_ROW_LIMIT);
+  const dbContext = limitedRows.length
+    ? limitedRows
+        .map((row, index) => {
+          const title = buildLawTitle(row) || `รายการที่ ${index + 1}`;
+          const detail = summarizeLaw(row);
+          return `${index + 1}. ${title}: ${detail}`;
+        })
+        .join('\n')
+    : 'ไม่พบข้อมูลจากฐานข้อมูลที่ตรงกับคำค้นอย่างชัดเจน';
+
+  return [
+    'คุณเป็นผู้ช่วยด้านกฎหมายสหกรณ์ที่ต้องอธิบายข้อมูลจากฐานข้อมูล และค้นหาข้อมูลเพิ่มเติมจากอินเทอร์เน็ตเพื่อสรุปให้เข้าใจง่าย ครบถ้วน และอ่านจบในครั้งเดียว',
+    `คำถามผู้ใช้: ${String(message || '').trim()}`,
+    `ฐานกฎหมายที่เกี่ยวข้อง: ${targetLabelMap[target] || targetLabelMap.coop}`,
+    '',
+    'ข้อมูลจากฐานข้อมูล:',
+    dbContext,
+    '',
+    'คำแนะนำในการตอบ:',
+    broadMode
+      ? '- คำถามนี้ค่อนข้างกว้าง ดังนั้นให้ขยายความจาก DB และอินเทอร์เน็ตแบบเข้าใจง่าย แต่ไม่ยืดเยื้อ'
+      : '- ตอบเป็นภาษาไทยแบบสรุปที่ครบประเด็น แต่ไม่ยืดเยื้อ',
+    broadMode
+      ? '- ให้เริ่มด้วยภาพรวมสั้น ๆ จากข้อมูลใน DB แล้วค่อยเสริมข้อมูลจากอินเทอร์เน็ต'
+      : '- ให้เริ่มจากข้อเท็จจริงใน DB แล้วเสริมข้อมูลจากอินเทอร์เน็ตเฉพาะส่วนที่ช่วยอธิบาย',
+    '- ต้องอธิบายทั้งสิ่งที่พบใน DB และข้อมูลเพิ่มเติมจากอินเทอร์เน็ต',
+    '- ใช้รูปแบบสั้น กระชับ เน้นใจความสำคัญ ไม่คัดลอกข้อความจาก DB ตรง ๆ',
+    '- แต่ละส่วนควรเป็น 1-2 ประโยคที่สมบูรณ์ ห้ามตอบเป็นวลีสั้น ๆ ตัดกลางความหมาย',
+    broadMode
+      ? '- รูปแบบคำตอบ: 1) สรุปจาก DB 2) ข้อมูลเพิ่มเติมจากอินเทอร์เน็ต 3) ใจความสำคัญ/ข้อควรรู้'
+      : '- แนะนำรูปแบบ: 1) สรุปจาก DB 2) ข้อมูลเพิ่มเติมจากอินเทอร์เน็ต 3) ใจความสำคัญ',
+    '- ใช้ภาษาที่เข้าใจง่าย ไม่จำเป็นต้องใช้ศัพท์ทางกฎหมายมากเกินไป',
+    '- ถ้าข้อมูลไม่ชัดเจน ให้บอกตรง ๆ ว่าไม่พบข้อมูลที่แน่ชัด และสรุปเฉพาะสิ่งที่ยืนยันได้',
+    '- ห้ามตัดคำกลางประโยคหรือกลางตัวเลขมาตรา เช่น 2542 ต้องเขียนให้ครบ',
+    '- ถ้าคำตอบยังไม่ครบ ให้เขียนต่อจนจบประเด็นสำคัญก่อนหยุด',
+    '- ให้พยายามตอบให้ครบ 2 ย่อหน้า หรืออย่างน้อย 4 หัวข้อย่อยถ้ามีข้อมูลเพียงพอ'
+  ].join('\n');
+}
+
+
+
+
+async function generateGeminiSummary(message, target, rows = []) {
+  if (!GEMINI_API_KEY) {
+    console.warn('No Gemini API key');
+    return '';
+  }
+
+  const prompt = buildGeminiSummaryPrompt(message, target, rows);
+  const modelName = normalizeGeminiModelName(GEMINI_MODEL);
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+  console.log(`[Gemini AI] Calling model: ${modelName}`);
+
+  try {
+    const response = await axios.post(
+      endpoint,
+      {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        tools: [
+          {
+            googleSearch: {}
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.9,
+          maxOutputTokens: isBroadSummaryQuery(message) ? 4096 : 2048
+        }
+      },
+      {
+        timeout: GEMINI_TIMEOUT_MS,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    // 🔥 debug ดูของจริง
+    console.log('Gemini RAW:', JSON.stringify(response.data, null, 2));
+
+    let text = '';
+
+    const candidates = response.data?.candidates;
+
+    if (Array.isArray(candidates) && candidates.length > 0) {
+      const parts = candidates[0]?.content?.parts;
+
+      if (Array.isArray(parts)) {
+        text = parts.map(p => p?.text || '').join('\n').trim();
+      }
+    }
+
+    // fallback
+    if (!text) {
+      text =
+        response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        response.data?.candidates?.[0]?.output ||
+        '';
+    }
+
+    if (!text) {
+      console.warn('Gemini returned empty text');
+      return '';
+    }
+
+    return sanitizeGeminiSummary(text);
+  } catch (error) {
+    console.warn('Gemini summary failed:', error.response?.data || error.message);
+    return '';
+  }
 }
 
 function formatNotFoundWithSuggestions(suggestions) {
@@ -182,9 +384,10 @@ function isSmallTalkIntent(message) {
   return false;
 }
 
-exports.askLawChatbot = async (message, target = 'coop') => {
+exports.askLawChatbot = async (message, target = 'coop', options = {}) => {
   const safeMessage = sanitizeInput(message);
   const safeTarget = normalizeTarget(target);
+  const includeAiSummary = options.includeAiSummary !== false;
 
   async function buildNotFoundPayload() {
     const suggestions = await lawChatbotModel.suggestNearbyLaws(safeMessage, 3, safeTarget);
@@ -227,12 +430,41 @@ exports.askLawChatbot = async (message, target = 'coop') => {
     return buildNotFoundPayload();
   }
 
-  const answer = formatAnswer(matchedRows);
+  const baseAnswer = formatAnswer(matchedRows);
+  if (!includeAiSummary) {
+    return {
+      answer: baseAnswer,
+      context: matchedRows
+    };
+  }
+
+  const aiSummary = await generateGeminiSummary(safeMessage, safeTarget, matchedRows);
+  const answer = aiSummary
+    ? `${baseAnswer}
+
+🧠 ข้อมูลสรุปโดย AI
+${aiSummary}`
+    : `${baseAnswer}
+
+🤖 ไม่สามารถสรุปได้ในขณะนี้`;
 
   return {
     answer,
     context: matchedRows
   };
+};
+
+exports.getInternetSummary = async (message, target = 'coop', rows = []) => {
+  const safeMessage = sanitizeInput(message);
+  const safeTarget = normalizeTarget(target);
+
+  if (!safeMessage) {
+    return '';
+  }
+
+  const safeRows = Array.isArray(rows) ? rows.map(normalizeLawRow) : [];
+
+  return generateGeminiSummary(safeMessage, safeTarget, safeRows);
 };
 
 exports.saveChatbotFeedback = async (payload = {}) => {
@@ -266,6 +498,15 @@ exports.saveChatbotFeedback = async (payload = {}) => {
     message: 'บันทึกข้อเสนอแนะเรียบร้อยแล้ว'
   };
 };
+
+function normalizeLawRow(row) {
+  return {
+    law_number: row.law_number || row.glaw_number || '',
+    law_part: row.law_part || row.glaw_part || '',
+    law_detail: row.law_detail || row.glaw_detail || '',
+    law_comment: row.law_comment || row.glaw_comment || ''
+  };
+}
 
 exports.getChatbotFeedbackList = async (query = {}) => {
   const page = Math.max(1, Number(query.page) || 1);

@@ -13,7 +13,7 @@ exports.chat = async (req, res) => {
     const message = req.body && typeof req.body.message === 'string' ? req.body.message : '';
     const target = req.body && typeof req.body.target === 'string' ? req.body.target : 'coop';
 
-    const result = await lawChatbotService.askLawChatbot(message, target);
+    const result = await lawChatbotService.askLawChatbot(message, target, { includeAiSummary: false });
 
     return res.json({
       answer: result.answer
@@ -22,6 +22,24 @@ exports.chat = async (req, res) => {
     console.error('lawChatbot chat error:', error);
     return res.status(500).json({
       answer: lawChatbotService.NOT_FOUND_MESSAGE
+    });
+  }
+};
+
+exports.chatSummary = async (req, res) => {
+  try {
+    const message = req.body && typeof req.body.message === 'string' ? req.body.message : '';
+    const target = req.body && typeof req.body.target === 'string' ? req.body.target : 'coop';
+    const searchResult = await lawChatbotService.askLawChatbot(message, target, { includeAiSummary: false });
+    const summary = await lawChatbotService.getInternetSummary(message, target, searchResult.context || []);
+
+    return res.json({
+      summary
+    });
+  } catch (error) {
+    console.error('lawChatbot summary error:', error);
+    return res.status(500).json({
+      summary: ''
     });
   }
 };

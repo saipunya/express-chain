@@ -685,6 +685,7 @@
 
       function saveRecentChats() {
         const items = Array.from(chatMessages.querySelectorAll('.bubble'))
+          .filter((node) => !node.classList.contains('bubble-loading'))
           .map((node) => ({ text: node.textContent || '', role: node.classList.contains('bubble-user') ? 'user' : 'bot' }))
           .slice(-CHAT_CACHE_LIMIT);
         localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(items));
@@ -730,6 +731,39 @@
             target: selectedTarget
           });
           botRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          const aiLoadingRow = addBubble('🤖 กำลังประมวลผล...', 'bot', true);
+          aiLoadingRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          void (async () => {
+            try {
+              const summaryResponse = await fetch('/chat-summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: trimmed, target: selectedTarget })
+              });
+
+              const summaryData = await summaryResponse.json();
+              const summaryText = summaryData && summaryData.summary ? String(summaryData.summary).trim() : '';
+
+              if (aiLoadingRow && aiLoadingRow.parentNode) {
+                aiLoadingRow.remove();
+              }
+
+              if (!summaryText) return;
+
+              const summaryRow = addBubble(`🤖 สรุปโดย AI (coopbot)\n${summaryText}`, 'bot', false, buildHighlightTerms(trimmed), {
+                question: trimmed,
+                target: selectedTarget
+              });
+              summaryRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              saveRecentChats();
+            } catch (_) {
+              if (aiLoadingRow && aiLoadingRow.parentNode) {
+                aiLoadingRow.remove();
+              }
+            }
+          })();
         } catch (_) {
           chatMessages.lastElementChild.remove();
           const botRow = addBubble('ขออภัยครับ! ไม่พบข้อมูลที่ชัดเจน ลองเปลี่ยนคำค้นหา', 'bot', false, [], {

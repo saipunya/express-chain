@@ -99,7 +99,8 @@
     }
 
     .lawbot-app.headers-collapsed .chat-shell {
-      min-height: calc(100dvh - 1.5rem);
+      min-height: 0;
+      flex: 1;
     }
 
     .page-header {
@@ -584,6 +585,11 @@
         border-right: none;
         flex: 1;
         min-height: 0;
+      }
+
+      .lawbot-app.headers-collapsed .chat-shell {
+        min-height: 0;
+        height: 100%;
       }
       .chat-header {
         padding: 0.7rem 0.75rem;

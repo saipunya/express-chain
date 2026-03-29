@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light border-0 d-flex align-items-center justify-content-between">
+        <h4 class="mb-0">📤 อัปโหลด PDF เข้า Law Chatbot</h4>
+        <a href="/law-chatbot" class="btn btn-outline-secondary btn-sm">กลับหน้าแชตบอท</a>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">
+          อัปโหลดไฟล์ PDF เพื่อแปลงเป็นข้อความและบันทึกเป็น chunks ลงฐานข้อมูล
+          <code>pdf_chunks</code> โดยแต่ละ chunk ไม่เกิน 1000 คำ
+        </p>
+
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="file" class="form-label">เลือกไฟล์ PDF</label>
+            <input
+              type="file"
+              id="file"
+              name="file"
+              class="form-control"
+              accept="application/pdf,.pdf"
+              required
+            />
+            <div class="form-text">รองรับเฉพาะไฟล์ PDF ขนาดไม่เกิน 20MB</div>
+          </div>
+
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-cloud-upload me-1"></i> อัปโหลดและประมวลผล
+          </button>
+        </form>
+
+        <hr class="my-4" />
+        <div class="small text-muted">
+          API endpoint: <code>POST /upload</code> (field: <code>file</code>)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,6 +1,9 @@
 const axios = require('axios');
+const fs = require('fs');
+const pdfParse = require('pdf-parse');
 const lawChatbotModel = require('../models/lawChatbotModel');
 const lawChatbotFeedbackModel = require('../models/lawChatbotFeedbackModel');
+const lawChatbotPdfChunkModel = require('../models/lawChatbotPdfChunkModel');
 
 const NOT_FOUND_MESSAGE = 'ไม่พบข้อมูล! ลองเปลี่ยนหรือลดคำค้นหาให้น้อยลง';
 const DEFAULT_SEARCH_LIMIT = 80;
@@ -505,6 +508,46 @@ function normalizeLawRow(row) {
     law_comment: row.law_comment || row.glaw_comment || ''
   };
 }
+
+function chunkText(text, maxWords = 1000) {
+  const words = String(text || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean);
+
+  if (!words.length) return [];
+
+  const chunks = [];
+  for (let i = 0; i < words.length; i += maxWords) {
+    chunks.push(words.slice(i, i + maxWords).join(' '));
+  }
+
+  return chunks;
+}
+
+exports.processUploadedPdf = async (filePath) => {
+  const safePath = String(filePath || '').trim();
+  if (!safePath) {
+    throw new Error('ไม่พบไฟล์ PDF ที่อัปโหลด');
+  }
+
+  const pdfBuffer = await fs.promises.readFile(safePath);
+  const parsed = await pdfParse(pdfBuffer);
+  const rawText = String((parsed && parsed.text) || '').trim();
+
+  if (!rawText) {
+    throw new Error('ไม่พบข้อความที่อ่านได้จากไฟล์ PDF');
+  }
+
+  const chunks = chunkText(rawText, 1000);
+  const saved = await lawChatbotPdfChunkModel.insertChunks(chunks);
+
+  return {
+    chunkCount: chunks.length,
+    insertedCount: saved.insertedCount
+  };
+};
 
 exports.getChatbotFeedbackList = async (query = {}) => {
   const page = Math.max(1, Number(query.page) || 1);

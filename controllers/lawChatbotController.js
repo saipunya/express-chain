@@ -8,6 +8,12 @@ exports.index = async (req, res) => {
   });
 };
 
+exports.uploadPage = async (req, res) => {
+  return res.render('lawChatbot/upload', {
+    title: 'อัปโหลด PDF เข้าระบบ Law Chatbot'
+  });
+};
+
 exports.chat = async (req, res) => {
   try {
     const message = req.body && typeof req.body.message === 'string' ? req.body.message : '';
@@ -89,6 +95,32 @@ exports.chatFeedback = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'ไม่สามารถบันทึกข้อเสนอแนะได้'
+    });
+  }
+};
+
+exports.uploadPdf = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาอัปโหลดไฟล์ PDF ในฟิลด์ file'
+      });
+    }
+
+    const result = await lawChatbotService.processUploadedPdf(req.file.path);
+
+    return res.json({
+      success: true,
+      message: 'อัปโหลดและบันทึกข้อมูลจาก PDF เรียบร้อยแล้ว',
+      fileName: req.file.filename,
+      ...result
+    });
+  } catch (error) {
+    console.error('lawChatbot upload pdf error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'ไม่สามารถประมวลผลไฟล์ PDF ได้'
     });
   }
 };

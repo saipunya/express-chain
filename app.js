@@ -11,7 +11,7 @@ const fs = require('fs');
 const axios = require('axios');
 const chamraExportRoute = require('./routes/chamraExport');
 // const methodOverride = require('method-override'); // replaced by safe loader below
-
+const { createProxyMiddleware } = require('http-proxy-middleware');
 require('dotenv').config();
 
 // Import middleware
@@ -103,6 +103,33 @@ app.use((req, res, next) => {
   next();
 });
 
+// Proxy coopgame requests to port 3001 using axios
+app.use('/coopgame', async (req, res) => {
+  try {
+    const targetUrl = `http://localhost:3001${req.originalUrl}`;
+    console.log(`[Proxy] ${req.method} ${req.originalUrl} -> ${targetUrl}`);
+
+    const response = await axios({
+      method: req.method,
+      url: targetUrl,
+      headers: req.headers,
+      data: req.body,
+      params: req.query,
+      validateStatus: () => true
+    });
+
+    // Copy response headers
+    Object.keys(response.headers).forEach(key => {
+      res.setHeader(key, response.headers[key]);
+    });
+
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('[Proxy Error]', error.message);
+    res.status(500).send('Proxy error: ' + error.message);
+  }
+});
+
 // เรียกใช้ routes/index.js
 require('./routes/index')(app);
 
@@ -121,7 +148,6 @@ const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route 
 const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
 const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); // เพิ่ม route cooperatives assets
 const lawChatbotRoutes = require('./routes/lawChatbot'); // เพิ่ม route แชตบอทกฎหมาย
-const createProxyMiddleware  = require('http-proxy-middleware');
 
 
 // Public routes that don't require authentication
@@ -150,11 +176,7 @@ app.use('/chamra', chamraExportRoute);
 app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
 app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งานเส้นทาง cooperatives assets
 app.use('/', lawChatbotRoutes); // หน้า /law-chatbot และ API /chat
-app.use('/coopgame', createProxyMiddleware({
-  target: 'http://127.0.0.1:3001',
-  changeOrigin: true,
-  ws: true,
-}));
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {

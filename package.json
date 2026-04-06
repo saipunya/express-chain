@@ -36,6 +36,7 @@
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
+    "http-proxy-middleware": "^3.0.5",
     "iconv-lite": "^0.7.0",
     "jsdom": "^26.1.0",
     "method-override": "^3.0.0",

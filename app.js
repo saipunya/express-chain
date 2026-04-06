@@ -151,8 +151,9 @@ app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง b
 app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งานเส้นทาง cooperatives assets
 app.use('/', lawChatbotRoutes); // หน้า /law-chatbot และ API /chat
 app.use('/coopgame', createProxyMiddleware({
-  target: 'http://localhost:3001',
+  target: 'http://127.0.0.1:3001',
   changeOrigin: true,
+  ws: true,
 }));
 // 404 handler
 app.use((req, res) => {

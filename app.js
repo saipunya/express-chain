@@ -121,6 +121,8 @@ const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route 
 const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
 const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); // เพิ่ม route cooperatives assets
 const lawChatbotRoutes = require('./routes/lawChatbot'); // เพิ่ม route แชตบอทกฎหมาย
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
 
 // Public routes that don't require authentication
 const publicRoutes = [
@@ -148,7 +150,10 @@ app.use('/chamra', chamraExportRoute);
 app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
 app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งานเส้นทาง cooperatives assets
 app.use('/', lawChatbotRoutes); // หน้า /law-chatbot และ API /chat
-
+app.use('/coopgame', createProxyMiddleware({
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+}));
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {

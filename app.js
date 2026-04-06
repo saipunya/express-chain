@@ -121,7 +121,7 @@ const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route 
 const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
 const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); // เพิ่ม route cooperatives assets
 const lawChatbotRoutes = require('./routes/lawChatbot'); // เพิ่ม route แชตบอทกฎหมาย
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const createProxyMiddleware  = require('http-proxy-middleware');
 
 
 // Public routes that don't require authentication

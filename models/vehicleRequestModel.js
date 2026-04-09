@@ -88,6 +88,7 @@ async function getById(id) {
 async function getDetailById(id) {
   const [rows] = await db.query(`
     SELECT vr.*, tr.request_no AS travel_request_no, tr.subject AS travel_subject,
+           tr.status AS travel_status,
            tr.destination_text AS travel_destination, tr.start_at AS travel_start_at, tr.end_at AS travel_end_at,
            va.vehicle_id, va.driver_id, va.plate_no_snapshot, va.driver_name_snapshot,
            vtl.morning_departure_at, vtl.morning_odometer, vtl.afternoon_return_at, vtl.afternoon_odometer,

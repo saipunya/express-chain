@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">คิวงานคนขับรถ</h3>
+    <p class="text-muted mb-0">รายการงานที่ได้รับมอบหมายและพร้อมบันทึกเวลา/เลขไมล์</p>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>เลขที่คำขอ</th>
+          <th>ผู้ขอ</th>
+          <th>ปลายทาง</th>
+          <th>รถ/คนขับ</th>
+          <th>สถานะเดินรถ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr><td colspan="6" class="text-center py-4 text-muted">ยังไม่มีงานขับรถที่ได้รับมอบหมาย</td></tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td><%= item.vehicle_request_no %></td>
+            <td><%= item.requester_name %></td>
+            <td><%= item.destination_text %></td>
+            <td>
+              <div><%= item.plate_no_snapshot || '-' %></div>
+              <small class="text-muted"><%= item.driver_name_snapshot || '-' %></small>
+            </td>
+            <td><span class="badge bg-info"><%= item.log_status || 'not_started' %></span></td>
+            <td class="text-end"><a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

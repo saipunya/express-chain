@@ -138,6 +138,19 @@
       align-items: center;
       gap: 4px;
     }
+
+    .event-source {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e6f4f7;
+      color: #2b5d6d;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
     
     .event-participants {
       font-size: 0.85rem;
@@ -399,6 +412,9 @@
               <% if (event.place) { %>
                 <div class="event-place">📍 <%= event.place %></div>
               <% } %>
+              <% if (event.sourceLabel) { %>
+                <div class="event-source">🏷️ <%= event.sourceLabel %></div>
+              <% } %>
               <% if (event.goto) { %>
                 <div class="event-participants">👥 <%= event.goto %></div>
               <% } %>
@@ -417,6 +433,13 @@
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body">
+        <div class="detail-row">
+          <div class="detail-icon">🏷️</div>
+          <div class="detail-content">
+            <div class="detail-label">แหล่งข้อมูล</div>
+            <div class="detail-value" id="modalSourceLabel">-</div>
+          </div>
+        </div>
         <div class="detail-row">
           <div class="detail-icon">📅</div>
           <div class="detail-content">
@@ -473,6 +496,13 @@
             <div class="detail-value" id="modalMaihed">-</div>
           </div>
         </div>
+        <div class="detail-row" id="modalLinkRow" style="display:none;">
+          <div class="detail-icon">🔗</div>
+          <div class="detail-content">
+            <div class="detail-label">ลิงก์รายละเอียด</div>
+            <div class="detail-value"><a id="modalDetailLink" href="#">เปิดรายละเอียด</a></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -513,6 +543,7 @@
       }
       
       document.getElementById('modalTitle').textContent = event.activity || 'รายละเอียดกิจกรรม';
+      document.getElementById('modalSourceLabel').textContent = event.sourceLabel || '-';
       document.getElementById('modalDate').textContent = formatFullThaiDate(event.date);
       document.getElementById('modalTime').textContent = event.time ? event.time + ' น.' : '-';
       document.getElementById('modalActivity').textContent = event.activity || '-';
@@ -521,6 +552,16 @@
       document.getElementById('modalGoto').textContent = event.goto || '-';
       document.getElementById('modalGroup').textContent = event.group || '-';
       document.getElementById('modalMaihed').textContent = event.maihed || '-';
+
+      const linkRow = document.getElementById('modalLinkRow');
+      const detailLink = document.getElementById('modalDetailLink');
+      if (event.detailUrl) {
+        detailLink.href = event.detailUrl;
+        linkRow.style.display = 'flex';
+      } else {
+        detailLink.href = '#';
+        linkRow.style.display = 'none';
+      }
       
       document.getElementById('eventModal').classList.add('active');
       document.body.style.overflow = 'hidden';

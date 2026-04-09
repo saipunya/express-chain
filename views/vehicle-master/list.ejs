@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">ทะเบียนรถราชการ</h3>
+    <p class="text-muted mb-0">จัดการข้อมูลรถสำหรับใช้ในขั้นตอนมอบหมายงาน</p>
+  </div>
+  <a href="/vehicle-master/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> เพิ่มรถ</a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ทะเบียน</th>
+          <th>ชื่อรถ</th>
+          <th>ประเภท</th>
+          <th>ยี่ห้อ/รุ่น</th>
+          <th>ที่นั่ง</th>
+          <th>สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr><td colspan="7" class="text-center py-4 text-muted">ยังไม่มีข้อมูลรถ</td></tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td class="fw-semibold"><%= item.plate_no %></td>
+            <td><%= item.vehicle_name %></td>
+            <td><%= item.vehicle_type || '-' %></td>
+            <td><%= [item.brand, item.model].filter(Boolean).join(' / ') || '-' %></td>
+            <td><%= item.seat_capacity || '-' %></td>
+            <td>
+              <% const badge = item.status === 'active' ? 'success' : item.status === 'maintenance' ? 'warning text-dark' : 'secondary'; %>
+              <span class="badge bg-<%= badge %>"><%= item.status %></span>
+            </td>
+            <td class="text-end"><a href="/vehicle-master/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

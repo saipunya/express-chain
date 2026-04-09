@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">พิจารณาคำขอไปราชการ</h3>
+    <p class="text-muted mb-0"><%= item.request_no %></p>
+  </div>
+  <a href="/vehicle-approval/pending" class="btn btn-outline-secondary">กลับคิวอนุมัติ</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">เรื่อง</dt><dd class="col-sm-8"><%= item.subject %></dd>
+          <dt class="col-sm-4">ผู้ขอ</dt><dd class="col-sm-8"><%= item.requester_name %> (<%= item.requester_position || '-' %>)</dd>
+          <dt class="col-sm-4">กลุ่มงาน</dt><dd class="col-sm-8"><%= item.requester_group || '-' %></dd>
+          <dt class="col-sm-4">สถานที่</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
+          <dt class="col-sm-4">ช่วงเวลา</dt><dd class="col-sm-8"><%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></dd>
+          <dt class="col-sm-4">วัตถุประสงค์</dt><dd class="col-sm-8"><%= item.purpose_text %></dd>
+          <dt class="col-sm-4">วิธีเดินทาง</dt><dd class="col-sm-8"><%= item.transport_type %></dd>
+          <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.status %></span></dd>
+          <dt class="col-sm-4">ความเห็นล่าสุด</dt><dd class="col-sm-8"><%= item.approval_comment || '-' %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white"><h5 class="mb-0">ผลการพิจารณา</h5></div>
+      <div class="card-body">
+        <% if (item.status === 'submitted') { %>
+          <form action="/vehicle-approval/travel/<%= item.id %>/approve" method="POST" class="mb-3">
+            <label class="form-label">ความเห็น</label>
+            <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
+            <button type="submit" class="btn btn-success w-100">อนุมัติคำขอไปราชการ</button>
+          </form>
+          <form action="/vehicle-approval/travel/<%= item.id %>/reject" method="POST">
+            <label class="form-label">เหตุผลไม่อนุมัติ</label>
+            <textarea class="form-control mb-2" name="approval_comment" rows="3" required></textarea>
+            <button type="submit" class="btn btn-outline-danger w-100">ไม่อนุมัติ</button>
+          </form>
+        <% } else { %>
+          <p class="text-muted mb-2">คำขอนี้ถูกพิจารณาแล้ว</p>
+          <div class="small text-muted"><%= item.approver_name || '-' %></div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (item.vehicleRequest) { %>
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white"><h5 class="mb-0">คำขอใช้รถที่เชื่อมไว้</h5></div>
+        <div class="card-body d-grid gap-2">
+          <a href="/vehicle-approval/request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">พิจารณาคำขอใช้รถ</a>
+          <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-secondary">ดูคำขอใช้รถ</a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,124 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
+  <div>
+    <h3 class="mb-1"><%= title %></h3>
+    <p class="text-muted mb-0">บันทึกข้อมูลคำขอไปราชการตามแบบฟอร์มของหน่วยงาน</p>
+  </div>
+  <a href="/official-travel" class="btn btn-outline-secondary">ย้อนกลับ</a>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">เลขที่คำขอ</label>
+        <input type="text" class="form-control" name="request_no" value="<%= item.request_no || '' %>" readonly>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">วันที่คำขอ</label>
+        <input type="date" class="form-control" name="request_date" value="<%= item.request_date || '' %>" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">เรียน</label>
+        <input type="text" class="form-control" name="learn_to" value="<%= item.learn_to || '' %>">
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">เรื่อง</label>
+        <input type="text" class="form-control" name="subject" value="<%= item.subject || '' %>" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">ผู้ขอ</label>
+        <input type="text" class="form-control" name="requester_name" value="<%= item.requester_name || '' %>" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">ตำแหน่ง</label>
+        <input type="text" class="form-control" name="requester_position" value="<%= item.requester_position || '' %>">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">กลุ่ม/หน่วยงาน</label>
+        <input type="text" class="form-control" name="requester_group" value="<%= item.requester_group || '' %>">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">สถานที่ / ปลายทาง</label>
+        <input type="text" class="form-control" name="destination_text" value="<%= item.destination_text || '' %>" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">เริ่มเดินทาง</label>
+        <input type="datetime-local" class="form-control" name="start_at" value="<%= item.start_at || '' %>" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">สิ้นสุด</label>
+        <input type="datetime-local" class="form-control" name="end_at" value="<%= item.end_at || '' %>" required>
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">วัตถุประสงค์</label>
+        <textarea class="form-control" name="purpose_text" rows="3" required><%= item.purpose_text || '' %></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">วิธีเดินทาง</label>
+        <select class="form-select" name="transport_type">
+          <option value="official_vehicle" <%= item.transport_type === 'official_vehicle' ? 'selected' : '' %>>รถราชการ</option>
+          <option value="private_vehicle" <%= item.transport_type === 'private_vehicle' ? 'selected' : '' %>>รถส่วนตัว</option>
+          <option value="other" <%= item.transport_type === 'other' ? 'selected' : '' %>>อื่น ๆ</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">รายละเอียดพาหนะอื่น</label>
+        <input type="text" class="form-control" name="transport_other_text" value="<%= item.transport_other_text || '' %>">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ออกนอกจังหวัด</label>
+        <select class="form-select" name="out_of_province">
+          <option value="0" <%= Number(item.out_of_province) === 0 ? 'selected' : '' %>>ไม่ใช่</option>
+          <option value="1" <%= Number(item.out_of_province) === 1 ? 'selected' : '' %>>ใช่</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">ต้องใช้รถราชการ</label>
+        <select class="form-select" name="requires_vehicle_request">
+          <option value="0" <%= Number(item.requires_vehicle_request) === 0 ? 'selected' : '' %>>ไม่ต้อง</option>
+          <option value="1" <%= Number(item.requires_vehicle_request) === 1 ? 'selected' : '' %>>ต้องใช้</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">ผู้ร่วมเดินทาง</h5>
+      <small class="text-muted">กรอกได้ตามจำนวนที่ต้องการในรอบแรก</small>
+    </div>
+
+    <% const rows = companions && companions.length ? companions : [{ companion_name: '', companion_position: '' }]; %>
+    <% rows.forEach((companion, index) => { %>
+      <div class="row g-3 mb-2">
+        <div class="col-md-1 text-muted pt-2">#<%= index + 1 %></div>
+        <div class="col-md-5">
+          <input type="text" class="form-control" name="companion_name" value="<%= companion.companion_name || '' %>" placeholder="ชื่อผู้ร่วมเดินทาง">
+        </div>
+        <div class="col-md-6">
+          <input type="text" class="form-control" name="companion_position" value="<%= companion.companion_position || '' %>" placeholder="ตำแหน่งผู้ร่วมเดินทาง">
+        </div>
+      </div>
+    <% }) %>
+    <div class="row g-3">
+      <div class="col-md-1 text-muted pt-2">#+</div>
+      <div class="col-md-5">
+        <input type="text" class="form-control" name="companion_name" value="" placeholder="เพิ่มผู้ร่วมเดินทาง">
+      </div>
+      <div class="col-md-6">
+        <input type="text" class="form-control" name="companion_position" value="" placeholder="ตำแหน่งผู้ร่วมเดินทาง">
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+    <button type="submit" class="btn btn-success"><%= submitLabel %></button>
+  </div>
+</form>
+
+<%- include('../partials/footer') %>

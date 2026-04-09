@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">คำขอไปราชการ</h3>
+    <p class="text-muted mb-0">จัดการคำขอไปราชการและเชื่อมข้อมูลไปยังปฏิทินกิจกรรม</p>
+  </div>
+  <a href="/official-travel/create" class="btn btn-success">
+    <i class="bi bi-plus-circle me-1"></i> สร้างคำขอ
+  </a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>เลขที่</th>
+          <th>วันที่</th>
+          <th>เรื่อง</th>
+          <th>ผู้ขอ</th>
+          <th>ช่วงเวลา</th>
+          <th>สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">ยังไม่มีคำขอไปราชการ</td>
+          </tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td><%= item.request_no %></td>
+            <td><%= new Date(item.request_date).toLocaleDateString('th-TH') %></td>
+            <td>
+              <div class="fw-semibold"><%= item.subject %></div>
+              <small class="text-muted"><%= item.destination_text %></small>
+            </td>
+            <td>
+              <div><%= item.requester_name %></div>
+              <small class="text-muted"><%= item.requester_group || '-' %></small>
+            </td>
+            <td>
+              <div><%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></div>
+              <small class="text-muted">ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+            </td>
+            <td>
+              <% const badge = item.status === 'approved' ? 'success' : item.status === 'submitted' ? 'warning text-dark' : item.status === 'rejected' ? 'danger' : item.status === 'cancelled' ? 'secondary' : 'info'; %>
+              <span class="badge bg-<%= badge %>"><%= item.status %></span>
+            </td>
+            <td class="text-end text-nowrap">
+              <a href="/official-travel/<%= item.id %>" class="btn btn-sm btn-outline-primary">ดู</a>
+              <a href="/official-travel/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <a href="/official-travel/<%= item.id %>/print" class="btn btn-sm btn-outline-secondary" target="_blank">พิมพ์</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

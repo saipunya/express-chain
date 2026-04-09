@@ -1,4 +1,5 @@
 const gitgumModel = require('../models/gitgumModel');
+const mergedActivityService = require('../services/mergedActivityService');
 
 // แสดงรายการ (รองรับ pagination)
 exports.list = async (req, res) => {
@@ -77,61 +78,17 @@ exports.deleteGitgum = async (req, res) => {
 // แสดงปฏิทินกิจกรรมทั้งหมด (responsive)
 exports.calendarView = async (req, res) => {
   try {
-    const rows = await gitgumModel.findAll();
+    const today = new Date();
+    const startDate = new Date(today);
+    const endDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 90);
+    endDate.setDate(endDate.getDate() + 90);
 
-    // ฟังก์ชันแปลงเวลาให้เป็น HH:mm
-    const toHHmm = (val) => {
-      if (!val) return null;
-      const s = String(val).trim();
-      // รูปแบบ 0830
-      if (/^\d{4}$/.test(s)) {
-        return `${s.slice(0,2)}:${s.slice(2,4)}`;
-      }
-      // รูปแบบ H:mm หรือ HH:mm หรือ H.mm หรือ HH.mm
-      const m = s.match(/^(\d{1,2})[:.](\d{2})/);
-      if (m) {
-        const hh = m[1].padStart(2, '0');
-        const mm = m[2];
-        if (Number(hh) <= 23 && Number(mm) <= 59) return `${hh}:${mm}`;
-      }
-      return null;
-    };
-
-    // แปลง date ให้เป็นสตริง YYYY-MM-DD (รองรับทั้ง string/Date)
-    const toYMD = (d) => {
-      if (!d) return '';
-      if (typeof d === 'string') return d.slice(0, 10);
-      if (d instanceof Date) {
-        try {
-          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(d);
-        } catch (_) {
-          return d.toISOString().slice(0, 10);
-        }
-      }
-      return String(d).slice(0, 10);
-    };
-
-    const events = rows.map(r => {
-      const dateStr = toYMD(r.git_date);
-      const norm = toHHmm(r.git_time);
-      const start = dateStr ? (norm ? `${dateStr}T${norm}` : dateStr) : undefined;
-      const allDay = !!(dateStr && !norm);
-      const titleParts = [r.git_act];
-      if (r.git_place) titleParts.push(`@${r.git_place}`);
-      return {
-        id: r.git_id,
-        title: titleParts.filter(Boolean).join(' '),
-        start,
-        allDay,
-        extendedProps: {
-          place: r.git_place,
-          respon: r.git_respon,
-          goto: r.git_goto,
-          group: r.git_group,
-          maihed: r.git_maihed
-        }
-      };
-    }).filter(e => !!e.start);
+    const formatDate = (value) => mergedActivityService.toYMD(value);
+    const events = await mergedActivityService.getMergedCalendarEvents({
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate)
+    });
 
     res.render('allcalendar', {
       title: 'ปฏิทินกิจกรรม',
@@ -146,57 +103,38 @@ exports.calendarView = async (req, res) => {
 // หน้าปฏิทินมือถือ (standalone - ไม่มี header/footer)
 exports.mobileCalendarView = async (req, res) => {
   try {
-    const rows = await gitgumModel.findFromTodayToEnd();
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 90);
 
-    // ฟังก์ชันแปลงเวลาให้เป็น HH:mm
-    const toHHmm = (val) => {
-      if (!val) return null;
-      const s = String(val).trim();
-      if (/^\d{4}$/.test(s)) {
-        return `${s.slice(0,2)}:${s.slice(2,4)}`;
-      }
-      const m = s.match(/^(\d{1,2})[:.](\d{2})/);
-      if (m) {
-        const hh = m[1].padStart(2, '0');
-        const mm = m[2];
-        if (Number(hh) <= 23 && Number(mm) <= 59) return `${hh}:${mm}`;
-      }
-      return null;
-    };
-
-    // แปลง date ให้เป็นสตริง YYYY-MM-DD
-    const toYMD = (d) => {
-      if (!d) return '';
-      if (typeof d === 'string') return d.slice(0, 10);
-      if (d instanceof Date) {
-        try {
-          return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(d);
-        } catch (_) {
-          return d.toISOString().slice(0, 10);
-        }
-      }
-      return String(d).slice(0, 10);
-    };
+    const events = await mergedActivityService.getMergedCalendarEvents({
+      startDate: mergedActivityService.toYMD(today),
+      endDate: mergedActivityService.toYMD(endDate)
+    });
 
     // จัดกลุ่มข้อมูลตามเดือน
     const groupedByMonth = {};
-    rows.forEach(r => {
-      const dateStr = toYMD(r.git_date);
+    events.forEach((event) => {
+      const dateStr = mergedActivityService.toYMD(event.start);
       if (!dateStr) return;
       const monthKey = dateStr.slice(0, 7); // YYYY-MM
       if (!groupedByMonth[monthKey]) {
         groupedByMonth[monthKey] = [];
       }
+
+      const props = event.extendedProps || {};
       groupedByMonth[monthKey].push({
-        id: r.git_id,
+        id: event.id,
         date: dateStr,
-        time: toHHmm(r.git_time),
-        activity: r.git_act,
-        place: r.git_place,
-        respon: r.git_respon,
-        goto: r.git_goto,
-        group: r.git_group,
-        maihed: r.git_maihed
+        time: event.allDay ? null : String(event.start).slice(11, 16),
+        activity: event.title,
+        place: props.place || null,
+        respon: props.respon || null,
+        goto: props.goto || null,
+        group: props.group || null,
+        maihed: props.maihed || null,
+        sourceLabel: props.sourceLabel || 'กิจกรรม',
+        detailUrl: props.detailUrl || null
       });
     });
 

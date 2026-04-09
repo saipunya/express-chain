@@ -1,0 +1,59 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">คำขอใช้รถราชการ</h3>
+    <p class="text-muted mb-0">จัดการคำขอใช้รถที่เชื่อมจากคำขอไปราชการ</p>
+  </div>
+  <a href="/vehicle-request/create" class="btn btn-success">
+    <i class="bi bi-plus-circle me-1"></i> สร้างคำขอใช้รถ
+  </a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>เลขที่</th>
+          <th>คำขอไปราชการ</th>
+          <th>ผู้ขอ</th>
+          <th>ปลายทาง</th>
+          <th>ช่วงเวลา</th>
+          <th>สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">ยังไม่มีคำขอใช้รถราชการ</td>
+          </tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td><%= item.vehicle_request_no %></td>
+            <td>
+              <div class="fw-semibold"><%= item.travel_request_no %></div>
+              <small class="text-muted"><%= item.travel_subject %></small>
+            </td>
+            <td><%= item.requester_name %></td>
+            <td><%= item.destination_text %></td>
+            <td>
+              <div><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></div>
+              <small class="text-muted">ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+            </td>
+            <td><span class="badge bg-info"><%= item.status %></span></td>
+            <td class="text-end text-nowrap">
+              <a href="/vehicle-request/<%= item.id %>" class="btn btn-sm btn-outline-primary">ดู</a>
+              <a href="/vehicle-request/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <a href="/vehicle-request/<%= item.id %>/print" class="btn btn-sm btn-outline-secondary" target="_blank">พิมพ์</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

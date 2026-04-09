@@ -1,0 +1,107 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">พิจารณาคำขอใช้รถราชการ</h3>
+    <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+  </div>
+  <a href="/vehicle-approval/pending" class="btn btn-outline-secondary">กลับคิวอนุมัติ</a>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">อ้างอิงคำขอไปราชการ</dt><dd class="col-sm-8"><a href="/vehicle-approval/travel/<%= item.travel_request_id %>"><%= item.travel_request_no %></a></dd>
+          <dt class="col-sm-4">สถานะคำขอไปราชการ</dt><dd class="col-sm-8"><span class="badge bg-<%= item.travel_status === 'approved' ? 'success' : item.travel_status === 'submitted' ? 'warning text-dark' : 'secondary' %>"><%= item.travel_status %></span></dd>
+          <dt class="col-sm-4">ผู้ขอใช้รถ</dt><dd class="col-sm-8"><%= item.requester_name %> (<%= item.requester_position || '-' %>)</dd>
+          <dt class="col-sm-4">ปลายทาง</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
+          <dt class="col-sm-4">ภารกิจ</dt><dd class="col-sm-8"><%= item.mission_text %></dd>
+          <dt class="col-sm-4">ช่วงเวลา</dt><dd class="col-sm-8"><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></dd>
+          <dt class="col-sm-4">จำนวนผู้โดยสาร</dt><dd class="col-sm-8"><%= item.passenger_count %></dd>
+          <dt class="col-sm-4">สถานะคำขอใช้รถ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.status %></span></dd>
+          <dt class="col-sm-4">ความเห็นล่าสุด</dt><dd class="col-sm-8"><%= item.approval_comment || '-' %></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h5 class="mb-0">ข้อมูลมอบหมายปัจจุบัน</h5></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">ทะเบียนรถ</dt><dd class="col-sm-8"><%= item.plate_no_snapshot || '-' %></dd>
+          <dt class="col-sm-4">คนขับ</dt><dd class="col-sm-8"><%= item.driver_name_snapshot || '-' %></dd>
+          <dt class="col-sm-4">สถานะบันทึกเดินรถ</dt><dd class="col-sm-8"><%= item.log_status || '-' %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white"><h5 class="mb-0">ผลการพิจารณา</h5></div>
+      <div class="card-body">
+        <% if (item.status === 'submitted') { %>
+          <form action="/vehicle-approval/request/<%= item.id %>/approve" method="POST" class="mb-3">
+            <label class="form-label">ความเห็น</label>
+            <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
+            <button type="submit" class="btn btn-success w-100" <%= item.travel_status !== 'approved' ? 'disabled' : '' %>>อนุมัติคำขอใช้รถ</button>
+          </form>
+          <% if (item.travel_status !== 'approved') { %>
+            <p class="small text-danger mb-3">ต้องอนุมัติคำขอไปราชการก่อน</p>
+          <% } %>
+        <% } %>
+
+        <% if (item.status === 'submitted' || item.status === 'approved') { %>
+          <form action="/vehicle-approval/request/<%= item.id %>/reject" method="POST">
+            <label class="form-label">เหตุผลไม่อนุมัติ</label>
+            <textarea class="form-control mb-2" name="approval_comment" rows="3" required></textarea>
+            <button type="submit" class="btn btn-outline-danger w-100">ไม่อนุมัติ</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h5 class="mb-0">มอบหมายรถและคนขับ</h5></div>
+      <div class="card-body">
+        <% if (item.status === 'approved' || item.status === 'assigned') { %>
+          <form action="/vehicle-approval/request/<%= item.id %>/assign" method="POST" class="d-grid gap-3">
+            <div>
+              <label class="form-label">รถ</label>
+              <select class="form-select" name="vehicle_id" required>
+                <option value="">เลือกรถ</option>
+                <% vehicles.forEach((vehicle) => { %>
+                  <option value="<%= vehicle.id %>" <%= Number(item.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">คนขับ</label>
+              <select class="form-select" name="driver_id" required>
+                <option value="">เลือกคนขับ</option>
+                <% drivers.forEach((driver) => { %>
+                  <option value="<%= driver.id %>" <%= Number(item.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">หมายเหตุการมอบหมาย</label>
+              <textarea class="form-control" name="assignment_note" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100"><%= item.status === 'assigned' ? 'อัปเดตการมอบหมาย' : 'มอบหมายรถและคนขับ' %></button>
+          </form>
+        <% } else { %>
+          <p class="text-muted mb-0">ต้องอนุมัติคำขอใช้รถก่อนจึงจะมอบหมายได้</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

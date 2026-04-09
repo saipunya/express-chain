@@ -1,0 +1,84 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">คิวอนุมัติคำขอ</h3>
+    <p class="text-muted mb-0">ตรวจสอบคำขอไปราชการและคำขอใช้รถที่รอการพิจารณา</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">คำขอไปราชการรออนุมัติ</h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>เลขที่</th>
+              <th>เรื่อง</th>
+              <th>ผู้ขอ</th>
+              <th class="text-end">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!travelItems.length) { %>
+              <tr><td colspan="4" class="text-center py-4 text-muted">ไม่มีคำขอไปราชการรออนุมัติ</td></tr>
+            <% } %>
+            <% travelItems.forEach((item) => { %>
+              <tr>
+                <td><%= item.request_no %></td>
+                <td>
+                  <div class="fw-semibold"><%= item.subject %></div>
+                  <small class="text-muted"><%= item.destination_text %></small>
+                </td>
+                <td><%= item.requester_name %></td>
+                <td class="text-end"><a href="/vehicle-approval/travel/<%= item.id %>" class="btn btn-sm btn-outline-primary">พิจารณา</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">คำขอใช้รถรออนุมัติ/มอบหมาย</h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>เลขที่</th>
+              <th>ปลายทาง</th>
+              <th>ผู้ขอ</th>
+              <th class="text-end">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!vehicleItems.length) { %>
+              <tr><td colspan="4" class="text-center py-4 text-muted">ไม่มีคำขอใช้รถที่รออนุมัติหรือมอบหมาย</td></tr>
+            <% } %>
+            <% vehicleItems.forEach((item) => { %>
+              <tr>
+                <td>
+                  <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                  <small class="text-muted"><%= item.status %></small>
+                </td>
+                <td><%= item.destination_text %></td>
+                <td><%= item.requester_name %></td>
+                <td class="text-end"><a href="/vehicle-approval/request/<%= item.id %>" class="btn btn-sm btn-outline-primary">พิจารณา</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

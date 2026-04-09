@@ -1,0 +1,77 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">รายละเอียดงานขับรถ</h3>
+    <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+  </div>
+  <a href="/driver-trip/queue" class="btn btn-outline-secondary">กลับคิวงาน</a>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">ผู้ขอ</dt><dd class="col-sm-8"><%= item.requester_name %></dd>
+          <dt class="col-sm-4">ปลายทาง</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
+          <dt class="col-sm-4">ภารกิจ</dt><dd class="col-sm-8"><%= item.mission_text %></dd>
+          <dt class="col-sm-4">ช่วงเวลา</dt><dd class="col-sm-8"><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></dd>
+          <dt class="col-sm-4">รถ</dt><dd class="col-sm-8"><%= item.plate_no_snapshot || '-' %></dd>
+          <dt class="col-sm-4">คนขับ</dt><dd class="col-sm-8"><%= item.driver_name_snapshot || '-' %></dd>
+          <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.log_status || 'not_started' %></span></dd>
+          <dt class="col-sm-4">เวลาออกเช้า</dt><dd class="col-sm-8"><%= item.morning_departure_at ? new Date(item.morning_departure_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-' %></dd>
+          <dt class="col-sm-4">เลขไมล์ออก</dt><dd class="col-sm-8"><%= item.morning_odometer || '-' %></dd>
+          <dt class="col-sm-4">เวลากลับบ่าย</dt><dd class="col-sm-8"><%= item.afternoon_return_at ? new Date(item.afternoon_return_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-' %></dd>
+          <dt class="col-sm-4">เลขไมล์เข้า</dt><dd class="col-sm-8"><%= item.afternoon_odometer || '-' %></dd>
+          <dt class="col-sm-4">ระยะทางรวม</dt><dd class="col-sm-8"><%= item.distance_km || '-' %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white"><h5 class="mb-0">บันทึกช่วงเช้า</h5></div>
+      <div class="card-body">
+        <% if (!item.morning_departure_at) { %>
+          <form action="/driver-trip/<%= item.vehicle_request_id %>/morning" method="POST" class="d-grid gap-3">
+            <div>
+              <label class="form-label">เลขไมล์ขาออก</label>
+              <input type="number" step="0.1" min="0" class="form-control" name="morning_odometer" required>
+            </div>
+            <button type="submit" class="btn btn-success">บันทึกเวลาออกและเลขไมล์เช้า</button>
+          </form>
+        <% } else { %>
+          <p class="text-muted mb-0">บันทึกช่วงเช้าแล้ว</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h5 class="mb-0">บันทึกช่วงบ่าย</h5></div>
+      <div class="card-body">
+        <% if (!item.afternoon_return_at) { %>
+          <form action="/driver-trip/<%= item.vehicle_request_id %>/afternoon" method="POST" class="d-grid gap-3">
+            <div>
+              <label class="form-label">เลขไมล์ขาเข้า</label>
+              <input type="number" step="0.1" min="0" class="form-control" name="afternoon_odometer" required>
+            </div>
+            <button type="submit" class="btn btn-primary" <%= !item.morning_departure_at ? 'disabled' : '' %>>บันทึกเวลากลับและเลขไมล์บ่าย</button>
+          </form>
+          <% if (!item.morning_departure_at) { %>
+            <p class="small text-danger mt-2 mb-0">ต้องบันทึกช่วงเช้าก่อน</p>
+          <% } %>
+        <% } else { %>
+          <p class="text-muted mb-0">บันทึกช่วงบ่ายแล้ว</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

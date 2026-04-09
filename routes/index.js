@@ -16,6 +16,12 @@ module.exports = (app) => {
     if (file === 'homeRoutes.js') baseRoute = '/';
     if (file === 'activeCoopRoutes.js') baseRoute = '/activeCoop';
     if (file === 'vongBusinessRoutes.js') baseRoute = '/vong-business';
+    if (file === 'officialTravelRoutes.js') baseRoute = '/official-travel';
+    if (file === 'vehicleRequestRoutes.js') baseRoute = '/vehicle-request';
+    if (file === 'vehicleApprovalRoutes.js') baseRoute = '/vehicle-approval';
+    if (file === 'driverTripRoutes.js') baseRoute = '/driver-trip';
+    if (file === 'vehicleMasterRoutes.js') baseRoute = '/vehicle-master';
+    if (file === 'driverMasterRoutes.js') baseRoute = '/driver-master';
 
     app.use(baseRoute, route);
   });

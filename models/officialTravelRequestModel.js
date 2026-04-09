@@ -1,0 +1,348 @@
+const db = require('../config/db');
+
+function toBooleanFlag(value) {
+  return value ? 1 : 0;
+}
+
+function normalizeCompanions(companions = []) {
+  return companions
+    .map((companion, index) => ({
+      seq_no: index + 1,
+      companion_member_id: companion.companion_member_id || null,
+      companion_name: (companion.companion_name || '').trim(),
+      companion_position: (companion.companion_position || '').trim() || null
+    }))
+    .filter((companion) => companion.companion_name);
+}
+
+async function upsertCompanions(connection, travelRequestId, companions) {
+  await connection.query('DELETE FROM official_travel_companions WHERE travel_request_id = ?', [travelRequestId]);
+  if (!companions.length) {
+    return;
+  }
+
+  const values = companions.map((companion) => ([
+    travelRequestId,
+    companion.seq_no,
+    companion.companion_member_id,
+    companion.companion_name,
+    companion.companion_position
+  ]));
+
+  await connection.query(
+    `INSERT INTO official_travel_companions (
+      travel_request_id, seq_no, companion_member_id, companion_name, companion_position
+    ) VALUES ?`,
+    [values]
+  );
+}
+
+function mapPayload(payload) {
+  return {
+    request_no: payload.request_no,
+    request_date: payload.request_date,
+    subject: payload.subject,
+    learn_to: payload.learn_to || null,
+    requester_member_id: payload.requester_member_id || null,
+    requester_name: payload.requester_name,
+    requester_position: payload.requester_position || null,
+    requester_group: payload.requester_group || null,
+    purpose_text: payload.purpose_text,
+    destination_text: payload.destination_text,
+    start_at: payload.start_at,
+    end_at: payload.end_at,
+    duration_days: payload.duration_days || null,
+    duration_hours: payload.duration_hours || null,
+    transport_type: payload.transport_type,
+    transport_other_text: payload.transport_other_text || null,
+    out_of_province: toBooleanFlag(payload.out_of_province),
+    requires_vehicle_request: toBooleanFlag(payload.requires_vehicle_request),
+    status: payload.status || 'draft',
+    submitted_at: payload.submitted_at || null,
+    approved_at: payload.approved_at || null,
+    rejected_at: payload.rejected_at || null,
+    cancelled_at: payload.cancelled_at || null,
+    approver_member_id: payload.approver_member_id || null,
+    approver_name: payload.approver_name || null,
+    approver_position: payload.approver_position || null,
+    approval_comment: payload.approval_comment || null,
+    created_by: payload.created_by || null,
+    updated_by: payload.updated_by || null
+  };
+}
+
+async function listAll() {
+  const [rows] = await db.query(`
+    SELECT tr.*, COUNT(tc.id) AS companion_count, vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.status AS vehicle_request_status
+    FROM official_travel_requests tr
+    LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+    LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+    GROUP BY tr.id
+    ORDER BY tr.request_date DESC, tr.id DESC
+  `);
+  return rows;
+}
+
+async function getById(id) {
+  const [rows] = await db.query('SELECT * FROM official_travel_requests WHERE id = ?', [id]);
+  return rows[0] || null;
+}
+
+async function getCompanions(travelRequestId) {
+  const [rows] = await db.query(
+    'SELECT * FROM official_travel_companions WHERE travel_request_id = ? ORDER BY seq_no ASC',
+    [travelRequestId]
+  );
+  return rows;
+}
+
+async function getDetailById(id) {
+  const record = await getById(id);
+  if (!record) {
+    return null;
+  }
+  const [companions, vehicleRows] = await Promise.all([
+    getCompanions(id),
+    db.query('SELECT id, vehicle_request_no, status, trip_start_at, trip_end_at FROM vehicle_requests WHERE travel_request_id = ?', [id])
+  ]);
+
+  return {
+    ...record,
+    companions,
+    vehicleRequest: vehicleRows[0][0] || null
+  };
+}
+
+async function create(payload, companions = []) {
+  const connection = await db.getConnection();
+  const data = mapPayload(payload);
+  try {
+    await connection.beginTransaction();
+    const [result] = await connection.query(
+      `INSERT INTO official_travel_requests (
+        request_no, request_date, subject, learn_to, requester_member_id, requester_name,
+        requester_position, requester_group, purpose_text, destination_text, start_at, end_at,
+        duration_days, duration_hours, transport_type, transport_other_text, out_of_province,
+        requires_vehicle_request, status, submitted_at, approved_at, rejected_at, cancelled_at,
+        approver_member_id, approver_name, approver_position, approval_comment, created_by, updated_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.request_no, data.request_date, data.subject, data.learn_to, data.requester_member_id, data.requester_name,
+        data.requester_position, data.requester_group, data.purpose_text, data.destination_text, data.start_at, data.end_at,
+        data.duration_days, data.duration_hours, data.transport_type, data.transport_other_text, data.out_of_province,
+        data.requires_vehicle_request, data.status, data.submitted_at, data.approved_at, data.rejected_at, data.cancelled_at,
+        data.approver_member_id, data.approver_name, data.approver_position, data.approval_comment, data.created_by, data.updated_by
+      ]
+    );
+
+    await upsertCompanions(connection, result.insertId, normalizeCompanions(companions));
+    await connection.commit();
+    return result.insertId;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function update(id, payload, companions = []) {
+  const connection = await db.getConnection();
+  const data = mapPayload(payload);
+  try {
+    await connection.beginTransaction();
+    await connection.query(
+      `UPDATE official_travel_requests SET
+        request_date = ?,
+        subject = ?,
+        learn_to = ?,
+        requester_member_id = ?,
+        requester_name = ?,
+        requester_position = ?,
+        requester_group = ?,
+        purpose_text = ?,
+        destination_text = ?,
+        start_at = ?,
+        end_at = ?,
+        duration_days = ?,
+        duration_hours = ?,
+        transport_type = ?,
+        transport_other_text = ?,
+        out_of_province = ?,
+        requires_vehicle_request = ?,
+        status = ?,
+        submitted_at = ?,
+        approved_at = ?,
+        rejected_at = ?,
+        cancelled_at = ?,
+        approver_member_id = ?,
+        approver_name = ?,
+        approver_position = ?,
+        approval_comment = ?,
+        updated_by = ?
+      WHERE id = ?`,
+      [
+        data.request_date,
+        data.subject,
+        data.learn_to,
+        data.requester_member_id,
+        data.requester_name,
+        data.requester_position,
+        data.requester_group,
+        data.purpose_text,
+        data.destination_text,
+        data.start_at,
+        data.end_at,
+        data.duration_days,
+        data.duration_hours,
+        data.transport_type,
+        data.transport_other_text,
+        data.out_of_province,
+        data.requires_vehicle_request,
+        data.status,
+        data.submitted_at,
+        data.approved_at,
+        data.rejected_at,
+        data.cancelled_at,
+        data.approver_member_id,
+        data.approver_name,
+        data.approver_position,
+        data.approval_comment,
+        data.updated_by,
+        id
+      ]
+    );
+    await upsertCompanions(connection, id, normalizeCompanions(companions));
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function submit(id, user) {
+  await db.query(
+    `UPDATE official_travel_requests
+     SET status = 'submitted', submitted_at = NOW(), updated_by = ?
+     WHERE id = ? AND status = 'draft'`,
+    [user?.fullname || user?.username || 'system', id]
+  );
+}
+
+async function listEligibleForVehicleRequest() {
+  const [rows] = await db.query(`
+    SELECT tr.id, tr.request_no, tr.subject, tr.request_date, tr.requester_name, tr.destination_text, tr.start_at, tr.end_at
+    FROM official_travel_requests tr
+    LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+    WHERE vr.id IS NULL
+      AND tr.status IN ('draft', 'submitted', 'approved')
+      AND tr.requires_vehicle_request = 1
+    ORDER BY tr.request_date DESC, tr.id DESC
+  `);
+  return rows;
+}
+
+async function listApprovedInRange(startDate, endDate) {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        tr.*,
+        GROUP_CONCAT(tc.companion_name ORDER BY tc.seq_no SEPARATOR ', ') AS companion_names,
+        vr.id AS vehicle_request_id,
+        vr.vehicle_request_no,
+        vr.status AS vehicle_request_status,
+        vr.trip_start_at,
+        vr.trip_end_at,
+        va.plate_no_snapshot,
+        va.driver_name_snapshot
+      FROM official_travel_requests tr
+      LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+      LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+      LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
+      WHERE tr.status = 'approved'
+        AND tr.start_at <= ?
+        AND tr.end_at >= ?
+      GROUP BY tr.id
+      ORDER BY tr.start_at ASC, tr.id ASC
+    `, [endDate, startDate]);
+    return rows;
+  } catch (error) {
+    if (error && error.code === 'ER_NO_SUCH_TABLE') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function listPendingApproval() {
+  const [rows] = await db.query(`
+    SELECT tr.*, COUNT(tc.id) AS companion_count
+    FROM official_travel_requests tr
+    LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+    WHERE tr.status = 'submitted'
+    GROUP BY tr.id
+    ORDER BY tr.submitted_at ASC, tr.id ASC
+  `);
+  return rows;
+}
+
+async function approve(id, user, approvalComment = null) {
+  await db.query(
+    `UPDATE official_travel_requests
+     SET status = 'approved',
+         approved_at = NOW(),
+         approver_member_id = ?,
+         approver_name = ?,
+         approver_position = ?,
+         approval_comment = ?,
+         updated_by = ?
+     WHERE id = ? AND status = 'submitted'`,
+    [
+      user?.id || null,
+      user?.fullname || null,
+      user?.position || null,
+      approvalComment || null,
+      user?.fullname || user?.username || 'system',
+      id
+    ]
+  );
+}
+
+async function reject(id, user, approvalComment = null) {
+  await db.query(
+    `UPDATE official_travel_requests
+     SET status = 'rejected',
+         rejected_at = NOW(),
+         approver_member_id = ?,
+         approver_name = ?,
+         approver_position = ?,
+         approval_comment = ?,
+         updated_by = ?
+     WHERE id = ? AND status = 'submitted'`,
+    [
+      user?.id || null,
+      user?.fullname || null,
+      user?.position || null,
+      approvalComment || null,
+      user?.fullname || user?.username || 'system',
+      id
+    ]
+  );
+}
+
+module.exports = {
+  create,
+  getById,
+  getCompanions,
+  getDetailById,
+  listAll,
+  listPendingApproval,
+  listApprovedInRange,
+  listEligibleForVehicleRequest,
+  approve,
+  reject,
+  submit,
+  update
+};

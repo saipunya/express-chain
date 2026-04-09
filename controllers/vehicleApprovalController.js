@@ -1,0 +1,225 @@
+const officialTravelRequestModel = require('../models/officialTravelRequestModel');
+const vehicleRequestModel = require('../models/vehicleRequestModel');
+const vehicleMasterModel = require('../models/vehicleMasterModel');
+const driverMasterModel = require('../models/driverMasterModel');
+const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
+const workflowNotificationService = require('../services/workflowNotificationService');
+
+async function loadPendingCounts() {
+  const [travelItems, vehicleItems] = await Promise.all([
+    officialTravelRequestModel.listPendingApproval(),
+    vehicleRequestModel.listPendingApproval()
+  ]);
+
+  return {
+    travelItems,
+    vehicleItems
+  };
+}
+
+exports.pending = async (req, res) => {
+  try {
+    const { travelItems, vehicleItems } = await loadPendingCounts();
+    res.render('vehicle-approval/pending', {
+      title: 'คิวอนุมัติคำขอ',
+      travelItems,
+      vehicleItems
+    });
+  } catch (error) {
+    console.error('Error loading approval queue:', error);
+    res.status(500).send('ไม่สามารถโหลดคิวอนุมัติได้');
+  }
+};
+
+exports.travelDetail = async (req, res) => {
+  try {
+    const item = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+    res.render('vehicle-approval/travel-detail', {
+      title: 'พิจารณาคำขอไปราชการ',
+      item
+    });
+  } catch (error) {
+    console.error('Error loading travel approval detail:', error);
+    res.status(500).send('ไม่สามารถโหลดคำขอไปราชการได้');
+  }
+};
+
+exports.approveTravel = async (req, res) => {
+  try {
+    await officialTravelRequestModel.approve(req.params.id, req.session?.user, req.body.approval_comment);
+    const item = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (item) {
+      await workflowNotificationService.notifyTravelDecision(
+        item,
+        'อนุมัติ',
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+    res.redirect(`/vehicle-approval/travel/${req.params.id}`);
+  } catch (error) {
+    console.error('Error approving travel request:', error);
+    res.status(500).send('ไม่สามารถอนุมัติคำขอไปราชการได้');
+  }
+};
+
+exports.rejectTravel = async (req, res) => {
+  try {
+    await officialTravelRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
+    const item = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (item) {
+      await workflowNotificationService.notifyTravelDecision(
+        item,
+        'ไม่อนุมัติ',
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+    res.redirect(`/vehicle-approval/travel/${req.params.id}`);
+  } catch (error) {
+    console.error('Error rejecting travel request:', error);
+    res.status(500).send('ไม่สามารถไม่อนุมัติคำขอไปราชการได้');
+  }
+};
+
+exports.vehicleDetail = async (req, res) => {
+  try {
+    const [item, vehicles, drivers] = await Promise.all([
+      vehicleRequestModel.getDetailById(req.params.id),
+      vehicleMasterModel.listActive(),
+      driverMasterModel.listActive()
+    ]);
+
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+
+    res.render('vehicle-approval/request-detail', {
+      title: 'พิจารณาคำขอใช้รถราชการ',
+      item,
+      vehicles,
+      drivers,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error loading vehicle approval detail:', error);
+    res.status(500).send('ไม่สามารถโหลดคำขอใช้รถราชการได้');
+  }
+};
+
+exports.approveVehicle = async (req, res) => {
+  try {
+    const item = await vehicleRequestModel.getDetailById(req.params.id);
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+    if (item.travel_status !== 'approved') {
+      return res.status(400).send('ต้องอนุมัติคำขอไปราชการก่อนจึงจะอนุมัติคำขอใช้รถได้');
+    }
+
+    await vehicleRequestModel.approve(req.params.id, req.session?.user, req.body.approval_comment);
+    const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
+    if (updatedItem) {
+      await workflowNotificationService.notifyVehicleDecision(
+        updatedItem,
+        'อนุมัติ',
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+    res.redirect(`/vehicle-approval/request/${req.params.id}`);
+  } catch (error) {
+    console.error('Error approving vehicle request:', error);
+    res.status(500).send('ไม่สามารถอนุมัติคำขอใช้รถได้');
+  }
+};
+
+exports.rejectVehicle = async (req, res) => {
+  try {
+    await vehicleRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
+    const item = await vehicleRequestModel.getDetailById(req.params.id);
+    if (item) {
+      await workflowNotificationService.notifyVehicleDecision(
+        item,
+        'ไม่อนุมัติ',
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+    res.redirect(`/vehicle-approval/request/${req.params.id}`);
+  } catch (error) {
+    console.error('Error rejecting vehicle request:', error);
+    res.status(500).send('ไม่สามารถไม่อนุมัติคำขอใช้รถได้');
+  }
+};
+
+exports.assignVehicle = async (req, res) => {
+  try {
+    const [item, vehicles, drivers] = await Promise.all([
+      vehicleRequestModel.getDetailById(req.params.id),
+      vehicleMasterModel.listActive(),
+      driverMasterModel.listActive()
+    ]);
+
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+
+    if (item.status !== 'approved' && item.status !== 'assigned') {
+      return res.status(400).send('ต้องอนุมัติคำขอใช้รถก่อนจึงจะมอบหมายรถและคนขับได้');
+    }
+
+    const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
+    const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
+
+    if (!selectedVehicle || !selectedDriver) {
+      return res.status(400).render('vehicle-approval/request-detail', {
+        title: 'พิจารณาคำขอใช้รถราชการ',
+        item,
+        vehicles,
+        drivers,
+        error: 'กรุณาเลือกรถและคนขับให้ครบถ้วน'
+      });
+    }
+
+    const overlapping = await vehicleAssignmentModel.findOverlappingAssignment(
+      selectedVehicle.id,
+      item.trip_start_at,
+      item.trip_end_at,
+      item.id
+    );
+
+    if (overlapping) {
+      return res.status(400).render('vehicle-approval/request-detail', {
+        title: 'พิจารณาคำขอใช้รถราชการ',
+        item,
+        vehicles,
+        drivers,
+        error: `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`
+      });
+    }
+
+    await vehicleAssignmentModel.upsertAssignment({
+      vehicle_request_id: item.id,
+      vehicle_id: selectedVehicle.id,
+      driver_id: selectedDriver.id,
+      assigned_by_member_id: req.session?.user?.id || null,
+      assignment_note: req.body.assignment_note || null,
+      plate_no_snapshot: selectedVehicle.plate_no,
+      driver_name_snapshot: selectedDriver.driver_name,
+      updated_by: req.session?.user?.fullname || req.session?.user?.username || 'system'
+    });
+
+    const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
+    if (updatedItem) {
+      await workflowNotificationService.notifyVehicleAssigned(
+        updatedItem,
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+
+    res.redirect(`/vehicle-approval/request/${req.params.id}`);
+  } catch (error) {
+    console.error('Error assigning vehicle request:', error);
+    res.status(500).send('ไม่สามารถมอบหมายรถและคนขับได้');
+  }
+};

@@ -31,8 +31,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <div class="mb-2"><i class="bi bi-bookmark-star me-2"></i><span id="eventSource"></span></div>
+        <div class="mb-2"><i class="bi bi-upc-scan me-2"></i><span id="eventRequestNumber"></span></div>
         <div class="mb-2"><i class="bi bi-calendar-event me-2"></i><span id="eventDate"></span></div>
         <div class="mb-2"><i class="bi bi-clock me-2"></i><span id="eventTime"></span></div>
+        <div class="mb-2"><i class="bi bi-truck me-2"></i><span id="eventVehicle"></span></div>
+        <div class="mb-2"><i class="bi bi-person-badge me-2"></i><span id="eventDriver"></span></div>
+        <div class="mb-2"><i class="bi bi-signpost-2 me-2"></i><span id="eventTransportType"></span></div>
+        <div class="mb-2"><i class="bi bi-patch-check me-2"></i><span id="eventApprovalStatus"></span></div>
         <div class="mb-2"><i class="bi bi-geo-alt me-2"></i><span id="eventPlace"></span></div>
         <div class="mb-2"><i class="bi bi-people me-2"></i><span id="eventRespon"></span></div>
         <div class="mb-2"><i class="bi bi-arrow-right-circle me-2"></i><span id="eventGoto"></span></div>
@@ -80,16 +86,22 @@
         const start = e.start ? new Date(e.start) : null;
         const thDate = start ? start.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
         const thTime = start ? start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
+        document.getElementById('eventSource').textContent = p.sourceLabel || 'กิจกรรม';
+        document.getElementById('eventRequestNumber').textContent = p.requestNumber || p.vehicleRequestNo || '-';
         document.getElementById('eventDate').textContent = thDate;
         document.getElementById('eventTime').textContent = thTime;
+        document.getElementById('eventVehicle').textContent = p.vehiclePlate || '-';
+        document.getElementById('eventDriver').textContent = p.driverName || '-';
+        document.getElementById('eventTransportType').textContent = p.transportType || '-';
+        document.getElementById('eventApprovalStatus').textContent = p.approvalStatus || '-';
         document.getElementById('eventPlace').textContent = p.place || '-';
         document.getElementById('eventRespon').textContent = p.respon || '-';
         document.getElementById('eventGoto').textContent = p.goto || '-';
         document.getElementById('eventGroup').textContent = p.group || '-';
         document.getElementById('eventMaihed').textContent = p.maihed || '-';
         const viewBtn = document.getElementById('eventViewBtn');
-        if (e.id) {
-          viewBtn.href = '/gitgum/view/' + e.id;
+        if (p.detailUrl) {
+          viewBtn.href = p.detailUrl;
           viewBtn.classList.remove('d-none');
         } else {
           viewBtn.href = '#';

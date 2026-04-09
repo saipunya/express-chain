@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">รายละเอียดคำขอไปราชการ</h3>
+    <p class="text-muted mb-0"><%= item.request_no %></p>
+  </div>
+  <div class="d-flex gap-2">
+    <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+      <a href="/vehicle-approval/travel/<%= item.id %>" class="btn btn-outline-primary">พิจารณา</a>
+    <% } %>
+    <a href="/official-travel/<%= item.id %>/print" target="_blank" class="btn btn-outline-secondary">พิมพ์</a>
+    <a href="/official-travel/<%= item.id %>/edit" class="btn btn-warning text-white">แก้ไข</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">เรื่อง</dt><dd class="col-sm-8"><%= item.subject %></dd>
+          <dt class="col-sm-4">ผู้ขอ</dt><dd class="col-sm-8"><%= item.requester_name %> <span class="text-muted">(<%= item.requester_position || '-' %>)</span></dd>
+          <dt class="col-sm-4">กลุ่มงาน</dt><dd class="col-sm-8"><%= item.requester_group || '-' %></dd>
+          <dt class="col-sm-4">สถานที่</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
+          <dt class="col-sm-4">ช่วงเวลา</dt><dd class="col-sm-8"><%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></dd>
+          <dt class="col-sm-4">วัตถุประสงค์</dt><dd class="col-sm-8"><%= item.purpose_text %></dd>
+          <dt class="col-sm-4">วิธีเดินทาง</dt><dd class="col-sm-8"><%= item.transport_type %></dd>
+          <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.status %></span></dd>
+          <dt class="col-sm-4">ผู้พิจารณา</dt><dd class="col-sm-8"><%= item.approver_name || '-' %></dd>
+          <dt class="col-sm-4">ความเห็น</dt><dd class="col-sm-8"><%= item.approval_comment || '-' %></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+      <div class="card-header bg-white"><h5 class="mb-0">ผู้ร่วมเดินทาง</h5></div>
+      <div class="card-body">
+        <% if (!item.companions.length) { %>
+          <p class="text-muted mb-0">ไม่มีผู้ร่วมเดินทาง</p>
+        <% } else { %>
+          <ol class="mb-0">
+            <% item.companions.forEach((companion) => { %>
+              <li><%= companion.companion_name %> <span class="text-muted">(<%= companion.companion_position || '-' %>)</span></li>
+            <% }) %>
+          </ol>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h5 class="mb-0">การดำเนินการ</h5></div>
+      <div class="card-body d-grid gap-2">
+        <% if (item.status === 'draft') { %>
+          <form action="/official-travel/<%= item.id %>/submit" method="POST">
+            <button type="submit" class="btn btn-success w-100">ส่งคำขอ</button>
+          </form>
+        <% } %>
+
+        <% if (Number(item.requires_vehicle_request) === 1 && !item.vehicleRequest) { %>
+          <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-outline-primary">สร้างคำขอใช้รถ</a>
+        <% } %>
+
+        <% if (item.vehicleRequest) { %>
+          <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">ดูคำขอใช้รถที่เชื่อมไว้</a>
+        <% } %>
+
+        <a href="/official-travel" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,17 +1,58 @@
 <%- include('../partials/header', { title: 'รายการบัญชี' }) %>
 <div class="container py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-    <h4 class="mb-0">📒 รายการบัญชีรายรับรายจ่าย กลุ่มจัดตั้งและส่งเสริมสหกรณ์</h4>
-    <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
-      <a href="/account/create" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> เพิ่มรายการ
-      </a>
-    <% } %>
+  <% const activeFilters = (filters || {}); %>
+  <div class="mobile-page-header">
+    <div>
+      <h1 class="mobile-page-header__title">📒 รายการบัญชีรายรับรายจ่าย</h1>
+      <p class="mobile-page-header__subtitle">สรุปภาพรวมรายรับ รายจ่าย และยอดคงเหลือ พร้อมดูรายการย้อนหลังแบบอ่านง่ายบนมือถือ</p>
+    </div>
+    <div class="mobile-page-header__meta">
+      <span class="mobile-chip"><i class="bi bi-receipt"></i><%= (pagination && pagination.total) ? pagination.total : accounts.length %> รายการ</span>
+      <% if (user && (user.mClass === 'kts' || user.mClass === 'admin')) { %>
+        <a href="/account/create" class="btn btn-success">
+          <i class="bi bi-plus-circle"></i> เพิ่มรายการ
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mobile-list-card mb-4">
+    <div class="card-body">
+      <form method="GET" action="/account/list" class="row g-2 align-items-end">
+        <input type="hidden" name="page" value="1">
+        <div class="col-12 col-md-6">
+          <label class="form-label">ค้นหารายการ</label>
+          <input type="text" class="form-control" name="search" placeholder="ค้นหาคำอธิบายหรือวันที่" value="<%= activeFilters.search || '' %>">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">ประเภท</label>
+          <select class="form-select" name="type">
+            <option value="" <%= !activeFilters.type ? 'selected' : '' %>>ทั้งหมด</option>
+            <option value="income" <%= activeFilters.type === 'income' ? 'selected' : '' %>>รายได้</option>
+            <option value="expense" <%= activeFilters.type === 'expense' ? 'selected' : '' %>>ค่าใช้จ่าย</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">ต่อหน้า</label>
+          <select class="form-select" name="pageSize">
+            <% [10, 15, 30, 50].forEach(size => { %>
+              <option value="<%= size %>" <%= pagination && pagination.pageSize === size ? 'selected' : '' %>><%= size %>/หน้า</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button class="btn btn-primary flex-fill" type="submit"><i class="bi bi-search"></i> ค้นหา</button>
+          <% if (activeFilters.search || activeFilters.type) { %>
+            <a href="/account/list" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+          <% } %>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="row g-3 mb-4">
     <div class="col-md-4">
-      <div class="card text-bg-success shadow-sm">
+      <div class="card text-bg-success shadow-sm mobile-summary-card">
         <div class="card-body">
           <h6 class="card-title mb-1">รวมรายได้</h6>
           <p class="card-text fs-4 mb-0"><%= totalIncome.toLocaleString() %> บาท</p>
@@ -19,7 +60,7 @@
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card text-bg-danger shadow-sm">
+      <div class="card text-bg-danger shadow-sm mobile-summary-card">
         <div class="card-body">
           <h6 class="card-title mb-1">รวมค่าใช้จ่าย</h6>
           <p class="card-text fs-4 mb-0"><%= totalExpense.toLocaleString() %> บาท</p>
@@ -27,7 +68,7 @@
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card text-bg-primary shadow-sm">
+      <div class="card text-bg-primary shadow-sm mobile-summary-card">
         <div class="card-body">
           <h6 class="card-title mb-1">ยอดคงเหลือ</h6>
           <p class="card-text fs-4 mb-1"><%= balance.toLocaleString() %> บาท</p>
@@ -38,7 +79,7 @@
     </div>
   </div>
 
-  <div class="card shadow-sm">
+  <div class="card shadow-sm mobile-list-card table-mobile-cards">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle mb-0">
@@ -59,8 +100,8 @@
               const runningTxt = (acc.running ?? 0).toLocaleString();
             %>
               <tr>
-                <td><%= thaiDateItem %></td>
-                <td>
+                <td class="mobile-primary" data-label="วันที่"><%= thaiDateItem %></td>
+                <td data-label="รายการ">
                   <%= acc.description %>
                   <% if (acc.income != null) { %>
                     <span class="badge bg-success ms-2">รายได้</span>
@@ -68,9 +109,9 @@
                     <span class="badge bg-danger ms-2">ค่าใช้จ่าย</span>
                   <% } %>
                 </td>
-                <td class="text-end text-success"><%= incomeTxt %></td>
-                <td class="text-end text-danger"><%= expenseTxt %></td>
-                <td class="text-end fw-semibold"><%= runningTxt %></td>
+                <td class="text-end text-success" data-label="รายได้"><%= incomeTxt %></td>
+                <td class="text-end text-danger" data-label="ค่าใช้จ่าย"><%= expenseTxt %></td>
+                <td class="text-end fw-semibold" data-label="คงเหลือ"><%= runningTxt %></td>
               </tr>
             <% }) %>
           </tbody>
@@ -78,6 +119,35 @@
       </div>
     </div>
   </div>
+
+  <% if (pagination && pagination.totalPages > 1) { %>
+    <% const baseQuery = (extra = {}) => {
+         const params = new URLSearchParams();
+         if (activeFilters.search) params.set('search', activeFilters.search);
+         if (activeFilters.type) params.set('type', activeFilters.type);
+         if (pagination.pageSize) params.set('pageSize', pagination.pageSize);
+         Object.keys(extra).forEach(key => params.set(key, extra[key]));
+         return '/account/list?' + params.toString();
+       }; %>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
+      <div class="small text-muted">หน้า <%= pagination.page %> / <%= pagination.totalPages %> แสดง <%= accounts.length %> จาก <%= pagination.total %> รายการ</div>
+      <nav aria-label="Account pagination">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.page === 1 ? '#' : baseQuery({ page: 1 }) %>">&laquo;</a></li>
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.hasPrev ? baseQuery({ page: pagination.page - 1 }) : '#' %>">&lsaquo;</a></li>
+          <% const windowSize = 5;
+             let start = Math.max(1, pagination.page - Math.floor(windowSize / 2));
+             let end = Math.min(pagination.totalPages, start + windowSize - 1);
+             if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+             for (let pageNumber = start; pageNumber <= end; pageNumber++) { %>
+            <li class="page-item <%= pageNumber === pagination.page ? 'active' : '' %>"><a class="page-link" href="<%= baseQuery({ page: pageNumber }) %>"><%= pageNumber %></a></li>
+          <% } %>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.hasNext ? baseQuery({ page: pagination.page + 1 }) : '#' %>">&rsaquo;</a></li>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.page === pagination.totalPages ? '#' : baseQuery({ page: pagination.totalPages }) %>">&raquo;</a></li>
+        </ul>
+      </nav>
+    </div>
+  <% } %>
 
   <div class="text-center mt-3">
     <a href="/" class="btn btn-outline-danger">

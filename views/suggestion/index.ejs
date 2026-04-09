@@ -1,16 +1,24 @@
 <%- include('../partials/header', { title: 'Suggestions' }) %>
 <div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>ข้อเสนอแนะ/เอกสาร</h3>
-    <form class="d-flex" method="GET" action="">
-      <input type="text" class="form-control me-2" name="search" placeholder="ระบุคำค้นหา" value="<%= search || '' %>">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+    <div>
+      <h3 class="mb-1">ข้อเสนอแนะ/เอกสาร</h3>
+      <div class="small text-muted">ทั้งหมด <%= (pagination && pagination.total) ? pagination.total : suggestions.length %> รายการ</div>
+    </div>
+    <form class="d-flex flex-wrap gap-2" method="GET" action="/suggestion">
+      <input type="hidden" name="page" value="1">
+      <input type="text" class="form-control" style="min-width:240px;" name="search" placeholder="ระบุคำค้นหา" value="<%= search || '' %>">
+      <select name="pageSize" class="form-select" style="max-width:140px;">
+        <% [10, 20, 30, 50].forEach(size => { %>
+          <option value="<%= size %>" <%= pagination && pagination.pageSize === size ? 'selected' : '' %>><%= size %>/หน้า</option>
+        <% }) %>
+      </select>
       <button class="btn btn-outline-primary" type="submit">ค้นหา</button>
-      <a href="/suggestion" class="btn btn-outline-secondary ms-2">ล้าง</a>
+      <a href="/suggestion" class="btn btn-outline-secondary">ล้าง</a>
+      <% if(user && (user.mClass=='admin' || user.mClass=='kjs')){ %>
+        <a href="/suggestion/create" class="btn btn-primary">เพิ่มข้อมูล</a>
+      <% } %>
     </form>
-    <a href="/suggestion/create" class="btn btn-primary">เพิ่มข้อมูล</a>
-    <% if(user && (user.mClass=='admin' || user.mClass=='kjs')){ %>
-   
-    <% } %>
   </div>
   <table class="table table-bordered table-striped">
     <thead>
@@ -27,7 +35,7 @@
     <tbody>
       <% suggestions.forEach((s , index) => { %>
         <tr>
-          <td><%= (index +1) + ". "  %><%= s.fi_subject %></td>
+          <td><%= (((pagination ? (pagination.page - 1) * pagination.pageSize : 0) + index + 1)) + ". "  %><%= s.fi_subject %></td>
   
       
           <td>
@@ -54,5 +62,33 @@
       <% }) %>
     </tbody>
   </table>
+
+  <% if (pagination && pagination.totalPages > 1) { %>
+    <% const baseQuery = (extra = {}) => {
+         const params = new URLSearchParams();
+         if (search) params.set('search', search);
+         if (pagination.pageSize) params.set('pageSize', pagination.pageSize);
+         Object.keys(extra).forEach(key => params.set(key, extra[key]));
+         return '/suggestion?' + params.toString();
+       }; %>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3">
+      <div class="small text-muted">หน้า <%= pagination.page %> / <%= pagination.totalPages %> แสดง <%= suggestions.length %> จาก <%= pagination.total %> รายการ</div>
+      <nav aria-label="Suggestion pagination">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.page === 1 ? '#' : baseQuery({ page: 1 }) %>">&laquo;</a></li>
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.hasPrev ? baseQuery({ page: pagination.page - 1 }) : '#' %>">&lsaquo;</a></li>
+          <% const windowSize = 5;
+             let start = Math.max(1, pagination.page - Math.floor(windowSize / 2));
+             let end = Math.min(pagination.totalPages, start + windowSize - 1);
+             if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+             for (let pageNumber = start; pageNumber <= end; pageNumber++) { %>
+            <li class="page-item <%= pageNumber === pagination.page ? 'active' : '' %>"><a class="page-link" href="<%= baseQuery({ page: pageNumber }) %>"><%= pageNumber %></a></li>
+          <% } %>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.hasNext ? baseQuery({ page: pagination.page + 1 }) : '#' %>">&rsaquo;</a></li>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>"><a class="page-link" href="<%= pagination.page === pagination.totalPages ? '#' : baseQuery({ page: pagination.totalPages }) %>">&raquo;</a></li>
+        </ul>
+      </nav>
+    </div>
+  <% } %>
 </div>
 <%- include('../partials/footer') %>

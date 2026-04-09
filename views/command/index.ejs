@@ -193,10 +193,8 @@
           action="/command"
           class="row g-2 align-items-end"
           id="commandSearchForm"
-          data-search-endpoint="/command"
-          data-can-manage="<%= hasActions ? '1' : '0' %>"
-          data-is-logged-in="<%= user ? '1' : '0' %>"
         >
+          <input type="hidden" name="page" value="1">
           <div class="col-12 col-md">
             <div class="position-relative">
               <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
@@ -210,14 +208,21 @@
                 autocomplete="off"
               >
             </div>
-            <div class="search-helper">พิมพ์คำค้นหาเพื่อกรองรายการทันทีโดยไม่ต้องกดปุ่มค้นหา</div>
+            <div class="search-helper">ค้นหาตามเลขที่หรือเรื่อง และใช้การแบ่งหน้าเพื่อเปิดดูรายการได้ต่อเนื่อง</div>
+          </div>
+
+          <div class="col-12 col-md-auto">
+            <select name="pageSize" class="form-select">
+              <% [10, 20, 30, 50].forEach(size => { %>
+                <option value="<%= size %>" <%= pagination && pagination.pageSize === size ? 'selected' : '' %>><%= size %>/หน้า</option>
+              <% }) %>
+            </select>
           </div>
 
           <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">ค้นหา</button>
             <% if(search) { %>
-              <button type="button" class="btn btn-outline-secondary" id="commandSearchClear" title="ล้างค่าค้นหา">
-                <i class="bi bi-x-lg"></i>
-              </button>
+              <a href="/command" class="btn btn-outline-secondary" id="commandSearchClear" title="ล้างค่าค้นหา"><i class="bi bi-x-lg"></i></a>
             <% } %>
           </div>
 
@@ -234,8 +239,11 @@
   <!-- Stats Bar -->
   <div class="stats-bar">
     <i class="bi bi-folder2-open"></i>
-    <strong class="stats-number" id="commandResultsCount"><%= (commands && commands.length) ? commands.length : 0 %></strong>
+    <strong class="stats-number" id="commandResultsCount"><%= (pagination && pagination.total) ? pagination.total : ((commands && commands.length) ? commands.length : 0) %></strong>
     <span class="stats-text" id="commandResultsLabel"><%= search ? 'ผลการค้นหา' : 'รายการทั้งหมด' %></span>
+    <% if (pagination) { %>
+      <span class="small text-muted ms-auto">หน้า <%= pagination.page %> / <%= pagination.totalPages %></span>
+    <% } %>
   </div>
 
   <!-- Command List -->
@@ -304,183 +312,44 @@
       </div>
     <% } %>
   </div>
+
+  <% if (pagination && pagination.totalPages > 1) { %>
+    <% const baseQuery = (extra = {}) => {
+         const params = new URLSearchParams();
+         if (search) params.set('search', search);
+         if (pagination.pageSize) params.set('pageSize', pagination.pageSize);
+         Object.keys(extra).forEach(key => params.set(key, extra[key]));
+         return '?' + params.toString();
+       }; %>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
+      <div class="small text-muted">แสดง <%= commands.length %> รายการจากทั้งหมด <%= pagination.total %> รายการ</div>
+      <nav aria-label="Command pagination">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.page === 1 ? '#' : baseQuery({ page: 1 }) %>">&laquo;</a>
+          </li>
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.hasPrev ? baseQuery({ page: pagination.page - 1 }) : '#' %>">&lsaquo;</a>
+          </li>
+          <% const windowSize = 5;
+             let start = Math.max(1, pagination.page - Math.floor(windowSize / 2));
+             let end = Math.min(pagination.totalPages, start + windowSize - 1);
+             if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+             for (let pageNumber = start; pageNumber <= end; pageNumber++) { %>
+            <li class="page-item <%= pageNumber === pagination.page ? 'active' : '' %>">
+              <a class="page-link" href="<%= baseQuery({ page: pageNumber }) %>"><%= pageNumber %></a>
+            </li>
+          <% } %>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.hasNext ? baseQuery({ page: pagination.page + 1 }) : '#' %>">&rsaquo;</a>
+          </li>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.page === pagination.totalPages ? '#' : baseQuery({ page: pagination.totalPages }) %>">&raquo;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  <% } %>
 </div>
-
-<script>
-  (function () {
-    const form = document.getElementById('commandSearchForm');
-    const input = document.getElementById('commandSearchInput');
-    const list = document.getElementById('commandList');
-    const count = document.getElementById('commandResultsCount');
-    const label = document.getElementById('commandResultsLabel');
-    const clearBtn = document.getElementById('commandSearchClear');
-    if (!form || !input || !list || !count || !label) return;
-
-    const endpoint = form.getAttribute('data-search-endpoint') || form.action || '/command';
-    const canManage = form.getAttribute('data-can-manage') === '1';
-    const isLoggedIn = form.getAttribute('data-is-logged-in') === '1';
-    let t = null;
-    let controller = null;
-
-    function escapeHtml(value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function formatThaiDate(dateValue) {
-      const date = new Date(dateValue);
-      if (Number.isNaN(date.getTime())) return '';
-      return new Intl.DateTimeFormat('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).format(date);
-    }
-
-    function renderEmptyState() {
-      return [
-        '<div class="empty-state">',
-        '  <i class="bi bi-inbox"></i>',
-        '  <h5>ไม่พบข้อมูลคำสั่ง</h5>',
-        '  <p class="text-muted">ลองเปลี่ยนคำค้นหา หรือเพิ่มรายการใหม่</p>',
-        '</div>'
-      ].join('');
-    }
-
-    function renderActionButtons(item) {
-      if (isLoggedIn) {
-        return '<a href="/command/download/' + encodeURIComponent(item.command_id) + '" class="btn btn-sm btn-action" target="_blank">' +
-          '<i class="bi bi-file-earmark-pdf-fill me-2"></i>เปิดอ่าน' +
-          '</a>';
-      }
-
-      return '<a href="/auth/login" class="btn btn-sm btn-action">' +
-        '<i class="bi bi-lock-fill me-2"></i>เข้าสู่ระบบ' +
-        '</a>';
-    }
-
-    function renderListItem(item) {
-      const thaiDate = formatThaiDate(item.com_date);
-      const manageMenu = canManage ? [
-        '  <button class="btn btn-sm btn-light text-muted p-2" type="button" data-bs-toggle="dropdown" aria-label="เมนูการกระทำ">',
-        '    <i class="bi bi-three-dots-vertical"></i>',
-        '  </button>',
-        '  <ul class="dropdown-menu dropdown-menu-end">',
-        '    <li><a class="dropdown-item" href="/command/edit/' + encodeURIComponent(item.command_id) + '"><i class="bi bi-pencil me-2"></i>แก้ไข</a></li>',
-        '    <li><hr class="dropdown-divider"></li>',
-        '    <li>',
-        '      <form action="/command/delete/' + encodeURIComponent(item.command_id) + '" method="POST" onsubmit="return confirm(\'ยืนยันการลบ?\')">',
-        '        <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>ลบ</button>',
-        '      </form>',
-        '    </li>',
-        '  </ul>',
-      ].join('') : '';
-
-      return [
-        '<div class="list-item">',
-        '  <div class="list-item-top">',
-        '    <div class="flex-grow-1">',
-        '      <span class="command-no-badge"><i class="bi bi-hash"></i>' + escapeHtml(item.com_no) + '</span>',
-        '      <h5 class="command-title">' + escapeHtml(item.com_story) + '</h5>',
-        thaiDate ? '      <div class="command-date"><i class="bi bi-calendar3"></i>' + escapeHtml(thaiDate) + '</div>' : '',
-        '      <div class="command-meta">',
-        '        <div class="meta-item">',
-        '          <i class="bi bi-file-earmark-text"></i>',
-        '          <span>คำสั่งสำนักงาน</span>',
-        '        </div>',
-        '      </div>',
-        '    </div>',
-        canManage ? '    <div class="dropdown">' + manageMenu + '</div>' : '',
-        '  </div>',
-        '  <div class="action-buttons">',
-        '    ' + renderActionButtons(item),
-        '  </div>',
-        '</div>'
-      ].join('');
-    }
-
-    function updateUi(items) {
-      const total = Array.isArray(items) ? items.length : 0;
-      count.textContent = String(total);
-      label.textContent = input.value.trim() ? 'ผลการค้นหา' : 'รายการทั้งหมด';
-      list.innerHTML = total ? items.map(renderListItem).join('') : renderEmptyState();
-      if (clearBtn) {
-        clearBtn.style.display = input.value.trim() ? 'inline-flex' : 'none';
-      }
-    }
-
-    function runSearch() {
-      const query = input.value.trim();
-
-      if (controller) controller.abort();
-      controller = new AbortController();
-
-      const url = new URL(endpoint, window.location.origin);
-      url.searchParams.set('ajax', '1');
-      if (query) {
-        url.searchParams.set('search', query);
-      }
-
-      label.classList.add('is-updating');
-
-      fetch(url.toString(), {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(function (response) {
-          if (!response.ok) throw new Error('Search failed');
-          return response.json();
-        })
-        .then(function (data) {
-          updateUi(Array.isArray(data.items) ? data.items : []);
-        })
-        .catch(function (err) {
-          if (err && err.name === 'AbortError') return;
-        })
-        .finally(function () {
-          label.classList.remove('is-updating');
-        });
-    }
-
-    input.addEventListener('input', function () {
-      clearTimeout(t);
-      t = setTimeout(runSearch, 300);
-    });
-
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        clearTimeout(t);
-        runSearch();
-      }
-
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        input.value = '';
-        clearTimeout(t);
-        runSearch();
-      }
-    });
-
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () {
-        input.value = '';
-        clearTimeout(t);
-        runSearch();
-        input.focus();
-      });
-    }
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      clearTimeout(t);
-      runSearch();
-    });
-  })();
-</script>
 
 <%- include('../partials/footer') %>

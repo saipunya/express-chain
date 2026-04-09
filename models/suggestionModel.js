@@ -12,6 +12,28 @@ const Suggestion = {
     return rows;
   },
 
+  getList: async ({ search = '', page = 1, pageSize = 10 } = {}) => {
+    let where = '';
+    const params = [];
+    if (search) {
+      where = 'WHERE fi_subject LIKE ? OR fi_keyword LIKE ? OR fi_type LIKE ?';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    const [[{ total = 0 } = {}]] = await db.query(
+      `SELECT COUNT(*) AS total FROM tbl_filename ${where}`,
+      params
+    );
+
+    const offset = Math.max(0, (Number(page) - 1) * Number(pageSize));
+    const [items] = await db.query(
+      `SELECT * FROM tbl_filename ${where} ORDER BY fi_savedate DESC, fi_id DESC LIMIT ? OFFSET ?`,
+      [...params, Number(pageSize), offset]
+    );
+
+    return { items, total: Number(total || 0) };
+  },
+
   getById: async (id) => {
     const [rows] = await db.query('SELECT * FROM tbl_filename WHERE fi_id = ?', [id]);
     return rows[0];

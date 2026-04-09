@@ -1,11 +1,31 @@
 // controllers/accountController.js
 const Account = require('../models/accountModel');
 
+function buildPagination(page, pageSize, total) {
+    const safePageSize = Math.max(1, Number(pageSize) || 15);
+    const safeTotal = Math.max(0, Number(total) || 0);
+    const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
+    const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+
+    return {
+        page: safePage,
+        pageSize: safePageSize,
+        total: safeTotal,
+        totalPages,
+        hasPrev: safePage > 1,
+        hasNext: safePage < totalPages
+    };
+}
+
 exports.index = async (req, res) => {
     try {
-        const results = await Account.getAll();
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+        const type = typeof req.query.type === 'string' ? req.query.type.trim() : '';
+        const requestedPageSize = Number(req.query.pageSize) || 15;
+        const pageSize = [10, 15, 30, 50].includes(requestedPageSize) ? requestedPageSize : 15;
+        const requestedPage = Number(req.query.page) || 1;
+        const results = await Account.getAll({ search, type });
 
-        // summary (unchanged)
         const totalIncome = results
             .filter(r => r.type === 'income')
             .reduce((sum, r) => sum + Number(r.amount), 0);
@@ -37,12 +57,18 @@ exports.index = async (req, res) => {
                 };
             });
 
+        const pagination = buildPagination(requestedPage, pageSize, processed.length);
+        const offset = (pagination.page - 1) * pagination.pageSize;
+        const pagedAccounts = processed.slice(offset, offset + pagination.pageSize);
+
         res.render('account/list', {
-            accounts: processed,          // use processed list
+            accounts: pagedAccounts,
             totalIncome,
             totalExpense,
             balance,
-            latestDate: latestDate ? latestDate.toISOString().split('T')[0] : ''
+            latestDate: latestDate ? latestDate.toISOString().split('T')[0] : '',
+            filters: { search, type },
+            pagination
         });
     } catch (err) {
         res.status(500).send(err.message);

@@ -6175,6 +6175,47 @@ const _memberSummaryTotals = {
     const fallbackEl = document.getElementById('activitiesCalendarFallback');
     if (!calEl) return;
 
+    function toggleModalFallback(modalEl, shouldShow) {
+      if (!modalEl) return;
+      modalEl.style.display = shouldShow ? 'block' : 'none';
+      modalEl.classList.toggle('show', shouldShow);
+      modalEl.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+      document.body.classList.toggle('modal-open', shouldShow);
+
+      let backdrop = document.querySelector('.modal-backdrop.activity-fallback');
+      if (shouldShow) {
+        if (!backdrop) {
+          backdrop = document.createElement('div');
+          backdrop.className = 'modal-backdrop fade show activity-fallback';
+          backdrop.addEventListener('click', () => toggleModalFallback(modalEl, false));
+          document.body.appendChild(backdrop);
+        }
+      } else if (backdrop) {
+        backdrop.remove();
+      }
+    }
+
+    function showModal(modalEl) {
+      if (!modalEl) return;
+
+      if (window.bootstrap && typeof bootstrap.Modal === 'function') {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        return;
+      }
+
+      toggleModalFallback(modalEl, true);
+    }
+
+    function wireFallbackClose(modalEl) {
+      if (!modalEl) return;
+      modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach((button) => {
+        button.addEventListener('click', () => toggleModalFallback(modalEl, false));
+      });
+    }
+
+    wireFallbackClose(document.getElementById('activityModal'));
+    wireFallbackClose(document.getElementById('activityListModal'));
+
     let inited = false;
 
     const start = () => {
@@ -6225,6 +6266,8 @@ const _memberSummaryTotals = {
         dayMaxEventRows: 2,
         events,
         eventClick(info) {
+          info.jsEvent.preventDefault();
+          info.jsEvent.stopPropagation();
           const ev = info.event;
           const raw = ev.extendedProps?.raw || {};
           const d = ev.start ? new Date(ev.start) : null;
@@ -6238,8 +6281,7 @@ const _memberSummaryTotals = {
           document.getElementById('acPlace').textContent = raw.place || '-';
           document.getElementById('acParticipants').textContent = raw.co_person || '-';
 
-          const modal = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(modalEl) : null;
-          if (modal) modal.show();
+          showModal(modalEl);
         }
       });
 
@@ -6250,8 +6292,7 @@ const _memberSummaryTotals = {
       if (btnList) {
         btnList.addEventListener('click', function() {
           const el = document.getElementById('activityListModal');
-          const m = (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(el) : null;
-          if (m) m.show();
+          showModal(el);
           const countEl = document.getElementById('activityCount');
           const rows = document.querySelectorAll('#activityTbody tr:not([style*="display: none"])');
           if (countEl) countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';

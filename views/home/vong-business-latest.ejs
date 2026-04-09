@@ -3,7 +3,7 @@
     <div class="card modern-card shadow-sm border-0">
       <div class="card-gradient-bar"></div>
       <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> วงเงินดำเนินกิจการกลุ่มเกษตรกร (10 สถาบันล่าสุด)</h6>
+        <h6 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i> วงเงินกลุ่มเกษตรกร (10 สถาบันล่าสุด)</h6>
         <a href="/vong-business" class="btn btn-sm btn-outline-success">ทั้งหมด</a>
       </div>
       <div class="card-body">
@@ -14,12 +14,13 @@
                 <th style="width:46px;" class="text-center">#</th>
                 <th>ชื่อกลุ่มเกษตรกร</th>
                 <th class="text-nowrap">ปี</th>
-                <th class="text-end text-nowrap">วงเงิน</th>
+                <th class="text-end text-nowrap">กู้ยืม/ค้ำประกัน</th>
+                <th class="text-end text-nowrap">ดำเนินกิจการ</th>
                 <th class="text-center text-nowrap">ไฟล์</th>
               </tr>
             </thead>
             <tbody id="vongBusinessLatestTbody">
-              <tr><td colspan="5" class="text-muted">กำลังโหลด...</td></tr>
+              <tr><td colspan="6" class="text-muted">กำลังโหลด...</td></tr>
             </tbody>
           </table>
         </div>
@@ -40,7 +41,7 @@
     .then(r => r.json())
     .then(rows => {
       if(!Array.isArray(rows) || !rows.length){
-        tbody.innerHTML = '<tr><td colspan="5" class="text-muted">ไม่มีข้อมูล</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-muted">ไม่มีข้อมูล</td></tr>';
         return;
       }
 
@@ -51,11 +52,14 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
-      const fmtMoney = n => {
+      const fmtMoney = (n, fractionDigits) => {
         if(n == null) return '-';
         const num = Number(n);
         if(isNaN(num)) return escapeHtml(n);
-        return num.toLocaleString('th-TH', { minimumFractionDigits: 0 });
+        return num.toLocaleString('th-TH', {
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits
+        });
       };
 
       tbody.innerHTML = rows.map((r, i) => `
@@ -63,7 +67,8 @@
           <td class="text-center">${i + 1}</td>
           <td>${escapeHtml(r.name || '-')}</td>
           <td class="text-nowrap">${escapeHtml(r.year || '-')}</td>
-          <td class="text-end">${loggedIn ? fmtMoney(r.money) : '<span class="text-muted"><i class="bi bi-lock-fill"></i></span>'}</td>
+          <td class="text-end">${loggedIn ? fmtMoney(r.money, 0) : '<span class="text-muted"><i class="bi bi-lock-fill"></i></span>'}</td>
+          <td class="text-end">${loggedIn ? fmtMoney(r.money2, 2) : '<span class="text-muted"><i class="bi bi-lock-fill"></i></span>'}</td>
           <td class="text-center">
             ${r.file ? (loggedIn
               ? `<a href="/vong-business/download/${r.id}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-pdf"></i></a>`
@@ -75,7 +80,7 @@
     })
     .catch(err => {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="5" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>';
     });
 })();
 </script>

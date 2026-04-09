@@ -88,11 +88,12 @@ exports.create = async (req, res) => {
     if (!req.body) return res.status(400).send('ไม่มีข้อมูลที่ส่งมา');
     if (!req.file) return res.status(400).send('กรุณาแนบไฟล์');
 
-    const { vongb_code, vongb_year, vongb_money, vongb_date } = req.body;
+    const { vongb_code, vongb_year, vongb_money, vongb_money2, vongb_date } = req.body;
     const data = {
       vongb_code,
       vongb_year,
       vongb_money: normalizeMoneyInput(vongb_money),
+      vongb_money2: normalizeMoneyInput(vongb_money2),
       vongb_date,
       vongb_filename: req.file.filename,
       vongb_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',
@@ -118,13 +119,14 @@ exports.update = async (req, res) => {
       return res.status(404).send('ไม่พบข้อมูล');
     }
 
-    const { vongb_code, vongb_year, vongb_money, vongb_date } = req.body;
+    const { vongb_code, vongb_year, vongb_money, vongb_money2, vongb_date } = req.body;
     const vongb_filename = req.file ? req.file.filename : existing.vongb_filename;
 
     const data = {
       vongb_code,
       vongb_year,
       vongb_money: normalizeMoneyInput(vongb_money),
+      vongb_money2: normalizeMoneyInput(vongb_money2),
       vongb_date,
       vongb_filename,
       vongb_saveby: req.session.user?.fullname || 'ไม่ทราบชื่อ',
@@ -230,6 +232,7 @@ exports.latestJson = async (req, res) => {
       year: r.vongb_year,
       date: r.vongb_date,
       money: r.vongb_money,
+      money2: r.vongb_money2,
       file: r.vongb_filename,
       saveby: r.vongb_saveby,
       savedate: r.vongb_savedate

@@ -38,29 +38,48 @@ exports.getById = async (id) => {
 };
 
 exports.create = async (data) => {
-  const { vongb_code, vongb_year, vongb_money, vongb_date, vongb_filename, vongb_saveby, vongb_savedate } = data;
+  const {
+    vongb_code,
+    vongb_year,
+    vongb_money,
+    vongb_money2,
+    vongb_date,
+    vongb_filename,
+    vongb_saveby,
+    vongb_savedate
+  } = data;
   const [result] = await db.query(
     `INSERT INTO vong_business
-      (vongb_code, vongb_year, vongb_money, vongb_date, vongb_filename, vongb_saveby, vongb_savedate)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [vongb_code, vongb_year, vongb_money, vongb_date, vongb_filename, vongb_saveby, vongb_savedate]
+      (vongb_code, vongb_year, vongb_money, vongb_money2, vongb_date, vongb_filename, vongb_saveby, vongb_savedate)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [vongb_code, vongb_year, vongb_money, vongb_money2, vongb_date, vongb_filename, vongb_saveby, vongb_savedate]
   );
   return result.insertId;
 };
 
 exports.update = async (id, data) => {
-  const { vongb_code, vongb_year, vongb_money, vongb_date, vongb_filename, vongb_saveby, vongb_savedate } = data;
+  const {
+    vongb_code,
+    vongb_year,
+    vongb_money,
+    vongb_money2,
+    vongb_date,
+    vongb_filename,
+    vongb_saveby,
+    vongb_savedate
+  } = data;
   await db.query(
     `UPDATE vong_business SET
       vongb_code = ?,
       vongb_year = ?,
       vongb_money = ?,
+      vongb_money2 = ?,
       vongb_date = ?,
       vongb_filename = ?,
       vongb_saveby = ?,
       vongb_savedate = ?
      WHERE vongb_id = ?`,
-    [vongb_code, vongb_year, vongb_money, vongb_date, vongb_filename, vongb_saveby, vongb_savedate, id]
+    [vongb_code, vongb_year, vongb_money, vongb_money2, vongb_date, vongb_filename, vongb_saveby, vongb_savedate, id]
   );
 };
 

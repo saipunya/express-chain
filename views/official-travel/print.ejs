@@ -11,12 +11,13 @@
   </style>
 </head>
 <body>
+  <% const requestNoDisplay = 'ชย 0010(ดท)/..............'; %>
   <div class="print-sheet">
     <div class="text-end no-print mb-3">
       <button class="btn btn-dark" onclick="window.print()">พิมพ์</button>
     </div>
     <h2 class="text-center mb-4">บันทึกข้อความ</h2>
-    <p><strong>เลขที่</strong> <%= item.request_no %></p>
+    <p><strong>เลขที่</strong> <%= requestNoDisplay %></p>
     <p><strong>วันที่</strong> <%= new Date(item.request_date).toLocaleDateString('th-TH') %></p>
     <p><strong>เรียน</strong> <%= item.learn_to || '-' %></p>
     <p><strong>เรื่อง</strong> <%= item.subject %></p>

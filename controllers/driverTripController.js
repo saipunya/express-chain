@@ -1,13 +1,25 @@
 const vehicleTripLogModel = require('../models/vehicleTripLogModel');
 
+function isMissingWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
 exports.queue = async (req, res) => {
   try {
     const items = await vehicleTripLogModel.listQueueForUser(req.session?.user);
     res.render('driver-trip/queue', {
       title: 'คิวงานคนขับรถ',
-      items
+      items,
+      warning: null
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('driver-trip/queue', {
+        title: 'คิวงานคนขับรถ',
+        items: [],
+        warning: 'ยังไม่พบตาราง workflow งานคนขับในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นรายการงานจริง'
+      });
+    }
     console.error('Error loading driver queue:', error);
     res.status(500).send('ไม่สามารถโหลดคิวงานคนขับรถได้');
   }

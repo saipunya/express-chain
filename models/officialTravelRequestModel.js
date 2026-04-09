@@ -73,13 +73,63 @@ function mapPayload(payload) {
 
 async function listAll() {
   const [rows] = await db.query(`
-    SELECT tr.*, COUNT(tc.id) AS companion_count, vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.status AS vehicle_request_status
+    SELECT tr.*, COALESCE(tc.companion_count, 0) AS companion_count,
+           vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.status AS vehicle_request_status
     FROM official_travel_requests tr
-    LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+    LEFT JOIN (
+      SELECT travel_request_id, COUNT(*) AS companion_count
+      FROM official_travel_companions
+      GROUP BY travel_request_id
+    ) tc ON tc.travel_request_id = tr.id
     LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
-    GROUP BY tr.id
     ORDER BY tr.request_date DESC, tr.id DESC
   `);
+  return rows;
+}
+
+async function listReport(filters = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (filters.dateFrom) {
+    conditions.push('DATE(tr.start_at) >= ?');
+    params.push(filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    conditions.push('DATE(tr.start_at) <= ?');
+    params.push(filters.dateTo);
+  }
+
+  if (filters.status) {
+    conditions.push('tr.status = ?');
+    params.push(filters.status);
+  }
+
+  if (filters.transportType) {
+    conditions.push('tr.transport_type = ?');
+    params.push(filters.transportType);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const [rows] = await db.query(
+    `SELECT tr.*, COALESCE(tc.companion_count, 0) AS companion_count,
+            vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.status AS vehicle_request_status,
+            va.plate_no_snapshot, va.driver_name_snapshot,
+            vtl.log_status, vtl.distance_km
+     FROM official_travel_requests tr
+     LEFT JOIN (
+       SELECT travel_request_id, COUNT(*) AS companion_count
+       FROM official_travel_companions
+       GROUP BY travel_request_id
+     ) tc ON tc.travel_request_id = tr.id
+     LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+     LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
+     LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
+     ${whereClause}
+     ORDER BY tr.start_at DESC, tr.id DESC`,
+    params
+  );
   return rows;
 }
 
@@ -249,7 +299,7 @@ async function listApprovedInRange(startDate, endDate) {
     const [rows] = await db.query(`
       SELECT
         tr.*,
-        GROUP_CONCAT(tc.companion_name ORDER BY tc.seq_no SEPARATOR ', ') AS companion_names,
+        tc.companion_names,
         vr.id AS vehicle_request_id,
         vr.vehicle_request_no,
         vr.status AS vehicle_request_status,
@@ -258,13 +308,17 @@ async function listApprovedInRange(startDate, endDate) {
         va.plate_no_snapshot,
         va.driver_name_snapshot
       FROM official_travel_requests tr
-      LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+      LEFT JOIN (
+        SELECT travel_request_id,
+               GROUP_CONCAT(companion_name ORDER BY seq_no SEPARATOR ', ') AS companion_names
+        FROM official_travel_companions
+        GROUP BY travel_request_id
+      ) tc ON tc.travel_request_id = tr.id
       LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
       LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
       WHERE tr.status = 'approved'
         AND tr.start_at <= ?
         AND tr.end_at >= ?
-      GROUP BY tr.id
       ORDER BY tr.start_at ASC, tr.id ASC
     `, [endDate, startDate]);
     return rows;
@@ -278,11 +332,14 @@ async function listApprovedInRange(startDate, endDate) {
 
 async function listPendingApproval() {
   const [rows] = await db.query(`
-    SELECT tr.*, COUNT(tc.id) AS companion_count
+    SELECT tr.*, COALESCE(tc.companion_count, 0) AS companion_count
     FROM official_travel_requests tr
-    LEFT JOIN official_travel_companions tc ON tc.travel_request_id = tr.id
+    LEFT JOIN (
+      SELECT travel_request_id, COUNT(*) AS companion_count
+      FROM official_travel_companions
+      GROUP BY travel_request_id
+    ) tc ON tc.travel_request_id = tr.id
     WHERE tr.status = 'submitted'
-    GROUP BY tr.id
     ORDER BY tr.submitted_at ASC, tr.id ASC
   `);
   return rows;
@@ -338,6 +395,7 @@ module.exports = {
   getCompanions,
   getDetailById,
   listAll,
+  listReport,
   listPendingApproval,
   listApprovedInRange,
   listEligibleForVehicleRequest,

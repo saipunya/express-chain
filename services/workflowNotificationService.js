@@ -24,7 +24,10 @@ function escapeHtml(value) {
 
 async function send(message) {
   try {
-    await notify.broadcast(message);
+    const payload = typeof message === 'string'
+      ? { html: message, telegramTarget: 'workflow' }
+      : { ...message, telegramTarget: 'workflow' };
+    await notify.broadcast(payload);
   } catch (error) {
     console.error('Workflow notification failed:', error.message);
   }

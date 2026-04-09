@@ -1,5 +1,9 @@
 const vehicleMasterModel = require('../models/vehicleMasterModel');
 
+function isMissingWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
 function mapBody(req) {
   const actor = req.session?.user?.fullname || req.session?.user?.username || 'system';
   return {
@@ -22,6 +26,7 @@ function renderForm(res, overrides = {}) {
     formAction: overrides.formAction,
     item: overrides.item,
     error: overrides.error || null,
+    warning: overrides.warning || null,
     submitLabel: overrides.submitLabel || 'บันทึก'
   });
 }
@@ -31,9 +36,17 @@ exports.list = async (req, res) => {
     const items = await vehicleMasterModel.listAll();
     res.render('vehicle-master/list', {
       title: 'ทะเบียนรถราชการ',
-      items
+      items,
+      warning: null
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('vehicle-master/list', {
+        title: 'ทะเบียนรถราชการ',
+        items: [],
+        warning: 'ยังไม่พบตารางทะเบียนรถในฐานข้อมูล กรุณารัน migration ก่อนจึงจะใช้งานข้อมูลรถจริงได้'
+      });
+    }
     console.error('Error listing vehicle masters:', error);
     res.status(500).send('ไม่สามารถโหลดทะเบียนรถได้');
   }
@@ -44,6 +57,7 @@ exports.createForm = async (req, res) => {
     title: 'เพิ่มทะเบียนรถราชการ',
     formAction: '/vehicle-master/create',
     item: { status: 'active' },
+    warning: null,
     submitLabel: 'บันทึกข้อมูลรถ'
   });
 };

@@ -321,6 +321,85 @@
             </button>
           </div>
 
+          <% if (user) { %>
+            <div class="menu-section-title">งานไปราชการและยานพาหนะ</div>
+            <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="travel-workflow">
+              <div class="col-md-4">
+                <a href="/official-travel" class="menu-link">
+                  <div class="menu-card menu-card-highlight">
+                    <div class="menu-icon menu-icon-travel"><i class="bi bi-file-earmark-text"></i></div>
+                    <div>
+                      <p class="menu-title">คำขอไปราชการ</p>
+                      <p class="menu-desc">สร้าง ติดตาม และพิมพ์คำขอไปราชการ</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/vehicle-request" class="menu-link">
+                  <div class="menu-card menu-card-highlight">
+                    <div class="menu-icon menu-icon-travel"><i class="bi bi-truck"></i></div>
+                    <div>
+                      <p class="menu-title">คำขอใช้รถราชการ</p>
+                      <p class="menu-desc">เชื่อมคำขอไปราชการกับการขอใช้รถ</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/driver-trip/queue" class="menu-link">
+                  <div class="menu-card menu-card-highlight">
+                    <div class="menu-icon menu-icon-travel"><i class="bi bi-car-front"></i></div>
+                    <div>
+                      <p class="menu-title">งานคนขับ</p>
+                      <p class="menu-desc">บันทึกเวลาและเลขไมล์รอบเช้า-บ่าย</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <% if (user.mClass === 'admin' || user.mClass === 'kjs') { %>
+                <div class="col-md-4">
+                  <a href="/vehicle-approval/pending" class="menu-link">
+                    <div class="menu-card menu-card-highlight">
+                      <div class="menu-icon menu-icon-travel"><i class="bi bi-check2-square"></i></div>
+                      <div>
+                        <p class="menu-title">คิวอนุมัติ</p>
+                        <p class="menu-desc">อนุมัติคำขอและมอบหมายรถพร้อมคนขับ</p>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+                <div class="col-md-4">
+                  <a href="/vehicle-master" class="menu-link">
+                    <div class="menu-card menu-card-highlight">
+                      <div class="menu-icon menu-icon-travel"><i class="bi bi-car-front-fill"></i></div>
+                      <div>
+                        <p class="menu-title">ทะเบียนรถ</p>
+                        <p class="menu-desc">ข้อมูลรถราชการที่ใช้ในระบบ workflow</p>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+                <div class="col-md-4">
+                  <a href="/driver-master" class="menu-link">
+                    <div class="menu-card menu-card-highlight">
+                      <div class="menu-icon menu-icon-travel"><i class="bi bi-person-vcard"></i></div>
+                      <div>
+                        <p class="menu-title">ทะเบียนคนขับ</p>
+                        <p class="menu-desc">จัดการรายชื่อคนขับและข้อมูลใบอนุญาต</p>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              <% } %>
+            </div>
+            <div class="dashboard-toggle-wrap d-md-none mb-4">
+              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill dashboard-toggle-btn" data-target-group="travel-workflow" data-expand-label="ดูเมนูเพิ่มเติม" data-collapse-label="ซ่อนเมนู">
+                <i class="bi bi-chevron-down me-1"></i>ดูเมนูเพิ่มเติม
+              </button>
+            </div>
+          <% } %>
+
           <% if (user && user.mClass === 'admin') { %>
             <div class="menu-section-title">สำหรับผู้ดูแลระบบ</div>
             <div class="row g-3 dashboard-menu-grid" data-dashboard-group="admin">
@@ -436,6 +515,14 @@
       height:100%;
     }
     .menu-card:hover {background:#f8f9fa;}
+    .menu-card-highlight {
+      border-color: #cfe2ff;
+      background: linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
+    }
+    .menu-card-highlight:hover {
+      background: linear-gradient(180deg, #f8fbff 0%, #edf6ff 100%);
+      border-color: #9ec5fe;
+    }
     .menu-icon {
       width:44px;
       height:44px;
@@ -447,6 +534,10 @@
       color:#0d6efd;
       font-size:1.25rem;
       flex-shrink:0;
+    }
+    .menu-icon-travel {
+      background: linear-gradient(135deg, #d1ecf1 0%, #cfe2ff 100%);
+      color: #0a58ca;
     }
     .menu-title {margin:0; font-weight:600; color:#212529;}
     .menu-desc {margin:0; font-size:.85rem; color:#6c757d;}

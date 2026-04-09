@@ -1,0 +1,115 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">รายงานคำขอใช้รถราชการ</h3>
+    <p class="text-muted mb-0">สรุปคำขอใช้รถ การมอบหมาย และผลบันทึกการเดินทาง</p>
+  </div>
+  <a href="/vehicle-request" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
+</div>
+
+<% if (warning) { %>
+  <div class="alert alert-warning"><%= warning %></div>
+<% } %>
+
+<form class="card shadow-sm border-0 mb-4" method="GET" action="/vehicle-request/report">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">ตั้งแต่วันที่</label>
+        <input type="date" class="form-control" name="dateFrom" value="<%= filters.dateFrom %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">ถึงวันที่</label>
+        <input type="date" class="form-control" name="dateTo" value="<%= filters.dateTo %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">สถานะ</label>
+        <select class="form-select" name="status">
+          <option value="" <%= !filters.status ? 'selected' : '' %>>ทั้งหมด</option>
+          <% ['draft', 'submitted', 'approved', 'assigned', 'in_progress', 'completed', 'rejected', 'cancelled'].forEach((status) => { %>
+            <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= status %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill">กรองรายงาน</button>
+        <a href="/vehicle-request/report" class="btn btn-outline-secondary">ล้าง</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">ทั้งหมด</div><div class="fs-4 fw-semibold"><%= summary.total %></div></div></div></div>
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">รอมอบหมาย/รออนุมัติ</div><div class="fs-4 fw-semibold"><%= summary.pending %></div></div></div></div>
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">มอบหมายแล้ว</div><div class="fs-4 fw-semibold"><%= summary.assigned %></div></div></div></div>
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">กำลังเดินทาง</div><div class="fs-4 fw-semibold"><%= summary.inProgress %></div></div></div></div>
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">เสร็จสิ้น</div><div class="fs-4 fw-semibold"><%= summary.completed %></div></div></div></div>
+  <div class="col-md-2 col-6"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">ระยะทางรวม</div><div class="fs-4 fw-semibold"><%= Number(summary.distanceKm || 0).toLocaleString('th-TH') %></div></div></div></div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>คำขอใช้รถ</th>
+          <th>คำขอไปราชการ</th>
+          <th>ผู้ขอ/ปลายทาง</th>
+          <th>รถ/คนขับ</th>
+          <th>เช้า</th>
+          <th>บ่าย</th>
+          <th>ระยะทาง</th>
+          <th>สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td>
+              <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+              <small class="text-muted"><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+            </td>
+            <td>
+              <div class="fw-semibold"><%= item.travel_request_no %></div>
+              <small class="text-muted"><%= item.travel_subject %></small>
+            </td>
+            <td>
+              <div><%= item.requester_name %></div>
+              <small class="text-muted"><%= item.destination_text %></small>
+            </td>
+            <td>
+              <div><%= item.plate_no_snapshot || '-' %></div>
+              <small class="text-muted"><%= item.driver_name_snapshot || '-' %></small>
+            </td>
+            <td>
+              <div><%= item.morning_departure_at ? new Date(item.morning_departure_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-' %></div>
+              <small class="text-muted">ไมล์ <%= item.morning_odometer || '-' %></small>
+            </td>
+            <td>
+              <div><%= item.afternoon_return_at ? new Date(item.afternoon_return_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-' %></div>
+              <small class="text-muted">ไมล์ <%= item.afternoon_odometer || '-' %></small>
+            </td>
+            <td><%= item.distance_km || '-' %></td>
+            <td>
+              <span class="badge bg-<%= item.status === 'completed' ? 'success' : item.status === 'in_progress' ? 'warning text-dark' : item.status === 'assigned' ? 'primary' : item.status === 'rejected' ? 'danger' : 'info' %>"><%= item.status %></span>
+            </td>
+            <td class="text-end text-nowrap">
+              <a href="/vehicle-request/<%= item.id %>" class="btn btn-sm btn-outline-primary">ดู</a>
+              <% if (item.status === 'assigned' || item.status === 'in_progress') { %>
+                <a href="/driver-trip/<%= item.id %>" class="btn btn-sm btn-outline-secondary">งานคนขับ</a>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

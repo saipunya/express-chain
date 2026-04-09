@@ -1,13 +1,26 @@
 // services/telegramService.js
 const axios = require('axios');
 
-// ใส่ TOKEN ของ Bot และ CHAT_ID ของกลุ่ม
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+function getTelegramConfig(target = 'default') {
+  if (target === 'workflow') {
+    return {
+      token: process.env.TELEGRAM_WORKFLOW_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN,
+      chatId: process.env.TELEGRAM_WORKFLOW_CHAT_ID || process.env.TELEGRAM_CHAT_ID
+    };
+  }
 
-async function sendMessage(message) {
-  if (!TOKEN || !CHAT_ID) {
-    console.error('❌ TELEGRAM config missing: set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
+  return {
+    token: process.env.TELEGRAM_BOT_TOKEN,
+    chatId: process.env.TELEGRAM_CHAT_ID
+  };
+}
+
+async function sendMessage(message, options = {}) {
+  const { target = 'default' } = options;
+  const { token, chatId } = getTelegramConfig(target);
+
+  if (!token || !chatId) {
+    console.error('❌ TELEGRAM config missing: set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or TELEGRAM_WORKFLOW_BOT_TOKEN/TELEGRAM_WORKFLOW_CHAT_ID');
     return;
   }
 
@@ -19,8 +32,8 @@ async function sendMessage(message) {
 
   try {
     for (const part of parts) {
-      await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        chat_id: CHAT_ID,
+      await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+        chat_id: chatId,
         text: part,
         parse_mode: 'HTML',
       });

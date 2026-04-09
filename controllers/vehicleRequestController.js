@@ -44,8 +44,23 @@ async function renderForm(res, overrides = {}) {
     item: overrides.item,
     travelOptions,
     error: overrides.error || null,
+    warning: overrides.warning || null,
     submitLabel: overrides.submitLabel || 'บันทึก'
   });
+}
+
+function isMissingWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
+function defaultReportFilters(query = {}) {
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  return {
+    dateFrom: query.dateFrom || monthStart.toISOString().slice(0, 10),
+    dateTo: query.dateTo || today.toISOString().slice(0, 10),
+    status: query.status || ''
+  };
 }
 
 exports.list = async (req, res) => {
@@ -53,11 +68,70 @@ exports.list = async (req, res) => {
     const items = await vehicleRequestModel.listAll();
     res.render('vehicle-request/list', {
       title: 'รายการคำขอใช้รถราชการ',
-      items
+      items,
+      warning: null
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('vehicle-request/list', {
+        title: 'รายการคำขอใช้รถราชการ',
+        items: [],
+        warning: 'ยังไม่พบตาราง workflow คำขอใช้รถในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นข้อมูลจริง'
+      });
+    }
     console.error('Error listing vehicle requests:', error);
     res.status(500).send('ไม่สามารถโหลดรายการคำขอใช้รถราชการได้');
+  }
+};
+
+exports.report = async (req, res) => {
+  try {
+    const filters = defaultReportFilters(req.query);
+    const items = await vehicleRequestModel.listReport(filters);
+    const summary = items.reduce((acc, item) => {
+      acc.total += 1;
+      if (item.status === 'completed') acc.completed += 1;
+      if (item.status === 'in_progress') acc.inProgress += 1;
+      if (item.status === 'assigned') acc.assigned += 1;
+      if (item.status === 'approved' || item.status === 'submitted') acc.pending += 1;
+      acc.distanceKm += Number(item.distance_km || 0);
+      return acc;
+    }, {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      assigned: 0,
+      pending: 0,
+      distanceKm: 0
+    });
+
+    res.render('vehicle-request/report', {
+      title: 'รายงานคำขอใช้รถราชการ',
+      items,
+      filters,
+      summary,
+      warning: null
+    });
+  } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      const filters = defaultReportFilters(req.query);
+      return res.render('vehicle-request/report', {
+        title: 'รายงานคำขอใช้รถราชการ',
+        items: [],
+        filters,
+        summary: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          assigned: 0,
+          pending: 0,
+          distanceKm: 0
+        },
+        warning: 'ยังไม่พบตาราง workflow คำขอใช้รถในฐานข้อมูล กรุณารัน migration ก่อนจึงจะสร้างรายงานได้'
+      });
+    }
+    console.error('Error loading vehicle request report:', error);
+    res.status(500).send('ไม่สามารถโหลดรายงานคำขอใช้รถราชการได้');
   }
 };
 
@@ -89,9 +163,26 @@ exports.createForm = async (req, res) => {
       formAction: '/vehicle-request/create',
       item,
       travelOptions,
+      warning: null,
       submitLabel: 'บันทึกร่าง'
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      const requestDate = new Date();
+      return renderForm(res, {
+        title: 'สร้างคำขอใช้รถราชการ',
+        formAction: '/vehicle-request/create',
+        item: {
+          vehicle_request_no: await generateRunningNumber('vehicle_requests', requestDate),
+          request_date: requestDate.toISOString().slice(0, 10),
+          learn_to: 'สหกรณ์จังหวัดชัยภูมิ',
+          passenger_count: 1
+        },
+        travelOptions: [],
+        warning: 'ยังไม่พบตาราง workflow คำขอใช้รถหรือคำขอไปราชการในฐานข้อมูล ฟอร์มเปิดได้ แต่ยังบันทึกจริงไม่ได้จนกว่าจะรัน migration',
+        submitLabel: 'บันทึกร่าง'
+      });
+    }
     console.error('Error rendering vehicle request form:', error);
     res.status(500).send('ไม่สามารถโหลดฟอร์มคำขอใช้รถราชการได้');
   }

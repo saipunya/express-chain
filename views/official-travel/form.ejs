@@ -12,12 +12,19 @@
   <div class="alert alert-danger"><%= error %></div>
 <% } %>
 
+<% if (warning) { %>
+  <div class="alert alert-warning"><%= warning %></div>
+<% } %>
+
+<% const requestNoDisplay = 'ชย 0010(ดท)/..............'; %>
+
 <form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
   <div class="card-body">
     <div class="row g-3">
       <div class="col-md-3">
         <label class="form-label">เลขที่คำขอ</label>
-        <input type="text" class="form-control" name="request_no" value="<%= item.request_no || '' %>" readonly>
+        <input type="hidden" name="request_no" value="<%= item.request_no || '' %>">
+        <input type="text" class="form-control" value="<%= requestNoDisplay %>" readonly>
       </div>
       <div class="col-md-3">
         <label class="form-label">วันที่คำขอ</label>
@@ -29,7 +36,8 @@
       </div>
       <div class="col-md-12">
         <label class="form-label">เรื่อง</label>
-        <input type="text" class="form-control" name="subject" value="<%= item.subject || '' %>" required>
+        <input type="hidden" name="subject" value="<%= item.subject || '' %>">
+        <input type="text" class="form-control" value="<%= item.subject || '' %>" readonly>
       </div>
       <div class="col-md-4">
         <label class="form-label">ผู้ขอ</label>
@@ -91,34 +99,105 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">ผู้ร่วมเดินทาง</h5>
-      <small class="text-muted">กรอกได้ตามจำนวนที่ต้องการในรอบแรก</small>
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted">เพิ่มจำนวนผู้ร่วมเดินทางได้ตามต้องการ</small>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-companion-row">เพิ่มรายชื่อ</button>
+      </div>
     </div>
 
     <% const rows = companions && companions.length ? companions : [{ companion_name: '', companion_position: '' }]; %>
+    <div id="companion-rows">
     <% rows.forEach((companion, index) => { %>
-      <div class="row g-3 mb-2">
-        <div class="col-md-1 text-muted pt-2">#<%= index + 1 %></div>
-        <div class="col-md-5">
+      <div class="row g-3 mb-2 companion-row" data-row-index="<%= index + 1 %>">
+        <div class="col-md-1 text-muted pt-2 companion-seq">#<%= index + 1 %></div>
+        <div class="col-md-4">
           <input type="text" class="form-control" name="companion_name" value="<%= companion.companion_name || '' %>" placeholder="ชื่อผู้ร่วมเดินทาง">
         </div>
-        <div class="col-md-6">
+        <div class="col-md-5">
           <input type="text" class="form-control" name="companion_position" value="<%= companion.companion_position || '' %>" placeholder="ตำแหน่งผู้ร่วมเดินทาง">
+        </div>
+        <div class="col-md-2 d-flex align-items-start">
+          <button type="button" class="btn btn-outline-danger w-100 remove-companion-row">ลบ</button>
         </div>
       </div>
     <% }) %>
-    <div class="row g-3">
-      <div class="col-md-1 text-muted pt-2">#+</div>
-      <div class="col-md-5">
-        <input type="text" class="form-control" name="companion_name" value="" placeholder="เพิ่มผู้ร่วมเดินทาง">
-      </div>
-      <div class="col-md-6">
-        <input type="text" class="form-control" name="companion_position" value="" placeholder="ตำแหน่งผู้ร่วมเดินทาง">
-      </div>
     </div>
   </div>
   <div class="card-footer bg-white d-flex gap-2 justify-content-end">
     <button type="submit" class="btn btn-success"><%= submitLabel %></button>
   </div>
 </form>
+
+<template id="companion-row-template">
+  <div class="row g-3 mb-2 companion-row">
+    <div class="col-md-1 text-muted pt-2 companion-seq"></div>
+    <div class="col-md-4">
+      <input type="text" class="form-control" name="companion_name" value="" placeholder="ชื่อผู้ร่วมเดินทาง">
+    </div>
+    <div class="col-md-5">
+      <input type="text" class="form-control" name="companion_position" value="" placeholder="ตำแหน่งผู้ร่วมเดินทาง">
+    </div>
+    <div class="col-md-2 d-flex align-items-start">
+      <button type="button" class="btn btn-outline-danger w-100 remove-companion-row">ลบ</button>
+    </div>
+  </div>
+</template>
+
+<script>
+  (() => {
+    const rowsContainer = document.getElementById('companion-rows');
+    const addButton = document.getElementById('add-companion-row');
+    const rowTemplate = document.getElementById('companion-row-template');
+
+    if (!rowsContainer || !addButton || !rowTemplate) {
+      return;
+    }
+
+    const updateSequence = () => {
+      const rows = rowsContainer.querySelectorAll('.companion-row');
+      rows.forEach((row, index) => {
+        row.dataset.rowIndex = String(index + 1);
+        const seq = row.querySelector('.companion-seq');
+        if (seq) {
+          seq.textContent = `#${index + 1}`;
+        }
+      });
+    };
+
+    const attachRowEvents = (row) => {
+      const removeButton = row.querySelector('.remove-companion-row');
+      if (!removeButton) {
+        return;
+      }
+
+      removeButton.addEventListener('click', () => {
+        const rows = rowsContainer.querySelectorAll('.companion-row');
+        if (rows.length === 1) {
+          row.querySelector('input[name="companion_name"]').value = '';
+          row.querySelector('input[name="companion_position"]').value = '';
+          return;
+        }
+        row.remove();
+        updateSequence();
+      });
+    };
+
+    rowsContainer.querySelectorAll('.companion-row').forEach(attachRowEvents);
+
+    addButton.addEventListener('click', () => {
+      const fragment = rowTemplate.content.cloneNode(true);
+      const row = fragment.querySelector('.companion-row');
+      rowsContainer.appendChild(fragment);
+      attachRowEvents(rowsContainer.lastElementChild);
+      updateSequence();
+      const nameInput = rowsContainer.lastElementChild.querySelector('input[name="companion_name"]');
+      if (nameInput) {
+        nameInput.focus();
+      }
+    });
+
+    updateSequence();
+  })();
+</script>
 
 <%- include('../partials/footer') %>

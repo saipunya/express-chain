@@ -5,6 +5,10 @@ const driverMasterModel = require('../models/driverMasterModel');
 const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
 
+function isMissingWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
 async function loadPendingCounts() {
   const [travelItems, vehicleItems] = await Promise.all([
     officialTravelRequestModel.listPendingApproval(),
@@ -23,9 +27,18 @@ exports.pending = async (req, res) => {
     res.render('vehicle-approval/pending', {
       title: 'คิวอนุมัติคำขอ',
       travelItems,
-      vehicleItems
+      vehicleItems,
+      warning: null
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('vehicle-approval/pending', {
+        title: 'คิวอนุมัติคำขอ',
+        travelItems: [],
+        vehicleItems: [],
+        warning: 'ยังไม่พบตาราง workflow สำหรับคิวอนุมัติในฐานข้อมูล กรุณารัน migration ก่อนจึงจะใช้งานหน้านี้ได้เต็มรูปแบบ'
+      });
+    }
     console.error('Error loading approval queue:', error);
     res.status(500).send('ไม่สามารถโหลดคิวอนุมัติได้');
   }

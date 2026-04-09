@@ -15,7 +15,7 @@ function stripHtml(html = '') {
 }
 
 async function broadcast(message) {
-  let html, text, channels, lineTo;
+  let html, text, channels, lineTo, telegramTarget;
 
   if (typeof message === 'string') {
     html = message;
@@ -25,6 +25,7 @@ async function broadcast(message) {
     text = message.text || (message.html ? stripHtml(message.html) : undefined);
     channels = message.channels;   // ['telegram','line']
     lineTo = message.lineTo;       // override LINE_TO
+    telegramTarget = message.telegramTarget;
   }
 
   // Default channels: only telegram; include 'line' only if enabled
@@ -32,7 +33,7 @@ async function broadcast(message) {
   const use = Array.isArray(channels) && channels.length ? channels : defaultChannels;
 
   const tasks = [];
-  if (use.includes('telegram') && html) tasks.push(telegram.sendMessage(html));
+  if (use.includes('telegram') && html) tasks.push(telegram.sendMessage(html, { target: telegramTarget }));
   // Respect global LINE enable switch
   if (ENABLE_LINE && use.includes('line') && text) tasks.push(line.pushText(text, lineTo));
 

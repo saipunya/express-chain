@@ -12,6 +12,10 @@
   <div class="alert alert-danger"><%= error %></div>
 <% } %>
 
+<% if (warning) { %>
+  <div class="alert alert-warning"><%= warning %></div>
+<% } %>
+
 <form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
   <div class="card-body">
     <div class="row g-3">

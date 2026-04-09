@@ -2,6 +2,8 @@ const officialTravelRequestModel = require('../models/officialTravelRequestModel
 const { generateRunningNumber } = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
 
+const OFFICIAL_TRAVEL_SUBJECT = 'ขออนุมัติเดินทางไปราชการ';
+
 function toDatetimeLocal(value) {
   if (!value) {
     return '';
@@ -33,7 +35,7 @@ function mapBody(req) {
   return {
     request_no: req.body.request_no,
     request_date: req.body.request_date,
-    subject: req.body.subject,
+    subject: OFFICIAL_TRAVEL_SUBJECT,
     learn_to: req.body.learn_to,
     requester_member_id: user.id || null,
     requester_name: req.body.requester_name,
@@ -72,8 +74,24 @@ async function renderForm(res, overrides = {}) {
     item: overrides.item,
     companions: overrides.companions,
     error: overrides.error || null,
+    warning: overrides.warning || null,
     submitLabel: overrides.submitLabel || 'บันทึก'
   });
+}
+
+function isMissingTravelWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
+function defaultReportFilters(query = {}) {
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  return {
+    dateFrom: query.dateFrom || monthStart.toISOString().slice(0, 10),
+    dateTo: query.dateTo || today.toISOString().slice(0, 10),
+    status: query.status || '',
+    transportType: query.transportType || ''
+  };
 }
 
 exports.list = async (req, res) => {
@@ -81,11 +99,70 @@ exports.list = async (req, res) => {
     const items = await officialTravelRequestModel.listAll();
     res.render('official-travel/list', {
       title: 'รายการคำขอไปราชการ',
-      items
+      items,
+      warning: null
     });
   } catch (error) {
+    if (isMissingTravelWorkflowTable(error)) {
+      return res.render('official-travel/list', {
+        title: 'รายการคำขอไปราชการ',
+        items: [],
+        warning: 'ยังไม่พบตาราง workflow คำขอไปราชการในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นข้อมูลจริง'
+      });
+    }
     console.error('Error listing official travel requests:', error);
     res.status(500).send('ไม่สามารถโหลดรายการคำขอไปราชการได้');
+  }
+};
+
+exports.report = async (req, res) => {
+  try {
+    const filters = defaultReportFilters(req.query);
+    const items = await officialTravelRequestModel.listReport(filters);
+    const summary = items.reduce((acc, item) => {
+      acc.total += 1;
+      if (item.status === 'approved') acc.approved += 1;
+      if (item.status === 'submitted') acc.submitted += 1;
+      if (item.status === 'rejected') acc.rejected += 1;
+      if (item.vehicle_request_id) acc.withVehicle += 1;
+      if (Number(item.out_of_province) === 1) acc.outOfProvince += 1;
+      return acc;
+    }, {
+      total: 0,
+      approved: 0,
+      submitted: 0,
+      rejected: 0,
+      withVehicle: 0,
+      outOfProvince: 0
+    });
+
+    res.render('official-travel/report', {
+      title: 'รายงานคำขอไปราชการ',
+      items,
+      filters,
+      summary,
+      warning: null
+    });
+  } catch (error) {
+    if (isMissingTravelWorkflowTable(error)) {
+      const filters = defaultReportFilters(req.query);
+      return res.render('official-travel/report', {
+        title: 'รายงานคำขอไปราชการ',
+        items: [],
+        filters,
+        summary: {
+          total: 0,
+          approved: 0,
+          submitted: 0,
+          rejected: 0,
+          withVehicle: 0,
+          outOfProvince: 0
+        },
+        warning: 'ยังไม่พบตาราง workflow คำขอไปราชการในฐานข้อมูล กรุณารัน migration ก่อนจึงจะสร้างรายงานได้'
+      });
+    }
+    console.error('Error loading official travel report:', error);
+    res.status(500).send('ไม่สามารถโหลดรายงานคำขอไปราชการได้');
   }
 };
 
@@ -95,6 +172,7 @@ exports.createForm = async (req, res) => {
     const item = {
       request_no: await generateRunningNumber('official_travel_requests', requestDate),
       request_date: requestDate.toISOString().slice(0, 10),
+      subject: OFFICIAL_TRAVEL_SUBJECT,
       learn_to: 'ผู้ว่าราชการจังหวัดชัยภูมิ',
       requester_name: req.session?.user?.fullname || '',
       requester_position: req.session?.user?.position || '',
@@ -110,9 +188,35 @@ exports.createForm = async (req, res) => {
       formAction: '/official-travel/create',
       item,
       companions: [{ companion_name: '', companion_position: '' }],
+      warning: null,
       submitLabel: 'บันทึกร่าง'
     });
   } catch (error) {
+    if (isMissingTravelWorkflowTable(error)) {
+      const requestDate = new Date();
+      const item = {
+        request_no: await generateRunningNumber('official_travel_requests', requestDate),
+        request_date: requestDate.toISOString().slice(0, 10),
+        subject: OFFICIAL_TRAVEL_SUBJECT,
+        learn_to: 'ผู้ว่าราชการจังหวัดชัยภูมิ',
+        requester_name: req.session?.user?.fullname || '',
+        requester_position: req.session?.user?.position || '',
+        requester_group: req.session?.user?.group || '',
+        transport_type: 'official_vehicle',
+        out_of_province: 0,
+        requires_vehicle_request: 1,
+        start_at: '',
+        end_at: ''
+      };
+      return renderForm(res, {
+        title: 'สร้างคำขอไปราชการ',
+        formAction: '/official-travel/create',
+        item,
+        companions: [{ companion_name: '', companion_position: '' }],
+        warning: 'ยังไม่พบตาราง workflow คำขอไปราชการในฐานข้อมูล ฟอร์มเปิดได้ แต่ยังบันทึกจริงไม่ได้จนกว่าจะรัน migration',
+        submitLabel: 'บันทึกร่าง'
+      });
+    }
     console.error('Error rendering official travel form:', error);
     res.status(500).send('ไม่สามารถโหลดฟอร์มคำขอไปราชการได้');
   }

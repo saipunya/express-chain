@@ -42,6 +42,44 @@ async function listAll() {
   return rows;
 }
 
+async function listReport(filters = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (filters.dateFrom) {
+    conditions.push('DATE(vr.trip_start_at) >= ?');
+    params.push(filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    conditions.push('DATE(vr.trip_start_at) <= ?');
+    params.push(filters.dateTo);
+  }
+
+  if (filters.status) {
+    conditions.push('vr.status = ?');
+    params.push(filters.status);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const [rows] = await db.query(
+    `SELECT vr.*, tr.request_no AS travel_request_no, tr.subject AS travel_subject,
+            tr.requester_group AS travel_requester_group,
+            va.plate_no_snapshot, va.driver_name_snapshot,
+            vtl.morning_departure_at, vtl.morning_odometer,
+            vtl.afternoon_return_at, vtl.afternoon_odometer,
+            vtl.distance_km, vtl.log_status
+     FROM vehicle_requests vr
+     INNER JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
+     LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
+     LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
+     ${whereClause}
+     ORDER BY vr.trip_start_at DESC, vr.id DESC`,
+    params
+  );
+  return rows;
+}
+
 async function getById(id) {
   const [rows] = await db.query('SELECT * FROM vehicle_requests WHERE id = ?', [id]);
   return rows[0] || null;
@@ -212,6 +250,7 @@ module.exports = {
   getById,
   getDetailById,
   listAll,
+  listReport,
   listPendingApproval,
   reject,
   submit,

@@ -1,6 +1,10 @@
 const driverMasterModel = require('../models/driverMasterModel');
 const memberModel = require('../models/memberModel');
 
+function isMissingWorkflowTable(error) {
+  return error && error.code === 'ER_NO_SUCH_TABLE';
+}
+
 function mapBody(req) {
   const actor = req.session?.user?.fullname || req.session?.user?.username || 'system';
   return {
@@ -24,6 +28,7 @@ async function renderForm(res, overrides = {}) {
     item: overrides.item,
     members,
     error: overrides.error || null,
+    warning: overrides.warning || null,
     submitLabel: overrides.submitLabel || 'บันทึก'
   });
 }
@@ -33,21 +38,46 @@ exports.list = async (req, res) => {
     const items = await driverMasterModel.listAll();
     res.render('driver-master/list', {
       title: 'ทะเบียนพนักงานขับรถ',
-      items
+      items,
+      warning: null
     });
   } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('driver-master/list', {
+        title: 'ทะเบียนพนักงานขับรถ',
+        items: [],
+        warning: 'ยังไม่พบตารางทะเบียนคนขับในฐานข้อมูล กรุณารัน migration ก่อนจึงจะใช้งานข้อมูลคนขับจริงได้'
+      });
+    }
     console.error('Error listing driver masters:', error);
     res.status(500).send('ไม่สามารถโหลดทะเบียนคนขับได้');
   }
 };
 
 exports.createForm = async (req, res) => {
-  await renderForm(res, {
-    title: 'เพิ่มทะเบียนพนักงานขับรถ',
-    formAction: '/driver-master/create',
-    item: { status: 'active' },
-    submitLabel: 'บันทึกข้อมูลคนขับ'
-  });
+  try {
+    await renderForm(res, {
+      title: 'เพิ่มทะเบียนพนักงานขับรถ',
+      formAction: '/driver-master/create',
+      item: { status: 'active' },
+      warning: null,
+      submitLabel: 'บันทึกข้อมูลคนขับ'
+    });
+  } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('driver-master/form', {
+        title: 'เพิ่มทะเบียนพนักงานขับรถ',
+        formAction: '/driver-master/create',
+        item: { status: 'active' },
+        members: [],
+        error: null,
+        warning: 'ยังไม่พบตารางทะเบียนคนขับในฐานข้อมูล ฟอร์มเปิดได้ แต่ยังบันทึกจริงไม่ได้จนกว่าจะรัน migration',
+        submitLabel: 'บันทึกข้อมูลคนขับ'
+      });
+    }
+    console.error('Error rendering driver master form:', error);
+    res.status(500).send('ไม่สามารถโหลดฟอร์มข้อมูลคนขับได้');
+  }
 };
 
 exports.create = async (req, res) => {

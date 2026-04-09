@@ -1,5 +1,23 @@
 const db = require('../config/db');
 
+function toSqlDate(value) {
+  if (!value) {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 10);
+  }
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function combineDateAndTime(dateValue, timeValue) {
+  if (!dateValue || !timeValue) {
+    return null;
+  }
+  return `${toSqlDate(dateValue)} ${timeValue}:00`;
+}
+
 async function listQueueForUser(user) {
   if (user?.mClass === 'admin' || user?.mClass === 'kjs') {
     const [rows] = await db.query(
@@ -58,20 +76,26 @@ async function getDetailForUser(vehicleRequestId, user) {
   return rows[0] || null;
 }
 
-async function logMorning(vehicleRequestId, user, odometer) {
+async function logMorning(vehicleRequestId, user, departureTime, odometer) {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
 
+    const [requestRows] = await connection.query(
+      'SELECT trip_start_at FROM vehicle_requests WHERE id = ? LIMIT 1',
+      [vehicleRequestId]
+    );
+    const departureAt = combineDateAndTime(requestRows[0]?.trip_start_at, departureTime);
+
     await connection.query(
       `UPDATE vehicle_trip_logs
-       SET morning_departure_at = NOW(),
+       SET morning_departure_at = ?,
            morning_odometer = ?,
            logged_morning_by_member_id = ?,
            log_status = 'morning_logged'
        WHERE vehicle_request_id = ?
          AND morning_departure_at IS NULL`,
-      [odometer, user?.id || null, vehicleRequestId]
+      [departureAt, odometer, user?.id || null, vehicleRequestId]
     );
 
     await connection.query(
@@ -90,13 +114,14 @@ async function logMorning(vehicleRequestId, user, odometer) {
   }
 }
 
-async function logAfternoon(vehicleRequestId, user, odometer) {
+async function logAfternoon(vehicleRequestId, user, returnTime, odometer) {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
     const [rows] = await connection.query(
-      `SELECT morning_odometer
+      `SELECT vtl.morning_odometer, vr.trip_end_at
        FROM vehicle_trip_logs
+       INNER JOIN vehicle_requests vr ON vr.id = vehicle_trip_logs.vehicle_request_id
        WHERE vehicle_request_id = ?
        LIMIT 1`,
       [vehicleRequestId]
@@ -108,16 +133,17 @@ async function logAfternoon(vehicleRequestId, user, odometer) {
     }
 
     const distance = Number(odometer) - Number(morningOdometer);
+    const returnAt = combineDateAndTime(rows[0]?.trip_end_at, returnTime);
     await connection.query(
       `UPDATE vehicle_trip_logs
-       SET afternoon_return_at = NOW(),
+       SET afternoon_return_at = ?,
            afternoon_odometer = ?,
            distance_km = ?,
            logged_afternoon_by_member_id = ?,
            log_status = 'completed'
        WHERE vehicle_request_id = ?
          AND afternoon_return_at IS NULL`,
-      [odometer, distance >= 0 ? distance : null, user?.id || null, vehicleRequestId]
+      [returnAt, odometer, distance >= 0 ? distance : null, user?.id || null, vehicleRequestId]
     );
 
     await connection.query(

@@ -47,6 +47,7 @@ exports.logMorning = async (req, res) => {
     await vehicleTripLogModel.logMorning(
       req.params.vehicleRequestId,
       req.session?.user,
+      req.body.morning_departure_time,
       req.body.morning_odometer
     );
     res.redirect(`/driver-trip/${req.params.vehicleRequestId}`);
@@ -61,6 +62,7 @@ exports.logAfternoon = async (req, res) => {
     await vehicleTripLogModel.logAfternoon(
       req.params.vehicleRequestId,
       req.session?.user,
+      req.body.afternoon_return_time,
       req.body.afternoon_odometer
     );
     res.redirect(`/driver-trip/${req.params.vehicleRequestId}`);

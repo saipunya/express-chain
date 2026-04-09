@@ -30,7 +30,7 @@
           <th>วันที่</th>
           <th>เรื่อง</th>
           <th>ผู้ขอ</th>
-          <th>ช่วงเวลา</th>
+          <th>วันที่ปฏิบัติงาน</th>
           <th>สถานะ</th>
           <th class="text-end">จัดการ</th>
         </tr>
@@ -54,8 +54,7 @@
               <small class="text-muted"><%= item.requester_group || '-' %></small>
             </td>
             <td>
-              <div><%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></div>
-              <small class="text-muted">ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+              <div><%= new Date(item.start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></div>
             </td>
             <td>
               <% const badge = item.status === 'approved' ? 'success' : item.status === 'submitted' ? 'warning text-dark' : item.status === 'rejected' ? 'danger' : item.status === 'cancelled' ? 'secondary' : 'info'; %>

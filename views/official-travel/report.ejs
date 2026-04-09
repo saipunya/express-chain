@@ -65,7 +65,7 @@
         <tr>
           <th>เลขที่/เรื่อง</th>
           <th>ผู้ขอ</th>
-          <th>ปลายทาง/ช่วงเวลา</th>
+          <th>ปลายทาง/วันที่ปฏิบัติงาน</th>
           <th>การเดินทาง</th>
           <th>คำขอใช้รถ</th>
           <th>รถ/คนขับ</th>
@@ -89,7 +89,7 @@
             </td>
             <td>
               <div><%= item.destination_text %></div>
-              <small class="text-muted"><%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %> ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+              <small class="text-muted"><%= new Date(item.start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></small>
             </td>
             <td>
               <div><%= item.transport_type %></div>

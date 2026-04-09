@@ -3,20 +3,32 @@ const vehicleRequestModel = require('../models/vehicleRequestModel');
 const { generateRunningNumber } = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
 
-function toDatetimeLocal(value) {
+function toDateInput(value) {
   if (!value) {
     return '';
   }
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return String(value).slice(0, 16);
+    return String(value).slice(0, 10);
   }
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function buildSingleDayRange(operationDate) {
+  if (!operationDate) {
+    return { trip_start_at: null, trip_end_at: null };
+  }
+
+  return {
+    trip_start_at: `${operationDate} 00:00:00`,
+    trip_end_at: `${operationDate} 23:59:00`
+  };
 }
 
 function mapBody(req) {
   const user = req.session?.user || {};
+  const operationDate = req.body.operation_date || toDateInput(req.body.trip_start_at);
+  const dateRange = buildSingleDayRange(operationDate);
   return {
     travel_request_id: req.body.travel_request_id,
     vehicle_request_no: req.body.vehicle_request_no,
@@ -28,8 +40,8 @@ function mapBody(req) {
     destination_text: req.body.destination_text,
     mission_text: req.body.mission_text,
     passenger_count: req.body.passenger_count,
-    trip_start_at: req.body.trip_start_at,
-    trip_end_at: req.body.trip_end_at,
+    trip_start_at: dateRange.trip_start_at,
+    trip_end_at: dateRange.trip_end_at,
     status: req.body.status || 'draft',
     created_by: user.fullname || user.username || 'system',
     updated_by: user.fullname || user.username || 'system'
@@ -154,8 +166,7 @@ exports.createForm = async (req, res) => {
       destination_text: selectedTravel?.destination_text || '',
       mission_text: selectedTravel?.purpose_text || '',
       passenger_count: selectedTravel?.companion_count ? selectedTravel.companion_count + 1 : 1,
-      trip_start_at: selectedTravel ? toDatetimeLocal(selectedTravel.start_at) : '',
-      trip_end_at: selectedTravel ? toDatetimeLocal(selectedTravel.end_at) : ''
+      operation_date: selectedTravel ? toDateInput(selectedTravel.start_at) : requestDate.toISOString().slice(0, 10)
     };
 
     await renderForm(res, {
@@ -176,7 +187,8 @@ exports.createForm = async (req, res) => {
           vehicle_request_no: await generateRunningNumber('vehicle_requests', requestDate),
           request_date: requestDate.toISOString().slice(0, 10),
           learn_to: 'สหกรณ์จังหวัดชัยภูมิ',
-          passenger_count: 1
+          passenger_count: 1,
+          operation_date: requestDate.toISOString().slice(0, 10)
         },
         travelOptions: [],
         warning: 'ยังไม่พบตาราง workflow คำขอใช้รถหรือคำขอไปราชการในฐานข้อมูล ฟอร์มเปิดได้ แต่ยังบันทึกจริงไม่ได้จนกว่าจะรัน migration',
@@ -226,8 +238,7 @@ exports.editForm = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
-    item.trip_start_at = toDatetimeLocal(item.trip_start_at);
-    item.trip_end_at = toDatetimeLocal(item.trip_end_at);
+    item.operation_date = toDateInput(item.trip_start_at);
     const travelOptions = await officialTravelRequestModel.listEligibleForVehicleRequest();
     if (!travelOptions.find((option) => Number(option.id) === Number(item.travel_request_id))) {
       travelOptions.unshift({

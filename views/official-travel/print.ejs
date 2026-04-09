@@ -24,7 +24,7 @@
     <p><strong>ข้าพเจ้า</strong> <%= item.requester_name %> ตำแหน่ง <%= item.requester_position || '-' %> กลุ่มงาน <%= item.requester_group || '-' %></p>
     <p><strong>ขออนุญาตไปราชการเพื่อ</strong> <%= item.purpose_text %></p>
     <p><strong>สถานที่</strong> <%= item.destination_text %></p>
-    <p><strong>ระหว่างวันที่</strong> <%= new Date(item.start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></p>
+    <p><strong>วันที่ปฏิบัติงาน</strong> <%= new Date(item.start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></p>
     <p><strong>วิธีเดินทาง</strong> <%= item.transport_type %> <%= item.transport_other_text || '' %></p>
     <p><strong>ผู้ร่วมเดินทาง</strong></p>
     <ol>

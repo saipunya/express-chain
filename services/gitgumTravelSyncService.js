@@ -48,7 +48,7 @@ function buildNote(item) {
 function buildGitgumPayload(item) {
   return {
     git_date: toSqlDate(item.start_at || item.request_date),
-    git_time: toTime(item.start_at),
+    git_time: '',
     git_act: item.subject || 'ขออนุมัติเดินทางไปราชการ',
     git_place: item.destination_text || '-',
     git_goto: buildParticipants(item) || '-',

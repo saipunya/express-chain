@@ -23,7 +23,7 @@
     <p><strong>ปลายทาง</strong> <%= item.destination_text %></p>
     <p><strong>ภารกิจ</strong> <%= item.mission_text %></p>
     <p><strong>จำนวนผู้โดยสาร</strong> <%= item.passenger_count %> คน</p>
-    <p><strong>ระหว่างวันที่</strong> <%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></p>
+    <p><strong>วันที่ปฏิบัติงาน</strong> <%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></p>
     <div class="mt-5 text-end">
       <p>ลงชื่อ ................................................ ผู้ขอใช้รถ</p>
       <p>(<%= item.requester_name %>)</p>

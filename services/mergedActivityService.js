@@ -72,8 +72,7 @@ function buildGitgumEvent(row) {
 
 function buildTravelEvent(row) {
   const dateStr = toYMD(row.start_at);
-  const timeStr = row.start_at ? String(row.start_at).slice(11, 16) : null;
-  const start = dateStr ? (timeStr ? `${dateStr}T${timeStr}` : dateStr) : undefined;
+  const start = dateStr || undefined;
   if (!start) {
     return null;
   }
@@ -88,7 +87,7 @@ function buildTravelEvent(row) {
     id: `travel-${row.id}`,
     title: [row.subject, row.destination_text ? `@${row.destination_text}` : null].filter(Boolean).join(' '),
     start,
-    allDay: false,
+    allDay: true,
     extendedProps: {
       sourceType: 'travel_request',
       sourceLabel: 'คำขอไปราชการ',

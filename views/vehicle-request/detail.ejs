@@ -23,7 +23,7 @@
           <dt class="col-sm-4">ผู้ขอใช้รถ</dt><dd class="col-sm-8"><%= item.requester_name %> <span class="text-muted">(<%= item.requester_position || '-' %>)</span></dd>
           <dt class="col-sm-4">ปลายทาง</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
           <dt class="col-sm-4">ภารกิจ</dt><dd class="col-sm-8"><%= item.mission_text %></dd>
-          <dt class="col-sm-4">ช่วงเวลา</dt><dd class="col-sm-8"><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %> ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) %></dd>
+          <dt class="col-sm-4">วันที่ปฏิบัติงาน</dt><dd class="col-sm-8"><%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></dd>
           <dt class="col-sm-4">จำนวนผู้โดยสาร</dt><dd class="col-sm-8"><%= item.passenger_count %></dd>
           <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.status %></span></dd>
           <dt class="col-sm-4">ผู้พิจารณา</dt><dd class="col-sm-8"><%= item.approver_name || '-' %></dd>

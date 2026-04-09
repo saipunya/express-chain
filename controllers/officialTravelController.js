@@ -5,16 +5,26 @@ const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
 
 const OFFICIAL_TRAVEL_SUBJECT = 'ขออนุมัติเดินทางไปราชการ';
 
-function toDatetimeLocal(value) {
+function toDateInput(value) {
   if (!value) {
     return '';
   }
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return String(value).slice(0, 16);
+    return String(value).slice(0, 10);
   }
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function buildSingleDayRange(operationDate) {
+  if (!operationDate) {
+    return { start_at: null, end_at: null };
+  }
+
+  return {
+    start_at: `${operationDate} 00:00:00`,
+    end_at: `${operationDate} 23:59:00`
+  };
 }
 
 function calculateDuration(startAt, endAt) {
@@ -32,7 +42,9 @@ function calculateDuration(startAt, endAt) {
 
 function mapBody(req) {
   const user = req.session?.user || {};
-  const { duration_days, duration_hours } = calculateDuration(req.body.start_at, req.body.end_at);
+  const operationDate = req.body.operation_date || toDateInput(req.body.start_at);
+  const dateRange = buildSingleDayRange(operationDate);
+  const { duration_days, duration_hours } = calculateDuration(dateRange.start_at, dateRange.end_at);
   return {
     request_no: req.body.request_no,
     request_date: req.body.request_date,
@@ -44,8 +56,8 @@ function mapBody(req) {
     requester_group: req.body.requester_group,
     purpose_text: req.body.purpose_text,
     destination_text: req.body.destination_text,
-    start_at: req.body.start_at,
-    end_at: req.body.end_at,
+    start_at: dateRange.start_at,
+    end_at: dateRange.end_at,
     duration_days: req.body.duration_days || duration_days,
     duration_hours: req.body.duration_hours || duration_hours,
     transport_type: req.body.transport_type,
@@ -181,8 +193,7 @@ exports.createForm = async (req, res) => {
       transport_type: 'official_vehicle',
       out_of_province: 0,
       requires_vehicle_request: 1,
-      start_at: '',
-      end_at: ''
+      operation_date: requestDate.toISOString().slice(0, 10)
     };
     await renderForm(res, {
       title: 'สร้างคำขอไปราชการ',
@@ -206,8 +217,7 @@ exports.createForm = async (req, res) => {
         transport_type: 'official_vehicle',
         out_of_province: 0,
         requires_vehicle_request: 1,
-        start_at: '',
-        end_at: ''
+        operation_date: requestDate.toISOString().slice(0, 10)
       };
       return renderForm(res, {
         title: 'สร้างคำขอไปราชการ',
@@ -264,8 +274,7 @@ exports.editForm = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
-    item.start_at = toDatetimeLocal(item.start_at);
-    item.end_at = toDatetimeLocal(item.end_at);
+    item.operation_date = toDateInput(item.start_at);
     await renderForm(res, {
       title: 'แก้ไขคำขอไปราชการ',
       formAction: `/official-travel/${item.id}/edit`,

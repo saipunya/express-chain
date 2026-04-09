@@ -73,7 +73,7 @@
           <tr>
             <td>
               <div class="fw-semibold"><%= item.vehicle_request_no %></div>
-              <small class="text-muted"><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+              <small class="text-muted"><%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></small>
             </td>
             <td>
               <div class="fw-semibold"><%= item.travel_request_no %></div>

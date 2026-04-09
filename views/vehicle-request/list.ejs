@@ -30,7 +30,7 @@
           <th>คำขอไปราชการ</th>
           <th>ผู้ขอ</th>
           <th>ปลายทาง</th>
-          <th>ช่วงเวลา</th>
+          <th>วันที่ปฏิบัติงาน</th>
           <th>สถานะ</th>
           <th class="text-end">จัดการ</th>
         </tr>
@@ -51,8 +51,7 @@
             <td><%= item.requester_name %></td>
             <td><%= item.destination_text %></td>
             <td>
-              <div><%= new Date(item.trip_start_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></div>
-              <small class="text-muted">ถึง <%= new Date(item.trip_end_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) %></small>
+              <div><%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></div>
             </td>
             <td><span class="badge bg-info"><%= item.status %></span></td>
             <td class="text-end text-nowrap">

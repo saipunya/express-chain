@@ -11,6 +11,27 @@ const Project = {
     const [rows] = await db.query(`SELECT * FROM pt_project ${where} ORDER BY pro_year DESC, pro_order DESC`, params);
     return rows;
   },
+  getList: async ({ search = '', page = 1, pageSize = 12 } = {}) => {
+    const params = [];
+    let where = '';
+    if (search) {
+      where = 'WHERE pro_story LIKE ?';
+      params.push(`%${search}%`);
+    }
+
+    const [[{ total = 0 } = {}]] = await db.query(
+      `SELECT COUNT(*) AS total FROM pt_project ${where}`,
+      params
+    );
+
+    const offset = Math.max(0, (Number(page) - 1) * Number(pageSize));
+    const [items] = await db.query(
+      `SELECT * FROM pt_project ${where} ORDER BY pro_year DESC, pro_order DESC LIMIT ? OFFSET ?`,
+      [...params, Number(pageSize), offset]
+    );
+
+    return { items, total: Number(total || 0) };
+  },
   getById: async (id) => {
     const [rows] = await db.query('SELECT * FROM pt_project WHERE pro_id = ?', [id]);
     return rows[0];

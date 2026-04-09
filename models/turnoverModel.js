@@ -11,7 +11,53 @@ exports.getSummaryByFiscalYear = async () => {
     `SELECT
         tur_budyear,
         COUNT(DISTINCT CONCAT(tur_year, '-', tur_month)) AS months_with_data,
-        SUM(tur_amount) AS total_amount
+        SUM(tur_amount) AS total_amount,
+        SUBSTRING_INDEX(
+          GROUP_CONCAT(
+            tur_year
+            ORDER BY CAST(NULLIF(tur_year, '') AS SIGNED) DESC,
+              CASE
+                WHEN tur_month IN ('มกราคม', '1') THEN 1
+                WHEN tur_month IN ('กุมภาพันธ์', '2') THEN 2
+                WHEN tur_month IN ('มีนาคม', '3') THEN 3
+                WHEN tur_month IN ('เมษายน', '4') THEN 4
+                WHEN tur_month IN ('พฤษภาคม', '5') THEN 5
+                WHEN tur_month IN ('มิถุนายน', '6') THEN 6
+                WHEN tur_month IN ('กรกฎาคม', '7') THEN 7
+                WHEN tur_month IN ('สิงหาคม', '8') THEN 8
+                WHEN tur_month IN ('กันยายน', '9') THEN 9
+                WHEN tur_month IN ('ตุลาคม', '10') THEN 10
+                WHEN tur_month IN ('พฤศจิกายน', '11') THEN 11
+                WHEN tur_month IN ('ธันวาคม', '12') THEN 12
+                ELSE 0
+              END DESC
+          ),
+          ',',
+          1
+        ) AS latest_year,
+        SUBSTRING_INDEX(
+          GROUP_CONCAT(
+            tur_month
+            ORDER BY CAST(NULLIF(tur_year, '') AS SIGNED) DESC,
+              CASE
+                WHEN tur_month IN ('มกราคม', '1') THEN 1
+                WHEN tur_month IN ('กุมภาพันธ์', '2') THEN 2
+                WHEN tur_month IN ('มีนาคม', '3') THEN 3
+                WHEN tur_month IN ('เมษายน', '4') THEN 4
+                WHEN tur_month IN ('พฤษภาคม', '5') THEN 5
+                WHEN tur_month IN ('มิถุนายน', '6') THEN 6
+                WHEN tur_month IN ('กรกฎาคม', '7') THEN 7
+                WHEN tur_month IN ('สิงหาคม', '8') THEN 8
+                WHEN tur_month IN ('กันยายน', '9') THEN 9
+                WHEN tur_month IN ('ตุลาคม', '10') THEN 10
+                WHEN tur_month IN ('พฤศจิกายน', '11') THEN 11
+                WHEN tur_month IN ('ธันวาคม', '12') THEN 12
+                ELSE 0
+              END DESC
+          ),
+          ',',
+          1
+        ) AS latest_month
      FROM tbl_turnover
      GROUP BY tur_budyear
      ORDER BY CAST(NULLIF(tur_budyear, '') AS SIGNED) DESC`

@@ -4,7 +4,21 @@
 <div class="py-4">
   <%- include('../partials/plan-navbar', { currentPage: 'planmain' }) %>
 
-  <div class="card border-0 shadow-sm">
+  <div class="mobile-page-header">
+    <div>
+      <h1 class="mobile-page-header__title">
+        <i class="bi bi-clipboard-check me-2"></i>แผนงานหลัก
+      </h1>
+      <p class="mobile-page-header__subtitle">ดูรายการแผนงานหลักแบบย่อและเข้าถึงการจัดการได้ง่ายขึ้นบนมือถือ</p>
+    </div>
+    <div class="mobile-page-header__meta">
+      <span class="mobile-chip">
+        <i class="bi bi-collection"></i>ทั้งหมด <%= plans.length %> รายการ
+      </span>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mobile-list-card table-mobile-cards">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover table-sm mb-0">
@@ -21,12 +35,13 @@
         <tbody>
           <% plans.forEach(p => { %>
             <tr>
-              <td><%= p.ma_id %></td>
-              <td><%= p.ma_code %></td>
-              <td><%= p.ma_subject %></td>
-              <td><%= p.ma_saveby %></td>
-              <td><%= thaiDate(p.ma_savedate) %></td>
-              <td class="d-flex gap-2">
+              <td class="mobile-primary" data-label="ลำดับ"><%= p.ma_id %></td>
+              <td data-label="รหัส"><%= p.ma_code %></td>
+              <td data-label="หัวข้อ"><%= p.ma_subject %></td>
+              <td data-label="บันทึกโดย"><%= p.ma_saveby %></td>
+              <td data-label="วันที่"><%= thaiDate(p.ma_savedate) %></td>
+              <td class="mobile-action" data-label="การจัดการ">
+                <div class="mobile-inline-actions">
                 <a href="/planmain/<%= p.ma_id %>/edit" class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-pencil-square"></i>
                 </a>
@@ -35,6 +50,7 @@
                   <input type="hidden" name="_method" value="DELETE">
                   <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('ลบรายการ?')">ลบ</button>
                 </form>
+                </div>
               </td>
             </tr>
           <% }) %>

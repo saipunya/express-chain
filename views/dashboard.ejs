@@ -104,7 +104,7 @@
         </div>
         <div class="card-body p-4">
           <div class="menu-section-title">ข้อมูลและรายงาน</div>
-          <div class="row g-3 mb-4">
+          <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="reports">
             <div class="col-md-4">
               <a href="/allCoop" class="menu-link">
                 <div class="menu-card">
@@ -227,9 +227,14 @@
               </a>
             </div>
           </div>
+          <div class="dashboard-toggle-wrap d-md-none mb-4">
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill dashboard-toggle-btn" data-target-group="reports" data-expand-label="ดูเมนูเพิ่มเติม" data-collapse-label="ซ่อนเมนู">
+              <i class="bi bi-chevron-down me-1"></i>ดูเมนูเพิ่มเติม
+            </button>
+          </div>
 
           <div class="menu-section-title">โครงการและกิจกรรม</div>
-          <div class="row g-3 mb-4">
+          <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="projects">
             <div class="col-md-4">
               <a href="/plan" class="menu-link">
                 <div class="menu-card">
@@ -321,10 +326,15 @@
               </div>
             <% } %>
           </div>
+          <div class="dashboard-toggle-wrap d-md-none mb-4">
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill dashboard-toggle-btn" data-target-group="projects" data-expand-label="ดูเมนูเพิ่มเติม" data-collapse-label="ซ่อนเมนู">
+              <i class="bi bi-chevron-down me-1"></i>ดูเมนูเพิ่มเติม
+            </button>
+          </div>
 
           <% if (user && user.mClass === 'admin') { %>
             <div class="menu-section-title">สำหรับผู้ดูแลระบบ</div>
-            <div class="row g-3">
+            <div class="row g-3 dashboard-menu-grid" data-dashboard-group="admin">
               <div class="col-md-4">
                 <a href="/member" class="menu-link">
                   <div class="menu-card">
@@ -459,6 +469,23 @@
       margin-bottom:.5rem;
     }
 
+    .dashboard-toggle-wrap {
+      text-align: center;
+    }
+
+    .dashboard-toggle-btn {
+      min-height: 40px;
+      padding-inline: 1rem;
+    }
+
+    .dashboard-toggle-btn i {
+      transition: transform .2s ease;
+    }
+
+    .dashboard-toggle-btn.is-expanded i {
+      transform: rotate(180deg);
+    }
+
     /* Activities */
     .activity-item {font-size:.9rem; transition:.25s;}
     .activity-item:hover {background:rgba(0,0,0,.02);} 
@@ -473,7 +500,45 @@
       .feature-card {padding:26px 16px;}
       .mini-stat {padding:12px 14px;}
       .profile-avatar {width:72px; height:72px;}
+
+      .dashboard-menu-grid:not(.is-expanded) > [class*="col-"]:nth-child(n+7) {
+        display: none;
+      }
+
+      .menu-card {
+        padding: 12px 14px;
+        border-radius: 12px;
+      }
+
+      .menu-title {
+        font-size: .95rem;
+      }
+
+      .menu-desc {
+        font-size: .8rem;
+      }
     }
   </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.dashboard-toggle-btn').forEach(function(button) {
+        const targetGroup = button.getAttribute('data-target-group');
+        const target = document.querySelector('.dashboard-menu-grid[data-dashboard-group="' + targetGroup + '"]');
+        if (!target) return;
+
+        if (window.innerWidth > 575.98 || target.children.length <= 6) {
+          button.parentElement.style.display = 'none';
+          return;
+        }
+
+        button.addEventListener('click', function() {
+          const expanded = target.classList.toggle('is-expanded');
+          button.classList.toggle('is-expanded', expanded);
+          button.innerHTML = '<i class="bi bi-chevron-down me-1"></i>' + (expanded ? button.dataset.collapseLabel : button.dataset.expandLabel);
+        });
+      });
+    });
+  </script>
 
   <%- include('partials/footer') %>

@@ -21,6 +21,12 @@
     --border-color: #e5e7eb;
     --bg-light: #f9fafb;
     --bg-lighter: #ffffff;
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+    --color-text: #1e293b;
+    --color-muted: #64748b;
+    --color-accent-grad: linear-gradient(135deg, #059669 0%, #10b981 100%);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -30,6 +36,11 @@
     --radius-xl: 1rem;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: 0.15s ease;
+    --grad-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --grad-accent: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    --grad-warm: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    --glass: rgba(255, 255, 255, 0.75);
+    --glass-blur: blur(16px);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -343,7 +354,6 @@
 
   /* Enhanced Section Titles */
   .section-title {
-    font-size: 1.875rem;
     font-weight: 700;
     color: var(--primary);
     margin-bottom: 2rem;
@@ -405,7 +415,7 @@
   }
 
   .table tbody td {
-    color: var (--text-secondary);
+    color: var(--text-secondary);
     vertical-align: middle;
   }
 
@@ -734,10 +744,6 @@
       padding: 1.5rem 1rem;
     }
 
-    .section-title {
-      font-size: 1.5rem !important;
-    }
-
     .card-header {
       padding: 0.75rem 1rem;
     }
@@ -777,10 +783,6 @@
 
     .hero-title {
       font-size: 1.75rem !important;
-    }
-
-    .section-title {
-      font-size: 1.25rem !important;
     }
 
     .stats-card h3 {
@@ -867,7 +869,6 @@
   }
 
   .section-title {
-    font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary);
     margin-bottom: 2rem;
@@ -1170,7 +1171,6 @@
     }
     
     .section-title {
-      font-size: 1.25rem;
       margin-bottom: 1.5rem;
     }
     
@@ -1745,10 +1745,6 @@
       padding-block: 1.25rem;
     }
 
-    .section-title {
-      font-size: 1.1rem !important;
-    }
-
     .section-title:after {
       width: 50px;
       height: 3px;
@@ -1765,15 +1761,6 @@
 
     .modern-card .card-header {
       padding: 10px 12px;
-      font-size: 0.9rem;
-    }
-
-    .card-title {
-      font-size: 0.95rem;
-    }
-
-    .display-6 {
-      font-size: 1.5rem !important;
     }
 
     /* Stats Cards Mobile */
@@ -1786,16 +1773,16 @@
     }
 
     #stats .card-title {
-      font-size: 0.85rem;
       margin-bottom: 4px;
     }
 
     #stats .card-text.display-6 {
-      font-size: 1.4rem !important;
       margin-bottom: 8px;
     }
 
-    /* Enhanced Chart Responsive Design */
+  }
+
+  /* Enhanced Chart Responsive Design */
   .chart-container {
     position: relative;
     height: 300px;
@@ -2236,6 +2223,7 @@
     margin-right: 0.5rem;
   }
 
+  @media (max-width: 767.98px) {
     /* Groups Section Mobile */
     #groups .col-md-4 {
       margin-bottom: 10px;
@@ -2439,18 +2427,6 @@
       font-size: 0.7rem;
     }
 
-    .display-6 {
-      font-size: 1.25rem !important;
-    }
-
-    #stats .card-text.display-6 {
-      font-size: 1.2rem !important;
-    }
-
-    .section-title {
-      font-size: 1rem !important;
-    }
-
     .chart-container {
       height: 240px !important;
     }
@@ -2462,39 +2438,6 @@
     #activitiesCalendar {
       min-height: 300px !important;
     }
-  }
-
-  /* Enhanced Colors and Visual Hierarchy */
-  .section-title {
-    position: relative;
-    padding-bottom: 1rem;
-    color: var(--primary);
-    font-weight: 700;
-  }
-
-  .section-title:after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 0;
-    width: 80px;
-    height: 4px;
-    background: var(--gradient-primary);
-    border-radius: 4px;
-  }
-
-  /* Enhanced Card Headers */
-  .modern-card .card-header {
-    background: linear-gradient(135deg, var(--primary-light) 0%, #f0fdf4 100%);
-    border-bottom: 2px solid var(--primary);
-    font-weight: 600;
-    color: var(--primary);
-  }
-
-  .modern-card .card-header h5 {
-    margin: 0;
-    font-size: 1.1rem;
   }
 
   /* Icon Colors */
@@ -2566,98 +2509,6 @@
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 0.5px;
-  }
-
-  /* Enhanced Buttons */
-  .btn-primary {
-    background: var(--gradient-primary);
-    border: none;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
-  }
-
-  .btn-success {
-    background: var(--gradient-primary);
-    border: none;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-  }
-
-  .btn-success:hover {
-    background: linear-gradient(135deg, #047857 0%, #059669 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
-  }
-
-  .btn-outline-primary {
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    background: transparent;
-    transition: all 0.3s ease;
-  }
-
-  .btn-outline-primary:hover {
-    background: var(--gradient-primary);
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-  }
-
-  .btn-outline-success {
-    border: 2px solid var(--success);
-    color: var(--success);
-    background: transparent;
-    transition: all 0.3s ease;
-  }
-
-  .btn-outline-success:hover {
-    background: var(--gradient-primary);
-    border-color: var(--success);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-  }
-
-  /* Section Backgrounds */
-  .section-block.bg-light {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  }
-
-  .section-block.bg-white {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  }
-
-  /* Enhanced Links */
-  a {
-    color: var(--primary);
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-
-  a:hover {
-    color: #047857;
-    text-decoration: underline;
-  }
-
-  /* Enhanced Stats Display */
-  .display-4 {
-    background: var(--gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    font-weight: 800;
-  }
-
-  /* Enhanced Chart Containers */
-  .chart-container {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   /* Back to Top Button */
@@ -2947,7 +2798,6 @@
 
   #stats .card-title {
     color: #64748b;
-    font-size: 0.9rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
   }
@@ -3261,6 +3111,1023 @@
   }
 </style>
 
+<style>
+  /* UI refinement pass: simpler, calmer, more consistent */
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 24%),
+      #f8fafc !important;
+  }
+
+  .container,
+  .container-lg {
+    max-width: 1240px;
+  }
+
+  .section-block {
+    padding-block: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .hero-shell {
+    background: linear-gradient(135deg, #047857 0%, #059669 52%, #34d399 100%) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 28px;
+    box-shadow: 0 28px 60px -38px rgba(5, 150, 105, 0.55);
+  }
+
+  .hero-shell::before {
+    background:
+      radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.24), transparent 30%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  }
+
+  .hero-img-wrap {
+    min-height: 360px;
+  }
+
+  .glass-pane {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .login-form-wrapper,
+  .glass-pane .w-100.text-center {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 22px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 45px -35px rgba(15, 23, 42, 0.55);
+  }
+
+  .section-title {
+    margin-bottom: 2.25rem;
+    padding-bottom: 0.85rem;
+    color: #0f172a !important;
+    letter-spacing: -0.03em;
+  }
+
+  .section-title::before,
+  .section-title:after {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 72px;
+    background: linear-gradient(90deg, #059669, #34d399);
+  }
+
+  .modern-card,
+  .card {
+    border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    border-radius: 24px;
+    box-shadow: 0 18px 45px -38px rgba(15, 23, 42, 0.4) !important;
+  }
+
+  .modern-card::after,
+  .card::before {
+    display: none !important;
+  }
+
+  .modern-card:hover,
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 55px -38px rgba(15, 23, 42, 0.45) !important;
+    border-color: rgba(5, 150, 105, 0.24) !important;
+  }
+
+  .modern-card .card-header,
+  .card .card-header {
+    background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
+  .card-gradient-bar {
+    height: 5px;
+    opacity: 0.95;
+  }
+
+  .btn {
+    border-radius: 999px;
+    font-weight: 600;
+    box-shadow: none !important;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-primary,
+  .btn-outline-success,
+  .btn-outline-secondary,
+  .btn-outline-warning,
+  .btn-outline-danger {
+    background: #ffffff;
+  }
+
+  .table-responsive {
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .table thead th {
+    background: #f8fafc !important;
+    color: #334155 !important;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #dbe4ee !important;
+  }
+
+  .table tbody tr:hover {
+    background: #f0fdf4 !important;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .meeting-today-card {
+    border-radius: 24px;
+    box-shadow: 0 20px 48px -40px rgba(15, 23, 42, 0.45);
+  }
+
+  .meeting-today-head {
+    background:
+      radial-gradient(900px 180px at 10% 0%, rgba(52, 211, 153, 0.12), transparent 55%),
+      linear-gradient(180deg, #ffffff, #f8fafc);
+  }
+
+  .meeting-today-item {
+    border-radius: 16px;
+    background: #ffffff;
+  }
+
+  #stats .card-body {
+    padding: 2rem 1.5rem;
+  }
+
+  #stats .display-5,
+  #stats .display-6 {
+    letter-spacing: -0.04em;
+  }
+
+  #activitiesCalendar,
+  #activitiesCalendar .fc {
+    border-radius: 20px;
+  }
+
+  #downloads .card-header,
+  #rules .card-header {
+    color: #0f172a !important;
+    background: linear-gradient(180deg, #ecfdf5, #f0fdf4) !important;
+  }
+
+  .resource-links .hero-link-card {
+    min-height: 100%;
+    justify-content: center;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    color: #0f172a;
+  }
+
+  .resource-links .hero-link-card:hover {
+    color: #0f172a;
+    background: linear-gradient(180deg, #f0fdf4, #ecfdf5);
+  }
+
+  .resource-links .hero-link-card--alt:hover {
+    background: linear-gradient(180deg, #eff6ff, #f8fafc);
+  }
+
+  .summary-metric-card {
+    background: linear-gradient(180deg, #ffffff, #fbfffd) !important;
+  }
+
+  .summary-metric-card .metric-icon {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(240, 253, 244, 0.9));
+    border: 1px solid rgba(16, 185, 129, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .summary-metric-card .badge {
+    min-width: 72px;
+  }
+
+  #stats .row {
+    --bs-gutter-x: 0.9rem;
+    --bs-gutter-y: 0.9rem;
+  }
+
+  #stats .summary-metric-card .card-body {
+    padding: 1.4rem 1rem;
+  }
+
+  #stats .metric-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  #stats .badge {
+    min-width: 56px;
+    margin-bottom: 0.75rem !important;
+  }
+
+  #stats .btn {
+    padding: 0.42rem 0.72rem;
+    font-size: 0.78rem;
+  }
+
+  #institution-summary .institution-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  #institution-summary .institution-summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(22, 163, 74, 0.08);
+  }
+
+  #institution-summary .institution-summary-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-secondary);
+  }
+
+  #institution-summary .institution-summary-value {
+    font-size: 1.6rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+  }
+
+  #institution-summary .institution-summary-action {
+    margin-top: 0.6rem;
+    padding: 0.32rem 0.72rem;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    align-self: flex-end;
+  }
+
+  #member-summary .member-summary-meta {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  #member-summary .member-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #member-summary .member-summary-headline {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  #member-summary .member-summary-kicker {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #059669;
+  }
+
+  #member-summary .member-summary-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  #member-summary .member-summary-year {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.72rem;
+    border-radius: 999px;
+    background: rgba(5, 150, 105, 0.08);
+    color: #047857;
+    border: 1px solid rgba(5, 150, 105, 0.16);
+    font-weight: 700;
+  }
+
+  #member-summary .member-summary-overview {
+    padding: 1rem;
+    background: linear-gradient(180deg, #f8fffc, #f0fdf4);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  #member-summary .member-summary-totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  #member-summary .member-summary-total {
+    padding: 0.8rem 0.9rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  #member-summary .member-summary-total-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+
+  #member-summary .member-summary-total-value {
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  #member-summary .member-summary-action {
+    white-space: nowrap;
+  }
+
+  #member-summary .member-summary-table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    vertical-align: middle;
+  }
+
+  #member-summary .member-summary-table tbody td {
+    background: #ffffff;
+  }
+
+  #member-summary .member-summary-table tbody tr:nth-child(odd) td {
+    background: #fcfffd;
+  }
+
+  #turnover-summary .turnover-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #turnover-summary .turnover-summary-headline {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  #turnover-summary .turnover-summary-kicker {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2563eb;
+  }
+
+  #turnover-summary .turnover-summary-meta {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  #turnover-summary .turnover-summary-overview {
+    padding: 1rem;
+    background: linear-gradient(180deg, #f8fbff, #eff6ff);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  #turnover-summary .turnover-summary-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  #turnover-summary .turnover-summary-tile {
+    padding: 0.8rem 0.9rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(37, 99, 235, 0.08);
+  }
+
+  #turnover-summary .turnover-summary-tile-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+
+  #turnover-summary .turnover-summary-tile-value {
+    font-size: 1.06rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  #turnover-summary .turnover-summary-table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+  }
+
+  #turnover-summary .turnover-summary-year {
+    display: grid;
+    gap: 0.18rem;
+  }
+
+  #turnover-summary .turnover-summary-year-main {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  #turnover-summary .turnover-summary-year-sub {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  #turnover-summary .turnover-summary-status {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  #turnover-summary .turnover-summary-target {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  #turnover-summary .turnover-summary-status .progress {
+    height: 0.7rem;
+    border-radius: 999px;
+    background: #dbeafe;
+  }
+
+  #turnover-summary .turnover-summary-note {
+    color: var(--text-secondary);
+  }
+
+  .activities-shell .card-header,
+  .downloads-shell .card-header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .activities-shell .card-body {
+    background: linear-gradient(180deg, #ffffff, #fcfffe);
+  }
+
+  .activities-shell #activitiesCalendar {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .downloads-shell .table tbody td:first-child,
+  .downloads-shell .table thead th:first-child {
+    text-align: center;
+    width: 60px;
+  }
+
+  .downloads-shell .table tbody tr td {
+    vertical-align: middle;
+  }
+
+  .downloads-shell .card-footer {
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+  }
+
+  .resource-link-text {
+    font-size: 1rem;
+  }
+
+  .btn-inline-small {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .btn-soft-primary {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(5, 150, 105, 0.28);
+  }
+
+  .btn-soft-primary:hover {
+    background: #dff7eb;
+    color: #047857;
+    border-color: rgba(5, 150, 105, 0.4);
+  }
+
+  .metric-bar--success {
+    background: var(--grad-success);
+  }
+
+  .metric-bar--info {
+    background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+  }
+
+  .metric-bar--warm {
+    background: var(--grad-warm);
+  }
+
+  .table-subtle-sm {
+    font-size: 0.95rem;
+  }
+
+  .table-head-soft {
+    background: var(--bg-light);
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .table-head-soft th {
+    color: var(--text-secondary);
+    font-weight: 700;
+    padding: 12px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  .table-head-soft th.text-center,
+  .table-subtle td.text-center {
+    text-align: center;
+  }
+
+  .table-subtle tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+  }
+
+  .table-subtle tbody td {
+    padding: 12px;
+  }
+
+  .table-subtle .cell-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: left;
+  }
+
+  .icon-accent {
+    color: var(--primary);
+  }
+
+  .count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  .count-pill--primary {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .count-pill--success {
+    background: #d1fae5;
+    color: #059669;
+    border-color: #10b981;
+  }
+
+  .count-pill--warning {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #f59e0b;
+  }
+
+  .count-pill--danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #ef4444;
+  }
+
+  /* Typography normalization */
+  :root {
+    --fs-section-title: clamp(1.45rem, 1.1rem + 1vw, 1.9rem);
+    --fs-section-subtitle: clamp(1.05rem, 0.98rem + 0.35vw, 1.2rem);
+    --fs-card-heading: 1.05rem;
+    --fs-card-title: 0.98rem;
+    --fs-body-md: 0.95rem;
+    --fs-body-sm: 0.875rem;
+    --fs-meta: 0.82rem;
+    --fs-stat: clamp(2rem, 1.5rem + 1.2vw, 2.65rem);
+  }
+
+  body,
+  .card-text,
+  .modal-body,
+  .list-group-item,
+  .meeting-subline,
+  .meeting-meta,
+  .table,
+  .table td,
+  .table th {
+    font-size: var(--fs-body-md);
+  }
+
+  .small,
+  .text-muted,
+  .badge,
+  .btn-sm,
+  .table-head-soft th,
+  .table thead th,
+  .deadline-code,
+  .resource-link-text,
+  .btn-inline-small {
+    font-size: var(--fs-meta);
+  }
+
+  .section-title,
+  section > .d-flex h2.h5,
+  .container > .d-flex h2.h5,
+  .container-lg > .d-flex h2.h5 {
+    font-size: var(--fs-section-title) !important;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .card-header h5,
+  .meeting-today-title,
+  .modal-title,
+  #rules .card-header,
+  #downloads .card-header,
+  #latest-commands .card-header h5,
+  #latest-projects .card-header h5,
+  #activities .card-header h5 {
+    font-size: var(--fs-section-subtitle) !important;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  .card-title,
+  #stats .card-title,
+  .section-heading {
+    font-size: var(--fs-card-title) !important;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  .lead {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  #stats .display-5,
+  #stats .display-6,
+  .display-4 {
+    font-size: var(--fs-stat) !important;
+    line-height: 1;
+  }
+
+  .table-subtle-sm,
+  .table-subtle-sm td,
+  .table-subtle-sm th {
+    font-size: var(--fs-body-md);
+  }
+
+  .count-pill,
+  .soft-badge,
+  .hp-badge {
+    font-size: var(--fs-meta);
+  }
+
+  .btn,
+  .form-control,
+  .form-label {
+    font-size: var(--fs-body-sm);
+  }
+
+  @media (max-width: 767.98px) {
+    :root {
+      --fs-section-title: 1.2rem;
+      --fs-section-subtitle: 1rem;
+      --fs-card-title: 0.92rem;
+      --fs-body-md: 0.9rem;
+      --fs-body-sm: 0.84rem;
+      --fs-meta: 0.78rem;
+      --fs-stat: 1.85rem;
+    }
+
+    .lead {
+      font-size: 0.95rem;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    :root {
+      --fs-section-title: 1.08rem;
+      --fs-section-subtitle: 0.94rem;
+      --fs-card-title: 0.9rem;
+      --fs-body-md: 0.86rem;
+      --fs-body-sm: 0.8rem;
+      --fs-meta: 0.75rem;
+      --fs-stat: 1.7rem;
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    .hero-shell {
+      border-radius: 24px;
+    }
+
+    .hero-img-wrap {
+      min-height: 240px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .section-block {
+      padding-block: 1.5rem;
+    }
+
+    #stats {
+      padding-top: 1rem !important;
+    }
+
+    #stats .row {
+      --bs-gutter-x: 0.55rem;
+      --bs-gutter-y: 0.55rem;
+    }
+
+    #stats .summary-metric-card {
+      border-radius: 16px;
+    }
+
+    #stats .summary-metric-card .card-body {
+      padding: 0.85rem 0.5rem;
+    }
+
+    #stats .metric-icon {
+      width: 2.35rem;
+      height: 2.35rem;
+    }
+
+    #stats .metric-icon i {
+      font-size: 1rem;
+    }
+
+    #stats .card-title {
+      margin-bottom: 0.35rem !important;
+      font-size: 0.72rem !important;
+      line-height: 1.25;
+    }
+
+    #stats .card-text.display-5 {
+      margin-bottom: 0.45rem !important;
+      font-size: 1.18rem !important;
+    }
+
+    #stats .badge {
+      min-width: 44px;
+      padding: 0.28rem 0.4rem;
+      margin-bottom: 0.45rem !important;
+      font-size: 0.68rem;
+    }
+
+    #stats .mt-2 {
+      margin-top: 0.35rem !important;
+    }
+
+    #stats .btn {
+      width: 100%;
+      padding: 0.34rem 0.3rem;
+      font-size: 0.68rem;
+      line-height: 1.2;
+    }
+
+    #institution-summary .row {
+      --bs-gutter-x: 0.6rem;
+      --bs-gutter-y: 0.6rem;
+    }
+
+    #institution-summary .institution-summary-list {
+      gap: 0.45rem;
+    }
+
+    #institution-summary .institution-summary-item {
+      padding: 0.55rem 0.65rem;
+      border-radius: 14px;
+      gap: 0.5rem;
+    }
+
+    #institution-summary .institution-summary-label {
+      font-size: 0.68rem;
+    }
+
+    #institution-summary .institution-summary-value {
+      font-size: 1.02rem;
+    }
+
+    #institution-summary .institution-summary-action {
+      margin-top: 0.45rem;
+      padding: 0.28rem 0.58rem;
+      font-size: 0.66rem;
+    }
+
+    #member-summary .card-header {
+      align-items: flex-start !important;
+    }
+
+    #member-summary .member-summary-head {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #member-summary .member-summary-kicker {
+      font-size: 0.66rem;
+    }
+
+    #member-summary .member-summary-meta {
+      font-size: 0.72rem;
+    }
+
+    #member-summary .member-summary-tools {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    #member-summary .member-summary-year {
+      padding: 0.28rem 0.58rem;
+      font-size: 0.68rem;
+    }
+
+    #member-summary .member-summary-overview {
+      padding: 0.8rem;
+    }
+
+    #member-summary .table-responsive {
+      margin: 0;
+      padding: 0;
+      overflow-x: auto;
+    }
+
+    #member-summary .table-mobile-cards table {
+      display: table;
+      width: 100%;
+      min-width: 430px;
+    }
+
+    #member-summary .table-mobile-cards thead {
+      display: table-header-group;
+    }
+
+    #member-summary .table-mobile-cards tbody {
+      display: table-row-group;
+    }
+
+    #member-summary .table-mobile-cards tr {
+      display: table-row;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    #member-summary .table-mobile-cards th,
+    #member-summary .table-mobile-cards td {
+      display: table-cell;
+      width: auto;
+    }
+
+    #member-summary .table-mobile-cards tbody tr {
+      margin-bottom: 0;
+    }
+
+    #member-summary .table-mobile-cards tbody td {
+      padding-top: 0.4rem;
+      padding-bottom: 0.4rem;
+    }
+
+    #member-summary .table-mobile-cards tbody td.mobile-primary {
+      padding-bottom: 0.6rem;
+      white-space: nowrap;
+    }
+
+    #member-summary .table-mobile-cards tbody td::before {
+      display: none;
+    }
+
+    #member-summary .member-summary-totals {
+      gap: 0.5rem;
+    }
+
+    #member-summary .member-summary-total {
+      padding: 0.65rem 0.7rem;
+      border-radius: 14px;
+    }
+
+    #member-summary .member-summary-total-label {
+      font-size: 0.68rem;
+    }
+
+    #member-summary .member-summary-total-value {
+      font-size: 0.92rem;
+    }
+
+    #member-summary .member-summary-action {
+      width: 100%;
+    }
+
+    #turnover-summary .turnover-summary-head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #turnover-summary .turnover-summary-kicker {
+      font-size: 0.66rem;
+    }
+
+    #turnover-summary .turnover-summary-meta {
+      font-size: 0.72rem;
+    }
+
+    #turnover-summary .turnover-summary-overview {
+      padding: 0.8rem;
+    }
+
+    #turnover-summary .turnover-summary-tiles {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+
+    #turnover-summary .table-mobile-cards tbody {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      align-items: stretch;
+    }
+
+    #turnover-summary .table-mobile-cards tr {
+      height: 100%;
+      padding: 0.25rem;
+    }
+
+    #turnover-summary .table-mobile-cards td {
+      padding: 0.5rem 0.55rem;
+    }
+
+    #turnover-summary .turnover-summary-tile {
+      padding: 0.7rem;
+      border-radius: 14px;
+    }
+
+    #turnover-summary .turnover-summary-tile-label,
+    #turnover-summary .turnover-summary-target,
+    #turnover-summary .turnover-summary-year-sub {
+      font-size: 0.68rem;
+    }
+
+    #turnover-summary .turnover-summary-tile-value {
+      font-size: 0.92rem;
+    }
+
+    #turnover-summary .turnover-summary-table tbody td::before {
+      min-width: 6.9rem;
+    }
+
+    #turnover-summary .turnover-summary-year-main {
+      font-size: 0.9rem;
+    }
+
+    #turnover-summary .turnover-summary-status {
+      gap: 0.35rem;
+    }
+
+    .hero-shell {
+      border-radius: 20px;
+    }
+
+    .login-form-wrapper,
+    .glass-pane .w-100.text-center {
+      border-radius: 18px;
+      padding: 1rem;
+    }
+
+    .resource-links .hero-link-card {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .modern-card,
+    .card,
+    .table-responsive,
+    .meeting-today-card,
+    #activitiesCalendar,
+    #activitiesCalendar .fc {
+      border-radius: 18px;
+    }
+
+    .section-title {
+      margin-bottom: 1.5rem;
+    }
+  }
+</style>
+
 <%
 // Helper: map backend c_group codes to readable Thai names
 function displayGroupName(code){
@@ -3286,6 +4153,11 @@ const _gradeSummary = (typeof gradeSummary !== 'undefined' && Array.isArray(grad
 const _summaryYear = (typeof summaryYear !== 'undefined' && summaryYear) ? summaryYear : (typeof _strengthTypeYear !== 'undefined' ? _strengthTypeYear : '-');
 const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
 const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
+const _memberSummaryTotals = {
+  coopSaman: Number((_memberSummary.coop_agri_saman || 0) + (_memberSummary.coop_non_agri_saman || 0)),
+  coopSomtob: Number((_memberSummary.coop_agri_somtob || 0) + (_memberSummary.coop_non_agri_somtob || 0)),
+  farmerSaman: Number(_memberSummary.farmer_group_saman || 0)
+};
 %>
 
 <!-- ================= Hero ================= -->
@@ -3392,20 +4264,20 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 </div>
 
 <!-- vong_coop link -->
-<div class="container mb-4 reveal in">
+<div class="container mb-4 reveal in resource-links">
   <div class="row my-2">
     <div class="col-md-6 mb-2 mb-md-0">
-      <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100">
+      <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100 hero-link-card">
         <i class="bi bi-globe2"></i>
-        <span class="text-wrap" style="font-size: 16px;">
+        <span class="text-wrap resource-link-text">
         หลักเกณฑ์การกำหนดวงเงินกู้ยืม[กลุ่มเกษตรกร]
         </span>
       </a>
     </div>
     <div class="col-md-6">
-      <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100">
+      <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100 hero-link-card hero-link-card--alt">
         <i class="bi bi-globe2"></i>
-        <span class="text-wrap" style="font-size: 16px;">
+        <span class="text-wrap resource-link-text">
         หลักเกณฑ์การกำหนดวงเงินดำเนินกิจการ[กลุ่มเกษตรกร]
         </span>
       </a>
@@ -3443,7 +4315,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           %>
           <%= _thMeetingDate %>
         </div>
-        <a href="/meetingroom" class="btn btn-sm btn-outline-primary rounded-pill d-inline-flex align-items-center gap-1" style="font-weight: 600; font-size: 0.85rem;">
+        <a href="/meetingroom" class="btn btn-sm btn-outline-primary rounded-pill d-inline-flex align-items-center gap-1 btn-inline-small">
           <i class="bi bi-calendar-event"></i>
           ดูทั้งหมด
         </a>
@@ -3514,112 +4386,55 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 
 <!-- ================= Stats ================= -->
 <section id="stats" class="section-block pt-4">
-  <div class="container">
-   
-    <h2 class="my-4 text-center text-primary section-title">
-      <i class="bi bi-bar-chart-line-fill me-2"></i> ข้อมูลสหกรณ์
-    </h2>
-    <div class="row g-4 mt-2">
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: var(--grad-success);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 metric-icon">
-                <i class="bi bi-building text-success"></i>
-              </span>
-            </div>
-            <h5 class="card-title text-muted mb-2">จำนวนสหกรณ์</h5>
-            <p class="card-text display-5 text-success fw-bold mb-3">
-              <%= stats.coop %>
-            </p>
-            <span class="badge bg-success bg-opacity-10 text-white mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-success rounded-pill" href="/allCoop/group">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10 metric-icon">
-                <i class="bi bi-people-fill text-info"></i>
-              </span>
-            </div>
-            <h5 class="card-title text-muted mb-2">จำนวนกลุ่มเกษตรกร</h5>
-            <p class="card-text display-5 text-info fw-bold mb-3">
-              <%= stats.farmer %>
-            </p>
-            <span class="badge bg-info bg-opacity-10 text-info mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-info rounded-pill" href="/allCoop/group">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card modern-card shadow-sm border-0 h-100">
-          <div class="card-gradient-bar" style="background: var(--grad-warm);"></div>
-          <div class="card-body text-center py-4">
-            <div class="mb-3">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10 metric-icon">
-                <i class="bi bi-hourglass-split text-warning"></i>
-              </span>
-            </div>
-            <h5 class="card-title text-muted mb-2">อยู่ระหว่างชำระบัญชี</h5>
-            <p class="card-text display-5 text-warning fw-bold mb-3">
-              <%= stats.closing %>
-            </p>
-            <span class="badge bg-warning bg-opacity-10 text-warning mb-3">แห่ง</span>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-warning rounded-pill" href="/chamra">
-                <i class="bi bi-arrow-right-circle me-1"></i> รายละเอียด
-              </a>
-            </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
- 
-
-
-
-
   <!-- ================= Charts ================= -->
   <section id="charts" class="section-block">
     <div class="container-lg">
-      <div class="row g-4 justify-content-center">
-        <div class="col-lg-8">
-          <div class="card modern-card shadow-sm border-0">
+      <h2 class="my-4 text-center text-primary section-title">
+      <i class="bi bi-bar-chart-line-fill me-2"></i> ข้อมูลสหกรณ์
+    </h2>
+      <div class="row g-2 align-items-stretch flex-nowrap">
+        <div class="col-7">
+          <div class="card modern-card shadow-sm border-0 h-100">
             <div class="card-gradient-bar"></div>
-            <div class="card-body p-4">
-              <h4 class="mb-4 text-center text-primary fw-semibold">
+            <div class="card-body p-3 p-md-4 d-flex flex-column">
+              <h4 class="mb-3 text-center text-primary fw-semibold">
                 <i class="bi bi-bar-chart-fill me-2"></i> กราฟแสดงจำนวนสหกรณ์/กลุ่มเกษตรกร
               </h4>
-              <div class="chart-container">
+              <div class="chart-container flex-grow-1 mb-0">
                 <canvas id="coopChart" height="120"></canvas>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-5" id="institution-summary">
           <div class="card modern-card shadow-sm border-0 h-100">
-            <div class="card-gradient-bar"></div>
-            <div class="card-body p-4">
-              <h4 class="mb-4 text-center text-primary fw-semibold">
-                <i class="bi bi-pie-chart-fill me-2"></i> สัดส่วน
-              </h4>
-              <div class="chart-container chart-container--sm d-flex justify-content-center">
-                <canvas id="coopPieChart" height="120"></canvas>
+            <div class="card-gradient-bar metric-bar--info"></div>
+            <div class="card-body p-2 p-md-3 d-flex flex-column">
+              <div class="mb-2">
+                <h4 class="mb-0 text-primary fw-semibold">สรุปข้อมูลสถาบัน</h4>
+                <div class="small text-muted d-none d-md-block">ข้อมูลจากตาราง active_coop</div>
               </div>
+              <div class="institution-summary-list flex-grow-1 justify-content-center">
+                <div class="institution-summary-item">
+                  <div class="institution-summary-label">สหกรณ์ภาคเกษตร</div>
+                  <div class="institution-summary-value text-success fw-bold"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_agri) || 0).toLocaleString() %></div>
+                </div>
+                <div class="institution-summary-item">
+                  <div class="institution-summary-label">สหกรณ์นอกภาคเกษตร</div>
+                  <div class="institution-summary-value text-primary fw-bold"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></div>
+                </div>
+                <div class="institution-summary-item">
+                  <div class="institution-summary-label">กลุ่มเกษตรกร</div>
+                  <div class="institution-summary-value text-info fw-bold"><%= Number((_coopTypeSummary && _coopTypeSummary.farmer_group) || 0).toLocaleString() %></div>
+                </div>
+                <div class="institution-summary-item">
+                  <div class="institution-summary-label">ชำระบัญชี</div>
+                  <div class="institution-summary-value text-warning fw-bold"><%= Number(stats.closing || 0).toLocaleString() %></div>
+                </div>
+              </div>
+              <a href="/allCoop/group" class="btn btn-outline-primary btn-sm rounded-pill institution-summary-action">
+                ดูทั้งหมด
+              </a>
             </div>
           </div>
         </div>
@@ -3630,55 +4445,6 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 
   <section>
     <div class="container">
-       <div class="card modern-card shadow-sm border-0 mb-4">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0">
-          <i class="bi bi-people me-2 text-primary"></i>สรุปจำนวนสถาบันตามประเภท
-        </h5>
-        <span class="small text-muted">ฐานข้อมูล active_coop</span>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover mb-0 deadline-table">
-            <thead class="table-light">
-              <tr>
-                <th>กลุ่มส่งเสริม</th>
-                <th class="text-end">สหกรณ์ภาคการเกษตร</th>
-                <th class="text-end">สหกรณ์นอกภาคการเกษตร</th>
-                <th class="text-end">กลุ่มเกษตรกร</th>
-                <th class="text-end">รวม</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if ((_coopTypeByGroup || []).length) { %>
-              <% _coopTypeByGroup.forEach((row) => { %>
-              <tr>
-                <td><%= displayGroupName(row.c_group) %></td>
-                <td class="text-end"><%= Number(row.coop_agri || 0).toLocaleString() %></td>
-                <td class="text-end"><%= Number(row.coop_non_agri || 0).toLocaleString() %></td>
-                <td class="text-end"><%= Number(row.farmer_group || 0).toLocaleString() %></td>
-                <td class="text-end fw-bold"><%= Number((row.coop_agri || 0) + (row.coop_non_agri || 0) + (row.farmer_group || 0)).toLocaleString() %></td>
-              </tr>
-              <% }) %>
-              <% } else { %>
-              <tr>
-                <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูล</td>
-              </tr>
-              <% } %>
-            </tbody>
-            <tfoot class="table-light">
-              <tr>
-                <th>รวมทั้งหมด</th>
-                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_agri) || 0).toLocaleString() %></th>
-                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.coop_non_agri) || 0).toLocaleString() %></th>
-                <th class="text-end"><%= Number((_coopTypeSummary && _coopTypeSummary.farmer_group) || 0).toLocaleString() %></th>
-                <th class="text-end fw-bold"><%= Number((Number(_coopTypeSummary?.coop_agri || 0) + Number(_coopTypeSummary?.coop_non_agri || 0) + Number(_coopTypeSummary?.farmer_group || 0))).toLocaleString() %></th>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
     </div>
   </section>
 
@@ -3689,9 +4455,45 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         <i class="bi bi-people-fill me-2"></i> สรุปจำนวนตามกลุ่มส่งเสริมสหกรณ์
       </h2>
       <% if ((coopGroupStats || []).length) { %>
+      <% 
+        const coopGroupOverview = (coopGroupStats || []).reduce((summary, group) => {
+          summary.coop += Number(group.coop || 0);
+          summary.farmer += Number(group.farmer || 0);
+          return summary;
+        }, { coop: 0, farmer: 0 });
+        const coopGroupOverviewTotal = coopGroupOverview.coop + coopGroupOverview.farmer;
+      %>
       <div class="row g-3">
+        <div class="col-6 col-lg-4">
+          <div class="card modern-card shadow-sm border-0 h-100">
+            <div class="card-gradient-bar metric-bar--success"></div>
+            <div class="card-body">
+              <h6 class="text-primary fw-semibold mb-2">
+                <i class="bi bi-globe-central-south-asia me-1"></i>
+                ภาพรวมทุกกลุ่ม
+              </h6>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">สหกรณ์</span>
+                <span class="fw-bold text-success"><%= coopGroupOverview.coop.toLocaleString() %> แห่ง</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-1">
+                <span class="text-muted">กลุ่มเกษตรกร</span>
+                <span class="fw-bold text-info"><%= coopGroupOverview.farmer.toLocaleString() %> แห่ง</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-1 pt-2 border-top">
+                <span class="text-muted fw-semibold">รวมทั้งหมด</span>
+                <span class="fw-bold text-primary"><%= coopGroupOverviewTotal.toLocaleString() %> แห่ง</span>
+              </div>
+              <div class="mt-3 text-end">
+                <a href="/allCoop/group" class="btn btn-outline-primary btn-sm">
+                  ดูข้อมูลรวม
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
         <% (coopGroupStats || []).forEach((g) => { %>
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-6 col-lg-4">
           <div class="card modern-card shadow-sm border-0 h-100">
             <div class="card-body">
               <h6 class="text-primary fw-semibold mb-2">
@@ -3732,9 +4534,14 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       <div class="card modern-card shadow-sm border-0">
         <div class="card-gradient-bar"></div>
         <div class="card-body p-4">
-          <h4 class="mb-4 text-center text-primary fw-semibold">
-            <i class="bi bi-bar-chart-steps me-2"></i> กราฟขั้นตอนการชำระบัญชี (S1-S10)
-          </h4>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <h4 class="mb-0 text-primary fw-semibold text-center flex-grow-1">
+              <i class="bi bi-bar-chart-steps me-2"></i> กราฟขั้นตอนการชำระบัญชี (S1-S10)
+            </h4>
+            <a href="/chamra" class="btn btn-sm btn-outline-primary rounded-pill">
+              ดูทั้งหมด
+            </a>
+          </div>
           <div class="chart-container">
             <canvas id="chamraStageChart" height="120"></canvas>
           </div>
@@ -3744,171 +4551,82 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   </section>
 
 
-   <!-- ================= Chamra Process Table ================= -->
-  <section id="chamra-process" class="section-block bg-white">
-    <div class="container">
-      <div class="card modern-card shadow-sm border-0">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h5 class="mb-0">
-            <i class="bi bi-file-earmark-check me-2 text-success"></i> ตารางสถานะการชำระบัญชี (Chamra Process)
-          </h5>
-          <div class="d-flex align-items-center gap-2">
-            <span class="small text-muted">ขั้นตอน S1-S10</span>
-            <a href="/chamra/process" class="btn btn-sm btn-outline-success rounded-pill">
-              <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
-            </a>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered table-hover align-middle mb-0">
-              <thead class="table-dark text-center">
-                <tr>
-                  <th>สถาบัน</th>
-                  <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
-                  <th>S6</th><th>S7</th><th>S8</th><th>S9</th><th>S10</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% 
-                  const isEmptyDate = (v) => {
-                    if (!v) return true;
-                    if (typeof v === 'string') {
-                      if (v === '0000-00-00') return true;
-                      if (/^1899-11-30/.test(v)) return true;
-                    }
-                    if (v instanceof Date) {
-                      const y = v.getFullYear();
-                      if (y < 1950) return true;
-                    }
-                    return false;
-                  };
-                  const formatThai = (v) => {
-                    const raw = isEmptyDate(v) ? null : v;
-                    if (!raw) return '-';
-                    const d = raw instanceof Date ? raw : new Date(raw);
-                    if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
-                    const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-                    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
-                  };
-                %>
-                <% (chamraAllProcesses || []).slice(0, 10).forEach(p => { %>
-                  <tr>
-                    <td class="fw-semibold text-start">
-                      <div class="small text-darkfw-normal"><%= p.c_name || '-' %></div>
-                    </td>
-                    <% for (let i=1;i<=10;i++){ 
-                         const key='pr_s'+i; 
-                         const raw = p[key];
-                         const showDash = isEmptyDate(raw);
-                    %>
-                      <td class="text-center">
-                        <% if (showDash) { %>
-                          <span class="badge bg-secondary">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                              <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>  
-                            </svg>
-                          </span>
-                        <% } else { %>
-                          <span class="badge bg-success hp-badge"><%= formatThai(raw) %></span>
-                        <% } %>
-                      </td>
-                    <% } %>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-          <% if (!chamraAllProcesses || chamraAllProcesses.length === 0) { %>
-            <div class="text-center text-muted py-4">
-              <i class="bi bi-info-circle me-2"></i>
-              ไม่มีข้อมูลกระบวนการชำระบัญชี
-            </div>
-          <% } else if (chamraAllProcesses.length > 10) { %>
-            <div class="card-footer bg-light text-end">
-              <small class="text-muted">
-                <i class="bi bi-info-circle me-1"></i>
-                แสดง <%= Math.min(10, chamraAllProcesses.length) %> รายการจากทั้งหมด <%= chamraAllProcesses.length %> รายการ
-              </small>
-            </div>
-          <% } %>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-
 
   <!-- ================= Member Summary ================= -->
   <section id="member-summary" class="section-block bg-light">
     <div class="container">
       <div class="card modern-card shadow-sm border-0">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h5 class="mb-0">
-            <i class="bi bi-people-fill me-2 text-success"></i>สรุปจำนวนสมาชิกปีล่าสุด
-          </h5>
-          <span class="small text-muted">ปี <%= _latestYear %> | ฐานข้อมูล addmem</span>
+        <div class="card-gradient-bar metric-bar--success"></div>
+        <div class="card-header bg-white">
+          <div class="member-summary-head">
+            <div class="member-summary-headline">
+              <div class="member-summary-kicker">Member Snapshot</div>
+              <h5 class="mb-0">
+                <i class="bi bi-people-fill me-2 text-success"></i>สรุปจำนวนสมาชิกปีล่าสุด
+              </h5>
+              <span class="small member-summary-meta">ภาพรวมสมาชิกสหกรณ์และกลุ่มเกษตรกรจากฐานข้อมูล addmem</span>
+            </div>
+            <div class="member-summary-tools">
+              <span class="small member-summary-year">ปี <%= _latestYear %></span>
+              <a href="/addmem/list" class="btn btn-success btn-sm member-summary-action">
+                ดูข้อมูลสมาชิกทั้งหมด
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
+        <div class="member-summary-overview">
+          <div class="member-summary-totals">
+            <div class="member-summary-total">
+              <div class="member-summary-total-label">รวมสหกรณ์สามัญ</div>
+              <div class="member-summary-total-value text-success"><%= _memberSummaryTotals.coopSaman.toLocaleString() %></div>
+            </div>
+            <div class="member-summary-total">
+              <div class="member-summary-total-label">รวมสหกรณ์สมทบ</div>
+              <div class="member-summary-total-value text-primary"><%= _memberSummaryTotals.coopSomtob.toLocaleString() %></div>
+            </div>
+            <div class="member-summary-total">
+              <div class="member-summary-total-label">กลุ่มเกษตรกรสามัญ</div>
+              <div class="member-summary-total-value text-info"><%= _memberSummaryTotals.farmerSaman.toLocaleString() %></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <div class="table-responsive table-mobile-cards">
+            <table class="table table-hover align-middle mb-0 table-subtle-sm member-summary-table">
               <thead class="table-light">
                 <tr>
                   <th rowspan="2" class="align-middle border-end text-center">ประเภทสถาบัน</th>
-                  <th colspan="2" class="text-center border-end">สหกรณ์</th>
-                  <th colspan="2" class="text-center">กลุ่มเกษตรกร</th>
                 </tr>
                 <tr>
-                  <th class="text-end text-muted fw-normal">สามัญ</th>
-                  <th class="text-end text-muted fw-normal border-end">สมทบ</th>
                   <th class="text-end text-muted fw-normal">สามัญ</th>
                   <th class="text-end text-muted fw-normal">สมทบ</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="border-end fw-medium"><i class="bi bi-tree me-2 text-success"></i>ภาคการเกษตร</td>
-                  <td class="text-end"><%= Number(_memberSummary.coop_agri_saman || 0).toLocaleString() %></td>
-                  <td class="text-end border-end"><%= Number(_memberSummary.coop_agri_somtob || 0).toLocaleString() %></td>
-                  <td class="text-end text-muted bg-light">-</td>
-                  <td class="text-end text-muted bg-light">-</td>
+                  <td class="border-end fw-medium mobile-primary" data-label="ประเภทสถาบัน"><i class="bi bi-tree me-2 text-success"></i>ภาคการเกษตร</td>
+                  <td class="text-end" data-label="สหกรณ์สามัญ"><%= Number(_memberSummary.coop_agri_saman || 0).toLocaleString() %></td>
+                  <td class="text-end" data-label="สหกรณ์สมทบ"><%= Number(_memberSummary.coop_agri_somtob || 0).toLocaleString() %></td>
                 </tr>
                 <tr>
-                  <td class="border-end fw-medium"><i class="bi bi-building me-2 text-primary"></i>นอกภาคการเกษตร</td>
-                  <td class="text-end"><%= Number(_memberSummary.coop_non_agri_saman || 0).toLocaleString() %></td>
-                  <td class="text-end border-end"><%= Number(_memberSummary.coop_non_agri_somtob || 0).toLocaleString() %></td>
-                  <td class="text-end text-muted bg-light">-</td>
-                  <td class="text-end text-muted bg-light">-</td>
+                  <td class="border-end fw-medium mobile-primary" data-label="ประเภทสถาบัน"><i class="bi bi-building me-2 text-primary"></i>นอกภาคการเกษตร</td>
+                  <td class="text-end" data-label="สหกรณ์สามัญ"><%= Number(_memberSummary.coop_non_agri_saman || 0).toLocaleString() %></td>
+                  <td class="text-end" data-label="สหกรณ์สมทบ"><%= Number(_memberSummary.coop_non_agri_somtob || 0).toLocaleString() %></td>
                 </tr>
                 <tr>
-                  <td class="border-end fw-medium"><i class="bi bi-flower1 me-2 text-warning"></i>กลุ่มเกษตรกร</td>
-                  <td class="text-end text-muted bg-light">-</td>
-                  <td class="text-end text-muted bg-light border-end">-</td>
-                  <td class="text-end"><%= Number(_memberSummary.farmer_group_saman || 0).toLocaleString() %></td>
-                  <td class="text-end"><%= Number(_memberSummary.farmer_group_somtob || 0).toLocaleString() %></td>
+                  <td class="border-end fw-medium mobile-primary" data-label="ประเภทสถาบัน"><i class="bi bi-flower1 me-2 text-warning"></i>กลุ่มเกษตรกร</td>
+                  <td class="text-end" data-label="สหกรณ์สามัญ"><%= Number(_memberSummary.farmer_group_saman || 0).toLocaleString() %></td>
+                  <td class="text-end text-muted bg-light" data-label="สหกรณ์สมทบ">-</td>
                 </tr>
               </tbody>
-              <tfoot class="table-light">
-                <tr>
-                  <th class="border-end text-end">รวมทั้งหมด</th>
-                  <th class="text-end text-primary"><%= Number((_memberSummary.coop_agri_saman || 0) + (_memberSummary.coop_non_agri_saman || 0)).toLocaleString() %></th>
-                  <th class="text-end text-primary border-end"><%= Number((_memberSummary.coop_agri_somtob || 0) + (_memberSummary.coop_non_agri_somtob || 0)).toLocaleString() %></th>
-                  <th class="text-end text-primary"><%= Number(_memberSummary.farmer_group_saman || 0).toLocaleString() %></th>
-                  <th class="text-end text-primary"><%= Number(_memberSummary.farmer_group_somtob || 0).toLocaleString() %></th>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
-        <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-          <small class="text-muted">
-            <i class="bi bi-info-circle me-1"></i>
-            แสดงข้อมูลสมาชิกปี <%= _latestYear %> จากฐานข้อมูล addmem
+        <div class="card-footer bg-light">
+          <small class="text-muted d-flex align-items-center gap-1 flex-wrap">
+            <i class="bi bi-info-circle"></i>
+            <span>แสดงข้อมูลสมาชิกปี <%= _latestYear %> จากฐานข้อมูล addmem</span>
           </small>
-          <a href="/addmem/list" class="btn btn-success btn-sm">
-            ดูข้อมูลสมาชิกทั้งหมด
-          </a>
         </div>
       </div>
     </div>
@@ -3926,7 +4644,9 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         ...row,
         budYearAd,
         totalAmount,
-        monthsCount
+        monthsCount,
+        latestYearAd: Number(row.latest_year) || null,
+        latestMonth: row.latest_month || null
       };
     })
     .filter((row) => Number.isFinite(row.budYearAd))
@@ -3942,10 +4662,35 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     ? (currentYearData.totalAmount / targetAmount) * 100
     : 0;
 
-  const getFiscalYearRange = (budYearAd) => {
+  const toThaiMonthLabel = (monthValue) => {
+    const normalized = String(monthValue || '').trim();
+    const monthMap = {
+      '1': 'มกราคม',
+      '2': 'กุมภาพันธ์',
+      '3': 'มีนาคม',
+      '4': 'เมษายน',
+      '5': 'พฤษภาคม',
+      '6': 'มิถุนายน',
+      '7': 'กรกฎาคม',
+      '8': 'สิงหาคม',
+      '9': 'กันยายน',
+      '10': 'ตุลาคม',
+      '11': 'พฤศจิกายน',
+      '12': 'ธันวาคม'
+    };
+    return monthMap[normalized] || normalized;
+  };
+
+  const getFiscalYearRange = (budYearAd, latestYearAd = null, latestMonth = null, useLatestPeriodLabel = false) => {
     if (!Number.isFinite(budYearAd)) return budYearAd;
     const startYear = budYearAd - 1;
     const endYear = budYearAd;
+    if (useLatestPeriodLabel && latestYearAd && latestMonth) {
+      return `ปีงบประมาณ ${endYear + 543} (กันยายน ${startYear + 543} - ${toThaiMonthLabel(latestMonth)} ${latestYearAd + 543})`;
+    }
+    if (useLatestPeriodLabel) {
+      return `ปีงบประมาณ ${endYear + 543} (กันยายน ${startYear + 543} - เดือนล่าสุด)`;
+    }
     return `ปีงบประมาณ ${endYear + 543} (กันยายน ${startYear + 543} - สิงหาคม ${endYear + 543})`;
   };
 
@@ -3959,129 +4704,123 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   const formatMonths = (value) => Number(value || 0).toLocaleString('th-TH');
 %>
 
-<section class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h2 class="h5 mb-1"><i class="bi bi-cash-stack me-2"></i>สรุปปริมาณธุรกิจรวมรายปี (ปีงบประมาณ)</h2>
-      <div class="text-muted small">นับปีงบประมาณ ก.ย. - ส.ค. (เฉพาะข้อมูลปริมาณธุรกิจ)</div>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="/turnover" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-spreadsheet me-1"></i>ดูรายละเอียด</a>
-    </div>
-  </div>
-
-    <% if (!tfSummaryRows.length) { %>
-
+<section id="turnover-summary" class="container py-4">
+  <% if (!tfSummaryRows.length) { %>
     <div class="alert alert-info d-flex align-items-center" role="alert">
       <i class="bi bi-info-circle me-2"></i>
       <div>ยังไม่มีข้อมูลปริมาณธุรกิจ</div>
     </div>
   <% } else { %>
-    <% 
-      const hasTarget = currentYearData && previousYearData;
-    %>
-
-    <div class="card shadow-sm border-0">
-      <div class="table-responsive mb-0">
-        <table class="table align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th >ปีงบประมาณ</th>
-              <th class="text-end" style="width: 140px;">จำนวนเดือนที่มีข้อมูล</th>
-              <th class="text-end">ปริมาณธุรกิจรวม</th>
-              <th class="text-end">เป้าหมาย (+3%)</th>
-              <th class="text-center" style="width: 120px;">บรรลุเป้าหมาย</th>
-              <th style="width: 150px;">ความคืบหน้า</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% tfSummaryRows.forEach((row) => { %>
-              <% 
-                const isCurrentYear = currentYearData && row.budYearAd === currentYearData.budYearAd;
-                const rowTarget = isCurrentYear && previousYearData ? targetAmount : 0;
-                const percentage = rowTarget > 0 ? (row.totalAmount / rowTarget) * 100 : 0;
-                const progressWidth = Math.max(0, Math.min(percentage, 100));
-                const badgeClass =
-                  percentage >= 100 ? 'bg-success' :
-                  percentage >= 80 ? 'bg-warning text-dark' :
-                  'bg-danger';
-                const progressBarClass =
-                  percentage >= 100 ? 'bg-success' :
-                  percentage >= 80 ? 'bg-warning' :
-                  'bg-danger';
-              %>
-              <tr>
-                <td class="fw-medium">
-                  <%= getFiscalYearRange(row.budYearAd) %>
-                  <% if (isCurrentYear) { %>
-                    <span class="badge bg-primary ms-2">ปีปัจจุบัน</span>
-                  <% } %>
-                </td>
-                <td class="text-end"><%= formatMonths(row.monthsCount) %> เดือน</td>
-                <td class="text-end fw-semibold"><%= formatAmount(row.totalAmount) %></td>
-                <td class="text-end">
-                  <% if (isCurrentYear && previousYearData) { %>
-                    <span class="text-primary fw-semibold"><%= formatAmount(rowTarget) %></span>
-                  <% } else { %>
-                    -
-                  <% } %>
-                </td>
-                <td class="text-center">
-                  <% if (isCurrentYear && previousYearData) { %>
-                    <div class="d-flex align-items-center justify-content-center">
-                      <span class="badge <%= badgeClass %>">
-                        <%= percentage.toFixed(1) %>%
-                      </span>
-                    </div>
-
-                  <% } else { %>
-                    -
-                  <% } %>
-                </td>
-                <td>
-                  <% if (isCurrentYear && previousYearData) { %>
-                    <div class="progress" style="height: 20px;">
-                      <div class="progress-bar <%= progressBarClass %>" role="progressbar" 
-                           style="width: <%= progressWidth %>%;" 
-                           aria-valuenow="<%= progressWidth %>" aria-valuemin="0" aria-valuemax="100">
-                        <%= percentage.toFixed(1) %>%
-                      </div>
-
-                    </div>
-                  <% } else { %>
-                    -
-                  <% } %>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+    <% const hasTarget = currentYearData && previousYearData; %>
+    <div class="card modern-card shadow-sm border-0">
+      <div class="card-gradient-bar metric-bar--warm"></div>
+      <div class="card-header bg-white">
+        <div class="turnover-summary-head">
+          <div class="turnover-summary-headline">
+            <div class="turnover-summary-kicker">Business Volume</div>
+            <h5 class="mb-0"><i class="bi bi-cash-stack me-2 text-primary"></i>สรุปปริมาณธุรกิจรวมรายปี</h5>
+            <span class="small turnover-summary-meta">มุมมองปีงบประมาณ ก.ย. - ส.ค. พร้อมเทียบเป้าหมายปีปัจจุบัน</span>
+          </div>
+          <a href="/turnover" class="btn btn-outline-primary btn-sm rounded-pill">
+            ดูรายละเอียด
+          </a>
+        </div>
       </div>
-      <% if (currentYearData && previousYearData) { %>
-        <div class="card-footer bg-light">
-          <div class="row text-center">
-            <div class="col-md-4">
-              <div class="small text-muted">เป้าหมายปี <%= currentFiscalYearThai || '-' %></div>
-              <div class="h5 text-primary mb-0"><%= formatAmount(targetAmount) %></div>
-            </div>
-            <div class="col-md-4">
-              <div class="small text-muted">ปริมาณธุรกิจปัจจุบัน</div>
-              <div class="h5 text-info mb-0"><%= formatAmount(currentYearData.totalAmount) %></div>
-            </div>
-            <div class="col-md-4">
-              <div class="small text-muted">บรรลุเป้าหมายจากปี <%= previousFiscalYearThai || '-' %></div>
-              <div class="h5 <%= achievementPercentage >= 100 ? 'text-success' : achievementPercentage >= 80 ? 'text-warning' : 'text-danger' %> mb-0">
-                <%= achievementPercentage.toFixed(1) %>%
-              </div>
+      <div class="turnover-summary-overview">
+        <div class="turnover-summary-tiles">
+          <div class="turnover-summary-tile">
+            <div class="turnover-summary-tile-label">ปีล่าสุด</div>
+            <div class="turnover-summary-tile-value text-info"><%= currentFiscalYearThai || '-' %></div>
+          </div>
+          <div class="turnover-summary-tile">
+            <div class="turnover-summary-tile-label">ปริมาณธุรกิจปัจจุบัน</div>
+            <div class="turnover-summary-tile-value text-primary"><%= formatAmount(currentYearData.totalAmount) %></div>
+          </div>
+          <div class="turnover-summary-tile">
+            <div class="turnover-summary-tile-label"><%= hasTarget ? `เทียบเป้าหมายจากปี ${previousFiscalYearThai || '-'}` : 'สถานะการคำนวณเป้าหมาย' %></div>
+            <div class="turnover-summary-tile-value <%= hasTarget ? (achievementPercentage >= 100 ? 'text-success' : achievementPercentage >= 80 ? 'text-warning' : 'text-danger') : 'text-muted' %>">
+              <%= hasTarget ? `${achievementPercentage.toFixed(1)}%` : 'ต้องมีข้อมูลปีก่อน' %>
             </div>
           </div>
         </div>
-      <% } else if (!previousYearData) { %>
-        <div class="card-footer bg-light text-muted text-center small">
-          ต้องมีข้อมูลปีงบประมาณก่อนหน้าเพื่อคำนวณเป้าหมาย (+3%)
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive mb-0 table-mobile-cards">
+          <table class="table align-middle mb-0 turnover-summary-table">
+            <thead class="table-light">
+              <tr>
+                <th>ปีงบประมาณ</th>
+                <th class="text-end" style="width: 110px;">เดือนข้อมูล</th>
+                <th class="text-end" style="width: 180px;">ปริมาณธุรกิจรวม</th>
+                <th style="width: 250px;">สถานะปีปัจจุบัน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% tfSummaryRows.forEach((row) => { %>
+                <% 
+                  const isCurrentYear = currentYearData && row.budYearAd === currentYearData.budYearAd;
+                  const rowTarget = isCurrentYear && previousYearData ? targetAmount : 0;
+                  const percentage = rowTarget > 0 ? (row.totalAmount / rowTarget) * 100 : 0;
+                  const progressWidth = Math.max(0, Math.min(percentage, 100));
+                  const badgeClass =
+                    percentage >= 100 ? 'bg-success' :
+                    percentage >= 80 ? 'bg-warning text-dark' :
+                    'bg-danger';
+                  const progressBarClass =
+                    percentage >= 100 ? 'bg-success' :
+                    percentage >= 80 ? 'bg-warning' :
+                    'bg-danger';
+                %>
+                <tr>
+                  <td class="mobile-primary" data-label="ปีงบประมาณ">
+                    <div class="turnover-summary-year">
+                      <div class="turnover-summary-year-main">ปี <%= row.budYearAd + 543 %></div>
+                      <div class="turnover-summary-year-sub"><%= getFiscalYearRange(row.budYearAd, row.latestYearAd, row.latestMonth, isCurrentYear).replace(`ปีงบประมาณ ${row.budYearAd + 543} `, '') %></div>
+                    </div>
+                    <% if (isCurrentYear) { %>
+                      <span class="badge bg-primary mt-2">ปีปัจจุบัน</span>
+                    <% } %>
+                  </td>
+                  <td class="text-end" data-label="เดือนข้อมูล"><%= formatMonths(row.monthsCount) %> เดือน</td>
+                  <td class="text-end fw-semibold" data-label="ปริมาณธุรกิจรวม"><%= formatAmount(row.totalAmount) %></td>
+                  <td data-label="สถานะปีปัจจุบัน">
+                    <% if (isCurrentYear && previousYearData) { %>
+                      <div class="turnover-summary-status">
+                        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                          <span class="turnover-summary-target">เป้าหมาย <strong class="text-primary"><%= formatAmount(rowTarget) %></strong></span>
+                          <span class="badge <%= badgeClass %>"><%= percentage.toFixed(1) %>%</span>
+                        </div>
+                        <div class="progress">
+                          <div class="progress-bar <%= progressBarClass %>" role="progressbar"
+                               style="width: 0;"
+                               data-progress="<%= progressWidth %>"
+                               aria-valuenow="<%= progressWidth %>" aria-valuemin="0" aria-valuemax="100">
+                          </div>
+                        </div>
+                      </div>
+                    <% } else { %>
+                      <span class="small turnover-summary-note">ใช้เป็นข้อมูลอ้างอิงเทียบปีล่าสุด</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
         </div>
-      <% } %>
-
+      </div>
+      <div class="card-footer bg-light">
+        <% if (hasTarget) { %>
+          <small class="text-muted d-flex align-items-center gap-1 flex-wrap">
+            <i class="bi bi-info-circle"></i>
+            <span>เป้าหมายปี <%= currentFiscalYearThai || '-' %> คำนวณจากปริมาณธุรกิจปี <%= previousFiscalYearThai || '-' %> เพิ่มขึ้น 3%</span>
+          </small>
+        <% } else { %>
+          <small class="text-muted d-flex align-items-center gap-1 flex-wrap">
+            <i class="bi bi-info-circle"></i>
+            <span>ต้องมีข้อมูลปีงบประมาณก่อนหน้าเพื่อคำนวณเป้าหมาย (+3%)</span>
+          </small>
+        <% } %>
+      </div>
     </div>
   <% } %>
 </section>
@@ -4089,50 +4828,50 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
   <div class="card modern-card shadow-sm border-0  mt-1">
       <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0">
-          <i class="bi bi-award me-2" style="color: var(--primary);"></i>สรุปความเข้มแข็ง (st_grade) แยกตามประเภทสถาบัน
+          <i class="bi bi-award me-2 icon-accent"></i>สรุปความเข้มแข็ง (st_grade) แยกตามประเภทสถาบัน
           <span class="small text-muted">(สหกรณ์ภาคการเกษตร/สหกรณ์นอกภาคการเกษตร/กลุ่มเกษตรกร)</span>
         </h5>
         <div class="d-flex align-items-center gap-2">
           <span class="small text-muted">ปี <%= _summaryYear %></span>
-          <a href="/strength/list" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">ดูทั้งหมด</a>
+          <a href="/strength/list" class="btn btn-sm btn-soft-primary">ดูทั้งหมด</a>
         </div>
       </div>
       <div class="card-body p-0">
         <% if (_gradeSummary.length > 0) { %>
-        <div class="table-responsive">
-          <table class="table table-sm mb-0">
-            <thead style="background: var(--bg-light); border-bottom: 2px solid var(--border-color);">
+        <div class="table-responsive table-mobile-cards">
+          <table class="table table-sm mb-0 table-subtle">
+            <thead class="table-head-soft">
               <tr>
-                <th style="color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ประเภทสหกรณ์</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">จำนวนทั้งหมด</th>
-                <th style="text-align: center; color: var (--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 1</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 2</th>
-                <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชั้น 3</th>
+                <th>ประเภทสหกรณ์</th>
+                <th class="text-center">จำนวนทั้งหมด</th>
+                <th class="text-center">ชั้น 1</th>
+                <th class="text-center">ชั้น 2</th>
+                <th class="text-center">ชั้น 3</th>
               </tr>
             </thead>
             <tbody>
               <% _gradeSummary.forEach((row) => { %>
-              <tr style="border-bottom: 1px solid var(--border-color); transition: var(--transition);">
-                <td style="padding: 12px; font-weight: 600; color: var(--text-primary); text-align: left;">
-                  <i class="bi bi-building me-2" style="color: var(--primary);"></i><%= row.group_name %>
+              <tr>
+                <td class="cell-label mobile-primary" data-label="ประเภทสหกรณ์">
+                  <i class="bi bi-building me-2 icon-accent"></i><%= row.group_name %>
                 </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid var(--primary);">
+                <td class="text-center" data-label="จำนวนทั้งหมด">
+                  <span class="count-pill count-pill--primary">
                     <%= row.total_count %>
                   </span>
                 </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #d1fae5; color: #059669; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #10b981;">
+                <td class="text-center" data-label="ชั้น 1">
+                  <span class="count-pill count-pill--success">
                     <%= row.grade_1_count %>
                   </span>
                 </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #fef3c7; color: #d97706; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #f59e0b;">
+                <td class="text-center" data-label="ชั้น 2">
+                  <span class="count-pill count-pill--warning">
                     <%= row.grade_2_count %>
                   </span>
                 </td>
-                <td style="text-align: center; padding: 12px;">
-                  <span style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 8px; font-weight: 700; border: 1px solid #ef4444;">
+                <td class="text-center" data-label="ชั้น 3">
+                  <span class="count-pill count-pill--danger">
                     <%= row.grade_3_count %>
                   </span>
                 </td>
@@ -4167,25 +4906,25 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     </div>
     <% } else { %>
     <div class="card shadow-sm border-0">
-      <div class="table-responsive mb-0">
-        <table class="table align-middle mb-0">
-          <thead style=" border-bottom: 2px solid var(--border-color);" class="bg-success bg-opacity-10">
+      <div class="table-responsive mb-0 table-mobile-cards">
+        <table class="table align-middle mb-0 table-subtle">
+          <thead class="table-head-soft">
             <tr>
-               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">#</th>
-               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">รหัส</th>
-               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
-               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">กลุ่ม</th>
-               <th style="text-align: center; color: var(--text-secondary); font-weight: 700; padding: 12px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">ผลจัดชั้น</th>
+               <th class="text-center">#</th>
+               <th class="text-center">รหัส</th>
+               <th class="text-center">ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
+               <th class="text-center">กลุ่ม</th>
+               <th class="text-center">ผลจัดชั้น</th>
             </tr>
           </thead>
           <tbody>
             <% nsList.forEach((row, idx) => { %>
               <tr>
-                <td class="text-center text-muted small"><%= idx + 1 %></td>
-                <td><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
-                <td class="fw-medium text-primary"><%= row.c_name || '-' %></td>
-                <td><span class="text-muted"><%= row.str_group %></span></td>
-                <td class="text-center">
+                <td class="text-center text-muted small mobile-primary" data-label="ลำดับ"><%= idx + 1 %></td>
+                <td data-label="รหัส"><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
+                <td class="fw-medium text-primary" data-label="ชื่อสหกรณ์/กลุ่มเกษตรกร"><%= row.c_name || '-' %></td>
+                <td data-label="กลุ่ม"><span class="text-muted"><%= row.str_group %></span></td>
+                <td class="text-center" data-label="ผลจัดชั้น">
                   <span class="badge <%= row.str_grade ? 'bg-success' : 'bg-secondary' %>"><%= row.str_grade || '-' %></span>
                 </td>
               </tr>
@@ -4200,7 +4939,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 <!-- ================= Activities Calendar (RESTORE) ================= -->
 <section id="activities" class="section-block bg-white">
   <div class="container-lg">
-    <div class="card modern-card shadow-sm border-0">
+    <div class="card modern-card shadow-sm border-0 activities-shell">
       <div class="card-gradient-bar"></div>
       <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0">
@@ -4266,7 +5005,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           <input type="text" class="modal-search-bar" id="activityFilter" placeholder="🔍 ค้นหากิจกรรม..." />
           <div class="small text-muted" id="activityCount"></div>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive table-mobile-cards">
           <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
             <thead>
               <tr class="text-center">
@@ -4287,9 +5026,9 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
               %>
               <% todayActivities.forEach((a,i)=>{ const d=new Date(a.date_act); %>
               <tr data-name="<%= (a.activity||'').toLowerCase() %> <%= d.toISOString().slice(0,10) %>">
-                <td class="text-center"><%= i+1 %></td>
-                <td><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
-                <td><%= a.activity %></td>
+                <td class="text-center mobile-primary" data-label="ลำดับ"><%= i+1 %></td>
+                <td data-label="วันที่"><%= d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) %></td>
+                <td data-label="กิจกรรม"><%= a.activity %></td>
               </tr>
               <% }) %>
               <% if (todayActivities.length === 0) { %>
@@ -4320,15 +5059,16 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           const rulesNow = new Date();
           const rulesToday = new Date(rulesNow.getFullYear(), rulesNow.getMonth(), rulesNow.getDate());
           const rulesLastDayOfMonth = new Date(rulesNow.getFullYear(), rulesNow.getMonth() + 1, 0);
-        %>
-        <ul class="list-group list-group-flush">
-          <% (activity || [])
+          const monthlyActivities = (activity || [])
             .filter(acti => { 
               const d = new Date(acti.date_act); 
               const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
               return actDateOnly >= rulesToday && actDateOnly <= rulesLastDayOfMonth; 
-            })
-            .forEach(acti => { %>
+            });
+          const monthlyActivitiesPreview = monthlyActivities.slice(0, 6);
+        %>
+        <ul class="list-group list-group-flush">
+          <% monthlyActivitiesPreview.forEach(acti => { %>
           <li class="list-group-item">
             <i class="bi bi-calendar-event me-2 text-success"></i>
             <% const actDate = new Date(acti.date_act); %>
@@ -4339,9 +5079,19 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             <% } %>
           </li>
           <% }) %>
+          <% if (monthlyActivities.length === 0) { %>
+          <li class="list-group-item text-center text-muted py-4">ไม่มีกิจกรรมในเดือนนี้</li>
+          <% } %>
         </ul>
       </div>
-      <div class="text-end mt-2">
+      <div class="card-footer bg-light d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <small class="text-muted">
+          <% if (monthlyActivities.length > monthlyActivitiesPreview.length) { %>
+            แสดง <%= monthlyActivitiesPreview.length %> จาก <%= monthlyActivities.length %> รายการในเดือนนี้
+          <% } else { %>
+            แสดงกิจกรรมตามวันที่ที่กำลังจะมาถึงในเดือนนี้
+          <% } %>
+        </small>
         <a href="/gitgum/list" class="btn btn-primary btn-sm">
           ดูทั้งหมด
         </a>
@@ -4371,6 +5121,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         <% 
           const closingGroups = closingWithin30Groups || [];
           const totalClosingCount = closingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
+          const closingPreviewLimit = 5;
         %>
         
         <% if (totalClosingCount === 0) { %>
@@ -4386,6 +5137,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
           
           <% closingGroups.forEach((group) => { %>
             <% if (group.rows && group.rows.length > 0) { %>
+              <% const closingRowsPreview = group.rows.slice(0, closingPreviewLimit); %>
               <div class="mb-4">
                 <h6 class="text-primary mb-3">
                   <i class="bi bi-building me-2"></i>
@@ -4402,7 +5154,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                     <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 5</span>
                   <% } %>
                 </h6>
-                <div class="table-responsive">
+                <div class="table-responsive table-mobile-cards">
                   <table class="table table-sm table-bordered table-hover align-middle">
                     <thead class="table-light">
                       <tr>
@@ -4415,7 +5167,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                       </tr>
                     </thead>
                     <tbody>
-                      <% group.rows.forEach((coop) => { %>
+                      <% closingRowsPreview.forEach((coop) => { %>
                         <% 
                           const today = new Date();
                           const deadlineDate = new Date(coop.closingDeadlineYmd);
@@ -4423,16 +5175,16 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                           const urgencyClass = daysRemaining <= 7 ? 'table-danger' : daysRemaining <= 15 ? 'table-warning' : '';
                         %>
                         <tr class="<%= urgencyClass %>">
-                          <td class="fw-medium">
+                          <td class="fw-medium mobile-primary" data-label="ชื่อสถาบัน">
                             <strong><%= coop.c_name %></strong>
                             <br>
                             <small><%= coop.endDateThai %></small>
                           </td>
                          
-                          <td class="text-nowrap">
+                          <td class="text-nowrap" data-label="กำหนดปิดบัญชี">
                             <strong><%= coop.closingDeadlineThai %></strong>
                           </td>
-                          <td class="text-center">
+                          <td class="text-center" data-label="คงเหลือ">
                             <% if (daysRemaining <= 7) { %>
                               <span class="badge bg-danger"><%= daysRemaining %> วัน</span>
                             <% } else if (daysRemaining <= 15) { %>
@@ -4446,6 +5198,14 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                     </tbody>
                   </table>
                 </div>
+                <% if (group.rows.length > closingRowsPreview.length) { %>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+                  <small class="text-muted">แสดง <%= closingRowsPreview.length %> จาก <%= group.rows.length %> รายการในกลุ่มนี้</small>
+                  <a href="/activeCoop/list" class="btn btn-sm btn-outline-primary rounded-pill">
+                    <i class="bi bi-arrow-right-circle me-1"></i> ดูข้อมูลเพิ่มเติม
+                  </a>
+                </div>
+                <% } %>
               </div>
             <% } %>
           <% }) %>
@@ -4472,6 +5232,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
       <% 
         const meetingGroups = meetingDeadlineGroups || [];
         const totalMeetingCount = meetingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
+        const meetingPreviewLimit = 5;
       %>
       
       <% if (totalMeetingCount === 0) { %>
@@ -4487,6 +5248,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         
         <% meetingGroups.forEach((group) => { %>
           <% if (group.rows && group.rows.length > 0) { %>
+            <% const meetingRowsPreview = group.rows.slice(0, meetingPreviewLimit); %>
             <div class="mb-4">
               <h6 class="text-primary mb-3">
                 <i class="bi bi-building me-2"></i>
@@ -4503,7 +5265,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                   <span class="badge bg-danger ms-2">กลุ่มส่งเสริมสหกรณ์ 5</span>
                 <% } %>
               </h6>
-              <div class="table-responsive">
+              <div class="table-responsive table-mobile-cards">
                 <table class="table table-sm table-bordered table-hover align-middle">
                   <thead class="table-light">
                     <tr>
@@ -4516,7 +5278,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                     </tr>
                   </thead>
                   <tbody>
-                    <% group.rows.forEach((coop) => { %>
+                    <% meetingRowsPreview.forEach((coop) => { %>
                       <% 
                         const today = new Date();
                         const deadlineDate = new Date(coop.deadlineYmd);
@@ -4525,17 +5287,17 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                       %>
                       <tr class="<%= urgencyClass %>">
                       
-                        <td class="fw-medium">
+                        <td class="fw-medium mobile-primary" data-label="ชื่อสถาบัน">
                           <strong><%= coop.c_name %></strong>
                           <br>
                           <small><%= coop.endDateThai %></small>
                          
                         </td>
                        
-                        <td class="text-nowrap">
+                        <td class="text-nowrap" data-label="กำหนดประชุม">
                           <strong><%= coop.deadlineThai %></strong>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="สถานะการประชุม">
                           <% if (coop.meetingDateThai) { %>
                             <span class="badge bg-success">
                               <i class="bi bi-check-circle me-1"></i><%= coop.meetingDateThai %>
@@ -4551,10 +5313,23 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                   </tbody>
                 </table>
               </div>
+              <% if (group.rows.length > meetingRowsPreview.length) { %>
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+                <small class="text-muted">แสดง <%= meetingRowsPreview.length %> จาก <%= group.rows.length %> รายการในกลุ่มนี้</small>
+                <a href="/bigmeet" class="btn btn-sm btn-outline-primary rounded-pill">
+                  <i class="bi bi-arrow-right-circle me-1"></i> ดูข้อมูลเพิ่มเติม
+                </a>
+              </div>
+              <% } %>
             </div>
           <% } %>
         <% }) %>
       <% } %>
+    </div>
+    <div class="card-footer bg-light text-end">
+      <a href="/bigmeet" class="btn btn-sm btn-outline-primary rounded-pill">
+        <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
+      </a>
     </div>
   </div>
 </section>
@@ -4568,13 +5343,13 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
 
 <section id="downloads" class="section-block bg-white">
   <div class="container-lg">
-    <div class="card modern-card">
+    <div class="card modern-card downloads-shell">
       <div class="card-gradient-bar"></div>
       <div class="card-header bg-success text-dark">
         <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
       </div>
       <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-mobile-cards">
           <table class="table table-sm table-bordered table-hover align-middle">
             <thead class="table-light">
               <tr>
@@ -4613,13 +5388,13 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         </h5>
         <div class="d-flex align-items-center gap-2">
           <span class="small text-muted">ดูทั้งหมด</span>
-          <a href="/command" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">
+          <a href="/command" class="btn btn-sm btn-soft-primary">
             ดูทั้งหมด
           </a>
         </div>
       </div>
       <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="table-responsive table-mobile-cards">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
               <tr>
@@ -4633,24 +5408,28 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
               <% if (lastCommands && lastCommands.length > 0) { %>
                 <% lastCommands.forEach((command, index) => { %>
                   <tr>
-                    <td class="text-center"><%= command.com_no || '-' %></td>
-                    <td>
+                    <td class="text-center mobile-primary" data-label="เลขที่"><%= command.com_no || '-' %></td>
+                    <td data-label="เรื่อง">
                      
                       
                       <% if (command.com_story) { %>
                         <div class="text-truncate" title="<%= command.com_story %>"><%= command.com_story %></div>
                       <% } %>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center mobile-action" data-label="ดำเนินการ">
                       <% if (command.com_filename) { %>
                         <% if (user) { %>
+                          <div class="mobile-inline-actions">
                           <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="เปิดอ่านไฟล์">
                             <i class="bi bi-file-earmark-pdf"></i>
                           </a>
+                          </div>
                         <% } else { %>
+                          <div class="mobile-inline-actions">
                           <button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
                             <i class="bi bi-file-earmark-pdf"></i>
                           </button>
+                          </div>
                         <% } %>
                       <% } else { %>
                         <span class="text-muted small">ไม่มีไฟล์</span>
@@ -4660,7 +5439,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                 <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลคำสั่งล่าสุด</td>
+                  <td colspan="3" class="text-center text-muted py-3">ไม่มีข้อมูลคำสั่งล่าสุด</td>
                 </tr>
               <% } %>
             </tbody>
@@ -4684,13 +5463,13 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
         </h5>
         <div class="d-flex align-items-center gap-2">
           <span class="small text-muted">ดูทั้งหมด</span>
-          <a href="/projects" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary);">
+          <a href="/projects" class="btn btn-sm btn-soft-primary">
             ดูทั้งหมด
           </a>
         </div>
       </div>
       <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="table-responsive table-mobile-cards">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
               <tr>
@@ -4703,10 +5482,11 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
               <% if (lastProjects && lastProjects.length > 0) { %>
                 <% lastProjects.forEach((project, index) => { %>
                   <tr>
-                    <td class="text-center"><%= index + 1 %></td>
-                    <td>
+                    <td class="text-center mobile-primary" data-label="ลำดับ"><%= index + 1 %></td>
+                    <td data-label="โครงการ">
                       <%= project.pro_story || '-' %>
                       <% if (project.pro_filename) { %>
+                        <div class="mobile-inline-actions mt-2">
                         <% if (user) { %>
                           <a href="/project/download/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary ms-2" target="_blank">
                             <i class="bi bi-download"></i> ดาวน์โหลด
@@ -4716,6 +5496,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                             <i class="bi bi-download"></i> ดาวน์โหลด
                           </button>
                         <% } %>
+                        </div>
                       <% } %>
                     </td>
              
@@ -4723,7 +5504,7 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
                 <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="4" class="text-center text-muted py-3">ไม่มีข้อมูลโครงการล่าสุด</td>
+                  <td colspan="2" class="text-center text-muted py-3">ไม่มีข้อมูลโครงการล่าสุด</td>
                 </tr>
               <% } %>
             </tbody>
@@ -4877,6 +5658,16 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
     });
   })();
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.progress-bar[data-progress]').forEach(function(bar) {
+      const value = Number(bar.getAttribute('data-progress') || 0);
+      const width = Math.max(0, Math.min(value, 100));
+      bar.style.width = width + '%';
+    });
+  });
+</script>
+
 
 <section id="online" class="section-block bg-light">
   <div class="container-lg">
@@ -5506,24 +6297,24 @@ const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ?
             
             return `
               <tr>
-                <td class="col-index d-none d-sm-table-cell text-center">${index + 1}</td>
-                <td>
+                <td class="col-index d-none d-sm-table-cell text-center mobile-primary no-mobile-label">${index + 1}</td>
+                <td data-label="เรื่อง">
                   <div class="fw-medium">${down.down_subject || '-'}</div>
                 </td>
-                <td class="text-nowrap">
+                <td class="text-nowrap" data-label="ประเภท">
                   ${hasFile ? '<span class="badge bg-success"><i class="bi bi-file-earmark me-1"></i>ไฟล์</span>' : '<span class="badge bg-info"><i class="bi bi-link me-1"></i>ลิงก์</span>'}
                 </td>
-                <td class="text-center">
+                <td class="text-center mobile-action" data-label="ดำเนินการ">
                   ${isLoggedIn ? 
-                    `<a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
+                    `<div class="mobile-inline-actions"><a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
                       <i class="bi ${linkIcon}"></i>
-                    </a>` : 
-                    `<button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
+                    </a></div>` : 
+                    `<div class="mobile-inline-actions"><button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
                       <i class="bi ${linkIcon}"></i>
-                    </button>`
+                    </button></div>`
                   }
                 </td>
-                <td class="text-nowrap small text-muted">
+                <td class="text-nowrap small text-muted" data-label="วันที่">
                   ${down.down_savedate ? new Date(down.down_savedate).toLocaleDateString('th-TH') : '-'}
                 </td>
               </tr>

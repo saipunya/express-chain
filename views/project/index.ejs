@@ -224,21 +224,51 @@
   }
 
   @media (max-width: 768px) {
+    .page-header {
+      padding: 1rem 0 1rem;
+      margin-bottom: 1rem;
+    }
+
     .search-wrapper {
       margin-bottom: 1rem;
+    }
+
+    .search-card {
+      padding: 1rem;
+      border-radius: 1rem;
     }
 
     .project-card .project-row {
       gap: 0.85rem;
     }
 
+    .project-card {
+      padding: 1rem;
+      border-radius: 1rem;
+    }
+
     .project-title {
       font-size: 0.95rem;
+      margin-bottom: 1rem;
     }
 
     .year-badge {
       font-size: 0.7rem;
       padding: 0.3rem 0.6rem;
+    }
+
+    .project-actions {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .project-actions .btn,
+    .project-actions .dropdown {
+      flex: 1 1 auto;
+    }
+
+    .project-actions .dropdown .btn {
+      width: 100%;
     }
   }
 </style>
@@ -246,8 +276,15 @@
 <!-- Header -->
 <div class="page-header">
   <div class="container">
-    <h1 class="mb-2 fw-bold">โครงการ</h1>
-    <p class="mb-0 text-muted">จัดเก็บและค้นหาเอกสารโครงการอย่างเป็นระเบียบ</p>
+    <div class="mobile-page-header mb-0">
+      <div>
+        <h1 class="mobile-page-header__title">โครงการ</h1>
+        <p class="mobile-page-header__subtitle">ค้นหาและเปิดดูเอกสารโครงการได้รวดเร็วขึ้นบนมือถือและหน้าจอขนาดเล็ก</p>
+      </div>
+      <div class="mobile-page-header__meta">
+        <span class="mobile-chip"><i class="bi bi-folder2-open"></i><%= (pagination && pagination.total) ? pagination.total : ((projects && projects.length) ? projects.length : 0) %> รายการ</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -260,10 +297,8 @@
           <form id="project-search-form"
                 class="d-flex flex-column flex-md-row gap-2"
                 method="GET"
-                action="/project"
-                data-search-endpoint="/project"
-                data-is-logged-in="<%= user ? '1' : '0' %>"
-                data-can-manage="<%= canManage ? '1' : '0' %>">
+                action="/project">
+            <input type="hidden" name="page" value="1">
             <div class="position-relative flex-grow-1">
               <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
               <input id="project-search-input"
@@ -273,6 +308,11 @@
                      placeholder="ค้นหาชื่อโครงการ..."
                      value="<%= search || '' %>">
             </div>
+            <select class="form-select" name="pageSize" style="max-width: 150px;">
+              <% [12, 24, 48].forEach(size => { %>
+                <option value="<%= size %>" <%= pagination && pagination.pageSize === size ? 'selected' : '' %>><%= size %>/หน้า</option>
+              <% }) %>
+            </select>
             <button class="btn btn-primary-action" type="submit">ค้นหา</button>
             <% if(search) { %>
               <a href="/project" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="ล้างการค้นหา">
@@ -293,7 +333,10 @@
   <!-- Results Info -->
   <div id="project-results-info" class="results-info">
     <i class="bi bi-folder2-open me-2"></i>
-    พบทั้งหมด <strong><%= (projects && projects.length) ? projects.length : 0 %></strong> รายการ
+    พบทั้งหมด <strong><%= (pagination && pagination.total) ? pagination.total : ((projects && projects.length) ? projects.length : 0) %></strong> รายการ
+    <% if (pagination) { %>
+      <span class="ms-2">หน้า <strong><%= pagination.page %></strong> / <strong><%= pagination.totalPages %></strong></span>
+    <% } %>
   </div>
 
   <!-- Project Grid -->
@@ -370,7 +413,43 @@
       </div>
     <% } %>
   </div>
-</div>
 
-<script src="/js/project-search.js"></script>
+  <% if (pagination && pagination.totalPages > 1) { %>
+    <% const baseQuery = (extra = {}) => {
+         const params = new URLSearchParams();
+         if (search) params.set('search', search);
+         if (pagination.pageSize) params.set('pageSize', pagination.pageSize);
+         Object.keys(extra).forEach(key => params.set(key, extra[key]));
+         return '?' + params.toString();
+       }; %>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4">
+      <div class="text-muted small">แสดง <%= projects.length %> รายการจากทั้งหมด <%= pagination.total %> รายการ</div>
+      <nav aria-label="Project pagination">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
+          <li class="page-item <%= pagination.page === 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.page === 1 ? '#' : baseQuery({ page: 1 }) %>">&laquo;</a>
+          </li>
+          <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.hasPrev ? baseQuery({ page: pagination.page - 1 }) : '#' %>">&lsaquo;</a>
+          </li>
+          <% const windowSize = 5;
+             let start = Math.max(1, pagination.page - Math.floor(windowSize / 2));
+             let end = Math.min(pagination.totalPages, start + windowSize - 1);
+             if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+             for (let pageNumber = start; pageNumber <= end; pageNumber++) { %>
+            <li class="page-item <%= pageNumber === pagination.page ? 'active' : '' %>">
+              <a class="page-link" href="<%= baseQuery({ page: pageNumber }) %>"><%= pageNumber %></a>
+            </li>
+          <% } %>
+          <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.hasNext ? baseQuery({ page: pagination.page + 1 }) : '#' %>">&rsaquo;</a>
+          </li>
+          <li class="page-item <%= pagination.page === pagination.totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="<%= pagination.page === pagination.totalPages ? '#' : baseQuery({ page: pagination.totalPages }) %>">&raquo;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  <% } %>
+</div>
 <%- include('../partials/footer') %>

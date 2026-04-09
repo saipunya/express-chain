@@ -4,20 +4,47 @@ const fontkit = require('@pdf-lib/fontkit');
 const { PDFDocument, rgb, degrees } = require('pdf-lib');
 const Command = require('../models/commandModel');
 
+function buildPagination(page, pageSize, total) {
+  const safePageSize = Math.max(1, Number(pageSize) || 10);
+  const safeTotal = Math.max(0, Number(total) || 0);
+  const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
+  const safePage = Math.min(Math.max(1, Number(page) || 1), totalPages);
+
+  return {
+    page: safePage,
+    pageSize: safePageSize,
+    total: safeTotal,
+    totalPages,
+    hasPrev: safePage > 1,
+    hasNext: safePage < totalPages
+  };
+}
+
 const commandController = {
   index: async (req, res) => {
-    const search = req.query.search || '';
-    const commands = await Command.getAll(search);
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    const requestedPageSize = Number(req.query.pageSize) || 10;
+    const pageSize = [10, 20, 30, 50].includes(requestedPageSize) ? requestedPageSize : 10;
+    const requestedPage = Number(req.query.page) || 1;
+    const initialPagination = buildPagination(requestedPage, pageSize, 0);
+    const result = await Command.getList({
+      search,
+      page: initialPagination.page,
+      pageSize: initialPagination.pageSize
+    });
+    const pagination = buildPagination(requestedPage, pageSize, result.total);
+    const commands = result.items;
 
     if (req.query.ajax === '1') {
       return res.json({
         items: commands,
+        pagination,
         isLoggedIn: !!req.session?.user,
         canManage: ['admin','pbt'].includes(req.session?.user?.mClass)
       });
     }
 
-    res.render('command/index', { commands, search });
+    res.render('command/index', { commands, search, pagination });
   },
 
   createForm: async (req, res) => {

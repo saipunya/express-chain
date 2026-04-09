@@ -21,6 +21,32 @@ async function loadPendingCounts() {
   };
 }
 
+function buildAssignmentSelection(item, body = {}) {
+  return {
+    vehicle_id: body.vehicle_id || item?.vehicle_id || '',
+    driver_id: body.driver_id || item?.driver_id || '',
+    assignment_note: body.assignment_note || ''
+  };
+}
+
+function getActorName(user) {
+  return user?.fullname || user?.username || 'system';
+}
+
+async function renderVehicleDetail(res, item, overrides = {}) {
+  const vehicles = overrides.vehicles || await vehicleMasterModel.listActive();
+  const drivers = overrides.drivers || await driverMasterModel.listActive();
+
+  res.render('vehicle-approval/request-detail', {
+    title: 'พิจารณาคำขอใช้รถราชการ',
+    item,
+    vehicles,
+    drivers,
+    error: overrides.error || null,
+    assignmentSelection: overrides.assignmentSelection || buildAssignmentSelection(item)
+  });
+}
+
 exports.pending = async (req, res) => {
   try {
     const { travelItems, vehicleItems } = await loadPendingCounts();
@@ -98,23 +124,13 @@ exports.rejectTravel = async (req, res) => {
 
 exports.vehicleDetail = async (req, res) => {
   try {
-    const [item, vehicles, drivers] = await Promise.all([
-      vehicleRequestModel.getDetailById(req.params.id),
-      vehicleMasterModel.listActive(),
-      driverMasterModel.listActive()
-    ]);
+    const item = await vehicleRequestModel.getDetailById(req.params.id);
 
     if (!item) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
 
-    res.render('vehicle-approval/request-detail', {
-      title: 'พิจารณาคำขอใช้รถราชการ',
-      item,
-      vehicles,
-      drivers,
-      error: null
-    });
+    await renderVehicleDetail(res, item);
   } catch (error) {
     console.error('Error loading vehicle approval detail:', error);
     res.status(500).send('ไม่สามารถโหลดคำขอใช้รถราชการได้');
@@ -123,7 +139,11 @@ exports.vehicleDetail = async (req, res) => {
 
 exports.approveVehicle = async (req, res) => {
   try {
-    const item = await vehicleRequestModel.getDetailById(req.params.id);
+    const [item, vehicles, drivers] = await Promise.all([
+      vehicleRequestModel.getDetailById(req.params.id),
+      vehicleMasterModel.listActive(),
+      driverMasterModel.listActive()
+    ]);
     if (!item) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
@@ -131,13 +151,56 @@ exports.approveVehicle = async (req, res) => {
       return res.status(400).send('ต้องอนุมัติคำขอไปราชการก่อนจึงจะอนุมัติคำขอใช้รถได้');
     }
 
+    const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
+    const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
+
+    if (!selectedVehicle || !selectedDriver) {
+      return renderVehicleDetail(res.status(400), item, {
+        vehicles,
+        drivers,
+        error: 'กรุณาเลือกรถและคนขับก่อนอนุมัติคำขอใช้รถ',
+        assignmentSelection: buildAssignmentSelection(item, req.body)
+      });
+    }
+
+    const overlapping = await vehicleAssignmentModel.findOverlappingAssignment(
+      selectedVehicle.id,
+      item.trip_start_at,
+      item.trip_end_at,
+      item.id
+    );
+
+    if (overlapping) {
+      return renderVehicleDetail(res.status(400), item, {
+        vehicles,
+        drivers,
+        error: `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`,
+        assignmentSelection: buildAssignmentSelection(item, req.body)
+      });
+    }
+
     await vehicleRequestModel.approve(req.params.id, req.session?.user, req.body.approval_comment);
+    await vehicleAssignmentModel.upsertAssignment({
+      vehicle_request_id: item.id,
+      vehicle_id: selectedVehicle.id,
+      driver_id: selectedDriver.id,
+      assigned_by_member_id: req.session?.user?.id || null,
+      assignment_note: req.body.assignment_note || null,
+      plate_no_snapshot: selectedVehicle.plate_no,
+      driver_name_snapshot: selectedDriver.driver_name,
+      updated_by: getActorName(req.session?.user)
+    });
+
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
     if (updatedItem) {
       await workflowNotificationService.notifyVehicleDecision(
         updatedItem,
         'อนุมัติ',
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
+        getActorName(req.session?.user)
+      );
+      await workflowNotificationService.notifyVehicleAssigned(
+        updatedItem,
+        getActorName(req.session?.user)
       );
     }
     res.redirect(`/vehicle-approval/request/${req.params.id}`);
@@ -185,12 +248,11 @@ exports.assignVehicle = async (req, res) => {
     const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
 
     if (!selectedVehicle || !selectedDriver) {
-      return res.status(400).render('vehicle-approval/request-detail', {
-        title: 'พิจารณาคำขอใช้รถราชการ',
-        item,
+      return renderVehicleDetail(res.status(400), item, {
         vehicles,
         drivers,
-        error: 'กรุณาเลือกรถและคนขับให้ครบถ้วน'
+        error: 'กรุณาเลือกรถและคนขับให้ครบถ้วน',
+        assignmentSelection: buildAssignmentSelection(item, req.body)
       });
     }
 
@@ -202,12 +264,11 @@ exports.assignVehicle = async (req, res) => {
     );
 
     if (overlapping) {
-      return res.status(400).render('vehicle-approval/request-detail', {
-        title: 'พิจารณาคำขอใช้รถราชการ',
-        item,
+      return renderVehicleDetail(res.status(400), item, {
         vehicles,
         drivers,
-        error: `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`
+        error: `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`,
+        assignmentSelection: buildAssignmentSelection(item, req.body)
       });
     }
 
@@ -219,14 +280,14 @@ exports.assignVehicle = async (req, res) => {
       assignment_note: req.body.assignment_note || null,
       plate_no_snapshot: selectedVehicle.plate_no,
       driver_name_snapshot: selectedDriver.driver_name,
-      updated_by: req.session?.user?.fullname || req.session?.user?.username || 'system'
+      updated_by: getActorName(req.session?.user)
     });
 
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
     if (updatedItem) {
       await workflowNotificationService.notifyVehicleAssigned(
         updatedItem,
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
+        getActorName(req.session?.user)
       );
     }
 

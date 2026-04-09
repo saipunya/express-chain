@@ -50,7 +50,29 @@
           <form action="/vehicle-approval/request/<%= item.id %>/approve" method="POST" class="mb-3">
             <label class="form-label">ความเห็น</label>
             <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
-            <button type="submit" class="btn btn-success w-100" <%= item.travel_status !== 'approved' ? 'disabled' : '' %>>อนุมัติคำขอใช้รถ</button>
+            <div class="mb-3">
+              <label class="form-label">รถที่มอบหมาย</label>
+              <select class="form-select" name="vehicle_id" required>
+                <option value="">เลือกรถ</option>
+                <% vehicles.forEach((vehicle) => { %>
+                  <option value="<%= vehicle.id %>" <%= Number(assignmentSelection.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">คนขับที่มอบหมาย</label>
+              <select class="form-select" name="driver_id" required>
+                <option value="">เลือกคนขับ</option>
+                <% drivers.forEach((driver) => { %>
+                  <option value="<%= driver.id %>" <%= Number(assignmentSelection.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">หมายเหตุการมอบหมาย</label>
+              <textarea class="form-control" name="assignment_note" rows="3"><%= assignmentSelection.assignment_note || '' %></textarea>
+            </div>
+            <button type="submit" class="btn btn-success w-100" <%= item.travel_status !== 'approved' ? 'disabled' : '' %>>อนุมัติคำขอใช้รถพร้อมมอบหมาย</button>
           </form>
           <% if (item.travel_status !== 'approved') { %>
             <p class="small text-danger mb-3">ต้องอนุมัติคำขอไปราชการก่อน</p>
@@ -71,13 +93,14 @@
       <div class="card-header bg-white"><h5 class="mb-0">มอบหมายรถและคนขับ</h5></div>
       <div class="card-body">
         <% if (item.status === 'approved' || item.status === 'assigned') { %>
+          <p class="text-muted small">สามารถเปลี่ยนรถหรือคนขับภายหลังได้จากส่วนนี้</p>
           <form action="/vehicle-approval/request/<%= item.id %>/assign" method="POST" class="d-grid gap-3">
             <div>
               <label class="form-label">รถ</label>
               <select class="form-select" name="vehicle_id" required>
                 <option value="">เลือกรถ</option>
                 <% vehicles.forEach((vehicle) => { %>
-                  <option value="<%= vehicle.id %>" <%= Number(item.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
+                  <option value="<%= vehicle.id %>" <%= Number(assignmentSelection.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
                 <% }) %>
               </select>
             </div>
@@ -86,13 +109,13 @@
               <select class="form-select" name="driver_id" required>
                 <option value="">เลือกคนขับ</option>
                 <% drivers.forEach((driver) => { %>
-                  <option value="<%= driver.id %>" <%= Number(item.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+                  <option value="<%= driver.id %>" <%= Number(assignmentSelection.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
                 <% }) %>
               </select>
             </div>
             <div>
               <label class="form-label">หมายเหตุการมอบหมาย</label>
-              <textarea class="form-control" name="assignment_note" rows="3"></textarea>
+              <textarea class="form-control" name="assignment_note" rows="3"><%= assignmentSelection.assignment_note || '' %></textarea>
             </div>
             <button type="submit" class="btn btn-primary w-100"><%= item.status === 'assigned' ? 'อัปเดตการมอบหมาย' : 'มอบหมายรถและคนขับ' %></button>
           </form>

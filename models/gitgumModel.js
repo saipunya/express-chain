@@ -1,5 +1,14 @@
 const db = require('../config/db');
 
+function buildWorkflowTravelKey(travelRequestId) {
+  return `workflow_travel:${travelRequestId}`;
+}
+
+function parseWorkflowTravelId(saveBy) {
+  const match = String(saveBy || '').match(/^workflow_travel:(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
 // เพิ่มข้อมูล
 exports.insert = async (data) => {
   const sql = `INSERT INTO tbl_gitgum (
@@ -7,7 +16,8 @@ exports.insert = async (data) => {
     git_group, git_saveby, git_savedate
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   const params = Object.values(data);
-  await db.query(sql, params);
+  const [result] = await db.query(sql, params);
+  return result.insertId;
 };
 
 // ดึงข้อมูลทั้งหมด (ช่วง -90 วัน ถึง +90 วัน จากวันนี้)
@@ -50,6 +60,14 @@ exports.findById = async (id) => {
   return rows[0];
 };
 
+exports.findByWorkflowTravelId = async (travelRequestId) => {
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_saveby = ? ORDER BY git_id DESC LIMIT 1',
+    [buildWorkflowTravelKey(travelRequestId)]
+  );
+  return rows[0] || null;
+};
+
 // อัปเดตข้อมูล
 exports.update = async (id, data) => {
   const sql = `UPDATE tbl_gitgum SET
@@ -63,6 +81,10 @@ exports.update = async (id, data) => {
 // ลบ
 exports.delete = async (id) => {
   await db.query('DELETE FROM tbl_gitgum WHERE git_id = ?', [id]);
+};
+
+exports.deleteByWorkflowTravelId = async (travelRequestId) => {
+  await db.query('DELETE FROM tbl_gitgum WHERE git_saveby = ?', [buildWorkflowTravelKey(travelRequestId)]);
 };
 
 // หาเฉพาะกิจกรรมของวันนี้
@@ -125,3 +147,6 @@ exports.findRecent = async (limit = 5) => {
   );
   return rows;
 };
+
+exports.buildWorkflowTravelKey = buildWorkflowTravelKey;
+exports.parseWorkflowTravelId = parseWorkflowTravelId;

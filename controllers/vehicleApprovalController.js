@@ -4,6 +4,7 @@ const vehicleMasterModel = require('../models/vehicleMasterModel');
 const driverMasterModel = require('../models/driverMasterModel');
 const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
+const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
 
 function isMissingWorkflowTable(error) {
   return error && error.code === 'ER_NO_SUCH_TABLE';
@@ -91,6 +92,7 @@ exports.approveTravel = async (req, res) => {
     await officialTravelRequestModel.approve(req.params.id, req.session?.user, req.body.approval_comment);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
     if (item) {
+      await gitgumTravelSyncService.syncApprovedTravel(item);
       await workflowNotificationService.notifyTravelDecision(
         item,
         'อนุมัติ',
@@ -107,6 +109,7 @@ exports.approveTravel = async (req, res) => {
 exports.rejectTravel = async (req, res) => {
   try {
     await officialTravelRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
+    await gitgumTravelSyncService.removeTravel(req.params.id);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
     if (item) {
       await workflowNotificationService.notifyTravelDecision(
@@ -193,6 +196,8 @@ exports.approveVehicle = async (req, res) => {
 
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
     if (updatedItem) {
+      const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
+      await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
       await workflowNotificationService.notifyVehicleDecision(
         updatedItem,
         'อนุมัติ',
@@ -215,6 +220,8 @@ exports.rejectVehicle = async (req, res) => {
     await vehicleRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
     const item = await vehicleRequestModel.getDetailById(req.params.id);
     if (item) {
+      const updatedTravelItem = await officialTravelRequestModel.getDetailById(item.travel_request_id);
+      await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
       await workflowNotificationService.notifyVehicleDecision(
         item,
         'ไม่อนุมัติ',
@@ -285,6 +292,8 @@ exports.assignVehicle = async (req, res) => {
 
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
     if (updatedItem) {
+      const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
+      await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
       await workflowNotificationService.notifyVehicleAssigned(
         updatedItem,
         getActorName(req.session?.user)

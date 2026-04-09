@@ -1,6 +1,7 @@
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
 const { generateRunningNumber } = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
+const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
 
 const OFFICIAL_TRAVEL_SUBJECT = 'ขออนุมัติเดินทางไปราชการ';
 
@@ -290,6 +291,10 @@ exports.update = async (req, res) => {
       status: current.status
     };
     await officialTravelRequestModel.update(req.params.id, payload, mapCompanions(req));
+    if (current.status === 'approved') {
+      const updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+      await gitgumTravelSyncService.syncApprovedTravel(updatedItem);
+    }
     res.redirect(`/official-travel/${req.params.id}`);
   } catch (error) {
     console.error('Error updating official travel request:', error);

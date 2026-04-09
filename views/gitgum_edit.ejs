@@ -69,7 +69,7 @@
     </div>
 
     <!-- Hidden meta fields -->
-    <input type="hidden" name="git_saveby" value="<%= (user && user.fullname) ? user.fullname : 'guest' %>" />
+    <input type="hidden" name="git_saveby" value="<%= (typeof record.git_saveby === 'string' && record.git_saveby.startsWith('workflow_travel:')) ? record.git_saveby : ((user && user.fullname) ? user.fullname : 'guest') %>" />
     <input type="hidden" name="git_savedate" value="<%= new Date().toISOString().slice(0,19).replace('T',' ') %>" />
 
     <div class="col-12 d-flex gap-2">

@@ -39,6 +39,8 @@ function toYMD(value) {
 }
 
 function buildGitgumEvent(row) {
+  const workflowTravelId = gitgumModel.parseWorkflowTravelId(row.git_saveby);
+  const isWorkflowTravel = Boolean(workflowTravelId);
   const dateStr = toYMD(row.git_date);
   const timeStr = toHHmm(row.git_time);
   const start = dateStr ? (timeStr ? `${dateStr}T${timeStr}` : dateStr) : undefined;
@@ -46,20 +48,24 @@ function buildGitgumEvent(row) {
     return null;
   }
 
+  const requestNumberMatch = String(row.git_maihed || '').match(/เลขที่คำขอ:\s*([^|]+)/);
+  const requestNumber = requestNumberMatch ? requestNumberMatch[1].trim() : null;
+
   return {
     id: `gitgum-${row.git_id}`,
     title: [row.git_act, row.git_place ? `@${row.git_place}` : null].filter(Boolean).join(' '),
     start,
     allDay: !timeStr,
     extendedProps: {
-      sourceType: 'gitgum',
-      sourceLabel: 'กิจกรรมสำนักงาน',
+      sourceType: isWorkflowTravel ? 'travel_request' : 'gitgum',
+      sourceLabel: isWorkflowTravel ? 'คำขอไปราชการ' : 'กิจกรรมสำนักงาน',
+      requestNumber,
       place: row.git_place,
       respon: row.git_respon,
       goto: row.git_goto,
       group: row.git_group,
       maihed: row.git_maihed,
-      detailUrl: `/gitgum/view/${row.git_id}`
+      detailUrl: isWorkflowTravel ? `/official-travel/${workflowTravelId}` : `/gitgum/view/${row.git_id}`
     }
   };
 }
@@ -108,7 +114,16 @@ async function getMergedCalendarEvents({ startDate, endDate }) {
     officialTravelRequestModel.listApprovedInRange(startDate, endDate)
   ]);
 
-  return [...gitgumRows.map(buildGitgumEvent), ...travelRows.map(buildTravelEvent)]
+  const syncedTravelIds = new Set(
+    gitgumRows
+      .map((row) => gitgumModel.parseWorkflowTravelId(row.git_saveby))
+      .filter(Boolean)
+  );
+
+  return [
+    ...gitgumRows.map(buildGitgumEvent),
+    ...travelRows.filter((row) => !syncedTravelIds.has(Number(row.id))).map(buildTravelEvent)
+  ]
     .filter(Boolean)
     .sort((left, right) => String(left.start).localeCompare(String(right.start)));
 }

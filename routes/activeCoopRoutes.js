@@ -23,18 +23,9 @@ router.get('/by-end-date/preview', async (req, res, next) => {
     next(err);
   }
 });
-router.get('/active-coop/:group', async (req, res) => {
-  const group = req.params.group;
-  // ดึงข้อมูลจาก active_coop ตาม group
-  const data_group = await db.query('SELECT * FROM active_coop WHERE c_group = ?', [group]);
-  let html = '<ul class="list-group">';
-  data_group.forEach(item => {
-    html += `<li class="list-group-item">${item.name} (${item.type === 'coop' ? 'สหกรณ์' : 'กลุ่มเกษตรกร'})</li>`;
-  });
-  html += '</ul>';
-  res.send(html);
-});
-
+router.get('/closing/group/:group', activeCoopController.closingGroupDetail);
+router.get('/closing-group/:group', activeCoopController.closingGroupDetail);router.get('/closing-group/:group', activeCoopController.closingGroupDetail);
+router.get('/meeting-group/:group', activeCoopController.meetingGroupDetail);
 router.get('/group/:group/items', activeCoopController.listGroupItems);
 
 module.exports = router;

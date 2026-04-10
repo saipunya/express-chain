@@ -646,3 +646,131 @@ footer { backdrop-filter: saturate(160%) blur(2px); }
     padding: .95rem 1rem;
   }
 }
+
+/* Strength summary: show horizontal cards on mobile and hide stacked table for this section */
+.strength-mobile-row { display: none; gap: .75rem; padding: .85rem; }
+.strength-mobile-item {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .06);
+  border-radius: 0.75rem;
+  padding: .65rem;
+  box-shadow: 0 10px 24px rgba(15,23,42,.04);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: .6rem;
+}
+.strength-mobile-title { font-weight: 700; color: #0f172a; margin-bottom: .5rem; }
+.strength-mobile-counts { display: flex; gap: .5rem; justify-content: space-between; align-items: center; }
+.strength-mobile-col { text-align: center; min-width: 48px; }
+.strength-mobile-num { font-weight: 800; }
+.strength-mobile-label { font-size: .72rem; color: #64748b; margin-top: .25rem; }
+
+/* visual accents */
+.strength-mobile-item { position: relative; padding-left: 1rem; transition: transform .18s ease, box-shadow .18s ease; }
+.strength-mobile-item::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 6px; border-radius: 6px; }
+.strength-mobile-item:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(15,23,42,.06); }
+
+/* per-group accents */
+.strength-mobile-item[data-group="สหกรณ์ภาคการเกษตร"]::before { background: linear-gradient(180deg,#10b981,#059669); }
+.strength-mobile-item[data-group="สหกรณ์นอกภาคการเกษตร"]::before { background: linear-gradient(180deg,#3b82f6,#2563eb); }
+.strength-mobile-item[data-group="กลุ่มเกษตรกร"]::before { background: linear-gradient(180deg,#f59e0b,#f97316); }
+
+/* make pills larger on mobile summary */
+.strength-mobile-num .count-pill { font-size: 1.05rem; padding: 8px 14px; min-width: 62px; }
+
+/* title icon color and spacing */
+.strength-mobile-title i { color: rgba(15,23,42,.5); margin-right: .4rem; }
+
+@media (max-width: 767.98px) {
+  .strength-mobile-row { display: block; }
+  .strength-mobile-item { display: block; }
+  .strength-mobile-counts { justify-content: flex-start; gap: 1rem; }
+  .strength-summary-table { display: none; }
+}
+
+/* Compact closing-within-30 rows on small screens: make each row one line and minimize spacing */
+@media (max-width: 767.98px) {
+  #closing-within-30 .table-mobile-cards .table-responsive { padding: .25rem 0; }
+  #closing-within-30 .table-mobile-cards table,
+  #closing-within-30 .table-mobile-cards thead,
+  #closing-within-30 .table-mobile-cards tbody,
+  #closing-within-30 .table-mobile-cards th,
+  #closing-within-30 .table-mobile-cards td,
+  #closing-within-30 .table-mobile-cards tr { display: block; width: 100%; }
+
+  /* Make each row a compact flex line */
+  #closing-within-30 .table-mobile-cards tbody {
+    display: block;
+    gap: .35rem;
+  }
+
+  #closing-within-30 .table-mobile-cards tr {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .45rem;
+    border-radius: .6rem;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,.05);
+  }
+
+  #closing-within-30 .table-mobile-cards td {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+    font-size: .92rem;
+  }
+
+  /* hide the mobile label (td::before) for compact single-line rows */
+  #closing-within-30 .table-mobile-cards td::before { display: none !important; }
+
+  /* Primary column (name) takes remaining space; hide secondary small date to save lines */
+  #closing-within-30 .table-mobile-cards td.mobile-primary { flex: 1 1 auto; min-width: 0; }
+  #closing-within-30 .table-mobile-cards td.mobile-primary small,
+  #closing-within-30 .table-mobile-cards td.mobile-primary br { display: none; }
+  #closing-within-30 .table-mobile-cards td.mobile-primary strong {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+
+  /* target both possible header labels and also fallback to nth-child for robustness */
+  #closing-within-30 .table-mobile-cards td[data-label="กำหนดปิดบัญชี"],
+  #closing-within-30 .table-mobile-cards td[data-label="ปิดบัญชี"],
+  #closing-within-30 .table-mobile-cards td[data-label="คงเหลือ"],
+  #closing-within-30 .table-mobile-cards tr td:nth-child(2),
+  #closing-within-30 .table-mobile-cards tr td:nth-child(3) {
+    flex: 0 0 auto;
+    min-width: 88px;
+    text-align: right;
+  }
+
+  /* truncate long coop names to keep rows compact */
+  #closing-within-30 .table-mobile-cards td.mobile-primary strong {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+
+  /* Smaller badges */
+  #closing-within-30 .table-mobile-cards .badge { padding: .25rem .45rem; font-size: .78rem; }
+
+  /* Reduce group header spacing */
+  #closing-within-30 h6 { margin: .25rem 0 .35rem; font-size: .95rem; }
+  #closing-within-30 p.mb-2 { margin-bottom: .3rem; }
+  #closing-within-30 .display-6 { margin-bottom: 0; }
+  #closing-within-30 .card-footer { padding-top: .5rem; padding-bottom: .5rem; }
+  #closing-within-30 .compact-closing-card .card-body { padding: .75rem 1rem; }
+  #closing-within-30 .compact-closing-card .card-footer { padding: .5rem 1rem; }
+  #closing-within-30 .d-flex.justify-content-between { gap: .4rem; }
+
+  /* Compact meeting cards should match closing layout */
+  .compact-closing-card .card-body { padding: .75rem 1rem; }
+  .compact-closing-card .card-footer { padding: .5rem 1rem; }
+}

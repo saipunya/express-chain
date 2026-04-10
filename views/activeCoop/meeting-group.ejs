@@ -1,0 +1,57 @@
+<%- include('../partials/header', { title: 'ประชุมใหญ่ภายใน 150 วัน' }) %>
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h2 class="mb-2 text-warning"><i class="bi bi-people-fill me-2"></i> <%= groupLabel %></h2>
+      <p class="text-muted mb-0">สถาบันทั้งหมด <strong><%= rows.length %></strong> แห่ง ที่ต้องประชุมใหญ่ภายใน 150 วัน</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> กลับหน้าแรก
+      </a>
+      <a href="/activeCoop/by-end-date" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-list-ul"></i> ดูสรุป End Date
+      </a>
+    </div>
+  </div>
+
+  <% if (!rows.length) { %>
+    <div class="alert alert-info">ไม่มีข้อมูลสถาบันสำหรับกลุ่มนี้ในช่วง 150 วันข้างหน้า</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th style="width: 130px;">รหัส</th>
+            <th>ชื่อสถาบัน</th>
+            <th style="width: 140px;">ประเภท</th>
+            <th style="width: 140px;">กำหนดประชุม</th>
+            <th style="width: 120px;">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach((row, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><%= row.c_code %></td>
+              <td><%= row.c_name %></td>
+              <td>
+                <span class="badge <%= row.coop_group === 'สหกรณ์' ? 'bg-success' : 'bg-info' %>"><%= row.coop_group || '-' %></span>
+              </td>
+              <td><%= row.deadlineThai %></td>
+              <td>
+                <% if (row.meetingDateThai) { %>
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i><%= row.meetingDateThai %></span>
+                <% } else { %>
+                  <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>ยังไม่ประชุม</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/footer') %>

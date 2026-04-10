@@ -1,5 +1,6 @@
 const pool = require('../config/db'); 
 const activeCoopModel = require('../models/activeCoopModel');
+const bigmeetModel = require('../models/bigmeetModel');
 // (removed) const puppeteer = require('puppeteer');
 const path = require('path');
 const PdfPrinter = require('pdfmake');
@@ -191,5 +192,176 @@ exports.listGroupItems = async (req, res) => {
   } catch (e) {
     console.error('listGroupItems error:', e);
     res.status(500).json({ error: 'server error' });
+  }
+};
+
+const resolveYearForEndDay = (monthDay, yearNow) => {
+  if (!monthDay) return yearNow;
+  const month = Number(monthDay.split('-')[0]);
+  if (Number.isNaN(month)) return yearNow;
+  return month >= 4 ? yearNow - 1 : yearNow;
+};
+
+exports.meetingGroupDetail = async (req, res) => {
+  try {
+    const group = req.params.group;
+    const rows = await activeCoopModel.getMeetingDeadlineBase();
+    const bangkokNow = new Date();
+    const currentYear = Number(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric' }).format(bangkokNow));
+    const bangkokMonthKey = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit'
+    }).format(bangkokNow);
+    const nextBangkokDate = new Date(bangkokNow.getTime());
+    nextBangkokDate.setMonth(nextBangkokDate.getMonth() + 1);
+    const nextBangkokMonthKey = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit'
+    }).format(nextBangkokDate);
+
+    const meetingDeadlines = (rows || [])
+      .map((row) => {
+        const monthDay = toMonthDay(row.end_day);
+        if (!monthDay) return null;
+        const endDateYear = resolveYearForEndDay(monthDay, currentYear);
+        const endDateYmd = `${endDateYear}-${monthDay}`;
+        const endDateObj = addDaysUtc(endDateYmd, 0);
+        const deadlineObj = addDaysUtc(endDateYmd, 150);
+        const deadlineMonthKey = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Bangkok',
+          year: 'numeric',
+          month: '2-digit'
+        }).format(deadlineObj);
+        return {
+          ...row,
+          endDateYmd,
+          endDateThai: formatThaiDate(endDateObj),
+          deadlineYmd: deadlineObj.toISOString().slice(0, 10),
+          deadlineThai: formatThaiDate(deadlineObj),
+          deadlineMs: deadlineObj.getTime(),
+          deadlineMonthKey,
+          endDateMs: endDateObj.getTime()
+        };
+      })
+      .filter(Boolean)
+      .filter((row) => row.deadlineMonthKey === bangkokMonthKey || row.deadlineMonthKey === nextBangkokMonthKey);
+
+    const meetingCodes = meetingDeadlines.map((row) => row.c_code).filter(Boolean);
+    const bigmeetRows = await bigmeetModel.findByCodes(meetingCodes);
+    const bigmeetMap = bigmeetRows.reduce((acc, row) => {
+      const key = row.big_code || '';
+      const ms = parseDateToUtcMs(row.big_date);
+      if (!key || ms === null) return acc;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(ms);
+      return acc;
+    }, {});
+
+    const results = meetingDeadlines
+      .map((row) => {
+        const dates = (bigmeetMap[row.c_code] || []).filter((ms) => ms >= row.endDateMs && ms <= row.deadlineMs).sort();
+        return {
+          ...row,
+          meetingDateThai: dates.length ? formatThaiDate(new Date(dates[0])) : null
+        };
+      })
+      .filter((item) => item.c_group === group)
+      .sort((a, b) => a.deadlineMs - b.deadlineMs || a.c_name.localeCompare(b.c_name, 'th-TH'));
+
+    res.render('activeCoop/meeting-group', {
+      group,
+      groupLabel: getGroupLabel(group),
+      rows: results,
+    });
+  } catch (e) {
+    console.error('meetingGroupDetail error:', e);
+    res.status(500).send('ไม่สามารถโหลดข้อมูลหน้าได้');
+  }
+};
+
+const toMonthDay = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    const md = trimmed.slice(5, 10);
+    return /^\d{2}-\d{2}$/.test(md) ? md : null;
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${month}-${day}`;
+  }
+  return null;
+};
+
+const addDaysUtc = (ymd, days) => {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date;
+};
+
+const formatThaiDate = (date) => date.toLocaleDateString('th-TH', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'Asia/Bangkok'
+});
+
+const getGroupLabel = (groupName) => {
+  switch (groupName) {
+    case 'group1': return 'กลุ่มส่งเสริมสหกรณ์ 1';
+    case 'group2': return 'กลุ่มส่งเสริมสหกรณ์ 2';
+    case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
+    case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
+    case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+    default: return groupName || 'ไม่ระบุกลุ่ม';
+  }
+};
+
+exports.closingGroupDetail = async (req, res) => {
+  try {
+    const group = req.params.group;
+    const rows = await activeCoopModel.getMeetingDeadlineBase();
+    const bangkokNow = new Date();
+    const nowMs = Date.UTC(
+      Number(new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Bangkok', year:'numeric' }).format(bangkokNow)),
+      Number(new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Bangkok', month:'2-digit' }).format(bangkokNow)) - 1,
+      Number(new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Bangkok', day:'2-digit' }).format(bangkokNow))
+    );
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+    const results = rows
+      .map((row) => {
+        const monthDay = toMonthDay(row.end_day);
+        if (!monthDay) return null;
+        const endDateYear = Number(new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Bangkok', year:'numeric' }).format(bangkokNow));
+        const endDateYmd = `${endDateYear}-${monthDay}`;
+        const closingDeadlineObj = addDaysUtc(endDateYmd, 30);
+        const closingMs = closingDeadlineObj.getTime();
+        if (closingMs < nowMs || closingMs > nowMs + thirtyDaysMs) return null;
+        return {
+          ...row,
+          closingDeadlineYmd: closingDeadlineObj.toISOString().slice(0, 10),
+          closingDeadlineThai: formatThaiDate(closingDeadlineObj),
+          daysRemaining: Math.ceil((closingMs - nowMs) / (1000 * 60 * 60 * 24)),
+          groupLabel: getGroupLabel(row.c_group)
+        };
+      })
+      .filter(Boolean)
+      .filter((item) => item.c_group === group)
+      .sort((a, b) => a.daysRemaining - b.daysRemaining || a.c_name.localeCompare(b.c_name, 'th-TH'));
+
+    res.render('activeCoop/closing-group', {
+      group,
+      groupLabel: getGroupLabel(group),
+      rows: results,
+    });
+  } catch (e) {
+    console.error('closingGroupDetail error:', e);
+    res.status(500).send('ไม่สามารถโหลดข้อมูลหน้าได้');
   }
 };

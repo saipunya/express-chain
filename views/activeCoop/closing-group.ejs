@@ -1,0 +1,59 @@
+<%- include('../partials/header', { title: 'สถาบันที่จะปิดบัญชีภายใน 30 วัน' }) %>
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h2 class="mb-2 text-primary"><i class="bi bi-calendar-x me-2"></i> <%= groupLabel %></h2>
+      <p class="text-muted mb-0">สถาบันทั้งหมด <strong><%= rows.length %></strong> แห่ง ที่จะปิดบัญชีภายใน 30 วัน</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> กลับหน้าแรก
+      </a>
+      <a href="/activeCoop/by-end-date" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-list-ul"></i> ดูสรุป End Date
+      </a>
+    </div>
+  </div>
+
+  <% if (!rows.length) { %>
+    <div class="alert alert-info">ไม่มีข้อมูลสถาบันที่ปิดบัญชีภายใน 30 วันสำหรับกลุ่มนี้</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th style="width: 130px;">รหัส</th>
+            <th>ชื่อสถาบัน</th>
+            <th style="width: 140px;">ประเภท</th>
+            <th style="width: 140px;">ปิดบัญชี</th>
+            <th style="width: 100px;">คงเหลือ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach((row, idx) => { %>
+            <tr>
+              <td><%= idx + 1 %></td>
+              <td><%= row.c_code %></td>
+              <td><%= row.c_name %></td>
+              <td>
+                <span class="badge <%= row.coop_group === 'สหกรณ์' ? 'bg-success' : 'bg-info' %>"><%= row.coop_group || '-' %></span>
+              </td>
+              <td><%= row.closingDeadlineThai %></td>
+              <td>
+                <% if (row.daysRemaining <= 7) { %>
+                  <span class="badge bg-danger"><%= row.daysRemaining %> วัน</span>
+                <% } else if (row.daysRemaining <= 15) { %>
+                  <span class="badge bg-warning text-dark"><%= row.daysRemaining %> วัน</span>
+                <% } else { %>
+                  <span class="badge bg-info"><%= row.daysRemaining %> วัน</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+<%- include('../partials/footer') %>

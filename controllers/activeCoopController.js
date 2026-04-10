@@ -304,6 +304,23 @@ const addDaysUtc = (ymd, days) => {
   return date;
 };
 
+const parseDateToUtcMs = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    const ymd = value.trim().slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+      const [y, m, d] = ymd.split('-').map(Number);
+      return Date.UTC(y, m - 1, d);
+    }
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  return null;
+};
+
 const formatThaiDate = (date) => date.toLocaleDateString('th-TH', {
   year: 'numeric',
   month: 'long',

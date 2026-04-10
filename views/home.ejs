@@ -4864,7 +4864,7 @@ const _memberSummaryTotals = {
             <thead class="table-head-soft">
               <tr>
                 <th>ประเภทสหกรณ์</th>
-                <th class="text-center">จำนวนทั้งหมด</th>
+                <th class="text-center">ทั้งหมด</th>
                 <th class="text-center">ชั้น 1</th>
                 <th class="text-center">ชั้น 2</th>
                 <th class="text-center">ชั้น 3</th>
@@ -4927,24 +4927,21 @@ const _memberSummaryTotals = {
     </div>
     <% } else { %>
     <div class="card shadow-sm border-0">
-      <div class="table-responsive mb-0 table-mobile-cards">
+      <div class="mb-0 table-mobile-cards">
         <table class="table align-middle mb-0 table-subtle">
           <thead class="table-head-soft">
             <tr>
-               <th class="text-center">#</th>
-               <th class="text-center">รหัส</th>
+            
+            
                <th class="text-center">ชื่อสหกรณ์/กลุ่มเกษตรกร</th>
-               <th class="text-center">กลุ่ม</th>
                <th class="text-center">ผลจัดชั้น</th>
             </tr>
           </thead>
           <tbody>
             <% nsList.forEach((row, idx) => { %>
               <tr>
-                <td class="text-center text-muted small mobile-primary" data-label="ลำดับ"><%= idx + 1 %></td>
-                <td data-label="รหัส"><span class="badge bg-light text-dark border"><%= row.str_code %></span></td>
+  
                 <td class="fw-medium text-primary" data-label="ชื่อสหกรณ์/กลุ่มเกษตรกร"><%= row.c_name || '-' %></td>
-                <td data-label="กลุ่ม"><span class="text-muted"><%= row.str_group %></span></td>
                 <td class="text-center" data-label="ผลจัดชั้น">
                   <span class="badge <%= row.str_grade ? 'bg-success' : 'bg-secondary' %>"><%= row.str_grade || '-' %></span>
                 </td>

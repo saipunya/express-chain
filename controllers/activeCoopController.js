@@ -267,7 +267,7 @@ exports.meetingGroupDetail = async (req, res) => {
           meetingDateThai: dates.length ? formatThaiDate(new Date(dates[0])) : null
         };
       })
-      .filter((item) => item.c_group === group)
+      .filter((item) => group === 'all' ? true : item.c_group === group)
       .sort((a, b) => a.deadlineMs - b.deadlineMs || a.c_name.localeCompare(b.c_name, 'th-TH'));
 
     res.render('activeCoop/meeting-group', {
@@ -335,6 +335,7 @@ const getGroupLabel = (groupName) => {
     case 'group3': return 'กลุ่มส่งเสริมสหกรณ์ 3';
     case 'group4': return 'กลุ่มส่งเสริมสหกรณ์ 4';
     case 'group5': return 'กลุ่มส่งเสริมสหกรณ์ 5';
+    case 'all': return 'ทุกกลุ่ม';
     default: return groupName || 'ไม่ระบุกลุ่ม';
   }
 };
@@ -369,7 +370,7 @@ exports.closingGroupDetail = async (req, res) => {
         };
       })
       .filter(Boolean)
-      .filter((item) => item.c_group === group)
+      .filter((item) => group === 'all' ? true : item.c_group === group)
       .sort((a, b) => a.daysRemaining - b.daysRemaining || a.c_name.localeCompare(b.c_name, 'th-TH'));
 
     res.render('activeCoop/closing-group', {

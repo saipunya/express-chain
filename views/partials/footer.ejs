@@ -36,5 +36,130 @@
     } catch(e) { /* noop */ }
   })();
 </script>
+
+<div id="a2hs-banner" class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3" style="max-width:420px; z-index:1055; display:none;">
+  <div class="alert alert-primary alert-dismissible d-flex align-items-center shadow-sm mb-0" role="alert">
+    <i class="bi bi-phone-fill fs-4 me-2"></i>
+    <div class="flex-grow-1 text-start">
+      ติดตั้งแอปนี้ลงบนหน้าจอหลัก เพื่อเข้าใช้งานได้เร็วขึ้น
+    </div>
+    <button id="a2hs-button" class="btn btn-sm btn-success ms-3">ติดตั้ง</button>
+    <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('a2hs-banner').style.display='none'"></button>
+  </div>
+</div>
+<div id="ios-install-banner" class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3 d-none" style="max-width:420px; z-index:1055;">
+  <div class="alert alert-warning alert-dismissible d-flex align-items-center shadow-sm mb-0" role="alert">
+    <i class="bi bi-info-circle-fill fs-4 me-2"></i>
+    <div class="flex-grow-1 text-start">
+      บน iPhone/iPad ให้เปิดเมนู Safari แล้วเลือก “Add to Home Screen” เพื่อเพิ่มทางลัด
+    </div>
+    <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('ios-install-banner').classList.add('d-none')"></button>
+  </div>
+</div>
+<script>
+  (function() {
+    var deferredPrompt;
+    var installBanner = document.getElementById('a2hs-banner');
+    var iosBanner = document.getElementById('ios-install-banner');
+    var installButton = document.getElementById('a2hs-button');
+    var promptInstallBtn = document.getElementById('promptInstallBtn');
+    var installNowBtn = document.getElementById('installNowBtn');
+    var installStatus = document.getElementById('pwaInstallStatus');
+
+    function setStatus(text) {
+      if (installStatus) {
+        installStatus.textContent = text;
+      }
+    }
+
+    function hideInstallControls() {
+      if (promptInstallBtn) {
+        var installNavClose = promptInstallBtn.closest('.nav-item');
+        if (installNavClose) {
+          installNavClose.classList.add('d-none');
+        }
+      }
+      if (installNowBtn) {
+        installNowBtn.style.display = 'none';
+      }
+    }
+
+    function showInstallControls() {
+      if (installBanner) {
+        installBanner.style.display = 'block';
+      }
+      if (promptInstallBtn) {
+        var installNav = promptInstallBtn.closest('.nav-item');
+        if (installNav) {
+          installNav.classList.remove('d-none');
+        }
+      }
+      if (installNowBtn) {
+        installNowBtn.style.display = 'inline-flex';
+      }
+      setStatus('พร้อมติดตั้งแอปแล้ว กดปุ่มเพื่อติดตั้งลงหน้าจอหลัก');
+    }
+
+    function promptInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choiceResult) {
+        if (installBanner) {
+          installBanner.style.display = 'none';
+        }
+        hideInstallControls();
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          setStatus('ติดตั้งสำเร็จแล้ว ขอบคุณครับ');
+        } else {
+          setStatus('ยังไม่ได้ติดตั้ง คุณสามารถลองได้อีกครั้ง');
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', function(event) {
+      event.preventDefault();
+      deferredPrompt = event;
+      showInstallControls();
+    });
+
+    if (installButton) {
+      installButton.addEventListener('click', promptInstall);
+    }
+
+    if (promptInstallBtn) {
+      promptInstallBtn.addEventListener('click', promptInstall);
+    }
+
+    if (installNowBtn) {
+      installNowBtn.addEventListener('click', promptInstall);
+    }
+
+    window.addEventListener('appinstalled', function() {
+      setStatus('แอปถูกติดตั้งเรียบร้อยแล้ว');
+      hideInstallControls();
+      if (installBanner) {
+        installBanner.style.display = 'none';
+      }
+    });
+
+    var isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    if (isIos && !isStandalone && iosBanner) {
+      iosBanner.classList.remove('d-none');
+      setStatus('บน iOS ให้ใช้เมนู Safari > Add to Home Screen');
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function() {
+          console.log('Service worker registered');
+        }).catch(function(error) {
+          console.warn('Service worker registration failed:', error);
+        });
+      });
+    }
+  })();
+</script>
 </body>
 </html>

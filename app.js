@@ -91,6 +91,8 @@ const bahtText = require('./utils/bahtText');
 app.use((req, res, next) => {
   res.locals.title = '++ CoopChain : ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ';
   res.locals.bahtText = bahtText; // make helper available in all views
+  res.locals.manifestPath = '/manifest.json';
+  res.locals.themeColor = '#10b981';
   next();
 });
 
@@ -194,8 +196,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// Use PORT env if provided, otherwise default to 3000 for local development
-const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3000;
+// Use PORT env if provided, otherwise default to 3002 for local development
+const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 3002;
 let port = DEFAULT_PORT;
 let attempts = 0;
 const maxAttempts = 5;

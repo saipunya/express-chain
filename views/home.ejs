@@ -1,8 +1,7 @@
 <%- include('partials/header',{title : 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ' }) %>
-
-<!-- Added: Required Chart.js + plugin (fix graphs not showing) -->
-<script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+                <tr>
+                    <th></th>
+                  </tr>
 
 <!-- Added: FullCalendar (for Activities calendar) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" />
@@ -3024,7 +3023,6 @@
 </style>
 
 
-
 <!-- Added: Light theme & contrast fixes -->
 <style>
   /* Force light theme to avoid unreadable dark auto-scheme */
@@ -4201,7 +4199,7 @@ const _memberSummaryTotals = {
           <!-- Wrapper gains d-none only on extra-small; visible on sm+ -->
           <div id="loginFormCollapsible" class="login-form-wrapper d-none d-sm-block">
             <h5 class="text-center mb-4 d-none d-sm-block">
-              <i class="bi bi-shield-lock me-2 text-success"></i>เข้าระบบ
+              <i class="bi bi-shield-lock me-2"></i>เข้าระบบ
             </h5>
             <form action="/auth/login" method="POST">
               <div class="mb-3">
@@ -4280,28 +4278,6 @@ const _memberSummaryTotals = {
         </div>
         <% } %>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- vong_coop link -->
-<div class="container mb-4 reveal in resource-links">
-  <div class="row my-2">
-    <div class="col-md-6 mb-2 mb-md-0">
-      <a href="/uploads/pdf/vong_coop.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-primary btn-lg w-100 hero-link-card">
-        <i class="bi bi-globe2"></i>
-        <span class="text-wrap resource-link-text">
-        หลักเกณฑ์การกำหนดวงเงินกู้ยืม[กลุ่มเกษตรกร]
-        </span>
-      </a>
-    </div>
-    <div class="col-md-6">
-      <a href="/uploads/pdf/vong_group.pdf" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-2 btn btn-secondary btn-lg w-100 hero-link-card hero-link-card--alt">
-        <i class="bi bi-globe2"></i>
-        <span class="text-wrap resource-link-text">
-        หลักเกณฑ์การกำหนดวงเงินดำเนินกิจการ[กลุ่มเกษตรกร]
-        </span>
-      </a>
     </div>
   </div>
 </div>
@@ -4825,6 +4801,11 @@ const _memberSummaryTotals = {
                   </td>
                 </tr>
               <% }) %>
+              <% if (tfSummaryRows.length === 0) { %>
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-3">ไม่มีข้อมูลธุรกิจ</td>
+                </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
@@ -4997,7 +4978,72 @@ const _memberSummaryTotals = {
         setGroupState(group, expanded);
       });
     });
-  })();
+
+</script>
+<!-- Downloads calendar modal -->
+<div class="modal fade modal-elevated" id="downloadsCalendarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-gradient py-2">
+        <h5 class="modal-title mb-0"><i class="bi bi-calendar3 me-1"></i> ปฏิทินดาวน์โหลด</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive table-mobile-cards">
+          <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="text-start">วันที่</th>
+                <th class="text-start">รายการดาวน์โหลด</th>
+              </tr>
+            </thead>
+            <tbody id="downloadsCalendarTbody">
+              <tr><td colspan="2" class="text-center text-muted py-3">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function formatThaiDate(dateStr){
+    try{
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'});
+    }catch(e){ return dateStr || '-'; }
+  }
+
+  function openDownloadsCalendarModal(){
+    const data = window.topDownloadsData || [];
+    const tbody = document.getElementById('downloadsCalendarTbody');
+    if(!tbody) return;
+    if(!data.length){
+      tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted py-3">ไม่มีข้อมูลดาวน์โหลด</td></tr>';
+    } else {
+      // sort by savedate desc
+      const items = data.slice().sort((a,b)=> new Date(b.down_savedate) - new Date(a.down_savedate));
+      tbody.innerHTML = items.map(d => {
+        const date = d.down_savedate ? formatThaiDate(d.down_savedate) : '-';
+        const hasFile = d.down_file && d.down_file !== '-';
+        const hasLink = d.down_link && d.down_link !== '-';
+        const downloadUrl = hasFile ? `/down/download/${d.down_id}` : d.down_link;
+        const isLoggedIn = document.getElementById('template-data') ? JSON.parse(document.getElementById('template-data').getAttribute('data-is-logged-in')||'false') : false;
+        const subjectLink = hasFile ? (isLoggedIn ? downloadUrl : '/auth/login') : (hasLink ? downloadUrl : null);
+        const titleHtml = subjectLink ? `<a href="${subjectLink}" target="_blank" class="text-decoration-none d-block text-wrap">${(d.down_subject||'-')}</a>` : `<div class="text-wrap">${(d.down_subject||'-')}</div>`;
+        return `<tr><td class="text-start" style="white-space:nowrap">${date}</td><td class="text-start">${titleHtml}</td></tr>`;
+      }).join('');
+    }
+    const modalEl = document.getElementById('downloadsCalendarModal');
+    if(modalEl){
+      const bsModal = new bootstrap.Modal(modalEl);
+      bsModal.show();
+    }
+  }
 </script>
 
 <!-- Activity single detail modal (KEEP only ONE) -->
@@ -5045,8 +5091,8 @@ const _memberSummaryTotals = {
         </div>
         <div class="table-responsive table-mobile-cards">
           <table class="table table-sm table-modern table-bordered table-hover align-middle mb-0">
-            <thead>
-              <tr class="text-center">
+            <thead class="table-light">
+              <tr>
                 <th class="col-index d-none d-sm-table-cell">#</th>
                 <th class="text-start">วันที่</th>
                 <th class="text-start">กิจกรรม</th>
@@ -5085,398 +5131,6 @@ const _memberSummaryTotals = {
   </div>
 </div>
 
-<section id="rules" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card mb-4">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-dark">
-        <i class="bi bi-file-earmark-text me-2"></i> ปฏิทินกิจกรรมประจำเดือน <%= new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' }) %>
-      </div>
-      <div class="card-body">
-        <% 
-          const rulesNow = new Date();
-          const rulesToday = new Date(rulesNow.getFullYear(), rulesNow.getMonth(), rulesNow.getDate());
-          const rulesLastDayOfMonth = new Date(rulesNow.getFullYear(), rulesNow.getMonth() + 1, 0);
-          const monthlyActivities = (activity || [])
-            .filter(acti => { 
-              const d = new Date(acti.date_act); 
-              const actDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-              return actDateOnly >= rulesToday && actDateOnly <= rulesLastDayOfMonth; 
-            });
-          const monthlyActivitiesPreview = monthlyActivities.slice(0, 6);
-        %>
-        <ul class="list-group list-group-flush">
-          <% monthlyActivitiesPreview.forEach(acti => { %>
-          <li class="list-group-item text-start">
-            <i class="bi bi-calendar-event me-2 text-success"></i>
-            <% const actDate = new Date(acti.date_act); %>
-            <%= actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %> -
-            <%= acti.activity %>
-            <% if (actDate.toDateString() === rulesNow.toDateString()) { %>
-            <span class="badge bg-danger ms-2"><i class="bi bi-stars"></i> วันนี้</span>
-            <% } %>
-          </li>
-          <% }) %>
-          <% if (monthlyActivities.length === 0) { %>
-          <li class="list-group-item text-center text-muted py-4">ไม่มีกิจกรรมในเดือนนี้</li>
-          <% } %>
-        </ul>
-      </div>
-      <div class="card-footer bg-light d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-        <small class="text-muted">
-          <% if (monthlyActivities.length > monthlyActivitiesPreview.length) { %>
-            แสดง <%= monthlyActivitiesPreview.length %> จาก <%= monthlyActivities.length %> รายการในเดือนนี้
-          <% } else { %>
-            แสดงกิจกรรมตามวันที่ที่กำลังจะมาถึงในเดือนนี้
-          <% } %>
-        </small>
-        <a href="/gitgum/list" class="btn btn-primary btn-sm">
-          ดูทั้งหมด
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= Closing Accounts Within 30 Days ================= -->
-<section id="closing-within-30" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card shadow-sm border-0">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0">
-          <i class="bi bi-calendar-x me-2 text-danger"></i> สถาบันที่จะปิดบัญชีภายใน 30 วัน
-          <span class="small text-muted">(เดือนปัจจุบันและเดือนหน้า)</span>
-        </h5>
-        <div class="d-flex align-items-center gap-2">
-          <span class="small text-muted">ณ วันที่ <%= new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
-          <a href="/activeCoop/list" class="btn btn-sm btn-outline-primary rounded-pill">
-            <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
-          </a>
-        </div>
-      </div>
-      <div class="card-body">
-        <% 
-          const closingGroups = closingWithin30Groups || [];
-          const totalClosingCount = closingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
-          const closingPreviewLimit = 5;
-        %>
-        
-        <% if (totalClosingCount === 0) { %>
-          <div class="alert alert-success d-flex align-items-center" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <div>ไม่มีสถาบันที่จะปิดบัญชีภายใน 30 วันข้างหน้า</div>
-          </div>
-        <% } else { %>
-          <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
-            <i class="bi bi-info-circle me-2"></i>
-            <div>พบ <%= totalClosingCount %> สถาบันที่จะปิดบัญชีภายใน 30 วันข้างหน้า</div>
-          </div>
-          
-          <div class="row g-2">
-            <% closingGroups.forEach((group) => { %>
-              <% if (group.rows && group.rows.length > 0) { %>
-                <div class="col-6 col-md-6">
-                  <div class="card modern-card shadow-sm border-0 h-100 compact-closing-card">
-                    <div class="card-body py-2">
-                      <div class="d-flex align-items-start gap-3">
-                        <div>
-                          <h6 class="mb-2 text-primary">
-                            <i class="bi bi-building me-1"></i>
-                            <% if (group.groupName === 'group1') { %>
-                              กลุ่มส่งเสริมสหกรณ์ 1
-                            <% } else if (group.groupName === 'group2') { %>
-                              กลุ่มส่งเสริมสหกรณ์ 2
-                            <% } else if (group.groupName === 'group3') { %>
-                              กลุ่มส่งเสริมสหกรณ์ 3
-                            <% } else if (group.groupName === 'group4') { %>
-                              กลุ่มส่งเสริมสหกรณ์ 4
-                            <% } else if (group.groupName === 'group5') { %>
-                              กลุ่มส่งเสริมสหกรณ์ 5
-                            <% } else { %>
-                              <%= group.groupName %>
-                            <% } %>
-                          </h6>
-                          <p class="mb-2 text-muted">จำนวนสถาบันที่จะปิดบัญชีภายใน 30 วัน</p>
-                          <div class="display-6 fw-semibold"><%= group.rows.length %></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 py-2 pt-0 text-end">
-                      <a href="/activeCoop/closing-group/<%= encodeURIComponent(group.groupName) %>" class="btn btn-sm btn-primary rounded-pill">
-                        <i class="bi bi-list-ul me-1"></i> ดูรายละเอียด
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              <% } %>
-            <% }) %>
-          </div>
-        <% } %>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= ประชุมใหญ่ภายใน 150 วัน ================= -->
-<section class="container-lg py-4">
-  <div class="card modern-card shadow-sm border-0">
-    <div class="card-gradient-bar"></div>
-    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <h5 class="mb-0">
-        <i class="bi bi-people-fill me-2 text-warning"></i> ประชุมใหญ่ภายใน 150 วัน
-        <span class="small text-muted">(เดือนปัจจุบันและเดือนหน้า)</span>
-      </h5>
-      <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-warning text-dark">150 วัน</span>
-      </div>
-    </div>
-    <div class="card-body">
-      <% 
-        const meetingGroups = meetingDeadlineGroups || [];
-        const totalMeetingCount = meetingGroups.reduce((sum, group) => sum + (group.rows ? group.rows.length : 0), 0);
-        const meetingPreviewLimit = 5;
-      %>
-      
-      <% if (totalMeetingCount === 0) { %>
-        <div class="alert alert-success d-flex align-items-center" role="alert">
-          <i class="bi bi-check-circle me-2"></i>
-          <div>ไม่มีสถาบันที่ต้องประชุมใหญ่ภายใน 150 วันข้างหน้า</div>
-        </div>
-      <% } else { %>
-        <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
-          <i class="bi bi-info-circle me-2"></i>
-          <div>พบ <%= totalMeetingCount %> สถาบันที่ต้องประชุมใหญ่ภายใน 150 วันข้างหน้า</div>
-        </div>
-        
-        <div class="row g-2">
-          <% meetingGroups.forEach((group) => { %>
-            <% if (group.rows && group.rows.length > 0) { %>
-              <div class="col-6 col-md-6">
-                <div class="card modern-card shadow-sm border-0 h-100 compact-closing-card">
-                  <div class="card-body py-2">
-                    <div class="d-flex align-items-start gap-3">
-                      <div>
-                        <h6 class="mb-2 text-warning">
-                          <i class="bi bi-people-fill me-1"></i>
-                          <% if (group.groupName === 'group1') { %>
-                            กลุ่มส่งเสริมสหกรณ์ 1
-                          <% } else if (group.groupName === 'group2') { %>
-                            กลุ่มส่งเสริมสหกรณ์ 2
-                          <% } else if (group.groupName === 'group3') { %>
-                            กลุ่มส่งเสริมสหกรณ์ 3
-                          <% } else if (group.groupName === 'group4') { %>
-                            กลุ่มส่งเสริมสหกรณ์ 4
-                          <% } else if (group.groupName === 'group5') { %>
-                            กลุ่มส่งเสริมสหกรณ์ 5
-                          <% } else { %>
-                            <%= group.groupName %>
-                          <% } %>
-                        </h6>
-                        <p class="mb-2 text-muted">จำนวนสถาบันที่จะประชุมใหญ่ภายใน 150 วัน</p>
-                        <div class="display-6 fw-semibold"><%= group.rows.length %></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card-footer bg-white border-0 py-2 pt-0 text-end">
-                    <a href="/activeCoop/meeting-group/<%= encodeURIComponent(group.groupName) %>" class="btn btn-sm btn-warning rounded-pill">
-                      <i class="bi bi-list-ul me-1"></i> ดูรายละเอียด
-                    </a>
-                  </div>
-                </div>
-              </div>
-            <% } %>
-          <% }) %>
-      <% } %>
-    </div>
-    <div class="card-footer bg-light text-end">
-      <a href="/bigmeet" class="btn btn-sm btn-outline-primary rounded-pill">
-        <i class="bi bi-list-ul me-1"></i> ดูทั้งหมด
-      </a>
-    </div>
-  </div>
-</section>
-
-<%- include('home/vong-latest.ejs') %>
-<%- include('home/vong-business-latest.ejs') %>
-<div class="" id="assets_all">
-  <%- include('home/assets-summary.ejs') %>
-</div>
-
-
-<section id="downloads" class="section-block bg-white">
-  <div class="container-lg">
-    <div class="card modern-card downloads-shell">
-      <div class="card-gradient-bar"></div>
-      <div class="card-header bg-success text-dark">
-        <i class="bi bi-trophy me-2"></i> Top 10 ดาวน์โหลดล่าสุด
-      </div>
-      <div class="card-body">
-        <div class="table-responsive table-mobile-cards">
-          <table class="table table-sm table-bordered table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th class="col-index d-none d-sm-table-cell">#</th>
-                <th>เรื่อง</th>
-                <th class="text-nowrap">ไฟล์</th>
-                <th class="text-center">ลิงก์</th>
-                <th class="text-nowrap">วันที่</th>
-              </tr>
-            </thead>
-            <tbody id="topDownloadsTbody">
-              <tr>
-                <td colspan="5" class="text-muted">กำลังโหลด...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card-footer bg-light text-end">
-        <a href="/down" class="btn btn-sm btn-outline-secondary">ดูทั้งหมด</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= Latest Commands ================= -->
-<section id="latest-commands" class="section-block bg-light">
-  <div class="container">
-    <h2 class="my-4 text-center text-primary section-title">
-      <i class="bi bi-file-earmark-text me-2"></i> 10 คำสั่งล่าสุด
-    </h2>
-    <div class="card modern-card shadow-sm border-0">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0">
-          <i class="bi bi-file-earmark-text me-2 text-primary"></i> คำสั่งล่าสุด
-        </h5>
-        <div class="d-flex align-items-center gap-2">
-          <span class="small text-muted">ดูทั้งหมด</span>
-          <a href="/command" class="btn btn-sm btn-soft-primary">
-            ดูทั้งหมด
-          </a>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive table-mobile-cards">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">เลขที่</th>
-                <th>เรื่อง</th>
-              
-                <th class="text-center">ดำเนินการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (lastCommands && lastCommands.length > 0) { %>
-                <% lastCommands.forEach((command, index) => { %>
-                  <tr>
-                    <td class="text-center mobile-primary" data-label="เลขที่"><%= command.com_no || '-' %></td>
-                    <td data-label="เรื่อง">
-                     
-                      
-                      <% if (command.com_story) { %>
-                        <div class="text-truncate" title="<%= command.com_story %>"><%= command.com_story %></div>
-                      <% } %>
-                    </td>
-                    <td class="text-center mobile-action" data-label="ดำเนินการ">
-                      <% if (command.com_filename) { %>
-                        <% if (user) { %>
-                          <div class="mobile-inline-actions">
-                          <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary" target="_blank" title="เปิดอ่านไฟล์">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                          </a>
-                          </div>
-                        <% } else { %>
-                          <div class="mobile-inline-actions">
-                          <button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                          </button>
-                          </div>
-                        <% } %>
-                      <% } else { %>
-                        <span class="text-muted small">ไม่มีไฟล์</span>
-                      <% } %>
-                    </td>
-                  </tr>
-                <% }) %>
-              <% } else { %>
-                <tr>
-                  <td colspan="3" class="text-center text-muted py-3">ไม่มีข้อมูลคำสั่งล่าสุด</td>
-                </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= Latest Projects ================= -->
-<section id="latest-projects" class="section-block bg-light">
-  <div class="container">
-    <h2 class="text-center text-primary section-title">
-      <i class="bi bi-file-earmark-text me-2"></i> 10 โครงการล่าสุด
-    </h2>
-    <div class="card modern-card shadow-sm border-0">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="mb-0">
-          <i class="bi bi-file-earmark-text me-2 text-primary"></i> โครงการล่าสุด
-        </h5>
-        <div class="d-flex align-items-center gap-2">
-          <span class="small text-muted">ดูทั้งหมด</span>
-          <a href="/projects" class="btn btn-sm btn-soft-primary">
-            ดูทั้งหมด
-          </a>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive table-mobile-cards">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">ลำดับ</th>
-                <th>โครงการ</th>
-             
-              </tr>
-            </thead>
-            <tbody>
-              <% if (lastProjects && lastProjects.length > 0) { %>
-                <% lastProjects.forEach((project, index) => { %>
-                  <tr>
-                    <td class="text-center mobile-primary" data-label="ลำดับ"><%= index + 1 %></td>
-                    <td data-label="โครงการ">
-                      <%= project.pro_story || '-' %>
-                      <% if (project.pro_filename) { %>
-                        <div class="mobile-inline-actions mt-2">
-                        <% if (user) { %>
-                          <a href="/project/download/<%= project.pro_id %>" class="btn btn-sm btn-outline-primary ms-2" target="_blank">
-                            <i class="bi bi-download"></i> ดาวน์โหลด
-                          </a>
-                        <% } else { %>
-                          <button class="btn btn-sm btn-outline-secondary ms-2" disabled title="ต้องเข้าสู่ระบบก่อน">
-                            <i class="bi bi-download"></i> ดาวน์โหลด
-                          </button>
-                        <% } %>
-                        </div>
-                      <% } %>
-                    </td>
-             
-                  </tr>
-                <% }) %>
-              <% } else { %>
-                <tr>
-                  <td colspan="2" class="text-center text-muted py-3">ไม่มีข้อมูลโครงการล่าสุด</td>
-                </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- ================= Articles (List View) ================= -->
 
@@ -6307,7 +5961,7 @@ const _memberSummaryTotals = {
     }
   })();
 
-  // Load Top 10 Downloads
+  // Load Top 5 Downloads
   (function() {
     async function loadTopDownloads() {
       try {
@@ -6315,63 +5969,140 @@ const _memberSummaryTotals = {
         if (!response.ok) throw new Error('Failed to load downloads');
         
         const downloads = await response.json();
+        window.topDownloadsData = downloads || [];
         const tbody = document.getElementById('topDownloadsTbody');
-        
-        if (!tbody) return;
-        
+        const mobileCards = document.getElementById('topDownloadsMobileCards');
+        if (!tbody || !mobileCards) return;
+        // Desktop table
         if (downloads && downloads.length > 0) {
           const tDataEl = document.getElementById('template-data');
           const isLoggedIn = tDataEl ? JSON.parse(tDataEl.getAttribute('data-is-logged-in') || 'false') : false;
-          tbody.innerHTML = downloads.map((down, index) => {
+          tbody.innerHTML = downloads.slice(0, 5).map((down, index) => {
             const hasFile = down.down_file && down.down_file !== '-';
             const hasLink = down.down_link && down.down_link !== '-';
             const downloadUrl = hasFile ? `/down/download/${down.down_id}` : down.down_link;
-            const linkTarget = hasFile ? '_blank' : '_blank';
-            const linkText = hasFile ? 'ดาวน์โหลด' : 'เปิดลิงก์';
-            const linkIcon = hasFile ? 'bi-download' : 'bi-link-45deg';
-            
+            const linkTarget = '_blank';
+            const subject = down.down_subject || '-';
+            const subjectLink = hasFile ? (isLoggedIn ? downloadUrl : '/auth/login') : (hasLink ? downloadUrl : null);
+            const subjectAttrs = subjectLink ? `href="${subjectLink}" target="${linkTarget}" class="text-decoration-none d-block text-wrap fw-bold"` : '';
             return `
               <tr>
-                <td class="col-index d-none d-sm-table-cell text-center mobile-primary no-mobile-label">${index + 1}</td>
-                <td data-label="เรื่อง">
-                  <div class="fw-medium">${down.down_subject || '-'}</div>
-                </td>
-                <td class="text-nowrap" data-label="ประเภท">
-                  ${hasFile ? '<span class="badge bg-success"><i class="bi bi-file-earmark me-1"></i>ไฟล์</span>' : '<span class="badge bg-info"><i class="bi bi-link me-1"></i>ลิงก์</span>'}
-                </td>
-                <td class="text-center mobile-action" data-label="ดำเนินการ">
-                  ${isLoggedIn ? 
-                    `<div class="mobile-inline-actions"><a href="${downloadUrl}" class="btn btn-sm btn-outline-primary" target="${linkTarget}" title="${linkText}">
-                      <i class="bi ${linkIcon}"></i>
-                    </a></div>` : 
-                    `<div class="mobile-inline-actions"><button class="btn btn-sm btn-outline-secondary" disabled title="ต้องเข้าสู่ระบบก่อน">
-                      <i class="bi ${linkIcon}"></i>
-                    </button></div>`
-                  }
-                </td>
-                <td class="text-nowrap small text-muted" data-label="วันที่">
-                  ${down.down_savedate ? new Date(down.down_savedate).toLocaleDateString('th-TH') : '-'}
+                <td class="text-start">
+                  ${subjectLink ? `<a ${subjectAttrs} title="${subject}">${subject}</a>` : `<div class="fw-medium text-wrap">${subject}</div>`}
+                  ${down.down_file && down.down_file !== '-' ? `<div class='small text-muted mt-1'><i class='bi bi-file-earmark-arrow-down me-1'></i>${down.down_file}</div>` : ''}
                 </td>
               </tr>
             `;
           }).join('');
         } else {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีข้อมูลดาวน์โหลด</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="1" class="text-center text-muted py-3">ไม่มีข้อมูลดาวน์โหลด</td></tr>';
+        }
+        // Mobile cards
+        if (downloads && downloads.length > 0) {
+          const tDataEl = document.getElementById('template-data');
+          const isLoggedIn = tDataEl ? JSON.parse(tDataEl.getAttribute('data-is-logged-in') || 'false') : false;
+          mobileCards.innerHTML = downloads.slice(0, 5).map((down, index) => {
+            const hasFile = down.down_file && down.down_file !== '-';
+            const hasLink = down.down_link && down.down_link !== '-';
+            const downloadUrl = hasFile ? `/down/download/${down.down_id}` : down.down_link;
+            const subject = down.down_subject || '-';
+            const subjectLink = hasFile ? (isLoggedIn ? downloadUrl : '/auth/login') : (hasLink ? downloadUrl : null);
+            return `
+              <div class="card mb-2 shadow-sm border-0">
+                <div class="card-body py-2 px-3">
+                  <div class="fw-bold mb-1">
+                    ${subjectLink ? `<a href="${subjectLink}" target="_blank" rel="noopener" class="fw-bold">${subject}</a>` : `<span class="fw-bold">${subject}</span>`}
+                  </div>
+                  ${down.down_file && down.down_file !== '-' ? `<div class='small text-muted'><i class='bi bi-file-earmark-arrow-down me-1'></i>${down.down_file}</div>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          mobileCards.innerHTML = '<div class="text-center text-muted py-3">ไม่มีข้อมูลดาวน์โหลด</div>';
+        }
+        // attach modal opener handler
+        const calBtn = document.getElementById('openDownloadsCalendarBtn');
+        if (calBtn) {
+          calBtn.addEventListener('click', function(){
+            openDownloadsCalendarModal();
+          });
         }
       } catch (error) {
         console.error('Error loading top downloads:', error);
         const tbody = document.getElementById('topDownloadsTbody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="1" class="text-center text-danger py-3">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+        }
+        const mobileCards = document.getElementById('topDownloadsMobileCards');
+        if (mobileCards) {
+          mobileCards.innerHTML = '<div class="text-center text-danger py-3">โหลดข้อมูลไม่สำเร็จ</div>';
         }
       }
     }
 
     // Load downloads when page loads
+    // Mobile card rendering for lastCommands
+    function renderLastCommandsMobileCards() {
+      const container = document.getElementById('lastCommandsMobileCards');
+      if (!container) return;
+      const commands = window.lastCommandsData || [];
+      if (!commands.length) {
+        container.innerHTML = '<div class="text-center text-muted py-3">ไม่มีข้อมูลคำสั่งล่าสุด</div>';
+        return;
+      }
+      container.innerHTML = commands.slice(0, 5).map(command => {
+        let link = '';
+        if (command.com_story) {
+          if (command.com_filename) {
+            if (window.isLoggedIn) {
+              link = `<a href="/command/download/${command.command_id}" class="fw-bold" title="เปิดอ่านไฟล์">${command.com_story}</a>`;
+            } else {
+              link = `<a href="/auth/login" class="fw-bold" title="ต้องเข้าสู่ระบบก่อน">${command.com_story}</a>`;
+            }
+          } else {
+            link = `<span class="fw-bold">${command.com_story}</span>`;
+          }
+        }
+        return `<div class="card mb-2 shadow-sm border-0"><div class="card-body py-2 px-3">${link}</div></div>`;
+      }).join('');
+    }
+
+    // Mobile card rendering for lastProjects
+    function renderLastProjectsMobileCards() {
+      const container = document.getElementById('lastProjectsMobileCards');
+      if (!container) return;
+      const projects = window.lastProjectsData || [];
+      if (!projects.length) {
+        container.innerHTML = '<div class="text-center text-muted py-3">ไม่มีข้อมูลโครงการล่าสุด</div>';
+        return;
+      }
+      container.innerHTML = projects.slice(0, 5).map((project, idx) => {
+        let downloadBtn = '';
+        if (project.pro_filename) {
+          if (window.isLoggedIn) {
+            downloadBtn = `<a href="/project/download/${project.pro_id}" class="btn btn-sm btn-outline-primary ms-2 mt-2" target="_blank"><i class="bi bi-download"></i> ดาวน์โหลด</a>`;
+          } else {
+            downloadBtn = `<button class="btn btn-sm btn-outline-secondary ms-2 mt-2" disabled title="ต้องเข้าสู่ระบบก่อน"><i class="bi bi-download"></i> ดาวน์โหลด</button>`;
+          }
+        }
+        return `<div class="card mb-2 shadow-sm border-0"><div class="card-body py-2 px-3"><div class="fw-bold mb-1">${project.pro_story || '-'}</div>${downloadBtn}</div></div>`;
+      }).join('');
+    }
+
+
+
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadTopDownloads);
+      document.addEventListener('DOMContentLoaded', function() {
+        loadTopDownloads();
+        renderLastCommandsMobileCards();
+        renderLastProjectsMobileCards();
+      });
     } else {
       loadTopDownloads();
+      renderLastCommandsMobileCards();
+      renderLastProjectsMobileCards();
     }
   })();
 </script>
@@ -6385,4 +6116,9 @@ const _memberSummaryTotals = {
   style="display: none;">
 </div>
 
+<script>
+  window.isLoggedIn = <%= JSON.stringify(!!user) %>;
+  window.lastCommandsData = <%- JSON.stringify(lastCommands || []) %>;
+  window.lastProjectsData = <%- JSON.stringify(lastProjects || []) %>;
+</script>
 <%- include('partials/footer') %>

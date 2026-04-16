@@ -37,19 +37,9 @@
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1" aria-hidden="true"></i>หน้าแรก</a></li>
             <li class="nav-item"><a class="nav-link" href="/plan"><i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>แผนงาน</a></li>
-            <li class="nav-item d-none" id="installNavItem"><button id="promptInstallBtn" class="btn btn-sm btn-success ms-2">ติดตั้งแอป</button></li>
-
-            <!-- <li class="nav-item"><a href="/rule" class="nav-link">ข้อบังคับ</a></li> --> 
-               <% if(user && user.mClass=='kjs'){ %>
-              <!-- <li class="nav-item"><a class="nav-link" href="/rabiab">ระเบียบ</a></li> -->
-               <% } %>
               <li class="nav-item"><a class="nav-link" href="/chamra"><i class="bi bi-cash-coin me-1" aria-hidden="true"></i>ผลการชำระบัญชี</a></li>
               <li class="nav-item"><a class="nav-link" href="/meetingroom"><i class="bi bi-calendar-week me-1" aria-hidden="true"></i>ห้องประชุม</a></li>
-             
-              <!-- <li class="nav-item"><a class="nav-link" href="/vong">วงเงินกู้ยืม</a></li> -->
-              <!-- <li class="nav-item"><a class="nav-link" href="/vong-business"><i class="bi bi-briefcase-fill me-1" aria-hidden="true"></i>วงเงินดำเนินกิจการ</a></li> -->
-              <!-- <li class="nav-item"><a class="nav-link" href="/rq2">รายงาน RQ2</a></li> -->
-            <!-- ตรวจสอบ login -->
+              <!-- ตรวจสอบ login -->
               <% if (user) { %>
                 <!-- เพิ่มกิจกรรม -->
               <li class="nav-item"><a class="nav-link" href="/gitgum/list"><i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>ปฏิทินงาน</a></li>

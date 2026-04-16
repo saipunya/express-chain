@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">ตั้งค่าเลขที่คำขอไปราชการ</h3>
+    <p class="text-muted mb-0">กำหนด prefix และเลขลำดับถัดไปสำหรับคำขอไปราชการ</p>
+  </div>
+  <a href="/official-travel" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
+</div>
+
+<% if (notice) { %>
+  <div class="alert alert-success"><%= notice %></div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <form action="/official-travel/settings/running-number" method="POST" class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Prefix</label>
+            <input type="text" class="form-control" name="prefix" value="<%= settings.prefix %>" required>
+            <div class="form-text">ตัวอย่าง `ชย 0010(ดท)/`</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">จำนวนหลักเลขลำดับ</label>
+            <input type="number" min="1" max="10" class="form-control" name="padding_length" value="<%= settings.paddingLength %>" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">เลขลำดับถัดไป</label>
+            <input type="number" min="1" class="form-control" name="next_number" value="<%= settings.nextNumber %>" required>
+            <div class="form-text">ค่าที่จะถูกใช้กับเอกสารถัดไป</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ตัวอย่างเลขที่ถัดไป</label>
+            <input type="text" class="form-control" value="<%= settings.preview %>" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex justify-content-end">
+        <button type="submit" class="btn btn-success">บันทึกการตั้งค่า</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h5 class="mb-0">แนวทางใช้งาน</h5></div>
+      <div class="card-body">
+        <ul class="mb-0 ps-3">
+          <li>เลขที่ใหม่จะรันอัตโนมัติเมื่อบันทึกคำขอไปราชการ</li>
+          <li>ถ้าต้องการเริ่มลำดับใหม่ ให้แก้ที่ช่อง “เลขลำดับถัดไป”</li>
+          <li>ระบบจะแสดงตัวอย่างเลขที่ถัดไปจากค่าปัจจุบันให้ทันทีหลังบันทึก</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

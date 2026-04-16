@@ -1,7 +1,14 @@
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
-const { generateRunningNumber } = require('../services/runningNumberService');
+const userModel = require('../models/userModel');
+const {
+  previewRunningNumber,
+  getOfficialTravelRunningNumberSettings,
+  updateOfficialTravelRunningNumberSettings
+} = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
 const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
+const { generateOfficialTravelRequestPdf } = require('../utils/pdf/officialTravelRequestPdf');
+const { resolveMemberClassLabel } = require('../utils/memberClass');
 
 const OFFICIAL_TRAVEL_SUBJECT = 'ขออนุมัติเดินทางไปราชการ';
 
@@ -40,7 +47,119 @@ function calculateDuration(startAt, endAt) {
   };
 }
 
-function mapBody(req) {
+function calculateDisplayDurationDays(startAt, endAt, savedDurationDays) {
+  const numericDays = Number(savedDurationDays);
+  if (numericDays > 0) {
+    return numericDays;
+  }
+
+  const start = new Date(startAt);
+  const end = new Date(endAt || startAt);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 1;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, diffDays);
+}
+
+function formatTransportLabel(item = {}) {
+  const transportLabels = {
+    official_vehicle: 'รถยนต์ราชการ',
+    private_vehicle: 'รถยนต์ส่วนตัว',
+    public_transport: 'รถโดยสารสาธารณะ',
+    airplane: 'เครื่องบิน',
+    train: 'รถไฟ',
+    other: 'อื่น ๆ'
+  };
+
+  const label = transportLabels[item.transport_type] || item.transport_type || '-';
+  const extraDetails = [];
+
+  if (item.transport_other_text) {
+    extraDetails.push(item.transport_other_text);
+  }
+
+  if (item.vehicleRequest?.plate_no_snapshot) {
+    extraDetails.push(`ทะเบียน ${item.vehicleRequest.plate_no_snapshot}`);
+  }
+
+  if (item.vehicleRequest?.driver_name_snapshot) {
+    extraDetails.push(`พนักงานขับรถ ${item.vehicleRequest.driver_name_snapshot}`);
+  }
+
+  return extraDetails.length ? `${label} ${extraDetails.join(' ')}` : label;
+}
+
+function buildTravelRequestPdfFormData(item) {
+  const departmentFallback = item.requester_group
+    ? `สำนักงานสหกรณ์จังหวัดชัยภูมิ ${item.requester_group}`
+    : 'สำนักงานสหกรณ์จังหวัดชัยภูมิ';
+
+  const approvalStatusMap = {
+    approved: 'approved',
+    rejected: 'rejected'
+  };
+
+  return {
+    departmentName: process.env.TRAVEL_REQUEST_PDF_DEPARTMENT || departmentFallback,
+    phone: process.env.TRAVEL_REQUEST_PDF_PHONE || '-',
+    bookNo: item.request_no || '-',
+    date: item.request_date || item.created_at || new Date(),
+    subject: item.subject || OFFICIAL_TRAVEL_SUBJECT,
+    learnTo: item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ',
+    requesterName: item.requester_name || '-',
+    requesterPosition: item.requester_position || '-',
+    requesterDepartment: item.requester_group || '-',
+    companions: (item.companions || []).map((companion) => ({
+      name: companion.companion_name,
+      position: companion.companion_position
+    })),
+    purpose: item.purpose_text || '-',
+    destination: item.destination_text || '-',
+    startDate: item.start_at || item.request_date,
+    endDate: item.end_at || item.start_at || item.request_date,
+    durationDays: calculateDisplayDurationDays(item.start_at, item.end_at, item.duration_days),
+    transportDetails: formatTransportLabel(item),
+    closingText: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ',
+    signerName: item.requester_name || '-',
+    signerPosition: item.requester_position || item.requester_group || '-',
+    opinionText: item.approval_comment || 'เห็นสมควรพิจารณาตามระเบียบที่เกี่ยวข้อง',
+    approverName: item.approver_name || '',
+    approverPosition: item.approver_position || '',
+    approvalStatus: approvalStatusMap[item.status] || 'pending',
+    approvalDate: item.approved_at || item.rejected_at || null
+  };
+}
+
+function buildTravelRequestPdfFileName(item) {
+  const raw = item.request_no || `travel-request-${item.id}`;
+  return `${String(raw).replace(/[\\/:*?"<>|]+/g, '-').trim() || `travel-request-${item.id}`}.pdf`;
+}
+
+async function resolveRequesterGroupByMemberId(memberId, fallback = '') {
+  if (!memberId) {
+    return fallback;
+  }
+
+  try {
+    const member = await userModel.findActiveUserById(memberId);
+    return resolveMemberClassLabel(member?.m_class) || fallback;
+  } catch (error) {
+    console.error('Error resolving requester group from member3:', error);
+    return fallback;
+  }
+}
+
+async function resolveRequesterGroup(req, memberId = null) {
+  const user = req.session?.user || {};
+  const fallback = resolveMemberClassLabel(user.mClass || user.m_class) || user.group || '';
+  return resolveRequesterGroupByMemberId(memberId || user.id, fallback);
+}
+
+async function mapBody(req) {
   const user = req.session?.user || {};
   const operationDate = req.body.operation_date || toDateInput(req.body.start_at);
   const dateRange = buildSingleDayRange(operationDate);
@@ -53,7 +172,7 @@ function mapBody(req) {
     requester_member_id: user.id || null,
     requester_name: req.body.requester_name,
     requester_position: req.body.requester_position,
-    requester_group: req.body.requester_group,
+    requester_group: await resolveRequesterGroup(req),
     purpose_text: req.body.purpose_text,
     destination_text: req.body.destination_text,
     start_at: dateRange.start_at,
@@ -74,7 +193,7 @@ function mapCompanions(req) {
   const names = Array.isArray(req.body.companion_name) ? req.body.companion_name : [req.body.companion_name].filter(Boolean);
   const positions = Array.isArray(req.body.companion_position) ? req.body.companion_position : [req.body.companion_position].filter(Boolean);
 
-  return names.map((name, index) => ({
+  return names.slice(0, 7).map((name, index) => ({
     companion_name: name,
     companion_position: positions[index] || ''
   }));
@@ -89,6 +208,72 @@ async function renderForm(res, overrides = {}) {
     error: overrides.error || null,
     warning: overrides.warning || null,
     submitLabel: overrides.submitLabel || 'บันทึก'
+  });
+}
+
+async function buildRunningNumberSettingsViewModel() {
+  const settings = await getOfficialTravelRunningNumberSettings();
+  return {
+    prefix: settings.prefix,
+    nextNumber: settings.nextNumber,
+    paddingLength: settings.paddingLength,
+    preview: await previewRunningNumber('official_travel_requests')
+  };
+}
+
+function toPositiveInt(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getDetailNotice(query = {}) {
+  if (query.notice === 'cancelled') {
+    return 'ยกเลิกคำขอไปราชการเรียบร้อยแล้ว';
+  }
+  return null;
+}
+
+function canEditTravelRequest(item) {
+  return item && item.status !== 'cancelled';
+}
+
+function canCancelTravelRequest(item) {
+  if (!item || !['draft', 'submitted', 'approved'].includes(item.status)) {
+    return false;
+  }
+
+  const vehicleStatus = item.vehicleRequest?.status;
+  if (vehicleStatus && ['in_progress', 'completed'].includes(vehicleStatus)) {
+    return false;
+  }
+
+  return true;
+}
+
+function buildCancelErrorMessage(error) {
+  if (!error) {
+    return 'ไม่สามารถยกเลิกคำขอไปราชการได้';
+  }
+
+  if (error.code === 'LINKED_VEHICLE_ACTIVE') {
+    return 'ไม่สามารถยกเลิกได้ เนื่องจากคำขอใช้รถที่เชื่อมอยู่กำลังดำเนินการหรือเสร็จสิ้นแล้ว';
+  }
+
+  if (error.code === 'TRAVEL_CANCEL_NOT_ALLOWED') {
+    return 'สถานะปัจจุบันของคำขอไปราชการไม่สามารถยกเลิกได้';
+  }
+
+  return 'ไม่สามารถยกเลิกคำขอไปราชการได้';
+}
+
+async function renderDetail(res, item, overrides = {}) {
+  res.render('official-travel/detail', {
+    title: overrides.title || 'รายละเอียดคำขอไปราชการ',
+    item,
+    error: overrides.error || null,
+    notice: overrides.notice || null,
+    canEdit: canEditTravelRequest(item),
+    canCancel: canCancelTravelRequest(item)
   });
 }
 
@@ -182,14 +367,15 @@ exports.report = async (req, res) => {
 exports.createForm = async (req, res) => {
   try {
     const requestDate = new Date();
+    const requesterGroup = await resolveRequesterGroup(req);
     const item = {
-      request_no: await generateRunningNumber('official_travel_requests', requestDate),
+      request_no: await previewRunningNumber('official_travel_requests', requestDate),
       request_date: requestDate.toISOString().slice(0, 10),
       subject: OFFICIAL_TRAVEL_SUBJECT,
       learn_to: 'ผู้ว่าราชการจังหวัดชัยภูมิ',
       requester_name: req.session?.user?.fullname || '',
       requester_position: req.session?.user?.position || '',
-      requester_group: req.session?.user?.group || '',
+      requester_group: requesterGroup,
       transport_type: 'official_vehicle',
       out_of_province: 0,
       requires_vehicle_request: 1,
@@ -206,14 +392,15 @@ exports.createForm = async (req, res) => {
   } catch (error) {
     if (isMissingTravelWorkflowTable(error)) {
       const requestDate = new Date();
+      const requesterGroup = await resolveRequesterGroup(req);
       const item = {
-        request_no: await generateRunningNumber('official_travel_requests', requestDate),
+        request_no: await previewRunningNumber('official_travel_requests', requestDate),
         request_date: requestDate.toISOString().slice(0, 10),
         subject: OFFICIAL_TRAVEL_SUBJECT,
         learn_to: 'ผู้ว่าราชการจังหวัดชัยภูมิ',
         requester_name: req.session?.user?.fullname || '',
         requester_position: req.session?.user?.position || '',
-        requester_group: req.session?.user?.group || '',
+        requester_group: requesterGroup,
         transport_type: 'official_vehicle',
         out_of_province: 0,
         requires_vehicle_request: 1,
@@ -235,16 +422,21 @@ exports.createForm = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const payload = mapBody(req);
+    const payload = await mapBody(req);
     const companions = mapCompanions(req);
     const id = await officialTravelRequestModel.create(payload, companions);
     res.redirect(`/official-travel/${id}`);
   } catch (error) {
     console.error('Error creating official travel request:', error);
+    const requesterGroup = await resolveRequesterGroup(req);
     await renderForm(res, {
       title: 'สร้างคำขอไปราชการ',
       formAction: '/official-travel/create',
-      item: req.body,
+      item: {
+        ...req.body,
+        request_no: await previewRunningNumber('official_travel_requests'),
+        requester_group: requesterGroup
+      },
       companions: mapCompanions(req),
       error: 'บันทึกคำขอไม่สำเร็จ',
       submitLabel: 'บันทึกร่าง'
@@ -258,9 +450,8 @@ exports.viewOne = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
-    res.render('official-travel/detail', {
-      title: 'รายละเอียดคำขอไปราชการ',
-      item
+    await renderDetail(res, item, {
+      notice: getDetailNotice(req.query)
     });
   } catch (error) {
     console.error('Error loading official travel request:', error);
@@ -274,6 +465,10 @@ exports.editForm = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
+    if (!canEditTravelRequest(item)) {
+      return res.status(400).send('ไม่สามารถแก้ไขคำขอไปราชการที่ถูกยกเลิกแล้ว');
+    }
+    item.requester_group = await resolveRequesterGroup(req, item.requester_member_id);
     item.operation_date = toDateInput(item.start_at);
     await renderForm(res, {
       title: 'แก้ไขคำขอไปราชการ',
@@ -294,11 +489,16 @@ exports.update = async (req, res) => {
     if (!current) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
+    if (!canEditTravelRequest(current)) {
+      return res.status(400).send('ไม่สามารถแก้ไขคำขอไปราชการที่ถูกยกเลิกแล้ว');
+    }
     const payload = {
-      ...mapBody(req),
+      ...(await mapBody(req)),
       request_no: current.request_no,
-      status: current.status
+      status: current.status,
+      requester_member_id: current.requester_member_id
     };
+    payload.requester_group = await resolveRequesterGroup(req, current.requester_member_id);
     await officialTravelRequestModel.update(req.params.id, payload, mapCompanions(req));
     if (current.status === 'approved') {
       const updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
@@ -307,10 +507,14 @@ exports.update = async (req, res) => {
     res.redirect(`/official-travel/${req.params.id}`);
   } catch (error) {
     console.error('Error updating official travel request:', error);
+    const requesterGroup = await resolveRequesterGroup(req);
     await renderForm(res, {
       title: 'แก้ไขคำขอไปราชการ',
       formAction: `/official-travel/${req.params.id}/edit`,
-      item: req.body,
+      item: {
+        ...req.body,
+        requester_group: requesterGroup
+      },
       companions: mapCompanions(req),
       error: 'บันทึกการแก้ไขไม่สำเร็จ',
       submitLabel: 'บันทึกการแก้ไข'
@@ -320,6 +524,13 @@ exports.update = async (req, res) => {
 
 exports.submit = async (req, res) => {
   try {
+    const current = await officialTravelRequestModel.getById(req.params.id);
+    if (!current) {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+    if (current.status === 'cancelled') {
+      return res.status(400).send('ไม่สามารถส่งคำขอไปราชการที่ถูกยกเลิกแล้ว');
+    }
     await officialTravelRequestModel.submit(req.params.id, req.session?.user);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
     if (item) {
@@ -346,5 +557,109 @@ exports.printView = async (req, res) => {
   } catch (error) {
     console.error('Error rendering official travel print view:', error);
     res.status(500).send('ไม่สามารถพิมพ์คำขอไปราชการได้');
+  }
+};
+
+exports.exportTravelRequestPdf = async (req, res) => {
+  try {
+    const item = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+
+    await generateOfficialTravelRequestPdf(res, buildTravelRequestPdfFormData(item), {
+      fileName: buildTravelRequestPdfFileName(item)
+    });
+  } catch (error) {
+    console.error('Error exporting official travel request PDF:', error);
+    if (!res.headersSent) {
+      res.status(500).send('ไม่สามารถสร้างไฟล์ PDF คำขอไปราชการได้');
+    }
+  }
+};
+
+exports.cancel = async (req, res) => {
+  try {
+    await officialTravelRequestModel.cancel(req.params.id, req.session?.user);
+    await gitgumTravelSyncService.removeTravel(req.params.id);
+
+    const item = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (item) {
+      await workflowNotificationService.notifyTravelDecision(
+        item,
+        'ยกเลิก',
+        req.session?.user?.fullname || req.session?.user?.username || 'system'
+      );
+    }
+
+    res.redirect(`/official-travel/${req.params.id}?notice=cancelled`);
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+
+    try {
+      const item = await officialTravelRequestModel.getDetailById(req.params.id);
+      if (item) {
+        return renderDetail(res.status(400), item, {
+          error: buildCancelErrorMessage(error)
+        });
+      }
+    } catch (detailError) {
+      console.error('Error reloading travel request after cancel failure:', detailError);
+    }
+
+    console.error('Error cancelling official travel request:', error);
+    res.status(500).send('ไม่สามารถยกเลิกคำขอไปราชการได้');
+  }
+};
+
+exports.runningNumberSettingsForm = async (req, res) => {
+  try {
+    const settings = await buildRunningNumberSettingsViewModel();
+    res.render('official-travel/settings', {
+      title: 'ตั้งค่าเลขที่คำขอไปราชการ',
+      settings,
+      error: null,
+      notice: null
+    });
+  } catch (error) {
+    console.error('Error loading official travel running number settings:', error);
+    res.status(500).send('ไม่สามารถโหลดหน้าตั้งค่าเลขที่คำขอไปราชการได้');
+  }
+};
+
+exports.updateRunningNumberSettings = async (req, res) => {
+  try {
+    await updateOfficialTravelRunningNumberSettings(
+      {
+        prefix: req.body.prefix,
+        nextNumber: req.body.next_number,
+        paddingLength: req.body.padding_length
+      },
+      req.session?.user?.fullname || req.session?.user?.username || 'system'
+    );
+
+    const settings = await buildRunningNumberSettingsViewModel();
+    res.render('official-travel/settings', {
+      title: 'ตั้งค่าเลขที่คำขอไปราชการ',
+      settings,
+      error: null,
+      notice: 'บันทึกการตั้งค่าเลขลำดับเรียบร้อยแล้ว'
+    });
+  } catch (error) {
+    console.error('Error updating official travel running number settings:', error);
+    const fallback = {
+      prefix: req.body.prefix || 'ชย 0010(ดท)/',
+      nextNumber: toPositiveInt(req.body.next_number, 1),
+      paddingLength: toPositiveInt(req.body.padding_length, 3),
+      preview: '-'
+    };
+    res.status(400).render('official-travel/settings', {
+      title: 'ตั้งค่าเลขที่คำขอไปราชการ',
+      settings: fallback,
+      error: 'บันทึกการตั้งค่าไม่สำเร็จ',
+      notice: null
+    });
   }
 };

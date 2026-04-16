@@ -7,6 +7,9 @@
   </div>
   <div class="d-flex gap-2">
     <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+      <a href="/official-travel/settings/running-number" class="btn btn-outline-secondary">
+        <i class="bi bi-123 me-1"></i> ตั้งค่าเลขที่
+      </a>
       <a href="/official-travel/report" class="btn btn-outline-primary">
         <i class="bi bi-bar-chart-line me-1"></i> รายงาน
       </a>
@@ -31,6 +34,7 @@
           <th>เรื่อง</th>
           <th>ผู้ขอ</th>
           <th>วันที่ปฏิบัติงาน</th>
+          <th>คำขอใช้รถ</th>
           <th>สถานะ</th>
           <th class="text-end">จัดการ</th>
         </tr>
@@ -38,7 +42,7 @@
       <tbody>
         <% if (!items.length) { %>
           <tr>
-            <td colspan="7" class="text-center py-4 text-muted">ยังไม่มีคำขอไปราชการ</td>
+            <td colspan="8" class="text-center py-4 text-muted">ยังไม่มีคำขอไปราชการ</td>
           </tr>
         <% } %>
         <% items.forEach((item) => { %>
@@ -57,12 +61,27 @@
               <div><%= new Date(item.start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></div>
             </td>
             <td>
+              <% if (Number(item.requires_vehicle_request) !== 1) { %>
+                <span class="text-muted">ไม่ต้องใช้รถ</span>
+              <% } else if (item.vehicle_request_id) { %>
+                <a href="/vehicle-request/<%= item.vehicle_request_id %>" class="text-decoration-none">
+                  <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                  <small class="text-muted"><%= item.vehicle_request_status || '-' %></small>
+                </a>
+              <% } else { %>
+                <div class="text-danger small mb-1">ยังไม่สร้างคำขอใช้รถ</div>
+                <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-sm btn-outline-primary">สร้างคำขอใช้รถ</a>
+              <% } %>
+            </td>
+            <td>
               <% const badge = item.status === 'approved' ? 'success' : item.status === 'submitted' ? 'warning text-dark' : item.status === 'rejected' ? 'danger' : item.status === 'cancelled' ? 'secondary' : 'info'; %>
               <span class="badge bg-<%= badge %>"><%= item.status %></span>
             </td>
             <td class="text-end text-nowrap">
               <a href="/official-travel/<%= item.id %>" class="btn btn-sm btn-outline-primary">ดู</a>
-              <a href="/official-travel/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <% if (item.status !== 'cancelled') { %>
+                <a href="/official-travel/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <% } %>
               <a href="/official-travel/<%= item.id %>/print" class="btn btn-sm btn-outline-secondary" target="_blank">พิมพ์</a>
             </td>
           </tr>

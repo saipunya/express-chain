@@ -16,15 +16,13 @@
   <div class="alert alert-warning"><%= warning %></div>
 <% } %>
 
-<% const requestNoDisplay = 'ชย 0010(ดท)/..............'; %>
-
 <form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
   <div class="card-body">
     <div class="row g-3">
       <div class="col-md-3">
         <label class="form-label">เลขที่คำขอ</label>
-        <input type="hidden" name="request_no" value="<%= item.request_no || '' %>">
-        <input type="text" class="form-control" value="<%= requestNoDisplay %>" readonly>
+        <input type="text" class="form-control" value="<%= item.request_no || '' %>" readonly>
+        <div class="form-text">ระบบจะกำหนดเลขที่คำขอให้อัตโนมัติเมื่อบันทึก</div>
       </div>
       <div class="col-md-3">
         <label class="form-label">วันที่คำขอ</label>
@@ -49,7 +47,8 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">กลุ่ม/หน่วยงาน</label>
-        <input type="text" class="form-control" name="requester_group" value="<%= item.requester_group || '' %>">
+        <input type="text" class="form-control" value="<%= item.requester_group || '' %>" readonly>
+        <div class="form-text">ดึงจาก member3.m_class ของผู้ใช้งานในระบบ</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">สถานที่ / ปลายทาง</label>
@@ -65,7 +64,7 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">วิธีเดินทาง</label>
-        <select class="form-select" name="transport_type">
+        <select class="form-select" name="transport_type" id="transport-type-select">
           <option value="official_vehicle" <%= item.transport_type === 'official_vehicle' ? 'selected' : '' %>>รถราชการ</option>
           <option value="private_vehicle" <%= item.transport_type === 'private_vehicle' ? 'selected' : '' %>>รถส่วนตัว</option>
           <option value="other" <%= item.transport_type === 'other' ? 'selected' : '' %>>อื่น ๆ</option>
@@ -73,7 +72,7 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">รายละเอียดพาหนะอื่น</label>
-        <input type="text" class="form-control" name="transport_other_text" value="<%= item.transport_other_text || '' %>">
+        <input type="text" class="form-control" id="transport-other-input" name="transport_other_text" value="<%= item.transport_other_text || '' %>">
       </div>
       <div class="col-md-2">
         <label class="form-label">ออกนอกจังหวัด</label>
@@ -84,7 +83,7 @@
       </div>
       <div class="col-md-2">
         <label class="form-label">ต้องใช้รถราชการ</label>
-        <select class="form-select" name="requires_vehicle_request">
+        <select class="form-select" name="requires_vehicle_request" id="requires-vehicle-select">
           <option value="0" <%= Number(item.requires_vehicle_request) === 0 ? 'selected' : '' %>>ไม่ต้อง</option>
           <option value="1" <%= Number(item.requires_vehicle_request) === 1 ? 'selected' : '' %>>ต้องใช้</option>
         </select>
@@ -96,7 +95,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">ผู้ร่วมเดินทาง</h5>
       <div class="d-flex align-items-center gap-2">
-        <small class="text-muted">เพิ่มจำนวนผู้ร่วมเดินทางได้ตามต้องการ</small>
+        <small class="text-muted">เพิ่มได้สูงสุด 7 คน</small>
+        <span class="badge text-bg-light" id="companion-count-badge">0/7</span>
         <button type="button" class="btn btn-sm btn-outline-primary" id="add-companion-row">เพิ่มรายชื่อ</button>
       </div>
     </div>
@@ -144,6 +144,10 @@
     const rowsContainer = document.getElementById('companion-rows');
     const addButton = document.getElementById('add-companion-row');
     const rowTemplate = document.getElementById('companion-row-template');
+    const companionCountBadge = document.getElementById('companion-count-badge');
+    const transportTypeSelect = document.getElementById('transport-type-select');
+    const transportOtherInput = document.getElementById('transport-other-input');
+    const requiresVehicleSelect = document.getElementById('requires-vehicle-select');
 
     if (!rowsContainer || !addButton || !rowTemplate) {
       return;
@@ -158,12 +162,27 @@
           seq.textContent = `#${index + 1}`;
         }
       });
+
+      if (companionCountBadge) {
+        const filledRows = Array.from(rows).filter((row) => {
+          const nameInput = row.querySelector('input[name="companion_name"]');
+          return nameInput && nameInput.value.trim();
+        });
+        companionCountBadge.textContent = `${filledRows.length}/7`;
+      }
+
+      addButton.disabled = rows.length >= 7;
     };
 
     const attachRowEvents = (row) => {
       const removeButton = row.querySelector('.remove-companion-row');
+      const nameInput = row.querySelector('input[name="companion_name"]');
       if (!removeButton) {
         return;
+      }
+
+      if (nameInput) {
+        nameInput.addEventListener('input', updateSequence);
       }
 
       removeButton.addEventListener('click', () => {
@@ -181,8 +200,12 @@
     rowsContainer.querySelectorAll('.companion-row').forEach(attachRowEvents);
 
     addButton.addEventListener('click', () => {
+      const currentRows = rowsContainer.querySelectorAll('.companion-row');
+      if (currentRows.length >= 7) {
+        return;
+      }
+
       const fragment = rowTemplate.content.cloneNode(true);
-      const row = fragment.querySelector('.companion-row');
       rowsContainer.appendChild(fragment);
       attachRowEvents(rowsContainer.lastElementChild);
       updateSequence();
@@ -192,7 +215,36 @@
       }
     });
 
+    const syncTransportFields = () => {
+      if (!transportTypeSelect || !transportOtherInput || !requiresVehicleSelect) {
+        return;
+      }
+
+      const transportType = transportTypeSelect.value;
+      transportOtherInput.disabled = transportType !== 'other';
+      transportOtherInput.placeholder = transportType === 'other' ? 'ระบุรายละเอียดพาหนะ' : 'ใช้เมื่อเลือก "อื่น ๆ"';
+
+      if (transportType !== 'other' && !transportOtherInput.dataset.userEdited) {
+        transportOtherInput.value = '';
+      }
+
+      if (transportType === 'official_vehicle') {
+        requiresVehicleSelect.value = '1';
+      }
+    };
+
+    if (transportOtherInput) {
+      transportOtherInput.addEventListener('input', () => {
+        transportOtherInput.dataset.userEdited = transportOtherInput.value.trim() ? '1' : '';
+      });
+    }
+
+    if (transportTypeSelect) {
+      transportTypeSelect.addEventListener('change', syncTransportFields);
+    }
+
     updateSequence();
+    syncTransportFields();
   })();
 </script>
 

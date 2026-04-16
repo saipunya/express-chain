@@ -9,16 +9,33 @@
     <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
       <a href="/vehicle-approval/travel/<%= item.id %>" class="btn btn-outline-primary">พิจารณา</a>
     <% } %>
+    <% if (item.status !== 'cancelled' && Number(item.requires_vehicle_request) === 1 && !item.vehicleRequest) { %>
+      <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-primary">สร้างคำขอใช้รถ</a>
+    <% } else if (item.vehicleRequest) { %>
+      <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">ดูคำขอใช้รถ</a>
+    <% } %>
+    <a href="/export/travel-request/<%= item.id %>" target="_blank" class="btn btn-outline-dark">PDF</a>
     <a href="/official-travel/<%= item.id %>/print" target="_blank" class="btn btn-outline-secondary">พิมพ์</a>
-    <a href="/official-travel/<%= item.id %>/edit" class="btn btn-warning text-white">แก้ไข</a>
+    <% if (canEdit) { %>
+      <a href="/official-travel/<%= item.id %>/edit" class="btn btn-warning text-white">แก้ไข</a>
+    <% } %>
   </div>
 </div>
+
+<% if (notice) { %>
+  <div class="alert alert-success"><%= notice %></div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
 
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="card shadow-sm border-0">
       <div class="card-body">
         <dl class="row mb-0">
+          <% const statusBadge = item.status === 'approved' ? 'success' : item.status === 'submitted' ? 'warning text-dark' : item.status === 'rejected' ? 'danger' : item.status === 'cancelled' ? 'secondary' : 'info'; %>
           <dt class="col-sm-4">เรื่อง</dt><dd class="col-sm-8"><%= item.subject %></dd>
           <dt class="col-sm-4">ผู้ขอ</dt><dd class="col-sm-8"><%= item.requester_name %> <span class="text-muted">(<%= item.requester_position || '-' %>)</span></dd>
           <dt class="col-sm-4">กลุ่มงาน</dt><dd class="col-sm-8"><%= item.requester_group || '-' %></dd>
@@ -26,9 +43,21 @@
           <dt class="col-sm-4">วันที่ปฏิบัติงาน</dt><dd class="col-sm-8"><%= new Date(item.start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></dd>
           <dt class="col-sm-4">วัตถุประสงค์</dt><dd class="col-sm-8"><%= item.purpose_text %></dd>
           <dt class="col-sm-4">วิธีเดินทาง</dt><dd class="col-sm-8"><%= item.transport_type %></dd>
-          <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-info"><%= item.status %></span></dd>
+          <dt class="col-sm-4">คำขอใช้รถราชการ</dt>
+          <dd class="col-sm-8">
+            <% if (Number(item.requires_vehicle_request) !== 1) { %>
+              <span class="text-muted">ไม่ต้องใช้รถราชการ</span>
+            <% } else if (item.vehicleRequest) { %>
+              <a href="/vehicle-request/<%= item.vehicleRequest.id %>"><%= item.vehicleRequest.vehicle_request_no %></a>
+              <span class="text-muted">(<%= item.vehicleRequest.status || '-' %>)</span>
+            <% } else { %>
+              <span class="text-danger">ยังไม่สร้างคำขอใช้รถ</span>
+            <% } %>
+          </dd>
+          <dt class="col-sm-4">สถานะ</dt><dd class="col-sm-8"><span class="badge bg-<%= statusBadge %>"><%= item.status %></span></dd>
           <dt class="col-sm-4">ผู้พิจารณา</dt><dd class="col-sm-8"><%= item.approver_name || '-' %></dd>
           <dt class="col-sm-4">ความเห็น</dt><dd class="col-sm-8"><%= item.approval_comment || '-' %></dd>
+          <dt class="col-sm-4">วันที่ยกเลิก</dt><dd class="col-sm-8"><%= item.cancelled_at ? new Date(item.cancelled_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-' %></dd>
         </dl>
       </div>
     </div>
@@ -59,8 +88,13 @@
           </form>
         <% } %>
 
-        <% if (Number(item.requires_vehicle_request) === 1 && !item.vehicleRequest) { %>
-          <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-outline-primary">สร้างคำขอใช้รถ</a>
+        <% if (canCancel) { %>
+          <form
+            action="/official-travel/<%= item.id %>/cancel"
+            method="POST"
+            onsubmit="return confirm('ยืนยันยกเลิกคำขอไปราชการนี้? หากมีคำขอใช้รถที่เชื่อมอยู่และยังไม่เริ่มเดินรถ ระบบจะยกเลิกให้ด้วย');">
+            <button type="submit" class="btn btn-outline-danger w-100">ยกเลิกคำขอไปราชการ</button>
+          </form>
         <% } %>
 
         <% if (item.vehicleRequest) { %>

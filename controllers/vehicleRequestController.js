@@ -25,6 +25,84 @@ function buildSingleDayRange(operationDate) {
   };
 }
 
+function getPassengerCountFromTravel(travelRequest) {
+  const companionCount = Number(travelRequest?.companion_count || 0);
+  return Math.max(1, companionCount + 1);
+}
+
+function normalizeTravelOption(option) {
+  if (!option) {
+    return null;
+  }
+
+  return {
+    id: option.id,
+    request_no: option.request_no,
+    subject: option.subject,
+    request_date: option.request_date,
+    requester_name: option.requester_name,
+    requester_position: option.requester_position,
+    requester_group: option.requester_group,
+    destination_text: option.destination_text,
+    purpose_text: option.purpose_text,
+    start_at: option.start_at,
+    end_at: option.end_at,
+    status: option.status,
+    companion_count: Number(option.companion_count || 0)
+  };
+}
+
+function appendCurrentTravelOption(travelOptions, item) {
+  if (!item?.travel_request_id) {
+    return travelOptions;
+  }
+
+  const exists = travelOptions.find((option) => Number(option.id) === Number(item.travel_request_id));
+  if (exists) {
+    return travelOptions;
+  }
+
+  return [
+    {
+      id: item.travel_request_id,
+      request_no: item.travel_request_no,
+      subject: item.travel_subject,
+      request_date: item.request_date,
+      requester_name: item.requester_name,
+      requester_position: item.requester_position,
+      requester_group: item.requester_group || '',
+      destination_text: item.destination_text,
+      purpose_text: item.mission_text,
+      start_at: item.travel_start_at || item.trip_start_at,
+      end_at: item.travel_end_at || item.trip_end_at,
+      status: item.travel_status || item.status,
+      companion_count: Math.max(0, Number(item.passenger_count || 1) - 1)
+    },
+    ...travelOptions
+  ];
+}
+
+async function validateTravelRequestSelection(travelRequestId, currentVehicleRequestId = null) {
+  if (!travelRequestId) {
+    return 'กรุณาเลือกคำขอไปราชการ';
+  }
+
+  const travelRequest = await officialTravelRequestModel.getDetailById(travelRequestId);
+  if (!travelRequest) {
+    return 'ไม่พบคำขอไปราชการที่เลือก';
+  }
+
+  if (Number(travelRequest.requires_vehicle_request) !== 1) {
+    return 'คำขอไปราชการนี้ไม่ได้ระบุว่าต้องใช้รถราชการ';
+  }
+
+  if (travelRequest.vehicleRequest && Number(travelRequest.vehicleRequest.id) !== Number(currentVehicleRequestId)) {
+    return 'คำขอไปราชการนี้มีคำขอใช้รถราชการแล้ว';
+  }
+
+  return null;
+}
+
 function mapBody(req) {
   const user = req.session?.user || {};
   const operationDate = req.body.operation_date || toDateInput(req.body.trip_start_at);
@@ -49,7 +127,9 @@ function mapBody(req) {
 }
 
 async function renderForm(res, overrides = {}) {
-  const travelOptions = overrides.travelOptions || await officialTravelRequestModel.listEligibleForVehicleRequest();
+  const travelOptions = (overrides.travelOptions || await officialTravelRequestModel.listEligibleForVehicleRequest())
+    .map(normalizeTravelOption)
+    .filter(Boolean);
   res.render('vehicle-request/form', {
     title: overrides.title || 'คำขอใช้รถราชการ',
     formAction: overrides.formAction,
@@ -153,7 +233,7 @@ exports.createForm = async (req, res) => {
     const travelOptions = await officialTravelRequestModel.listEligibleForVehicleRequest();
     let selectedTravel = null;
     if (req.query.travelId) {
-      selectedTravel = await officialTravelRequestModel.getById(req.query.travelId);
+      selectedTravel = await officialTravelRequestModel.getDetailById(req.query.travelId);
     }
 
     const item = {
@@ -165,7 +245,7 @@ exports.createForm = async (req, res) => {
       requester_position: selectedTravel?.requester_position || req.session?.user?.position || '',
       destination_text: selectedTravel?.destination_text || '',
       mission_text: selectedTravel?.purpose_text || '',
-      passenger_count: selectedTravel?.companion_count ? selectedTravel.companion_count + 1 : 1,
+      passenger_count: getPassengerCountFromTravel(selectedTravel),
       operation_date: selectedTravel ? toDateInput(selectedTravel.start_at) : requestDate.toISOString().slice(0, 10)
     };
 
@@ -202,6 +282,11 @@ exports.createForm = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+    const validationError = await validateTravelRequestSelection(req.body.travel_request_id);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
     const id = await vehicleRequestModel.create(mapBody(req));
     res.redirect(`/vehicle-request/${id}`);
   } catch (error) {
@@ -210,7 +295,7 @@ exports.create = async (req, res) => {
       title: 'สร้างคำขอใช้รถราชการ',
       formAction: '/vehicle-request/create',
       item: req.body,
-      error: 'บันทึกคำขอใช้รถไม่สำเร็จ',
+      error: error.message || 'บันทึกคำขอใช้รถไม่สำเร็จ',
       submitLabel: 'บันทึกร่าง'
     });
   }
@@ -239,17 +324,8 @@ exports.editForm = async (req, res) => {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
     item.operation_date = toDateInput(item.trip_start_at);
-    const travelOptions = await officialTravelRequestModel.listEligibleForVehicleRequest();
-    if (!travelOptions.find((option) => Number(option.id) === Number(item.travel_request_id))) {
-      travelOptions.unshift({
-        id: item.travel_request_id,
-        request_no: item.travel_request_no,
-        subject: item.travel_subject,
-        requester_name: item.requester_name,
-        destination_text: item.destination_text,
-        request_date: item.request_date
-      });
-    }
+    let travelOptions = await officialTravelRequestModel.listEligibleForVehicleRequest();
+    travelOptions = appendCurrentTravelOption(travelOptions, item);
     await renderForm(res, {
       title: 'แก้ไขคำขอใช้รถราชการ',
       formAction: `/vehicle-request/${item.id}/edit`,
@@ -269,6 +345,12 @@ exports.update = async (req, res) => {
     if (!current) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
+
+    const validationError = await validateTravelRequestSelection(req.body.travel_request_id, req.params.id);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
     await vehicleRequestModel.update(req.params.id, {
       ...mapBody(req),
       vehicle_request_no: current.vehicle_request_no,
@@ -281,7 +363,7 @@ exports.update = async (req, res) => {
       title: 'แก้ไขคำขอใช้รถราชการ',
       formAction: `/vehicle-request/${req.params.id}/edit`,
       item: req.body,
-      error: 'บันทึกการแก้ไขไม่สำเร็จ',
+      error: error.message || 'บันทึกการแก้ไขไม่สำเร็จ',
       submitLabel: 'บันทึกการแก้ไข'
     });
   }

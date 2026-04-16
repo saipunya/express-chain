@@ -16,6 +16,13 @@
   <div class="alert alert-warning"><%= warning %></div>
 <% } %>
 
+<% if (!travelOptions.length) { %>
+  <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>ยังไม่มีคำขอไปราชการที่พร้อมสร้างคำขอใช้รถราชการ</div>
+    <a href="/official-travel/create" class="btn btn-sm btn-outline-primary">สร้างคำขอไปราชการ</a>
+  </div>
+<% } %>
+
 <form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
   <div class="card-body">
     <div class="row g-3">
@@ -33,44 +40,142 @@
       </div>
       <div class="col-md-12">
         <label class="form-label">อ้างอิงคำขอไปราชการ</label>
-        <select class="form-select" name="travel_request_id" required>
+        <select class="form-select" name="travel_request_id" id="travel-request-select" required>
           <option value="">เลือกคำขอไปราชการ</option>
           <% travelOptions.forEach((option) => { %>
-            <option value="<%= option.id %>" <%= Number(item.travel_request_id) === Number(option.id) ? 'selected' : '' %>>
+            <option
+              value="<%= option.id %>"
+              data-request-no="<%= option.request_no || '' %>"
+              data-request-date="<%= option.request_date ? new Date(option.request_date).toISOString().slice(0, 10) : '' %>"
+              data-requester-name="<%= option.requester_name || '' %>"
+              data-requester-position="<%= option.requester_position || '' %>"
+              data-requester-group="<%= option.requester_group || '' %>"
+              data-destination="<%= option.destination_text || '' %>"
+              data-mission="<%= option.purpose_text || '' %>"
+              data-operation-date="<%= option.start_at ? new Date(option.start_at).toISOString().slice(0, 10) : '' %>"
+              data-passenger-count="<%= Number(option.companion_count || 0) + 1 %>"
+              data-status="<%= option.status || '' %>"
+              <%= Number(item.travel_request_id) === Number(option.id) ? 'selected' : '' %>>
               <%= option.request_no %> - <%= option.subject %> - <%= option.requester_name %>
             </option>
           <% }) %>
         </select>
+        <div class="form-text">
+          เลือกคำขอไปราชการแล้วระบบจะเติมผู้ขอ ปลายทาง ภารกิจ วันที่ และจำนวนผู้โดยสารให้อัตโนมัติ
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="border rounded p-3 bg-light-subtle" id="travel-request-summary">
+          <div class="fw-semibold mb-2">สรุปคำขอไปราชการที่เลือก</div>
+          <div class="text-muted small" id="travel-request-summary-empty">ยังไม่ได้เลือกคำขอไปราชการ</div>
+          <dl class="row mb-0 small d-none" id="travel-request-summary-content">
+            <dt class="col-sm-3">เลขที่</dt><dd class="col-sm-9 mb-1" data-summary-field="requestNo">-</dd>
+            <dt class="col-sm-3">ผู้ขอ</dt><dd class="col-sm-9 mb-1" data-summary-field="requester">-</dd>
+            <dt class="col-sm-3">หน่วยงาน</dt><dd class="col-sm-9 mb-1" data-summary-field="group">-</dd>
+            <dt class="col-sm-3">ปลายทาง</dt><dd class="col-sm-9 mb-1" data-summary-field="destination">-</dd>
+            <dt class="col-sm-3">วันที่</dt><dd class="col-sm-9 mb-1" data-summary-field="operationDate">-</dd>
+            <dt class="col-sm-3">สถานะ</dt><dd class="col-sm-9 mb-0" data-summary-field="status">-</dd>
+          </dl>
+        </div>
       </div>
       <div class="col-md-4">
         <label class="form-label">ผู้ขอใช้รถ</label>
-        <input type="text" class="form-control" name="requester_name" value="<%= item.requester_name || '' %>" required>
+        <input type="text" class="form-control" name="requester_name" id="requester-name-input" value="<%= item.requester_name || '' %>" required>
       </div>
       <div class="col-md-4">
         <label class="form-label">ตำแหน่ง</label>
-        <input type="text" class="form-control" name="requester_position" value="<%= item.requester_position || '' %>">
+        <input type="text" class="form-control" name="requester_position" id="requester-position-input" value="<%= item.requester_position || '' %>">
       </div>
       <div class="col-md-4">
         <label class="form-label">จำนวนผู้โดยสาร</label>
-        <input type="number" min="1" class="form-control" name="passenger_count" value="<%= item.passenger_count || 1 %>" required>
+        <input type="number" min="1" class="form-control" name="passenger_count" id="passenger-count-input" value="<%= item.passenger_count || 1 %>" required>
       </div>
       <div class="col-md-6">
         <label class="form-label">ปลายทาง</label>
-        <input type="text" class="form-control" name="destination_text" value="<%= item.destination_text || '' %>" required>
+        <input type="text" class="form-control" name="destination_text" id="destination-input" value="<%= item.destination_text || '' %>" required>
       </div>
       <div class="col-md-6">
         <label class="form-label">วันที่ปฏิบัติงาน</label>
-        <input type="date" class="form-control" name="operation_date" value="<%= item.operation_date || '' %>" required>
+        <input type="date" class="form-control" name="operation_date" id="operation-date-input" value="<%= item.operation_date || '' %>" required>
       </div>
       <div class="col-md-12">
         <label class="form-label">ภารกิจ / เหตุผล</label>
-        <textarea class="form-control" name="mission_text" rows="4" required><%= item.mission_text || '' %></textarea>
+        <textarea class="form-control" name="mission_text" id="mission-input" rows="4" required><%= item.mission_text || '' %></textarea>
       </div>
     </div>
   </div>
   <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-    <button type="submit" class="btn btn-success"><%= submitLabel %></button>
+    <button type="submit" class="btn btn-success" <%= !travelOptions.length ? 'disabled' : '' %>><%= submitLabel %></button>
   </div>
 </form>
+
+<script>
+  (() => {
+    const travelSelect = document.getElementById('travel-request-select');
+    if (!travelSelect) {
+      return;
+    }
+
+    const requesterNameInput = document.getElementById('requester-name-input');
+    const requesterPositionInput = document.getElementById('requester-position-input');
+    const passengerCountInput = document.getElementById('passenger-count-input');
+    const destinationInput = document.getElementById('destination-input');
+    const operationDateInput = document.getElementById('operation-date-input');
+    const missionInput = document.getElementById('mission-input');
+    const summaryEmpty = document.getElementById('travel-request-summary-empty');
+    const summaryContent = document.getElementById('travel-request-summary-content');
+
+    const summaryFields = {
+      requestNo: summaryContent?.querySelector('[data-summary-field="requestNo"]'),
+      requester: summaryContent?.querySelector('[data-summary-field="requester"]'),
+      group: summaryContent?.querySelector('[data-summary-field="group"]'),
+      destination: summaryContent?.querySelector('[data-summary-field="destination"]'),
+      operationDate: summaryContent?.querySelector('[data-summary-field="operationDate"]'),
+      status: summaryContent?.querySelector('[data-summary-field="status"]')
+    };
+
+    const formatDateThai = (dateValue) => {
+      if (!dateValue) {
+        return '-';
+      }
+
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) {
+        return dateValue;
+      }
+
+      return date.toLocaleDateString('th-TH', { dateStyle: 'medium' });
+    };
+
+    const applySelection = () => {
+      const option = travelSelect.options[travelSelect.selectedIndex];
+      if (!option || !option.value) {
+        summaryEmpty?.classList.remove('d-none');
+        summaryContent?.classList.add('d-none');
+        return;
+      }
+
+      requesterNameInput.value = option.dataset.requesterName || '';
+      requesterPositionInput.value = option.dataset.requesterPosition || '';
+      passengerCountInput.value = option.dataset.passengerCount || '1';
+      destinationInput.value = option.dataset.destination || '';
+      operationDateInput.value = option.dataset.operationDate || '';
+      missionInput.value = option.dataset.mission || '';
+
+      if (summaryFields.requestNo) summaryFields.requestNo.textContent = option.dataset.requestNo || '-';
+      if (summaryFields.requester) summaryFields.requester.textContent = option.dataset.requesterName || '-';
+      if (summaryFields.group) summaryFields.group.textContent = option.dataset.requesterGroup || '-';
+      if (summaryFields.destination) summaryFields.destination.textContent = option.dataset.destination || '-';
+      if (summaryFields.operationDate) summaryFields.operationDate.textContent = formatDateThai(option.dataset.operationDate || '');
+      if (summaryFields.status) summaryFields.status.textContent = option.dataset.status || '-';
+
+      summaryEmpty?.classList.add('d-none');
+      summaryContent?.classList.remove('d-none');
+    };
+
+    travelSelect.addEventListener('change', applySelection);
+    applySelection();
+  })();
+</script>
 
 <%- include('../partials/footer') %>

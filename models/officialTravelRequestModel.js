@@ -1,4 +1,8 @@
 const db = require('../config/db');
+const {
+  ensureRunningNumberSettingsTable,
+  generateRunningNumber
+} = require('../services/runningNumberService');
 
 function toBooleanFlag(value) {
   return value ? 1 : 0;
@@ -174,7 +178,14 @@ async function create(payload, companions = []) {
   const connection = await db.getConnection();
   const data = mapPayload(payload);
   try {
+    await ensureRunningNumberSettingsTable();
     await connection.beginTransaction();
+    if (!data.request_no) {
+      data.request_no = await generateRunningNumber('official_travel_requests', data.request_date, {
+        connection,
+        actorName: data.created_by || data.updated_by || null
+      });
+    }
     const [result] = await connection.query(
       `INSERT INTO official_travel_requests (
         request_no, request_date, subject, learn_to, requester_member_id, requester_name,
@@ -290,8 +301,16 @@ async function submit(id, user) {
 
 async function listEligibleForVehicleRequest() {
   const [rows] = await db.query(`
-    SELECT tr.id, tr.request_no, tr.subject, tr.request_date, tr.requester_name, tr.destination_text, tr.start_at, tr.end_at
+    SELECT tr.id, tr.request_no, tr.subject, tr.request_date, tr.requester_name,
+           tr.requester_position, tr.requester_group, tr.destination_text, tr.purpose_text,
+           tr.start_at, tr.end_at, tr.status,
+           COALESCE(tc.companion_count, 0) AS companion_count
     FROM official_travel_requests tr
+    LEFT JOIN (
+      SELECT travel_request_id, COUNT(*) AS companion_count
+      FROM official_travel_companions
+      GROUP BY travel_request_id
+    ) tc ON tc.travel_request_id = tr.id
     LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
     WHERE vr.id IS NULL
       AND tr.status IN ('draft', 'submitted', 'approved')
@@ -396,7 +415,76 @@ async function reject(id, user, approvalComment = null) {
   );
 }
 
+async function cancel(id, user) {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[travelRequest]] = await connection.query(
+      `SELECT tr.id, tr.status,
+              vr.id AS vehicle_request_id,
+              vr.status AS vehicle_request_status
+       FROM official_travel_requests tr
+       LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+       WHERE tr.id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!travelRequest) {
+      const error = new Error('NOT_FOUND');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    if (!['draft', 'submitted', 'approved'].includes(travelRequest.status)) {
+      const error = new Error('TRAVEL_CANCEL_NOT_ALLOWED');
+      error.code = 'TRAVEL_CANCEL_NOT_ALLOWED';
+      throw error;
+    }
+
+    if (['in_progress', 'completed'].includes(travelRequest.vehicle_request_status)) {
+      const error = new Error('LINKED_VEHICLE_ACTIVE');
+      error.code = 'LINKED_VEHICLE_ACTIVE';
+      throw error;
+    }
+
+    await connection.query(
+      `UPDATE official_travel_requests
+       SET status = 'cancelled',
+           cancelled_at = NOW(),
+           updated_by = ?
+       WHERE id = ?`,
+      [user?.fullname || user?.username || 'system', id]
+    );
+
+    if (
+      travelRequest.vehicle_request_id &&
+      ['draft', 'submitted', 'approved', 'assigned', 'rejected'].includes(travelRequest.vehicle_request_status)
+    ) {
+      await connection.query(
+        `UPDATE vehicle_requests
+         SET status = 'cancelled',
+             cancelled_at = NOW(),
+             updated_by = ?
+         WHERE id = ?`,
+        [user?.fullname || user?.username || 'system', travelRequest.vehicle_request_id]
+      );
+    }
+
+    await connection.commit();
+    return travelRequest;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
+  cancel,
   create,
   getById,
   getCompanions,

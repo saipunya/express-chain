@@ -17,6 +17,7 @@ router.get('/:id/edit', controller.editForm);
 router.post('/:id/edit', controller.update);
 router.post('/:id/submit', controller.submit);
 router.post('/:id/cancel', controller.cancel);
+router.post('/:id/delete', requireLevel(['admin', 'kjs']), controller.delete);
 router.get('/:id/print', controller.printView);
 
 module.exports = router;

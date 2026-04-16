@@ -16,7 +16,7 @@ function getTelegramConfig(target = 'default') {
 }
 
 async function sendMessage(message, options = {}) {
-  const { target = 'default' } = options;
+  const { target = 'default', replyMarkup = null } = options;
   const { token, chatId } = getTelegramConfig(target);
 
   if (!token || !chatId) {
@@ -31,11 +31,14 @@ async function sendMessage(message, options = {}) {
   }
 
   try {
-    for (const part of parts) {
+    for (let index = 0; index < parts.length; index += 1) {
+      const part = parts[index];
+      const isLastPart = index === parts.length - 1;
       await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
         chat_id: chatId,
         text: part,
         parse_mode: 'HTML',
+        ...(replyMarkup && isLastPart ? { reply_markup: replyMarkup } : {})
       });
     }
     console.log('✅ ส่งข้อความ Telegram (แบบหลายตอน) เรียบร้อย');

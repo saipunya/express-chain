@@ -1,11 +1,11 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'travel-settings' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">ตั้งค่าเลขที่คำขอไปราชการ</h3>
     <p class="text-muted mb-0">กำหนด prefix และเลขลำดับถัดไปสำหรับคำขอไปราชการ</p>
   </div>
-  <a href="/official-travel" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
 </div>
 
 <% if (notice) { %>

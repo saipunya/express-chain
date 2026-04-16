@@ -1,0 +1,96 @@
+<style>
+  .travel-subnav {
+    margin-bottom: 1.5rem;
+    padding: .75rem;
+    border: 1px solid #dfe7e2;
+    border-radius: 8px;
+    background: #f8fbf9;
+  }
+
+  .travel-subnav .nav {
+    gap: .5rem;
+  }
+
+  .travel-subnav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem .8rem;
+    border: 1px solid #cfe0d6;
+    border-radius: 8px;
+    color: #2f4f3e;
+    background: #fff;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .travel-subnav .nav-link:hover,
+  .travel-subnav .nav-link:focus {
+    color: #1f3b2d;
+    background: #edf7f1;
+  }
+
+  .travel-subnav .nav-link.active {
+    color: #fff;
+    background: #198754;
+    border-color: #198754;
+  }
+
+  .travel-subnav .nav-link i {
+    font-size: .95rem;
+  }
+</style>
+
+<%
+  const activePage = currentPage || '';
+  const isPrivileged = user && (user.mClass === 'admin' || user.mClass === 'kjs');
+%>
+
+<nav class="travel-subnav" aria-label="เมนูงานไปราชการและรถราชการ">
+  <ul class="nav">
+    <li class="nav-item">
+      <a href="/official-travel" class="nav-link <%= activePage === 'travel' ? 'active' : '' %>">
+        <i class="bi bi-journal-text" aria-hidden="true"></i>รายการไปราชการ
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/official-travel/create" class="nav-link <%= activePage === 'travel-create' ? 'active' : '' %>">
+        <i class="bi bi-plus-circle" aria-hidden="true"></i>สร้างคำขอไปราชการ
+      </a>
+    </li>
+    <% if (isPrivileged) { %>
+      <li class="nav-item">
+        <a href="/official-travel/report" class="nav-link <%= activePage === 'travel-report' ? 'active' : '' %>">
+          <i class="bi bi-bar-chart-line" aria-hidden="true"></i>รายงานไปราชการ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/official-travel/settings/running-number" class="nav-link <%= activePage === 'travel-settings' ? 'active' : '' %>">
+          <i class="bi bi-123" aria-hidden="true"></i>ตั้งค่าเลขที่
+        </a>
+      </li>
+    <% } %>
+    <li class="nav-item">
+      <a href="/vehicle-request" class="nav-link <%= activePage === 'vehicle' ? 'active' : '' %>">
+        <i class="bi bi-truck" aria-hidden="true"></i>รายการใช้รถ
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/vehicle-request/create" class="nav-link <%= activePage === 'vehicle-create' ? 'active' : '' %>">
+        <i class="bi bi-plus-square" aria-hidden="true"></i>สร้างคำขอใช้รถ
+      </a>
+    </li>
+    <% if (isPrivileged) { %>
+      <li class="nav-item">
+        <a href="/vehicle-request/report" class="nav-link <%= activePage === 'vehicle-report' ? 'active' : '' %>">
+          <i class="bi bi-clipboard-data" aria-hidden="true"></i>รายงานใช้รถ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/vehicle-approval/pending" class="nav-link <%= activePage === 'approval' ? 'active' : '' %>">
+          <i class="bi bi-check2-square" aria-hidden="true"></i>คิวอนุมัติ
+        </a>
+      </li>
+    <% } %>
+  </ul>
+</nav>

@@ -1,9 +1,10 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'approval' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">พิจารณาคำขอใช้รถราชการ</h3>
-    <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+    <p class="text-muted mb-0"><%= item.travel_request_no || item.vehicle_request_no %></p>
   </div>
   <a href="/vehicle-approval/pending" class="btn btn-outline-secondary">กลับคิวอนุมัติ</a>
 </div>

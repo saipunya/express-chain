@@ -1,9 +1,10 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'vehicle' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">รายละเอียดคำขอใช้รถราชการ</h3>
-    <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+    <p class="text-muted mb-0"><%= item.travel_request_no || item.vehicle_request_no %></p>
   </div>
   <div class="d-flex gap-2">
     <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>

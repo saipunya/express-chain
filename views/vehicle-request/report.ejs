@@ -1,11 +1,11 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'vehicle-report' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">รายงานคำขอใช้รถราชการ</h3>
     <p class="text-muted mb-0">สรุปคำขอใช้รถ การมอบหมาย และผลบันทึกการเดินทาง</p>
   </div>
-  <a href="/vehicle-request" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
 </div>
 
 <% if (warning) { %>
@@ -72,7 +72,7 @@
         <% items.forEach((item) => { %>
           <tr>
             <td>
-              <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+              <div class="fw-semibold"><%= item.travel_request_no || item.vehicle_request_no %></div>
               <small class="text-muted"><%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></small>
             </td>
             <td>

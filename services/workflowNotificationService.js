@@ -1,4 +1,5 @@
 const notify = require('./notifyService');
+const BASE_URL = String(process.env.BASE_URL || '').replace(/\/+$/, '');
 
 function formatDateTime(value) {
   if (!value) {
@@ -33,8 +34,29 @@ async function send(message) {
   }
 }
 
+function buildLoginRedirectUrl(pathname) {
+  if (!BASE_URL || !pathname) {
+    return null;
+  }
+
+  const safePath = String(pathname).startsWith('/') ? pathname : `/${pathname}`;
+  return `${BASE_URL}/auth/login?returnTo=${encodeURIComponent(safePath)}`;
+}
+
+function buildApprovalButton(label, pathname) {
+  const url = buildLoginRedirectUrl(pathname);
+  if (!url) {
+    return null;
+  }
+
+  return {
+    inline_keyboard: [[{ text: label, url }]]
+  };
+}
+
 async function notifyTravelSubmitted(item) {
-  return send(`
+  return send({
+    html: `
 <b>คำขอไปราชการส่งใหม่</b>
 เลขที่: ${escapeHtml(item.request_no)}
 เรื่อง: ${escapeHtml(item.subject)}
@@ -42,7 +64,9 @@ async function notifyTravelSubmitted(item) {
 ปลายทาง: ${escapeHtml(item.destination_text)}
 ช่วงเวลา: ${escapeHtml(formatDateTime(item.start_at))} ถึง ${escapeHtml(formatDateTime(item.end_at))}
 สถานะ: ${escapeHtml(item.status)}
-  `);
+  `,
+    replyMarkup: buildApprovalButton('เปิดหน้าอนุมัติไปราชการ', `/vehicle-approval/travel/${item.id}`)
+  });
 }
 
 async function notifyTravelDecision(item, actionLabel, actorName) {
@@ -58,21 +82,26 @@ async function notifyTravelDecision(item, actionLabel, actorName) {
 }
 
 async function notifyVehicleSubmitted(item) {
-  return send(`
+  const requestNo = item.travel_request_no || item.vehicle_request_no;
+  return send({
+    html: `
 <b>คำขอใช้รถส่งใหม่</b>
-เลขที่: ${escapeHtml(item.vehicle_request_no)}
+เลขที่: ${escapeHtml(requestNo)}
 อ้างอิงไปราชการ: ${escapeHtml(item.travel_request_no)}
 ผู้ขอ: ${escapeHtml(item.requester_name)}
 ปลายทาง: ${escapeHtml(item.destination_text)}
 ช่วงเวลา: ${escapeHtml(formatDateTime(item.trip_start_at))} ถึง ${escapeHtml(formatDateTime(item.trip_end_at))}
 สถานะ: ${escapeHtml(item.status)}
-  `);
+  `,
+    replyMarkup: buildApprovalButton('เปิดหน้าอนุมัติคำขอใช้รถ', `/vehicle-approval/request/${item.id}`)
+  });
 }
 
 async function notifyVehicleDecision(item, actionLabel, actorName) {
+  const requestNo = item.travel_request_no || item.vehicle_request_no;
   return send(`
 <b>${escapeHtml(actionLabel)}คำขอใช้รถ</b>
-เลขที่: ${escapeHtml(item.vehicle_request_no)}
+เลขที่: ${escapeHtml(requestNo)}
 อ้างอิงไปราชการ: ${escapeHtml(item.travel_request_no)}
 ผู้ขอ: ${escapeHtml(item.requester_name)}
 ผู้พิจารณา: ${escapeHtml(actorName)}
@@ -82,9 +111,10 @@ async function notifyVehicleDecision(item, actionLabel, actorName) {
 }
 
 async function notifyVehicleAssigned(item, actorName) {
+  const requestNo = item.travel_request_no || item.vehicle_request_no;
   return send(`
 <b>มอบหมายรถและคนขับแล้ว</b>
-เลขที่คำขอใช้รถ: ${escapeHtml(item.vehicle_request_no)}
+เลขที่คำขอใช้รถ: ${escapeHtml(requestNo)}
 ผู้ขอ: ${escapeHtml(item.requester_name)}
 ปลายทาง: ${escapeHtml(item.destination_text)}
 รถ: ${escapeHtml(item.plate_no_snapshot || '-')}

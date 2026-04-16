@@ -1,4 +1,5 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'approval' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
@@ -70,7 +71,7 @@
             <% vehicleItems.forEach((item) => { %>
               <tr>
                 <td>
-                  <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                  <div class="fw-semibold"><%= item.travel_request_no || item.vehicle_request_no %></div>
                   <small class="text-muted"><%= item.status %></small>
                 </td>
                 <td><%= item.destination_text %></td>

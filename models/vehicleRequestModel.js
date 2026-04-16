@@ -85,6 +85,14 @@ async function getById(id) {
   return rows[0] || null;
 }
 
+async function getByTravelRequestId(travelRequestId) {
+  const [rows] = await db.query(
+    'SELECT * FROM vehicle_requests WHERE travel_request_id = ? ORDER BY id DESC LIMIT 1',
+    [travelRequestId]
+  );
+  return rows[0] || null;
+}
+
 async function getDetailById(id) {
   const [rows] = await db.query(`
     SELECT vr.*, tr.request_no AS travel_request_no, tr.subject AS travel_subject,
@@ -249,6 +257,7 @@ module.exports = {
   approve,
   create,
   getById,
+  getByTravelRequestId,
   getDetailById,
   listAll,
   listReport,

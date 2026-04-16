@@ -1,4 +1,5 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'vehicle' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
@@ -43,7 +44,7 @@
         <% } %>
         <% items.forEach((item) => { %>
           <tr>
-            <td><%= item.vehicle_request_no %></td>
+            <td><%= item.travel_request_no || item.vehicle_request_no %></td>
             <td>
               <div class="fw-semibold"><%= item.travel_request_no %></div>
               <small class="text-muted"><%= item.travel_subject %></small>

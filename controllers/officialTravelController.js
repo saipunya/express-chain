@@ -7,6 +7,10 @@ const {
 } = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
 const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
+const {
+  ensureVehicleRequestDraft,
+  ensureVehicleRequestSubmitted
+} = require('../services/travelVehicleRequestService');
 const { generateOfficialTravelRequestPdf } = require('../utils/pdf/officialTravelRequestPdf');
 const { resolveMemberClassLabel } = require('../utils/memberClass');
 
@@ -230,6 +234,18 @@ function getDetailNotice(query = {}) {
   if (query.notice === 'cancelled') {
     return 'ยกเลิกคำขอไปราชการเรียบร้อยแล้ว';
   }
+  if (query.notice === 'deleted') {
+    return 'ลบคำขอไปราชการและคำขอใช้รถที่เชื่อมไว้เรียบร้อยแล้ว';
+  }
+  if (query.notice === 'vehicle_created') {
+    return 'ระบบสร้างคำขอใช้รถราชการให้อัตโนมัติแล้ว';
+  }
+  if (query.notice === 'submitted') {
+    return 'ส่งคำขอไปราชการเรียบร้อยแล้ว';
+  }
+  if (query.notice === 'submitted_with_vehicle') {
+    return 'ส่งคำขอไปราชการและคำขอใช้รถราชการเรียบร้อยแล้ว';
+  }
   return null;
 }
 
@@ -250,6 +266,17 @@ function canCancelTravelRequest(item) {
   return true;
 }
 
+function isTravelManager(user) {
+  return Boolean(user && ['admin', 'kjs'].includes(user.mClass));
+}
+
+function canDeleteTravelRequest(item, user) {
+  if (!item || !isTravelManager(user)) {
+    return false;
+  }
+  return true;
+}
+
 function buildCancelErrorMessage(error) {
   if (!error) {
     return 'ไม่สามารถยกเลิกคำขอไปราชการได้';
@@ -266,6 +293,18 @@ function buildCancelErrorMessage(error) {
   return 'ไม่สามารถยกเลิกคำขอไปราชการได้';
 }
 
+function buildDeleteErrorMessage(error) {
+  if (!error) {
+    return 'ไม่สามารถลบคำขอไปราชการได้';
+  }
+
+  if (error.code === 'LINKED_VEHICLE_ACTIVE') {
+    return 'ไม่สามารถลบได้ เนื่องจากคำขอใช้รถที่เชื่อมอยู่เริ่มเดินรถแล้วหรือเสร็จสิ้นแล้ว';
+  }
+
+  return 'ไม่สามารถลบคำขอไปราชการได้';
+}
+
 async function renderDetail(res, item, overrides = {}) {
   res.render('official-travel/detail', {
     title: overrides.title || 'รายละเอียดคำขอไปราชการ',
@@ -273,7 +312,8 @@ async function renderDetail(res, item, overrides = {}) {
     error: overrides.error || null,
     notice: overrides.notice || null,
     canEdit: canEditTravelRequest(item),
-    canCancel: canCancelTravelRequest(item)
+    canCancel: canCancelTravelRequest(item),
+    canDelete: canDeleteTravelRequest(item, res.locals.user)
   });
 }
 
@@ -298,6 +338,7 @@ exports.list = async (req, res) => {
     res.render('official-travel/list', {
       title: 'รายการคำขอไปราชการ',
       items,
+      notice: getDetailNotice(req.query),
       warning: null
     });
   } catch (error) {
@@ -305,6 +346,7 @@ exports.list = async (req, res) => {
       return res.render('official-travel/list', {
         title: 'รายการคำขอไปราชการ',
         items: [],
+        notice: getDetailNotice(req.query),
         warning: 'ยังไม่พบตาราง workflow คำขอไปราชการในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นข้อมูลจริง'
       });
     }
@@ -425,7 +467,19 @@ exports.create = async (req, res) => {
     const payload = await mapBody(req);
     const companions = mapCompanions(req);
     const id = await officialTravelRequestModel.create(payload, companions);
-    res.redirect(`/official-travel/${id}`);
+
+    let notice = '';
+    try {
+      const item = await officialTravelRequestModel.getDetailById(id);
+      const vehicleResult = await ensureVehicleRequestDraft(item, req.session?.user);
+      if (vehicleResult.created) {
+        notice = 'vehicle_created';
+      }
+    } catch (vehicleError) {
+      console.error('Error auto-creating linked vehicle request:', vehicleError);
+    }
+
+    res.redirect(`/official-travel/${id}${notice ? `?notice=${notice}` : ''}`);
   } catch (error) {
     console.error('Error creating official travel request:', error);
     const requesterGroup = await resolveRequesterGroup(req);
@@ -500,11 +554,29 @@ exports.update = async (req, res) => {
     };
     payload.requester_group = await resolveRequesterGroup(req, current.requester_member_id);
     await officialTravelRequestModel.update(req.params.id, payload, mapCompanions(req));
-    if (current.status === 'approved') {
-      const updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+
+    let updatedItem = null;
+    let notice = '';
+
+    try {
+      updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+      const vehicleResult = await ensureVehicleRequestDraft(updatedItem, req.session?.user);
+      if (vehicleResult.created) {
+        notice = 'vehicle_created';
+      }
+      updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+    } catch (vehicleError) {
+      console.error('Error auto-syncing linked vehicle request:', vehicleError);
+      if (!updatedItem) {
+        updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+      }
+    }
+
+    if (current.status === 'approved' && updatedItem) {
       await gitgumTravelSyncService.syncApprovedTravel(updatedItem);
     }
-    res.redirect(`/official-travel/${req.params.id}`);
+
+    res.redirect(`/official-travel/${req.params.id}${notice ? `?notice=${notice}` : ''}`);
   } catch (error) {
     console.error('Error updating official travel request:', error);
     const requesterGroup = await resolveRequesterGroup(req);
@@ -531,12 +603,28 @@ exports.submit = async (req, res) => {
     if (current.status === 'cancelled') {
       return res.status(400).send('ไม่สามารถส่งคำขอไปราชการที่ถูกยกเลิกแล้ว');
     }
+    if (current.status !== 'draft') {
+      return res.status(400).send('ส่งคำขอไปราชการได้เฉพาะรายการที่ยังเป็นร่างเท่านั้น');
+    }
+
     await officialTravelRequestModel.submit(req.params.id, req.session?.user);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
+
+    let notice = 'submitted';
     if (item) {
       await workflowNotificationService.notifyTravelSubmitted(item);
+
+      try {
+        const vehicleResult = await ensureVehicleRequestSubmitted(item, req.session?.user);
+        if (vehicleResult.submitted && vehicleResult.vehicleRequest) {
+          await workflowNotificationService.notifyVehicleSubmitted(vehicleResult.vehicleRequest);
+          notice = 'submitted_with_vehicle';
+        }
+      } catch (vehicleError) {
+        console.error('Error auto-submitting linked vehicle request:', vehicleError);
+      }
     }
-    res.redirect(`/official-travel/${req.params.id}`);
+    res.redirect(`/official-travel/${req.params.id}?notice=${notice}`);
   } catch (error) {
     console.error('Error submitting official travel request:', error);
     res.status(500).send('ไม่สามารถส่งคำขอไปราชการได้');
@@ -611,6 +699,36 @@ exports.cancel = async (req, res) => {
 
     console.error('Error cancelling official travel request:', error);
     res.status(500).send('ไม่สามารถยกเลิกคำขอไปราชการได้');
+  }
+};
+
+exports.delete = async (req, res) => {
+  try {
+    await officialTravelRequestModel.remove(req.params.id, { force: true });
+    try {
+      await gitgumTravelSyncService.removeTravel(req.params.id);
+    } catch (syncError) {
+      console.error('Error removing deleted travel request from activity sync:', syncError);
+    }
+    res.redirect('/official-travel?notice=deleted');
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+
+    try {
+      const item = await officialTravelRequestModel.getDetailById(req.params.id);
+      if (item) {
+        return renderDetail(res.status(400), item, {
+          error: buildDeleteErrorMessage(error)
+        });
+      }
+    } catch (detailError) {
+      console.error('Error reloading travel request after delete failure:', detailError);
+    }
+
+    console.error('Error deleting official travel request:', error);
+    res.status(500).send('ไม่สามารถลบคำขอไปราชการได้');
   }
 };
 

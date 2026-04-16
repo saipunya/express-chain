@@ -1,11 +1,11 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'travel-create' }) %>
 
 <div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
   <div>
     <h3 class="mb-1"><%= title %></h3>
     <p class="text-muted mb-0">บันทึกข้อมูลคำขอไปราชการตามแบบฟอร์มของหน่วยงาน</p>
   </div>
-  <a href="/official-travel" class="btn btn-outline-secondary">ย้อนกลับ</a>
 </div>
 
 <% if (error) { %>

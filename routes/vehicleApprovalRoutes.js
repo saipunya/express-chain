@@ -1,10 +1,10 @@
 const express = require('express');
 const controller = require('../controllers/vehicleApprovalController');
-const { requireLevel } = require('../middlewares/authMiddleware');
+const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.use(requireLevel(['admin', 'kjs']));
+router.use(requireLogin, requireLevel(['admin', 'kjs']));
 
 router.get('/pending', controller.pending);
 router.get('/travel/:id', controller.travelDetail);

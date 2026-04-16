@@ -22,11 +22,29 @@ exports.requireLogin = (req, res, next) => {
     next();
   };
   
+  function hasRequiredLevel(user, requiredLevel) {
+    if (!user) {
+      return false;
+    }
+
+    const allowedLevels = Array.isArray(requiredLevel) ? requiredLevel : [requiredLevel];
+    const userLevels = [user.mClass, user.m_class, user.level]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+    return userLevels.some((level) => allowedLevels.includes(level));
+  }
+
   exports.requireLevel = (requiredLevel) => {
     return (req, res, next) => {
-      if (!req.session.user || !requiredLevel.includes(req.session.user.mClass)) {
+      if (!req.session.user) {
+        return res.redirect('/auth/login');
+      }
+
+      if (!hasRequiredLevel(req.session.user, requiredLevel)) {
         return res.render('requireLevel', { title: 'ไม่ได้เข้าหน้านี้' }); 
       }
+
       next();
     };
   };
@@ -55,4 +73,3 @@ exports.requireLogin = (req, res, next) => {
 
 // ลบ module.exports ตัวเดิมออกแล้วใช้ตัวเดียวกับ requireLogin
 exports.isAuth = exports.requireLogin;
-

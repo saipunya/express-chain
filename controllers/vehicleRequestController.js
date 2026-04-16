@@ -1,6 +1,5 @@
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
 const vehicleRequestModel = require('../models/vehicleRequestModel');
-const { generateRunningNumber } = require('../services/runningNumberService');
 const workflowNotificationService = require('../services/workflowNotificationService');
 
 function toDateInput(value) {
@@ -101,6 +100,19 @@ async function validateTravelRequestSelection(travelRequestId, currentVehicleReq
   }
 
   return null;
+}
+
+async function resolveVehicleRequestNoByTravelRequestId(travelRequestId, fallback = '') {
+  if (!travelRequestId) {
+    return fallback;
+  }
+
+  const travelRequest = await officialTravelRequestModel.getById(travelRequestId);
+  if (!travelRequest?.request_no) {
+    throw new Error('ไม่พบเลขที่คำขอไปราชการที่เลือก');
+  }
+
+  return travelRequest.request_no;
 }
 
 function mapBody(req) {
@@ -237,7 +249,7 @@ exports.createForm = async (req, res) => {
     }
 
     const item = {
-      vehicle_request_no: await generateRunningNumber('vehicle_requests', requestDate),
+      vehicle_request_no: selectedTravel?.request_no || '',
       request_date: requestDate.toISOString().slice(0, 10),
       learn_to: 'สหกรณ์จังหวัดชัยภูมิ',
       travel_request_id: selectedTravel?.id || '',
@@ -264,7 +276,7 @@ exports.createForm = async (req, res) => {
         title: 'สร้างคำขอใช้รถราชการ',
         formAction: '/vehicle-request/create',
         item: {
-          vehicle_request_no: await generateRunningNumber('vehicle_requests', requestDate),
+          vehicle_request_no: '',
           request_date: requestDate.toISOString().slice(0, 10),
           learn_to: 'สหกรณ์จังหวัดชัยภูมิ',
           passenger_count: 1,
@@ -287,14 +299,24 @@ exports.create = async (req, res) => {
       throw new Error(validationError);
     }
 
-    const id = await vehicleRequestModel.create(mapBody(req));
+    const vehicleRequestNo = await resolveVehicleRequestNoByTravelRequestId(req.body.travel_request_id);
+    const id = await vehicleRequestModel.create({
+      ...mapBody(req),
+      vehicle_request_no: vehicleRequestNo
+    });
     res.redirect(`/vehicle-request/${id}`);
   } catch (error) {
     console.error('Error creating vehicle request:', error);
     await renderForm(res, {
       title: 'สร้างคำขอใช้รถราชการ',
       formAction: '/vehicle-request/create',
-      item: req.body,
+      item: {
+        ...req.body,
+        vehicle_request_no: req.body.travel_request_id
+          ? await resolveVehicleRequestNoByTravelRequestId(req.body.travel_request_id, req.body.vehicle_request_no || '')
+              .catch(() => req.body.vehicle_request_no || '')
+          : req.body.vehicle_request_no || ''
+      },
       error: error.message || 'บันทึกคำขอใช้รถไม่สำเร็จ',
       submitLabel: 'บันทึกร่าง'
     });
@@ -351,9 +373,10 @@ exports.update = async (req, res) => {
       throw new Error(validationError);
     }
 
+    const vehicleRequestNo = await resolveVehicleRequestNoByTravelRequestId(req.body.travel_request_id, current.vehicle_request_no);
     await vehicleRequestModel.update(req.params.id, {
       ...mapBody(req),
-      vehicle_request_no: current.vehicle_request_no,
+      vehicle_request_no: vehicleRequestNo,
       status: current.status
     });
     res.redirect(`/vehicle-request/${req.params.id}`);
@@ -362,7 +385,13 @@ exports.update = async (req, res) => {
     await renderForm(res, {
       title: 'แก้ไขคำขอใช้รถราชการ',
       formAction: `/vehicle-request/${req.params.id}/edit`,
-      item: req.body,
+      item: {
+        ...req.body,
+        vehicle_request_no: req.body.travel_request_id
+          ? await resolveVehicleRequestNoByTravelRequestId(req.body.travel_request_id, req.body.vehicle_request_no || '')
+              .catch(() => req.body.vehicle_request_no || '')
+          : req.body.vehicle_request_no || ''
+      },
       error: error.message || 'บันทึกการแก้ไขไม่สำเร็จ',
       submitLabel: 'บันทึกการแก้ไข'
     });

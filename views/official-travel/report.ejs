@@ -1,11 +1,11 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'travel-report' }) %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">รายงานคำขอไปราชการ</h3>
     <p class="text-muted mb-0">สรุปคำขอไปราชการและการเชื่อมโยงไปยังคำขอใช้รถราชการ</p>
   </div>
-  <a href="/official-travel" class="btn btn-outline-secondary">กลับหน้ารายการ</a>
 </div>
 
 <% if (warning) { %>

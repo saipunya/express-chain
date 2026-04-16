@@ -483,6 +483,65 @@ async function cancel(id, user) {
   }
 }
 
+async function remove(id, options = {}) {
+  const force = options.force === true;
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[travelRequest]] = await connection.query(
+      `SELECT id
+       FROM official_travel_requests
+       WHERE id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!travelRequest) {
+      const error = new Error('NOT_FOUND');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    const [linkedVehicleRequests] = await connection.query(
+      `SELECT id, status
+       FROM vehicle_requests
+       WHERE travel_request_id = ?
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!force && linkedVehicleRequests.some((request) => ['in_progress', 'completed'].includes(request.status))) {
+      const error = new Error('LINKED_VEHICLE_ACTIVE');
+      error.code = 'LINKED_VEHICLE_ACTIVE';
+      throw error;
+    }
+
+    const vehicleRequestIds = linkedVehicleRequests.map((request) => request.id);
+
+    if (vehicleRequestIds.length) {
+      await connection.query('DELETE FROM vehicle_trip_logs WHERE vehicle_request_id IN (?)', [vehicleRequestIds]);
+      await connection.query('DELETE FROM vehicle_assignments WHERE vehicle_request_id IN (?)', [vehicleRequestIds]);
+      await connection.query('DELETE FROM vehicle_requests WHERE id IN (?)', [vehicleRequestIds]);
+    }
+
+    await connection.query('DELETE FROM official_travel_companions WHERE travel_request_id = ?', [id]);
+    await connection.query('DELETE FROM official_travel_requests WHERE id = ?', [id]);
+
+    await connection.commit();
+    return {
+      id,
+      deletedVehicleRequestCount: vehicleRequestIds.length
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   cancel,
   create,
@@ -494,6 +553,7 @@ module.exports = {
   listPendingApproval,
   listApprovedInRange,
   listEligibleForVehicleRequest,
+  remove,
   approve,
   reject,
   submit,

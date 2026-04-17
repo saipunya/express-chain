@@ -49,6 +49,29 @@ async function renderVehicleDetail(res, item, overrides = {}) {
   });
 }
 
+exports.dashboard = async (req, res) => {
+  try {
+    const { travelItems, vehicleItems } = await loadPendingCounts();
+    res.render('vehicle-approval/dashboard', {
+      title: 'แดชบอร์ดอนุมัติคำขอ',
+      travelItems,
+      vehicleItems,
+      warning: null
+    });
+  } catch (error) {
+    if (isMissingWorkflowTable(error)) {
+      return res.render('vehicle-approval/dashboard', {
+        title: 'แดชบอร์ดอนุมัติคำขอ',
+        travelItems: [],
+        vehicleItems: [],
+        warning: 'ยังไม่พบตาราง workflow สำหรับคิวอนุมัติในฐานข้อมูล กรุณารัน migration ก่อนจึงจะใช้งานหน้านี้ได้เต็มรูปแบบ'
+      });
+    }
+    console.error('Error loading approval dashboard:', error);
+    res.status(500).send('ไม่สามารถโหลดแดชบอร์ดอนุมัติได้');
+  }
+};
+
 exports.pending = async (req, res) => {
   try {
     const { travelItems, vehicleItems } = await loadPendingCounts();

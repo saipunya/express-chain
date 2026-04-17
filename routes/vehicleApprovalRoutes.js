@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.use(requireLogin, requireLevel(['admin', 'kjs', 'pbt']));
 
+router.get('/dashboard', controller.dashboard);
 router.get('/pending', controller.pending);
 router.get('/travel/:id', controller.travelDetail);
 router.post('/travel/:id/approve', controller.approveTravel);

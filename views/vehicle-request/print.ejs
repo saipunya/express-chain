@@ -3,30 +3,201 @@
 <head>
   <meta charset="UTF-8">
   <title>พิมพ์คำขอใช้รถราชการ</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: 'Sarabun', sans-serif; padding: 24px; }
-    .print-sheet { max-width: 800px; margin: 0 auto; }
-    @media print { .no-print { display: none; } }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #fff;
+      color: #111;
+    }
+
+    .print-sheet {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .document-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .document-header h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0.05em;
+    }
+
+    .document-header h2 {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .meta-table,
+    .field-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    .meta-table td,
+    .field-table td {
+      padding: 8px 6px;
+      vertical-align: top;
+      border-bottom: 1px dotted #999;
+    }
+
+    .meta-table .label,
+    .field-table .label {
+      width: 120px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .field-box {
+      border: 1px solid #333;
+      padding: 12px;
+      min-height: 116px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .field-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .field-value {
+      font-size: 15px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 20px 0 8px;
+    }
+
+    .signature-block {
+      margin-top: 36px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 24px;
+    }
+
+    .signature-item {
+      width: 260px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .signature-line {
+      border-bottom: 1px solid #000;
+      margin: 42px 0 8px;
+      height: 1px;
+    }
+
+    .no-print {
+      margin-bottom: 24px;
+      text-align: right;
+    }
+
+    @media print {
+      .no-print {
+        display: none;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .print-sheet {
+        box-shadow: none;
+        padding: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="print-sheet">
-    <div class="text-end no-print mb-3">
-      <button class="btn btn-dark" onclick="window.print()">พิมพ์</button>
+    <div class="no-print">
+      <button onclick="window.print()">พิมพ์</button>
     </div>
-    <h2 class="text-center mb-4">ใบขออนุญาตใช้รถส่วนกลาง</h2>
-    <p><strong>เลขที่</strong> <%= item.travel_request_no || item.vehicle_request_no %></p>
-    <p><strong>วันที่</strong> <%= new Date(item.request_date).toLocaleDateString('th-TH') %></p>
-    <p><strong>เรียน</strong> <%= item.learn_to || '-' %></p>
-    <p><strong>ผู้ขอใช้รถ</strong> <%= item.requester_name %> ตำแหน่ง <%= item.requester_position || '-' %></p>
-    <p><strong>ปลายทาง</strong> <%= item.destination_text %></p>
-    <p><strong>ภารกิจ</strong> <%= item.mission_text %></p>
-    <p><strong>จำนวนผู้โดยสาร</strong> <%= item.passenger_count %> คน</p>
-    <p><strong>วันที่ปฏิบัติงาน</strong> <%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></p>
-    <div class="mt-5 text-end">
-      <p>ลงชื่อ ................................................ ผู้ขอใช้รถ</p>
-      <p>(<%= item.requester_name %>)</p>
+
+    <div class="document-header">
+      <h1>บันทึกข้อความ</h1>
+      <h2>เรื่อง ขออนุญาตใช้รถส่วนกลาง</h2>
+    </div>
+
+    <table class="meta-table">
+      <tr>
+        <td class="label">เลขที่</td>
+        <td><%= item.travel_request_no || item.vehicle_request_no || '-' %></td>
+        <td class="label">วันที่</td>
+        <td><%= item.request_date ? new Date(item.request_date).toLocaleDateString('th-TH') : '-' %></td>
+      </tr>
+      <tr>
+        <td class="label">เรียน</td>
+        <td colspan="3"><%= item.learn_to || '-' %></td>
+      </tr>
+    </table>
+
+    <div class="two-column">
+      <div class="field-box">
+        <strong>ผู้ขอใช้รถ</strong>
+        <div class="field-value"><%= item.requester_name || '-' %></div>
+      </div>
+      <div class="field-box">
+        <strong>ตำแหน่ง</strong>
+        <div class="field-value"><%= item.requester_position || '-' %></div>
+      </div>
+      <div class="field-box">
+        <strong>ปลายทาง</strong>
+        <div class="field-value"><%= item.destination_text || '-' %></div>
+      </div>
+      <div class="field-box">
+        <strong>จำนวนผู้โดยสาร</strong>
+        <div class="field-value"><%= typeof item.passenger_count !== 'undefined' ? item.passenger_count : '-' %> คน</div>
+      </div>
+    </div>
+
+    <div class="two-column">
+      <div class="field-box">
+        <strong>วันที่ปฏิบัติงาน</strong>
+        <div class="field-value"><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '-' %></div>
+      </div>
+      <div class="field-box">
+        <strong>เวลาที่ใช้รถ</strong>
+        <div class="field-value"><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %> - <%= item.trip_end_at ? new Date(item.trip_end_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">ภารกิจ / เหตุผล</div>
+      <div class="field-box" style="border-color: transparent; padding: 0; min-height: auto;">
+        <div class="field-value"><%= item.mission_text || '-' %></div>
+      </div>
+    </div>
+
+    <div class="signature-block">
+      <div class="signature-item">
+        <div class="signature-line"></div>
+        <div>ลงชื่อผู้ขอใช้รถ</div>
+        <div>(<%= item.requester_name || '-' %>)</div>
+      </div>
     </div>
   </div>
 </body>

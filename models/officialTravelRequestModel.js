@@ -75,7 +75,16 @@ function mapPayload(payload) {
   };
 }
 
-async function listAll() {
+async function listAll(options = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (options.requesterMemberId) {
+    conditions.push('tr.requester_member_id = ?');
+    params.push(options.requesterMemberId);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const [rows] = await db.query(`
     SELECT tr.*, COALESCE(tc.companion_count, 0) AS companion_count,
            vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.status AS vehicle_request_status
@@ -86,8 +95,9 @@ async function listAll() {
       GROUP BY travel_request_id
     ) tc ON tc.travel_request_id = tr.id
     LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
+    ${whereClause}
     ORDER BY tr.request_date DESC, tr.id DESC
-  `);
+  `, params);
   return rows;
 }
 

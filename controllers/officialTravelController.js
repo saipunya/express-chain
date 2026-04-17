@@ -351,7 +351,12 @@ function defaultReportFilters(query = {}) {
 
 exports.list = async (req, res) => {
   try {
-    const items = await officialTravelRequestModel.listAll();
+    const user = req.session?.user;
+    const isPrivileged = user && (user.mClass === 'admin' || user.mClass === 'pbt');
+    const items = isPrivileged
+      ? await officialTravelRequestModel.listAll()
+      : await officialTravelRequestModel.listAll({ requesterMemberId: user?.id });
+
     res.render('official-travel/list', {
       title: 'รายการคำขอไปราชการ',
       items,

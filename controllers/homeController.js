@@ -9,7 +9,7 @@ const financeModel = require('../models/financeModel');
 const meetingRoomModel = require('../models/meetingRoomModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
-const UseCar = require('../models/usecarModel');
+const officialTravelRequestModel = require('../models/officialTravelRequestModel');
 const onlineModel = require('../models/onlineModel');
 const rabiabModel = require('../models/rabiabModel');
 const businessModel = require('../models/businessModel');
@@ -38,8 +38,11 @@ const homeController = {
       const ruleFiles = await ruleModel.getLastUploads();
       const rabiabFiles = await rabiabModel.getLastUploads();
       const businessFiles = await businessModel.getLastUploads(10);
-      const allUsecars = await UseCar.getAll() || [];
-      const usecars = allUsecars.slice(0, 5);
+      // ดึงเฉพาะรายการไปราชการที่ขอใช้รถยนต์ราชการและมี vehicle_request อนุมัติแล้ว
+      const vehicleRequestsRaw = await officialTravelRequestModel.listReport({});
+      // เงื่อนไข: ต้องมี vehicle_request_id, vehicle_request_status = 'approved' (หรือที่เหมาะสม)
+      const vehicleRequests = (vehicleRequestsRaw || []).filter(vr => vr.vehicle_request_id && (vr.vehicle_request_status === 'approved' || vr.vehicle_request_status === 'อนุมัติ'));
+      const vehicleRequestsShow = vehicleRequests.slice(0, 10); // แสดง 10 รายการล่าสุด
       const lastProjects = await Project.getLast(10);
       const lastRq2 = await Rq2.getLast(10);
       const lastCommands = await Command.getLast(10);
@@ -501,7 +504,7 @@ const homeController = {
         ruleFiles,
         rabiabFiles,
         businessFiles,
-        usecars,
+        vehicleRequests: vehicleRequestsShow,
         lastProjects,
         lastRq2,
         lastCommands,

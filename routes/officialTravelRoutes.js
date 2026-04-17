@@ -8,8 +8,8 @@ router.use(requireLogin);
 
 router.get('/', controller.list);
 router.get('/report', requireLevel(['admin', 'kjs', 'pbt']), controller.report);
-router.get('/settings/running-number', requireLevel(['admin', 'kjs', 'pbt']), controller.runningNumberSettingsForm);
-router.post('/settings/running-number', requireLevel(['admin', 'kjs', 'pbt']), controller.updateRunningNumberSettings);
+router.get('/settings/running-number', requireLevel(['admin', 'pbt']), controller.runningNumberSettingsForm);
+router.post('/settings/running-number', requireLevel(['admin', 'pbt']), controller.updateRunningNumberSettings);
 router.get('/create', controller.createForm);
 router.post('/create', controller.create);
 router.get('/:id', controller.viewOne);

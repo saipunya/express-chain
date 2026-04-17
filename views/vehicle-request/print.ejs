@@ -94,20 +94,38 @@
     .signature-block {
       margin-top: 36px;
       display: flex;
-      justify-content: flex-end;
-      gap: 24px;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
-    .signature-item {
-      width: 260px;
-      text-align: center;
+    .signature-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 560px;
+      gap: 12px;
       font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .signature-row span {
+      display: inline-block;
+      min-width: 90px;
+      text-align: center;
     }
 
     .signature-line {
+      flex: 1;
       border-bottom: 1px solid #000;
-      margin: 42px 0 8px;
       height: 1px;
+    }
+
+    .signature-name {
+      text-align: center;
+      font-size: 14px;
+      width: 100%;
+      max-width: 560px;
     }
 
     .no-print {
@@ -193,11 +211,12 @@
     </div>
 
     <div class="signature-block">
-      <div class="signature-item">
+      <div class="signature-row">
+        <span>ลงชื่อ</span>
         <div class="signature-line"></div>
-        <div>ลงชื่อผู้ขอใช้รถ</div>
-        <div>(<%= item.requester_name || '-' %>)</div>
+        <span>ผู้ขอใช้รถ</span>
       </div>
+      <div class="signature-name">(<%= item.requester_name || '-' %>)</div>
     </div>
   </div>
 </body>

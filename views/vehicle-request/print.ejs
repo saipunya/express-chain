@@ -155,17 +155,24 @@
       <button onclick="window.print()">พิมพ์</button>
     </div>
 
-    <div class="document-header">
-      <h1>บันทึกข้อความ</h1>
-      <h2>เรื่อง ขออนุญาตใช้รถส่วนกลาง</h2>
-    </div>
 
-    <table class="meta-table">
+    <div class="document-header">
+      <h1 style="font-size:32px;margin-bottom:8px;">บันทึกข้อความ</h1>
+    </div>
+    <table class="meta-table" style="margin-bottom:24px;">
       <tr>
-        <td class="label">เลขที่</td>
-        <td><%= item.travel_request_no || item.vehicle_request_no || '-' %></td>
+        <td class="label">ส่วนราชการ</td>
+        <td colspan="3">สำนักงาน/กลุ่มงาน/หน่วยงาน</td>
+      </tr>
+      <tr>
+        <td class="label">ที่</td>
+        <td style="width:180px"><%= item.vehicle_request_no || '-' %></td>
         <td class="label">วันที่</td>
         <td><%= item.request_date ? new Date(item.request_date).toLocaleDateString('th-TH') : '-' %></td>
+      </tr>
+      <tr>
+        <td class="label">เรื่อง</td>
+        <td colspan="3">ขออนุญาตใช้รถราชการ</td>
       </tr>
       <tr>
         <td class="label">เรียน</td>
@@ -173,40 +180,21 @@
       </tr>
     </table>
 
-    <div class="two-column">
-      <div class="field-box">
-        <strong>ผู้ขอใช้รถ</strong>
-        <div class="field-value"><%= item.requester_name || '-' %></div>
-      </div>
-      <div class="field-box">
-        <strong>ตำแหน่ง</strong>
-        <div class="field-value"><%= item.requester_position || '-' %></div>
-      </div>
-      <div class="field-box">
-        <strong>ปลายทาง</strong>
-        <div class="field-value"><%= item.destination_text || '-' %></div>
-      </div>
-      <div class="field-box">
-        <strong>จำนวนผู้โดยสาร</strong>
-        <div class="field-value"><%= typeof item.passenger_count !== 'undefined' ? item.passenger_count : '-' %> คน</div>
-      </div>
+    <div style="margin-bottom: 24px; font-size: 16px; line-height: 2.1;">
+      <span>ข้าพเจ้า <strong><%= item.requester_name || '-' %></strong> ตำแหน่ง <strong><%= item.requester_position || '-' %></strong></span>
+      <span>มีความประสงค์ขออนุญาตใช้รถราชการเพื่อ <strong><%= item.mission_text || '-' %></strong></span><br>
+      <span>ปลายทาง <strong><%= item.destination_text || '-' %></strong></span>
+      <span>ในวันที่ <strong><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '-' %></strong></span>
+      <span>เวลา <strong><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %> - <%= item.trip_end_at ? new Date(item.trip_end_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></strong></span>
+      <span>จำนวนผู้โดยสาร <strong><%= typeof item.passenger_count !== 'undefined' ? item.passenger_count : '-' %></strong> คน</span>
     </div>
 
-    <div class="two-column">
-      <div class="field-box">
-        <strong>วันที่ปฏิบัติงาน</strong>
-        <div class="field-value"><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '-' %></div>
-      </div>
-      <div class="field-box">
-        <strong>เวลาที่ใช้รถ</strong>
-        <div class="field-value"><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %> - <%= item.trip_end_at ? new Date(item.trip_end_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></div>
-      </div>
-    </div>
-
-    <div>
-      <div class="section-title">ภารกิจ / เหตุผล</div>
-      <div class="field-box" style="border-color: transparent; padding: 0; min-height: auto;">
-        <div class="field-value"><%= item.mission_text || '-' %></div>
+    <div style="margin-top: 48px; display: flex; flex-direction: column; align-items: flex-end;">
+      <div style="min-width: 320px; text-align: center;">
+        <div style="margin-bottom: 48px;">&nbsp;</div>
+        <div>ลงชื่อ....................................................</div>
+        <div>(<%= item.requester_name || '-' %>)</div>
+        <div style="margin-top: 4px;">ตำแหน่ง <%= item.requester_position || '-' %></div>
       </div>
     </div>
 

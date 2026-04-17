@@ -665,9 +665,26 @@ exports.printView = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
+    // Map official travel fields to vehicle-request/print fields
+    const mapped = {
+      vehicle_request_no: item.request_no,
+      requester_name: item.requester_name,
+      requester_position: item.requester_position,
+      destination_text: item.destination_text,
+      mission_text: item.purpose_text,
+      trip_start_at: item.start_at,
+      trip_end_at: item.end_at,
+      passenger_count: item.passenger_count,
+      learn_to: item.learn_to,
+      request_date: item.request_date,
+      department_name: item.department_name,
+      requester_group: item.requester_group,
+      subject: item.subject,
+      companions: item.companions,
+    };
     res.render('vehicle-request/print', {
       title: 'พิมพ์คำขอไปราชการ',
-      item,
+      item: mapped,
       layout: false
     });
   } catch (error) {

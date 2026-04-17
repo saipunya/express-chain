@@ -3,11 +3,7 @@ const vehicleRequestModel = require('../models/vehicleRequestModel');
 const DEFAULT_VEHICLE_LEARN_TO = 'สหกรณ์จังหวัดชัยภูมิ';
 
 function shouldAutoManageVehicleRequest(travelItem) {
-  return (
-    travelItem &&
-    travelItem.transport_type === 'official_vehicle' &&
-    Number(travelItem.requires_vehicle_request) === 1
-  );
+  return travelItem && travelItem.transport_type === 'official_vehicle';
 }
 
 function getPassengerCountFromTravel(travelItem) {
@@ -112,8 +108,32 @@ async function ensureVehicleRequestSubmitted(travelItem, user) {
   };
 }
 
+async function ensureVehicleRequestApproved(travelItem, user) {
+  const result = await ensureVehicleRequestDraft(travelItem, user);
+  if (!result.vehicleRequest) {
+    return { ...result, approved: false };
+  }
+
+  const vehicleRequest = result.vehicleRequest;
+  if (vehicleRequest.status === 'approved') {
+    return { ...result, approved: false, vehicleRequest };
+  }
+
+  if (vehicleRequest.status === 'draft') {
+    await vehicleRequestModel.submit(vehicleRequest.id, user);
+  }
+
+  await vehicleRequestModel.forceApprove(vehicleRequest.id, user, `อนุมัติพร้อมคำขอไปราชการ ${travelItem.request_no}`);
+  return {
+    ...result,
+    approved: true,
+    vehicleRequest: await vehicleRequestModel.getDetailById(vehicleRequest.id)
+  };
+}
+
 module.exports = {
   ensureVehicleRequestDraft,
   ensureVehicleRequestSubmitted,
+  ensureVehicleRequestApproved,
   shouldAutoManageVehicleRequest
 };

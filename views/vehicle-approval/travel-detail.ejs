@@ -34,9 +34,15 @@
       <div class="card-body">
         <% if (item.status === 'submitted') { %>
           <form action="/vehicle-approval/travel/<%= item.id %>/approve" method="POST" class="mb-3">
-            <label class="form-label">ความเห็น</label>
-            <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
-            <button type="submit" class="btn btn-success w-100">อนุมัติคำขอไปราชการ</button>
+            <div class="d-grid gap-2 mb-3">
+              <button type="submit" class="btn btn-success">อนุมัติทันที</button>
+              <button type="button" class="btn btn-outline-secondary" id="show-approval-comment">เพิ่มความเห็นเพิ่มเติม</button>
+            </div>
+            <div id="approval-comment-section" class="d-none">
+              <label class="form-label">ความเห็น</label>
+              <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
+              <button type="submit" class="btn btn-success w-100">อนุมัติพร้อมความเห็น</button>
+            </div>
           </form>
           <form action="/vehicle-approval/travel/<%= item.id %>/reject" method="POST">
             <label class="form-label">เหตุผลไม่อนุมัติ</label>
@@ -62,4 +68,19 @@
   </div>
 </div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleCommentBtn = document.getElementById('show-approval-comment');
+    const commentSection = document.getElementById('approval-comment-section');
+    if (toggleCommentBtn && commentSection) {
+      toggleCommentBtn.addEventListener('click', () => {
+        commentSection.classList.toggle('d-none');
+        if (!commentSection.classList.contains('d-none')) {
+          const textarea = commentSection.querySelector('textarea[name="approval_comment"]');
+          if (textarea) textarea.focus();
+        }
+      });
+    }
+  });
+</script>
 <%- include('../partials/footer') %>

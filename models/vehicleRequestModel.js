@@ -231,6 +231,28 @@ async function approve(id, user, approvalComment = null) {
   );
 }
 
+async function forceApprove(id, user, approvalComment = null) {
+  await db.query(
+    `UPDATE vehicle_requests
+     SET status = 'approved',
+         approved_at = NOW(),
+         approver_member_id = ?,
+         approver_name = ?,
+         approver_position = ?,
+         approval_comment = ?,
+         updated_by = ?
+     WHERE id = ?`,
+    [
+      user?.id || null,
+      user?.fullname || null,
+      user?.position || null,
+      approvalComment || null,
+      user?.fullname || user?.username || 'system',
+      id
+    ]
+  );
+}
+
 async function reject(id, user, approvalComment = null) {
   await db.query(
     `UPDATE vehicle_requests
@@ -264,5 +286,6 @@ module.exports = {
   listPendingApproval,
   reject,
   submit,
-  update
+  update,
+  forceApprove
 };

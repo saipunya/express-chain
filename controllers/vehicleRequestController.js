@@ -91,7 +91,10 @@ async function validateTravelRequestSelection(travelRequestId, currentVehicleReq
     return 'ไม่พบคำขอไปราชการที่เลือก';
   }
 
-  if (Number(travelRequest.requires_vehicle_request) !== 1) {
+  if (
+    Number(travelRequest.requires_vehicle_request) !== 1 &&
+    travelRequest.transport_type !== 'official_vehicle'
+  ) {
     return 'คำขอไปราชการนี้ไม่ได้ระบุว่าต้องใช้รถราชการ';
   }
 

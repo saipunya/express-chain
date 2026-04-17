@@ -5,6 +5,7 @@ const driverMasterModel = require('../models/driverMasterModel');
 const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
 const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
+const { ensureVehicleRequestApproved } = require('../services/travelVehicleRequestService');
 
 function isMissingWorkflowTable(error) {
   return error && error.code === 'ER_NO_SUCH_TABLE';
@@ -98,6 +99,12 @@ exports.approveTravel = async (req, res) => {
         'อนุมัติ',
         req.session?.user?.fullname || req.session?.user?.username || 'system'
       );
+
+      try {
+        await ensureVehicleRequestApproved(item, req.session?.user);
+      } catch (vehicleError) {
+        console.error('Error auto-approving linked vehicle request:', vehicleError);
+      }
     }
     res.redirect(`/vehicle-approval/travel/${req.params.id}`);
   } catch (error) {

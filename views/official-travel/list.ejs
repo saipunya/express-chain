@@ -74,8 +74,7 @@
                   <small class="text-muted"><%= item.vehicle_request_status || '-' %></small>
                 </a>
               <% } else { %>
-                <div class="text-danger small mb-1">ยังไม่สร้างคำขอใช้รถ</div>
-                <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-sm btn-outline-primary">สร้างคำขอใช้รถ</a>
+                <div class="text-danger small mb-1">รอการสร้างคำขอใช้รถอัตโนมัติ</div>
               <% } %>
             </td>
             <td>

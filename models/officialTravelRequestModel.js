@@ -314,7 +314,10 @@ async function listEligibleForVehicleRequest() {
     LEFT JOIN vehicle_requests vr ON vr.travel_request_id = tr.id
     WHERE vr.id IS NULL
       AND tr.status IN ('draft', 'submitted', 'approved')
-      AND tr.requires_vehicle_request = 1
+      AND (
+        tr.transport_type = 'official_vehicle'
+        OR tr.requires_vehicle_request = 1
+      )
     ORDER BY tr.request_date DESC, tr.id DESC
   `);
   return rows;

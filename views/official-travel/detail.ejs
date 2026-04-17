@@ -10,9 +10,7 @@
     <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
       <a href="/vehicle-approval/travel/<%= item.id %>" class="btn btn-outline-primary">พิจารณา</a>
     <% } %>
-    <% if (item.status !== 'cancelled' && Number(item.requires_vehicle_request) === 1 && !item.vehicleRequest) { %>
-      <a href="/vehicle-request/create?travelId=<%= item.id %>" class="btn btn-primary">สร้างคำขอใช้รถ</a>
-    <% } else if (item.vehicleRequest) { %>
+    <% if (item.vehicleRequest) { %>
       <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">ดูคำขอใช้รถ</a>
     <% } %>
     <a href="/export/travel-request/<%= item.id %>" target="_blank" class="btn btn-outline-dark">PDF</a>

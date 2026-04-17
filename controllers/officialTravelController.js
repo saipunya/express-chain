@@ -665,7 +665,7 @@ exports.printView = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
-    res.render('official-travel/print', {
+    res.render('vehicle-request/print', {
       title: 'พิมพ์คำขอไปราชการ',
       item,
       layout: false

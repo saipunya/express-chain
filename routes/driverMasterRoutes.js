@@ -4,7 +4,7 @@ const { requireLevel } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.use(requireLevel(['admin', 'kjs']));
+router.use(requireLevel(['admin', 'kjs', 'pbt']));
 
 router.get('/', controller.list);
 router.get('/create', controller.createForm);

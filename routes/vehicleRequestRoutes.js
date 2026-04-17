@@ -7,7 +7,7 @@ const router = express.Router();
 router.use(requireLogin);
 
 router.get('/', controller.list);
-router.get('/report', requireLevel(['admin', 'kjs']), controller.report);
+router.get('/report', requireLevel(['admin', 'kjs', 'pbt']), controller.report);
 router.get('/create', controller.createForm);
 router.post('/create', controller.create);
 router.get('/:id', controller.viewOne);

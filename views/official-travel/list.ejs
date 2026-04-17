@@ -7,7 +7,7 @@
     <p class="text-muted mb-0">จัดการคำขอไปราชการและเชื่อมข้อมูลไปยังปฏิทินกิจกรรม</p>
   </div>
   <div class="d-flex gap-2">
-    <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+    <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs' || user.mClass === 'pbt')) { %>
       <a href="/official-travel/settings/running-number" class="btn btn-outline-secondary">
         <i class="bi bi-123 me-1"></i> ตั้งค่าเลขที่
       </a>
@@ -86,7 +86,7 @@
               <% if (item.status !== 'cancelled') { %>
                 <a href="/official-travel/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
               <% } %>
-              <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs')) { %>
+              <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs' || user.mClass === 'pbt')) { %>
                 <form
                   action="/official-travel/<%= item.id %>/delete"
                   method="POST"

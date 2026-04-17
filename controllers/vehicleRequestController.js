@@ -125,7 +125,7 @@ function mapBody(req) {
   return {
     travel_request_id: req.body.travel_request_id,
     vehicle_request_no: req.body.vehicle_request_no,
-    request_date: req.body.request_date,
+    request_date: new Date().toISOString().slice(0, 10),
     learn_to: req.body.learn_to,
     requester_member_id: user.id || null,
     requester_name: req.body.requester_name,

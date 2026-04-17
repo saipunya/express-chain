@@ -102,14 +102,15 @@
             <button type="submit" class="btn btn-outline-danger w-100">ยกเลิกคำขอไปราชการ</button>
           </form>
         <% } %>
-
-        <% if (canDelete) { %>
-          <form
-            action="/official-travel/<%= item.id %>/delete"
-            method="POST"
-            onsubmit="return confirm('ยืนยันลบข้อมูลทดสอบนี้ถาวร? ระบบจะลบคำขอไปราชการ คำขอใช้รถ ผู้ร่วมเดินทาง การมอบหมายรถ และบันทึกเดินรถที่เกี่ยวข้องทั้งหมด');">
-            <button type="submit" class="btn btn-danger w-100">ลบข้อมูลทดสอบ</button>
-          </form>
+        <% if(user && user.mClass === 'admin') { %>
+          <% if (canDelete) { %>
+            <form
+              action="/official-travel/<%= item.id %>/delete"
+              method="POST"
+              onsubmit="return confirm('ยืนยันลบข้อมูลทดสอบนี้ถาวร? ระบบจะลบคำขอไปราชการ คำขอใช้รถ ผู้ร่วมเดินทาง การมอบหมายรถ และบันทึกเดินรถที่เกี่ยวข้องทั้งหมด');">
+              <button type="submit" class="btn btn-danger w-100">ลบข้อมูลทดสอบ</button>
+            </form>
+          <% } %>
         <% } %>
 
         <% if (item.vehicleRequest) { %>

@@ -4,7 +4,7 @@ const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.use(requireLogin, requireLevel(['admin', 'kjs', 'pbt']));
+router.use(requireLogin, requireLevel(['admin', 'pbt']));
 
 router.get('/dashboard', controller.dashboard);
 router.get('/pending', controller.pending);

@@ -86,7 +86,7 @@
               <% if (item.status !== 'cancelled') { %>
                 <a href="/official-travel/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
               <% } %>
-              <% if (user && (user.mClass === 'admin' || user.mClass === 'kjs' || user.mClass === 'pbt')) { %>
+              <% if (user && (user.mClass === 'admin' || user.mClass === 'pbt')) { %>
                 <form
                   action="/official-travel/<%= item.id %>/delete"
                   method="POST"

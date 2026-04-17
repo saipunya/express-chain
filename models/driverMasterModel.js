@@ -73,10 +73,15 @@ async function update(id, payload) {
   );
 }
 
+async function remove(id) {
+  await db.query('DELETE FROM driver_masters WHERE id = ?', [id]);
+}
+
 module.exports = {
   create,
   getById,
   listAll,
-  listActive
-  ,update
+  listActive,
+  update,
+  delete: remove
 };

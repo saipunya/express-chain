@@ -1,11 +1,15 @@
 <%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'vehicle' }) %>
 
 <div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
   <div>
     <h3 class="mb-1"><%= title %></h3>
     <p class="text-muted mb-0">บันทึกข้อมูลรถที่ใช้ในระบบขอใช้รถราชการ</p>
   </div>
-  <a href="/vehicle-master" class="btn btn-outline-secondary">ย้อนกลับ</a>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/driver-master" class="btn btn-outline-primary">ทะเบียนคนขับ</a>
+    <a href="/vehicle-master" class="btn btn-outline-secondary">ย้อนกลับ</a>
+  </div>
 </div>
 
 <% if (error) { %>

@@ -11,5 +11,6 @@ router.get('/create', controller.createForm);
 router.post('/create', controller.create);
 router.get('/:id/edit', controller.editForm);
 router.post('/:id/edit', controller.update);
+router.post('/:id/delete', controller.delete);
 
 module.exports = router;

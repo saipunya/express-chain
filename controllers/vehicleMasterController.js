@@ -115,3 +115,13 @@ exports.update = async (req, res) => {
     });
   }
 };
+
+exports.delete = async (req, res) => {
+  try {
+    await vehicleMasterModel.delete(req.params.id);
+    res.redirect('/vehicle-master');
+  } catch (error) {
+    console.error('Error deleting vehicle master:', error);
+    res.status(500).send('ไม่สามารถลบข้อมูลรถได้');
+  }
+};

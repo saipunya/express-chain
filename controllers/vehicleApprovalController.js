@@ -78,9 +78,22 @@ exports.travelDetail = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
+
+    let vehicles = [];
+    let drivers = [];
+    if (item.vehicleRequest) {
+      [vehicles, drivers] = await Promise.all([
+        vehicleMasterModel.listActive(),
+        driverMasterModel.listActive()
+      ]);
+    }
+
     res.render('vehicle-approval/travel-detail', {
       title: 'พิจารณาคำขอไปราชการ',
-      item
+      item,
+      vehicles,
+      drivers,
+      assignmentSelection: buildAssignmentSelection(item)
     });
   } catch (error) {
     console.error('Error loading travel approval detail:', error);
@@ -92,20 +105,77 @@ exports.approveTravel = async (req, res) => {
   try {
     await officialTravelRequestModel.approve(req.params.id, req.session?.user, req.body.approval_comment);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
-    if (item) {
-      await gitgumTravelSyncService.syncApprovedTravel(item);
-      await workflowNotificationService.notifyTravelDecision(
-        item,
-        'อนุมัติ',
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
-      );
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+
+    await gitgumTravelSyncService.syncApprovedTravel(item);
+    await workflowNotificationService.notifyTravelDecision(
+      item,
+      'อนุมัติ',
+      req.session?.user?.fullname || req.session?.user?.username || 'system'
+    );
+
+    if (item.vehicleRequest) {
+      const updatedVehicleRequest = await ensureVehicleRequestApproved(item, req.session?.user);
+      let vehicleReq = updatedVehicleRequest.vehicleRequest;
 
       try {
-        await ensureVehicleRequestApproved(item, req.session?.user);
+        const selectedVehicleId = req.body.vehicle_id;
+        const selectedDriverId = req.body.driver_id;
+        const assignmentNote = req.body.assignment_note || null;
+
+        if (selectedVehicleId && selectedDriverId) {
+          const [vehicles, drivers] = await Promise.all([
+            vehicleMasterModel.listActive(),
+            driverMasterModel.listActive()
+          ]);
+          const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(selectedVehicleId));
+          const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(selectedDriverId));
+
+          if (!selectedVehicle || !selectedDriver) {
+            throw new Error('กรุณาเลือกรถและคนขับให้ถูกต้อง');
+          }
+
+          const overlapping = await vehicleAssignmentModel.findOverlappingAssignment(
+            selectedVehicle.id,
+            vehicleReq.trip_start_at,
+            vehicleReq.trip_end_at,
+            vehicleReq.id
+          );
+
+          if (overlapping) {
+            throw new Error(`รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`);
+          }
+
+          await vehicleAssignmentModel.upsertAssignment({
+            vehicle_request_id: vehicleReq.id,
+            vehicle_id: selectedVehicle.id,
+            driver_id: selectedDriver.id,
+            assigned_by_member_id: req.session?.user?.id || null,
+            assignment_note: assignmentNote,
+            plate_no_snapshot: selectedVehicle.plate_no,
+            driver_name_snapshot: selectedDriver.driver_name,
+            updated_by: getActorName(req.session?.user)
+          });
+
+          const updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
+          const updatedVehicleRequestDetail = await vehicleRequestModel.getDetailById(vehicleReq.id);
+          await workflowNotificationService.notifyVehicleDecision(
+            updatedVehicleRequestDetail,
+            'อนุมัติ',
+            getActorName(req.session?.user)
+          );
+          await workflowNotificationService.notifyVehicleAssigned(
+            updatedVehicleRequestDetail,
+            getActorName(req.session?.user)
+          );
+        }
       } catch (vehicleError) {
-        console.error('Error auto-approving linked vehicle request:', vehicleError);
+        console.error('Error assigning vehicle after approving travel:', vehicleError);
       }
     }
+
     res.redirect(`/vehicle-approval/travel/${req.params.id}`);
   } catch (error) {
     console.error('Error approving travel request:', error);

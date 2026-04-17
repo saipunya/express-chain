@@ -34,15 +34,38 @@
       <div class="card-body">
         <% if (item.status === 'submitted') { %>
           <form action="/vehicle-approval/travel/<%= item.id %>/approve" method="POST" class="mb-3">
-            <div class="d-grid gap-2 mb-3">
-              <button type="submit" class="btn btn-success">อนุมัติทันที</button>
-              <button type="button" class="btn btn-outline-secondary" id="show-approval-comment">เพิ่มความเห็นเพิ่มเติม</button>
-            </div>
-            <div id="approval-comment-section" class="d-none">
-              <label class="form-label">ความเห็น</label>
-              <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
-              <button type="submit" class="btn btn-success w-100">อนุมัติพร้อมความเห็น</button>
-            </div>
+            <label class="form-label">ความเห็น</label>
+            <textarea class="form-control mb-2" name="approval_comment" rows="3"></textarea>
+
+            <% if (item.vehicleRequest) { %>
+              <div class="alert alert-info">
+                ระบบจะอนุมัติคำขอใช้รถที่เชื่อมอยู่พร้อมกัน หากเลือกรถและคนขับในฟอร์มด้านล่าง
+              </div>
+              <div class="mb-3">
+                <label class="form-label">เลือกรถ</label>
+                <select class="form-select" name="vehicle_id">
+                  <option value="">ไม่ระบุ</option>
+                  <% vehicles.forEach((vehicle) => { %>
+                    <option value="<%= vehicle.id %>" <%= Number(assignmentSelection.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">เลือกคนขับ</label>
+                <select class="form-select" name="driver_id">
+                  <option value="">ไม่ระบุ</option>
+                  <% drivers.forEach((driver) => { %>
+                    <option value="<%= driver.id %>" <%= Number(assignmentSelection.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">หมายเหตุการมอบหมาย</label>
+                <textarea class="form-control" name="assignment_note" rows="2"><%= assignmentSelection.assignment_note || '' %></textarea>
+              </div>
+            <% } %>
+
+            <button type="submit" class="btn btn-success w-100">อนุมัติคำขอไปราชการ</button>
           </form>
           <form action="/vehicle-approval/travel/<%= item.id %>/reject" method="POST">
             <label class="form-label">เหตุผลไม่อนุมัติ</label>
@@ -59,9 +82,21 @@
     <% if (item.vehicleRequest) { %>
       <div class="card shadow-sm border-0">
         <div class="card-header bg-white"><h5 class="mb-0">คำขอใช้รถที่เชื่อมไว้</h5></div>
-        <div class="card-body d-grid gap-2">
-          <a href="/vehicle-approval/request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">พิจารณาคำขอใช้รถ</a>
-          <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-secondary">ดูคำขอใช้รถ</a>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">เลขที่คำขอใช้รถ</dt>
+            <dd class="col-sm-7"><a href="/vehicle-approval/request/<%= item.vehicleRequest.id %>"><%= item.vehicleRequest.vehicle_request_no %></a></dd>
+            <dt class="col-sm-5">สถานะ</dt>
+            <dd class="col-sm-7"><span class="badge bg-<%= item.vehicleRequest.status === 'approved' ? 'success' : item.vehicleRequest.status === 'submitted' ? 'warning text-dark' : item.vehicleRequest.status === 'draft' ? 'secondary' : 'danger' %>"><%= item.vehicleRequest.status %></span></dd>
+            <dt class="col-sm-5">เริ่มเดินทาง</dt>
+            <dd class="col-sm-7"><%= new Date(item.vehicleRequest.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></dd>
+            <dt class="col-sm-5">สถานะการมอบหมาย</dt>
+            <dd class="col-sm-7"><%= item.vehicleRequest.plate_no_snapshot ? 'มอบหมายแล้ว' : 'ยังไม่มอบหมาย' %></dd>
+          </dl>
+          <div class="d-grid gap-2 mt-3">
+            <a href="/vehicle-approval/request/<%= item.vehicleRequest.id %>" class="btn btn-outline-primary">เปิดคำขอใช้รถ</a>
+            <a href="/vehicle-request/<%= item.vehicleRequest.id %>" class="btn btn-outline-secondary">ดูคำขอใช้รถ</a>
+          </div>
         </div>
       </div>
     <% } %>

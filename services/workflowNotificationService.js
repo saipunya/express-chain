@@ -100,11 +100,12 @@ function buildApprovalButton(label, pathname) {
   };
 }
 
-async function notifyTravelSubmitted(item) {
+async function notifyTravelSubmitted(item, vehicleRequested = false) {
   const approvalUrl = buildLoginRedirectUrl(`/vehicle-approval/travel/${item.id}`);
   const approvalLink = approvalUrl
     ? `<a href="${escapeHtml(approvalUrl)}">เปิดหน้าอนุมัติคำขอไปราชการ</a>`
     : '-';
+  const usesOfficialVehicle = vehicleRequested || item.transport_type === 'official_vehicle' || Number(item.requires_vehicle_request) === 1;
   return send({
     html: `
 <b>คำขอไปราชการส่งใหม่</b>
@@ -113,6 +114,7 @@ async function notifyTravelSubmitted(item) {
 ผู้ขอ: ${escapeHtml(item.requester_name)}
 ปลายทาง: ${escapeHtml(item.destination_text)}
 ช่วงเวลา: ${escapeHtml(formatDateTime(item.start_at))} ถึง ${escapeHtml(formatDateTime(item.end_at))}
+ใช้รถยนต์ราชการ: ${usesOfficialVehicle ? 'ใช่' : 'ไม่ใช่'}
 สถานะ: ${escapeHtml(item.status)}
 ${approvalLink}
   `,

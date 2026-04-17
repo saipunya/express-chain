@@ -54,9 +54,17 @@
         <label class="form-label">สถานที่ / ปลายทาง</label>
         <input type="text" class="form-control" name="destination_text" value="<%= item.destination_text || '' %>" required>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-3">
         <label class="form-label">วันที่ปฏิบัติงาน</label>
         <input type="date" class="form-control" name="operation_date" value="<%= item.operation_date || '' %>" required>
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">เวลาไป</label>
+        <input type="time" class="form-control" name="start_time" value="<%= item.start_time || '' %>">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">เวลากลับ</label>
+        <input type="time" class="form-control" name="end_time" value="<%= item.end_time || '' %>">
       </div>
       <div class="col-md-12">
         <label class="form-label">วัตถุประสงค์</label>

@@ -133,3 +133,13 @@ exports.update = async (req, res) => {
     });
   }
 };
+
+exports.delete = async (req, res) => {
+  try {
+    await driverMasterModel.delete(req.params.id);
+    res.redirect('/driver-master');
+  } catch (error) {
+    console.error('Error deleting driver master:', error);
+    res.status(500).send('ไม่สามารถลบข้อมูลคนขับได้');
+  }
+};

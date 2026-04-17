@@ -27,14 +27,29 @@ function toDateInput(value) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
 }
 
-function buildSingleDayRange(operationDate) {
+function toTimeInput(value) {
+  if (!value) {
+    return '';
+  }
+  if (value instanceof Date) {
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+  const str = String(value);
+  return str.slice(11, 16) || '';
+}
+
+function buildSingleDayRange(operationDate, startTime, endTime) {
   if (!operationDate) {
     return { start_at: null, end_at: null };
   }
 
+  const normalizedStart = startTime || '00:00';
+  const normalizedEnd = endTime || '23:59';
   return {
-    start_at: `${operationDate} 00:00:00`,
-    end_at: `${operationDate} 23:59:00`
+    start_at: `${operationDate} ${normalizedStart}:00`,
+    end_at: `${operationDate} ${normalizedEnd}:00`
   };
 }
 
@@ -166,7 +181,9 @@ async function resolveRequesterGroup(req, memberId = null) {
 async function mapBody(req) {
   const user = req.session?.user || {};
   const operationDate = req.body.operation_date || toDateInput(req.body.start_at);
-  const dateRange = buildSingleDayRange(operationDate);
+  const startTime = req.body.start_time || '00:00';
+  const endTime = req.body.end_time || '23:59';
+  const dateRange = buildSingleDayRange(operationDate, startTime, endTime);
   const { duration_days, duration_hours } = calculateDuration(dateRange.start_at, dateRange.end_at);
   return {
     request_no: req.body.request_no,
@@ -421,7 +438,11 @@ exports.createForm = async (req, res) => {
       transport_type: 'official_vehicle',
       out_of_province: 0,
       requires_vehicle_request: 1,
-      operation_date: requestDate.toISOString().slice(0, 10)
+      operation_date: requestDate.toISOString().slice(0, 10),
+      start_time: '08:00',
+      end_time: '17:00',
+      start_time: '08:00',
+      end_time: '17:00'
     };
     await renderForm(res, {
       title: 'สร้างคำขอไปราชการ',
@@ -524,6 +545,8 @@ exports.editForm = async (req, res) => {
     }
     item.requester_group = await resolveRequesterGroup(req, item.requester_member_id);
     item.operation_date = toDateInput(item.start_at);
+    item.start_time = toTimeInput(item.start_at);
+    item.end_time = toTimeInput(item.end_at);
     await renderForm(res, {
       title: 'แก้ไขคำขอไปราชการ',
       formAction: `/official-travel/${item.id}/edit`,
@@ -612,17 +635,17 @@ exports.submit = async (req, res) => {
 
     let notice = 'submitted';
     if (item) {
-      await workflowNotificationService.notifyTravelSubmitted(item);
-
+      let vehicleSubmitted = false;
       try {
         const vehicleResult = await ensureVehicleRequestSubmitted(item, req.session?.user);
         if (vehicleResult.submitted && vehicleResult.vehicleRequest) {
-          await workflowNotificationService.notifyVehicleSubmitted(vehicleResult.vehicleRequest);
+          vehicleSubmitted = true;
           notice = 'submitted_with_vehicle';
         }
       } catch (vehicleError) {
         console.error('Error auto-submitting linked vehicle request:', vehicleError);
       }
+      await workflowNotificationService.notifyTravelSubmitted(item, vehicleSubmitted);
     }
     res.redirect(`/official-travel/${req.params.id}?notice=${notice}`);
   } catch (error) {

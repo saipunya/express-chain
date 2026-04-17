@@ -5,7 +5,10 @@
     <h3 class="mb-1">ทะเบียนพนักงานขับรถ</h3>
     <p class="text-muted mb-0">จัดการรายชื่อคนขับที่จะใช้ตอนมอบหมายงาน</p>
   </div>
-  <a href="/driver-master/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> เพิ่มคนขับ</a>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/vehicle-master" class="btn btn-outline-primary">ทะเบียนรถ</a>
+    <a href="/driver-master/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> เพิ่มคนขับ</a>
+  </div>
 </div>
 
 <% if (warning) { %>
@@ -40,7 +43,12 @@
             <td>
               <span class="badge bg-<%= item.status === 'active' ? 'success' : 'secondary' %>"><%= item.status %></span>
             </td>
-            <td class="text-end"><a href="/driver-master/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a></td>
+            <td class="text-end">
+              <a href="/driver-master/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <form action="/driver-master/<%= item.id %>/delete" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('ยืนยันการลบคนขับนี้?');">ลบ</button>
+              </form>
+            </td>
           </tr>
         <% }) %>
       </tbody>

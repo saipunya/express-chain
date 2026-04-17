@@ -5,7 +5,10 @@
     <h3 class="mb-1">ทะเบียนรถราชการ</h3>
     <p class="text-muted mb-0">จัดการข้อมูลรถสำหรับใช้ในขั้นตอนมอบหมายงาน</p>
   </div>
-  <a href="/vehicle-master/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> เพิ่มรถ</a>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/driver-master" class="btn btn-outline-primary">ทะเบียนคนขับ</a>
+    <a href="/vehicle-master/create" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> เพิ่มรถ</a>
+  </div>
 </div>
 
 <% if (warning) { %>
@@ -41,7 +44,12 @@
               <% const badge = item.status === 'active' ? 'success' : item.status === 'maintenance' ? 'warning text-dark' : 'secondary'; %>
               <span class="badge bg-<%= badge %>"><%= item.status %></span>
             </td>
-            <td class="text-end"><a href="/vehicle-master/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a></td>
+            <td class="text-end">
+              <a href="/vehicle-master/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">แก้ไข</a>
+              <form action="/vehicle-master/<%= item.id %>/delete" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('ยืนยันการลบรถคันนี้?');">ลบ</button>
+              </form>
+            </td>
           </tr>
         <% }) %>
       </tbody>

@@ -28,7 +28,7 @@ const DEFAULTS = {
   subject: 'ขออนุมัติเดินทางไปราชการ',
   learnTo: 'ผู้ว่าราชการจังหวัดชัยภูมิ',
   closingText: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ',
-  opinionText: '-',
+  opinionText: '',
   approvalStatus: 'pending'
 };
 
@@ -93,6 +93,9 @@ function sanitizeText(value, fallback = '-') {
   const text = String(value ?? '').trim();
   return text || fallback;
 }
+// FIX START: Removed Thai word-break helper to avoid inserting invisible characters
+// Helper `insertThaiWordBreaks` removed per request — render original Thai text directly.
+// FIX END
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -160,7 +163,9 @@ function normalizeFormData(formData = {}) {
     closingText: sanitizeText(formData.closingText || DEFAULTS.closingText),
     signerName: sanitizeText(formData.signerName || formData.requesterName),
     signerPosition: sanitizeText(formData.signerPosition || formData.requesterPosition),
-    opinionText: sanitizeText(formData.opinionText || DEFAULTS.opinionText),
+    opinionText: formData.opinionText != null
+      ? sanitizeText(formData.opinionText, '')
+      : DEFAULTS.opinionText,
     approverName: sanitizeText(formData.approverName, ''),
     approverPosition: sanitizeText(formData.approverPosition, ''),
     approvalStatus: ['approved', 'rejected', 'pending'].includes(formData.approvalStatus)
@@ -245,32 +250,74 @@ function drawFieldRow(doc, state, options) {
 }
 
 function drawIndentedParagraph(doc, state, label, text) {
+  // FIX START: Use left alignment and tighter line/paragraph gaps for Thai text
   const x = PAGE_MARGIN.left;
   const width = state.contentWidth;
-  const indent = 34;
   const labelText = sanitizeText(label, '');
-  const contentText = sanitizeText(text);
+  const hasLabel = Boolean(labelText);
   const labelWidth = 72;
+  const indent = 34;
+  const contentText = sanitizeText(text);
+  const lineGap = 2; // within recommended 2-4
+  const paragraphGap = 8; // within recommended 6-10
 
   const paragraphHeight = doc.heightOfString(contentText, {
-    width: width - indent - labelWidth,
-    lineGap: 3
+    width: width - labelWidth - 4,
+    lineGap
   });
 
-  ensurePageSpace(doc, state, paragraphHeight + 18);
+  ensurePageSpace(doc, state, paragraphHeight + paragraphGap + 6);
 
-  setBodyFont(doc, true);
-  doc.text(labelText, x, state.cursorY, { width: labelWidth, lineGap: 4 });
+  if (hasLabel) {
+    setBodyFont(doc, true);
+    doc.text(labelText, x, state.cursorY, { width: labelWidth, lineGap: 3 });
+  }
 
   setBodyFont(doc);
   doc.text(contentText, x + labelWidth, state.cursorY, {
-    width: width - labelWidth,
-    align: 'justify',
-    lineGap: 3,
+    width: width - labelWidth - 4,
+    align: 'left',
+    lineGap,
     indent
   });
 
-  state.cursorY += paragraphHeight + 10;
+  state.cursorY += paragraphHeight + paragraphGap;
+  // FIX END
+}
+
+function drawFullParagraph(doc, state, text, options = {}) {
+  // FIX START: Force left alignment, constrain lineGap, add paragraphGap and slightly reduce width for better Thai wrapping
+  const left = typeof options.left === 'number' ? options.left : PAGE_MARGIN.left;
+  const indent = options.indent ?? 0;
+  const width = state.contentWidth - (left - PAGE_MARGIN.left) - 4;
+  const contentText = sanitizeText(text, '');
+  let lineGap = options.lineGap ?? 2;
+  lineGap = Math.max(2, Math.min(lineGap, 4));
+  const paragraphGap = options.paragraphGap ?? 8;
+  const align = 'left';
+
+  if (!contentText) {
+    return;
+  }
+
+  const paragraphHeight = doc.heightOfString(contentText, {
+    width,
+    lineGap,
+    indent
+  });
+
+  ensurePageSpace(doc, state, paragraphHeight + paragraphGap + 6);
+
+  setBodyFont(doc, false);
+  doc.text(contentText, left, state.cursorY, {
+    width,
+    lineGap,
+    align,
+    indent
+  });
+
+  state.cursorY += paragraphHeight + paragraphGap;
+  // FIX END
 }
 
 function drawSectionTitle(doc, state, title) {
@@ -281,34 +328,30 @@ function drawSectionTitle(doc, state, title) {
 }
 
 function drawCompanionRows(doc, state, companions) {
-  drawSectionTitle(doc, state, 'ผู้ร่วมเดินทาง');
+  drawSectionTitle(doc, state, 'พร้อมด้วย');
 
-  companions.forEach((companion, index) => {
+  companions.forEach((companion) => {
     ensurePageSpace(doc, state, 22);
 
     const x = PAGE_MARGIN.left;
     const y = state.cursorY;
-    const numberWidth = 24;
     const nameLabelWidth = 34;
     const positionLabelWidth = 52;
     const gap = 8;
-    const contentWidth = state.contentWidth - numberWidth;
-    const nameWidth = Math.floor(contentWidth * 0.54);
+    const contentWidth = state.contentWidth;
+    const nameWidth = Math.floor((contentWidth - nameLabelWidth - positionLabelWidth - gap) * 0.54);
     const positionWidth = contentWidth - nameWidth - nameLabelWidth - positionLabelWidth - gap;
 
-    setBodyFont(doc, false);
-    doc.text(`${index + 1}.`, x, y, { width: numberWidth });
-
     setBodyFont(doc, true);
-    doc.text('ชื่อ', x + numberWidth, y, { width: nameLabelWidth });
-    drawDottedRule(doc, x + numberWidth + nameLabelWidth, x + numberWidth + nameLabelWidth + nameWidth, y + 18);
+    doc.text('ชื่อ', x, y, { width: nameLabelWidth });
+    drawDottedRule(doc, x + nameLabelWidth, x + nameLabelWidth + nameWidth, y + 18);
 
     setBodyFont(doc, false);
-    doc.text(companion.name || ' ', x + numberWidth + nameLabelWidth + 4, y, {
+    doc.text(companion.name || ' ', x + nameLabelWidth + 4, y, {
       width: nameWidth - 8
     });
 
-    const positionX = x + numberWidth + nameLabelWidth + nameWidth + gap;
+    const positionX = x + nameLabelWidth + nameWidth + gap;
     setBodyFont(doc, true);
     doc.text('ตำแหน่ง', positionX, y, { width: positionLabelWidth });
     drawDottedRule(doc, positionX + positionLabelWidth, x + state.contentWidth, y + 18);
@@ -381,18 +424,11 @@ function renderHeader(doc, formData, state) {
 
   const rightX = x + leftWidth + columnGap;
   setBodyFont(doc, true);
-  doc.text('โทรศัพท์', rightX, lineStartY, { width: 54 });
+  doc.text('วันที่', rightX, lineStartY, { width: 54 });
   drawDottedRule(doc, rightX + 54, x + state.contentWidth, lineStartY + 18);
   setBodyFont(doc, false);
-  doc.text(formData.phone, rightX + 58, lineStartY, { width: rightWidth - 8 });
+  doc.text(formatDate(formData.date), rightX + 58, lineStartY, { width: rightWidth - 8 });
   state.cursorY += 24;
-
-  drawFieldRow(doc, state, {
-    label: 'วันที่',
-    value: formatDate(formData.date),
-    labelWidth: 52,
-    minHeight: 24
-  });
 
   drawFieldRow(doc, state, {
     label: 'เรื่อง',
@@ -412,17 +448,130 @@ function renderHeader(doc, formData, state) {
 }
 
 function renderBody(doc, formData, state) {
-  drawIndentedParagraph(
-    doc,
-    state,
-    'ข้าพเจ้า',
-    `${formData.requesterName} ตำแหน่ง ${formData.requesterPosition} สังกัด ${formData.requesterDepartment}`
-  );
+  // renderBody: intro/middle/closing handling follows below
+  // FIX START: Split body into three blocks (intro, middle, closing).
+  // - Intro: fixed at the 'เรียน' value column (preserve original Y)
+  // - Middle: expanded width to use more horizontal space, first-line indented
+  // - Closing: fixed at the original closing Y position so signature/approval not moved
 
-  drawCompanionRows(doc, state, formData.companions);
-  drawIndentedParagraph(doc, state, 'วัตถุประสงค์', formData.purpose);
-  drawPeriodAndTransport(doc, state, formData);
-  drawIndentedParagraph(doc, state, 'ลงท้าย', formData.closingText);
+  const labelWidthForLearn = 52; // matches header 'เรียน' labelWidth
+  const valueLeftX = PAGE_MARGIN.left + labelWidthForLearn + 4;
+
+
+
+  // Build parts
+const requesterPart = `ข้าพเจ้า ${sanitizeText(formData.requesterName, '')} ตำแหน่ง ${sanitizeText(formData.requesterPosition, '')} สังกัด ${sanitizeText(formData.requesterDepartment, '')}`;
+
+const companions = Array.isArray(formData.companions) ? formData.companions : [];
+const companionItems = companions
+  .map((c) => {
+    const name = sanitizeText(c?.name || '', '');
+    const pos = sanitizeText(c?.position || '', '');
+    return [name, pos].filter(Boolean).join(' ตำแหน่ง ');
+  })
+  .filter(Boolean);
+
+const companionsPart = companionItems.length
+  ? `พร้อมด้วย ${companionItems.join(', ')}`
+  : '';
+
+const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} กำหนดการเดินทาง สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
+
+
+
+  const closingPart = sanitizeText(formData.closingText, '');
+
+  // Prepare text with Thai break hints
+const introTextRaw = requesterPart;
+const middleTextRaw = [companionsPart, travelPart].filter(Boolean).join(' ');
+const fullMainRaw = [introTextRaw, middleTextRaw].filter(Boolean).join(' ');
+  const lineGap = 2;
+  const paragraphGap = 8;
+
+  // Original width used for intro/closing (same as previous behavior)
+  const originalWidth = state.contentWidth - (valueLeftX - PAGE_MARGIN.left) - 4;
+
+  // FIX START: Use original Thai text without inserting invisible separators
+  const introText = sanitizeText(introTextRaw, '');
+  const middleText = sanitizeText(middleTextRaw, '');
+  const fullMainText = sanitizeText(fullMainRaw, '');
+  const closingText = sanitizeText(closingPart, '');
+  // FIX END
+
+  // Measure original main block height so we can preserve closing Y
+  const originalMainHeight = doc.heightOfString(fullMainText, {
+    width: originalWidth,
+    lineGap
+  });
+
+  const closingHeight = doc.heightOfString(closingText, {
+    width: originalWidth,
+    lineGap
+  });
+
+  // Ensure page has space for the whole block (original main + closing)
+  ensurePageSpace(doc, state, originalMainHeight + paragraphGap + closingHeight + 6);
+
+  // Anchor positions
+  const introY = state.cursorY; // fixed Y for intro
+
+  // Intro: render at the 'เรียน' column using original width
+  setBodyFont(doc, false);
+  doc.text(introText, valueLeftX, introY, {
+    width: originalWidth,
+    lineGap,
+    align: 'left'
+  });
+
+  const introHeight = doc.heightOfString(introText, {
+    width: originalWidth,
+    lineGap
+  });
+
+  // Middle: attempt to render wider across the page while keeping first-line indent
+  const middleLeftX = PAGE_MARGIN.left + 2; // small inner margin
+  const middleWidth = Math.max(20, state.contentWidth - 4);
+  const middleIndent = Math.max(0, valueLeftX - middleLeftX); // keep first-line indent aligned with intro
+
+  let middleHeight = doc.heightOfString(middleText, {
+    width: middleWidth,
+    lineGap,
+    indent: middleIndent
+  });
+
+  // Amount of vertical space originally allocated to the main body after the intro
+  let allowedMiddleHeight = originalMainHeight - introHeight - paragraphGap;
+  if (allowedMiddleHeight < 0) allowedMiddleHeight = 0;
+
+  // If the expanded middle would overflow the original space, fall back to original width to avoid overlap
+ const middleY = introY + introHeight + 2;
+ 
+  // วาด middle เต็มหน้าเลย ไม่ต้อง fallback
+doc.text(middleText, middleLeftX, middleY, {
+  width: middleWidth,
+  lineGap,
+  align: 'left',
+  indent: 0
+});
+
+// คำนวณความสูงตาม width ใหม่
+middleHeight = doc.heightOfString(middleText, {
+  width: middleWidth,
+  lineGap,
+  indent: 0
+});
+
+  // Closing: keep at the same Y as the original layout (introY + originalMainHeight + paragraphGap)
+  const closingY = middleY + middleHeight + paragraphGap;
+  doc.text(closingText, valueLeftX, closingY, {
+    width: originalWidth,
+    lineGap,
+    align: 'left'
+  });
+
+  // Advance cursor to just after closing so signature/approval sections remain in place
+  state.cursorY = closingY + closingHeight + paragraphGap;
+  // FIX END
 }
 
 function renderSignature(doc, formData, state) {
@@ -480,9 +629,6 @@ function renderApprovalSection(doc, formData, state) {
 
   setBodyFont(doc, true);
   doc.text('ความเห็น / ผลการพิจารณา', x + 10, y + 8, { width: boxWidth - 20 });
-
-  setBodyFont(doc, true);
-  doc.text('ความเห็น', x + 10, y + 32, { width: 54 });
   setBodyFont(doc, false);
   doc.text(formData.opinionText, x + 64, y + 32, {
     width: opinionWidth,
@@ -496,14 +642,13 @@ function renderApprovalSection(doc, formData, state) {
   doc.text('ผลอนุมัติ', x + 10, dividerY + 10, { width: 54 });
 
   drawChoiceCircle(doc, x + 74, dividerY + 8, 'อนุมัติ', formData.approvalStatus === 'approved');
-  drawChoiceCircle(doc, x + 150, dividerY + 8, 'ไม่อนุมัติ', formData.approvalStatus === 'rejected');
-  drawChoiceCircle(doc, x + 244, dividerY + 8, 'รอพิจารณา', formData.approvalStatus === 'pending');
+  drawChoiceCircle(doc, x + 196, dividerY + 8, 'ไม่อนุมัติ', formData.approvalStatus === 'rejected');
 
   setBodyFont(doc, false);
   doc.text('ลงชื่อ', x + boxWidth - 220, dividerY + 24, { width: 34 });
   drawDottedRule(doc, x + boxWidth - 184, x + boxWidth - 12, dividerY + 42);
 
-  doc.text(`(${formData.approverName || ' '})`, x + boxWidth - 220, dividerY + 52, {
+  doc.text(`(..............................................................................)`, x + boxWidth - 220, dividerY + 52, {
     width: 208,
     align: 'center'
   });

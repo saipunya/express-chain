@@ -32,9 +32,44 @@
           if (isNaN(d)) return '-';
           const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
           return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+        }
+        function toIsoDateValue(value) {
+          if (!value) return '';
+          if (value instanceof Date) {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(value);
+          }
+          const s = String(value).trim();
+          const isoMatch = s.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})/);
+          if (isoMatch) {
+            let y = Number(isoMatch[1]);
+            const m = String(isoMatch[2]).padStart(2, '0');
+            const d = String(isoMatch[3]).padStart(2, '0');
+            if (y > 2500) y = y - 543;
+            return `${String(y).padStart(4, '0')}-${m}-${d}`;
+          }
+          const monthsMap = {
+            'มกราคม':1,'กุมภาพันธ์':2,'มีนาคม':3,'เมษายน':4,'พฤษภาคม':5,'มิถุนายน':6,
+            'กรกฎาคม':7,'สิงหาคม':8,'กันยายน':9,'ตุลาคม':10,'พฤศจิกายน':11,'ธันวาคม':12
+          };
+          const thaiMatch = s.match(/(\d{1,2})\s+([^\d\s]+)\s+(\d{4})/);
+          if (thaiMatch) {
+            const day = String(Number(thaiMatch[1])).padStart(2,'0');
+            const monthName = thaiMatch[2].trim();
+            let year = Number(thaiMatch[3]);
+            const mIndex = monthsMap[monthName];
+            if (mIndex) {
+              if (year > 2500) year = year - 543;
+              return `${String(year).padStart(4,'0')}-${String(mIndex).padStart(2,'0')}-${day}`;
+            }
+          }
+          const d = new Date(s);
+          if (!isNaN(d)) {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(d);
+          }
+          return s.slice(0,10);
         } %>
         <input type="text" class="form-control" value="<%= thaiDate(item.request_date) %>" readonly>
-        <input type="hidden" name="request_date" value="<%= item.request_date || '' %>">
+        <input type="hidden" name="request_date" value="<%= toIsoDateValue(item.request_date) %>">
       </div>
       <div class="col-md-6">
         <label class="form-label">เรียน</label>

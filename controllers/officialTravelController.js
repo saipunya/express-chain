@@ -145,7 +145,7 @@ function buildTravelRequestPdfFormData(item) {
     closingText: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ',
     signerName: item.requester_name || '-',
     signerPosition: item.requester_position || item.requester_group || '-',
-    opinionText: item.approval_comment || 'เห็นสมควรพิจารณาตามระเบียบที่เกี่ยวข้อง',
+    opinionText: item.approval_comment || '',
     approverName: item.approver_name || '',
     approverPosition: item.approver_position || '',
     approvalStatus: approvalStatusMap[item.status] || 'pending',

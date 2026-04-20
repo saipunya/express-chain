@@ -1,0 +1,59 @@
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
+      <p class="text-muted mb-0">แดชบอร์ดสรุปสถานะโปรโมชั่นและสถิติการใช้งานโค้ดทั้งหมด</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/promotion/admin/campaigns" class="btn btn-outline-primary btn-sm">Campaigns</a>
+      <a href="/promotion/admin/prizes" class="btn btn-outline-primary btn-sm">Prizes</a>
+      <a href="/promotion/admin/codes" class="btn btn-outline-primary btn-sm">Codes</a>
+      <a href="/promotion/admin/draws" class="btn btn-outline-primary btn-sm">Draws</a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Total Codes</div>
+        <div class="h3 fw-bold"><%= counts.total || 0 %></div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Unused</div>
+        <div class="h3 fw-bold"><%= counts.unused || 0 %></div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Drawn</div>
+        <div class="h3 fw-bold"><%= counts.drawn || 0 %></div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Claimed</div>
+        <div class="h3 fw-bold"><%= counts.claimed || 0 %></div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Declined</div>
+        <div class="h3 fw-bold"><%= counts.declined || 0 %></div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
+        <div class="text-muted small">Expired</div>
+        <div class="h3 fw-bold"><%= counts.expired || 0 %></div>
+      </div>
+    </div>
+  </div>
+
+</div>

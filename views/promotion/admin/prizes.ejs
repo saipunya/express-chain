@@ -1,0 +1,46 @@
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
+      <p class="text-muted mb-0">รายการของรางวัลพร้อมสถานะคงเหลือและแคมเปญ</p>
+    </div>
+    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+  </div>
+
+  <div class="card shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Prize</th>
+            <th>Campaign</th>
+            <th class="text-end">Remaining</th>
+            <th class="text-end">Reserved</th>
+            <th>Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (Array.isArray(prizes) && prizes.length) { %>
+            <% prizes.forEach(p => { %>
+              <tr>
+                <td><%= p.name %></td>
+                <td><%= p.campaign_name || '-' %></td>
+                <td class="text-end"><%= p.remaining_qty != null ? p.remaining_qty : '-' %></td>
+                <td class="text-end"><%= p.reserved_qty != null ? p.reserved_qty : '-' %></td>
+                <td>
+                  <% if (p.active) { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="5" class="text-center text-muted">No prizes found</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

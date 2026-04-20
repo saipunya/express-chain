@@ -1,0 +1,48 @@
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
+      <p class="text-muted mb-0">รายการแคมเปญทั้งหมดพร้อมข้อมูลร้านและสถานะ</p>
+    </div>
+    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+  </div>
+
+  <div class="card shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Campaign ID</th>
+            <th>Name</th>
+            <th>Store</th>
+            <th>Active</th>
+            <th>Start</th>
+            <th>End</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (Array.isArray(campaigns) && campaigns.length) { %>
+            <% campaigns.forEach(c => { %>
+              <tr>
+                <td><%= c.id %></td>
+                <td><%= c.name %></td>
+                <td><%= c.store_name ? (c.store_name + ' (' + (c.store_code||'') + ')') : '-' %></td>
+                <td>
+                  <% if (c.active) { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% } %>
+                </td>
+                <td><%= c.start_at ? new Date(c.start_at).toLocaleString() : '-' %></td>
+                <td><%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="6" class="text-center text-muted">No campaigns found</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

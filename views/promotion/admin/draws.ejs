@@ -1,0 +1,48 @@
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
+      <p class="text-muted mb-0">ประวัติการจับรางวัลทั้งหมดพร้อมสถานะการเคลมและปฏิเสธ</p>
+    </div>
+    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+  </div>
+
+  <div class="card shadow-sm rounded-4">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Code</th>
+            <th>Prize</th>
+            <th>Status</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Drawn At</th>
+            <th>Claimed At</th>
+            <th>Declined At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (Array.isArray(draws) && draws.length) { %>
+            <% draws.forEach(d => { %>
+              <tr>
+                <td><%= d.draw_token %></td>
+                <td><%= d.code_value || '-' %></td>
+                <td><%= d.prize_name || '-' %></td>
+                <td><%= d.draw_status %></td>
+                <td><%= d.customer_name || '-' %></td>
+                <td><%= d.customer_phone || '-' %></td>
+                <td><%= d.drawn_at ? new Date(d.drawn_at).toLocaleString() : '-' %></td>
+                <td><%= d.claimed_at ? new Date(d.claimed_at).toLocaleString() : '-' %></td>
+                <td><%= d.declined_at ? new Date(d.declined_at).toLocaleString() : '-' %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="9" class="text-center text-muted">No draws found</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

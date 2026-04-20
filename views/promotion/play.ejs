@@ -1,0 +1,124 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+          <h1 class="fw-bold mb-2 text-center" style="font-size:2rem;">กรอกรหัสโปรโมชั่น</h1>
+          <p class="text-muted text-center mb-4" style="font-size:1.08rem;">
+            โปรดกรอกรหัสที่ได้รับจากเจ้าหน้าที่เพื่อร่วมลุ้นรับรางวัล
+          </p>
+
+          <!-- Validation / Flash Messages -->
+          <% if (locals && locals.flash) { %>
+            <div class="alert alert-<%= locals.flash.type || 'info' %> alert-dismissible fade show mb-3" role="alert">
+              <%= locals.flash.message %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
+          <% if (typeof validation !== 'undefined' && validation && validation.message) { %>
+            <div class="alert alert-<%= validation.type || 'info' %> mb-3" role="alert">
+              <%= validation.message %>
+            </div>
+          <% } %>
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="alert alert-<%= messageType || 'info' %> mb-3" role="alert">
+              <%= message %>
+            </div>
+          <% } %>
+
+          <!-- Campaign/Store Info -->
+          <% if (campaign || store) { %>
+            <div class="mb-4">
+              <div class="card bg-light border-0 shadow-sm rounded-3">
+                <div class="card-body py-2 px-3">
+                  <% if (campaign) { %>
+                    <div class="mb-1">
+                      <span class="fw-semibold text-primary"><i class="bi bi-gift me-1"></i>แคมเปญ:</span>
+                      <span><%= campaign.name %></span>
+                    </div>
+                  <% } %>
+                  <% if (store) { %>
+                    <div>
+                      <span class="fw-semibold text-success"><i class="bi bi-shop me-1"></i>สาขา:</span>
+                      <span><%= store.name %></span>
+                      <% if (store.code) { %>
+                        <span class="text-muted small">(<%= store.code %>)</span>
+                      <% } %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- Code Entry Form -->
+          <form method="post" action="/promotion/validate-code" autocomplete="off" class="needs-validation" novalidate onsubmit="return sanitizeCodeInput(this);">
+            <div class="mb-3">
+              <label for="codeValue" class="form-label fw-semibold">รหัสโปรโมชั่น</label>
+              <input
+                type="text"
+                class="form-control form-control-lg text-center rounded-3 shadow-sm"
+                id="codeValue"
+                name="codeValue"
+                value="<%= typeof codeValue !== 'undefined' ? codeValue : '' %>"
+                maxlength="16"
+                required
+                pattern="[A-Za-z0-9]+"
+                placeholder="กรอกรหัสที่นี่"
+                style="font-size:1.3rem; letter-spacing:0.08em;"
+                autofocus
+                inputmode="text"
+                autocomplete="off"
+              >
+              <div class="invalid-feedback text-center">
+                กรุณากรอกรหัสโปรโมชั่นที่ถูกต้อง (A-Z, 0-9)
+              </div>
+            </div>
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm" id="submitBtn">
+                <i class="bi bi-arrow-right-circle me-1"></i> ตรวจสอบรหัสและลุ้นรางวัล
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="/promotion" class="btn btn-link text-decoration-none text-muted">
+          <i class="bi bi-chevron-left"></i> กลับหน้าโปรโมชั่น
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Prevent double submit and sanitize input
+  function sanitizeCodeInput(form) {
+    var input = form.codeValue;
+    if (input) {
+      input.value = input.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    }
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'กำลังตรวจสอบ...';
+    }
+    return true;
+  }
+  // Bootstrap validation
+  (function () {
+    var forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  })();
+</script>
+
+<!-- Optional: Bootstrap Icons CDN (if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

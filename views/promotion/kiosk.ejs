@@ -1,0 +1,242 @@
+
+<div class="container-fluid min-vh-100 bg-light py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-9">
+      <div class="card shadow-lg border-0 mx-3">
+        <div class="card-body p-4 p-md-5">
+          <div class="mb-4 text-center">
+            <h1 class="h3 fw-bold mb-2"><%= title %></h1>
+            <p class="text-muted mb-0">กรอกรหัสโปรโมชั่น แล้วแตะตรวจสอบเพื่อทำงานด้วยคีออสก์ได้อย่างรวดเร็ว</p>
+          </div>
+
+          <div id="messageBox" class="mb-3" aria-live="polite"></div>
+
+          <div class="card border-0 shadow-sm rounded-4 mb-4" id="stage-enter">
+            <div class="card-body p-4">
+              <div class="mb-4 text-start">
+                <label for="kiosk-code" class="form-label fw-semibold">รหัสโปรโมชั่น</label>
+                <input id="kiosk-code" class="form-control form-control-xl text-center fs-4 rounded-3" placeholder="กรอกรหัสที่นี่" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-label="รหัสโปรโมชั่น">
+              </div>
+              <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <button id="validateBtn" class="btn btn-primary btn-lg px-5">ตรวจสอบ</button>
+                <button id="clearBtn" class="btn btn-outline-secondary btn-lg px-5">ล้าง</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="stage-validated" class="d-none">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+              <div class="card-body p-4 text-center">
+                <div id="campaignInfo" class="mb-3"></div>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                  <button id="drawBtn" class="btn btn-success btn-lg px-5">จับรางวัล</button>
+                  <button id="backToInputBtn" class="btn btn-outline-secondary btn-lg px-4">เริ่มใหม่</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="stage-result" class="d-none">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+              <div class="card-body p-4 text-center">
+                <div id="prizeBox" class="mb-3"></div>
+                <div id="claimArea" class="d-none mt-4">
+                  <input id="customerName" class="form-control form-control-lg mb-3 text-center rounded-3" placeholder="ชื่อผู้รับ" autocomplete="off" aria-label="ชื่อผู้รับ" />
+                  <input id="customerPhone" class="form-control form-control-lg mb-3 text-center rounded-3" placeholder="เบอร์โทรศัพท์" inputmode="tel" autocomplete="off" aria-label="เบอร์โทรศัพท์" />
+                  <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <button id="claimBtn" class="btn btn-success btn-lg px-4">เคลม</button>
+                    <button id="declineBtn" class="btn btn-outline-danger btn-lg px-4">ปฏิเสธ</button>
+                  </div>
+                </div>
+                <div id="restartArea" class="d-none mt-4">
+                  <button id="restartBtn" class="btn btn-primary btn-lg px-5">เริ่มใหม่</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const el = id => document.getElementById(id);
+  const msgBox = el('messageBox');
+  const codeInput = el('kiosk-code');
+  const validateBtn = el('validateBtn');
+  const clearBtn = el('clearBtn');
+  const stageEnter = el('stage-enter');
+  const stageValidated = el('stage-validated');
+  const campaignInfo = el('campaignInfo');
+  const drawBtn = el('drawBtn');
+  const backToInputBtn = el('backToInputBtn');
+  const stageResult = el('stage-result');
+  const prizeBox = el('prizeBox');
+  const claimArea = el('claimArea');
+  const customerName = el('customerName');
+  const customerPhone = el('customerPhone');
+  const claimBtn = el('claimBtn');
+  const declineBtn = el('declineBtn');
+  const restartArea = el('restartArea');
+  const restartBtn = el('restartBtn');
+
+  let currentDrawToken = null;
+  let autoResetTimer = null;
+
+  function showMessage(text, type = 'info') {
+    if (!msgBox) return;
+    msgBox.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'alert alert-' + (type ; 'info');
+    div.role = 'alert';
+    div.innerText = text;
+    msgBox.appendChild(div);
+  }
+
+  function clearMessage() { if (msgBox) msgBox.innerHTML = ''; }
+
+  function toEnter() {
+    clearTimeout(autoResetTimer);
+    currentDrawToken = null;
+    if (codeInput) codeInput.value = '';
+    if (customerName) customerName.value = '';
+    if (customerPhone) customerPhone.value = '';
+    if (stageEnter) stageEnter.classList.remove('d-none');
+    if (stageValidated) stageValidated.classList.add('d-none');
+    if (stageResult) stageResult.classList.add('d-none');
+    if (campaignInfo) campaignInfo.innerText = '';
+    if (prizeBox) prizeBox.innerText = '';
+    if (claimArea) claimArea.classList.add('d-none');
+    if (restartArea) restartArea.classList.add('d-none');
+    clearMessage();
+    setTimeout(() => { if (codeInput) codeInput.focus(); }, 300);
+  }
+
+  async function handleValidate() {
+    const code = sanitizeCodeInput((codeInput.value ; ''));
+    if (!code) { showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning'); return; }
+    showMessage('กำลังตรวจสอบ...', 'info');
+    if (validateBtn) validateBtn.disabled = true;
+    try {
+      const resp = await fetch('/promotion/kiosk/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const data = await resp.json();
+      if (!data.ok) { if (validateBtn) validateBtn.disabled = false; showMessage(data.message ; 'ไม่สามารถตรวจสอบได้', 'danger'); autoReset(5000); return; }
+      if (campaignInfo) {
+        campaignInfo.innerHTML = '';
+        const name = document.createElement('div'); name.className = 'h4 mb-0'; name.innerText = data.campaign.name ; '-';
+        const details = document.createElement('div'); details.className = 'text-muted small';
+        details.innerText = data.store ? (data.store.name + ' (' + data.store.store_code + ')') : '';
+        campaignInfo.appendChild(name); campaignInfo.appendChild(details);
+      }
+      if (stageEnter) stageEnter.classList.add('d-none');
+      if (stageValidated) stageValidated.classList.remove('d-none');
+      if (stageResult) stageResult.classList.add('d-none');
+      clearMessage();
+      if (validateBtn) validateBtn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      if (validateBtn) validateBtn.disabled = false;
+      showMessage('เกิดข้อผิดพลาดขณะตรวจสอบ', 'danger');
+      autoReset(5000);
+    }
+  }
+
+  async function handleDraw() {
+    const code = sanitizeCodeInput((codeInput.value ; ''));
+    if (!code) { showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning'); return; }
+    showMessage('กำลังจับรางวัล... โปรดรอสักครู่', 'info');
+    if (drawBtn) drawBtn.disabled = true;
+    try {
+      const resp = await fetch('/promotion/kiosk/draw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const data = await resp.json();
+      if (!data.ok) { showMessage(data.message ; 'จับรางวัลไม่สำเร็จ', 'danger'); if (drawBtn) drawBtn.disabled = false; autoReset(5000); return; }
+      currentDrawToken = data.draw_token;
+      if (stageValidated) stageValidated.classList.add('d-none');
+      if (stageResult) stageResult.classList.remove('d-none');
+      if (prizeBox) {
+        prizeBox.innerHTML = '';
+        if (data.prize) {
+          const h = document.createElement('div'); h.className = 'h3 mb-1'; h.innerText = data.prize.name ; 'รางวัล';
+          const d = document.createElement('div'); d.className = 'text-muted mb-2'; d.innerText = data.prize.description ; '';
+          prizeBox.appendChild(h); prizeBox.appendChild(d);
+          if (claimArea) claimArea.classList.remove('d-none');
+          if (restartArea) restartArea.classList.add('d-none');
+        } else {
+          const no = document.createElement('div'); no.className = 'h4 text-secondary'; no.innerText = 'ขออภัย วันนี้คุณไม่ได้รับรางวัล';
+          prizeBox.appendChild(no);
+          if (claimArea) claimArea.classList.add('d-none');
+          if (restartArea) restartArea.classList.remove('d-none');
+          autoReset(8000);
+        }
+      }
+      clearMessage();
+    } catch (err) {
+      console.error(err);
+      showMessage('เกิดข้อผิดพลาดขณะจับรางวัล', 'danger');
+      autoReset(5000);
+    } finally { if (drawBtn) drawBtn.disabled = false; }
+  }
+
+  function sanitizeCodeInput(s) { if (!s) return ''; return String(s).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 64); }
+
+  async function handleClaim() {
+    const name = (customerName.value ; '').trim();
+    const phone = (customerPhone.value ; '').trim();
+    if (!name || !phone) { showMessage('กรุณากรอกชื่อและเบอร์โทรศัพท์', 'warning'); return; }
+    if (claimBtn) claimBtn.disabled = true;
+    showMessage('กำลังบันทึกการเคลม...', 'info');
+    try {
+      const resp = await fetch('/promotion/kiosk/claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draw_token: currentDrawToken, customer_name: name, customer_phone: phone }) });
+      const data = await resp.json();
+      if (!data.ok) { showMessage(data.message ; 'ไม่สามารถเคลมได้', 'danger'); if (claimBtn) claimBtn.disabled = false; autoReset(5000); return; }
+      showMessage(data.message ; 'เคลมสำเร็จ', 'success');
+      if (claimArea) claimArea.classList.add('d-none');
+      if (restartArea) restartArea.classList.remove('d-none');
+      customerName.value = '';
+      customerPhone.value = '';
+      autoReset(10000);
+    } catch (err) {
+      console.error(err);
+      showMessage('เกิดข้อผิดพลาดขณะเคลม', 'danger');
+      autoReset(5000);
+    } finally { if (claimBtn) claimBtn.disabled = false; }
+  }
+
+  async function handleDecline() {
+    if (!confirm('คุณต้องการปฏิเสธรางวัลใช่หรือไม่?')) return;
+    if (declineBtn) declineBtn.disabled = true;
+    showMessage('กำลังบันทึกการปฏิเสธ...', 'info');
+    try {
+      const resp = await fetch('/promotion/kiosk/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draw_token: currentDrawToken }) });
+      const data = await resp.json();
+      if (!data.ok) { showMessage(data.message ; 'ไม่สามารถปฏิเสธได้', 'danger'); if (declineBtn) declineBtn.disabled = false; autoReset(5000); return; }
+      showMessage(data.message ; 'ปฏิเสธเรียบร้อย', 'success');
+      if (claimArea) claimArea.classList.add('d-none');
+      if (restartArea) restartArea.classList.remove('d-none');
+      customerName.value = '';
+      customerPhone.value = '';
+      autoReset(8000);
+    } catch (err) {
+      console.error(err);
+      showMessage('เกิดข้อผิดพลาดขณะปฏิเสธรางวัล', 'danger');
+      autoReset(5000);
+    } finally { if (declineBtn) declineBtn.disabled = false; }
+  }
+
+  function autoReset(delay = 8000) { clearTimeout(autoResetTimer); autoResetTimer = setTimeout(() => { toEnter(); }, delay); }
+
+  if (validateBtn) validateBtn.addEventListener('click', handleValidate);
+  if (codeInput) codeInput.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); handleValidate(); } });
+  if (clearBtn) clearBtn.addEventListener('click', () => { codeInput.value = ''; codeInput.focus(); clearMessage(); });
+  if (backToInputBtn) backToInputBtn.addEventListener('click', toEnter);
+  if (drawBtn) drawBtn.addEventListener('click', handleDraw);
+  if (claimBtn) claimBtn.addEventListener('click', handleClaim);
+  if (declineBtn) declineBtn.addEventListener('click', handleDecline);
+  if (restartBtn) restartBtn.addEventListener('click', toEnter);
+
+  toEnter();
+})();
+</script>

@@ -1,37 +1,387 @@
 
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-9">
-      <div class="card shadow-sm border-0 overflow-hidden">
-        <div class="row g-0 align-items-stretch">
-          <div class="col-12 col-md-6 bg-primary text-white p-5 d-flex align-items-center">
-            <div>
-              <div class="mb-3" style="font-size:2.6rem; line-height:1;">🎁</div>
-              <h1 class="display-6 fw-bold mb-3">โปรโมชั่นจับรางวัล</h1>
-              <p class="lead text-white-75 mb-0">ใช้รหัสจากเจ้าหน้าที่ แล้วลุ้นของรางวัลทันที</p>
+
+<!-- include header -->
+<%- include('header.ejs') %>
+<style>
+  .promo-section {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    padding: 60px 0 72px;
+  }
+
+  .promo-card-main {
+    background: #fff;
+    border-radius: 28px;
+    padding: 44px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .promo-card-main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 28%);
+    pointer-events: none;
+  }
+
+  .promo-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .promo-title {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+  }
+
+  .promo-highlight {
+    color: #2563eb;
+  }
+
+  .promo-desc {
+    font-size: 1.08rem;
+    color: #64748b;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  .promo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .promo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .promo-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: inline-block;
+  }
+
+  .promo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .promo-btn {
+    border-radius: 14px;
+    font-weight: 700;
+    padding: 14px 24px;
+    min-height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.18s ease;
+  }
+
+  .promo-btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);
+    border: none;
+  }
+
+  .promo-btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .promo-btn-outline {
+    border: 2px solid #2563eb;
+    color: #2563eb;
+    background: #fff;
+  }
+
+  .promo-btn-outline:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+    transform: translateY(-2px);
+  }
+
+  .promo-visual-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 280px;
+  }
+
+  .promo-visual {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .promo-box {
+    font-size: 116px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 16px 30px rgba(37, 99, 235, 0.20));
+  }
+
+  .promo-glow {
+    position: absolute;
+    width: 210px;
+    height: 210px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.30), rgba(37, 99, 235, 0.08), transparent 72%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(18px);
+    z-index: 1;
+  }
+
+  .promo-ring {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border: 2px dashed rgba(37, 99, 235, 0.18);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .promo-steps {
+    margin-top: 28px;
+  }
+
+  .promo-steps-header {
+    margin-bottom: 16px;
+  }
+
+  .promo-steps-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+
+  .promo-steps-desc {
+    color: #64748b;
+    margin-bottom: 0;
+  }
+
+  .promo-step-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px 18px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+    text-align: center;
+    height: 100%;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .promo-step-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+  }
+
+  .promo-step-number {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.20);
+  }
+
+  .promo-step-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+
+  .promo-step-text {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 991.98px) {
+    .promo-card-main {
+      padding: 32px 24px;
+    }
+
+    .promo-title {
+      font-size: 2.4rem;
+    }
+
+    .promo-visual-wrap {
+      min-height: 220px;
+      margin-top: 16px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .promo-section {
+      padding: 36px 0 48px;
+    }
+
+    .promo-card-main {
+      border-radius: 22px;
+      padding: 24px 18px;
+    }
+
+    .promo-title {
+      font-size: 2rem;
+    }
+
+    .promo-desc {
+      font-size: 1rem;
+    }
+
+    .promo-actions {
+      flex-direction: column;
+    }
+
+    .promo-btn {
+      width: 100%;
+    }
+
+    .promo-visual {
+      width: 180px;
+      height: 180px;
+    }
+
+    .promo-box {
+      font-size: 88px;
+    }
+
+    .promo-glow {
+      width: 150px;
+      height: 150px;
+    }
+
+    .promo-ring {
+      width: 130px;
+      height: 130px;
+    }
+  }
+</style>
+
+<div class="promo-section">
+  <div class="container">
+    <div class="promo-card-main">
+      <div class="promo-content">
+
+        <!-- HERO -->
+        <div class="row align-items-center g-4">
+          <div class="col-12 col-lg-7 text-center text-lg-start">
+            <h1 class="promo-title mb-3">
+              ลุ้นรับ<span class="promo-highlight">ของรางวัลทันที</span> 🎉
+            </h1>
+
+            <p class="promo-desc mb-0">
+              กรอกรหัสจากเจ้าหน้าที่เพียงครั้งเดียว แล้วระบบจะสุ่มรางวัลให้คุณทันที
+              ใช้งานง่าย รองรับทั้งมือถือและโหมดคีออสก์
+            </p>
+
+            <div class="promo-meta">
+              <span class="promo-chip"><span class="promo-chip-dot"></span> ใช้เวลาไม่นาน</span>
+              <span class="promo-chip"><span class="promo-chip-dot"></span> ทราบผลทันที</span>
+              <span class="promo-chip"><span class="promo-chip-dot"></span> ใช้งานง่าย</span>
+            </div>
+
+            <div class="promo-actions">
+              <a href="/promotion/play" class="promo-btn promo-btn-primary">
+                🎁 เริ่มลุ้นรางวัลตอนนี้
+              </a>
+
+              <a href="/promotion/kiosk" class="promo-btn promo-btn-outline">
+                โหมดคีออสก์
+              </a>
             </div>
           </div>
-          <div class="col-12 col-md-6 p-4 d-flex flex-column justify-content-between">
-            <div>
-              <h2 class="h5 fw-semibold mb-3">เริ่มต้นได้ทันที</h2>
-              <p class="text-muted mb-4">เลือกทางเข้าใช้งานตามบทบาทของคุณเพื่อร่วมสนุกกับโปรโมชั่นได้อย่างรวดเร็ว</p>
-              <div class="d-grid gap-3 mb-4">
-                <a href="/promotion/play" class="btn btn-primary btn-lg rounded-3">เล่นสุ่มรางวัล</a>
-                <a href="/promotion/kiosk" class="btn btn-outline-secondary btn-lg rounded-3">โหมดคีออสก์</a>
+
+          <div class="col-12 col-lg-5">
+            <div class="promo-visual-wrap">
+              <div class="promo-visual">
+                <div class="promo-ring"></div>
+                <div class="promo-glow"></div>
+                <div class="promo-box">🎁</div>
               </div>
-            </div>
-            <div class="card border-0 bg-light shadow-sm rounded-4 p-3">
-              <h3 class="h6 fw-semibold mb-3">วิธีร่วมสนุก</h3>
-              <ul class="list-unstyled mb-0 small">
-                <li class="mb-2"><span class="fw-semibold">1.</span> รับรหัสจากเจ้าหน้าที่</li>
-                <li class="mb-2"><span class="fw-semibold">2.</span> กรอกรหัสหน้าลูกค้า</li>
-                <li class="mb-2"><span class="fw-semibold">3.</span> ระบบสุ่มรางวัลให้ทันที</li>
-                <li><span class="fw-semibold">4.</span> เลือกเคลมหรือปฏิเสธตามต้องการ</li>
-              </ul>
             </div>
           </div>
         </div>
+
+        <!-- STEPS -->
+        <div class="promo-steps">
+          <div class="promo-steps-header text-center">
+            <h2 class="promo-steps-title">วิธีร่วมสนุก</h2>
+            <p class="promo-steps-desc">ทำตาม 4 ขั้นตอนง่าย ๆ แล้วลุ้นรับรางวัลได้ทันที</p>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="promo-step-box">
+                <div class="promo-step-number">1</div>
+                <div class="promo-step-title">รับรหัส</div>
+                <p class="promo-step-text">รับรหัสจากเจ้าหน้าที่</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="promo-step-box">
+                <div class="promo-step-number">2</div>
+                <div class="promo-step-title">กรอกรหัส</div>
+                <p class="promo-step-text">กรอกโค้ดเพื่อเริ่มร่วมกิจกรรม</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="promo-step-box">
+                <div class="promo-step-number">3</div>
+                <div class="promo-step-title">สุ่มรางวัล</div>
+                <p class="promo-step-text">ระบบสุ่มรางวัลให้อัตโนมัติ</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+              <div class="promo-step-box">
+                <div class="promo-step-number">4</div>
+                <div class="promo-step-title">ยืนยันผล</div>
+                <p class="promo-step-text">รับหรือปฏิเสธรางวัลตามต้องการ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
+
+<%- include('footer.ejs') %>

@@ -1,5 +1,6 @@
 const promotionModel = require('../models/promotionModel');
 const db = require('../config/db');
+const conn = require('../config/db');
 const { randomUUID } = require('crypto');
 
 // Helper: sanitize code input (upper-case alphanumeric only)
@@ -147,7 +148,7 @@ exports.kioskDraw = async (req, res) => {
 
     if (codeRow.status && codeRow.status !== 'unused') {
       await conn.rollback();
-      return res.json({ ok: false, message: 'รหัสนี้ไม่สามารถใช้ได้ (สถานะไม่ว่าง)' });
+      return res.json({ ok: false, message: 'รหัสนี้ไม่สามารถใช้ได้ (สถานะถูกใช้แล้ว)' });
     }
 
     if (codeRow.expires_at) {
@@ -167,7 +168,7 @@ exports.kioskDraw = async (req, res) => {
     }
 
     const [candidates] = await conn.query(
-      'SELECT * FROM promotion_prizes WHERE campaign_id = ? AND active = 1 AND remaining_qty > 0',
+      'SELECT * FROM promotion_prizes WHERE campaign_id = ? AND active = 1 AND (type = \'other\' OR COALESCE(remaining_qty, 0) > 0)',
       [campaign.id]
     );
 
@@ -190,6 +191,10 @@ exports.kioskDraw = async (req, res) => {
       if (!locked) {
         pool = pool.filter(p => p.id !== pick.id);
         continue;
+      }
+      if (locked.type === 'other') {
+        chosenPrize = locked;
+        break;
       }
       if (Number(locked.remaining_qty || 0) <= 0) { pool = pool.filter(p => p.id !== pick.id); continue; }
       const reserved = await promotionModel.reservePrizeById(conn, pick.id);
@@ -218,7 +223,7 @@ exports.kioskDraw = async (req, res) => {
 
     await conn.commit();
 
-    return res.json({ ok: true, draw_token: drawToken, draw_status: drawStatus, prize: chosenPrize ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description } : null, campaign: { id: campaign.id, name: campaign.name }, store: codeRow.store_id || campaign.store_id || null });
+    return res.json({ ok: true, draw_token: drawToken, draw_status: drawStatus, prize: (chosenPrize && chosenPrize.type !== 'other') ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description } : null, campaign: { id: campaign.id, name: campaign.name }, store: codeRow.store_id || campaign.store_id || null });
   } catch (err) {
     try { await conn.rollback(); } catch (e) { }
     console.error('kioskDraw error', err);
@@ -461,14 +466,20 @@ exports.validateCode = async (req, res) => {
  */
 exports.draw = async (req, res) => {
   const codeValue = sanitizeCode(req.body && req.body.code ? req.body.code : '');
+  const wantsJson = req.is('application/json') || (req.get('accept') || '').includes('application/json');
 
-  if (!codeValue) {
-    return res.render('promotion/play', {
+  function respondError(status, message, messageType = 'danger') {
+    if (wantsJson) return res.status(status).json({ ok: false, message, messageType });
+    return res.status(status).render('promotion/play', {
       title: 'เล่นสุ่มรางวัล',
       pageName: 'promotion-play',
-      message: 'กรุณากรอกรหัสโปรโมชั่น',
-      messageType: 'danger'
+      message,
+      messageType
     });
+  }
+
+  if (!codeValue) {
+    return respondError(400, 'กรุณากรอกรหัสโปรโมชั่น', 'danger');
   }
 
   const conn = await db.getConnection();
@@ -479,22 +490,12 @@ exports.draw = async (req, res) => {
     const codeRow = await promotionModel.lockCodeByValue(conn, codeValue);
     if (!codeRow) {
       await conn.rollback();
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
-        message: 'ไม่พบรหัสนี้',
-        messageType: 'danger'
-      });
+      return respondError(404, 'ไม่พบรหัสนี้', 'danger');
     }
 
     if (codeRow.status && codeRow.status !== 'unused') {
       await conn.rollback();
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
-        message: 'รหัสนี้ไม่สามารถใช้ได้ (สถานะไม่ว่าง)',
-        messageType: 'warning'
-      });
+      return respondError(400, 'รหัสนี้ไม่สามารถใช้ได้ (สถานะไม่ว่าง)', 'warning');
     }
 
     // Check expiry
@@ -505,12 +506,7 @@ exports.draw = async (req, res) => {
         // Optionally mark expired
         await promotionModel.markCodeStatus(conn, codeRow.id, 'expired');
         await conn.commit();
-        return res.render('promotion/play', {
-          title: 'เล่นสุ่มรางวัล',
-          pageName: 'promotion-play',
-          message: 'รหัสนี้หมดอายุแล้ว',
-          messageType: 'danger'
-        });
+        return respondError(400, 'รหัสนี้หมดอายุแล้ว', 'danger');
       }
     }
 
@@ -518,17 +514,12 @@ exports.draw = async (req, res) => {
     const campaign = await promotionModel.getCampaignById(codeRow.campaign_id);
     if (!campaign || !campaign.active) {
       await conn.rollback();
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
-        message: 'แคมเปญไม่พร้อมใช้งาน',
-        messageType: 'danger'
-      });
+      return respondError(400, 'แคมเปญไม่พร้อมใช้งาน', 'danger');
     }
 
     // Fetch candidate prizes (no lock yet)
     const [candidates] = await conn.query(
-      'SELECT * FROM promotion_prizes WHERE campaign_id = ? AND active = 1 AND remaining_qty > 0',
+      'SELECT * FROM promotion_prizes WHERE campaign_id = ? AND active = 1 AND (type = \'other\' OR COALESCE(remaining_qty, 0) > 0)',
       [campaign.id]
     );
 
@@ -556,9 +547,11 @@ exports.draw = async (req, res) => {
         pool = pool.filter(p => p.id !== pick.id);
         continue;
       }
-
+      if (locked.type === 'other') {
+        chosenPrize = locked;
+        break;
+      }
       if (Number(locked.remaining_qty || 0) <= 0) {
-        // no stock anymore
         pool = pool.filter(p => p.id !== pick.id);
         continue;
       }
@@ -597,16 +590,23 @@ exports.draw = async (req, res) => {
 
     await conn.commit();
 
+    if (wantsJson) {
+      return res.json({
+        ok: true,
+        draw_token: drawToken,
+        redirect_url: `/promotion/result/${drawToken}`,
+        draw_status: drawStatus,
+        prize: (chosenPrize && chosenPrize.type !== 'other')
+          ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description }
+          : null
+      });
+    }
+
     return res.redirect(`/promotion/result/${drawToken}`);
   } catch (err) {
     try { await conn.rollback(); } catch (e) { /* ignore */ }
     console.error('promotion.draw error', err);
-    return res.status(500).render('promotion/play', {
-      title: 'เล่นสุ่มรางวัล',
-      pageName: 'promotion-play',
-      message: 'เกิดข้อผิดพลาดในการจับรางวัล กรุณาลองใหม่',
-      messageType: 'danger'
-    });
+    return respondError(500, 'เกิดข้อผิดพลาดในการจับรางวัล กรุณาลองใหม่', 'danger');
   } finally {
     try { conn.release(); } catch (e) { /* ignore */ }
   }

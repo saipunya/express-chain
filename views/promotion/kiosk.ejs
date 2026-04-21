@@ -1,66 +1,553 @@
+<!-- include header -->
+<%- include('header.ejs') %>
 
-<div class="container-fluid min-vh-100 bg-light py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-xl-9">
-      <div class="card shadow-lg border-0 mx-3">
-        <div class="card-body p-4 p-md-5">
-          <div class="mb-4 text-center">
-            <h1 class="h3 fw-bold mb-2"><%= title %></h1>
-            <p class="text-muted mb-0">กรอกรหัสโปรโมชั่น แล้วแตะตรวจสอบเพื่อทำงานด้วยคีออสก์ได้อย่างรวดเร็ว</p>
+<style>
+  .promo-kiosk-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    padding: 32px 0 48px;
+  }
+
+  .promo-kiosk-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .promo-kiosk-top {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .promo-kiosk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.98rem;
+    margin-bottom: 16px;
+  }
+
+  .promo-kiosk-title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+
+  .promo-kiosk-highlight {
+    color: #2563eb;
+  }
+
+  .promo-kiosk-desc {
+    max-width: 860px;
+    margin: 0 auto;
+    font-size: 1.08rem;
+    color: #64748b;
+    line-height: 1.7;
+  }
+
+  .promo-kiosk-card {
+    background: #fff;
+    border: 1px solid rgba(37, 99, 235, 0.10);
+    border-radius: 32px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .promo-kiosk-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 24%);
+    pointer-events: none;
+  }
+
+  .promo-kiosk-card-body {
+    position: relative;
+    z-index: 1;
+    padding: 32px;
+  }
+
+  .promo-stage-box {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  .promo-stage-head {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .promo-stage-icon {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 14px;
+    border-radius: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+  }
+
+  .promo-stage-title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .promo-stage-desc {
+    font-size: 1.02rem;
+    color: #64748b;
+    margin-bottom: 0;
+  }
+
+  .promo-kiosk-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  .promo-kiosk-code {
+    min-height: 88px;
+    border-radius: 22px;
+    border: 2px solid #dbeafe;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.07);
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #0f172a;
+    transition: all 0.18s ease;
+  }
+
+  .promo-kiosk-code:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.3rem rgba(37, 99, 235, 0.14), 0 18px 34px rgba(37, 99, 235, 0.10);
+  }
+
+  .promo-kiosk-helper {
+    margin-top: 10px;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .promo-kiosk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+
+  .promo-kiosk-btn {
+    min-height: 62px;
+    padding: 14px 26px;
+    border-radius: 18px;
+    font-size: 1.08rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+    text-decoration: none;
+    border-width: 2px;
+  }
+
+  .promo-kiosk-btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+  }
+
+  .promo-kiosk-btn-primary:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  }
+
+  .promo-kiosk-btn-success {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 16px 32px rgba(5, 150, 105, 0.20);
+  }
+
+  .promo-kiosk-btn-success:hover {
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .promo-kiosk-btn-outline {
+    background: #fff;
+    color: #475569;
+    border: 2px solid #cbd5e1;
+  }
+
+  .promo-kiosk-btn-outline:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    transform: translateY(-2px);
+  }
+
+  .promo-kiosk-btn-danger {
+    background: #fff;
+    color: #dc2626;
+    border: 2px solid rgba(220, 38, 38, 0.24);
+  }
+
+  .promo-kiosk-btn-danger:hover {
+    background: #fef2f2;
+    color: #b91c1c;
+    transform: translateY(-2px);
+  }
+
+  .promo-kiosk-alert .alert {
+    border-radius: 18px;
+    padding: 16px 18px;
+    font-size: 1rem;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+  }
+
+  .promo-campaign-box,
+  .promo-result-box {
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 22px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  .promo-campaign-name,
+  .promo-prize-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+
+  .promo-campaign-sub,
+  .promo-prize-desc {
+    color: #64748b;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .promo-no-prize {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 0;
+  }
+
+  .promo-claim-box {
+    margin-top: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 22px;
+    padding: 22px;
+  }
+
+  .promo-claim-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .promo-claim-input {
+    min-height: 62px;
+    border-radius: 16px;
+    text-align: center;
+    font-size: 1.12rem;
+    border: 2px solid #e2e8f0;
+  }
+
+  .promo-claim-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.12);
+  }
+
+  .promo-kiosk-note-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+
+  .promo-kiosk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .promo-kiosk-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: inline-block;
+  }
+
+  @media (max-width: 767.98px) {
+    .promo-kiosk-page {
+      padding: 20px 0 32px;
+    }
+
+    .promo-kiosk-card-body {
+      padding: 18px;
+    }
+
+    .promo-stage-box {
+      padding: 20px 16px;
+      border-radius: 20px;
+    }
+
+    .promo-stage-title {
+      font-size: 1.55rem;
+    }
+
+    .promo-kiosk-code {
+      min-height: 74px;
+      font-size: 1.55rem;
+      letter-spacing: 0.12em;
+    }
+
+    .promo-kiosk-actions {
+      flex-direction: column;
+    }
+
+    .promo-kiosk-btn {
+      width: 100%;
+    }
+
+    .promo-campaign-name,
+    .promo-prize-name {
+      font-size: 1.55rem;
+    }
+
+    .promo-no-prize {
+      font-size: 1.35rem;
+    }
+  }
+  .spin-box {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin-wheel {
+  font-size: 70px;
+  animation: spinRoll 0.6s linear infinite;
+}
+
+@keyframes spinRoll {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ตอน reveal */
+.spin-stop {
+  animation: popReveal 0.6s ease;
+}
+
+@keyframes popReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.promo-spin-modal[hidden] {
+  display: none !important;
+}
+
+.promo-spin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.promo-spin-panel {
+  width: min(100%, 420px);
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+body.promo-spin-open {
+  overflow: hidden;
+}
+</style>
+
+<div class="promo-kiosk-page">
+  <div class="container-fluid">
+    <div class="promo-kiosk-shell">
+
+      <div class="promo-kiosk-top">
+        <div class="promo-kiosk-badge">
+          <span>🖥️</span>
+          <span>โหมดคีออสก์</span>
+        </div>
+        <h1 class="promo-kiosk-title">
+          <%= title %><span class="promo-kiosk-highlight"> สำหรับหน้าร้าน</span>
+        </h1>
+        <p class="promo-kiosk-desc">
+          กรอกรหัสโปรโมชั่น แล้วแตะตรวจสอบเพื่อเข้าสู่ขั้นตอนจับรางวัลได้อย่างรวดเร็ว
+          เหมาะสำหรับใช้งานบนหน้าจอคีออสก์หรือจุดบริการลูกค้า
+        </p>
+      </div>
+
+      <div class="promo-kiosk-card">
+        <div class="promo-kiosk-card-body">
+
+          <div id="messageBox" class="promo-kiosk-alert mb-3" aria-live="polite"></div>
+
+          <div class="promo-kiosk-note-row mb-4">
+            <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> กรอกง่าย</span>
+            <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ปุ่มใหญ่</span>
+            <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ใช้งานเร็ว</span>
           </div>
 
-          <div id="messageBox" class="mb-3" aria-live="polite"></div>
+          <div class="promo-stage-box" id="stage-enter">
+            <div class="promo-stage-head">
+              <div class="promo-stage-icon">🎁</div>
+              <div class="promo-stage-title">กรอกรหัสโปรโมชั่น</div>
+              <p class="promo-stage-desc">รับรหัสจากเจ้าหน้าที่ แล้วกรอกเพื่อเริ่มต้นลุ้นรางวัล</p>
+            </div>
 
-          <div class="card border-0 shadow-sm rounded-4 mb-4" id="stage-enter">
-            <div class="card-body p-4">
-              <div class="mb-4 text-start">
-                <label for="kiosk-code" class="form-label fw-semibold">รหัสโปรโมชั่น</label>
-                <input id="kiosk-code" class="form-control form-control-xl text-center fs-4 rounded-3" placeholder="กรอกรหัสที่นี่" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-label="รหัสโปรโมชั่น">
-              </div>
-              <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <button id="validateBtn" class="btn btn-primary btn-lg px-5">ตรวจสอบ</button>
-                <button id="clearBtn" class="btn btn-outline-secondary btn-lg px-5">ล้าง</button>
-              </div>
+            <div class="mb-3">
+              <label for="kiosk-code" class="promo-kiosk-label">รหัสโปรโมชั่น</label>
+              <input
+                id="kiosk-code"
+                class="form-control promo-kiosk-code"
+                placeholder="กรอกรหัสที่นี่"
+                inputmode="numeric"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                aria-label="รหัสโปรโมชั่น"
+              >
+              <div class="promo-kiosk-helper">ระบบจะปรับรหัสให้เป็นตัวพิมพ์ใหญ่และตัดอักขระที่ไม่ถูกต้องให้อัตโนมัติ</div>
+            </div>
+
+            <div class="promo-kiosk-actions">
+              <button id="validateBtn" class="btn promo-kiosk-btn promo-kiosk-btn-primary">ตรวจสอบรหัส</button>
+              <button id="clearBtn" class="btn promo-kiosk-btn promo-kiosk-btn-outline">ล้างข้อมูล</button>
             </div>
           </div>
 
           <div id="stage-validated" class="d-none">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-              <div class="card-body p-4 text-center">
-                <div id="campaignInfo" class="mb-3"></div>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
-                  <button id="drawBtn" class="btn btn-success btn-lg px-5">จับรางวัล</button>
-                  <button id="backToInputBtn" class="btn btn-outline-secondary btn-lg px-4">เริ่มใหม่</button>
-                </div>
+            <div class="promo-stage-box">
+              <div class="promo-stage-head">
+                <div class="promo-stage-icon">✅</div>
+                <div class="promo-stage-title">ตรวจสอบรหัสสำเร็จ</div>
+                <p class="promo-stage-desc">พร้อมเข้าสู่ขั้นตอนการจับรางวัล</p>
+              </div>
+
+              <div id="campaignInfo" class="promo-campaign-box mb-4"></div>
+
+              <div class="promo-kiosk-actions">
+                <button id="drawBtn" class="btn promo-kiosk-btn promo-kiosk-btn-success">จับรางวัล</button>
+                <button id="backToInputBtn" class="btn promo-kiosk-btn promo-kiosk-btn-outline">เริ่มใหม่</button>
               </div>
             </div>
           </div>
 
           <div id="stage-result" class="d-none">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-              <div class="card-body p-4 text-center">
-                <div id="prizeBox" class="mb-3"></div>
-                <div id="claimArea" class="d-none mt-4">
-                  <input id="customerName" class="form-control form-control-lg mb-3 text-center rounded-3" placeholder="ชื่อผู้รับ" autocomplete="off" aria-label="ชื่อผู้รับ" />
-                  <input id="customerPhone" class="form-control form-control-lg mb-3 text-center rounded-3" placeholder="เบอร์โทรศัพท์" inputmode="tel" autocomplete="off" aria-label="เบอร์โทรศัพท์" />
-                  <div class="d-flex gap-3 justify-content-center flex-wrap">
-                    <button id="claimBtn" class="btn btn-success btn-lg px-4">เคลม</button>
-                    <button id="declineBtn" class="btn btn-outline-danger btn-lg px-4">ปฏิเสธ</button>
-                  </div>
+            <div class="promo-stage-box">
+              <div class="promo-stage-head">
+                <div class="promo-stage-icon">🎉</div>
+                <div class="promo-stage-title">ผลการจับรางวัล</div>
+                <p class="promo-stage-desc">ตรวจสอบผลลัพธ์ด้านล่าง และเลือกดำเนินการต่อได้ทันที</p>
+              </div>
+
+              <div id="prizeBox" class="promo-result-box mb-3"></div>
+
+              <div id="claimArea" class="promo-claim-box d-none">
+                <div class="promo-claim-title">กรอกข้อมูลผู้รับรางวัล</div>
+                <input
+                  id="customerName"
+                  class="form-control promo-claim-input mb-3"
+                  placeholder="ชื่อผู้รับ"
+                  autocomplete="off"
+                  aria-label="ชื่อผู้รับ"
+                />
+                <input
+                  id="customerPhone"
+                  class="form-control promo-claim-input mb-3"
+                  placeholder="เบอร์โทรศัพท์"
+                  inputmode="tel"
+                  autocomplete="off"
+                  aria-label="เบอร์โทรศัพท์"
+                />
+                <div class="promo-kiosk-actions">
+                  <button id="claimBtn" class="btn promo-kiosk-btn promo-kiosk-btn-success">ยืนยันการเคลม</button>
+                  <button id="declineBtn" class="btn promo-kiosk-btn promo-kiosk-btn-danger">ปฏิเสธรางวัล</button>
                 </div>
-                <div id="restartArea" class="d-none mt-4">
-                  <button id="restartBtn" class="btn btn-primary btn-lg px-5">เริ่มใหม่</button>
-                </div>
+              </div>
+
+              <div id="restartArea" class="d-none mt-4 text-center">
+                <button id="restartBtn" class="btn promo-kiosk-btn promo-kiosk-btn-primary">เริ่มใหม่</button>
               </div>
             </div>
           </div>
 
         </div>
       </div>
+
     </div>
   </div>
 </div>
+<div id="spinModal" class="promo-spin-modal" hidden>
+  <div class="promo-spin-panel">
+    <div class="spin-box mb-3">
+      <div class="spin-wheel" id="spinWheel">🎁</div>
+    </div>
 
+    <h4 class="fw-bold">กำลังสุ่มรางวัล...</h4>
+    <p class="text-muted mb-0">โปรดรอสักครู่</p>
+  </div>
+</div>
 <script>
 (() => {
   const el = id => document.getElementById(id);
@@ -82,6 +569,8 @@
   const declineBtn = el('declineBtn');
   const restartArea = el('restartArea');
   const restartBtn = el('restartBtn');
+  const spinModal = el('spinModal');
+  const spinWheel = el('spinWheel');
 
   let currentDrawToken = null;
   let autoResetTimer = null;
@@ -90,147 +579,337 @@
     if (!msgBox) return;
     msgBox.innerHTML = '';
     const div = document.createElement('div');
-    div.className = 'alert alert-' + (type ; 'info');
+    div.className = 'alert alert-' + (type || 'info');
     div.role = 'alert';
     div.innerText = text;
     msgBox.appendChild(div);
   }
 
-  function clearMessage() { if (msgBox) msgBox.innerHTML = ''; }
+  function clearMessage() {
+    if (msgBox) msgBox.innerHTML = '';
+  }
+
+  function sanitizeCodeInput(s) {
+    if (!s) return '';
+    return String(s).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 64);
+  }
 
   function toEnter() {
     clearTimeout(autoResetTimer);
     currentDrawToken = null;
+    hideDrawEffect();
+
     if (codeInput) codeInput.value = '';
     if (customerName) customerName.value = '';
     if (customerPhone) customerPhone.value = '';
+
     if (stageEnter) stageEnter.classList.remove('d-none');
     if (stageValidated) stageValidated.classList.add('d-none');
     if (stageResult) stageResult.classList.add('d-none');
-    if (campaignInfo) campaignInfo.innerText = '';
-    if (prizeBox) prizeBox.innerText = '';
+
+    if (campaignInfo) campaignInfo.innerHTML = '';
+    if (prizeBox) prizeBox.innerHTML = '';
     if (claimArea) claimArea.classList.add('d-none');
     if (restartArea) restartArea.classList.add('d-none');
+
     clearMessage();
-    setTimeout(() => { if (codeInput) codeInput.focus(); }, 300);
+    setTimeout(() => {
+      if (codeInput) codeInput.focus();
+    }, 250);
+  }
+
+  function showDrawEffect() {
+    if (!spinModal || !spinWheel) return;
+    spinModal.hidden = false;
+    document.body.classList.add('promo-spin-open');
+    spinWheel.innerHTML = '🎁';
+    spinWheel.classList.remove('spin-stop');
+    spinWheel.style.animation = 'spinRoll 0.6s linear infinite';
+  }
+
+  function hideDrawEffect() {
+    if (!spinModal || !spinWheel) return;
+    spinWheel.style.animation = 'none';
+    spinWheel.classList.remove('spin-stop');
+    spinWheel.innerHTML = '🎁';
+    spinModal.hidden = true;
+    document.body.classList.remove('promo-spin-open');
+  }
+
+  function renderDrawResult(data) {
+    currentDrawToken = data.draw_token;
+
+    if (stageValidated) stageValidated.classList.add('d-none');
+    if (stageResult) stageResult.classList.remove('d-none');
+
+    if (!prizeBox) return;
+
+    prizeBox.innerHTML = '';
+
+    if (data.prize) {
+      const heading = document.createElement('div');
+      heading.className = 'promo-prize-name';
+      heading.innerText = data.prize.name || 'รางวัล';
+
+      const description = document.createElement('div');
+      description.className = 'promo-prize-desc';
+      description.innerText = data.prize.description || '';
+
+      prizeBox.appendChild(heading);
+      prizeBox.appendChild(description);
+
+      if (claimArea) claimArea.classList.remove('d-none');
+      if (restartArea) restartArea.classList.add('d-none');
+      return;
+    }
+
+    const noPrize = document.createElement('div');
+    noPrize.className = 'promo-no-prize';
+    noPrize.innerText = 'ขออภัย วันนี้คุณไม่ได้รับรางวัล';
+    prizeBox.appendChild(noPrize);
+
+    if (claimArea) claimArea.classList.add('d-none');
+    if (restartArea) restartArea.classList.remove('d-none');
+    autoReset(8000);
   }
 
   async function handleValidate() {
-    const code = sanitizeCodeInput((codeInput.value ; ''));
-    if (!code) { showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning'); return; }
-    showMessage('กำลังตรวจสอบ...', 'info');
+    const code = sanitizeCodeInput(codeInput ? codeInput.value : '');
+    if (!code) {
+      showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning');
+      return;
+    }
+
+    showMessage('กำลังตรวจสอบรหัส...', 'info');
     if (validateBtn) validateBtn.disabled = true;
+
     try {
-      const resp = await fetch('/promotion/kiosk/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const resp = await fetch('/promotion/kiosk/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
       const data = await resp.json();
-      if (!data.ok) { if (validateBtn) validateBtn.disabled = false; showMessage(data.message ; 'ไม่สามารถตรวจสอบได้', 'danger'); autoReset(5000); return; }
+
+      if (!data.ok) {
+        showMessage(data.message || 'ไม่สามารถตรวจสอบได้', 'danger');
+        autoReset(5000);
+        return;
+      }
+
       if (campaignInfo) {
         campaignInfo.innerHTML = '';
-        const name = document.createElement('div'); name.className = 'h4 mb-0'; name.innerText = data.campaign.name ; '-';
-        const details = document.createElement('div'); details.className = 'text-muted small';
-        details.innerText = data.store ? (data.store.name + ' (' + data.store.store_code + ')') : '';
-        campaignInfo.appendChild(name); campaignInfo.appendChild(details);
+
+        const name = document.createElement('div');
+        name.className = 'promo-campaign-name';
+        name.innerText = (data.campaign && data.campaign.name) || '-';
+
+        const details = document.createElement('div');
+        details.className = 'promo-campaign-sub';
+        details.innerText = data.store
+          ? `${data.store.name} (${data.store.store_code || '-'})`
+          : '';
+
+        campaignInfo.appendChild(name);
+        campaignInfo.appendChild(details);
       }
+
       if (stageEnter) stageEnter.classList.add('d-none');
       if (stageValidated) stageValidated.classList.remove('d-none');
       if (stageResult) stageResult.classList.add('d-none');
+
       clearMessage();
-      if (validateBtn) validateBtn.disabled = false;
     } catch (err) {
       console.error(err);
-      if (validateBtn) validateBtn.disabled = false;
       showMessage('เกิดข้อผิดพลาดขณะตรวจสอบ', 'danger');
       autoReset(5000);
+    } finally {
+      if (validateBtn) validateBtn.disabled = false;
     }
   }
 
   async function handleDraw() {
-    const code = sanitizeCodeInput((codeInput.value ; ''));
-    if (!code) { showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning'); return; }
-    showMessage('กำลังจับรางวัล... โปรดรอสักครู่', 'info');
-    if (drawBtn) drawBtn.disabled = true;
+    const code = sanitizeCodeInput(codeInput ? codeInput.value : '');
+    if (!code) {
+      showMessage('กรุณากรอกรหัสโปรโมชั่น', 'warning');
+      return;
+    }
+
+    clearMessage();
+    if (drawBtn) {
+      drawBtn.disabled = true;
+      drawBtn.innerText = 'กำลังสุ่มรางวัล...';
+    }
+
     try {
-      const resp = await fetch('/promotion/kiosk/draw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
-      const data = await resp.json();
-      if (!data.ok) { showMessage(data.message ; 'จับรางวัลไม่สำเร็จ', 'danger'); if (drawBtn) drawBtn.disabled = false; autoReset(5000); return; }
-      currentDrawToken = data.draw_token;
-      if (stageValidated) stageValidated.classList.add('d-none');
-      if (stageResult) stageResult.classList.remove('d-none');
-      if (prizeBox) {
-        prizeBox.innerHTML = '';
-        if (data.prize) {
-          const h = document.createElement('div'); h.className = 'h3 mb-1'; h.innerText = data.prize.name ; 'รางวัล';
-          const d = document.createElement('div'); d.className = 'text-muted mb-2'; d.innerText = data.prize.description ; '';
-          prizeBox.appendChild(h); prizeBox.appendChild(d);
-          if (claimArea) claimArea.classList.remove('d-none');
-          if (restartArea) restartArea.classList.add('d-none');
-        } else {
-          const no = document.createElement('div'); no.className = 'h4 text-secondary'; no.innerText = 'ขออภัย วันนี้คุณไม่ได้รับรางวัล';
-          prizeBox.appendChild(no);
-          if (claimArea) claimArea.classList.add('d-none');
-          if (restartArea) restartArea.classList.remove('d-none');
-          autoReset(8000);
-        }
+      const resp = await fetch('/promotion/kiosk/draw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ code })
+      });
+      const contentType = resp.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Unexpected response type from /promotion/kiosk/draw');
       }
+      const data = await resp.json();
+
+      if (!resp.ok || !data.ok) {
+        showMessage(data.message || 'จับรางวัลไม่สำเร็จ', data.messageType || 'danger');
+        autoReset(5000);
+        return;
+      }
+
+      showDrawEffect();
+      await new Promise(r => setTimeout(r, 1800));
+
+      if (spinWheel) {
+        spinWheel.style.animation = 'none';
+        spinWheel.classList.add('spin-stop');
+        spinWheel.innerHTML = data.prize ? '🎉' : '😢';
+      }
+
+      if (data.prize && navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      if (data.prize && typeof confetti === 'function') {
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+
+      await new Promise(r => setTimeout(r, 1800));
+
+      hideDrawEffect();
+      renderDrawResult(data);
+
       clearMessage();
     } catch (err) {
       console.error(err);
+      hideDrawEffect();
       showMessage('เกิดข้อผิดพลาดขณะจับรางวัล', 'danger');
       autoReset(5000);
-    } finally { if (drawBtn) drawBtn.disabled = false; }
+    } finally {
+      if (drawBtn) {
+        drawBtn.disabled = false;
+        drawBtn.innerText = 'จับรางวัล';
+      }
+    }
   }
 
-  function sanitizeCodeInput(s) { if (!s) return ''; return String(s).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 64); }
-
   async function handleClaim() {
-    const name = (customerName.value ; '').trim();
-    const phone = (customerPhone.value ; '').trim();
-    if (!name || !phone) { showMessage('กรุณากรอกชื่อและเบอร์โทรศัพท์', 'warning'); return; }
+    const name = customerName ? customerName.value.trim() : '';
+    const phone = customerPhone ? customerPhone.value.trim() : '';
+
+    if (!name || !phone) {
+      showMessage('กรุณากรอกชื่อและเบอร์โทรศัพท์', 'warning');
+      return;
+    }
+
     if (claimBtn) claimBtn.disabled = true;
     showMessage('กำลังบันทึกการเคลม...', 'info');
+
     try {
-      const resp = await fetch('/promotion/kiosk/claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draw_token: currentDrawToken, customer_name: name, customer_phone: phone }) });
+      const resp = await fetch('/promotion/kiosk/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          draw_token: currentDrawToken,
+          customer_name: name,
+          customer_phone: phone
+        })
+      });
       const data = await resp.json();
-      if (!data.ok) { showMessage(data.message ; 'ไม่สามารถเคลมได้', 'danger'); if (claimBtn) claimBtn.disabled = false; autoReset(5000); return; }
-      showMessage(data.message ; 'เคลมสำเร็จ', 'success');
+
+      if (!data.ok) {
+        showMessage(data.message || 'ไม่สามารถเคลมได้', 'danger');
+        autoReset(5000);
+        return;
+      }
+
+      showMessage(data.message || 'เคลมสำเร็จ', 'success');
+
       if (claimArea) claimArea.classList.add('d-none');
       if (restartArea) restartArea.classList.remove('d-none');
-      customerName.value = '';
-      customerPhone.value = '';
+
+      if (customerName) customerName.value = '';
+      if (customerPhone) customerPhone.value = '';
+
       autoReset(10000);
     } catch (err) {
       console.error(err);
       showMessage('เกิดข้อผิดพลาดขณะเคลม', 'danger');
       autoReset(5000);
-    } finally { if (claimBtn) claimBtn.disabled = false; }
+    } finally {
+      if (claimBtn) claimBtn.disabled = false;
+    }
   }
 
   async function handleDecline() {
     if (!confirm('คุณต้องการปฏิเสธรางวัลใช่หรือไม่?')) return;
+
     if (declineBtn) declineBtn.disabled = true;
     showMessage('กำลังบันทึกการปฏิเสธ...', 'info');
+
     try {
-      const resp = await fetch('/promotion/kiosk/decline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draw_token: currentDrawToken }) });
+      const resp = await fetch('/promotion/kiosk/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draw_token: currentDrawToken })
+      });
       const data = await resp.json();
-      if (!data.ok) { showMessage(data.message ; 'ไม่สามารถปฏิเสธได้', 'danger'); if (declineBtn) declineBtn.disabled = false; autoReset(5000); return; }
-      showMessage(data.message ; 'ปฏิเสธเรียบร้อย', 'success');
+
+      if (!data.ok) {
+        showMessage(data.message || 'ไม่สามารถปฏิเสธได้', 'danger');
+        autoReset(5000);
+        return;
+      }
+
+      showMessage(data.message || 'ปฏิเสธเรียบร้อย', 'success');
+
       if (claimArea) claimArea.classList.add('d-none');
       if (restartArea) restartArea.classList.remove('d-none');
-      customerName.value = '';
-      customerPhone.value = '';
+
+      if (customerName) customerName.value = '';
+      if (customerPhone) customerPhone.value = '';
+
       autoReset(8000);
     } catch (err) {
       console.error(err);
       showMessage('เกิดข้อผิดพลาดขณะปฏิเสธรางวัล', 'danger');
       autoReset(5000);
-    } finally { if (declineBtn) declineBtn.disabled = false; }
+    } finally {
+      if (declineBtn) declineBtn.disabled = false;
+    }
   }
 
-  function autoReset(delay = 8000) { clearTimeout(autoResetTimer); autoResetTimer = setTimeout(() => { toEnter(); }, delay); }
+  function autoReset(delay = 8000) {
+    clearTimeout(autoResetTimer);
+    autoResetTimer = setTimeout(() => {
+      toEnter();
+    }, delay);
+  }
 
   if (validateBtn) validateBtn.addEventListener('click', handleValidate);
-  if (codeInput) codeInput.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); handleValidate(); } });
-  if (clearBtn) clearBtn.addEventListener('click', () => { codeInput.value = ''; codeInput.focus(); clearMessage(); });
+  if (codeInput) {
+    codeInput.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        handleValidate();
+      }
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (codeInput) codeInput.value = '';
+      if (codeInput) codeInput.focus();
+      clearMessage();
+    });
+  }
   if (backToInputBtn) backToInputBtn.addEventListener('click', toEnter);
   if (drawBtn) drawBtn.addEventListener('click', handleDraw);
   if (claimBtn) claimBtn.addEventListener('click', handleClaim);
@@ -240,3 +919,6 @@
   toEnter();
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- include footer -->
+<%- include('footer.ejs') %>

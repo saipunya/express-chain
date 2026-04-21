@@ -1,63 +1,375 @@
-<div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
-      <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4">
-          <h1 class="fw-bold mb-2 text-center" style="font-size:2rem;">กรอกรหัสโปรโมชั่น</h1>
-          <p class="text-muted text-center mb-4" style="font-size:1.08rem;">
-            โปรดกรอกรหัสที่ได้รับจากเจ้าหน้าที่เพื่อร่วมลุ้นรับรางวัล
-          </p>
+
+<%- include('header.ejs') %>
+
+<style>
+  .promo-play-section {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 48px 0 64px;
+  }
+
+  .promo-play-shell {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .promo-play-hero {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .promo-play-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+  }
+
+  .promo-play-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+
+  .promo-play-highlight {
+    color: #2563eb;
+  }
+
+  .promo-play-desc {
+    font-size: 1.05rem;
+    color: #64748b;
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .promo-play-card {
+    background: #fff;
+    border: 1px solid rgba(37, 99, 235, 0.10);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .promo-play-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 24%);
+    pointer-events: none;
+  }
+
+  .promo-play-card-body {
+    position: relative;
+    z-index: 1;
+    padding: 32px;
+  }
+
+  .promo-play-head {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .promo-play-icon {
+    width: 82px;
+    height: 82px;
+    margin: 0 auto 16px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+  }
+
+  .promo-play-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .promo-info-card {
+    background: linear-gradient(180deg, #f8fbff 0%, #f8fafc 100%);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+
+  .promo-info-row + .promo-info-row {
+    margin-top: 8px;
+  }
+
+  .promo-info-label {
+    font-weight: 700;
+    color: #2563eb;
+    margin-right: 6px;
+  }
+
+  .promo-info-store {
+    color: #059669;
+  }
+
+  .promo-label {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+
+  .promo-code-input {
+    min-height: 72px;
+    border-radius: 18px;
+    border: 2px solid #dbeafe;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.06);
+    text-align: center;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #0f172a;
+    transition: all 0.18s ease;
+  }
+
+  .promo-code-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.14), 0 14px 28px rgba(37, 99, 235, 0.10);
+  }
+
+  .promo-helper {
+    margin-top: 10px;
+    color: #64748b;
+    font-size: 0.92rem;
+    text-align: center;
+  }
+
+  .promo-submit-btn {
+    min-height: 58px;
+    border: none;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
+    transition: all 0.18s ease;
+  }
+
+  .promo-submit-btn:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    color: #fff;
+  }
+
+  .promo-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .promo-back-link:hover {
+    color: #2563eb;
+  }
+
+  .promo-note-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  .promo-note-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .promo-note-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: inline-block;
+  }
+
+  @media (max-width: 767.98px) {
+    .promo-play-section {
+      padding: 28px 0 40px;
+    }
+
+    .promo-play-title {
+      font-size: 2rem;
+    }
+
+    .promo-play-card-body {
+      padding: 22px 16px;
+    }
+
+    .promo-code-input {
+      min-height: 64px;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+    }
+  }
+  .spin-box {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin-wheel {
+  font-size: 70px;
+  animation: spinRoll 0.6s linear infinite;
+}
+
+@keyframes spinRoll {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ตอน reveal */
+.spin-stop {
+  animation: popReveal 0.6s ease;
+}
+
+@keyframes popReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.promo-spin-modal[hidden] {
+  display: none !important;
+}
+
+.promo-spin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.promo-spin-panel {
+  width: min(100%, 420px);
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+}
+
+body.promo-spin-open {
+  overflow: hidden;
+}
+</style>
+
+<div class="promo-play-section">
+  <div class="container">
+    <div class="promo-play-shell">
+
+      <div class="promo-play-hero">
+        <div class="promo-play-badge">
+          <span>🎁</span>
+          <span>หน้ากรอกรหัสโปรโมชั่น</span>
+        </div>
+        <h1 class="promo-play-title">
+          กรอกรหัสเพื่อ<span class="promo-play-highlight">ลุ้นรับรางวัลทันที</span>
+        </h1>
+        <p class="promo-play-desc">
+          รับรหัสจากเจ้าหน้าที่ แล้วกรอกในช่องด้านล่างเพื่อเข้าสู่การสุ่มรางวัล
+          ใช้งานง่าย รวดเร็ว และทราบผลได้ทันที
+        </p>
+      </div>
+
+      <div class="promo-play-card">
+        <div class="promo-play-card-body">
+
+          <div class="promo-play-head">
+            <div class="promo-play-icon">🎉</div>
+            <h2 class="fw-bold mb-2" style="font-size: 1.7rem;">เริ่มลุ้นรางวัลของคุณ</h2>
+            <p class="promo-play-subtitle">กรอกรหัสให้ถูกต้องเพื่อดำเนินการต่อ</p>
+          </div>
 
           <!-- Validation / Flash Messages -->
           <% if (locals && locals.flash) { %>
-            <div class="alert alert-<%= locals.flash.type || 'info' %> alert-dismissible fade show mb-3" role="alert">
+            <div class="alert alert-<%= locals.flash.type || 'info' %> alert-dismissible fade show mb-3 rounded-4" role="alert">
               <%= locals.flash.message %>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
           <% } %>
           <% if (typeof validation !== 'undefined' && validation && validation.message) { %>
-            <div class="alert alert-<%= validation.type || 'info' %> mb-3" role="alert">
+            <div class="alert alert-<%= validation.type || 'info' %> mb-3 rounded-4" role="alert">
               <%= validation.message %>
             </div>
           <% } %>
-          <% if (typeof message !== 'undefined' && message) { %>
-            <div class="alert alert-<%= messageType || 'info' %> mb-3" role="alert">
-              <%= message %>
-            </div>
-          <% } %>
-
-          <!-- Campaign/Store Info -->
-          <% if (campaign || store) { %>
-            <div class="mb-4">
-              <div class="card bg-light border-0 shadow-sm rounded-3">
-                <div class="card-body py-2 px-3">
-                  <% if (campaign) { %>
-                    <div class="mb-1">
-                      <span class="fw-semibold text-primary"><i class="bi bi-gift me-1"></i>แคมเปญ:</span>
-                      <span><%= campaign.name %></span>
-                    </div>
-                  <% } %>
-                  <% if (store) { %>
-                    <div>
-                      <span class="fw-semibold text-success"><i class="bi bi-shop me-1"></i>สาขา:</span>
-                      <span><%= store.name %></span>
-                      <% if (store.code) { %>
-                        <span class="text-muted small">(<%= store.code %>)</span>
-                      <% } %>
-                    </div>
-                  <% } %>
-                </div>
-              </div>
-            </div>
-          <% } %>
+	          <% if (typeof message !== 'undefined' && message) { %>
+	            <div class="alert alert-<%= messageType || 'info' %> mb-3 rounded-4" role="alert">
+	              <%= message %>
+	            </div>
+	          <% } %>
+	
+	          <!-- Campaign/Store Info -->
+	          <%
+	            const campaignSafe = (typeof campaign !== 'undefined') ? campaign : null;
+	            const storeSafe = (typeof store !== 'undefined') ? store : null;
+	          %>
+	          <% if (campaignSafe || storeSafe) { %>
+	            <div class="promo-info-card">
+	              <% if (campaignSafe) { %>
+	                <div class="promo-info-row">
+	                  <span class="promo-info-label"><i class="bi bi-gift me-1"></i>แคมเปญ:</span>
+	                  <span><%= campaignSafe.name %></span>
+	                </div>
+	              <% } %>
+	              <% if (storeSafe) { %>
+	                <div class="promo-info-row">
+	                  <span class="promo-info-label promo-info-store"><i class="bi bi-shop me-1"></i>สาขา:</span>
+	                  <span><%= storeSafe.name %></span>
+	                  <% if (storeSafe.code) { %>
+	                    <span class="text-muted small">(<%= storeSafe.code %>)</span>
+	                  <% } %>
+	                </div>
+	              <% } %>
+	            </div>
+	          <% } %>
 
           <!-- Code Entry Form -->
-          <form method="post" action="/promotion/validate-code" autocomplete="off" class="needs-validation" novalidate onsubmit="return sanitizeCodeInput(this);">
+	          <form method="post" action="/promotion/validate-code" autocomplete="off" class="needs-validation" novalidate>
             <div class="mb-3">
-              <label for="codeValue" class="form-label fw-semibold">รหัสโปรโมชั่น</label>
+              <label for="codeValue" class="promo-label">รหัสโปรโมชั่น</label>
               <input
                 type="text"
-                class="form-control form-control-lg text-center rounded-3 shadow-sm"
+                class="form-control promo-code-input"
                 id="codeValue"
                 name="codeValue"
                 value="<%= typeof codeValue !== 'undefined' ? codeValue : '' %>"
@@ -65,7 +377,6 @@
                 required
                 pattern="[A-Za-z0-9]+"
                 placeholder="กรอกรหัสที่นี่"
-                style="font-size:1.3rem; letter-spacing:0.08em;"
                 autofocus
                 inputmode="text"
                 autocomplete="off"
@@ -73,52 +384,205 @@
               <div class="invalid-feedback text-center">
                 กรุณากรอกรหัสโปรโมชั่นที่ถูกต้อง (A-Z, 0-9)
               </div>
+              <div class="promo-helper">รองรับเฉพาะตัวอักษรภาษาอังกฤษ A-Z และตัวเลข 0-9</div>
             </div>
+
             <div class="d-grid mt-4">
-              <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm" id="submitBtn">
+              <button type="submit" class="btn promo-submit-btn" id="submitBtn">
                 <i class="bi bi-arrow-right-circle me-1"></i> ตรวจสอบรหัสและลุ้นรางวัล
               </button>
             </div>
           </form>
+
+          <div class="promo-note-row">
+            <span class="promo-note-chip"><span class="promo-note-dot"></span> ใช้เวลาไม่นาน</span>
+            <span class="promo-note-chip"><span class="promo-note-dot"></span> ทราบผลทันที</span>
+            <span class="promo-note-chip"><span class="promo-note-dot"></span> ใช้งานง่าย</span>
+          </div>
+
         </div>
       </div>
+
       <div class="text-center mt-4">
-        <a href="/promotion" class="btn btn-link text-decoration-none text-muted">
-          <i class="bi bi-chevron-left"></i> กลับหน้าโปรโมชั่น
+        <a href="/promotion" class="promo-back-link">
+          <i class="bi bi-chevron-left"></i>
+          <span>กลับหน้าโปรโมชั่น</span>
         </a>
       </div>
+
     </div>
   </div>
 </div>
+<div id="spinModal" class="promo-spin-modal" hidden>
+  <div class="promo-spin-panel">
+    <div class="spin-box mb-3">
+      <div class="spin-wheel" id="spinWheel">🎁</div>
+    </div>
 
+    <h4 class="fw-bold">กำลังสุ่มรางวัล...</h4>
+    <p class="text-muted mb-0">โปรดรอสักครู่</p>
+  </div>
+</div>
 <script>
-  // Prevent double submit and sanitize input
-  function sanitizeCodeInput(form) {
-    var input = form.codeValue;
-    if (input) {
-      input.value = input.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    }
-    var btn = form.querySelector('button[type="submit"]');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerText = 'กำลังตรวจสอบ...';
-    }
-    return true;
-  }
-  // Bootstrap validation
-  (function () {
-    var forms = document.querySelectorAll('.needs-validation');
-    Array.prototype.slice.call(forms).forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
-    });
-  })();
-</script>
 
-<!-- Optional: Bootstrap Icons CDN (if not already included) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	  (function () {
+	    var forms = document.querySelectorAll('.needs-validation');
+	    Array.prototype.slice.call(forms).forEach(function (form) {
+	      form.addEventListener('submit', function (event) {
+	        event.preventDefault();
+	        if (!form.checkValidity()) {
+	          event.stopPropagation();
+	          form.classList.add('was-validated');
+	          return;
+	        }
+	        form.classList.add('was-validated');
+	        handleSubmit(form);
+	      }, false);
+	    });
+	  })();
+async function startDrawWithEffect(code) {
+  const modalEl = document.getElementById('spinModal');
+  const wheel = document.getElementById('spinWheel');
+  const submitBtn = document.getElementById('submitBtn');
+  const flashContainer = document.querySelector('.promo-play-card-body');
+
+  function showClientAlert(message, type) {
+    const oldAlert = document.getElementById('clientDrawAlert');
+    if (oldAlert) oldAlert.remove();
+    if (!flashContainer || !message) return;
+
+    const alert = document.createElement('div');
+    alert.id = 'clientDrawAlert';
+    alert.className = 'alert alert-' + (type || 'danger') + ' mb-3 rounded-4';
+    alert.setAttribute('role', 'alert');
+    alert.textContent = message;
+    flashContainer.insertBefore(alert, flashContainer.firstChild);
+  }
+
+  function resetDrawUi() {
+    wheel.style.animation = "none";
+    wheel.classList.remove('spin-stop');
+    wheel.innerHTML = "🎁";
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "ตรวจสอบรหัสและลุ้นรางวัล";
+    }
+    modalEl.hidden = true;
+    document.body.classList.remove('promo-spin-open');
+  }
+
+  function showDrawUi() {
+    modalEl.hidden = false;
+    document.body.classList.add('promo-spin-open');
+    wheel.innerHTML = "🎁";
+    wheel.classList.remove('spin-stop');
+    wheel.style.animation = "spinRoll 0.6s linear infinite";
+  }
+	
+  try {
+    const oldAlert = document.getElementById('clientDrawAlert');
+    if (oldAlert) oldAlert.remove();
+
+    const resp = await fetch('/promotion/draw', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ code })
+    });
+
+    const contentType = resp.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Unexpected response type from /promotion/draw');
+    }
+
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      const drawError = new Error((data && data.message) || 'Draw failed');
+      drawError.alertType = (data && data.messageType) || 'danger';
+      throw drawError;
+    }
+
+    showDrawUi();
+
+    await new Promise(r => setTimeout(r, 1800));
+
+    wheel.style.animation = "none";
+    wheel.classList.add('spin-stop');
+
+    // ✅ อยู่ตรงนี้
+    if (data.prize) {
+      wheel.innerHTML = "🎉";
+      // 🔥 ใส่ตรงนี้เลย
+        if (navigator.vibrate) {
+          navigator.vibrate([200,100,200]);
+        }
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+    } else {
+      wheel.innerHTML = "😢";
+    }
+
+    await new Promise(r => setTimeout(r, 1800));
+
+    resetDrawUi();
+
+    handleDrawResult(data);
+
+  } catch (err) {
+    console.error(err);
+    resetDrawUi();
+    showClientAlert(
+      err && err.message ? err.message : "ระบบขัดข้อง กรุณาลองใหม่",
+      err && err.alertType ? err.alertType : 'danger'
+    );
+  }
+}
+function handleSubmit(form) {
+  const input = form.codeValue;
+
+  let code = input.value
+    .replace(/[^A-Za-z0-9]/g, '')
+    .toUpperCase();
+
+  if (!code) return;
+
+  input.value = code;
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "กำลังสุ่มรางวัล...";
+  }
+
+  // 👉 เรียก effect
+  startDrawWithEffect(code);
+  
+}
+function handleDrawResult(data) {
+  if (data && data.redirect_url) {
+    window.location.href = data.redirect_url;
+    return;
+  }
+  if (data && data.draw_token) {
+    window.location.href = '/promotion/result/' + encodeURIComponent(data.draw_token);
+    return;
+  }
+  if (data.prize) {
+    window.location.href = '/promotion/result?win=1';
+  } else {
+    window.location.href = '/promotion/result?win=0';
+  }
+}
+
+
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<%- include('footer.ejs') %>

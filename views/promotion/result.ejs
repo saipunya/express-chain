@@ -1,152 +1,204 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-8">
-      <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-        <div class="card-body p-4 text-center">
-          <h1 class="display-6 fw-bold mb-2"><%= title || 'ผลการจับรางวัล' %></h1>
-          <p class="text-muted mb-4">ตรวจสอบสถานะการจับรางวัลและจัดการการเคลมได้ที่หน้านี้</p>
+<!-- include header -->
+<%- include('header.ejs') %>
 
-          <% if (locals && locals.flash) { %>
-            <div class="alert alert-<%= locals.flash.type || 'info' %> alert-dismissible fade show mb-3" role="alert">
-              <%= locals.flash.message %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          <% } %>
+<style>
+  .promo-result-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
 
-          <% if (typeof message !== 'undefined' && message) { %>
-            <div class="alert alert-<%= messageType || 'info' %> mb-3" role="alert"><%= message %></div>
-          <% } %>
+  .promo-result-card {
+    width: 100%;
+    max-width: 720px;
+    background: #fff;
+    border-radius: 32px;
+    padding: 36px 28px;
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.12);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
 
-          <% if (draw) { %>
-            <div class="card mb-3 border-0 shadow-sm rounded-4">
-              <div class="row g-0 align-items-center">
-                <div class="col-12 col-md-4 text-center p-4 bg-light">
-                  <% if (draw.prize_image || draw.prize_image_url) { %>
-                    <img src="<%= draw.prize_image || draw.prize_image_url %>" alt="Prize image" class="img-fluid rounded mb-3" style="max-height:170px; object-fit:contain;">
-                  <% } else { %>
-                    <div class="bg-white rounded-4 d-flex align-items-center justify-content-center mb-3" style="height:170px;">
-                      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 2l2.9 6.2L21 9.3l-5 3.9L17.8 21 12 17.8 6.2 21 7 13.2 2 9.3l6.1-1.1L12 2z" fill="#ffc107"></path>
-                      </svg>
-                    </div>
-                  <% } %>
-                  <div class="text-muted small">รหัสที่ใช้: <strong><%= draw.code_value %></strong></div>
-                </div>
+  .promo-result-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(37,99,235,0.15), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(59,130,246,0.12), transparent 28%);
+    pointer-events: none;
+  }
 
-                <div class="col-12 col-md-8 p-4 text-start">
-                  <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                      <% if (draw.prize_name) { %>
-                        <h3 class="h5 fw-bold mb-2"><%= draw.prize_name %></h3>
-                        <% if (draw.prize_description) { %>
-                          <p class="text-muted small mb-0"><%= draw.prize_description %></p>
-                        <% } %>
-                      <% } else { %>
-                        <h3 class="h5 fw-bold mb-2">ไม่มีรางวัล</h3>
-                      <% } %>
-                    </div>
-                    <div class="text-end">
-                      <div class="small text-muted mb-1">สถานะ</div>
-                      <div>
-                        <% if (draw.draw_status === 'drawn') { %>
-                          <span class="badge bg-warning text-dark">จับรางวัลแล้ว</span>
-                        <% } else if (draw.draw_status === 'claimed') { %>
-                          <span class="badge bg-success">เคลมแล้ว</span>
-                        <% } else if (draw.draw_status === 'declined') { %>
-                          <span class="badge bg-secondary">ปฏิเสธแล้ว</span>
-                        <% } else { %>
-                          <span class="badge bg-secondary"><%= draw.draw_status %></span>
-                        <% } %>
-                      </div>
-                    </div>
-                  </div>
+  .promo-result-inner {
+    position: relative;
+    z-index: 1;
+  }
 
-                  <div class="row g-2">
-                    <div class="col-12 col-md-6">
-                      <div class="text-muted small">แคมเปญ</div>
-                      <div class="fw-semibold"><%= draw.campaign_name || '-' %></div>
-                    </div>
-                    <div class="col-12 col-md-6 text-md-end">
-                      <div class="text-muted small">ร้าน / เวลา</div>
-                      <div class="fw-semibold"><%= draw.store_name ? (draw.store_name + ' (' + draw.store_code + ')') : '-' %></div>
-                      <div class="text-muted small"><%= draw.drawn_at ? new Date(draw.drawn_at).toLocaleString() : '-' %></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+  .promo-result-icon {
+    font-size: 90px;
+    margin-bottom: 12px;
+    animation: bounce 1.2s infinite alternate;
+  }
 
-            <% if (draw.draw_status === 'drawn') { %>
-              <% if (draw.prize_id) { %>
-                <div class="row g-3">
-                  <div class="col-12 col-md-7">
-                    <form id="claimForm" method="post" action="/promotion/claim" onsubmit="return disableClaim(this);">
-                      <input type="hidden" name="draw_token" value="<%= draw.draw_token %>">
-                      <div class="mb-3">
-                        <label class="form-label">ชื่อผู้รับ</label>
-                        <input class="form-control form-control-lg rounded-3" name="customer_name" required autocomplete="name" placeholder="ชื่อเต็ม">
-                      </div>
-                      <div class="mb-3">
-                        <label class="form-label">เบอร์โทรศัพท์</label>
-                        <input class="form-control form-control-lg rounded-3" name="customer_phone" type="tel" inputmode="tel" required autocomplete="tel" placeholder="08xxxxxxxx">
-                      </div>
-                      <div class="d-grid">
-                        <button id="claimBtnForm" type="submit" class="btn btn-primary btn-lg rounded-3">เคลมรางวัล</button>
-                      </div>
-                    </form>
-                  </div>
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+  }
 
-                  <div class="col-12 col-md-5 d-flex align-items-center">
-                    <form id="declineForm" method="post" action="/promotion/decline" onsubmit="return onDeclineSubmit(this);" class="w-100">
-                      <input type="hidden" name="draw_token" value="<%= draw.draw_token %>">
-                      <div class="d-grid">
-                        <button id="declineBtnForm" type="submit" class="btn btn-outline-danger btn-lg rounded-3">ปฏิเสธรางวัล</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              <% } else { %>
-                <div class="alert alert-secondary">รางวัลไม่มีรายการให้เคลม ณ เวลานี้</div>
-              <% } %>
-            <% } else if (draw.draw_status === 'claimed') { %>
-              <div class="alert alert-success text-start">
-                <div class="fw-semibold mb-1">รางวัลถูกเคลมแล้ว</div>
-                <div class="small text-muted">โดย: <strong><%= draw.customer_name || '-' %></strong></div>
-                <div class="small text-muted">เบอร์โทรศัพท์: <%= draw.customer_phone || '-' %></div>
-                <div class="small text-muted">เวลา: <%= draw.claimed_at ? new Date(draw.claimed_at).toLocaleString() : '-' %></div>
-              </div>
-            <% } else if (draw.draw_status === 'declined') { %>
-              <div class="alert alert-warning text-start">
-                <div class="fw-semibold mb-1">ผู้เล่นปฏิเสธรางวัลแล้ว</div>
-                <div class="small text-muted">เวลา: <%= draw.declined_at ? new Date(draw.declined_at).toLocaleString() : '-' %></div>
-              </div>
-            <% } %>
-          <% } else { %>
-            <div class="alert alert-info">ไม่พบข้อมูลผลการจับรางวัล</div>
-          <% } %>
+  .promo-result-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
 
-          <div class="mt-3">
-            <a href="/promotion/play" class="btn btn-outline-primary btn-lg rounded-3">กลับไปยังหน้าเล่น</a>
-          </div>
+  .promo-result-win {
+    color: #16a34a;
+  }
+
+  .promo-result-lose {
+    color: #64748b;
+  }
+
+  .promo-prize-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 6px;
+  }
+
+  .promo-prize-desc {
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .promo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  .promo-btn {
+    min-height: 54px;
+    padding: 12px 22px;
+    border-radius: 14px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .promo-btn-primary {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(37,99,235,0.25);
+  }
+
+  .promo-btn-primary:hover {
+    transform: translateY(-2px);
+  }
+
+  .promo-btn-success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+  }
+
+  .promo-btn-danger {
+    background: #fff;
+    color: #dc2626;
+    border: 2px solid rgba(220,38,38,0.25);
+  }
+
+  .promo-btn-outline {
+    background: #fff;
+    border: 2px solid #cbd5e1;
+  }
+
+  @media(max-width:768px){
+    .promo-result-title {
+      font-size: 1.7rem;
+    }
+
+    .promo-prize-name {
+      font-size: 1.4rem;
+    }
+
+    .promo-actions {
+      flex-direction: column;
+    }
+
+    .promo-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="promo-result-page">
+  <div class="promo-result-card">
+    <div class="promo-result-inner">
+
+      <% const drawSafe = (typeof draw !== 'undefined') ? draw : null; %>
+      <% const hasPrize = drawSafe && drawSafe.prize_id && drawSafe.prize_type !== 'other'; %>
+      <% if (hasPrize) { %>
+
+        <div class="promo-result-icon">🎉</div>
+
+        <div class="promo-result-title promo-result-win">
+          ยินดีด้วย! คุณได้รับรางวัล
         </div>
+
+        <div class="promo-prize-name">
+          <%= drawSafe.prize_name %>
+        </div>
+
+        <div class="promo-prize-desc">
+          <%= drawSafe.prize_description || '' %>
+        </div>
+
+        <div class="promo-actions">
+          <form method="post" action="/promotion/claim">
+            <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
+            <button class="promo-btn promo-btn-success">🎁 เคลมรางวัล</button>
+          </form>
+
+          <form method="post" action="/promotion/decline">
+            <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
+            <button class="promo-btn promo-btn-danger">ปฏิเสธ</button>
+          </form>
+        </div>
+
+      <% } else { %>
+
+        <div class="promo-result-icon">😢</div>
+
+        <div class="promo-result-title promo-result-lose">
+          ขออภัย คุณไม่ได้รับรางวัล
+        </div>
+
+        <div class="promo-prize-desc">
+          ลองใหม่อีกครั้งในโอกาสถัดไปนะครับ
+        </div>
+
+        <div class="promo-actions">
+          <a href="/promotion/play" class="promo-btn promo-btn-primary">
+            🔄 ลองใหม่
+          </a>
+        </div>
+
+      <% } %>
+
+      <div class="promo-actions mt-3">
+        <a href="/promotion" class="promo-btn promo-btn-outline">
+          ← กลับหน้าแรก
+        </a>
       </div>
+
     </div>
   </div>
 </div>
-
-<script>
-  function disableClaim(form) {
-    const btn = form.querySelector('button[type="submit"]');
-    if (btn) { btn.disabled = true; btn.innerText = 'กำลังบันทึก...'; }
-    return true;
-  }
-
-  function onDeclineSubmit(form) {
-    if (!confirm('คุณต้องการปฏิเสธรางวัลใช่หรือไม่?')) return false;
-    const btn = form.querySelector('button[type="submit"]');
-    if (btn) { btn.disabled = true; btn.innerText = 'กำลังส่ง...'; }
-    return true;
-  }
-</script>
- 
-
+<!-- include footer -->
+<%- include('footer.ejs') %>

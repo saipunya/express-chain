@@ -1,6 +1,9 @@
 // models/promotionModel.js
 // Uses project's DB pool (mysql2/promise). Adjust import if your project uses a different path.
 const db = require('../config/db');
+const { getAvailablePrizesByCampaign, getPrizesList, lockPrizeById, reservePrizeById } = require('./promotion/prizeModel');
+const { getCampaignById, getActiveCampaignByStore, getCampaignsWithStore } = require('./promotion/campaignModel');
+const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList } = require('./promotion/drawModel');
 
 /**
  * Get store by id
@@ -12,35 +15,7 @@ async function getStoreById(storeId) {
   return rows[0] || null;
 }
 
-/**
- * Get campaign by id
- * @param {number|string} campaignId
- * @returns {Promise<Object|null>}
- */
-async function getCampaignById(campaignId) {
-  const [rows] = await db.query('SELECT * FROM promotion_campaigns WHERE id = ? LIMIT 1', [campaignId]);
-  return rows[0] || null;
-}
-
-/**
- * Get active campaigns for a store.
- * Returns array of campaigns that are active and within start/end bounds.
- * @param {number|string} storeId
- * @returns {Promise<Array>}
- */
-async function getActiveCampaignByStore(storeId) {
-  const [rows] = await db.query(
-    `SELECT *
-     FROM promotion_campaigns
-     WHERE store_id = ?
-       AND active = 1
-       AND (start_at IS NULL OR start_at <= NOW())
-       AND (end_at IS NULL OR end_at >= NOW())
-     ORDER BY start_at DESC, id ASC`,
-    [storeId]
-  );
-  return rows;
-}
+ 
 
 /**
  * Get code record by exact code value
@@ -76,34 +51,9 @@ async function getCodeWithCampaign(code) {
   return rows[0] || null;
 }
 
-/**
- * Get available prizes for a given campaign (active and with remaining_qty > 0).
- * Ordered by weight desc then id.
- * @param {number|string} campaignId
- * @returns {Promise<Array>}
- */
-async function getAvailablePrizesByCampaign(campaignId) {
-  const [rows] = await db.query(
-    `SELECT *
-     FROM promotion_prizes
-     WHERE campaign_id = ?
-       AND active = 1
-       AND remaining_qty > 0
-     ORDER BY weight DESC, id ASC`,
-    [campaignId]
-  );
-  return rows;
-}
+ 
 
-/**
- * Get draw record by draw token
- * @param {string} drawToken
- * @returns {Promise<Object|null>}
- */
-async function getDrawByToken(drawToken) {
-  const [rows] = await db.query('SELECT * FROM promotion_draws WHERE draw_token = ? LIMIT 1', [drawToken]);
-  return rows[0] || null;
-}
+ 
 
 module.exports = {
   getStoreById,
@@ -144,27 +94,9 @@ async function lockCodeByValue(connection, code) {
   return rows[0] || null;
 }
 
-/**
- * Lock a prize row by id (SELECT ... FOR UPDATE)
- */
-async function lockPrizeById(connection, prizeId) {
-  const [rows] = await connection.query('SELECT * FROM promotion_prizes WHERE id = ? FOR UPDATE', [prizeId]);
-  return rows[0] || null;
-}
+ 
 
-/**
- * Reserve one unit of prize (decrement remaining_qty, increment reserved_qty)
- * Returns true if update succeeded (affectedRows > 0)
- */
-async function reservePrizeById(connection, prizeId) {
-  // Reserve one unit without decrementing remaining_qty yet.
-  // Ensure there is at least one available unit: remaining_qty - reserved_qty > 0
-  const [result] = await connection.query(
-    'UPDATE promotion_prizes SET reserved_qty = reserved_qty + 1, updated_at = NOW() WHERE id = ? AND (remaining_qty - reserved_qty) > 0',
-    [prizeId]
-  );
-  return (result && result.affectedRows && result.affectedRows > 0) || false;
-}
+ 
 
 /**
  * Update code status (within transaction connection)
@@ -173,76 +105,12 @@ async function markCodeStatus(connection, codeId, status) {
   await connection.query('UPDATE promotion_codes SET status = ?, updated_at = NOW() WHERE id = ?', [status, codeId]);
 }
 
-/**
- * Insert a draw record within a transaction
- */
-async function createDrawRecord(connection, payload) {
-  const sql = `INSERT INTO promotion_draws
-    (draw_token, store_id, campaign_id, code_id, prize_id, draw_status, customer_name, customer_phone, drawn_at, device_type, device_ip, user_agent, metadata, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, NOW(), NOW())`;
-  const params = [
-    payload.draw_token,
-    payload.store_id || null,
-    payload.campaign_id || null,
-    payload.code_id || null,
-    payload.prize_id || null,
-    payload.draw_status || 'drawn',
-    payload.customer_name || null,
-    payload.customer_phone || null,
-    payload.device_type || null,
-    payload.device_ip || null,
-    payload.user_agent || null,
-    payload.metadata || null
-  ];
-  const [result] = await connection.query(sql, params);
-  return result.insertId;
-}
+ 
 
 /**
- * Lock a draw by token (SELECT ... FOR UPDATE)
- */
-async function lockDrawByToken(connection, drawToken) {
-  const [rows] = await connection.query('SELECT * FROM promotion_draws WHERE draw_token = ? FOR UPDATE', [drawToken]);
-  return rows[0] || null;
-}
-
-/**
- * Mark a draw as claimed and set customer info
- */
-async function markDrawClaimed(connection, drawId, customerName, customerPhone) {
-  const [result] = await connection.query(
-    'UPDATE promotion_draws SET draw_status = ?, customer_name = ?, customer_phone = ?, claimed_at = NOW(), updated_at = NOW() WHERE id = ?',
-    ['claimed', customerName, customerPhone, drawId]
-  );
-  return (result && result.affectedRows && result.affectedRows > 0) || false;
-}
-
-/**
- * Mark a draw as declined
- */
-async function markDrawDeclined(connection, drawId) {
-  const [result] = await connection.query(
-    'UPDATE promotion_draws SET draw_status = ?, declined_at = NOW(), updated_at = NOW() WHERE id = ?',
-    ['declined', drawId]
-  );
-  return (result && result.affectedRows && result.affectedRows > 0) || false;
-}
-
-/**
- * decrement reserved_qty and remaining_qty when customer claims
+ * finalize a claim by consuming one reserved unit
  */
 async function decrementReservedAndRemaining(connection, prizeId) {
-  const [result] = await connection.query(
-    'UPDATE promotion_prizes SET reserved_qty = reserved_qty - 1, remaining_qty = remaining_qty - 1, updated_at = NOW() WHERE id = ? AND reserved_qty > 0 AND remaining_qty > 0',
-    [prizeId]
-  );
-  return (result && result.affectedRows && result.affectedRows > 0) || false;
-}
-
-/**
- * decrement reserved_qty only (release reservation)
- */
-async function decrementReservedOnly(connection, prizeId) {
   const [result] = await connection.query(
     'UPDATE promotion_prizes SET reserved_qty = reserved_qty - 1, updated_at = NOW() WHERE id = ? AND reserved_qty > 0',
     [prizeId]
@@ -251,24 +119,17 @@ async function decrementReservedOnly(connection, prizeId) {
 }
 
 /**
- * Get draw and related details by token (non-transactional read)
+ * release a reservation by moving one reserved unit back to remaining
  */
-async function getDrawWithDetailsByToken(drawToken) {
-  const [rows] = await db.query(
-    `SELECT d.*, pc.code AS code_value, pr.id AS prize_id, pr.name AS prize_name, pr.description AS prize_description,
-            c.id AS campaign_id, c.campaign_code AS campaign_code, c.name AS campaign_name,
-            s.id AS store_id, s.store_code AS store_code, s.name AS store_name
-     FROM promotion_draws d
-     LEFT JOIN promotion_codes pc ON d.code_id = pc.id
-     LEFT JOIN promotion_prizes pr ON d.prize_id = pr.id
-     LEFT JOIN promotion_campaigns c ON d.campaign_id = c.id
-     LEFT JOIN stores s ON d.store_id = s.id
-     WHERE d.draw_token = ?
-     LIMIT 1`,
-    [drawToken]
+async function decrementReservedOnly(connection, prizeId) {
+  const [result] = await connection.query(
+    'UPDATE promotion_prizes SET reserved_qty = reserved_qty - 1, remaining_qty = remaining_qty + 1, updated_at = NOW() WHERE id = ? AND reserved_qty > 0',
+    [prizeId]
   );
-  return rows[0] || null;
+  return (result && result.affectedRows && result.affectedRows > 0) || false;
 }
+
+ 
 
 /**
  * Get aggregate counts for promotion codes by status
@@ -287,29 +148,9 @@ async function getCodeCounts() {
   return rows[0] || { total: 0, unused: 0, drawn: 0, claimed: 0, declined: 0, expired: 0 };
 }
 
-/**
- * Get campaigns with store info
- */
-async function getCampaignsWithStore() {
-  const [rows] = await db.query(
-    `SELECT c.*, s.id AS store_id, s.name AS store_name, s.store_code
-     FROM promotion_campaigns c
-     LEFT JOIN stores s ON c.store_id = s.id
-     ORDER BY s.name ASC, c.start_at DESC`);
-  return rows;
-}
+ 
 
-/**
- * Get prize list with campaign names
- */
-async function getPrizesList() {
-  const [rows] = await db.query(
-    `SELECT p.*, c.name AS campaign_name
-     FROM promotion_prizes p
-     LEFT JOIN promotion_campaigns c ON p.campaign_id = c.id
-     ORDER BY c.name ASC, p.name ASC`);
-  return rows;
-}
+ 
 
 /**
  * Get codes list (read-only)
@@ -327,23 +168,7 @@ async function getCodesList(limit = 500) {
   return rows;
 }
 
-/**
- * Get draws list (recent first)
- */
-async function getDrawsList(limit = 500) {
-  const [rows] = await db.query(
-    `SELECT d.*, pc.code AS code_value, pr.name AS prize_name, c.name AS campaign_name, s.name AS store_name
-     FROM promotion_draws d
-     LEFT JOIN promotion_codes pc ON d.code_id = pc.id
-     LEFT JOIN promotion_prizes pr ON d.prize_id = pr.id
-     LEFT JOIN promotion_campaigns c ON d.campaign_id = c.id
-     LEFT JOIN stores s ON d.store_id = s.id
-     ORDER BY d.drawn_at DESC
-     LIMIT ?`,
-    [limit]
-  );
-  return rows;
-}
+ 
 
 /**
  * Get list of stores for admin selects

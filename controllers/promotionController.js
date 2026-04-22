@@ -1,6 +1,5 @@
 const promotionModel = require('../models/promotionModel');
 const db = require('../config/db');
-const conn = require('../config/db');
 const { randomUUID } = require('crypto');
 
 // Helper: sanitize code input (upper-case alphanumeric only)
@@ -28,6 +27,106 @@ function sanitizeName(raw) {
   return s;
 }
 
+function sanitizeStoreCode(raw) {
+  return String(raw || '').trim().toUpperCase().slice(0, 50).replace(/[^A-Z0-9_-]/g, '');
+}
+
+async function findStoreByCode(storeCodeRaw) {
+  const storeCode = sanitizeStoreCode(storeCodeRaw);
+  if (!storeCode) return null;
+
+  const exact = await promotionModel.getStoreByCode(storeCode);
+  if (exact) return exact;
+
+  const match = storeCode.match(/^(.*?)(\d+)$/);
+  if (!match) return null;
+
+  const prefix = match[1];
+  const number = Number.parseInt(match[2], 10);
+  if (!Number.isInteger(number) || number < 0) return null;
+
+  for (const width of [1, 2, 3, 4, 5, 6]) {
+    const candidate = `${prefix}${String(number).padStart(width, '0')}`;
+    if (candidate === storeCode) continue;
+    const found = await promotionModel.getStoreByCode(candidate);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+function parseMetadataObject(raw) {
+  if (!raw) return {};
+  if (typeof raw === 'object' && raw !== null) return raw;
+  try {
+    const parsed = JSON.parse(String(raw));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function withPrizeImage(prize) {
+  const metadataObj = parseMetadataObject(prize && prize.metadata);
+  return {
+    ...prize,
+    image_url: metadataObj.image_url || null
+  };
+}
+
+async function renderPlayPage(res, options = {}) {
+  const store = options.store || null;
+  const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
+  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 12) : [];
+  const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
+
+  return res.render('promotion/play', {
+    title: options.title || 'เล่นสุ่มรางวัล',
+    pageName: 'promotion-play',
+    campaign: options.campaign || null,
+    store,
+    storeCode,
+    featuredPrizes,
+    ...options.extra
+  });
+}
+
+async function renderKioskPage(res, options = {}) {
+  const store = options.store || null;
+  const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
+  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 12) : [];
+  const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
+
+  return res.render('promotion/kiosk', {
+    title: options.title || 'Kiosk โปรโมชั่น',
+    pageName: 'promotion-kiosk',
+    store,
+    storeCode,
+    featuredPrizes,
+    ...options.extra
+  });
+}
+
+async function renderPlayWithContext(res, options = {}) {
+  const status = Number.isInteger(options.status) ? options.status : 200;
+  const store = options.store || null;
+  const campaign = options.campaign || null;
+  if (status !== 200) res.status(status);
+
+  return renderPlayPage(res, {
+    title: options.title || 'เล่นสุ่มรางวัล',
+    store,
+    campaign,
+    extra: {
+      message: options.message,
+      messageType: options.messageType || 'info',
+      codeValue: options.codeValue || '',
+      code: options.code || null,
+      validation: options.validation || null
+    }
+  });
+}
+
 function isValidToken(token) {
   if (!token) return false;
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -48,15 +147,28 @@ exports.index = async (req, res) => {
 
 exports.play = async (req, res) => {
   try {
-    res.render('promotion/play', {
-      title: 'เล่นสุ่มรางวัล',
-      pageName: 'promotion-play',
-      campaign: null,
-      store: null
-    });
+    return renderPlayPage(res, { title: 'เล่นสุ่มรางวัล' });
   } catch (err) {
     console.error('promotion.play error', err);
-    res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.playByStore = async (req, res) => {
+  try {
+    const storeCode = sanitizeStoreCode(req.params.storeCode);
+    if (!storeCode) return res.status(400).render('error_page', { message: 'รหัสสาขาไม่ถูกต้อง' });
+
+    const store = await findStoreByCode(storeCode);
+    if (!store) return res.status(404).render('error_page', { message: 'ไม่พบสาขาที่ต้องการ' });
+
+    return renderPlayPage(res, {
+      title: `เล่นสุ่มรางวัล - ${store.name}`,
+      store
+    });
+  } catch (err) {
+    console.error('promotion.playByStore error', err);
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
   }
 };
 
@@ -66,12 +178,27 @@ exports.play = async (req, res) => {
  */
 exports.kiosk = async (req, res) => {
   try {
-    return res.render('promotion/kiosk', {
-      title: 'Kiosk โปรโมชั่น',
-      pageName: 'promotion-kiosk'
-    });
+    return renderKioskPage(res, { title: 'Kiosk โปรโมชั่น' });
   } catch (err) {
     console.error('promotion.kiosk error', err);
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาด' });
+  }
+};
+
+exports.kioskByStore = async (req, res) => {
+  try {
+    const storeCode = sanitizeStoreCode(req.params.storeCode);
+    if (!storeCode) return res.status(400).render('error_page', { message: 'รหัสสาขาไม่ถูกต้อง' });
+
+    const store = await findStoreByCode(storeCode);
+    if (!store) return res.status(404).render('error_page', { message: 'ไม่พบสาขาที่ต้องการ' });
+
+    return renderKioskPage(res, {
+      title: `Kiosk โปรโมชั่น - ${store.name}`,
+      store
+    });
+  } catch (err) {
+    console.error('promotion.kioskByStore error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาด' });
   }
 };
@@ -83,7 +210,10 @@ exports.kiosk = async (req, res) => {
 exports.kioskValidate = async (req, res) => {
   try {
     const codeValue = sanitizeCode((req.body && req.body.code) || '');
+    const requestedStoreCode = sanitizeStoreCode((req.body && req.body.store_code) || '');
+    const expectedStore = requestedStoreCode ? await findStoreByCode(requestedStoreCode) : null;
     if (!codeValue) return res.json({ ok: false, message: 'กรุณากรอกรหัสโปรโมชั่น' });
+    if (requestedStoreCode && !expectedStore) return res.json({ ok: false, message: 'ไม่พบสาขาที่ระบุ' });
 
     const codeRow = await promotionModel.getCodeWithCampaign(codeValue);
     if (!codeRow) return res.json({ ok: false, message: 'ไม่พบรหัสนี้ในระบบ' });
@@ -120,6 +250,9 @@ exports.kioskValidate = async (req, res) => {
     const storeId = codeRow.store_id || campaign.store_id || codeRow.campaign_store_id;
     let store = null;
     if (storeId) store = await promotionModel.getStoreById(storeId);
+    if (expectedStore && Number(storeId) !== Number(expectedStore.id)) {
+      return res.json({ ok: false, message: 'รหัสนี้ไม่ใช่ของสาขานี้' });
+    }
 
     return res.json({ ok: true, code: { id: codeRow.id, code: codeRow.code, expires_at: codeRow.expires_at, status: codeRow.status }, campaign: { id: campaign.id, name: campaign.name, start_at: campaign.start_at, end_at: campaign.end_at }, store: store ? { id: store.id, name: store.name, store_code: store.store_code } : null });
   } catch (err) {
@@ -134,11 +267,17 @@ exports.kioskValidate = async (req, res) => {
  */
 exports.kioskDraw = async (req, res) => {
   const codeValue = sanitizeCode((req.body && req.body.code) || '');
+  const requestedStoreCode = sanitizeStoreCode((req.body && req.body.store_code) || '');
   if (!codeValue) return res.json({ ok: false, message: 'กรุณากรอกรหัสโปรโมชั่น' });
 
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
+    const expectedStore = requestedStoreCode ? await findStoreByCode(requestedStoreCode) : null;
+    if (requestedStoreCode && !expectedStore) {
+      await conn.rollback();
+      return res.json({ ok: false, message: 'ไม่พบสาขาที่ระบุ' });
+    }
 
     const codeRow = await promotionModel.lockCodeByValue(conn, codeValue);
     if (!codeRow) {
@@ -165,6 +304,11 @@ exports.kioskDraw = async (req, res) => {
     if (!campaign || !campaign.active) {
       await conn.rollback();
       return res.json({ ok: false, message: 'แคมเปญไม่พร้อมใช้งาน' });
+    }
+    const resolvedStoreId = codeRow.store_id || campaign.store_id || null;
+    if (expectedStore && Number(resolvedStoreId) !== Number(expectedStore.id)) {
+      await conn.rollback();
+      return res.json({ ok: false, message: 'รหัสนี้ไม่ใช่ของสาขานี้' });
     }
 
     const [candidates] = await conn.query(
@@ -203,12 +347,17 @@ exports.kioskDraw = async (req, res) => {
       break;
     }
 
+    if (!chosenPrize) {
+      await conn.rollback();
+      return res.json({ ok: false, message: 'ขออภัย ของรางวัลสำหรับแคมเปญนี้หมดแล้ว' });
+    }
+
     const drawToken = randomUUID();
     const drawStatus = 'drawn';
 
     await promotionModel.createDrawRecord(conn, {
       draw_token: drawToken,
-      store_id: codeRow.store_id || campaign.store_id || null,
+      store_id: resolvedStoreId,
       campaign_id: campaign.id,
       code_id: codeRow.id,
       prize_id: chosenPrize ? chosenPrize.id : null,
@@ -222,8 +371,18 @@ exports.kioskDraw = async (req, res) => {
     await promotionModel.markCodeStatus(conn, codeRow.id, 'drawn');
 
     await conn.commit();
+    const resolvedStore = expectedStore || (resolvedStoreId ? await promotionModel.getStoreById(resolvedStoreId) : null);
 
-    return res.json({ ok: true, draw_token: drawToken, draw_status: drawStatus, prize: (chosenPrize && chosenPrize.type !== 'other') ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description } : null, campaign: { id: campaign.id, name: campaign.name }, store: codeRow.store_id || campaign.store_id || null });
+    return res.json({
+      ok: true,
+      draw_token: drawToken,
+      draw_status: drawStatus,
+      prize: (chosenPrize && chosenPrize.type !== 'other')
+        ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description }
+        : null,
+      campaign: { id: campaign.id, name: campaign.name },
+      store: resolvedStore ? { id: resolvedStore.id, name: resolvedStore.name, store_code: resolvedStore.store_code } : null
+    });
   } catch (err) {
     try { await conn.rollback(); } catch (e) { }
     console.error('kioskDraw error', err);
@@ -316,13 +475,24 @@ exports.kioskDecline = async (req, res) => {
  * Validate a submitted promotion code and render feedback on the play page.
  */
 exports.validateCode = async (req, res) => {
+  const codeValue = sanitizeCode(req.body && (req.body.code || req.body.codeValue) ? (req.body.code || req.body.codeValue) : '');
+  const requestedStoreCode = sanitizeStoreCode((req.body && req.body.store_code) || '');
   try {
-    const codeValue = sanitizeCode(req.body && req.body.code ? req.body.code : '');
+    const expectedStore = requestedStoreCode ? await findStoreByCode(requestedStoreCode) : null;
+
+    if (requestedStoreCode && !expectedStore) {
+      return renderPlayWithContext(res, {
+        status: 400,
+        message: 'ไม่พบสาขาที่ระบุ',
+        messageType: 'danger',
+        codeValue: ''
+      });
+    }
 
     if (!codeValue) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
         message: 'กรุณากรอกรหัสโปรโมชั่น',
         messageType: 'danger',
         codeValue: ''
@@ -333,9 +503,9 @@ exports.validateCode = async (req, res) => {
     const codeRow = await promotionModel.getCodeWithCampaign(codeValue);
 
     if (!codeRow) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 404,
+        store: expectedStore,
         message: 'ไม่พบรหัสนี้ในระบบ',
         messageType: 'danger',
         codeValue
@@ -352,9 +522,9 @@ exports.validateCode = async (req, res) => {
         cancelled: 'รหัสนี้ถูกยกเลิก'
       };
       const human = statusMap[codeRow.status] || `สถานะ: ${codeRow.status}`;
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
         message: human,
         messageType: 'warning',
         codeValue,
@@ -367,9 +537,9 @@ exports.validateCode = async (req, res) => {
       const expires = new Date(codeRow.expires_at);
       const now = new Date();
       if (isNaN(expires.getTime()) === false && now > expires) {
-        return res.render('promotion/play', {
-          title: 'เล่นสุ่มรางวัล',
-          pageName: 'promotion-play',
+        return renderPlayWithContext(res, {
+          status: 400,
+          store: expectedStore,
           message: 'รหัสนี้หมดอายุแล้ว',
           messageType: 'danger',
           codeValue,
@@ -379,16 +549,16 @@ exports.validateCode = async (req, res) => {
     }
 
     // Campaign must exist and be active and within date range
-    const campaignId = codeRow.campaign_id || codeRow.campaign_id;
+    const campaignId = codeRow.campaign_id;
     let campaign = null;
     if (campaignId) {
       campaign = await promotionModel.getCampaignById(campaignId);
     }
 
     if (!campaign) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
         message: 'แคมเปญของรหัสนี้ไม่ถูกต้อง',
         messageType: 'danger',
         codeValue,
@@ -397,38 +567,38 @@ exports.validateCode = async (req, res) => {
     }
 
     if (!campaign.active) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
+        campaign,
         message: 'แคมเปญนี้ยังไม่เปิดใช้งาน',
         messageType: 'warning',
         codeValue,
-        code: codeRow,
-        campaign
+        code: codeRow
       });
     }
 
     const now = new Date();
     if (campaign.start_at && new Date(campaign.start_at) > now) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
+        campaign,
         message: 'แคมเปญยังไม่เริ่ม',
         messageType: 'info',
         codeValue,
-        code: codeRow,
-        campaign
+        code: codeRow
       });
     }
     if (campaign.end_at && new Date(campaign.end_at) < now) {
-      return res.render('promotion/play', {
-        title: 'เล่นสุ่มรางวัล',
-        pageName: 'promotion-play',
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
+        campaign,
         message: 'แคมเปญนี้สิ้นสุดแล้ว',
         messageType: 'warning',
         codeValue,
-        code: codeRow,
-        campaign
+        code: codeRow
       });
     }
 
@@ -436,24 +606,30 @@ exports.validateCode = async (req, res) => {
     const storeId = codeRow.store_id || campaign.store_id || codeRow.campaign_store_id;
     let store = null;
     if (storeId) store = await promotionModel.getStoreById(storeId);
+    if (expectedStore && Number(storeId) !== Number(expectedStore.id)) {
+      return renderPlayWithContext(res, {
+        status: 400,
+        store: expectedStore,
+        message: 'รหัสนี้ไม่ใช่ของสาขานี้',
+        messageType: 'warning',
+        codeValue
+      });
+    }
 
     // Success — show campaign/store info and code details
-    return res.render('promotion/play', {
-      title: 'เล่นสุ่มรางวัล',
-      pageName: 'promotion-play',
+    return renderPlayWithContext(res, {
+      store: store || expectedStore,
+      campaign,
       message: 'รหัสใช้งานได้ — สามารถดำเนินการต่อได้',
       messageType: 'success',
       codeValue,
       code: codeRow,
-      campaign,
-      store,
       validation: { success: true }
     });
   } catch (err) {
     console.error('promotion.validateCode error', err);
-    res.status(500).render('promotion/play', {
-      title: 'เล่นสุ่มรางวัล',
-      pageName: 'promotion-play',
+    return renderPlayWithContext(res, {
+      status: 500,
       message: 'เกิดข้อผิดพลาดภายในระบบ กรุณาลองอีกครั้ง',
       messageType: 'danger'
     });
@@ -466,15 +642,19 @@ exports.validateCode = async (req, res) => {
  */
 exports.draw = async (req, res) => {
   const codeValue = sanitizeCode(req.body && req.body.code ? req.body.code : '');
+  const requestedStoreCode = sanitizeStoreCode((req.body && req.body.store_code) || '');
   const wantsJson = req.is('application/json') || (req.get('accept') || '').includes('application/json');
+  let pageStore = null;
+  let expectedStore = null;
 
   function respondError(status, message, messageType = 'danger') {
     if (wantsJson) return res.status(status).json({ ok: false, message, messageType });
-    return res.status(status).render('promotion/play', {
-      title: 'เล่นสุ่มรางวัล',
-      pageName: 'promotion-play',
+    return renderPlayWithContext(res, {
+      status,
+      store: pageStore,
       message,
-      messageType
+      messageType,
+      codeValue
     });
   }
 
@@ -484,6 +664,12 @@ exports.draw = async (req, res) => {
 
   const conn = await db.getConnection();
   try {
+    expectedStore = requestedStoreCode ? await findStoreByCode(requestedStoreCode) : null;
+    if (requestedStoreCode && !expectedStore) {
+      return respondError(400, 'ไม่พบสาขาที่ระบุ', 'danger');
+    }
+    pageStore = expectedStore || null;
+
     await conn.beginTransaction();
 
     // lock the code row
@@ -495,7 +681,7 @@ exports.draw = async (req, res) => {
 
     if (codeRow.status && codeRow.status !== 'unused') {
       await conn.rollback();
-      return respondError(400, 'รหัสนี้ไม่สามารถใช้ได้ (สถานะไม่ว่าง)', 'warning');
+      return respondError(400, 'รหัสนี้ไม่สามารถใช้ได้ (สถานะถูกใช้งานแล้ว', 'warning');
     }
 
     // Check expiry
@@ -515,6 +701,11 @@ exports.draw = async (req, res) => {
     if (!campaign || !campaign.active) {
       await conn.rollback();
       return respondError(400, 'แคมเปญไม่พร้อมใช้งาน', 'danger');
+    }
+    const resolvedStoreId = codeRow.store_id || campaign.store_id || null;
+    if (expectedStore && Number(resolvedStoreId) !== Number(expectedStore.id)) {
+      await conn.rollback();
+      return respondError(400, 'รหัสนี้ไม่ใช่ของสาขานี้', 'warning');
     }
 
     // Fetch candidate prizes (no lock yet)
@@ -567,6 +758,11 @@ exports.draw = async (req, res) => {
       break;
     }
 
+    if (!chosenPrize) {
+      await conn.rollback();
+      return respondError(409, 'ขออภัย ของรางวัลสำหรับแคมเปญนี้หมดแล้ว', 'warning');
+    }
+
     const drawToken = randomUUID();
     // create draw in 'drawn' state; prize_id indicates if user won something
     const drawStatus = 'drawn';
@@ -574,7 +770,7 @@ exports.draw = async (req, res) => {
     // create draw record
     await promotionModel.createDrawRecord(conn, {
       draw_token: drawToken,
-      store_id: codeRow.store_id || campaign.store_id || null,
+      store_id: resolvedStoreId,
       campaign_id: campaign.id,
       code_id: codeRow.id,
       prize_id: chosenPrize ? chosenPrize.id : null,
@@ -591,11 +787,13 @@ exports.draw = async (req, res) => {
     await conn.commit();
 
     if (wantsJson) {
+      const resolvedStore = expectedStore || (resolvedStoreId ? await promotionModel.getStoreById(resolvedStoreId) : null);
       return res.json({
         ok: true,
         draw_token: drawToken,
         redirect_url: `/promotion/result/${drawToken}`,
         draw_status: drawStatus,
+        store: resolvedStore ? { id: resolvedStore.id, name: resolvedStore.name, store_code: resolvedStore.store_code } : null,
         prize: (chosenPrize && chosenPrize.type !== 'other')
           ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description }
           : null

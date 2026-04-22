@@ -1,59 +1,280 @@
-<div class="container py-5">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
-      <p class="text-muted mb-0">แดชบอร์ดสรุปสถานะโปรโมชั่นและสถิติการใช้งานโค้ดทั้งหมด</p>
+<!-- include header -->
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  .promo-admin-dashboard {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 40px 0 56px;
+  }
+
+  .promo-admin-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .promo-admin-topbar {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    margin-bottom: 24px;
+  }
+
+  .promo-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 0.92rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .promo-admin-title {
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.08;
+    margin-bottom: 10px;
+    letter-spacing: -0.03em;
+  }
+
+  .promo-admin-desc {
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.7;
+    max-width: 760px;
+  }
+
+  .promo-admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .promo-admin-nav .btn {
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-width: 1.5px;
+  }
+
+  .promo-stat-card {
+    border: none;
+    border-radius: 22px;
+    padding: 20px 18px;
+    height: 100%;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .promo-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.1);
+  }
+
+  .promo-stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .promo-stat-total {
+    background: #ffffff;
+  }
+  .promo-stat-total::before {
+    background: linear-gradient(135deg, #2563eb, #60a5fa);
+  }
+
+  .promo-stat-unused {
+    background: #ffffff;
+  }
+  .promo-stat-unused::before {
+    background: linear-gradient(135deg, #16a34a, #4ade80);
+  }
+
+  .promo-stat-drawn {
+    background: #ffffff;
+  }
+  .promo-stat-drawn::before {
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  }
+
+  .promo-stat-claimed {
+    background: #ffffff;
+  }
+  .promo-stat-claimed::before {
+    background: linear-gradient(135deg, #0891b2, #67e8f9);
+  }
+
+  .promo-stat-declined {
+    background: #ffffff;
+  }
+  .promo-stat-declined::before {
+    background: linear-gradient(135deg, #f59e0b, #fcd34d);
+  }
+
+  .promo-stat-expired {
+    background: #ffffff;
+  }
+  .promo-stat-expired::before {
+    background: linear-gradient(135deg, #ef4444, #fda4af);
+  }
+
+  .promo-stat-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .promo-stat-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+
+  .promo-stat-value {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .promo-stat-foot {
+    font-size: 0.9rem;
+    color: #64748b;
+  }
+
+  @media (max-width: 767.98px) {
+    .promo-admin-dashboard {
+      padding: 24px 0 36px;
+    }
+
+    .promo-admin-topbar {
+      padding: 18px;
+      border-radius: 18px;
+    }
+
+    .promo-admin-nav .btn {
+      width: 100%;
+    }
+
+    .promo-stat-card {
+      border-radius: 18px;
+      padding: 18px 16px;
+    }
+  }
+</style>
+
+<div class="promo-admin-dashboard">
+  <div class="container promo-admin-shell">
+
+    <div class="promo-admin-topbar">
+      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
+        <div>
+          <div class="promo-admin-badge">
+            <span>📊</span>
+            <span>Promotion Admin Dashboard</span>
+          </div>
+          <h1 class="promo-admin-title"><%= title %></h1>
+          <p class="promo-admin-desc">
+            แดชบอร์ดสรุปสถานะโปรโมชั่น ภาพรวมการใช้งานโค้ด และผลลัพธ์การร่วมกิจกรรมทั้งหมดในระบบ
+          </p>
+        </div>
+
+        <div class="promo-admin-nav">
+          <% if (promotionAdmin) { %>
+            <span class="btn btn-light btn-sm disabled">
+              <%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)
+            </span>
+          <% } %>
+          <a href="/promotion/admin/campaigns" class="btn btn-outline-primary btn-sm">Campaigns</a>
+          <a href="/promotion/admin/prizes" class="btn btn-outline-primary btn-sm">Prizes</a>
+          <a href="/promotion/admin/codes" class="btn btn-outline-primary btn-sm">Codes</a>
+          <a href="/promotion/admin/draws" class="btn btn-outline-primary btn-sm">Draws</a>
+          <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+            <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
+            <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
+          <% } %>
+          <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+      </div>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a href="/promotion/admin/campaigns" class="btn btn-outline-primary btn-sm">Campaigns</a>
-      <a href="/promotion/admin/prizes" class="btn btn-outline-primary btn-sm">Prizes</a>
-      <a href="/promotion/admin/codes" class="btn btn-outline-primary btn-sm">Codes</a>
-      <a href="/promotion/admin/draws" class="btn btn-outline-primary btn-sm">Draws</a>
+
+    <div class="row g-3">
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-total">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Total Codes</div>
+            <div class="promo-stat-value"><%= counts.total || 0 %></div>
+            <div class="promo-stat-foot">โค้ดทั้งหมดในระบบ</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-unused">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Unused</div>
+            <div class="promo-stat-value"><%= counts.unused || 0 %></div>
+            <div class="promo-stat-foot">พร้อมใช้งาน</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-drawn">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Drawn</div>
+            <div class="promo-stat-value"><%= counts.drawn || 0 %></div>
+            <div class="promo-stat-foot">ถูกนำไปสุ่มแล้ว</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-claimed">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Claimed</div>
+            <div class="promo-stat-value"><%= counts.claimed || 0 %></div>
+            <div class="promo-stat-foot">เคลมรางวัลสำเร็จ</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-declined">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Declined</div>
+            <div class="promo-stat-value"><%= counts.declined || 0 %></div>
+            <div class="promo-stat-foot">ปฏิเสธรางวัล</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="promo-stat-card promo-stat-expired">
+          <div class="promo-stat-inner text-center">
+            <div class="promo-stat-label">Expired</div>
+            <div class="promo-stat-value"><%= counts.expired || 0 %></div>
+            <div class="promo-stat-foot">หมดอายุแล้ว</div>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
-
-  <div class="row g-3">
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Total Codes</div>
-        <div class="h3 fw-bold"><%= counts.total || 0 %></div>
-      </div>
-    </div>
-
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Unused</div>
-        <div class="h3 fw-bold"><%= counts.unused || 0 %></div>
-      </div>
-    </div>
-
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Drawn</div>
-        <div class="h3 fw-bold"><%= counts.drawn || 0 %></div>
-      </div>
-    </div>
-
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Claimed</div>
-        <div class="h3 fw-bold"><%= counts.claimed || 0 %></div>
-      </div>
-    </div>
-
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Declined</div>
-        <div class="h3 fw-bold"><%= counts.declined || 0 %></div>
-      </div>
-    </div>
-
-    <div class="col-6 col-md-2">
-      <div class="card shadow-sm rounded-4 text-center p-3 h-100">
-        <div class="text-muted small">Expired</div>
-        <div class="h3 fw-bold"><%= counts.expired || 0 %></div>
-      </div>
-    </div>
-  </div>
-
 </div>
+<!-- include footer -->
+<%- include('../footer.ejs') %>

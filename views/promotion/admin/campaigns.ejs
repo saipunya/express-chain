@@ -1,48 +1,267 @@
-<div class="container py-5">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
-      <p class="text-muted mb-0">รายการแคมเปญทั้งหมดพร้อมข้อมูลร้านและสถานะ</p>
-    </div>
-    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
-  </div>
+<!-- include header -->
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  .promo-campaign-page {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 40px 0 56px;
+  }
 
-  <div class="card shadow-sm rounded-4">
-    <div class="card-body p-0">
-      <table class="table table-striped mb-0">
-        <thead>
-          <tr>
-            <th>Campaign ID</th>
-            <th>Name</th>
-            <th>Store</th>
-            <th>Active</th>
-            <th>Start</th>
-            <th>End</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (Array.isArray(campaigns) && campaigns.length) { %>
-            <% campaigns.forEach(c => { %>
-              <tr>
-                <td><%= c.id %></td>
-                <td><%= c.name %></td>
-                <td><%= c.store_name ? (c.store_name + ' (' + (c.store_code||'') + ')') : '-' %></td>
-                <td>
-                  <% if (c.active) { %>
-                    <span class="badge bg-success">Active</span>
-                  <% } else { %>
-                    <span class="badge bg-secondary">Inactive</span>
-                  <% } %>
-                </td>
-                <td><%= c.start_at ? new Date(c.start_at).toLocaleString() : '-' %></td>
-                <td><%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %></td>
-              </tr>
-            <% }) %>
-          <% } else { %>
-            <tr><td colspan="6" class="text-center text-muted">No campaigns found</td></tr>
+  .promo-campaign-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .promo-campaign-topbar {
+    background: rgba(255,255,255,0.96);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    margin-bottom: 24px;
+  }
+
+  .promo-campaign-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 0.92rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .promo-campaign-title {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.08;
+    margin-bottom: 10px;
+    letter-spacing: -0.03em;
+  }
+
+  .promo-campaign-desc {
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.7;
+    max-width: 760px;
+  }
+
+  .promo-campaign-back {
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-width: 1.5px;
+  }
+
+  .promo-campaign-card {
+    border: none;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  }
+
+  .promo-campaign-table {
+    margin-bottom: 0;
+  }
+
+  .promo-campaign-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.83rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 16px;
+    white-space: nowrap;
+  }
+
+  .promo-campaign-table tbody td {
+    padding: 15px 16px;
+    vertical-align: middle;
+    border-color: #eef2f7;
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+
+  .promo-campaign-table tbody tr:hover {
+    background: #f8fbff;
+  }
+
+  .promo-campaign-id {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+
+  .promo-campaign-name {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .promo-store-name {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .promo-store-code {
+    color: #64748b;
+    font-size: 0.88rem;
+  }
+
+  .promo-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .promo-status-active {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .promo-status-inactive {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .promo-date {
+    color: #0f172a;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .promo-empty {
+    padding: 36px 16px !important;
+    color: #64748b !important;
+    font-size: 0.98rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .promo-campaign-page {
+      padding: 24px 0 36px;
+    }
+
+    .promo-campaign-topbar {
+      padding: 18px;
+      border-radius: 18px;
+    }
+  }
+</style>
+
+<div class="promo-campaign-page">
+  <div class="container promo-campaign-shell">
+
+    <div class="promo-campaign-topbar">
+      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
+        <div>
+          <div class="promo-campaign-badge">
+            <span>📣</span>
+            <span>Promotion Campaign Manager</span>
+          </div>
+          <h1 class="promo-campaign-title"><%= title %></h1>
+          <p class="promo-campaign-desc">
+            รายการแคมเปญทั้งหมด พร้อมข้อมูลร้าน สถานะการเปิดใช้งาน และช่วงเวลาของกิจกรรมในระบบ
+          </p>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+          <% if (promotionAdmin) { %>
+            <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
           <% } %>
-        </tbody>
-      </table>
+          <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+            <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
+            <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
+          <% } %>
+          <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm promo-campaign-back">
+            Back to dashboard
+          </a>
+          <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+      </div>
     </div>
+
+    <div class="card promo-campaign-card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table promo-campaign-table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Campaign ID</th>
+                <th>Name</th>
+                <th>Store</th>
+                <th>Active</th>
+                <th>Start</th>
+                <th>End</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (Array.isArray(campaigns) && campaigns.length) { %>
+                <% campaigns.forEach(c => { %>
+                  <tr>
+                    <td>
+                      <span class="promo-campaign-id">#<%= c.id %></span>
+                    </td>
+                    <td>
+                      <div class="promo-campaign-name"><%= c.name %></div>
+                    </td>
+                    <td>
+                      <% if (c.store_name) { %>
+                        <div class="promo-store-name"><%= c.store_name %></div>
+                        <div class="promo-store-code"><%= c.store_code || '-' %></div>
+                      <% } else { %>
+                        <span class="text-muted">-</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (c.active) { %>
+                        <span class="promo-status promo-status-active">Active</span>
+                      <% } else { %>
+                        <span class="promo-status promo-status-inactive">Inactive</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <span class="promo-date">
+                        <%= c.start_at ? new Date(c.start_at).toLocaleString() : '-' %>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="promo-date">
+                        <%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="text-center promo-empty">
+                    ยังไม่พบรายการแคมเปญในระบบ
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+<!-- include footer -->
+<%- include('../footer.ejs') %>

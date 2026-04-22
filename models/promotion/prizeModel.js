@@ -56,18 +56,131 @@ async function reservePrizeById(connection, prizeId) {
 /**
  * Get prize list with campaign names
  */
-async function getPrizesList() {
+async function getPrizesList(storeId = null) {
+  const where = storeId ? 'WHERE p.store_id = ?' : '';
+  const params = storeId ? [storeId] : [];
   const [rows] = await db.query(
     `SELECT p.*, c.name AS campaign_name
      FROM promotion_prizes p
      LEFT JOIN promotion_campaigns c ON p.campaign_id = c.id
-     ORDER BY c.name ASC, p.name ASC`);
+     ${where}
+     ORDER BY c.name ASC, p.name ASC`,
+    params
+  );
   return rows;
+}
+
+/**
+ * Get active showcase prizes for one store (for play/kiosk welcome page)
+ * - excludes type='other'
+ * - includes active campaign in valid date range
+ */
+async function getShowcasePrizesByStore(storeId, limit = 12) {
+  const safeLimit = Number.isInteger(Number(limit)) ? Math.max(1, Math.min(30, Number(limit))) : 12;
+  const [rows] = await db.query(
+    `SELECT p.*, c.name AS campaign_name
+     FROM promotion_prizes p
+     INNER JOIN promotion_campaigns c ON c.id = p.campaign_id
+     WHERE p.store_id = ?
+       AND p.active = 1
+       AND p.type <> 'other'
+       AND c.active = 1
+       AND (c.start_at IS NULL OR c.start_at <= NOW())
+       AND (c.end_at IS NULL OR c.end_at >= NOW())
+       AND COALESCE(p.remaining_qty, 0) > 0
+     ORDER BY p.weight DESC, p.id DESC
+     LIMIT ?`,
+    [storeId, safeLimit]
+  );
+  return rows;
+}
+
+async function getPrizeById(prizeId) {
+  const [rows] = await db.query(
+    `SELECT p.*, c.name AS campaign_name
+     FROM promotion_prizes p
+     LEFT JOIN promotion_campaigns c ON p.campaign_id = c.id
+     WHERE p.id = ?
+     LIMIT 1`,
+    [prizeId]
+  );
+  return rows[0] || null;
+}
+
+async function updatePrizeById(prizeId, payload) {
+  await db.query(
+    `UPDATE promotion_prizes
+     SET prize_code = ?, name = ?, description = ?, type = ?, metadata = ?, weight = ?, updated_at = NOW()
+     WHERE id = ?`,
+    [
+      payload.prize_code || null,
+      payload.name,
+      payload.description || null,
+      payload.type,
+      payload.metadata || null,
+      payload.weight,
+      prizeId
+    ]
+  );
+}
+
+async function setPrizeActiveById(prizeId, active) {
+  await db.query(
+    'UPDATE promotion_prizes SET active = ?, updated_at = NOW() WHERE id = ?',
+    [active ? 1 : 0, prizeId]
+  );
+}
+
+async function countPrizeDrawReferences(prizeId) {
+  const [rows] = await db.query(
+    'SELECT COUNT(*) AS total FROM promotion_draws WHERE prize_id = ?',
+    [prizeId]
+  );
+  return Number(rows[0] && rows[0].total) || 0;
+}
+
+async function deletePrizeById(prizeId) {
+  const [result] = await db.query('DELETE FROM promotion_prizes WHERE id = ?', [prizeId]);
+  return Boolean(result && result.affectedRows > 0);
+}
+
+/**
+ * Create a new prize
+ * - remaining_qty starts from initial_qty
+ * - reserved_qty starts from 0
+ */
+async function createPrize(payload) {
+  const [result] = await db.query(
+    `INSERT INTO promotion_prizes
+      (store_id, campaign_id, prize_code, name, description, type, metadata, initial_qty, remaining_qty, reserved_qty, weight, active, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW(), NOW())`,
+    [
+      payload.store_id,
+      payload.campaign_id,
+      payload.prize_code || null,
+      payload.name,
+      payload.description || null,
+      payload.type || 'other',
+      payload.metadata || null,
+      payload.initial_qty || 0,
+      payload.initial_qty || 0,
+      payload.weight || 1,
+      payload.active ? 1 : 0
+    ]
+  );
+  return result.insertId;
 }
 
 module.exports = {
   getAvailablePrizesByCampaign,
   getPrizesList,
+  getShowcasePrizesByStore,
+  getPrizeById,
+  updatePrizeById,
+  setPrizeActiveById,
+  countPrizeDrawReferences,
+  deletePrizeById,
+  createPrize,
   lockPrizeById,
   reservePrizeById
 };

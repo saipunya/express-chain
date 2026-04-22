@@ -1,5 +1,12 @@
 <!-- include header -->
 <%- include('header.ejs') %>
+<%
+  const storeSafe = (typeof store !== 'undefined') ? store : null;
+  const storeCodeSafe = (typeof storeCode !== 'undefined' && storeCode)
+    ? String(storeCode).toUpperCase()
+    : (storeSafe && storeSafe.store_code ? String(storeSafe.store_code).toUpperCase() : '');
+  const featuredPrizesSafe = Array.isArray(featuredPrizes) ? featuredPrizes : [];
+%>
 
 <style>
   .promo-kiosk-page {
@@ -50,6 +57,23 @@
     font-size: 1.08rem;
     color: #64748b;
     line-height: 1.7;
+  }
+
+  .promo-kiosk-store-chip-row {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .promo-kiosk-store-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: #e0f2fe;
+    color: #0c4a6e;
+    font-weight: 700;
   }
 
   .promo-kiosk-card {
@@ -298,6 +322,74 @@
     margin-top: 24px;
   }
 
+  .promo-kiosk-showcase {
+    margin: 0 0 22px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 20px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    padding: 16px;
+  }
+
+  .promo-kiosk-showcase-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .promo-kiosk-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .promo-kiosk-showcase-item {
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 14px;
+    background: #fff;
+    padding: 10px;
+  }
+
+  .promo-kiosk-showcase-image {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+    background: #f1f5f9;
+    margin-bottom: 8px;
+  }
+
+  .promo-kiosk-showcase-noimage {
+    width: 100%;
+    height: 110px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  .promo-kiosk-showcase-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    min-height: 2.6em;
+  }
+
+  .promo-kiosk-showcase-stock {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
   .promo-kiosk-chip {
     display: inline-flex;
     align-items: center;
@@ -434,6 +526,14 @@ body.promo-spin-open {
           กรอกรหัสโปรโมชั่น แล้วแตะตรวจสอบเพื่อเข้าสู่ขั้นตอนจับรางวัลได้อย่างรวดเร็ว
           เหมาะสำหรับใช้งานบนหน้าจอคีออสก์หรือจุดบริการลูกค้า
         </p>
+        <% if (storeSafe) { %>
+          <div class="promo-kiosk-store-chip-row">
+            <span class="promo-kiosk-store-chip">
+              <i class="bi bi-shop"></i>
+              สาขา <%= storeSafe.name %> (<%= storeCodeSafe || '-' %>)
+            </span>
+          </div>
+        <% } %>
       </div>
 
       <div class="promo-kiosk-card">
@@ -446,6 +546,28 @@ body.promo-spin-open {
             <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ปุ่มใหญ่</span>
             <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ใช้งานเร็ว</span>
           </div>
+
+          <% if (storeSafe && featuredPrizesSafe.length) { %>
+            <div class="promo-kiosk-showcase">
+              <div class="promo-kiosk-showcase-title">
+                <i class="bi bi-stars"></i>
+                ของรางวัลเด่นของสาขานี้
+              </div>
+              <div class="promo-kiosk-showcase-grid">
+                <% featuredPrizesSafe.forEach(prize => { %>
+                  <div class="promo-kiosk-showcase-item">
+                    <% if (prize.image_url) { %>
+                      <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-kiosk-showcase-image">
+                    <% } else { %>
+                      <div class="promo-kiosk-showcase-noimage">🎁</div>
+                    <% } %>
+                    <div class="promo-kiosk-showcase-name"><%= prize.name || '-' %></div>
+                    <div class="promo-kiosk-showcase-stock">คงเหลือประมาณ <%= Number(prize.remaining_qty || 0) %> ชิ้น</div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
 
           <div class="promo-stage-box" id="stage-enter">
             <div class="promo-stage-head">
@@ -550,6 +672,7 @@ body.promo-spin-open {
 </div>
 <script>
 (() => {
+  const STORE_CODE = <%- JSON.stringify(storeCodeSafe || null) %>;
   const el = id => document.getElementById(id);
   const msgBox = el('messageBox');
   const codeInput = el('kiosk-code');
@@ -687,7 +810,10 @@ body.promo-spin-open {
       const resp = await fetch('/promotion/kiosk/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({
+          code,
+          store_code: STORE_CODE || undefined
+        })
       });
       const data = await resp.json();
 
@@ -748,7 +874,10 @@ body.promo-spin-open {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({
+          code,
+          store_code: STORE_CODE || undefined
+        })
       });
       const contentType = resp.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {

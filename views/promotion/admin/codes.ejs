@@ -1,175 +1,242 @@
-<div class="container py-5">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+<!-- include header -->
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  body {
+    background: #f1f5f9;
+  }
+
+  .admin-container {
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .topbar {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  }
+
+  .card-soft {
+    border-radius: 18px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+
+  .stat-card {
+    padding: 20px;
+    border-radius: 16px;
+    background: #fff;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+
+  .btn-main {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 12px;
+  }
+
+  .code-highlight {
+    background: #ecfdf5;
+    font-weight: bold;
+  }
+
+  .table td, .table th {
+    vertical-align: middle;
+  }
+
+  .table-hover tbody tr:hover {
+    background: #f1f5f9;
+  }
+
+  .badge-status {
+    padding: 6px 10px;
+    border-radius: 10px;
+  }
+</style>
+
+<div class="container py-4 admin-container">
+
+  <!-- TOP BAR -->
+  <div class="topbar mb-4 d-flex justify-content-between align-items-center">
     <div>
-      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
-      <p class="text-muted mb-0">สร้างและดูโค้ดโปรโมชั่น พร้อมดูโค้ดใหม่ที่สร้างขึ้นในหน้าเดียว</p>
+      <h4 class="fw-bold mb-1">🎯 Promotion Code Manager</h4>
+      <small class="text-muted">จัดการโค้ดโปรโมชั่นแบบมืออาชีพ</small>
     </div>
-    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back</a>
+    <div class="d-flex gap-2 align-items-center">
+      <% if (promotionAdmin) { %>
+        <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
+      <% } %>
+      <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+        <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
+        <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
+      <% } %>
+      <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">← Back</a>
+      <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+    </div>
   </div>
 
-  <% if (locals.flash) { %>
-    <div class="mb-3">
-      <div class="alert alert-<%= locals.flash.type || 'info' %> alert-dismissible fade show"><%= locals.flash.message %><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-    </div>
-  <% } %>
-
+  <!-- STATS -->
   <div class="row g-3 mb-4">
-    <div class="col-12 col-lg-5">
-      <div class="card shadow-sm rounded-4 h-100">
-        <div class="card-body">
-          <h2 class="h5 fw-semibold mb-3">Generate Codes</h2>
-          <form method="POST" action="/promotion/admin/codes/generate" class="mt-3">
-            <div class="mb-3">
-              <label class="form-label">Store</label>
-              <select class="form-select" id="storeSelect" name="store_id">
-                <option value="">-- All stores --</option>
-                <% if (Array.isArray(stores)) { %>
-                  <% stores.forEach(s => { %>
-                    <option value="<%= s.id %>"><%= s.name %> (<%= s.store_code %>)</option>
-                  <% }) %>
-                <% } %>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Campaign</label>
-              <select class="form-select" id="campaignSelect" name="campaign_id">
-                <option value="">-- All campaigns --</option>
-                <% if (Array.isArray(campaigns)) { %>
-                  <% campaigns.forEach(c => { %>
-                    <option value="<%= c.id %>" data-store-id="<%= c.store_id %>"><%= c.name %> (<%= c.campaign_code %>)</option>
-                  <% }) %>
-                <% } %>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Quantity</label>
-              <input type="number" name="quantity" class="form-control" min="1" max="50000" value="100" required />
-              <div class="form-text">ระบุจำนวนโค้ดที่ต้องการสร้าง (สูงสุด 50,000). ตัวอักษรอย่าง O,0,I,1 ถูกละไว้</div>
-            </div>
-
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary">Generate</button>
-            </div>
-          </form>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-number"><%= codes.length %></div>
+        <div class="text-muted">Total Codes</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-number text-success">
+          <%= codes.filter(c => c.status === 'unused').length %>
         </div>
+        <div class="text-muted">Available</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <div class="stat-number text-danger">
+          <%= codes.filter(c => c.status !== 'unused').length %>
+        </div>
+        <div class="text-muted">Used</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- GENERATE PANEL -->
+    <div class="col-lg-4">
+      <div class="card card-soft p-4">
+
+        <h5 class="fw-bold mb-3">⚡ Generate Codes</h5>
+
+        <form method="POST" action="/promotion/admin/codes/generate">
+
+          <div class="mb-3">
+            <label class="form-label">Store</label>
+            <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
+              <input type="hidden" name="store_id" value="<%= stores[0] ? stores[0].id : '' %>">
+              <input type="text" class="form-control" value="<%= stores[0] ? stores[0].name : '-' %>" readonly>
+            <% } else { %>
+              <select class="form-select" name="store_id" required>
+                <option value="">เลือกสาขา</option>
+                <% stores.forEach(s => { %>
+                  <option value="<%= s.id %>"><%= s.name %></option>
+                <% }) %>
+              </select>
+            <% } %>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Campaign</label>
+            <select class="form-select" name="campaign_id">
+              <option value="">ทั้งหมด</option>
+              <% campaigns.forEach(c => { %>
+                <option value="<%= c.id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Quantity</label>
+            <input type="number" name="quantity" class="form-control" value="100">
+          </div>
+
+          <button class="btn btn-primary btn-main w-100">
+            🚀 Generate Now
+          </button>
+
+        </form>
+
       </div>
     </div>
 
-    <div class="col-12 col-lg-7">
+    <!-- NEW CODES -->
+    <div class="col-lg-8">
       <% if (newCodes && newCodes.length) { %>
-        <div class="card shadow-sm rounded-4 border-success h-100">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <h5 class="card-title mb-1">Newly Generated Codes (<%= newCodes.length %>)</h5>
-                <div class="small text-muted">คัดลอกหรือส่งออกโค้ดที่สร้างใหม่ได้จากที่นี่</div>
-              </div>
-              <div>
-                <button id="copyCodesBtn" class="btn btn-sm btn-outline-secondary">Copy</button>
-              </div>
-            </div>
+      <div class="card card-soft p-4 border-success">
 
-            <div class="table-responsive mt-3">
-              <table class="table table-sm table-bordered mb-0">
-                <thead class="table-light">
-                  <tr><th>Code</th><th>Issued At</th><th>Expires At</th></tr>
-                </thead>
-                <tbody>
-                  <% newCodes.forEach(nc => { %>
-                    <tr>
-                      <td><code class="text-break"><%= nc.code %></code></td>
-                      <td><%= nc.issued_at ? new Date(nc.issued_at).toLocaleString() : '-' %></td>
-                      <td><%= nc.expires_at ? new Date(nc.expires_at).toLocaleString() : '-' %></td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
+        <div class="d-flex justify-content-between mb-3">
+          <div>
+            <h5 class="fw-bold">🔥 New Codes</h5>
+            <small class="text-muted"><%= newCodes.length %> codes created</small>
           </div>
+          <button id="copyCodesBtn" class="btn btn-outline-primary btn-sm">
+            Copy All
+          </button>
         </div>
-      <% } %>
-    </div>
-  </div>
 
-  <div class="card shadow-sm rounded-4">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-sm table-striped mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Code</th>
-              <th>Store</th>
-              <th>Campaign</th>
-              <th>Status</th>
-              <th>Issued At</th>
-              <th>Expires At</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (Array.isArray(codes) && codes.length) { %>
-              <% codes.forEach(c => { %>
-                <tr>
-                  <td><%= c.code %></td>
-                  <td><%= c.store_name || '-' %></td>
-                  <td><%= c.campaign_name || '-' %></td>
-                  <td><span class="badge bg-<%= c.status === 'unused' ? 'success' : 'secondary' %>"><%= c.status %></span></td>
-                  <td><%= c.issued_at ? new Date(c.issued_at).toLocaleString() : '-' %></td>
-                  <td><%= c.expires_at ? new Date(c.expires_at).toLocaleString() : '-' %></td>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <tbody>
+              <% newCodes.forEach(nc => { %>
+                <tr class="code-highlight">
+                  <td><code><%= nc.code %></code></td>
                 </tr>
               <% }) %>
-            <% } else { %>
-              <tr><td colspan="6" class="text-center text-muted">No codes found</td></tr>
-            <% } %>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
+
       </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- ALL CODES TABLE -->
+  <div class="card card-soft mt-4">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Code</th>
+            <th>Store</th>
+            <th>Campaign</th>
+            <th>Status</th>
+            <th>Expire</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% codes.forEach(c => { %>
+            <tr>
+              <td><%= c.code %></td>
+              <td><%= c.store_name || '-' %></td>
+              <td><%= c.campaign_name || '-' %></td>
+              <td>
+                <span class="badge-status bg-<%= c.status === 'unused' ? 'success' : 'secondary' %> text-white">
+                  <%= c.status %>
+                </span>
+              </td>
+              <td><%= c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '-' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <script>
-    (function() {
-      const storeSelect = document.getElementById('storeSelect');
-      const campaignSelect = document.getElementById('campaignSelect');
-      const copyBtn = document.getElementById('copyCodesBtn');
-
-      if (storeSelect && campaignSelect) {
-        function filterCampaigns() {
-          const storeId = storeSelect.value;
-          Array.from(campaignSelect.options).forEach(opt => {
-            if (!opt.value) return opt.hidden = false;
-            const optStore = opt.getAttribute('data-store-id') || '';
-            opt.hidden = storeId && optStore !== storeId;
-          });
-        }
-        storeSelect.addEventListener('change', filterCampaigns);
-        filterCampaigns();
-      }
-
-      // Prevent double-submit on generate form
-      const form = document.querySelector('form[action="/promotion/admin/codes/generate"]');
-      if (form) {
-        form.addEventListener('submit', function () {
-          const btn = form.querySelector('button[type="submit"]');
-          if (btn) {
-            btn.disabled = true;
-            btn.innerText = 'Generating...';
-          }
-        }, { once: true });
-      }
-
-      if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-          const rows = Array.from(document.querySelectorAll('table tbody tr'));
-          const codes = rows.map(r => r.querySelector('td') ? r.querySelector('td').innerText.trim() : '').filter(Boolean).join('\n');
-          if (!codes) return;
-          navigator.clipboard && navigator.clipboard.writeText(codes).then(() => {
-            copyBtn.innerText = 'Copied';
-            setTimeout(() => { copyBtn.innerText = 'Copy'; }, 2000);
-          }).catch(() => { alert('Copy failed'); });
-        });
-      }
-    })();
-  </script>
 </div>
+
+<script>
+  const copyBtn = document.getElementById('copyCodesBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      const codes = Array.from(document.querySelectorAll('code'))
+        .map(el => el.innerText)
+        .join('\n');
+
+      navigator.clipboard.writeText(codes).then(() => {
+        copyBtn.innerText = 'Copied!';
+        setTimeout(() => copyBtn.innerText = 'Copy All', 2000);
+      });
+    });
+  }
+</script>
+
+<%- include('../footer.ejs') %>

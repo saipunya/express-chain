@@ -1,7 +1,19 @@
 // models/promotionModel.js
 // Uses project's DB pool (mysql2/promise). Adjust import if your project uses a different path.
 const db = require('../config/db');
-const { getAvailablePrizesByCampaign, getPrizesList, lockPrizeById, reservePrizeById } = require('./promotion/prizeModel');
+const {
+  getAvailablePrizesByCampaign,
+  getPrizesList,
+  getShowcasePrizesByStore,
+  getPrizeById,
+  updatePrizeById,
+  setPrizeActiveById,
+  countPrizeDrawReferences,
+  deletePrizeById,
+  createPrize,
+  lockPrizeById,
+  reservePrizeById
+} = require('./promotion/prizeModel');
 const { getCampaignById, getActiveCampaignByStore, getCampaignsWithStore } = require('./promotion/campaignModel');
 const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList } = require('./promotion/drawModel');
 
@@ -13,6 +25,67 @@ const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, mark
 async function getStoreById(storeId) {
   const [rows] = await db.query('SELECT * FROM stores WHERE id = ? LIMIT 1', [storeId]);
   return rows[0] || null;
+}
+
+async function getStoreByCode(storeCode) {
+  const [rows] = await db.query('SELECT * FROM stores WHERE store_code = ? LIMIT 1', [storeCode]);
+  return rows[0] || null;
+}
+
+async function createStore(payload) {
+  const [result] = await db.query(
+    `INSERT INTO stores
+      (store_code, name, description, timezone, metadata, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+    [
+      payload.store_code,
+      payload.name,
+      payload.description || null,
+      payload.timezone || 'UTC',
+      payload.metadata || null
+    ]
+  );
+  return result.insertId;
+}
+
+async function updateStoreById(storeId, payload) {
+  await db.query(
+    `UPDATE stores
+     SET store_code = ?, name = ?, description = ?, timezone = ?, updated_at = NOW()
+     WHERE id = ?`,
+    [
+      payload.store_code,
+      payload.name,
+      payload.description || null,
+      payload.timezone || 'UTC',
+      storeId
+    ]
+  );
+}
+
+async function updateStoreMetadataById(storeId, metadata) {
+  await db.query(
+    'UPDATE stores SET metadata = ?, updated_at = NOW() WHERE id = ?',
+    [metadata || null, storeId]
+  );
+}
+
+async function getStoreImpactCounts(storeId) {
+  const [rows] = await db.query(
+    `SELECT
+      (SELECT COUNT(*) FROM promotion_campaigns WHERE store_id = ?) AS campaigns,
+      (SELECT COUNT(*) FROM promotion_prizes WHERE store_id = ?) AS prizes,
+      (SELECT COUNT(*) FROM promotion_codes WHERE store_id = ?) AS codes,
+      (SELECT COUNT(*) FROM promotion_draws WHERE store_id = ?) AS draws,
+      (SELECT COUNT(*) FROM promotion_admin_users WHERE store_id = ? AND role = 'coop_admin') AS coop_admin_users`,
+    [storeId, storeId, storeId, storeId, storeId]
+  );
+  return rows[0] || { campaigns: 0, prizes: 0, codes: 0, draws: 0, coop_admin_users: 0 };
+}
+
+async function deleteStoreById(storeId) {
+  const [result] = await db.query('DELETE FROM stores WHERE id = ?', [storeId]);
+  return Boolean(result && result.affectedRows > 0);
 }
 
  
@@ -51,12 +124,25 @@ async function getCodeWithCampaign(code) {
   return rows[0] || null;
 }
 
+function getScopedStoreId(scope) {
+  if (!scope) return null;
+  if (scope.role === 'super_admin') return null;
+  const storeId = Number(scope.store_id);
+  return Number.isInteger(storeId) && storeId > 0 ? storeId : null;
+}
+
  
 
  
 
 module.exports = {
   getStoreById,
+  getStoreByCode,
+  createStore,
+  updateStoreById,
+  updateStoreMetadataById,
+  getStoreImpactCounts,
+  deleteStoreById,
   getCampaignById,
   getActiveCampaignByStore,
   getCodeByValue,
@@ -68,6 +154,13 @@ module.exports = {
   getCampaignsWithStore,
   getStoresList,
   getPrizesList,
+  getShowcasePrizesByStore,
+  getPrizeById,
+  updatePrizeById,
+  setPrizeActiveById,
+  countPrizeDrawReferences,
+  deletePrizeById,
+  createPrize,
   getCodesList,
   getDrawsList,
   createCodesBatch,
@@ -134,7 +227,10 @@ async function decrementReservedOnly(connection, prizeId) {
 /**
  * Get aggregate counts for promotion codes by status
  */
-async function getCodeCounts() {
+async function getCodeCounts(scope = null) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const where = scopedStoreId ? 'WHERE store_id = ?' : '';
+  const params = scopedStoreId ? [scopedStoreId] : [];
   const [rows] = await db.query(
     `SELECT
        COUNT(*) AS total,
@@ -143,7 +239,9 @@ async function getCodeCounts() {
        SUM(status = 'claimed') AS claimed,
        SUM(status = 'declined') AS declined,
        SUM(status = 'expired') AS expired
-     FROM promotion_codes`
+     FROM promotion_codes
+     ${where}`,
+    params
   );
   return rows[0] || { total: 0, unused: 0, drawn: 0, claimed: 0, declined: 0, expired: 0 };
 }
@@ -155,15 +253,19 @@ async function getCodeCounts() {
 /**
  * Get codes list (read-only)
  */
-async function getCodesList(limit = 500) {
+async function getCodesList(limit = 500, scope = null) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const where = scopedStoreId ? 'WHERE pc.store_id = ?' : '';
+  const params = scopedStoreId ? [scopedStoreId, limit] : [limit];
   const [rows] = await db.query(
     `SELECT pc.*, c.name AS campaign_name, s.name AS store_name, s.store_code
      FROM promotion_codes pc
      LEFT JOIN promotion_campaigns c ON pc.campaign_id = c.id
      LEFT JOIN stores s ON pc.store_id = s.id
+     ${where}
      ORDER BY pc.issued_at DESC
      LIMIT ?`,
-    [limit]
+    params
   );
   return rows;
 }
@@ -173,9 +275,13 @@ async function getCodesList(limit = 500) {
 /**
  * Get list of stores for admin selects
  */
-async function getStoresList() {
+async function getStoresList(scope = null) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const where = scopedStoreId ? 'WHERE id = ?' : '';
+  const params = scopedStoreId ? [scopedStoreId] : [];
   const [rows] = await db.query(
-    `SELECT id, name, store_code FROM stores ORDER BY name ASC`
+    `SELECT id, name, store_code, description, timezone, metadata FROM stores ${where} ORDER BY name ASC`,
+    params
   );
   return rows;
 }

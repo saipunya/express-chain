@@ -1,5 +1,13 @@
 
 <%- include('header.ejs') %>
+<%
+  const campaignSafe = (typeof campaign !== 'undefined') ? campaign : null;
+  const storeSafe = (typeof store !== 'undefined') ? store : null;
+  const storeCodeSafe = (typeof storeCode !== 'undefined' && storeCode)
+    ? String(storeCode).toUpperCase()
+    : (storeSafe && storeSafe.store_code ? String(storeSafe.store_code).toUpperCase() : '');
+  const featuredPrizesSafe = Array.isArray(featuredPrizes) ? featuredPrizes : [];
+%>
 
 <style>
   .promo-play-section {
@@ -50,6 +58,89 @@
     max-width: 620px;
     margin: 0 auto;
     line-height: 1.7;
+  }
+
+  .promo-store-chip-row {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .promo-store-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #e0f2fe;
+    color: #0c4a6e;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  .promo-showcase-wrap {
+    margin-bottom: 20px;
+  }
+
+  .promo-showcase-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .promo-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .promo-showcase-item {
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+  }
+
+  .promo-showcase-image {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #f1f5f9;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .promo-showcase-noimage {
+    width: 100%;
+    height: 110px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  .promo-showcase-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    min-height: 2.6em;
+  }
+
+  .promo-showcase-stock {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
   }
 
   .promo-play-card {
@@ -309,6 +400,14 @@ body.promo-spin-open {
           รับรหัสจากเจ้าหน้าที่ แล้วกรอกในช่องด้านล่างเพื่อเข้าสู่การสุ่มรางวัล
           ใช้งานง่าย รวดเร็ว และทราบผลได้ทันที
         </p>
+        <% if (storeSafe) { %>
+          <div class="promo-store-chip-row">
+            <span class="promo-store-chip">
+              <i class="bi bi-shop"></i>
+              สาขา <%= storeSafe.name %> (<%= storeCodeSafe || '-' %>)
+            </span>
+          </div>
+        <% } %>
       </div>
 
       <div class="promo-play-card">
@@ -339,10 +438,6 @@ body.promo-spin-open {
 	          <% } %>
 	
 	          <!-- Campaign/Store Info -->
-	          <%
-	            const campaignSafe = (typeof campaign !== 'undefined') ? campaign : null;
-	            const storeSafe = (typeof store !== 'undefined') ? store : null;
-	          %>
 	          <% if (campaignSafe || storeSafe) { %>
 	            <div class="promo-info-card">
 	              <% if (campaignSafe) { %>
@@ -355,16 +450,41 @@ body.promo-spin-open {
 	                <div class="promo-info-row">
 	                  <span class="promo-info-label promo-info-store"><i class="bi bi-shop me-1"></i>สาขา:</span>
 	                  <span><%= storeSafe.name %></span>
-	                  <% if (storeSafe.code) { %>
-	                    <span class="text-muted small">(<%= storeSafe.code %>)</span>
+	                  <% if (storeSafe.store_code) { %>
+	                    <span class="text-muted small">(<%= storeSafe.store_code %>)</span>
 	                  <% } %>
 	                </div>
 	              <% } %>
 	            </div>
 	          <% } %>
 
+            <% if (storeSafe && featuredPrizesSafe.length) { %>
+              <div class="promo-showcase-wrap">
+                <div class="promo-showcase-title">
+                  <i class="bi bi-stars"></i>
+                  ของรางวัลเด่นของสาขานี้
+                </div>
+                <div class="promo-showcase-grid">
+                  <% featuredPrizesSafe.forEach(prize => { %>
+                    <div class="promo-showcase-item">
+                      <% if (prize.image_url) { %>
+                        <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-showcase-image">
+                      <% } else { %>
+                        <div class="promo-showcase-noimage">🎁</div>
+                      <% } %>
+                      <div class="promo-showcase-name"><%= prize.name || '-' %></div>
+                      <div class="promo-showcase-stock">คงเหลือประมาณ <%= Number(prize.remaining_qty || 0) %> ชิ้น</div>
+                    </div>
+                  <% }) %>
+                </div>
+              </div>
+            <% } %>
+
           <!-- Code Entry Form -->
 	          <form method="post" action="/promotion/validate-code" autocomplete="off" class="needs-validation" novalidate>
+              <% if (storeCodeSafe) { %>
+                <input type="hidden" name="store_code" value="<%= storeCodeSafe %>">
+              <% } %>
             <div class="mb-3">
               <label for="codeValue" class="promo-label">รหัสโปรโมชั่น</label>
               <input
@@ -408,6 +528,13 @@ body.promo-spin-open {
           <i class="bi bi-chevron-left"></i>
           <span>กลับหน้าโปรโมชั่น</span>
         </a>
+        <% if (storeCodeSafe) { %>
+          <span class="mx-2 text-muted">|</span>
+          <a href="/promotion/store/<%= encodeURIComponent(storeCodeSafe) %>/kiosk" class="promo-back-link">
+            <i class="bi bi-display"></i>
+            <span>เปิดโหมด Kiosk ของสาขานี้</span>
+          </a>
+        <% } %>
       </div>
 
     </div>
@@ -424,6 +551,7 @@ body.promo-spin-open {
   </div>
 </div>
 <script>
+const STORE_CODE = <%- JSON.stringify(storeCodeSafe || null) %>;
 
 	  (function () {
 	    var forms = document.querySelectorAll('.needs-validation');
@@ -490,7 +618,10 @@ async function startDrawWithEffect(code) {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ code })
+      body: JSON.stringify({
+        code,
+        store_code: STORE_CODE || undefined
+      })
     });
 
     const contentType = resp.headers.get('content-type') || '';
@@ -520,11 +651,13 @@ async function startDrawWithEffect(code) {
         if (navigator.vibrate) {
           navigator.vibrate([200,100,200]);
         }
-      confetti({
-        particleCount: 120,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 120,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
 
     } else {
       wheel.innerHTML = "😢";

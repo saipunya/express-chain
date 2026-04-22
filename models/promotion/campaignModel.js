@@ -34,12 +34,17 @@ async function getActiveCampaignByStore(storeId) {
 /**
  * Get campaigns with store info
  */
-async function getCampaignsWithStore() {
+async function getCampaignsWithStore(storeId = null) {
+  const where = storeId ? 'WHERE c.store_id = ?' : '';
+  const params = storeId ? [storeId] : [];
   const [rows] = await db.query(
     `SELECT c.*, s.id AS store_id, s.name AS store_name, s.store_code
      FROM promotion_campaigns c
      LEFT JOIN stores s ON c.store_id = s.id
-     ORDER BY s.name ASC, c.start_at DESC`);
+     ${where}
+     ORDER BY s.name ASC, c.start_at DESC`,
+    params
+  );
   return rows;
 }
 

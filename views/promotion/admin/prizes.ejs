@@ -1,46 +1,438 @@
-<div class="container py-5">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <h1 class="display-6 fw-bold mb-2"><%= title %></h1>
-      <p class="text-muted mb-0">รายการของรางวัลพร้อมสถานะคงเหลือและแคมเปญ</p>
-    </div>
-    <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
-  </div>
+<!-- include header -->
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  .promo-prize-page {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+  }
 
-  <div class="card shadow-sm rounded-4">
-    <div class="card-body p-0">
-      <table class="table table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Prize</th>
-            <th>Campaign</th>
-            <th class="text-end">Remaining</th>
-            <th class="text-end">Reserved</th>
-            <th>Active</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (Array.isArray(prizes) && prizes.length) { %>
-            <% prizes.forEach(p => { %>
+  .promo-shell {
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .promo-header {
+    background: #fff;
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .promo-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .promo-desc {
+    color: #64748b;
+  }
+
+  .promo-card {
+    border-radius: 22px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+  }
+
+  .promo-form-card {
+    border-radius: 22px;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .promo-form-card .form-control,
+  .promo-form-card .form-select {
+    border-radius: 12px;
+  }
+
+  .promo-table thead th {
+    background: #f8fafc;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+
+  .promo-table tbody tr:hover {
+    background: #f1f5f9;
+  }
+
+  .progress {
+    height: 8px;
+    border-radius: 999px;
+  }
+
+  .badge-soft {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-active {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .badge-inactive {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .action-stack {
+    display: grid;
+    gap: 6px;
+    min-width: 140px;
+  }
+
+  .prize-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    object-fit: cover;
+    display: block;
+  }
+
+  .prize-thumb-empty {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    background: #f8fafc;
+  }
+</style>
+
+<div class="promo-prize-page">
+  <div class="container promo-shell">
+    <% const storesSafe = Array.isArray(stores) ? stores : []; %>
+    <% const campaignsSafe = Array.isArray(campaigns) ? campaigns : []; %>
+
+    <!-- HEADER -->
+    <div class="promo-header d-flex justify-content-between align-items-start">
+      <div>
+        <h1 class="promo-title"><%= title %></h1>
+        <p class="promo-desc mb-0">
+          รายการของรางวัล พร้อมสถานะคงเหลือและการใช้งานจริง
+        </p>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <% if (promotionAdmin) { %>
+          <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
+        <% } %>
+        <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+          <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
+          <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
+        <% } %>
+        <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">
+          ← Dashboard
+        </a>
+        <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+      </div>
+    </div>
+
+    <% if (locals && locals.flash) { %>
+      <div class="alert alert-<%= locals.flash.type || 'info' %> rounded-3 mb-3">
+        <%= locals.flash.message %>
+      </div>
+    <% } %>
+
+    <div class="card promo-form-card">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">➕ เพิ่มของรางวัล</h5>
+        <form method="POST" action="/promotion/admin/prizes" class="row g-3" autocomplete="off">
+          <div class="col-md-3">
+            <label class="form-label">สาขา</label>
+            <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
+              <input type="hidden" name="store_id" value="<%= storesSafe[0] ? storesSafe[0].id : '' %>">
+              <input type="text" class="form-control" value="<%= storesSafe[0] ? storesSafe[0].name : '-' %>" readonly>
+            <% } else { %>
+              <select class="form-select" name="store_id" id="storeSelect" required>
+                <option value="">เลือกสาขา</option>
+                <% storesSafe.forEach(s => { %>
+                  <option value="<%= s.id %>"><%= s.name %> (<%= s.store_code || '-' %>)</option>
+                <% }) %>
+              </select>
+            <% } %>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">แคมเปญ</label>
+            <select class="form-select" name="campaign_id" id="campaignSelect" required>
+              <option value="">เลือกแคมเปญ</option>
+              <% campaignsSafe.forEach(c => { %>
+                <option value="<%= c.id %>" data-store-id="<%= c.store_id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">ชื่อของรางวัล</label>
+            <input type="text" name="name" class="form-control" maxlength="255" required>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">รหัสของรางวัล (ถ้ามี)</label>
+            <input type="text" name="prize_code" class="form-control" maxlength="100">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">รูปของรางวัล (URL)</label>
+            <input type="text" name="image_url" class="form-control" maxlength="2000" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">ประเภท</label>
+            <select class="form-select" name="type" required>
+              <option value="free_product">free_product</option>
+              <option value="discount">discount</option>
+              <option value="coupon">coupon</option>
+              <option value="credit">credit</option>
+              <option value="other">other (ไม่ได้รางวัล)</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">จำนวนเริ่มต้น</label>
+            <input type="number" name="initial_qty" class="form-control" value="0" min="0" max="1000000" required>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Weight</label>
+            <input type="number" name="weight" class="form-control" value="1" min="1" max="1000000" required>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label d-block">สถานะ</label>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="activeCheck" name="active" value="1" checked>
+              <label class="form-check-label" for="activeCheck">เปิดใช้งาน</label>
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">รายละเอียด (ถ้ามี)</label>
+            <textarea class="form-control" name="description" rows="2" maxlength="2000"></textarea>
+          </div>
+
+          <div class="col-12 d-flex justify-content-end">
+            <button class="btn btn-primary">บันทึกของรางวัล</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card promo-card">
+      <div class="table-responsive">
+        <table class="table promo-table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Prize</th>
+              <th>Image</th>
+              <th>Type</th>
+              <th>Campaign</th>
+              <th class="text-end">Remaining</th>
+              <th class="text-end">Reserved</th>
+              <th class="text-end">Weight</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% if (Array.isArray(prizes) && prizes.length) { %>
+              <% prizes.forEach(p => { 
+                const remaining = Number(p.remaining_qty || 0);
+                const reserved = Number(p.reserved_qty || 0);
+                const total = remaining + reserved;
+                const percent = total > 0 ? (reserved / total) * 100 : 0;
+              %>
               <tr>
-                <td><%= p.name %></td>
-                <td><%= p.campaign_name || '-' %></td>
-                <td class="text-end"><%= p.remaining_qty != null ? p.remaining_qty : '-' %></td>
-                <td class="text-end"><%= p.reserved_qty != null ? p.reserved_qty : '-' %></td>
+                <td class="fw-bold"><%= p.name %></td>
                 <td>
-                  <% if (p.active) { %>
-                    <span class="badge bg-success">Active</span>
+                  <% if (p.image_url) { %>
+                    <a href="<%= p.image_url %>" target="_blank" rel="noopener noreferrer">
+                      <img src="<%= p.image_url %>" alt="<%= p.name %>" class="prize-thumb">
+                    </a>
                   <% } else { %>
-                    <span class="badge bg-secondary">Inactive</span>
+                    <div class="prize-thumb-empty">No image</div>
                   <% } %>
                 </td>
+                <td><span class="text-muted"><%= p.type || '-' %></span></td>
+
+                <td><%= p.campaign_name || '-' %></td>
+
+                <td class="text-end">
+                  <span class="fw-semibold"><%= remaining %></span>
+                </td>
+
+                <td class="text-end text-muted">
+                  <%= reserved %>
+                </td>
+
+                <td class="text-end">
+                  <span class="fw-semibold"><%= Number(p.weight || 0) %></span>
+                </td>
+
+                <!-- 🔥 PROGRESS BAR -->
+                <td style="min-width:150px;">
+                  <div class="progress">
+                    <div class="progress-bar bg-primary" 
+                      style="width:<%= percent %>%">
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    <%= Math.round(percent) %>% used
+                  </small>
+                </td>
+
+                <td>
+                  <% if (p.active) { %>
+                    <span class="badge-soft badge-active">Active</span>
+                  <% } else { %>
+                    <span class="badge-soft badge-inactive">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <div class="action-stack">
+                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPrizeModal-<%= p.id %>">
+                      Edit
+                    </button>
+                    <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/status">
+                      <input type="hidden" name="active" value="<%= p.active ? '0' : '1' %>">
+                      <button class="btn btn-outline-warning btn-sm w-100">
+                        <%= p.active ? 'Deactivate' : 'Activate' %>
+                      </button>
+                    </form>
+                    <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/delete" onsubmit="return confirm('ยืนยันการลบรางวัลนี้?');">
+                      <button class="btn btn-outline-danger btn-sm w-100">Delete</button>
+                    </form>
+                  </div>
+                </td>
               </tr>
-            <% }) %>
-          <% } else { %>
-            <tr><td colspan="5" class="text-center text-muted">No prizes found</td></tr>
-          <% } %>
-        </tbody>
-      </table>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                  ยังไม่มีรายการของรางวัล
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 </div>
+<% if (Array.isArray(prizes) && prizes.length) { %>
+  <% prizes.forEach(p => { %>
+    <div class="modal fade" id="editPrizeModal-<%= p.id %>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">แก้ไขของรางวัล #<%= p.id %></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/update" autocomplete="off">
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">ชื่อของรางวัล</label>
+                  <input type="text" name="name" class="form-control" maxlength="255" value="<%= p.name || '' %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">รหัสของรางวัล (ถ้ามี)</label>
+                  <input type="text" name="prize_code" class="form-control" maxlength="100" value="<%= p.prize_code || '' %>">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">รูปของรางวัล (URL)</label>
+                  <input type="text" name="image_url" class="form-control" maxlength="2000" value="<%= p.image_url || '' %>" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">ประเภท</label>
+                  <select class="form-select" name="type" required>
+                    <option value="free_product" <%= p.type === 'free_product' ? 'selected' : '' %>>free_product</option>
+                    <option value="discount" <%= p.type === 'discount' ? 'selected' : '' %>>discount</option>
+                    <option value="coupon" <%= p.type === 'coupon' ? 'selected' : '' %>>coupon</option>
+                    <option value="credit" <%= p.type === 'credit' ? 'selected' : '' %>>credit</option>
+                    <option value="other" <%= p.type === 'other' ? 'selected' : '' %>>other (ไม่ได้รางวัล)</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Weight</label>
+                  <input type="number" name="weight" class="form-control" min="1" max="1000000" value="<%= Number(p.weight || 1) %>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Campaign</label>
+                  <input type="text" class="form-control" value="<%= p.campaign_name || '-' %>" readonly>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">รายละเอียด</label>
+                  <textarea class="form-control" name="description" rows="3" maxlength="2000"><%= p.description || '' %></textarea>
+                </div>
+                <div class="col-12">
+                  <small class="text-muted">หมายเหตุ: การแก้ไขนี้จะไม่เปลี่ยนจำนวนคงเหลือ/จำนวนจองของรางวัล</small>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
+<script>
+  (function () {
+    const storeSelect = document.getElementById('storeSelect');
+    const campaignSelect = document.getElementById('campaignSelect');
+    if (!campaignSelect) return;
+
+    const allCampaignOptions = Array.from(campaignSelect.querySelectorAll('option[data-store-id]')).map((opt) => ({
+      value: opt.value,
+      label: opt.textContent,
+      storeId: String(opt.getAttribute('data-store-id') || '')
+    }));
+
+    const renderCampaigns = (storeId) => {
+      const current = campaignSelect.value;
+      campaignSelect.innerHTML = '<option value="">เลือกแคมเปญ</option>';
+      allCampaignOptions
+        .filter((item) => !storeId || item.storeId === String(storeId))
+        .forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.value;
+          option.textContent = item.label;
+          option.setAttribute('data-store-id', item.storeId);
+          if (item.value === current) option.selected = true;
+          campaignSelect.appendChild(option);
+        });
+      if (!campaignSelect.value) campaignSelect.value = '';
+    };
+
+    if (storeSelect) {
+      storeSelect.addEventListener('change', () => renderCampaigns(storeSelect.value));
+      renderCampaigns(storeSelect.value);
+    } else {
+      renderCampaigns('');
+    }
+  })();
+</script>
+<!-- include footer -->
+<%- include('../footer.ejs') %>

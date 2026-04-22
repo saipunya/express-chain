@@ -106,8 +106,10 @@ async function getDrawWithDetailsByToken(token) {
   return rows[0] || null;
 }
 
-async function getDrawsList(limit = 500) {
+async function getDrawsList(limit = 500, storeId = null) {
   const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 500;
+  const where = storeId ? 'WHERE d.store_id = ?' : '';
+  const params = storeId ? [storeId, safeLimit] : [safeLimit];
   const [rows] = await db.query(
     `SELECT d.*,
             pc.code AS code_value,
@@ -119,9 +121,10 @@ async function getDrawsList(limit = 500) {
      LEFT JOIN promotion_prizes pr ON d.prize_id = pr.id
      LEFT JOIN promotion_campaigns c ON d.campaign_id = c.id
      LEFT JOIN stores s ON d.store_id = s.id
+     ${where}
      ORDER BY d.drawn_at DESC, d.id DESC
      LIMIT ?`,
-    [safeLimit]
+    params
   );
   return rows;
 }

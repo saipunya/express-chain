@@ -1,0 +1,220 @@
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  .promo-stores-page {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 36px 0 52px;
+  }
+  .promo-stores-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+  .promo-stores-topbar,
+  .promo-stores-card {
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+  }
+  .promo-stores-topbar {
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  .promo-stores-card {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .promo-title {
+    font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+  .promo-subtitle {
+    color: #64748b;
+    margin-bottom: 0;
+  }
+  .form-control,
+  .btn {
+    border-radius: 10px;
+  }
+  .table thead th {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.04em;
+  }
+  .badge-soft {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-active {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  .badge-inactive {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .action-stack {
+    display: grid;
+    gap: 6px;
+    min-width: 140px;
+  }
+</style>
+
+<div class="promo-stores-page">
+  <div class="container promo-stores-shell">
+    <div class="promo-stores-topbar d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
+      <div>
+        <h1 class="promo-title">🏬 <%= title %></h1>
+        <p class="promo-subtitle">จัดการรายการสาขาที่ใช้ในระบบ `/promotion` และผูกกับ campaign/admin ของแต่ละสหกรณ์</p>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <% if (promotionAdmin) { %>
+          <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
+        <% } %>
+        <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+        <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+      </div>
+    </div>
+
+    <% if (locals && locals.flash) { %>
+      <div class="alert alert-<%= locals.flash.type || 'info' %> rounded-3">
+        <%= locals.flash.message %>
+      </div>
+    <% } %>
+
+    <div class="promo-stores-card">
+      <h5 class="fw-bold mb-3">Create Store</h5>
+      <form class="row g-3" method="POST" action="/promotion/admin/stores" autocomplete="off">
+        <div class="col-md-3">
+          <label class="form-label">Store Code</label>
+          <input type="text" name="store_code" class="form-control" maxlength="50" required placeholder="STORE003">
+          <small class="text-muted">ใช้ A-Z, 0-9, _ หรือ -</small>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Store Name</label>
+          <input type="text" name="name" class="form-control" maxlength="255" required placeholder="สหกรณ์ C">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Timezone</label>
+          <input type="text" name="timezone" class="form-control" maxlength="50" value="Asia/Bangkok">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-primary w-100">Create Store</button>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" name="description" rows="2" maxlength="2000" placeholder="รายละเอียดสาขา"></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="promo-stores-card">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Store Code</th>
+              <th>Name</th>
+              <th>Timezone</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (Array.isArray(stores) && stores.length) { %>
+              <% stores.forEach(s => { %>
+                <tr>
+                  <td><%= s.id %></td>
+                  <td><code><%= s.store_code %></code></td>
+                  <td><%= s.name %></td>
+                  <td><%= s.timezone || '-' %></td>
+                  <td><%= s.description || '-' %></td>
+                  <td>
+                    <% if (s.is_active) { %>
+                      <span class="badge-soft badge-active">active</span>
+                    <% } else { %>
+                      <span class="badge-soft badge-inactive">inactive</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div class="action-stack">
+                      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editStoreModal-<%= s.id %>">
+                        Edit
+                      </button>
+                      <form method="POST" action="/promotion/admin/stores/<%= s.id %>/status">
+                        <input type="hidden" name="is_active" value="<%= s.is_active ? '0' : '1' %>">
+                        <button class="btn btn-outline-warning btn-sm w-100">
+                          <%= s.is_active ? 'Deactivate' : 'Activate' %>
+                        </button>
+                      </form>
+                      <form method="POST" action="/promotion/admin/stores/<%= s.id %>/delete" onsubmit="return confirm('ยืนยันการลบสาขานี้?');">
+                        <button class="btn btn-outline-danger btn-sm w-100">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">ยังไม่มีข้อมูลสาขา</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (Array.isArray(stores) && stores.length) { %>
+  <% stores.forEach(s => { %>
+    <div class="modal fade" id="editStoreModal-<%= s.id %>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">แก้ไขสาขา #<%= s.id %></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="/promotion/admin/stores/<%= s.id %>/update" autocomplete="off">
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Store Code</label>
+                  <input type="text" name="store_code" class="form-control" maxlength="50" value="<%= s.store_code || '' %>" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label">Store Name</label>
+                  <input type="text" name="name" class="form-control" maxlength="255" value="<%= s.name || '' %>" required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Timezone</label>
+                  <input type="text" name="timezone" class="form-control" maxlength="50" value="<%= s.timezone || 'UTC' %>">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-control" name="description" rows="3" maxlength="2000"><%= s.description || '' %></textarea>
+                </div>
+                <div class="col-12">
+                  <small class="text-muted">หมายเหตุ: ลบสาขาได้เฉพาะกรณีไม่มีข้อมูลอ้างอิงจาก campaign/prize/code/draw/admin</small>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
+
+<%- include('../footer.ejs') %>

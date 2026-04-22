@@ -1,0 +1,77 @@
+<%- include('../header.ejs', { title: title }) %>
+<style>
+  .promo-admin-login-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .promo-admin-login-card {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 24px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+    padding: 26px 24px;
+  }
+  .promo-admin-login-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .promo-admin-login-sub {
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+  .promo-admin-login-label {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+  .promo-admin-login-input {
+    min-height: 50px;
+    border-radius: 12px;
+  }
+  .promo-admin-login-btn {
+    min-height: 50px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+</style>
+
+<div class="promo-admin-login-page">
+  <div class="promo-admin-login-card">
+    <div class="mb-3">
+      <div class="promo-admin-login-title">Promotion Admin Login</div>
+      <p class="promo-admin-login-sub mb-0">เข้าสู่ระบบสำหรับผู้ดูแลระบบโปรโมชั่น</p>
+    </div>
+
+    <% if (locals && locals.flash) { %>
+      <div class="alert alert-<%= locals.flash.type || 'info' %> mb-3 rounded-3" role="alert">
+        <%= locals.flash.message %>
+      </div>
+    <% } %>
+
+    <form method="post" action="/promotion/admin/login" autocomplete="off">
+      <div class="mb-3">
+        <label class="promo-admin-login-label" for="username">ชื่อผู้ใช้</label>
+        <input id="username" name="username" type="text" class="form-control promo-admin-login-input" required maxlength="100" autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="promo-admin-login-label" for="password">รหัสผ่าน</label>
+        <input id="password" name="password" type="password" class="form-control promo-admin-login-input" required maxlength="200">
+      </div>
+      <button type="submit" class="btn btn-primary w-100 promo-admin-login-btn">เข้าสู่ระบบ</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="/promotion" class="text-decoration-none">กลับหน้าโปรโมชั่น</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../footer.ejs') %>

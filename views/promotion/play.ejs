@@ -104,6 +104,23 @@
     border-radius: 14px;
     padding: 10px;
     box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-showcase-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    color: #fff;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 8px 16px rgba(239, 68, 68, 0.24);
   }
 
   .promo-showcase-image {
@@ -467,6 +484,9 @@ body.promo-spin-open {
                 <div class="promo-showcase-grid">
                   <% featuredPrizesSafe.forEach(prize => { %>
                     <div class="promo-showcase-item">
+                      <% if (prize.badge_text) { %>
+                        <span class="promo-showcase-badge"><%= prize.badge_text %></span>
+                      <% } %>
                       <% if (prize.image_url) { %>
                         <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-showcase-image">
                       <% } else { %>

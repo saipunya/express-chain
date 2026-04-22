@@ -64,6 +64,18 @@
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
   }
 
+  .promo-campaign-form-card {
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    margin-bottom: 18px;
+  }
+
+  .promo-campaign-form-card .form-control,
+  .promo-campaign-form-card .form-select {
+    border-radius: 12px;
+  }
+
   .promo-campaign-table {
     margin-bottom: 0;
   }
@@ -153,6 +165,12 @@
     font-size: 0.98rem;
   }
 
+  .promo-action-stack {
+    display: grid;
+    gap: 6px;
+    min-width: 140px;
+  }
+
   @media (max-width: 767.98px) {
     .promo-campaign-page {
       padding: 24px 0 36px;
@@ -167,6 +185,16 @@
 
 <div class="promo-campaign-page">
   <div class="container promo-campaign-shell">
+    <% const storesSafe = Array.isArray(stores) ? stores : []; %>
+    <%
+      const toDateTimeLocal = (raw) => {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return '';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+    %>
 
     <div class="promo-campaign-topbar">
       <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
@@ -197,6 +225,71 @@
       </div>
     </div>
 
+    <% if (locals && locals.flash) { %>
+      <div class="alert alert-<%= locals.flash.type || 'info' %> rounded-3 mb-3">
+        <%= locals.flash.message %>
+      </div>
+    <% } %>
+
+    <div class="card promo-campaign-form-card">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-3">➕ เพิ่มแคมเปญ</h5>
+        <form method="POST" action="/promotion/admin/campaigns" class="row g-3" autocomplete="off">
+          <div class="col-md-3">
+            <label class="form-label">สาขา</label>
+            <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
+              <input type="hidden" name="store_id" value="<%= storesSafe[0] ? storesSafe[0].id : '' %>">
+              <input type="text" class="form-control" value="<%= storesSafe[0] ? storesSafe[0].name : '-' %>" readonly>
+            <% } else { %>
+              <select class="form-select" name="store_id" required>
+                <option value="">เลือกสาขา</option>
+                <% storesSafe.forEach(s => { %>
+                  <option value="<%= s.id %>"><%= s.name %> (<%= s.store_code || '-' %>)</option>
+                <% }) %>
+              </select>
+            <% } %>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Campaign Code</label>
+            <input type="text" name="campaign_code" class="form-control" maxlength="100" required placeholder="เช่น CMP-STORE01-2026">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">ชื่อแคมเปญ</label>
+            <input type="text" name="name" class="form-control" maxlength="255" required>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">เริ่มต้น</label>
+            <input type="datetime-local" name="start_at" class="form-control">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">สิ้นสุด</label>
+            <input type="datetime-local" name="end_at" class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label d-block">สถานะ</label>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="campaignActive" name="active" value="1" checked>
+              <label class="form-check-label" for="campaignActive">เปิดใช้งาน</label>
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">รายละเอียด (ถ้ามี)</label>
+            <textarea class="form-control" name="description" rows="2" maxlength="2000"></textarea>
+          </div>
+
+          <div class="col-12 d-flex justify-content-end">
+            <button class="btn btn-primary">บันทึกแคมเปญ</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="card promo-campaign-card">
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -209,6 +302,7 @@
                 <th>Active</th>
                 <th>Start</th>
                 <th>End</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -246,11 +340,24 @@
                         <%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %>
                       </span>
                     </td>
+                    <td>
+                      <div class="promo-action-stack">
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editCampaignModal-<%= c.id %>">
+                          Edit
+                        </button>
+                        <form method="POST" action="/promotion/admin/campaigns/<%= c.id %>/status">
+                          <input type="hidden" name="active" value="<%= c.active ? '0' : '1' %>">
+                          <button class="btn btn-outline-warning btn-sm w-100">
+                            <%= c.active ? 'Deactivate' : 'Activate' %>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
                   </tr>
                 <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="6" class="text-center promo-empty">
+                  <td colspan="7" class="text-center promo-empty">
                     ยังไม่พบรายการแคมเปญในระบบ
                   </td>
                 </tr>
@@ -263,5 +370,54 @@
 
   </div>
 </div>
+<% if (Array.isArray(campaigns) && campaigns.length) { %>
+  <% campaigns.forEach(c => { %>
+    <div class="modal fade" id="editCampaignModal-<%= c.id %>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">แก้ไขแคมเปญ #<%= c.id %></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="/promotion/admin/campaigns/<%= c.id %>/update" autocomplete="off">
+            <div class="modal-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Campaign Code</label>
+                  <input type="text" name="campaign_code" class="form-control" maxlength="100" value="<%= c.campaign_code || '' %>" required>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">ชื่อแคมเปญ</label>
+                  <input type="text" name="name" class="form-control" maxlength="255" value="<%= c.name || '' %>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">เริ่มต้น</label>
+                  <input type="datetime-local" name="start_at" class="form-control" value="<%= toDateTimeLocal(c.start_at) %>">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">สิ้นสุด</label>
+                  <input type="datetime-local" name="end_at" class="form-control" value="<%= toDateTimeLocal(c.end_at) %>">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">รายละเอียด</label>
+                  <textarea class="form-control" name="description" rows="3" maxlength="2000"><%= c.description || '' %></textarea>
+                </div>
+                <div class="col-12">
+                  <small class="text-muted">
+                    สาขา: <%= c.store_name || '-' %> (<%= c.store_code || '-' %>) • สถานะปัจจุบัน: <%= c.active ? 'Active' : 'Inactive' %>
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
 <!-- include footer -->
 <%- include('../footer.ejs') %>

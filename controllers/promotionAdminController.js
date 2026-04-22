@@ -1,10 +1,13 @@
 const promotionModel = require('../models/promotionModel');
 const bcrypt = require('bcryptjs');
 const adminUserModel = require('../models/promotion/adminUserModel');
+const fs = require('fs');
+const path = require('path');
 
 const USERNAME_REGEX = /^[a-z0-9._-]{3,100}$/;
 const ALLOWED_PRIZE_TYPES = new Set(['free_product', 'discount', 'coupon', 'credit', 'other']);
 const STORE_CODE_REGEX = /^[A-Z0-9_-]{2,50}$/;
+const CAMPAIGN_CODE_REGEX = /^[A-Z0-9_-]{2,100}$/;
 
 function getScope(req) {
   const admin = req.promotionAdmin || null;
@@ -59,8 +62,52 @@ function sanitizeImageUrl(raw) {
   return '';
 }
 
+function isLocalPromotionPrizeImage(imageUrl) {
+  return typeof imageUrl === 'string' && imageUrl.startsWith('/uploads/promotion/prizes/');
+}
+
+function deleteLocalPromotionPrizeImage(imageUrl) {
+  if (!isLocalPromotionPrizeImage(imageUrl)) return;
+  const safePart = imageUrl.replace('/uploads/', '');
+  const absolutePath = path.join(process.cwd(), 'uploads', safePart);
+  if (fs.existsSync(absolutePath)) {
+    try {
+      fs.unlinkSync(absolutePath);
+    } catch (err) {
+      console.warn('promotionAdmin.deleteLocalPromotionPrizeImage warn', err.message);
+    }
+  }
+}
+
+function getUploadedPromotionPrizeImageUrl(req) {
+  if (!req || !req.file || !req.file.filename) return '';
+  return `/uploads/promotion/prizes/${req.file.filename}`;
+}
+
+function cleanupUploadedPromotionPrizeImage(req) {
+  const uploadedUrl = getUploadedPromotionPrizeImageUrl(req);
+  if (!uploadedUrl) return;
+  deleteLocalPromotionPrizeImage(uploadedUrl);
+}
+
 function sanitizeStoreCode(raw) {
   return String(raw || '').trim().toUpperCase().slice(0, 50);
+}
+
+function sanitizeCampaignCode(raw) {
+  return String(raw || '').trim().toUpperCase().slice(0, 100);
+}
+
+function parseDateTimeInput(raw) {
+  const input = String(raw || '').trim();
+  if (!input) return { value: null, valid: true, provided: false };
+  const normalized = input.replace('T', ' ');
+  const candidate = normalized.length === 16 ? `${normalized}:00` : normalized;
+  const parsed = new Date(candidate.replace(' ', 'T'));
+  if (Number.isNaN(parsed.getTime())) {
+    return { value: null, valid: false, provided: true };
+  }
+  return { value: candidate, valid: true, provided: true };
 }
 
 function parseMetadataObject(raw) {
@@ -102,6 +149,12 @@ function canManagePrize(req, prize) {
   return Number(prize.store_id) === Number(scopedStoreId);
 }
 
+function canManageCampaign(req, campaign) {
+  const scopedStoreId = getScopedStoreId(req);
+  if (!scopedStoreId) return true;
+  return Number(campaign.store_id) === Number(scopedStoreId);
+}
+
 exports.dashboard = async (req, res) => {
   try {
     const scope = getScope(req);
@@ -115,12 +168,185 @@ exports.dashboard = async (req, res) => {
 
 exports.campaigns = async (req, res) => {
   try {
+    const scope = getScope(req);
     const scopedStoreId = getScopedStoreId(req);
-    const campaigns = await promotionModel.getCampaignsWithStore(scopedStoreId);
-    return res.render('promotion/admin/campaigns', { title: 'Campaigns', campaigns, promotionAdmin: req.promotionAdmin });
+    const [campaigns, stores] = await Promise.all([
+      promotionModel.getCampaignsWithStore(scopedStoreId),
+      promotionModel.getStoresList(scope)
+    ]);
+    return res.render('promotion/admin/campaigns', {
+      title: 'Campaigns',
+      campaigns,
+      stores,
+      promotionAdmin: req.promotionAdmin
+    });
   } catch (err) {
     console.error('promotionAdmin.campaigns error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.createCampaign = async (req, res) => {
+  try {
+    const scope = getScope(req);
+    const scopedStoreId = getScopedStoreId(req);
+
+    let storeId = parsePositiveInt(req.body.store_id);
+    if (scope && scope.role === 'coop_admin') {
+      storeId = scopedStoreId;
+    }
+
+    const campaignCode = sanitizeCampaignCode(req.body.campaign_code);
+    const name = sanitizePrizeText(req.body.name, 255);
+    const description = sanitizePrizeText(req.body.description, 2000);
+    const active = req.body.active === '1';
+    const startAtParsed = parseDateTimeInput(req.body.start_at);
+    const endAtParsed = parseDateTimeInput(req.body.end_at);
+
+    if (!storeId) {
+      req.flash('danger', 'กรุณาเลือกสาขาให้ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!CAMPAIGN_CODE_REGEX.test(campaignCode)) {
+      req.flash('danger', 'campaign_code ต้องเป็น A-Z, 0-9, _ หรือ - (2-100 ตัว)');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!name) {
+      req.flash('danger', 'กรุณาระบุชื่อแคมเปญ');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!startAtParsed.valid || !endAtParsed.valid) {
+      req.flash('danger', 'รูปแบบวันเวลาไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (startAtParsed.value && endAtParsed.value && startAtParsed.value > endAtParsed.value) {
+      req.flash('danger', 'วันเริ่มต้นต้องไม่มากกว่าวันสิ้นสุด');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const store = await promotionModel.getStoreById(storeId);
+    if (!store) {
+      req.flash('danger', 'ไม่พบสาขาที่เลือก');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const duplicate = await promotionModel.getCampaignByCodeInStore(storeId, campaignCode);
+    if (duplicate) {
+      req.flash('danger', `campaign_code ${campaignCode} ถูกใช้งานแล้วในสาขานี้`);
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    await promotionModel.createCampaign({
+      store_id: storeId,
+      campaign_code: campaignCode,
+      name,
+      description: description || null,
+      start_at: startAtParsed.value,
+      end_at: endAtParsed.value,
+      active,
+      metadata: null
+    });
+
+    req.flash('success', `เพิ่มแคมเปญ "${name}" สำเร็จ`);
+    return res.redirect('/promotion/admin/campaigns');
+  } catch (err) {
+    console.error('promotionAdmin.createCampaign error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะเพิ่มแคมเปญ');
+    return res.redirect('/promotion/admin/campaigns');
+  }
+};
+
+exports.updateCampaign = async (req, res) => {
+  try {
+    const campaignId = parsePositiveInt(req.params.id);
+    if (!campaignId) {
+      req.flash('danger', 'รหัสแคมเปญไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const campaign = await promotionModel.getCampaignById(campaignId);
+    if (!campaign) {
+      req.flash('danger', 'ไม่พบแคมเปญที่ต้องการแก้ไข');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!canManageCampaign(req, campaign)) {
+      req.flash('danger', 'คุณไม่มีสิทธิ์แก้ไขแคมเปญรายการนี้');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const campaignCode = sanitizeCampaignCode(req.body.campaign_code);
+    const name = sanitizePrizeText(req.body.name, 255);
+    const description = sanitizePrizeText(req.body.description, 2000);
+    const startAtParsed = parseDateTimeInput(req.body.start_at);
+    const endAtParsed = parseDateTimeInput(req.body.end_at);
+
+    if (!CAMPAIGN_CODE_REGEX.test(campaignCode)) {
+      req.flash('danger', 'campaign_code ต้องเป็น A-Z, 0-9, _ หรือ - (2-100 ตัว)');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!name) {
+      req.flash('danger', 'กรุณาระบุชื่อแคมเปญ');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!startAtParsed.valid || !endAtParsed.valid) {
+      req.flash('danger', 'รูปแบบวันเวลาไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (startAtParsed.value && endAtParsed.value && startAtParsed.value > endAtParsed.value) {
+      req.flash('danger', 'วันเริ่มต้นต้องไม่มากกว่าวันสิ้นสุด');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const duplicate = await promotionModel.getCampaignByCodeInStore(campaign.store_id, campaignCode);
+    if (duplicate && Number(duplicate.id) !== Number(campaign.id)) {
+      req.flash('danger', `campaign_code ${campaignCode} ถูกใช้งานแล้วในสาขานี้`);
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    await promotionModel.updateCampaignById(campaignId, {
+      campaign_code: campaignCode,
+      name,
+      description: description || null,
+      start_at: startAtParsed.value,
+      end_at: endAtParsed.value
+    });
+
+    req.flash('success', `บันทึกการแก้ไขแคมเปญ "${name}" แล้ว`);
+    return res.redirect('/promotion/admin/campaigns');
+  } catch (err) {
+    console.error('promotionAdmin.updateCampaign error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะแก้ไขแคมเปญ');
+    return res.redirect('/promotion/admin/campaigns');
+  }
+};
+
+exports.updateCampaignStatus = async (req, res) => {
+  try {
+    const campaignId = parsePositiveInt(req.params.id);
+    if (!campaignId) {
+      req.flash('danger', 'รหัสแคมเปญไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const campaign = await promotionModel.getCampaignById(campaignId);
+    if (!campaign) {
+      req.flash('danger', 'ไม่พบแคมเปญ');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!canManageCampaign(req, campaign)) {
+      req.flash('danger', 'คุณไม่มีสิทธิ์เปลี่ยนสถานะแคมเปญรายการนี้');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const active = req.body.active === '1';
+    await promotionModel.setCampaignActiveById(campaignId, active);
+
+    req.flash('success', `${active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}แคมเปญ "${campaign.name}" แล้ว`);
+    return res.redirect('/promotion/admin/campaigns');
+  } catch (err) {
+    console.error('promotionAdmin.updateCampaignStatus error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะเปลี่ยนสถานะแคมเปญ');
+    return res.redirect('/promotion/admin/campaigns');
   }
 };
 
@@ -152,7 +378,9 @@ exports.createPrize = async (req, res) => {
     const description = sanitizePrizeText(req.body.description, 2000);
     const prizeCode = sanitizePrizeText(req.body.prize_code, 100);
     const imageUrlRaw = sanitizePrizeText(req.body.image_url, 2000);
-    const imageUrl = sanitizeImageUrl(imageUrlRaw);
+    const imageUrlFromText = sanitizeImageUrl(imageUrlRaw);
+    const imageUrlFromUpload = getUploadedPromotionPrizeImageUrl(req);
+    const imageUrl = imageUrlFromUpload || imageUrlFromText;
     const typeRaw = sanitizePrizeText(req.body.type, 32);
     const initialQtyRaw = req.body.initial_qty;
     const weightRaw = req.body.weight;
@@ -168,46 +396,56 @@ exports.createPrize = async (req, res) => {
     const type = ALLOWED_PRIZE_TYPES.has(typeRaw) ? typeRaw : null;
 
     if (!storeId) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'กรุณาเลือกสาขาให้ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!campaignId) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'กรุณาเลือกแคมเปญ');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!name) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'กรุณาระบุชื่อของรางวัล');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!type) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ประเภทของรางวัลไม่ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
-    if (imageUrlRaw && !imageUrl) {
+    if (imageUrlRaw && !imageUrlFromText && !imageUrlFromUpload) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ลิงก์รูปของรางวัลไม่ถูกต้อง (รองรับเฉพาะ http/https หรือ path ภายในระบบ)');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!Number.isInteger(initialQty) || initialQty < 0 || initialQty > 1000000) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'จำนวนเริ่มต้นต้องเป็นตัวเลข 0 - 1,000,000');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!Number.isInteger(weight) || weight < 1 || weight > 1000000) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'น้ำหนักการสุ่มต้องเป็นตัวเลข 1 - 1,000,000');
       return res.redirect('/promotion/admin/prizes');
     }
 
     const store = await promotionModel.getStoreById(storeId);
     if (!store) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ไม่พบสาขาที่เลือก');
       return res.redirect('/promotion/admin/prizes');
     }
 
     const campaign = await promotionModel.getCampaignById(campaignId);
     if (!campaign) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ไม่พบแคมเปญที่เลือก');
       return res.redirect('/promotion/admin/prizes');
     }
     if (Number(campaign.store_id) !== Number(storeId)) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'แคมเปญนี้ไม่ได้อยู่ในสาขาที่เลือก');
       return res.redirect('/promotion/admin/prizes');
     }
@@ -228,6 +466,7 @@ exports.createPrize = async (req, res) => {
     req.flash('success', `เพิ่มของรางวัล "${name}" สำเร็จ`);
     return res.redirect('/promotion/admin/prizes');
   } catch (err) {
+    cleanupUploadedPromotionPrizeImage(req);
     console.error('promotionAdmin.createPrize error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะเพิ่มของรางวัล');
     return res.redirect('/promotion/admin/prizes');
@@ -238,16 +477,19 @@ exports.updatePrize = async (req, res) => {
   try {
     const prizeId = parsePositiveInt(req.params.id);
     if (!prizeId) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'รหัสของรางวัลไม่ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
 
     const prize = await promotionModel.getPrizeById(prizeId);
     if (!prize) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ไม่พบของรางวัลที่ต้องการแก้ไข');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!canManagePrize(req, prize)) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'คุณไม่มีสิทธิ์แก้ไขของรางวัลรายการนี้');
       return res.redirect('/promotion/admin/prizes');
     }
@@ -256,24 +498,33 @@ exports.updatePrize = async (req, res) => {
     const description = sanitizePrizeText(req.body.description, 2000);
     const prizeCode = sanitizePrizeText(req.body.prize_code, 100);
     const imageUrlRaw = sanitizePrizeText(req.body.image_url, 2000);
-    const imageUrl = sanitizeImageUrl(imageUrlRaw);
+    const imageUrlFromText = sanitizeImageUrl(imageUrlRaw);
+    const imageUrlFromUpload = getUploadedPromotionPrizeImageUrl(req);
+    const imageUrl = imageUrlFromUpload || imageUrlFromText;
     const typeRaw = sanitizePrizeText(req.body.type, 32);
     const weight = Number.parseInt(req.body.weight, 10);
     const type = ALLOWED_PRIZE_TYPES.has(typeRaw) ? typeRaw : null;
 
     if (!name) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'กรุณาระบุชื่อของรางวัล');
       return res.redirect('/promotion/admin/prizes');
     }
     if (!type) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ประเภทของรางวัลไม่ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
-    if (imageUrlRaw && !imageUrl) {
+    if (imageUrlRaw && !imageUrlFromText && !imageUrlFromUpload) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ลิงก์รูปของรางวัลไม่ถูกต้อง (รองรับเฉพาะ http/https หรือ path ภายในระบบ)');
       return res.redirect('/promotion/admin/prizes');
     }
+
+    const oldMetadataObj = parseMetadataObject(prize.metadata);
+    const oldImageUrl = sanitizeImageUrl(oldMetadataObj.image_url || '');
     if (!Number.isInteger(weight) || weight < 1 || weight > 1000000) {
+      cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'น้ำหนักการสุ่มต้องเป็นตัวเลข 1 - 1,000,000');
       return res.redirect('/promotion/admin/prizes');
     }
@@ -287,9 +538,14 @@ exports.updatePrize = async (req, res) => {
       weight
     });
 
+    if (imageUrlFromUpload && oldImageUrl && oldImageUrl !== imageUrlFromUpload) {
+      deleteLocalPromotionPrizeImage(oldImageUrl);
+    }
+
     req.flash('success', `บันทึกการแก้ไขของรางวัล "${name}" แล้ว`);
     return res.redirect('/promotion/admin/prizes');
   } catch (err) {
+    cleanupUploadedPromotionPrizeImage(req);
     console.error('promotionAdmin.updatePrize error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะแก้ไขของรางวัล');
     return res.redirect('/promotion/admin/prizes');

@@ -48,8 +48,74 @@ async function getCampaignsWithStore(storeId = null) {
   return rows;
 }
 
+async function getCampaignByCodeInStore(storeId, campaignCode) {
+  const [rows] = await db.query(
+    `SELECT *
+     FROM promotion_campaigns
+     WHERE store_id = ?
+       AND campaign_code = ?
+     LIMIT 1`,
+    [storeId, campaignCode]
+  );
+  return rows[0] || null;
+}
+
+async function createCampaign(payload) {
+  const [result] = await db.query(
+    `INSERT INTO promotion_campaigns
+      (store_id, campaign_code, name, description, start_at, end_at, active, metadata, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    [
+      payload.store_id,
+      payload.campaign_code,
+      payload.name,
+      payload.description || null,
+      payload.start_at || null,
+      payload.end_at || null,
+      payload.active ? 1 : 0,
+      payload.metadata || null
+    ]
+  );
+  return result.insertId;
+}
+
+async function updateCampaignById(campaignId, payload) {
+  await db.query(
+    `UPDATE promotion_campaigns
+     SET campaign_code = ?,
+         name = ?,
+         description = ?,
+         start_at = ?,
+         end_at = ?,
+         updated_at = NOW()
+     WHERE id = ?`,
+    [
+      payload.campaign_code,
+      payload.name,
+      payload.description || null,
+      payload.start_at || null,
+      payload.end_at || null,
+      campaignId
+    ]
+  );
+}
+
+async function setCampaignActiveById(campaignId, active) {
+  await db.query(
+    `UPDATE promotion_campaigns
+     SET active = ?,
+         updated_at = NOW()
+     WHERE id = ?`,
+    [active ? 1 : 0, campaignId]
+  );
+}
+
 module.exports = {
   getCampaignById,
   getActiveCampaignByStore,
-  getCampaignsWithStore
+  getCampaignsWithStore,
+  getCampaignByCodeInStore,
+  createCampaign,
+  updateCampaignById,
+  setCampaignActiveById
 };

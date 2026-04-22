@@ -6,6 +6,16 @@ const promotionController = require('../controllers/promotionController');
 const promotionAdminController = require('../controllers/promotionAdminController');
 const promotionAdminAuthController = require('../controllers/promotionAdminAuthController');
 const promotionAdminAuth = require('../middlewares/promotionAdminAuth');
+const promotionPrizeUpload = require('../middlewares/promotionPrizeUpload');
+
+function handlePrizeUpload(req, res, next) {
+  promotionPrizeUpload.single('image_file')(req, res, (err) => {
+    if (!err) return next();
+    const message = err && err.message ? err.message : 'อัปโหลดรูปของรางวัลไม่สำเร็จ';
+    req.flash('danger', message);
+    return res.redirect('/promotion/admin/prizes');
+  });
+}
 
 // Apply flash middleware only to promotion routes (keeps changes local)
 router.use(flashMiddleware());
@@ -33,9 +43,12 @@ router.get('/admin/logout', promotionAdminAuthController.logout);
 router.use('/admin', promotionAdminAuth);
 router.get('/admin', promotionAdminController.dashboard);
 router.get('/admin/campaigns', promotionAdminController.campaigns);
+router.post('/admin/campaigns', promotionAdminController.createCampaign);
+router.post('/admin/campaigns/:id/update', promotionAdminController.updateCampaign);
+router.post('/admin/campaigns/:id/status', promotionAdminController.updateCampaignStatus);
 router.get('/admin/prizes', promotionAdminController.prizes);
-router.post('/admin/prizes', promotionAdminController.createPrize);
-router.post('/admin/prizes/:id/update', promotionAdminController.updatePrize);
+router.post('/admin/prizes', handlePrizeUpload, promotionAdminController.createPrize);
+router.post('/admin/prizes/:id/update', handlePrizeUpload, promotionAdminController.updatePrize);
 router.post('/admin/prizes/:id/status', promotionAdminController.updatePrizeStatus);
 router.post('/admin/prizes/:id/delete', promotionAdminController.deletePrize);
 router.get('/admin/codes', promotionAdminController.codes);

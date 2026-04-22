@@ -75,8 +75,8 @@ async function getPrizesList(storeId = null) {
  * - excludes type='other'
  * - includes active campaign in valid date range
  */
-async function getShowcasePrizesByStore(storeId, limit = 12) {
-  const safeLimit = Number.isInteger(Number(limit)) ? Math.max(1, Math.min(30, Number(limit))) : 12;
+async function getShowcasePrizesByStore(storeId, limit = 6) {
+  const safeLimit = Number.isInteger(Number(limit)) ? Math.max(1, Math.min(30, Number(limit))) : 6;
   const [rows] = await db.query(
     `SELECT p.*, c.name AS campaign_name
      FROM promotion_prizes p
@@ -88,7 +88,7 @@ async function getShowcasePrizesByStore(storeId, limit = 12) {
        AND (c.start_at IS NULL OR c.start_at <= NOW())
        AND (c.end_at IS NULL OR c.end_at >= NOW())
        AND COALESCE(p.remaining_qty, 0) > 0
-     ORDER BY p.weight DESC, p.id DESC
+     ORDER BY p.weight ASC, p.id ASC
      LIMIT ?`,
     [storeId, safeLimit]
   );

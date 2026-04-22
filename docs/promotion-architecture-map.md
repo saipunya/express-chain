@@ -48,6 +48,9 @@ Client (play / kiosk / admin)
 - `POST /promotion/admin/logout`
 - `GET /promotion/admin`
 - `GET /promotion/admin/campaigns`
+- `POST /promotion/admin/campaigns`
+- `POST /promotion/admin/campaigns/:id/update`
+- `POST /promotion/admin/campaigns/:id/status`
 - `GET /promotion/admin/prizes`
 - `POST /promotion/admin/prizes`
 - `POST /promotion/admin/prizes/:id/update`
@@ -435,3 +438,121 @@ promotion_admin_users
   - ปัจจุบันรูปเป็น URL/path เท่านั้น (ยังไม่มี uploader ในหน้า admin)
 - Next Step:
   - เพิ่ม media upload endpoint ภายใน `/promotion/admin` แล้วเติม URL อัตโนมัติให้ฟอร์มรางวัล
+
+### 2026-04-22 13:45 (ICT) - Add prize image upload form in admin
+- Goal: ให้แอดมินอัปโหลดรูปของรางวัลจากเครื่องได้โดยตรง (ไม่ต้องใส่ URL อย่างเดียว)
+- Changes:
+  - เพิ่ม multer middleware เฉพาะ `/promotion` สำหรับอัปโหลดรูปของรางวัล
+  - ปรับ route create/update prize ให้รองรับ `multipart/form-data`
+  - เพิ่ม file input (`image_file`) ในฟอร์มเพิ่มรางวัลและฟอร์มแก้ไขรางวัล
+  - ฝั่ง controller รองรับการใช้รูปจากไฟล์อัปโหลด (override URL), ลบไฟล์เก่าของรางวัลเมื่ออัปโหลดรูปใหม่, และ cleanup ไฟล์กรณี validation ไม่ผ่าน
+- Files Touched:
+  - `middlewares/promotionPrizeUpload.js`
+  - `routes/promotionRoutes.js`
+  - `controllers/promotionAdminController.js`
+  - `views/promotion/admin/prizes.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - แอดมินเลือกไฟล์รูปได้จากฟอร์มรางวัลทันที
+  - ระบบบันทึก path เป็น `/uploads/promotion/prizes/<filename>`
+  - ลดไฟล์ orphan จากกรณีกรอกข้อมูลไม่ผ่าน validation
+- Open Issues:
+  - ยังไม่มีปุ่มลบรูปแบบ explicit (ตอนนี้ลบรูปได้โดยเคลียร์ URL/อัปโหลดรูปใหม่)
+- Next Step:
+  - เพิ่ม toggle “ลบรูปปัจจุบัน” ในฟอร์มแก้ไขรางวัล
+
+### 2026-04-22 13:55 (ICT) - Add client-side image preview in prize forms
+- Goal: ลดความผิดพลาดก่อนบันทึก โดยให้เห็นตัวอย่างรูปทันทีทั้งตอนเพิ่มและแก้ไขรางวัล
+- Changes:
+  - เพิ่ม preview card ในฟอร์ม create และ edit ของหน้า prizes
+  - เพิ่ม JS สำหรับ preview จากทั้ง URL และไฟล์อัปโหลด (`image_file` มี priority สูงกว่า)
+  - รองรับ fallback กรณี URL รูปไม่โหลด โดยซ่อน preview อัตโนมัติ
+- Files Touched:
+  - `views/promotion/admin/prizes.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - แอดมินตรวจสอบรูปได้ก่อนกดบันทึก ลดการใส่ URL ผิด/เลือกไฟล์ผิด
+- Open Issues:
+  - ยังไม่มี crop/resize ฝั่ง client ก่อนอัปโหลด
+- Next Step:
+  - เพิ่มตัวเลือก crop รูป (optional) สำหรับของรางวัลที่ต้องการสัดส่วนคงที่
+
+### 2026-04-22 14:10 (ICT) - Enforce admin scope policy + enable campaign create by coop_admin
+- Goal: ให้การจัดการผู้ใช้จำกัดเฉพาะ super_admin และให้ coop_admin เพิ่ม campaign/รางวัลได้เอง
+- Changes:
+  - ยืนยัน policy ฝั่ง controller ว่า user-management routes ใช้ `ensureSuperAdmin` เท่านั้น
+  - เพิ่ม backend สร้างแคมเปญ (`createCampaign`) พร้อม validation store scope, campaign_code, ช่วงเวลา start/end
+  - เพิ่ม model methods สำหรับ campaign create และตรวจ campaign_code ซ้ำในสาขา
+  - เพิ่ม route `POST /promotion/admin/campaigns`
+  - เพิ่มฟอร์ม “เพิ่มแคมเปญ” ในหน้า campaigns โดย coop_admin ใช้ store ของตัวเองอัตโนมัติ
+- Files Touched:
+  - `controllers/promotionAdminController.js`
+  - `models/promotion/campaignModel.js`
+  - `models/promotionModel.js`
+  - `routes/promotionRoutes.js`
+  - `views/promotion/admin/campaigns.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - super_admin ยังเป็นผู้จัดการ user ได้เพียง role เดียวตามนโยบาย
+  - coop_admin/สาขาเพิ่ม campaign ได้จาก UI ทันที และเพิ่มรางวัลได้เหมือนเดิม
+- Open Issues:
+  - ยังไม่มีหน้าแก้ไข/ปิดใช้งาน campaign แบบ inline
+- Next Step:
+  - เพิ่ม campaign edit/status endpoints เพื่อจัดการ lifecycle แคมเปญครบวงจร
+
+### 2026-04-22 14:25 (ICT) - Add campaign edit + activate/deactivate lifecycle
+- Goal: ทำให้แคมเปญจัดการได้ครบในหน้าเดียว (create/edit/status) สำหรับ super_admin และ coop_admin ตาม scope
+- Changes:
+  - เพิ่ม backend update campaign พร้อม validation `campaign_code`, ช่วงเวลาเริ่ม/สิ้นสุด, และกันรหัสซ้ำในสาขาเดียวกัน
+  - เพิ่ม backend toggle campaign status (activate/deactivate) พร้อมตรวจสิทธิ์ตาม store scope
+  - เพิ่ม route `POST /promotion/admin/campaigns/:id/update` และ `POST /promotion/admin/campaigns/:id/status`
+  - เพิ่ม Actions column + edit modal ในหน้า campaigns
+- Files Touched:
+  - `controllers/promotionAdminController.js`
+  - `models/promotion/campaignModel.js`
+  - `models/promotionModel.js`
+  - `routes/promotionRoutes.js`
+  - `views/promotion/admin/campaigns.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - coop_admin แก้ไข/เปลี่ยนสถานะแคมเปญในสาขาตัวเองได้ทันที
+  - super_admin จัดการได้ทุกสาขาเหมือนเดิม
+- Open Issues:
+  - ยังไม่มีระบบ audit log ราย event สำหรับ campaign update/status
+- Next Step:
+  - เพิ่ม audit log เฉพาะ campaign lifecycle actions
+
+### 2026-04-22 14:40 (ICT) - Tune featured-prize ordering for storefront
+- Goal: ปรับ “ของรางวัลเด่นของสาขา” ให้โชว์หลายรางวัลและเรียงจากโอกาสได้น้อยไปมาก
+- Changes:
+  - ปรับจำนวนรายการเด่นที่ดึงมาเป็นสูงสุด 6 รายการสำหรับหน้า play/kiosk
+  - ปรับลำดับ query จาก `weight ASC` เพื่อเรียงจากโอกาสได้น้อย -> มาก
+  - ยังคง exclude `type='other'` (ไม่ได้รางวัล) ตามเดิม
+- Files Touched:
+  - `models/promotion/prizeModel.js`
+  - `controllers/promotionController.js`
+- Behavior Impact:
+  - หน้า welcome ของแต่ละสาขาโชว์ของรางวัลเด่นได้หลายรายการมากขึ้น (แนว 4-6)
+  - ลำดับการ์ดสื่อ “โอกาสต่ำก่อน โอกาสสูงทีหลัง” ชัดเจนขึ้น
+- Open Issues:
+  - ยังไม่ได้แสดงเปอร์เซ็นต์โอกาสแบบ explicit ใน UI
+- Next Step:
+  - เพิ่ม label “โอกาสประมาณ” ต่อรางวัลจาก weight รวมของแคมเปญ (optional)
+
+### 2026-04-22 14:55 (ICT) - Add promo ribbon labels on featured prizes
+- Goal: ให้ของรางวัลเด่นดูดึงดูดขึ้นด้วยป้ายข้อความ เช่น “ฟรี”, “ลด 50%”
+- Changes:
+  - เพิ่มการ derive label จาก `type` ของรางวัล (`free_product`, `discount`, `coupon`, `credit`)
+  - สำหรับ `discount` ระบบพยายามดึง `%` จากชื่อ/รายละเอียด แล้วแสดงเป็น `ลด X%`
+  - เพิ่ม ribbon badge บนการ์ดของรางวัลเด่นในหน้า `play` และ `kiosk`
+- Files Touched:
+  - `controllers/promotionController.js`
+  - `views/promotion/play.ejs`
+  - `views/promotion/kiosk.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - ผู้ใช้เห็นจุดขายของรางวัลชัดขึ้นตั้งแต่หน้า welcome
+- Open Issues:
+  - ปัจจุบันยังเป็น mapping ตาม `type` + parsing `%` แบบง่ายจากข้อความ
+- Next Step:
+  - เพิ่มฟิลด์ `badge_text` แบบ custom ใน metadata สำหรับปรับข้อความได้ละเอียดต่อรางวัล

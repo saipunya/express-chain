@@ -111,6 +111,61 @@
     font-size: 0.8rem;
     background: #f8fafc;
   }
+
+  .prize-preview-card {
+    width: 160px;
+    height: 160px;
+    border-radius: 14px;
+    border: 1px dashed #cbd5e1;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .prize-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .prize-preview-empty {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .modal[id^="editPrizeModal-"] .modal-dialog {
+    margin: 1rem auto;
+  }
+
+  .modal[id^="editPrizeModal-"] .modal-content {
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+  }
+
+  .modal[id^="editPrizeModal-"] .modal-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 3;
+  }
+
+  .modal[id^="editPrizeModal-"] .modal-body {
+    overflow-y: auto;
+    max-height: calc(100vh - 210px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal[id^="editPrizeModal-"] .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 3;
+    border-top: 1px solid #e2e8f0;
+  }
 </style>
 
 <div class="promo-prize-page">
@@ -150,7 +205,7 @@
     <div class="card promo-form-card">
       <div class="card-body p-4">
         <h5 class="fw-bold mb-3">➕ เพิ่มของรางวัล</h5>
-        <form method="POST" action="/promotion/admin/prizes" class="row g-3" autocomplete="off">
+        <form method="POST" action="/promotion/admin/prizes" class="row g-3 prize-image-form" autocomplete="off" enctype="multipart/form-data">
           <div class="col-md-3">
             <label class="form-label">สาขา</label>
             <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
@@ -188,7 +243,20 @@
 
           <div class="col-md-6">
             <label class="form-label">รูปของรางวัล (URL)</label>
-            <input type="text" name="image_url" class="form-control" maxlength="2000" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+            <input type="text" name="image_url" class="form-control prize-image-url" maxlength="2000" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">อัปโหลดรูปของรางวัล</label>
+            <input type="file" name="image_file" class="form-control prize-image-file" accept="image/*">
+            <small class="text-muted">รองรับ JPG/PNG/WEBP/GIF ขนาดไม่เกิน 5MB (ถ้าอัปโหลดไฟล์ จะใช้ไฟล์แทน URL)</small>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">ตัวอย่างรูป</label>
+            <div class="prize-preview-card" data-prize-preview>
+              <img class="prize-preview-img d-none" alt="Prize preview">
+              <div class="prize-preview-empty">ยังไม่มีรูป</div>
+            </div>
           </div>
 
           <div class="col-md-3">
@@ -346,7 +414,7 @@
             <h5 class="modal-title">แก้ไขของรางวัล #<%= p.id %></h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/update" autocomplete="off">
+          <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/update" class="prize-image-form" autocomplete="off" enctype="multipart/form-data">
             <div class="modal-body">
               <div class="row g-3">
                 <div class="col-md-6">
@@ -359,7 +427,19 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label">รูปของรางวัล (URL)</label>
-                  <input type="text" name="image_url" class="form-control" maxlength="2000" value="<%= p.image_url || '' %>" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+                  <input type="text" name="image_url" class="form-control prize-image-url" maxlength="2000" value="<%= p.image_url || '' %>" placeholder="https://example.com/prize.jpg หรือ /uploads/prizes/item.jpg">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">อัปโหลดรูปใหม่</label>
+                  <input type="file" name="image_file" class="form-control prize-image-file" accept="image/*">
+                  <small class="text-muted">ถ้าอัปโหลดรูปใหม่ ระบบจะใช้ไฟล์ใหม่แทนค่า URL เดิม</small>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">ตัวอย่างรูป</label>
+                  <div class="prize-preview-card" data-prize-preview>
+                    <img class="prize-preview-img d-none" alt="Prize preview">
+                    <div class="prize-preview-empty">ยังไม่มีรูป</div>
+                  </div>
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">ประเภท</label>
@@ -432,6 +512,77 @@
     } else {
       renderCampaigns('');
     }
+  })();
+
+  (function () {
+    const imageForms = Array.from(document.querySelectorAll('.prize-image-form'));
+    if (!imageForms.length) return;
+
+    imageForms.forEach((form) => {
+      const urlInput = form.querySelector('.prize-image-url');
+      const fileInput = form.querySelector('.prize-image-file');
+      const previewCard = form.querySelector('[data-prize-preview]');
+      if (!previewCard || !urlInput || !fileInput) return;
+
+      const previewImg = previewCard.querySelector('.prize-preview-img');
+      const previewEmpty = previewCard.querySelector('.prize-preview-empty');
+      let objectUrl = null;
+
+      const showPreview = (src) => {
+        if (!previewImg || !previewEmpty || !src) return;
+        previewImg.src = src;
+        previewImg.classList.remove('d-none');
+        previewEmpty.classList.add('d-none');
+      };
+
+      const hidePreview = () => {
+        if (!previewImg || !previewEmpty) return;
+        previewImg.removeAttribute('src');
+        previewImg.classList.add('d-none');
+        previewEmpty.classList.remove('d-none');
+      };
+
+      const clearObjectUrl = () => {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
+      };
+
+      const refreshPreview = () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          clearObjectUrl();
+          objectUrl = URL.createObjectURL(fileInput.files[0]);
+          showPreview(objectUrl);
+          return;
+        }
+
+        clearObjectUrl();
+        const url = String(urlInput.value || '').trim();
+        if (url) {
+          showPreview(url);
+          return;
+        }
+        hidePreview();
+      };
+
+      if (previewImg) {
+        previewImg.addEventListener('error', () => {
+          if (!fileInput.files || !fileInput.files.length) {
+            hidePreview();
+          }
+        });
+      }
+
+      urlInput.addEventListener('input', refreshPreview);
+      fileInput.addEventListener('change', refreshPreview);
+      form.addEventListener('reset', () => {
+        clearObjectUrl();
+        setTimeout(refreshPreview, 0);
+      });
+
+      refreshPreview();
+    });
   })();
 </script>
 <!-- include footer -->

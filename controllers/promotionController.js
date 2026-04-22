@@ -66,18 +66,42 @@ function parseMetadataObject(raw) {
   }
 }
 
+function extractDiscountPercent(text) {
+  const source = String(text || '');
+  const match = source.match(/(\d{1,3})\s*%/);
+  if (!match) return null;
+  const value = Number.parseInt(match[1], 10);
+  if (!Number.isInteger(value) || value <= 0 || value > 100) return null;
+  return value;
+}
+
+function derivePrizeBadgeText(prize) {
+  const type = String((prize && prize.type) || '').trim();
+  if (!type) return null;
+
+  if (type === 'free_product') return 'ฟรี';
+  if (type === 'discount') {
+    const percent = extractDiscountPercent(`${prize && prize.name ? prize.name : ''} ${prize && prize.description ? prize.description : ''}`);
+    return percent ? `ลด ${percent}%` : 'ส่วนลด';
+  }
+  if (type === 'coupon') return 'คูปอง';
+  if (type === 'credit') return 'เครดิต';
+  return null;
+}
+
 function withPrizeImage(prize) {
   const metadataObj = parseMetadataObject(prize && prize.metadata);
   return {
     ...prize,
-    image_url: metadataObj.image_url || null
+    image_url: metadataObj.image_url || null,
+    badge_text: derivePrizeBadgeText(prize)
   };
 }
 
 async function renderPlayPage(res, options = {}) {
   const store = options.store || null;
   const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
-  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 12) : [];
+  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 6) : [];
   const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
 
   return res.render('promotion/play', {
@@ -94,7 +118,7 @@ async function renderPlayPage(res, options = {}) {
 async function renderKioskPage(res, options = {}) {
   const store = options.store || null;
   const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
-  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 12) : [];
+  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 6) : [];
   const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
 
   return res.render('promotion/kiosk', {

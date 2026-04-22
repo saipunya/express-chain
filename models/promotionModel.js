@@ -14,7 +14,15 @@ const {
   lockPrizeById,
   reservePrizeById
 } = require('./promotion/prizeModel');
-const { getCampaignById, getActiveCampaignByStore, getCampaignsWithStore } = require('./promotion/campaignModel');
+const {
+  getCampaignById,
+  getActiveCampaignByStore,
+  getCampaignsWithStore,
+  getCampaignByCodeInStore,
+  createCampaign,
+  updateCampaignById,
+  setCampaignActiveById
+} = require('./promotion/campaignModel');
 const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList } = require('./promotion/drawModel');
 
 /**
@@ -145,6 +153,10 @@ module.exports = {
   deleteStoreById,
   getCampaignById,
   getActiveCampaignByStore,
+  getCampaignByCodeInStore,
+  createCampaign,
+  updateCampaignById,
+  setCampaignActiveById,
   getCodeByValue,
   getCodeWithCampaign,
   getAvailablePrizesByCampaign,

@@ -49,7 +49,7 @@ function buildGitgumPayload(item) {
   return {
     git_date: toSqlDate(item.start_at || item.request_date),
     git_time: '',
-    git_act: item.subject || 'ขออนุมัติเดินทางไปราชการ',
+    git_act: item.purpose_text || 'ขออนุมัติเดินทางไปราชการ',
     git_place: item.destination_text || '-',
     git_goto: buildParticipants(item) || '-',
     git_respon: item.requester_name || '-',

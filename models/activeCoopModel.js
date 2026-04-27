@@ -100,7 +100,10 @@ exports.getAllSimple = async () => {
 };
 
 exports.getByCode = async (code) => {
-  const [rows] = await pool.query('SELECT c_code, c_name FROM active_coop WHERE c_code = ? LIMIT 1', [code]);
+  const [rows] = await pool.query(
+    'SELECT c_code, c_name, coop_group, c_group, c_status FROM active_coop WHERE c_code = ? LIMIT 1',
+    [code]
+  );
   return rows[0];
 };
 
@@ -181,4 +184,3 @@ exports.getMeetingDeadlineBase = async () => {
   `);
   return rows;
 };
-

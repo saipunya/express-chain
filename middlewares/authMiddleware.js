@@ -1,7 +1,79 @@
 const onlineModel = require('../models/onlineModel');
 
+function setNoCacheHeaders(res) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+}
+
+exports.noCache = (req, res, next) => {
+    setNoCacheHeaders(res);
+    next();
+};
+
+function isInstitutionUser(user) {
+    return ['coop', 'group'].includes(String(user?.group || user?.m_group || '').trim());
+}
+
+const INSTITUTION_BLOCKED_PREFIXES = [
+    '/dashboard',
+    '/plan',
+    '/planKpi',
+    '/planproject',
+    '/plan_project',
+    '/project',
+    '/official-travel',
+    '/vehicle-request',
+    '/vehicle-approval',
+    '/vehicle-master',
+    '/driver-master',
+    '/driver-trip',
+    '/gitgum',
+    '/member',
+    '/addmem',
+    '/activeCoop',
+    '/auditlog',
+    '/bigmeet',
+    '/business',
+    '/command',
+    '/cooperatives-assets',
+    '/down',
+    '/finance',
+    '/newstrength',
+    '/rabiab',
+    '/rq2',
+    '/rule',
+    '/strength',
+    '/suggestion',
+    '/turnover',
+    '/usecar',
+    '/vong',
+    '/vong-business'
+];
+
+exports.isInstitutionUser = isInstitutionUser;
+
+exports.redirectInstitutionUsers = (req, res, next) => {
+    if (!isInstitutionUser(req.session?.user)) {
+      return next();
+    }
+
+    const path = req.path || '';
+    if (path === '/dashboard2' || path.startsWith('/dashboard2/')) {
+      return next();
+    }
+
+    if (INSTITUTION_BLOCKED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+      return res.redirect('/dashboard2');
+    }
+
+    next();
+};
+
 // middlewares/authMiddleware.js
 exports.requireLogin = (req, res, next) => {
+    setNoCacheHeaders(res);
+
     if (!req.session.user) {
       // Remember where the user wanted to go (GET only, and not auth pages)
       const wantsHtml = req.headers.accept && req.headers.accept.includes('text/html');

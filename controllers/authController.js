@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const authModel = require('../models/userModel');
 const onlineModel = require('../models/onlineModel');
+const { isInstitutionUser } = require('../middlewares/authMiddleware');
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -52,8 +53,12 @@ exports.login = async (req, res) => {
     // Redirect to originally requested page if available and safe
     let redirectTo = req.session.returnTo;
     delete req.session.returnTo; // one-time use
+    const defaultDashboard = isInstitutionUser(req.session.user) ? '/dashboard2' : '/dashboard';
     if (typeof redirectTo !== 'string' || !redirectTo.startsWith('/') || redirectTo.startsWith('/auth')) {
-      redirectTo = '/dashboard';
+      redirectTo = defaultDashboard;
+    }
+    if (isInstitutionUser(req.session.user) && redirectTo !== '/dashboard2' && !redirectTo.startsWith('/dashboard2/')) {
+      redirectTo = defaultDashboard;
     }
     return res.redirect(redirectTo);
   } catch (error) {

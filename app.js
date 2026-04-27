@@ -103,6 +103,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(authMiddleware.redirectInstitutionUsers);
+
 // เรียกใช้ routes/index.js
 require('./routes/index')(app);
 
@@ -258,7 +260,5 @@ uploadDirs.forEach(dir => {
     console.log(`✅ Created directory: ${dir}`);
   }
 });
-
-
 
 

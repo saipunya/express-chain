@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const chamraController = require('../controllers/chamraController');
-const { requireLogin } = require('../middlewares/authMiddleware');
+const { noCache, requireLogin } = require('../middlewares/authMiddleware');
+
+router.use(noCache);
 
 // List
 router.get('/', chamraController.list);

@@ -12,12 +12,26 @@
           <form action="/register" method="POST" novalidate>
             <div class="mb-3">
               <label for="username" class="form-label">ชื่อผู้ใช้</label>
-              <input type="text" name="username" id="username" class="form-control" required>
+              <input type="text" name="username" id="username" class="form-control" pattern="[A-Za-z0-9_.-]{4,30}" required>
+              <div class="form-text" id="username-help">ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 4-30 ตัวอักษร</div>
+              <div class="invalid-feedback" id="username-feedback">ไม่พบรหัสนี้ในระบบ</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">รหัสผ่าน</label>
+              <input type="password" name="password" id="password" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="confirm_password" class="form-label">ยืนยันรหัสผ่าน</label>
+              <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+              <div class="invalid-feedback" id="confirm-password-feedback">รหัสผ่านไม่ตรงกัน</div>
             </div>
 
             <div class="mb-3">
               <label for="fullname" class="form-label">ชื่อ-นามสกุล</label>
               <input type="text" name="fullname" id="fullname" class="form-control" required>
+              <div class="form-text" id="fullname-help"></div>
             </div>
 
             <div class="mb-3">
@@ -30,48 +44,233 @@
               <input type="email" name="email" id="email" class="form-control">
             </div>
 
-            <!-- group : สังกัด -->
+            <!-- group : ประเภทหน่วยงาน -->
             <div class="mb-3">
-              <label for="group" class="form-label">สังกัด</label>
-              <div class="mb-3">
-                <select class="form-select form-select-lg" name="group" id="group" required>
-                  <option value="" selected>++โปรดเลือก++</option>
-                  <option value="kjs">กลุ่มจัดตั้งและส่งเสริมสหกรณ์</option>
-                  <option value="kps">กลุ่มส่งเสริมและพัฒนาธุรกิจ</option>
-                  <option value="kbs">กลุ่ม กบส</option>
-                  <option value="kts">กลุ่ม กตส</option>
-                  <option value="pbt">ฝ่ายบริหารทั่วไป</option>
-                  <option value="group1">กลุ่มส่งเสริมสหกรณ์ 1</option>
-                  <option value="group2">กลุ่มส่งเสริมสหกรณ์ 2</option>
-                  <option value="group3">กลุ่มส่งเสริมสหกรณ์ 3</option>
-                  <option value="group4">กลุ่มส่งเสริมสหกรณ์ 4</option>
-                  <option value="group5">กลุ่มส่งเสริมสหกรณ์ 5</option>
-                </select>
-              </div>
+              <label for="m_group" class="form-label">กลุ่มผู้ใช้งาน</label>
+              <select class="form-select" name="m_group" id="m_group" required>
+                <option value="" selected>++โปรดเลือก++</option>
+                <option value="coop">สหกรณ์</option>
+                <option value="group">กลุ่มเกษตรกร</option>
+                <option value="cpd">สำนักงานสหกรณ์จังหวัด</option>
+              </select>
             </div>
 
-              <div class="mb-3">
-                <label for="m_type" class="form-label">ประเภท</label>
-                <div class="mb-3">
-                  <select class="form-select form-select-lg" name="m_type" id="m_type" required>
-                    <option value="" selected>++โปรดเลือก++</option>
-                    <option value="ข้าราชการ">ข้าราชการ</option>
-                    <option value="พนักงานราชการ">พนักงานราชการ</option>
-                    <option value="ลูกจ้างประจำ">ลูกจ้างประจำ</option>
-                    <option value="จ้างเหมาบริการ">จ้างเหมาบริการ</option>
-                    <option value="สหกรณ์(สถาบัน)">สหกรณ์(สถาบัน)</option>
-                    <option value="กลุ่มเกษตรกร(สถาบัน)">กลุ่มเกษตรกร(สถาบัน)</option>
-                    <option value="สมาชิกสถาบัน">สมาชิกสถาบัน</option>
-                    <!-- ถ้าต้องการแสดง “อื่นๆ” ให้ map เป็นค่าที่รองรับ -->
-                    <!-- <option value="จ้างเหมาบริการ">อื่นๆ</option> -->
-                  </select>
-                </div>
-              </div>
-              <input type="hidden" name="m_org" value="สำนักงานสหกรณ์จังหวัดชัยภูมิ">
-            <div class="mb-4">
-              <label for="password" class="form-label">รหัสผ่าน</label>
-              <input type="password" name="password" id="password" class="form-control" required>
+            <div class="mb-3">
+              <label for="m_type" class="form-label">ประเภท</label>
+              <select class="form-select" name="m_type" id="m_type" required disabled>
+                <option value="" selected>++โปรดเลือกกลุ่มผู้ใช้งานก่อน++</option>
+              </select>
             </div>
+
+            <div class="mb-3">
+              <label for="m_class" class="form-label">สังกัด/สิทธิ์กลุ่ม</label>
+              <select class="form-select" name="m_class" id="m_class" required disabled>
+                <option value="" selected>++โปรดเลือกกลุ่มผู้ใช้งานก่อน++</option>
+              </select>
+            </div>
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  const mGroupSelect = document.getElementById('m_group');
+                  const mTypeSelect = document.getElementById('m_type');
+                  const mClassSelect = document.getElementById('m_class');
+                  const mOrgInput = document.querySelector('input[name="m_org"]');
+                  const form = document.querySelector('form[action="/register"]');
+                  const usernameInput = document.getElementById('username');
+                  const usernameHelp = document.getElementById('username-help');
+                  const usernameFeedback = document.getElementById('username-feedback');
+                  const fullnameInput = document.getElementById('fullname');
+                  const fullnameHelp = document.getElementById('fullname-help');
+                  const passwordInput = document.getElementById('password');
+                  const confirmPasswordInput = document.getElementById('confirm_password');
+                  let institutionCheckTimer = null;
+                  let institutionUsernameValid = false;
+
+                  const optionsByGroup = {
+                    coop: {
+                      types: [
+                        ['สหกรณ์(สถาบัน)', 'สหกรณ์(สถาบัน)'],
+                        ['ประธานกรรมการ', 'ประธานกรรมการ'],
+                        ['กรรมการ', 'กรรมการ'],
+                        ['ผู้จัดการ', 'ผู้จัดการ'],
+                        ['เจ้าหน้าที่สหกรณ์', 'เจ้าหน้าที่สหกรณ์']
+                      ],
+                      classes: [['c', 'สหกรณ์']]
+                    },
+                    group: {
+                      types: [['กลุ่มเกษตรกร(สถาบัน)', 'กลุ่มเกษตรกร(สถาบัน)']],
+                      classes: [['g', 'กลุ่มเกษตรกร']]
+                    },
+                    cpd: {
+                      types: [
+                        ['ข้าราชการ', 'ข้าราชการ'],
+                        ['ลูกจ้างประจำ', 'ลูกจ้างประจำ'],
+                        ['พนักงานราชการ', 'พนักงานราชการ'],
+                        ['จ้างเหมาบริการ', 'จ้างเหมาบริการ']
+                      ],
+                      classes: [
+                        ['kjs', 'กลุ่มจัดตั้งและส่งเสริมสหกรณ์'],
+                        ['kps', 'กลุ่มส่งเสริมและพัฒนาธุรกิจ'],
+                        ['kbs', 'กลุ่ม กบส'],
+                        ['kts', 'กลุ่ม กตส'],
+                        ['pbt', 'ฝ่ายบริหารทั่วไป'],
+                        ['group1', 'กลุ่มส่งเสริมสหกรณ์ 1'],
+                        ['group2', 'กลุ่มส่งเสริมสหกรณ์ 2'],
+                        ['group3', 'กลุ่มส่งเสริมสหกรณ์ 3'],
+                        ['group4', 'กลุ่มส่งเสริมสหกรณ์ 4'],
+                        ['group5', 'กลุ่มส่งเสริมสหกรณ์ 5']
+                      ]
+                    }
+                  };
+
+                  function renderOptions(select, options, placeholder) {
+                    select.innerHTML = '';
+                    const placeholderOption = new Option(placeholder, '');
+                    placeholderOption.selected = true;
+                    select.appendChild(placeholderOption);
+                    options.forEach(([value, label]) => {
+                      select.appendChild(new Option(label, value));
+                    });
+                    select.disabled = options.length === 0;
+                  }
+
+                  function updateMOrg() {
+                    if (mGroupSelect.value === 'coop' || mGroupSelect.value === 'group') {
+                      mOrgInput.value = "สหกรณ์และกลุ่มเกษตรกร";
+                    } else {
+                      mOrgInput.value = "สำนักงานสหกรณ์จังหวัดชัยภูมิ";
+                    }
+                  }
+
+                  function isInstitutionGroup() {
+                    return mGroupSelect.value === 'coop' || mGroupSelect.value === 'group';
+                  }
+
+                  function setUsernameState(isValid, message) {
+                    usernameInput.classList.toggle('is-invalid', !isValid && Boolean(message));
+                    usernameInput.classList.toggle('is-valid', isValid && isInstitutionGroup());
+                    usernameFeedback.textContent = message || 'ไม่พบรหัสนี้ในระบบ';
+                  }
+
+                  function updateIdentityMode() {
+                    if (isInstitutionGroup()) {
+                      usernameInput.removeAttribute('pattern');
+                      usernameInput.placeholder = mGroupSelect.value === 'coop' ? 'กรอกรหัสสหกรณ์ (c_code)' : 'กรอกรหัสกลุ่มเกษตรกร (c_code)';
+                      usernameHelp.textContent = 'ใช้รหัส c_code จากทะเบียน active_coop ระบบจะดึงชื่อจาก c_name ให้อัตโนมัติ';
+                      fullnameInput.readOnly = true;
+                      fullnameInput.placeholder = 'ระบบจะเติมชื่อจาก active_coop';
+                      fullnameHelp.textContent = 'ชื่อจะถูกดึงจาก active_coop เมื่อรหัสถูกต้อง';
+                    } else {
+                      usernameInput.setAttribute('pattern', '[A-Za-z0-9_.-]{4,30}');
+                      usernameInput.placeholder = '';
+                      usernameHelp.textContent = 'ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 4-30 ตัวอักษร';
+                      fullnameInput.readOnly = false;
+                      fullnameInput.placeholder = '';
+                      fullnameHelp.textContent = '';
+                      institutionUsernameValid = false;
+                      setUsernameState(true, '');
+                    }
+                  }
+
+                  async function checkInstitutionUsername() {
+                    if (!isInstitutionGroup()) {
+                      return true;
+                    }
+
+                    const username = usernameInput.value.trim();
+                    institutionUsernameValid = false;
+                    fullnameInput.value = '';
+                    setUsernameState(true, '');
+
+                    if (!username) {
+                      setUsernameState(false, 'กรุณากรอกรหัสจาก active_coop');
+                      return false;
+                    }
+
+                    try {
+                      const params = new URLSearchParams({
+                        m_group: mGroupSelect.value,
+                        username
+                      });
+                      const response = await fetch(`/register/check-institution?${params.toString()}`, {
+                        headers: { Accept: 'application/json' },
+                        cache: 'no-store'
+                      });
+                      const result = await response.json();
+                      if (!response.ok || !result.ok) {
+                        setUsernameState(false, result.message || 'ไม่พบรหัสนี้ในระบบ');
+                        return false;
+                      }
+
+                      institutionUsernameValid = true;
+                      fullnameInput.value = result.c_name || '';
+                      setUsernameState(true, '');
+                      return true;
+                    } catch (error) {
+                      setUsernameState(false, 'ไม่สามารถตรวจสอบรหัสได้ กรุณาลองใหม่');
+                      return false;
+                    }
+                  }
+
+                  function queueInstitutionCheck() {
+                    window.clearTimeout(institutionCheckTimer);
+                    if (!isInstitutionGroup()) {
+                      return;
+                    }
+                    institutionUsernameValid = false;
+                    fullnameInput.value = '';
+                    setUsernameState(true, '');
+                    institutionCheckTimer = window.setTimeout(checkInstitutionUsername, 350);
+                  }
+
+                  function updateDependentFields() {
+                    const selected = optionsByGroup[mGroupSelect.value] || { types: [], classes: [] };
+                    renderOptions(mTypeSelect, selected.types, '++โปรดเลือก++');
+                    renderOptions(mClassSelect, selected.classes, '++โปรดเลือก++');
+                    if (selected.classes.length === 1) {
+                      mClassSelect.value = selected.classes[0][0];
+                    }
+                    updateMOrg();
+                    updateIdentityMode();
+                    queueInstitutionCheck();
+                  }
+
+                  mGroupSelect.addEventListener('change', updateDependentFields);
+                  usernameInput.addEventListener('input', queueInstitutionCheck);
+                  usernameInput.addEventListener('blur', checkInstitutionUsername);
+                  mTypeSelect.addEventListener('change', updateMOrg);
+                  function validatePasswordMatch() {
+                    const isMatch = Boolean(confirmPasswordInput.value) && passwordInput.value === confirmPasswordInput.value;
+                    confirmPasswordInput.classList.toggle('is-invalid', !isMatch);
+                    return isMatch;
+                  }
+
+                  passwordInput.addEventListener('input', validatePasswordMatch);
+                  confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+                  form.addEventListener('submit', async function(event) {
+                    if (!validatePasswordMatch()) {
+                      event.preventDefault();
+                      confirmPasswordInput.focus();
+                      return;
+                    }
+
+                    if (isInstitutionGroup() && !institutionUsernameValid) {
+                      event.preventDefault();
+                      const validInstitution = await checkInstitutionUsername();
+                      if (validInstitution) {
+                        form.requestSubmit();
+                      } else {
+                        usernameInput.focus();
+                      }
+                    }
+                  });
+
+                  updateDependentFields();
+                  updateMOrg();
+                });
+              </script>
+
+              <input type="hidden" name="m_org" value="">
 
             <!-- honeypot field: บอทมักจะกรอก แต่ผู้ใช้ปกติจะไม่เห็น -->
             <div style="position:absolute; left:-9999px;" aria-hidden="true">

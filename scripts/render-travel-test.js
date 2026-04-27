@@ -24,6 +24,8 @@ const sample = {
   destination: 'สหกรณ์การเกษตรภูเขียว จำกัด อำเภอภูเขียว จังหวัดชัยภูมิ',
   startDate: '2026-04-20',
   endDate: '2026-04-20',
+  startTime: '08:00',
+  endTime: '17:00',
   durationDays: 1,
   transportDetails: 'รถยนต์ราชการ ทะเบียน กข 1234 ชัยภูมิ',
   closingText: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ',

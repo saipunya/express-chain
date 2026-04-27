@@ -4,8 +4,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+      "dev": "npx kill-port 3000 3001 3002 && nodemon app.js",
+    "start": "npx kill-port 3000 3001 3002 && node app.js"
   },
   "repository": {
     "type": "git",
@@ -51,5 +51,8 @@
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
     "wkhtmltopdf": "^0.4.0"
+  },
+  "devDependencies": {
+    "kill": "^0.0.2"
   }
 }

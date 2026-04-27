@@ -93,6 +93,60 @@ function sanitizeText(value, fallback = '-') {
   const text = String(value ?? '').trim();
   return text || fallback;
 }
+
+function sanitizeTime(value) {
+  return String(value ?? '').trim();
+}
+
+function formatTime(value) {
+  const raw = sanitizeTime(value);
+  if (!raw) {
+    return '';
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  const hhmmMatch = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (hhmmMatch) {
+    const hours = String(Number(hhmmMatch[1])).padStart(2, '0');
+    return `${hours}:${hhmmMatch[2]}`;
+  }
+
+  const date = new Date(raw);
+  if (!Number.isNaN(date.getTime())) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  const embeddedMatch = raw.match(/(\d{2}):(\d{2})(?::\d{2})?/);
+  if (embeddedMatch) {
+    return `${embeddedMatch[1]}:${embeddedMatch[2]}`;
+  }
+
+  return raw;
+}
+
+function formatTimeRange(startTime, endTime) {
+  const start = formatTime(startTime);
+  const end = formatTime(endTime);
+
+  if (start && end) {
+    return `${start} ถึง ${end} น.`;
+  }
+  if (start) {
+    return `${start} น.`;
+  }
+  if (end) {
+    return `${end} น.`;
+  }
+
+  return '-';
+}
 // FIX START: Removed Thai word-break helper to avoid inserting invisible characters
 // Helper `insertThaiWordBreaks` removed per request — render original Thai text directly.
 // FIX END
@@ -158,6 +212,8 @@ function normalizeFormData(formData = {}) {
     destination: sanitizeText(formData.destination),
     startDate: formData.startDate || formData.date || new Date(),
     endDate: formData.endDate || formData.startDate || formData.date || new Date(),
+    startTime: sanitizeTime(formData.startTime || formData.start_time),
+    endTime: sanitizeTime(formData.endTime || formData.end_time),
     durationDays: getDurationDays(formData),
     transportDetails: sanitizeText(formData.transportDetails),
     closingText: sanitizeText(formData.closingText || DEFAULTS.closingText),
@@ -368,7 +424,7 @@ function drawCompanionRows(doc, state, companions) {
 }
 
 function drawPeriodAndTransport(doc, state, formData) {
-  drawSectionTitle(doc, state, 'กำหนดการเดินทาง');
+  drawSectionTitle(doc, state, '');
 
   drawFieldRow(doc, state, {
     label: 'สถานที่',
@@ -381,6 +437,16 @@ function drawPeriodAndTransport(doc, state, formData) {
     label: 'ระหว่างวันที่',
     value: `${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน`,
     labelWidth: 84,
+    minHeight: 26
+  });
+
+  // เพิ่มแถว 'เวลา' เพื่อแสดงช่วงเวลาที่ขอไปราชการ
+  const timeValue = formatTimeRange(formData.startTime, formData.endTime);
+
+  drawFieldRow(doc, state, {
+    label: 'เวลา',
+    value: timeValue,
+    labelWidth: 62,
     minHeight: 26
   });
 
@@ -475,7 +541,8 @@ const companionsPart = companionItems.length
   ? `พร้อมด้วย ${companionItems.join(', ')}`
   : '';
 
-const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} กำหนดการเดินทาง สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
+const timePart = formatTimeRange(formData.startTime, formData.endTime);
+const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน เวลา ${timePart} พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
 
 
 

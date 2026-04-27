@@ -138,6 +138,8 @@ function buildTravelRequestPdfFormData(item) {
     })),
     purpose: item.purpose_text || '-',
     destination: item.destination_text || '-',
+    startTime: toTimeInput(item.start_at) || item.start_time || '',
+    endTime: toTimeInput(item.end_at) || item.end_time || '',
     startDate: item.start_at || item.request_date,
     endDate: item.end_at || item.start_at || item.request_date,
     durationDays: calculateDisplayDurationDays(item.start_at, item.end_at, item.duration_days),

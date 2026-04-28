@@ -123,8 +123,7 @@ const addmemRoutes = require('./routes/addmemRoutes'); // เพิ่ม route 
 const bigmeetRoutes = require('./routes/bigmeetRoutes'); // เพิ่ม route bigmeet
 const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); // เพิ่ม route cooperatives assets
 const promotionRoutes = require('./routes/promotionRoutes'); // เพิ่ม route promotion
-
-
+const registerRoutes = require('./routes/registerRoutes'); // เพิ่ม route register
 // Public routes that don't require authentication
 const publicRoutes = [
   '/chamra/process',
@@ -151,7 +150,7 @@ app.use('/chamra', chamraExportRoute);
 app.use('/bigmeet', bigmeetRoutes); // ใช้งานเส้นทาง bigmeet
 app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งานเส้นทาง cooperatives assets
 app.use('/promotion', promotionRoutes); // ใช้งานเส้นทาง promotion
-
+app.use('/register', registerRoutes); // ใช้งานเส้นทาง register
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {

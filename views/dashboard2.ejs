@@ -22,10 +22,16 @@
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body p-4">
           <div class="fw-semibold mb-1"><%= user.fullname || user.username %></div>
+          <div class="text-muted small mb-1">ชื่อผู้ใช้: <%= user ? (user.username || '-') : '-' %></div>
           <div class="text-muted small mb-3"><%= user.position || '-' %></div>
           <a href="/auth/logout" class="btn btn-outline-danger w-100">
             <i class="bi bi-box-arrow-right me-1"></i>ออกจากระบบ
           </a>
+          <% if (user && (user.username || user.m_user)) { %>
+            <a href="/allCoop/profile/<%= user.username || user.m_user %>" class="btn btn-primary w-100 mt-2">
+              <i class="bi bi-building me-1"></i>ดูข้อมูลสถาบันของฉัน
+            </a>
+          <% } %>
         </div>
       </div>
     </div>

@@ -38,6 +38,7 @@
       .card-header h5 {font-size:.9rem;}
       .badge {font-size:.6rem;}
       .mobile-scroll {overflow-x:auto; -webkit-overflow-scrolling:touch;}
+      .responsive-table td.row-actions .btn {display:block; width:100%;}
       .section-block {margin-top: 1rem;}
     }
     @media (min-width:576px) and (max-width: 767.98px) {
@@ -48,6 +49,12 @@
     /* Stacked section layout */
     .section-block {scroll-margin-top: 80px;}
     .section-title {display:flex; align-items:center; gap:.5rem; margin: .75rem 0; color: var(--bs-secondary-color);}    
+
+    /* Header polish */
+    .profile-header-card {background: #fff; border-radius: .5rem;}
+    .coop-logo {color: #0d6efd; background: rgba(13,110,253,0.06);}
+    .section-nav a {white-space:nowrap;}
+    .section-nav {overflow-x:auto; -webkit-overflow-scrolling:touch;}
 
     /* Cleaner card/table styling */
     .card {border: 1px solid var(--bs-border-color); box-shadow: none;}
@@ -76,21 +83,42 @@
   <% if (!data || !data.coop) { %>
     <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
   <% } else { %>
-    <!-- Header Section -->
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-      <div>
-        <h1 class="h4 mb-0"><i class="bi bi-building me-2 text-secondary"></i><%= data.coop.c_name %> <small class="text-muted">(<%= data.coop.c_code %>)</small></h1>
-      </div>
-      <div class="text-md-end small">
-        <span class="badge rounded-pill bg-info-subtle text-info-emphasis me-1"><i class="bi bi-diagram-3 me-1"></i><%= data.coop.c_group || 'ไม่ระบุ' %></span>
-        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis me-1"><i class="bi bi-layers me-1"></i><%= data.coop.coop_group || data.coop.c_type || 'ไม่ระบุ' %></span>
-        <span class="badge rounded-pill <%= (data.coop.c_status||'')==='ดำเนินการ' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' %>"><i class="bi bi-activity me-1"></i><%= data.coop.c_status || 'ไม่ระบุ' %></span>
+    <!-- Header Section (improved) -->
+    <div class="profile-header-card card border-0 mb-3">
+      <div class="card-body p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="coop-logo rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center justify-content-center" style="width:64px;height:64px;font-size:1.25rem;">
+            <i class="bi bi-building"></i>
+          </div>
+          <div>
+            <h1 class="h5 mb-0 fw-bold"><%= data.coop.c_name %></h1>
+            <div class="text-muted small">รหัส: <strong class="text-dark"><%= data.coop.c_code %></strong>
+              <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-code" data-code="<%= data.coop.c_code %>">คัดลอก</button>
+            </div>
+          </div>
+        </div>
+        <div class="text-md-end small">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill bg-info-subtle text-info-emphasis me-1"><i class="bi bi-diagram-3 me-1"></i><%= data.coop.c_group || 'ไม่ระบุ' %></span>
+            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis me-1"><i class="bi bi-layers me-1"></i><%= data.coop.coop_group || data.coop.c_type || 'ไม่ระบุ' %></span>
+            <span class="badge rounded-pill <%= (data.coop.c_status||'')==='ดำเนินการ' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' %>"><i class="bi bi-activity me-1"></i><%= data.coop.c_status || 'ไม่ระบุ' %></span>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Section navigation (quick links) -->
+    <div class="section-nav mb-3 d-flex flex-wrap gap-2">
+      <a href="#turnover-section" class="btn btn-sm btn-light">ปริมาณธุรกิจ</a>
+      <a href="#strength-section" class="btn btn-sm btn-light">ผลประเมิน (Strength)</a>
+      <a href="#finance-section" class="btn btn-sm btn-light">งบการเงิน</a>
+      <a href="#assets-section" class="btn btn-sm btn-light">ทรัพย์สิน</a>
+      <a href="#rules-section" class="btn btn-sm btn-light">ข้อบังคับ</a>
+    </div>
+
     <!-- Personnel and Fiscal Year Information Cards -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
+    <div class="row g-3 mb-4 quick-stats">
+      <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -103,7 +131,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -116,7 +144,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -135,7 +163,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-2">
@@ -192,8 +220,8 @@
           </div>
         </div>
         <div class="card-body p-0">
-          <div class="row g-3 p-3">
-            <div class="col-lg-7">
+            <div class="row g-3 p-3">
+            <div class="col-12 col-lg-7">
               <h6 class="fw-semibold mb-2">รายเดือน</h6>
               <% if (data.turnoverMonthly && data.turnoverMonthly.length) { %>
                 <div class="table-responsive">
@@ -220,7 +248,7 @@
                 <div class="text-muted">ไม่มีข้อมูลรายเดือน</div>
               <% } %>
             </div>
-            <div class="col-lg-5">
+            <div class="col-12 col-lg-5">
               <h6 class="fw-semibold mb-2">รายปี</h6>
               <% if (data.turnoverYearly && data.turnoverYearly.length) { %>
                 <div class="table-responsive">
@@ -748,15 +776,18 @@
     </section>
 
   <% } %>
-  <div class="mt-2">
-    <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
-  </div>
+  <% const sessionName = (user && (user.username || user.m_user)) ? (user.username || user.m_user) : null; %>
+  <% if (!sessionName || sessionName !== String(data.coop.c_code)) { %>
+    <div class="mt-2">
+      <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
+    </div>
+  <% } %>
 </div>
 <%- include('../partials/footer') %>
 
 <!-- Asset Detail Modal -->
 <div class="modal fade" id="assetModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i>รายละเอียดทรัพย์สิน/ครุภัณฑ์</h5>
@@ -864,5 +895,23 @@
     const modalEl = document.getElementById('assetModal');
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
+  });
+
+  // copy-code button
+  document.querySelectorAll('.copy-code').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const code = btn.getAttribute('data-code') || '';
+      if (!code) return;
+      try {
+        navigator.clipboard.writeText(code);
+        btn.textContent = 'คัดลอกแล้ว';
+        setTimeout(()=> btn.textContent = 'คัดลอก', 1500);
+      } catch (err) {
+        const input = document.createElement('input');
+        input.value = code; document.body.appendChild(input); input.select(); document.execCommand('copy'); document.body.removeChild(input);
+        btn.textContent = 'คัดลอกแล้ว';
+        setTimeout(()=> btn.textContent = 'คัดลอก', 1500);
+      }
+    });
   });
 </script>

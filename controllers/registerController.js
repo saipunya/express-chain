@@ -25,8 +25,11 @@ const sanitizeText = (value) => {
   return String(value).trim();
 };
 
-// username: อนุญาตเฉพาะ a-zA-Z0-9 และ _.-
-const USERNAME_REGEX = /^[A-Za-z0-9_.-]{4,30}$/;
+// username สำหรับเจ้าหน้าที่ทั่วไป: อนุญาตเฉพาะ a-zA-Z0-9 และ _.-
+const USERNAME_REGEX = /^[A-Za-z0-9_.-]{3,30}$/;
+
+// username สำหรับสหกรณ์/กลุ่มเกษตรกร: ใช้ c_code ซึ่งอาจสั้นกว่า 4 ตัวอักษร
+const INSTITUTION_USERNAME_REGEX = /^[A-Za-z0-9_.-]{1,30}$/;
 
 // ชื่อ/ตำแหน่ง: อนุญาตตัวอักษรไทย อังกฤษ ช่องว่าง และ .,-
 const NAME_REGEX = /^[0-9A-Za-zก-๙\s.,-]{2,100}$/;
@@ -103,11 +106,6 @@ exports.submit = async (req, res) => {
       return res.status(400).send('รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
     }
 
-    // ตรวจรูปแบบ username
-    if (!USERNAME_REGEX.test(cleanUsername)) {
-      return res.status(400).send('ชื่อผู้ใช้ต้องเป็นภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 4-30 ตัวอักษร');
-    }
-
     // กัน payload ทดสอบ SQL injection ใน field หลักๆ
     if (SUSPICIOUS_PATTERN.test(cleanUsername) || SUSPICIOUS_PATTERN.test(cleanPosition)) {
       return res.status(400).send('ข้อมูลไม่ถูกต้อง');
@@ -122,6 +120,9 @@ exports.submit = async (req, res) => {
     let orgToUse = 'สำนักงานสหกรณ์จังหวัดชัยภูมิ';
 
     if (m_group === 'coop') {
+      if (!INSTITUTION_USERNAME_REGEX.test(cleanUsername)) {
+        return res.status(400).send('รหัสสหกรณ์ต้องเป็นภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 1-30 ตัวอักษร');
+      }
       if (!COOP_TYPES.includes(m_type)) {
         return res.status(400).send('ประเภทผู้ใช้ไม่ถูกต้อง');
       }
@@ -133,6 +134,9 @@ exports.submit = async (req, res) => {
       classToUse = 'c';
       orgToUse = 'สหกรณ์และกลุ่มเกษตรกร';
     } else if (m_group === 'group') {
+      if (!INSTITUTION_USERNAME_REGEX.test(cleanUsername)) {
+        return res.status(400).send('รหัสกลุ่มเกษตรกรต้องเป็นภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 1-30 ตัวอักษร');
+      }
       if (!FARMER_GROUP_TYPES.includes(m_type)) {
         return res.status(400).send('ประเภทผู้ใช้ไม่ถูกต้อง');
       }
@@ -156,6 +160,9 @@ exports.submit = async (req, res) => {
       }
       if (!CPD_TYPES.includes(m_type) || !ALLOWED_CPD_CLASSES.includes(m_class)) {
         return res.status(400).send('สังกัดหรือประเภทผู้ใช้ไม่ถูกต้อง');
+      }
+      if (!USERNAME_REGEX.test(cleanUsername)) {
+        return res.status(400).send('ชื่อผู้ใช้ต้องเป็นภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 3-30 ตัวอักษร');
       }
     }
 

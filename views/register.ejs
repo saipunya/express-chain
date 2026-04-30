@@ -12,8 +12,8 @@
           <form action="/register" method="POST" novalidate>
             <div class="mb-3">
               <label for="username" class="form-label">ชื่อผู้ใช้</label>
-              <input type="text" name="username" id="username" class="form-control" pattern="[A-Za-z0-9_.-]{4,30}" required>
-              <div class="form-text" id="username-help">ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 4-30 ตัวอักษร</div>
+              <input type="text" name="username" id="username" class="form-control" pattern="[A-Za-z0-9_.-]{3,30}" required>
+              <div class="form-text" id="username-help">ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 3-30 ตัวอักษร</div>
               <div class="invalid-feedback" id="username-feedback">ไม่พบรหัสนี้ในระบบ</div>
             </div>
 
@@ -161,9 +161,9 @@
                       fullnameInput.placeholder = 'ระบบจะเติมชื่อจาก active_coop';
                       fullnameHelp.textContent = 'ชื่อจะถูกดึงจาก active_coop เมื่อรหัสถูกต้อง';
                     } else {
-                      usernameInput.setAttribute('pattern', '[A-Za-z0-9_.-]{4,30}');
+                      usernameInput.setAttribute('pattern', '[A-Za-z0-9_.-]{3,30}');
                       usernameInput.placeholder = '';
-                      usernameHelp.textContent = 'ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 4-30 ตัวอักษร';
+                      usernameHelp.textContent = 'ใช้ภาษาอังกฤษ ตัวเลข หรือ _ . - จำนวน 3-30 ตัวอักษร';
                       fullnameInput.readOnly = false;
                       fullnameInput.placeholder = '';
                       fullnameHelp.textContent = '';

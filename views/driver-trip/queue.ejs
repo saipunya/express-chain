@@ -12,7 +12,7 @@
 <% } %>
 
 <div class="card shadow-sm border-0">
-  <div class="table-responsive">
+  <div class="table-responsive d-none d-md-block">
     <table class="table table-hover mb-0 align-middle">
       <thead class="table-light">
         <tr>
@@ -43,6 +43,46 @@
         <% }) %>
       </tbody>
     </table>
+  </div>
+
+  <div class="d-md-none p-3">
+    <% if (!items.length) { %>
+      <div class="text-center py-4 text-muted">ยังไม่มีงานขับรถที่ได้รับมอบหมาย</div>
+    <% } %>
+
+    <div class="row g-3">
+      <% items.forEach((item) => { %>
+        <div class="col-12">
+          <div class="border rounded-4 p-3 bg-white shadow-sm">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <div>
+                <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                <div class="small text-muted"><%= item.requester_name %></div>
+              </div>
+              <span class="badge bg-info text-nowrap"><%= item.log_status || 'not_started' %></span>
+            </div>
+
+            <div class="mb-2">
+              <div class="small text-muted">ปลายทาง</div>
+              <div class="fw-medium"><%= item.destination_text %></div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="small text-muted">รถ</div>
+                <div class="fw-medium"><%= item.plate_no_snapshot || '-' %></div>
+              </div>
+              <div class="col-6">
+                <div class="small text-muted">คนขับ</div>
+                <div class="fw-medium"><%= item.driver_name_snapshot || '-' %></div>
+              </div>
+            </div>
+
+            <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary w-100">เปิดงาน</a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
   </div>
 </div>
 

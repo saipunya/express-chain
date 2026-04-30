@@ -75,10 +75,44 @@ if (methodOverridePkg) {
   });
 }
 
+// Keep browser-controlled app shell files fresh so the user does not need hard refresh.
+app.use((req, res, next) => {
+  if (req.method !== 'GET') {
+    return next();
+  }
+
+  const pathName = req.path || '';
+  const shouldBypassCache =
+    pathName === '/sw.js' ||
+    pathName === '/sw-calendar.js' ||
+    pathName === '/manifest.json' ||
+    pathName === '/manifest-calendar.json';
+
+  if (shouldBypassCache) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+
+  next();
+});
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(authMiddleware.setUserLocals);
 app.use(authMiddleware.updateOnlineTime); 
+
+// Prevent browsers from caching server-rendered pages too aggressively.
+// Static assets can still be cached by the browser/service worker, but HTML
+// responses should always be revalidated so edits show up without hard refresh.
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.accepts('html')) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
 
 // เพิ่มบรรทัดนี้เพื่อเตรียม summaryByYear/top ให้ทุก view (อ่าน member6667.json)
 app.use(require('./middlewares/memberCoopLocals'));
@@ -261,5 +295,3 @@ uploadDirs.forEach(dir => {
     console.log(`✅ Created directory: ${dir}`);
   }
 });
-
-

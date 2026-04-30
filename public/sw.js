@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coopchain-pwa-v1';
+const CACHE_NAME = 'coopchain-pwa-v2';
 const urlsToCache = [
   '/',
   '/css/style.css',
@@ -31,18 +31,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const request = event.request;
+  const isDocument = request.mode === 'navigate' || (request.destination === 'document');
+
+  if (isDocument) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          return response;
+        })
+        .catch(() => caches.match('/'))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(event.request)
+      return fetch(request)
         .then((response) => {
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
           return response;
         })
         .catch(() => caches.match('/'));

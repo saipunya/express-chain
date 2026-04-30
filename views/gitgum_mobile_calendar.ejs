@@ -632,7 +632,9 @@
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw-calendar.js').catch(() => {
+      navigator.serviceWorker.register('/sw-calendar.js').then((registration) => {
+        registration.update().catch(() => {});
+      }).catch(() => {
         // Service worker registration failed, app still works offline
       }).finally(() => syncAppBadge(todayEventCount));
     } else {

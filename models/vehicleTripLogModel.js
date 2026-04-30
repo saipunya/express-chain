@@ -19,44 +19,20 @@ function combineDateAndTime(dateValue, timeValue) {
 }
 
 async function listQueueForUser(user) {
-  if (user?.mClass === 'admin' || user?.mClass === 'kjs') {
-    const [rows] = await db.query(
-      `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
-              vr.requester_name, vr.status, va.plate_no_snapshot, va.driver_name_snapshot,
-              vtl.log_status, vtl.morning_departure_at, vtl.afternoon_return_at
-       FROM vehicle_requests vr
-       INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
-       LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
-       WHERE vr.status IN ('assigned', 'in_progress')
-       ORDER BY vr.trip_start_at ASC, vr.id ASC`
-    );
-    return rows;
-  }
-
   const [rows] = await db.query(
     `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
             vr.requester_name, vr.status, va.plate_no_snapshot, va.driver_name_snapshot,
             vtl.log_status, vtl.morning_departure_at, vtl.afternoon_return_at
      FROM vehicle_requests vr
      INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
-     INNER JOIN driver_masters dm ON dm.id = va.driver_id
      LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
-     WHERE dm.member_id = ?
-       AND vr.status IN ('assigned', 'in_progress')
+     WHERE vr.status IN ('assigned', 'in_progress')
      ORDER BY vr.trip_start_at ASC, vr.id ASC`,
-    [user?.id || 0]
   );
   return rows;
 }
 
 async function getDetailForUser(vehicleRequestId, user) {
-  const params = [vehicleRequestId];
-  let permissionClause = '';
-  if (!(user?.mClass === 'admin' || user?.mClass === 'kjs')) {
-    permissionClause = 'AND dm.member_id = ?';
-    params.push(user?.id || 0);
-  }
-
   const [rows] = await db.query(
     `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
             vr.requester_name, vr.mission_text, vr.status,
@@ -65,12 +41,10 @@ async function getDetailForUser(vehicleRequestId, user) {
             vtl.afternoon_return_at, vtl.afternoon_odometer, vtl.distance_km, vtl.log_status, vtl.remarks
      FROM vehicle_requests vr
      INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
-     INNER JOIN driver_masters dm ON dm.id = va.driver_id
      LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
      WHERE vr.id = ?
-       ${permissionClause}
-     LIMIT 1`,
-    params
+      LIMIT 1`,
+    [vehicleRequestId]
   );
 
   return rows[0] || null;

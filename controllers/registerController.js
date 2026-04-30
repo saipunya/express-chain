@@ -168,7 +168,7 @@ exports.submit = async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
 
-    await RegisterModel.create({
+    const userId = await RegisterModel.create({
       m_user: cleanUsername,
       m_pass: hash,
       m_group,
@@ -180,11 +180,22 @@ exports.submit = async (req, res) => {
       m_org: orgToUse,
       m_class: classToUse,
       m_pic: '',
-      m_status: 'wait',
+      m_status: 'active',
       m_img: ''
     });
 
-    res.redirect('/login');
+    req.session.user = {
+      id: userId,
+      username: cleanUsername,
+      fullname: nameToUse,
+      position: cleanPosition,
+      level: typeToUse,
+      group: m_group,
+      mClass: classToUse,
+      m_img: ''
+    };
+
+    return res.redirect('/dashboard');
   } catch (err) {
     console.error('Register error:', err.code, err.sqlMessage || err.message);
     if (err.code === 'ER_TRUNCATED_WRONG_VALUE' || err.code === 'ER_WRONG_VALUE_FOR_FIELD') {

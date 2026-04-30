@@ -51,6 +51,17 @@ const INSTITUTION_BLOCKED_PREFIXES = [
     '/vong-business'
 ];
 
+// Allowlist: paths that institution users should still be able to access (download endpoints, public uploads)
+const INSTITUTION_ALLOWED_PATHS = [
+  '/finance/download',
+  '/business/download',
+  '/rabiab/download',
+  '/vong/download',
+  '/rq2/download',
+  '/rule/', // rule detail/download endpoints use /rule/:id or /rule/file/:id
+  '/uploads/'
+];
+
 exports.isInstitutionUser = isInstitutionUser;
 
 exports.redirectInstitutionUsers = (req, res, next) => {
@@ -59,6 +70,10 @@ exports.redirectInstitutionUsers = (req, res, next) => {
     }
 
     const path = req.path || '';
+    // Allow access to specific download or uploads paths even for institution users
+    if (INSTITUTION_ALLOWED_PATHS.some((p) => path.startsWith(p))) {
+      return next();
+    }
     if (path === '/dashboard2' || path.startsWith('/dashboard2/')) {
       return next();
     }

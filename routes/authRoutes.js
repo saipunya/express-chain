@@ -22,7 +22,9 @@ router.get('/login', noCache, (req, res) => {
     delete req.session.returnTo;
     return res.redirect(isInstitutionUser(req.session.user) ? defaultDashboard : redirectTo);
   }
-  res.render('login');
+  const { registered } = req.query || {};
+  const registeredMessage = registered ? 'สมัครสมาชิกสำเร็จ กำลังรอการอนุมัติจากผู้ดูแลระบบ' : null;
+  res.render('login', { registeredMessage });
 });
 
 router.post('/login', authController.login);

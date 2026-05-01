@@ -187,22 +187,12 @@ exports.submit = async (req, res) => {
       m_org: orgToUse,
       m_class: classToUse,
       m_pic: '',
-      m_status: 'active',
+      m_status: 'wait',
       m_img: ''
     });
 
-    req.session.user = {
-      id: userId,
-      username: cleanUsername,
-      fullname: nameToUse,
-      position: cleanPosition,
-      level: typeToUse,
-      group: m_group,
-      mClass: classToUse,
-      m_img: ''
-    };
-
-    return res.redirect('/dashboard');
+    // Newly registered accounts require approval — do not auto-login.
+    return res.redirect('/auth/login?registered=1');
   } catch (err) {
     console.error('Register error:', err.code, err.sqlMessage || err.message);
     if (err.code === 'ER_TRUNCATED_WRONG_VALUE' || err.code === 'ER_WRONG_VALUE_FOR_FIELD') {

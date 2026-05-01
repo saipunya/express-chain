@@ -123,7 +123,7 @@
                           <a href="/business/download/<%= file.bu_id %>" target="_blank" class="btn btn-outline-primary flex-grow-1" data-bs-toggle="tooltip" title="ดาวน์โหลดไฟล์">
                             <i class="bi bi-download"></i>
                           </a>
-                          <% if(user && (user.mClass === 'admin' || user.mClass === 'kbs')) { %>
+                          <% if(user && (user.mClass === 'admin' || user.mClass === 'kts')) { %>
                             <a href="/business/delete/<%= file.bu_id %>" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="ลบไฟล์" onclick="return confirm('ต้องการลบไฟล์นี้?')">
                               <i class="bi bi-trash"></i>
                             </a>

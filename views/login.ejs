@@ -10,6 +10,11 @@
           </h2>
 
           <form action="/auth/login" method="POST" novalidate>
+            <% if (typeof registeredMessage !== 'undefined' && registeredMessage) { %>
+              <div class="alert alert-success" role="alert">
+                <%= registeredMessage %>
+              </div>
+            <% } %>
             <div class="mb-3">
               <label for="username" class="form-label">ชื่อผู้ใช้</label>
               <input type="text" name="username" id="username" class="form-control" required autofocus>

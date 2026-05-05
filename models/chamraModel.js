@@ -203,7 +203,7 @@ const Chamra = {
   async getProcessesInDateRange(startDate, endDate) {
     // Get one row per institution with activity dates, Oct 1 status, and current max step
     const query = `
-      SELECT activity.pr_code AS institution_code, ac.c_name AS institution_name, 
+      SELECT activity.pr_code AS institution_code, ac.c_name AS institution_name, ac.c_status AS institution_status, ac.coop_group AS institution_kind,
              MIN(activity.activity_date) AS date,
              (SELECT step FROM (
                SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'

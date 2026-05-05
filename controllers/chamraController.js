@@ -33,6 +33,91 @@ async function fetchImageDataUrl(src) {
 
 const chamraController = {};
 
+function isValidProcessDate(value) {
+  if (!value) return false;
+  if (value === '0000-00-00') return false;
+  if (/^1899-11-30/.test(value)) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.getFullYear() >= 1950;
+}
+
+function getBangkokDateKey(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const lookup = {};
+  parts.forEach((part) => {
+    if (part.type !== 'literal') {
+      lookup[part.type] = part.value;
+    }
+  });
+  if (!lookup.year || !lookup.month || !lookup.day) return null;
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function getLatestProcessDateKey(record) {
+  const processDates = [
+    record?.pr_s1, record?.pr_s2, record?.pr_s3, record?.pr_s4, record?.pr_s5,
+    record?.pr_s6, record?.pr_s7, record?.pr_s8, record?.pr_s9, record?.pr_s10
+  ];
+  for (let i = processDates.length - 1; i >= 0; i -= 1) {
+    if (isValidProcessDate(processDates[i])) {
+      return getBangkokDateKey(processDates[i]);
+    }
+  }
+  return null;
+}
+
+function getLatestProcessStepNumber(record) {
+  const processDates = [
+    record?.pr_s1, record?.pr_s2, record?.pr_s3, record?.pr_s4, record?.pr_s5,
+    record?.pr_s6, record?.pr_s7, record?.pr_s8, record?.pr_s9, record?.pr_s10
+  ];
+  for (let i = processDates.length - 1; i >= 0; i -= 1) {
+    if (isValidProcessDate(processDates[i])) {
+      return i + 1;
+    }
+  }
+  return 0;
+}
+
+function buildOct1MovementSummary(rows = []) {
+  return (rows || []).map((item) => {
+    const oct1Step = Number(item.oct1_step || 0);
+    const currentStep = Number(item.current_max_step || 0);
+    const upgraded = currentStep > oct1Step;
+    return {
+      ...item,
+      oct1_step_number: oct1Step,
+      current_max_step_number: currentStep,
+      movement_status: upgraded ? 'ยกระดับขั้น' : 'คงระดับเดิม',
+      movement_badge: upgraded ? 'bg-success' : 'bg-secondary'
+    };
+  });
+}
+
+function getInstitutionKindByCode(code) {
+  const normalized = String(code || '').trim().toUpperCase();
+  if (/^[AB]/.test(normalized)) return 'coop';
+  if (/^C/.test(normalized)) return 'farmer';
+  return 'other';
+}
+
+function formatThaiDate(value) {
+  if (!value) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('th-TH', {
+    dateStyle: 'long',
+    timeZone: 'Asia/Bangkok'
+  }).format(date);
+}
+
 // แสดงทั้งหมด
 chamraController.list = async (req, res) => {
   const data = await Chamra.getAll();
@@ -94,7 +179,50 @@ chamraController.list = async (req, res) => {
     }
   }
   
-  res.render('chamra/list', { data, members });
+  let octoberMovement = [];
+  let octoberMovementSummary = {
+    total: 0,
+    coop: 0,
+    farmer: 0
+  };
+  let withdrawnThisYearSummary = {
+    total: 0,
+    coop: 0,
+    farmer: 0
+  };
+  try {
+    const todayKey = getBangkokDateKey();
+    const fiscalStartKey = '2025-10-01';
+    const movementRows = todayKey
+      ? await Chamra.getProcessesInDateRange(fiscalStartKey, todayKey)
+      : await Chamra.getProcessesInDateRange(fiscalStartKey, fiscalStartKey);
+    octoberMovement = buildOct1MovementSummary(movementRows || []);
+    octoberMovementSummary = octoberMovement.reduce((acc, item) => {
+      acc.total += 1;
+      const kind = getInstitutionKindByCode(item.institution_code);
+      if (kind === 'coop') acc.coop += 1;
+      if (kind === 'farmer') acc.farmer += 1;
+      return acc;
+    }, octoberMovementSummary);
+
+    withdrawnThisYearSummary = (Array.isArray(data) ? data : []).reduce((acc, item) => {
+      const latestStepNumber = getLatestProcessStepNumber(item);
+      if (latestStepNumber < 9) return acc;
+      const latestDateKey = getLatestProcessDateKey(item);
+      if (!latestDateKey) return acc;
+      if (latestDateKey < fiscalStartKey) return acc;
+      if (todayKey && latestDateKey > todayKey) return acc;
+      acc.total += 1;
+      const kind = getInstitutionKindByCode(item.c_code || item.institution_code);
+      if (kind === 'coop') acc.coop += 1;
+      if (kind === 'farmer') acc.farmer += 1;
+      return acc;
+    }, withdrawnThisYearSummary);
+  } catch (error) {
+    console.error('Error fetching October 1 movement summary:', error);
+  }
+
+  res.render('chamra/list', { data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
 };
 
 chamraController.listPob = async (req, res) => {

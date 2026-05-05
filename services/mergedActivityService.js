@@ -59,6 +59,7 @@ function buildGitgumEvent(row) {
     extendedProps: {
       sourceType: isWorkflowTravel ? 'travel_request' : 'gitgum',
       sourceLabel: isWorkflowTravel ? 'คำขอไปราชการ' : 'กิจกรรมสำนักงาน',
+      timeLabel: row.git_time || null,
       requestNumber,
       place: row.git_place,
       respon: row.git_respon,
@@ -76,6 +77,10 @@ function buildTravelEvent(row) {
   if (!start) {
     return null;
   }
+
+  const startTime = toHHmm(row.start_at);
+  const endTime = toHHmm(row.end_at);
+  const timeLabel = startTime ? (endTime && endTime !== startTime ? `${startTime} - ${endTime}` : startTime) : null;
 
   const companions = row.companion_names ? `ผู้ร่วมเดินทาง: ${row.companion_names}` : null;
   const vehicleSummary = row.plate_no_snapshot || row.driver_name_snapshot
@@ -97,6 +102,7 @@ function buildTravelEvent(row) {
       vehicleRequestNo: row.vehicle_request_no || null,
       vehiclePlate: row.plate_no_snapshot || null,
       driverName: row.driver_name_snapshot || null,
+      timeLabel,
       place: row.destination_text,
       respon: row.requester_name,
       goto: row.companion_names ? `${row.requester_name}, ${row.companion_names}` : row.requester_name,

@@ -20,6 +20,21 @@ function toTime(value) {
   return match ? match[1] : '';
 }
 
+function formatTimeRange(startAt, endAt) {
+  const startTime = toTime(startAt);
+  const endTime = toTime(endAt);
+
+  if (!startTime) {
+    return '';
+  }
+
+  if (endTime && endTime !== startTime) {
+    return `${startTime} - ${endTime}`;
+  }
+
+  return startTime;
+}
+
 function nowTimestamp() {
   return new Date().toISOString().slice(0, 19).replace('T', ' ');
 }
@@ -48,7 +63,7 @@ function buildNote(item) {
 function buildGitgumPayload(item) {
   return {
     git_date: toSqlDate(item.start_at || item.request_date),
-    git_time: '',
+    git_time: formatTimeRange(item.start_at, item.end_at),
     git_act: item.purpose_text || 'ขออนุมัติเดินทางไปราชการ',
     git_place: item.destination_text || '-',
     git_goto: buildParticipants(item) || '-',
@@ -88,7 +103,23 @@ async function removeTravel(itemOrId) {
   await gitgumModel.deleteByWorkflowTravelId(travelRequestId);
 }
 
+async function backfillApprovedTravelSync() {
+  const officialTravelRequestModel = require('../models/officialTravelRequestModel');
+  const travelItems = await officialTravelRequestModel.listApprovedInRange('1900-01-01', '2100-12-31');
+  let processed = 0;
+
+  for (const item of travelItems) {
+    await syncApprovedTravel(item);
+    processed += 1;
+  }
+
+  return {
+    processed
+  };
+}
+
 module.exports = {
+  backfillApprovedTravelSync,
   syncApprovedTravel,
   removeTravel
 };

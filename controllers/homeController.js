@@ -498,7 +498,6 @@ const homeController = {
         farmer_group_saman: Number(memberSummaryRaw.farmer_group_saman || 0),
         farmer_group_somtob: Number(memberSummaryRaw.farmer_group_somtob || 0)
       };
-
       res.render('home', { 
         finances, 
         ruleFiles,

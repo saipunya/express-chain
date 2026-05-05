@@ -126,7 +126,7 @@ exports.mobileCalendarView = async (req, res) => {
       groupedByMonth[monthKey].push({
         id: event.id,
         date: dateStr,
-        time: event.allDay ? null : String(event.start).slice(11, 16),
+        time: props.timeLabel || (event.allDay ? null : String(event.start).slice(11, 16)),
         activity: event.title,
         place: props.place || null,
         respon: props.respon || null,

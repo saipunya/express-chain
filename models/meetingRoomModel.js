@@ -22,9 +22,9 @@ async function ensureRoomColumn() {
 exports.getAll = async () => {
   const roomCol = await ensureRoomColumn();
   const [rows] = await db.query(
-    `SELECT mee_id, mee_date, mee_time, mee_subject,
+    `SELECT mee_id, DATE_FORMAT(mee_date, '%Y-%m-%d') AS mee_date, mee_time, mee_subject,
             ${roomCol} AS mee_room,
-            mee_respon, mee_saveby, mee_savedate
+            mee_respon, mee_saveby, DATE_FORMAT(mee_savedate, '%Y-%m-%d') AS mee_savedate
      FROM tbl_meetingroom
      ORDER BY mee_date DESC, mee_id DESC`
   );
@@ -35,9 +35,9 @@ exports.getAll = async () => {
 exports.getByDate = async (dateStr) => {
   const roomCol = await ensureRoomColumn();
   const [rows] = await db.query(
-    `SELECT mee_id, mee_date, mee_time, mee_subject,
+    `SELECT mee_id, DATE_FORMAT(mee_date, '%Y-%m-%d') AS mee_date, mee_time, mee_subject,
             ${roomCol} AS mee_room,
-            mee_respon, mee_saveby, mee_savedate
+            mee_respon, mee_saveby, DATE_FORMAT(mee_savedate, '%Y-%m-%d') AS mee_savedate
      FROM tbl_meetingroom
      WHERE mee_date = ?
      ORDER BY mee_time ASC, mee_id ASC`,
@@ -63,9 +63,9 @@ exports.getUpcoming = async (limit = 5) => {
   const today = formatter.format(new Date());
   
   const [rows] = await db.query(
-    `SELECT mee_id, mee_date, mee_time, mee_subject,
+    `SELECT mee_id, DATE_FORMAT(mee_date, '%Y-%m-%d') AS mee_date, mee_time, mee_subject,
             ${roomCol} AS mee_room,
-            mee_respon, mee_saveby, mee_savedate
+            mee_respon, mee_saveby, DATE_FORMAT(mee_savedate, '%Y-%m-%d') AS mee_savedate
      FROM tbl_meetingroom
      WHERE mee_date > ?
      ORDER BY mee_date ASC, mee_time ASC
@@ -83,9 +83,9 @@ exports.getFromTodayBangkok = async () => {
   const today = formatter.format(new Date());
 
   const [rows] = await db.query(
-    `SELECT mee_id, mee_date, mee_time, mee_subject,
+    `SELECT mee_id, DATE_FORMAT(mee_date, '%Y-%m-%d') AS mee_date, mee_time, mee_subject,
             ${roomCol} AS mee_room,
-            mee_respon, mee_saveby, mee_savedate
+            mee_respon, mee_saveby, DATE_FORMAT(mee_savedate, '%Y-%m-%d') AS mee_savedate
      FROM tbl_meetingroom
      WHERE mee_date >= ?
      ORDER BY mee_date ASC, mee_time ASC, mee_id ASC`,
@@ -98,9 +98,9 @@ exports.getFromTodayBangkok = async () => {
 exports.getById = async (id) => {
   const roomCol = await ensureRoomColumn();
   const [rows] = await db.query(
-    `SELECT mee_id, mee_date, mee_time, mee_subject,
+    `SELECT mee_id, DATE_FORMAT(mee_date, '%Y-%m-%d') AS mee_date, mee_time, mee_subject,
             ${roomCol} AS mee_room,
-            mee_respon, mee_saveby, mee_savedate
+            mee_respon, mee_saveby, DATE_FORMAT(mee_savedate, '%Y-%m-%d') AS mee_savedate
      FROM tbl_meetingroom
      WHERE mee_id = ?`,
     [id]

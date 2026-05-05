@@ -40,6 +40,44 @@ function toTimeInput(value) {
   return str.slice(11, 16) || '';
 }
 
+function getBangkokDateKey(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const lookup = {};
+  parts.forEach((part) => {
+    if (part.type !== 'literal') {
+      lookup[part.type] = part.value;
+    }
+  });
+  if (!lookup.year || !lookup.month || !lookup.day) {
+    return null;
+  }
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function filterUpcomingVehicleUseRows(rows = []) {
+  const todayKey = getBangkokDateKey();
+  return (rows || []).filter((row) => {
+    if (!row?.vehicle_request_id) {
+      return false;
+    }
+    const status = row.vehicle_request_status;
+    if (!(status === 'approved' || status === 'อนุมัติ')) {
+      return false;
+    }
+    const startKey = getBangkokDateKey(row.start_at);
+    return Boolean(startKey && todayKey && startKey >= todayKey);
+  });
+}
+
 function buildSingleDayRange(operationDate, startTime, endTime) {
   if (!operationDate) {
     return { start_at: null, end_at: null };
@@ -701,6 +739,26 @@ exports.printView = async (req, res) => {
   } catch (error) {
     console.error('Error rendering official travel print view:', error);
     res.status(500).send('ไม่สามารถพิมพ์คำขอไปราชการได้');
+  }
+};
+
+exports.vehicleUseList = async (req, res) => {
+  try {
+    const rows = await officialTravelRequestModel.listReport({});
+    const items = filterUpcomingVehicleUseRows(rows);
+    const todayLabel = new Intl.DateTimeFormat('th-TH', {
+      dateStyle: 'full',
+      timeZone: 'Asia/Bangkok'
+    }).format(new Date());
+
+    res.render('official-travel/usecar', {
+      title: 'ข้อมูลการใช้รถยนต์ราชการ',
+      items,
+      todayLabel
+    });
+  } catch (error) {
+    console.error('Error loading vehicle use list:', error);
+    res.status(500).send('ไม่สามารถโหลดข้อมูลการใช้รถยนต์ราชการได้');
   }
 };
 

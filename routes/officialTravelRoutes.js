@@ -8,6 +8,7 @@ router.use(requireLogin);
 
 router.get('/', controller.list);
 router.get('/report', requireLevel(['admin', 'kjs', 'pbt']), controller.report);
+router.get('/usecar', controller.vehicleUseList);
 router.get('/settings/running-number', requireLevel(['admin', 'pbt']), controller.runningNumberSettingsForm);
 router.post('/settings/running-number', requireLevel(['admin', 'pbt']), controller.updateRunningNumberSettings);
 router.get('/create', controller.createForm);

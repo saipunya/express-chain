@@ -102,7 +102,16 @@
                   <button type="submit" class="btn btn-sm btn-outline-danger">ลบ</button>
                 </form>
               <% } %>
-              <a href="/official-travel/<%= item.id %>/print" class="btn btn-sm btn-outline-secondary" target="_blank">พิมพ์</a>
+              <a href="/export/travel-request/<%= item.id %>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                <!-- add print icon -->
+                
+                  <i class="bi bi-printer"></i>
+             
+              </a>
+              <a href="/official-travel/<%= item.id %>/print" class="btn btn-sm btn-outline-secondary" target="_blank">
+                <!-- add car icon -->
+                <i class="bi bi-car-front-fill"></i>
+              </a>
             </td>
           </tr>
         <% }) %>

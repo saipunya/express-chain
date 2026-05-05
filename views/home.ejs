@@ -5140,9 +5140,24 @@ const _memberSummaryTotals = {
   <div class="container-lg">
     <div class="row mt-4" id="usecarSection">
       <div class="col-12">
-        <h2 class="mb-4 text-center text-primary section-title">
-          <i class="bi bi-car-front-fill me-2"></i> รายการใช้รถ
-        </h2>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-4">
+          <div class="text-center text-lg-start">
+            <h2 class="mb-1 text-primary section-title">
+              <i class="bi bi-car-front-fill me-2"></i> ข้อมูลการใช้รถยนต์ราชการล่าสุด
+            </h2>
+            <div class="text-muted small">
+              แสดงรายการอนุมัติที่มีการขอใช้รถยนต์จากคำขอไปราชการ
+            </div>
+          </div>
+          <div class="d-flex flex-column flex-sm-row align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-success px-3 py-2">
+              ทั้งหมด <%= typeof vehicleRequestsCount !== 'undefined' ? vehicleRequestsCount : (vehicleRequests ? vehicleRequests.length : 0) %> รายการ
+            </span>
+            <a href="/official-travel/usecar" class="btn btn-outline-primary btn-sm">
+              ดูข้อมูลเพิ่มเติม
+            </a>
+          </div>
+        </div>
         <div class="card modern-card shadow-sm border-0">
           <div class="card-gradient-bar"></div>
           <div class="card-body">
@@ -5183,6 +5198,11 @@ const _memberSummaryTotals = {
             <% } else { %>
               <div class="text-center text-muted py-3">ไม่มีข้อมูลการใช้รถ</div>
             <% } %>
+            <div class="d-flex justify-content-end mt-3">
+              <a href="/official-travel/usecar" class="btn btn-sm btn-outline-secondary">
+                ดูข้อมูลเพิ่มเติม
+              </a>
+            </div>
           </div>
         </div>
       </div>

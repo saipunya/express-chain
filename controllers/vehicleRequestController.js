@@ -3,6 +3,8 @@ const vehicleRequestModel = require('../models/vehicleRequestModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
 const { previewRunningNumber } = require('../services/runningNumberService');
 
+const DIRECT_VEHICLE_REQUEST_NO = 'ชย 0010(ดท)/......';
+
 function toDateInput(value) {
   if (!value) {
     return '';
@@ -187,9 +189,9 @@ async function renderForm(res, overrides = {}) {
 
 async function renderDirectForm(res, overrides = {}) {
   const user = overrides.user || res.locals.user || {};
-  const vehicleRequestNo = overrides.vehicle_request_no || await resolveVehicleRequestNoForDirect();
-  const item = overrides.item || {
-    vehicle_request_no: vehicleRequestNo,
+  const item = {
+    ...(overrides.item || {}),
+    vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
     request_date: overrides.request_date || new Date().toISOString().slice(0, 10),
     learn_to: overrides.learn_to || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ',
     travel_request_id: '',
@@ -406,11 +408,10 @@ exports.createDirect = async (req, res) => {
       return res.status(403).send('ไม่มีสิทธิ์สร้างคำขอใช้รถยนต์ตรง');
     }
 
-    const vehicleRequestNo = req.body.vehicle_request_no || await resolveVehicleRequestNoForDirect();
     const id = await vehicleRequestModel.create({
       ...mapBody(req),
       travel_request_id: null,
-      vehicle_request_no: vehicleRequestNo
+      vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
     });
     res.redirect(`/vehicle-request/${id}`);
   } catch (error) {
@@ -421,7 +422,7 @@ exports.createDirect = async (req, res) => {
       item: {
         ...req.body,
         travel_request_id: '',
-        vehicle_request_no: req.body.vehicle_request_no || await resolveVehicleRequestNoForDirect()
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
       },
       error: error.message || 'บันทึกคำขอใช้รถยนต์ตรงไม่สำเร็จ'
     });
@@ -439,11 +440,10 @@ exports.updateDirect = async (req, res) => {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
 
-    const vehicleRequestNo = req.body.vehicle_request_no || current.vehicle_request_no || await resolveVehicleRequestNoForDirect();
     await vehicleRequestModel.update(req.params.id, {
       ...mapBody(req),
       travel_request_id: null,
-      vehicle_request_no: vehicleRequestNo,
+      vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
       status: current.status
     });
     res.redirect(`/vehicle-request/${req.params.id}`);
@@ -457,7 +457,7 @@ exports.updateDirect = async (req, res) => {
       item: {
         ...req.body,
         travel_request_id: '',
-        vehicle_request_no: req.body.vehicle_request_no || current?.vehicle_request_no || await resolveVehicleRequestNoForDirect()
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
       },
       error: error.message || 'บันทึกการแก้ไขคำขอใช้รถยนต์ตรงไม่สำเร็จ'
     });

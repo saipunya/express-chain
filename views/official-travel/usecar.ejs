@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+<%- include('../partials/travel-navbar', { currentPage: 'travel' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">ข้อมูลการใช้รถยนต์ราชการ</h3>
+    <p class="text-muted mb-0">แสดงเฉพาะรายการที่มีกำหนดปฏิบัติงานตั้งแต่วันนี้เป็นต้นไป</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <span class="badge rounded-pill text-bg-success px-3 py-2">
+      ทั้งหมด <%= items ? items.length : 0 %> รายการ
+    </span>
+    <a href="/" class="btn btn-outline-secondary">
+      <i class="bi bi-house me-1"></i> กลับหน้าแรก
+    </a>
+  </div>
+</div>
+
+<div class="alert alert-info">
+  วันที่อ้างอิง: <%= todayLabel %>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th class="text-center">วันที่</th>
+          <th class="text-center">เวลา</th>
+          <th>เลขที่คำขอ</th>
+          <th>เรื่อง</th>
+          <th>ผู้ขอ</th>
+          <th>สถานที่</th>
+          <th>กิจกรรม</th>
+          <th>ทะเบียนรถ</th>
+          <th>พนักงานขับรถ</th>
+          <th>สถานะ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items || !items.length) { %>
+          <tr>
+            <td colspan="10" class="text-center py-4 text-muted">ยังไม่มีรายการใช้รถตั้งแต่วันนี้เป็นต้นไป</td>
+          </tr>
+        <% } %>
+        <% (items || []).forEach((item) => { %>
+          <% const tripDate = item.start_at ? new Date(item.start_at) : null; %>
+          <tr>
+            <td class="text-center">
+              <%= tripDate ? tripDate.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %>
+            </td>
+            <td class="text-center">
+              <%= tripDate ? tripDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %>
+            </td>
+            <td>
+              <a href="/official-travel/<%= item.id %>" class="text-decoration-none fw-semibold">
+                <%= item.request_no || '-' %>
+              </a>
+            </td>
+            <td>
+              <div class="fw-semibold"><%= item.subject || '-' %></div>
+              <small class="text-muted"><%= item.destination_text || '-' %></small>
+            </td>
+            <td>
+              <div><%= item.requester_name || '-' %></div>
+              <small class="text-muted"><%= item.requester_group || '-' %></small>
+            </td>
+            <td><%= item.destination_text || '-' %></td>
+            <td><%= item.purpose_text || '-' %></td>
+            <td>
+              <div class="fw-semibold"><%= item.plate_no_snapshot || '-' %></div>
+              <% if (item.vehicle_request_no) { %>
+                <small class="text-muted"><%= item.vehicle_request_no %></small>
+              <% } %>
+            </td>
+            <td><%= item.driver_name_snapshot || '-' %></td>
+            <td>
+              <span class="badge bg-info text-dark">
+                <%= item.vehicle_request_status === 'approved' ? 'อนุมัติ' : (item.vehicle_request_status || '-') %>
+              </span>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-3 text-end">
+  <a href="/official-travel" class="btn btn-outline-primary">
+    กลับหน้ารายการไปราชการ
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

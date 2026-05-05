@@ -1,121 +1,196 @@
 <%- include('../partials/header') %>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-  <div>
-    <h3 class="mb-1">คิวงานคนขับรถ</h3>
-    <p class="text-muted mb-0">รายการงานที่ได้รับมอบหมายและแยกตามสถานะการบันทึกเวลา/ไมล์</p>
-  </div>
-  <div>
-    <a href="/driver-trip/report" class="btn btn-outline-primary">
-      <i class="bi bi-file-earmark-text me-1"></i> รายงานการใช้รถ
-    </a>
-  </div>
-</div>
+<style>
+  .driver-queue-shell {
+    --queue-gap: 1rem;
+  }
 
-<% if (warning) { %>
-  <div class="alert alert-warning"><%= warning %></div>
-<% } %>
+  .driver-queue-shell .queue-header {
+    gap: 0.75rem;
+  }
 
-<% function getQueueStatusLabel(item) {
-     if (!item.log_status) return 'เข้าใหม่';
-     if (item.log_status === 'morning_logged') return 'บันทึกเวลาเช้าแล้ว';
-     if (item.log_status === 'completed') return 'บันทึกเวลาและไมล์แล้ว';
-     return item.log_status;
-   } %>
+  .driver-queue-shell .queue-actions {
+    gap: 0.5rem;
+  }
 
-<% (queueGroups || []).forEach((group) => { %>
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <div>
-        <h5 class="mb-0"><%= group.title %></h5>
-        <div class="small text-muted"><%= group.subtitle %></div>
-      </div>
-      <span class="badge <%= group.badgeClass %>"><%= group.items.length %> งาน</span>
+  .driver-queue-shell .queue-card {
+    border: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .driver-queue-shell .queue-card .card-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .driver-queue-shell .queue-card .card-body {
+    padding: 1rem;
+  }
+
+  .driver-queue-shell .queue-table-wrap {
+    overflow-x: auto;
+  }
+
+  .driver-queue-shell .queue-table {
+    min-width: 760px;
+  }
+
+  .driver-queue-shell .queue-table th,
+  .driver-queue-shell .queue-table td {
+    vertical-align: middle;
+  }
+
+  .driver-queue-shell .queue-mobile-card {
+    border-radius: 1rem;
+  }
+
+  .driver-queue-shell .queue-mobile-card .meta-label {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+
+  .driver-queue-shell .queue-mobile-card .meta-value {
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  @media (max-width: 575.98px) {
+    .driver-queue-shell .queue-header h3 {
+      font-size: 1.4rem;
+    }
+
+    .driver-queue-shell .queue-actions .btn {
+      width: 100%;
+    }
+
+    .driver-queue-shell .queue-card .card-header {
+      padding: 0.9rem 1rem;
+    }
+
+    .driver-queue-shell .queue-card .card-body {
+      padding: 0.85rem;
+    }
+  }
+</style>
+
+<div class="driver-queue-shell">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-4 queue-header">
+    <div>
+      <h3 class="mb-1">คิวงานคนขับ</h3>
+      <p class="text-muted mb-0">รายการงานที่ได้รับมอบหมายและแยกตามสถานะการบันทึกเวลา/ไมล์</p>
     </div>
+    <div class="queue-actions d-flex flex-wrap">
+      <a href="/driver-trip/report" class="btn btn-outline-primary">
+        <i class="bi bi-file-earmark-text me-1"></i> รายงานการใช้รถ
+      </a>
+    </div>
+  </div>
 
-    <div class="table-responsive d-none d-md-block">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>เลขที่คำขอ</th>
-            <th>ผู้ขอ</th>
-            <th>ปลายทาง</th>
-            <th>รถ/คนขับ</th>
-            <th>สถานะเดินรถ</th>
-            <th class="text-end">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (!group.items.length) { %>
+  <% if (warning) { %>
+    <div class="alert alert-warning"><%= warning %></div>
+  <% } %>
+
+  <% function getQueueStatusLabel(item) {
+       if (!item.log_status) return 'เข้าใหม่';
+       if (item.log_status === 'morning_logged') return 'บันทึกเวลาเช้าแล้ว';
+       if (item.log_status === 'completed') return 'บันทึกเวลาและไมล์แล้ว';
+       return item.log_status;
+     } %>
+
+  <% (queueGroups || []).forEach((group) => { %>
+    <div class="card shadow-sm queue-card mb-4">
+      <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <h5 class="mb-0"><%= group.title %></h5>
+          <div class="small text-muted"><%= group.subtitle %></div>
+        </div>
+        <span class="badge <%= group.badgeClass %>"><%= group.items.length %> งาน</span>
+      </div>
+
+      <div class="queue-table-wrap d-none d-md-block">
+        <table class="table table-hover mb-0 align-middle queue-table">
+          <thead class="table-light">
             <tr>
-              <td colspan="6" class="text-center py-4 text-muted">ไม่มีรายการในหมวดนี้</td>
+              <th>เลขที่คำขอ</th>
+              <th>ผู้ขอ</th>
+              <th>ปลายทาง</th>
+              <th>รถ/คนขับ</th>
+              <th>สถานะเดินรถ</th>
+              <th class="text-end">จัดการ</th>
             </tr>
-          <% } %>
+          </thead>
+          <tbody>
+            <% if (!group.items.length) { %>
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">ไม่มีรายการในหมวดนี้</td>
+              </tr>
+            <% } %>
+            <% group.items.forEach((item) => { %>
+              <tr>
+                <td><%= item.vehicle_request_no %></td>
+                <td><%= item.requester_name %></td>
+                <td><%= item.destination_text %></td>
+                <td>
+                  <div><%= item.plate_no_snapshot || '-' %></div>
+                  <small class="text-muted"><%= item.driver_name_snapshot || '-' %></small>
+                </td>
+                <td>
+                  <span class="badge <%= item.log_status ? 'bg-success' : 'bg-danger' %>">
+                    <%= getQueueStatusLabel(item) %>
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-md-none p-3">
+        <% if (!group.items.length) { %>
+          <div class="text-center py-4 text-muted">ไม่มีรายการในหมวดนี้</div>
+        <% } %>
+
+        <div class="row g-3">
           <% group.items.forEach((item) => { %>
-            <tr>
-              <td><%= item.vehicle_request_no %></td>
-              <td><%= item.requester_name %></td>
-              <td><%= item.destination_text %></td>
-              <td>
-                <div><%= item.plate_no_snapshot || '-' %></div>
-                <small class="text-muted"><%= item.driver_name_snapshot || '-' %></small>
-              </td>
-              <td>
-                <span class="badge <%= item.log_status ? 'bg-success' : 'bg-danger' %>">
-                  <%= getQueueStatusLabel(item) %>
-                </span>
-              </td>
-              <td class="text-end">
-                <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="d-md-none p-3">
-      <% if (!group.items.length) { %>
-        <div class="text-center py-4 text-muted">ไม่มีรายการในหมวดนี้</div>
-      <% } %>
-
-      <div class="row g-3">
-        <% group.items.forEach((item) => { %>
-          <div class="col-12">
-            <div class="border rounded-4 p-3 bg-white shadow-sm">
-              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                <div>
-                  <div class="fw-semibold"><%= item.vehicle_request_no %></div>
-                <div class="small text-muted"><%= item.requester_name %></div>
-              </div>
-                <span class="badge <%= item.log_status ? 'bg-success' : 'bg-danger' %> text-nowrap">
-                  <%= getQueueStatusLabel(item) %>
-                </span>
-              </div>
-
-              <div class="mb-2">
-                <div class="small text-muted">ปลายทาง</div>
-                <div class="fw-medium"><%= item.destination_text %></div>
-              </div>
-
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <div class="small text-muted">รถ</div>
-                  <div class="fw-medium"><%= item.plate_no_snapshot || '-' %></div>
+            <div class="col-12">
+              <div class="border rounded-4 p-3 bg-white shadow-sm queue-mobile-card">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <div>
+                    <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                    <div class="small text-muted"><%= item.requester_name %></div>
+                  </div>
+                  <span class="badge <%= item.log_status ? 'bg-success' : 'bg-danger' %> text-nowrap">
+                    <%= getQueueStatusLabel(item) %>
+                  </span>
                 </div>
-                <div class="col-6">
-                  <div class="small text-muted">คนขับ</div>
-                  <div class="fw-medium"><%= item.driver_name_snapshot || '-' %></div>
-                </div>
-              </div>
 
-              <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary w-100">เปิดงาน</a>
+                <div class="mb-3">
+                  <div class="meta-label">ปลายทาง</div>
+                  <div class="meta-value"><%= item.destination_text %></div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <div class="meta-label">รถ</div>
+                    <div class="meta-value"><%= item.plate_no_snapshot || '-' %></div>
+                  </div>
+                  <div class="col-6">
+                    <div class="meta-label">คนขับ</div>
+                    <div class="meta-value"><%= item.driver_name_snapshot || '-' %></div>
+                  </div>
+                </div>
+
+                <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary w-100">เปิดงาน</a>
+              </div>
             </div>
-          </div>
-        <% }) %>
+          <% }) %>
+        </div>
       </div>
     </div>
-  </div>
-<% }) %>
+  <% }) %>
+</div>
 
 <%- include('../partials/footer') %>

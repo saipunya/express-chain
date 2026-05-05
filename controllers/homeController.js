@@ -31,6 +31,30 @@ const allfiles2 = require('../models/allfilesModel');
 const Finance = require('../models/financeModel');
 
 const activeCoopModel = require('../models/activeCoopModel');
+
+function getBangkokDateKey(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+  const lookup = {};
+  parts.forEach((part) => {
+    if (part.type !== 'literal') {
+      lookup[part.type] = part.value;
+    }
+  });
+  if (!lookup.year || !lookup.month || !lookup.day) {
+    return null;
+  }
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
 const homeController = {
   index: async (req, res) => {
     try {
@@ -40,9 +64,15 @@ const homeController = {
       const businessFiles = await businessModel.getLastUploads(10);
       // ดึงเฉพาะรายการไปราชการที่ขอใช้รถยนต์ราชการและมี vehicle_request อนุมัติแล้ว
       const vehicleRequestsRaw = await officialTravelRequestModel.listReport({});
-      // เงื่อนไข: ต้องมี vehicle_request_id, vehicle_request_status = 'approved' (หรือที่เหมาะสม)
-      const vehicleRequests = (vehicleRequestsRaw || []).filter(vr => vr.vehicle_request_id && (vr.vehicle_request_status === 'approved' || vr.vehicle_request_status === 'อนุมัติ'));
-      const vehicleRequestsShow = vehicleRequests.slice(0, 10); // แสดง 10 รายการล่าสุด
+      const todayKey = getBangkokDateKey();
+      // เงื่อนไข: ต้องมี vehicle_request_id, สถานะอนุมัติ และกำหนดวันปฏิบัติงานตั้งแต่วันนี้เป็นต้นไป
+      const vehicleRequests = (vehicleRequestsRaw || [])
+        .filter(vr => vr.vehicle_request_id && (vr.vehicle_request_status === 'approved' || vr.vehicle_request_status === 'อนุมัติ'))
+        .filter(vr => {
+          const startKey = getBangkokDateKey(vr.start_at);
+          return startKey && todayKey && startKey >= todayKey;
+        });
+      const vehicleRequestsShow = vehicleRequests.slice(0, 5); // แสดง 5 รายการล่าสุด
       const lastProjects = await Project.getLast(10);
       const lastRq2 = await Rq2.getLast(10);
       const lastCommands = await Command.getLast(10);
@@ -504,6 +534,7 @@ const homeController = {
         rabiabFiles,
         businessFiles,
         vehicleRequests: vehicleRequestsShow,
+        vehicleRequestsCount: vehicleRequests.length,
         lastProjects,
         lastRq2,
         lastCommands,

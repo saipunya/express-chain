@@ -37,8 +37,15 @@
     <div class="row g-3">
       <div class="col-md-3">
         <label class="form-label">เลขที่คำขอใช้รถ</label>
-        <input type="text" class="form-control" name="vehicle_request_no" id="vehicle-request-no-input" value="<%= item.vehicle_request_no || '' %>" readonly>
-        <div class="form-text"><%= isDirectMode ? 'ระบบสร้างเลขที่คำขอรถยนต์ตรงให้' : 'ใช้เลขเดียวกับคำขอไปราชการ' %></div>
+        <input
+          type="text"
+          class="form-control"
+          name="vehicle_request_no"
+          id="vehicle-request-no-input"
+          value="<%= item.vehicle_request_no || '' %>"
+          readonly
+          placeholder="ชย 0010(ดท)/......">
+        <div class="form-text"><%= isDirectMode ? 'ล็อคเลขที่คำขอใช้รถยนต์ไว้เป็น ชย 0010(ดท)/......' : 'ใช้เลขเดียวกับคำขอไปราชการ' %></div>
       </div>
       <div class="col-md-3">
         <label class="form-label">วันที่คำขอ</label>

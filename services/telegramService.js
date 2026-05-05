@@ -4,8 +4,14 @@ const axios = require('axios');
 function getTelegramConfig(target = 'default') {
   if (target === 'workflow') {
     return {
-      token: process.env.TELEGRAM_WORKFLOW_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN,
-      chatId: process.env.TELEGRAM_WORKFLOW_CHAT_ID || process.env.TELEGRAM_CHAT_ID
+      token:
+        process.env.LASYSTEM_BOT_TOKEN ||
+        process.env.TELEGRAM_WORKFLOW_BOT_TOKEN ||
+        process.env.TELEGRAM_BOT_TOKEN,
+      chatId:
+        process.env.LASYSTEM_BOT_CHAT_ID ||
+        process.env.TELEGRAM_WORKFLOW_CHAT_ID ||
+        process.env.TELEGRAM_CHAT_ID
     };
   }
 
@@ -20,7 +26,9 @@ async function sendMessage(message, options = {}) {
   const { token, chatId } = getTelegramConfig(target);
 
   if (!token || !chatId) {
-    console.error('❌ TELEGRAM config missing: set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or TELEGRAM_WORKFLOW_BOT_TOKEN/TELEGRAM_WORKFLOW_CHAT_ID');
+    console.error(
+      'TELEGRAM config missing: set TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID or LASYSTEM_BOT_TOKEN/LASYSTEM_BOT_CHAT_ID'
+    );
     return;
   }
 
@@ -41,9 +49,10 @@ async function sendMessage(message, options = {}) {
         ...(replyMarkup && isLastPart ? { reply_markup: replyMarkup } : {})
       });
     }
-    console.log('✅ ส่งข้อความ Telegram (แบบหลายตอน) เรียบร้อย');
+
+    console.log(`[telegram:${target}] sent ${parts.length} message part(s)`);
   } catch (error) {
-    console.error('❌ ส่งข้อความ Telegram ไม่สำเร็จ:', error.message);
+    console.error(`[telegram:${target}] send failed:`, error.message);
   }
 }
 

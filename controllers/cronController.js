@@ -1,38 +1,73 @@
-const axios = require('axios');
 const activityModel = require('../models/activityModel');
+const telegramService = require('../services/telegramService');
 
 exports.runCron = async (req, res) => {
   try {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-
-    const message = '📣 แจ้งเตือนกิจกรรมวันนี้จากระบบ CoopChain';
-
-    const response = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      chat_id: chatId,
-      text: message
-    });
-
-    console.log('ส่งข้อความสำเร็จ:', response.data);
-
-    return res.send('ส่งแจ้งเตือนเรียบร้อยแล้ว'); // ✅ ใส่ return
+    const message = 'แจ้งเตือนกิจกรรมวันนี้จากระบบ CoopChain';
+    await telegramService.sendMessage(message);
+    return res.send('ส่งแจ้งเตือนเรียบร้อยแล้ว');
   } catch (error) {
-    console.error(
-      'เกิดข้อผิดพลาดในการส่งแจ้งเตือน:',
-      error.response?.data || error.message
-    );
-
-    return res.status(500).send(
-      'เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' +
-      (error.response?.data?.description || error.message)
-    ); // ✅ ใส่ return
+    console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error.message);
+    return res.status(500).send('เกิดข้อผิดพลาดในการส่งแจ้งเตือน: ' + error.message);
   }
 };
+
+function toSqlDate(value) {
+  if (!value) {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 10);
+  }
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function nowTimestamp() {
+  return new Date().toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function buildParticipants(item) {
+  const companionNames = Array.isArray(item.companions)
+    ? item.companions.map((companion) => companion.companion_name).filter(Boolean)
+    : [];
+  return [item.requester_name, ...companionNames].filter(Boolean).join(', ');
+}
+
+function buildNote(item) {
+  const notes = [];
+  if (item.request_no) notes.push(`เลขที่คำขอ: ${item.request_no}`);
+  if (item.purpose_text) notes.push(`วัตถุประสงค์: ${item.purpose_text}`);
+  if (item.transport_type) notes.push(`วิธีเดินทาง: ${item.transport_type}`);
+  if (item.vehicleRequest?.vehicle_request_no) {
+    notes.push(`คำขอใช้รถ: ${item.vehicleRequest.vehicle_request_no} (${item.vehicleRequest.status || '-'})`);
+  }
+  if (item.vehicleRequest?.plate_no_snapshot || item.vehicleRequest?.driver_name_snapshot) {
+    notes.push(`รถ: ${item.vehicleRequest?.plate_no_snapshot || '-'} คนขับ: ${item.vehicleRequest?.driver_name_snapshot || '-'}`);
+  }
+  return notes.join(' | ');
+}
+
+function buildGitgumPayload(item) {
+  return {
+    git_date: toSqlDate(item.start_at || item.request_date),
+    git_time: '',
+    git_act: item.purpose_text || 'ขออนุมัติเดินทางไปราชการ',
+    git_place: item.destination_text || '-',
+    git_goto: buildParticipants(item) || '-',
+    git_respon: item.requester_name || '-',
+    git_maihed: buildNote(item) || '-',
+    git_group: item.requester_group || 'ไปราชการ',
+    git_saveby: `workflow-travel-${item.id}`,
+    git_savedate: nowTimestamp()
+  };
+}
 
 exports.buildTodayActivityMessage = async () => {
   const activities = await activityModel.getActivitiesForToday();
   if (!activities || activities.length === 0) return null;
-  let message = '📅 กิจกรรมประจำวันที่วันนี้\n';
+
+  let message = 'กิจกรรมประจำวันวันนี้\n';
   activities.forEach((act, index) => {
     message += `\n${index + 1}. ${act.activity || '-'}\n`;
     if (act.date_act) message += `   วันที่: ${act.date_act}\n`;
@@ -46,23 +81,11 @@ exports.buildTodayActivityMessage = async () => {
 exports.notifyActivityToday = async () => {
   const message = await exports.buildTodayActivityMessage();
   if (!message) {
-    console.log('ไม่มีรายการกิจกรรมสำหรับวันนี้ ไม่ส่งแจ้งเตือน');
+    console.log('ไม่มีรายการกิจกรรมสำหรับวันนี้');
     return;
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!botToken || !chatId) {
-    throw new Error('TELEGRAM_BOT_TOKEN หรือ TELEGRAM_CHAT_ID ไม่มีใน .env');
-  }
-
-  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-  const res = await axios.post(url, {
-    chat_id: chatId,
-    text: message,
-    parse_mode: 'HTML', // หรือ 'Markdown' ถ้าต้อง
-  });
-
-  console.log('✅ ส่งการแจ้งเตือนกิจกรรมวันนี้ไป Telegram เรียบร้อย:', res.data);
+  await telegramService.sendMessage(message);
 };
+
+exports.buildGitgumPayload = buildGitgumPayload;

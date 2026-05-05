@@ -25,10 +25,26 @@ exports.addMember = async (member) => {
 };
 
 exports.updateMember = async (id, member) => {
-  const { username, fullname, position, group, m_class } = member;
+  const { username, fullname, position, group, m_class, status, passwordHash } = member;
+  const fields = [
+    'm_user = ?',
+    'm_name = ?',
+    'm_position = ?',
+    '`m_group` = ?',
+    'm_class = ?',
+    'm_status = ?'
+  ];
+  const values = [username, fullname, position, group, m_class, status];
+
+  if (passwordHash) {
+    fields.push('m_pass = ?');
+    values.push(passwordHash);
+  }
+
+  values.push(id);
   return db.query(
-    'UPDATE member3 SET m_user = ?, m_name = ?, m_position = ?, `m_group` = ?, m_class = ? WHERE m_id = ?',
-    [username, fullname, position, group, m_class, id]
+    `UPDATE member3 SET ${fields.join(', ')} WHERE m_id = ?`,
+    values
   );
 };
 

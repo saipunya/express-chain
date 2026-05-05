@@ -1,4 +1,5 @@
 const notify = require('./notifyService');
+
 const BASE_URL = String(process.env.BASE_URL || '').replace(/\/+$/, '');
 
 function formatDateTime(value) {
@@ -26,8 +27,9 @@ function escapeHtml(value) {
 async function send(message) {
   try {
     const payload = typeof message === 'string'
-      ? { html: message, telegramTarget: 'workflow' }
-      : { ...message, telegramTarget: 'workflow' };
+      ? { html: message, telegramTarget: 'workflow', channels: ['telegram'] }
+      : { ...message, telegramTarget: 'workflow', channels: ['telegram'] };
+
     await notify.broadcast(payload);
   } catch (error) {
     console.error('Workflow notification failed:', error.message);
@@ -103,9 +105,10 @@ function buildApprovalButton(label, pathname) {
 async function notifyTravelSubmitted(item, vehicleRequested = false) {
   const approvalUrl = buildLoginRedirectUrl(`/vehicle-approval/travel/${item.id}`);
   const approvalLink = approvalUrl
-    ? `<a href="${escapeHtml(approvalUrl)}">เปิดหน้าอนุมัติคำขอไปราชการ</a>`
+    ? `<a href="${escapeHtml(approvalUrl)}">เปิดหน้าพิจารณาคำขอไปราชการ</a>`
     : '-';
   const usesOfficialVehicle = vehicleRequested || item.transport_type === 'official_vehicle' || Number(item.requires_vehicle_request) === 1;
+
   return send({
     html: `
 <b>คำขอไปราชการส่งใหม่</b>
@@ -117,75 +120,34 @@ async function notifyTravelSubmitted(item, vehicleRequested = false) {
 ใช้รถยนต์ราชการ: ${usesOfficialVehicle ? 'ใช่' : 'ไม่ใช่'}
 สถานะ: ${escapeHtml(item.status)}
 ${approvalLink}
-  `,
-    replyMarkup: buildApprovalButton('เปิดหน้าอนุมัติไปราชการ', `/vehicle-approval/travel/${item.id}`)
+    `,
+    replyMarkup: buildApprovalButton('เปิดหน้าพิจารณาคำขอไปราชการ', `/vehicle-approval/travel/${item.id}`)
   });
-}
-
-async function notifyTravelDecision(item, actionLabel, actorName) {
-  return send(`
-<b>${escapeHtml(actionLabel)}คำขอไปราชการ</b>
-เลขที่: ${escapeHtml(item.request_no)}
-เรื่อง: ${escapeHtml(item.subject)}
-ผู้ขอ: ${escapeHtml(item.requester_name)}
-ผู้พิจารณา: ${escapeHtml(actorName)}
-สถานะ: ${escapeHtml(item.status)}
-ความเห็น: ${escapeHtml(item.approval_comment || '-')}
-  `);
 }
 
 async function notifyVehicleSubmitted(item) {
   const requestNo = item.travel_request_no || item.vehicle_request_no;
   const approvalUrl = buildLoginRedirectUrl(`/vehicle-approval/request/${item.id}`);
   const approvalLink = approvalUrl
-    ? `<a href="${escapeHtml(approvalUrl)}">เปิดหน้าอนุมัติคำขอใช้รถ</a>`
+    ? `<a href="${escapeHtml(approvalUrl)}">เปิดหน้าพิจารณาคำขอใช้รถ</a>`
     : '-';
+
   return send({
     html: `
 <b>คำขอใช้รถส่งใหม่</b>
 เลขที่: ${escapeHtml(requestNo)}
-อ้างอิงไปราชการ: ${escapeHtml(item.travel_request_no)}
+อ้างอิงคำขอไปราชการ: ${escapeHtml(item.travel_request_no)}
 ผู้ขอ: ${escapeHtml(item.requester_name)}
 ปลายทาง: ${escapeHtml(item.destination_text)}
 ช่วงเวลา: ${escapeHtml(formatDateTime(item.trip_start_at))} ถึง ${escapeHtml(formatDateTime(item.trip_end_at))}
 สถานะ: ${escapeHtml(item.status)}
 ${approvalLink}
-  `,
-    replyMarkup: buildApprovalButton('เปิดหน้าอนุมัติคำขอใช้รถ', `/vehicle-approval/request/${item.id}`)
+    `,
+    replyMarkup: buildApprovalButton('เปิดหน้าพิจารณาคำขอใช้รถ', `/vehicle-approval/request/${item.id}`)
   });
 }
 
-async function notifyVehicleDecision(item, actionLabel, actorName) {
-  const requestNo = item.travel_request_no || item.vehicle_request_no;
-  return send(`
-<b>${escapeHtml(actionLabel)}คำขอใช้รถ</b>
-เลขที่: ${escapeHtml(requestNo)}
-อ้างอิงไปราชการ: ${escapeHtml(item.travel_request_no)}
-ผู้ขอ: ${escapeHtml(item.requester_name)}
-ผู้พิจารณา: ${escapeHtml(actorName)}
-สถานะ: ${escapeHtml(item.status)}
-ความเห็น: ${escapeHtml(item.approval_comment || '-')}
-  `);
-}
-
-async function notifyVehicleAssigned(item, actorName) {
-  const requestNo = item.travel_request_no || item.vehicle_request_no;
-  return send(`
-<b>มอบหมายรถและคนขับแล้ว</b>
-เลขที่คำขอใช้รถ: ${escapeHtml(requestNo)}
-ผู้ขอ: ${escapeHtml(item.requester_name)}
-ปลายทาง: ${escapeHtml(item.destination_text)}
-รถ: ${escapeHtml(item.plate_no_snapshot || '-')}
-คนขับ: ${escapeHtml(item.driver_name_snapshot || '-')}
-ผู้มอบหมาย: ${escapeHtml(actorName)}
-สถานะ: ${escapeHtml(item.status)}
-  `);
-}
-
 module.exports = {
-  notifyTravelDecision,
   notifyTravelSubmitted,
-  notifyVehicleAssigned,
-  notifyVehicleDecision,
   notifyVehicleSubmitted
 };

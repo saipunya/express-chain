@@ -718,15 +718,6 @@ exports.cancel = async (req, res) => {
     await officialTravelRequestModel.cancel(req.params.id, req.session?.user);
     await gitgumTravelSyncService.removeTravel(req.params.id);
 
-    const item = await officialTravelRequestModel.getDetailById(req.params.id);
-    if (item) {
-      await workflowNotificationService.notifyTravelDecision(
-        item,
-        'ยกเลิก',
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
-      );
-    }
-
     res.redirect(`/official-travel/${req.params.id}?notice=cancelled`);
   } catch (error) {
     if (error.code === 'NOT_FOUND') {

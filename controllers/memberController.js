@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const memberModel = require('../models/memberModel');
 
 exports.listMembers = async (req, res) => {
@@ -39,9 +40,90 @@ exports.editMember = async (req, res) => {
       res.status(500).send('Error fetching member');
     }
   } else if (req.method === 'POST') {
-    const { username, fullname, position, group, m_class } = req.body;
+    const { username, fullname, position, group, m_class, status, password, confirm_password } = req.body;
     try {
-      await memberModel.updateMember(id, { username, fullname, position, group, m_class });
+      const member = await memberModel.getMemberById(id);
+      if (!member) {
+        return res.status(404).send('Member not found');
+      }
+
+      if (!['active', 'inactive'].includes(String(status || ''))) {
+        return res.status(400).render('members/edit', {
+          member: {
+            ...member,
+            m_user: username,
+            m_name: fullname,
+            m_position: position,
+            m_group: group,
+            m_class,
+            m_status: status
+          },
+          error: 'สถานะสมาชิกไม่ถูกต้อง'
+        });
+      }
+
+      const cleanPassword = String(password || '');
+      const cleanConfirmPassword = String(confirm_password || '');
+      let passwordHash = null;
+
+      if (cleanPassword || cleanConfirmPassword) {
+        if (!cleanPassword || !cleanConfirmPassword) {
+          return res.status(400).render('members/edit', {
+            member: {
+              ...member,
+              m_user: username,
+              m_name: fullname,
+              m_position: position,
+              m_group: group,
+              m_class,
+              m_status: status
+            },
+            error: 'กรุณากรอกรหัสผ่านและยืนยันรหัสผ่านให้ตรงกัน'
+          });
+        }
+
+        if (cleanPassword !== cleanConfirmPassword) {
+          return res.status(400).render('members/edit', {
+            member: {
+              ...member,
+              m_user: username,
+              m_name: fullname,
+              m_position: position,
+              m_group: group,
+              m_class,
+              m_status: status
+            },
+            error: 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน'
+          });
+        }
+
+        if (cleanPassword.length < 6) {
+          return res.status(400).render('members/edit', {
+            member: {
+              ...member,
+              m_user: username,
+              m_name: fullname,
+              m_position: position,
+              m_group: group,
+              m_class,
+              m_status: status
+            },
+            error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
+          });
+        }
+
+        passwordHash = await bcrypt.hash(cleanPassword, 10);
+      }
+
+      await memberModel.updateMember(id, {
+        username,
+        fullname,
+        position,
+        group,
+        m_class,
+        status,
+        passwordHash
+      });
       res.redirect('/member');
     } catch (error) {
       console.error(error);
@@ -64,7 +146,7 @@ exports.deleteMember = async (req, res) => {
 exports.editMemberPage = async (req, res) => {
   try {
     const memberId = req.params.id; // Get member ID from the route parameter
-    const [member] = await memberModel.getMemberById(memberId); // Fetch member by ID
+    const member = await memberModel.getMemberById(memberId); // Fetch member by ID
 
     if (!member) {
       return res.status(404).send('Member not found'); // Handle case where member doesn't exist

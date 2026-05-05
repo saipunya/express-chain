@@ -3,7 +3,6 @@ const vehicleRequestModel = require('../models/vehicleRequestModel');
 const vehicleMasterModel = require('../models/vehicleMasterModel');
 const driverMasterModel = require('../models/driverMasterModel');
 const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
-const workflowNotificationService = require('../services/workflowNotificationService');
 const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
 const { ensureVehicleRequestApproved } = require('../services/travelVehicleRequestService');
 
@@ -133,11 +132,6 @@ exports.approveTravel = async (req, res) => {
     }
 
     await gitgumTravelSyncService.syncApprovedTravel(item);
-    await workflowNotificationService.notifyTravelDecision(
-      item,
-      'อนุมัติ',
-      req.session?.user?.fullname || req.session?.user?.username || 'system'
-    );
 
     if (item.vehicleRequest) {
       const updatedVehicleRequest = await ensureVehicleRequestApproved(item, req.session?.user);
@@ -184,15 +178,6 @@ exports.approveTravel = async (req, res) => {
 
           const updatedItem = await officialTravelRequestModel.getDetailById(req.params.id);
           const updatedVehicleRequestDetail = await vehicleRequestModel.getDetailById(vehicleReq.id);
-          await workflowNotificationService.notifyVehicleDecision(
-            updatedVehicleRequestDetail,
-            'อนุมัติ',
-            getActorName(req.session?.user)
-          );
-          await workflowNotificationService.notifyVehicleAssigned(
-            updatedVehicleRequestDetail,
-            getActorName(req.session?.user)
-          );
         }
       } catch (vehicleError) {
         console.error('Error assigning vehicle after approving travel:', vehicleError);
@@ -211,13 +196,6 @@ exports.rejectTravel = async (req, res) => {
     await officialTravelRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
     await gitgumTravelSyncService.removeTravel(req.params.id);
     const item = await officialTravelRequestModel.getDetailById(req.params.id);
-    if (item) {
-      await workflowNotificationService.notifyTravelDecision(
-        item,
-        'ไม่อนุมัติ',
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
-      );
-    }
     res.redirect(`/vehicle-approval/travel/${req.params.id}`);
   } catch (error) {
     console.error('Error rejecting travel request:', error);
@@ -298,15 +276,6 @@ exports.approveVehicle = async (req, res) => {
     if (updatedItem) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
-      await workflowNotificationService.notifyVehicleDecision(
-        updatedItem,
-        'อนุมัติ',
-        getActorName(req.session?.user)
-      );
-      await workflowNotificationService.notifyVehicleAssigned(
-        updatedItem,
-        getActorName(req.session?.user)
-      );
     }
     res.redirect(`/vehicle-approval/request/${req.params.id}`);
   } catch (error) {
@@ -322,11 +291,6 @@ exports.rejectVehicle = async (req, res) => {
     if (item) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(item.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
-      await workflowNotificationService.notifyVehicleDecision(
-        item,
-        'ไม่อนุมัติ',
-        req.session?.user?.fullname || req.session?.user?.username || 'system'
-      );
     }
     res.redirect(`/vehicle-approval/request/${req.params.id}`);
   } catch (error) {
@@ -394,10 +358,6 @@ exports.assignVehicle = async (req, res) => {
     if (updatedItem) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
-      await workflowNotificationService.notifyVehicleAssigned(
-        updatedItem,
-        getActorName(req.session?.user)
-      );
     }
 
     res.redirect(`/vehicle-approval/request/${req.params.id}`);

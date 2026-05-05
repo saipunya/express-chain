@@ -675,6 +675,7 @@ exports.printView = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
+    const passengerCount = Math.max(1, 1 + (Array.isArray(item.companions) ? item.companions.length : 0));
     // Map official travel fields to vehicle-request/print fields
     const mapped = {
       vehicle_request_no: item.request_no,
@@ -684,7 +685,7 @@ exports.printView = async (req, res) => {
       mission_text: item.purpose_text,
       trip_start_at: item.start_at,
       trip_end_at: item.end_at,
-      passenger_count: item.passenger_count,
+      passenger_count: passengerCount,
       learn_to: item.learn_to,
       request_date: item.request_date,
       department_name: item.department_name,

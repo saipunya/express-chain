@@ -3,32 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>พิมพ์คำขอใช้รถราชการ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'THSarabunNew';
+      src: url('/fonts/THSarabunNew.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'THSarabunNew';
+      src: url('/fonts/THSarabunNew-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+
     body {
-      font-family: 'Sarabun', 'TH SarabunPSK', 'TH Sarabun New', Arial, sans-serif;
+      font-family: 'THSarabunNew', 'TH Sarabun New', 'Sarabun', Arial, sans-serif;
       margin: 0;
-      padding: 24px;
+      padding: 20px;
       background: #fff;
       color: #111;
+      font-size: 20px;
+      line-height: 1.5;
     }
 
     .print-sheet {
-      max-width: 900px;
+      max-width: 780px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 12px 18px 18px;
       box-sizing: border-box;
     }
 
     .document-header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .document-header h1 {
       margin: 0;
       font-size: 28px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0;
+      font-weight: 700;
     }
 
     .document-header h2 {
@@ -46,14 +62,15 @@
 
     .meta-table td,
     .field-table td {
-      padding: 8px 6px;
+      padding: 6px 4px;
       vertical-align: top;
       border-bottom: 1px dotted #999;
+      font-size: 22px;
     }
 
     .meta-table .label,
     .field-table .label {
-      width: 120px;
+      width: 128px;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -67,8 +84,8 @@
 
     .field-box {
       border: 1px solid #333;
-      padding: 12px;
-      min-height: 116px;
+      padding: 10px 12px;
+      min-height: 104px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -76,24 +93,25 @@
 
     .field-box strong {
       display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
+      margin-bottom: 6px;
+      font-size: 18px;
+      font-weight: 700;
     }
 
     .field-value {
-      font-size: 15px;
-      line-height: 1.5;
+      font-size: 20px;
+      line-height: 1.45;
       white-space: pre-wrap;
     }
 
     .section-title {
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 700;
-      margin: 20px 0 8px;
+      margin: 16px 0 6px;
     }
 
     .signature-block {
-      margin-top: 36px;
+      margin-top: 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -104,9 +122,9 @@
       display: flex;
       align-items: center;
       width: 100%;
-      max-width: 560px;
-      gap: 12px;
-      font-size: 14px;
+      max-width: 520px;
+      gap: 10px;
+      font-size: 20px;
       white-space: nowrap;
     }
 
@@ -124,9 +142,13 @@
 
     .signature-name {
       text-align: center;
-      font-size: 14px;
+      font-size: 20px;
       width: 100%;
-      max-width: 560px;
+      max-width: 520px;
+    }
+
+    strong {
+      font-weight: 700;
     }
 
     .no-print {
@@ -134,7 +156,22 @@
       text-align: right;
     }
 
+    .summary-block {
+      margin-bottom: 18px;
+      font-size: 20px;
+      line-height: 1.6;
+    }
+
+    .summary-block span {
+      display: inline;
+    }
+
     @media print {
+      @page {
+        size: A4;
+        margin: 16mm 14mm;
+      }
+
       .no-print {
         display: none;
       }
@@ -146,6 +183,7 @@
       .print-sheet {
         box-shadow: none;
         padding: 0;
+        max-width: none;
       }
     }
   </style>
@@ -158,7 +196,7 @@
 
 
     <div class="document-header">
-      <h1 style="font-size:32px;margin-bottom:8px;">บันทึกข้อความ</h1>
+      <h1>บันทึกข้อความ</h1>
     </div>
     <table class="meta-table" style="margin-bottom:24px;">
       <tr>
@@ -190,7 +228,7 @@
       </tr>
     </table>
 
-    <div style="margin-bottom: 24px; font-size: 16px; line-height: 2.1;">
+    <div class="summary-block">
       <span>ข้าพเจ้า <strong><%= item.requester_name || '-' %></strong> ตำแหน่ง <strong><%= item.requester_position || '-' %></strong></span>
       <span>มีความประสงค์ขออนุญาตใช้รถราชการเพื่อ <strong><%= item.mission_text || '-' %></strong></span>
       <span>ปลายทาง <strong><%= item.destination_text || '-' %></strong></span>
@@ -200,17 +238,17 @@
       <span>จำนวนผู้โดยสาร <strong><%= item.passenger_count != null ? item.passenger_count : '-' %></strong> คน</span>
     </div>
 
-    <div style="margin-top: 48px; display: flex; flex-direction: column; align-items: flex-end;">
+    <div style="margin-top: 32px; display: flex; flex-direction: column; align-items: flex-end;">
       <div style="min-width: 320px; text-align: center;">
-        <div style="margin-bottom: 48px;">&nbsp;</div>
+        <div style="margin-bottom: 36px;">&nbsp;</div>
         <div>ลงชื่อ....................................................</div>
         <div>(<%= item.requester_name || '-' %>)</div>
         <div style="margin-top: 4px;">ตำแหน่ง <%= item.requester_position || '-' %></div>
       </div>
     </div>
-    <div style="margin-top: 48px; display: flex; flex-direction: column; align-items: flex-end;">
+    <div style="margin-top: 32px; display: flex; flex-direction: column; align-items: flex-end;">
       <div style="min-width: 320px; text-align: center;">
-        <div style="margin-bottom: 48px;">&nbsp;</div>
+        <div style="margin-bottom: 36px;">&nbsp;</div>
         <div>ลงชื่อ....................................................</div>
         <div>(....................................................)</div>
         <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>

@@ -32,6 +32,38 @@ async function listQueueForUser(user) {
   return rows;
 }
 
+async function listMonthlyReport({ driverId = null, month = null } = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (driverId) {
+    conditions.push('va.driver_id = ?');
+    params.push(driverId);
+  }
+
+  if (month) {
+    conditions.push('DATE_FORMAT(vr.trip_start_at, "%Y-%m") = ?');
+    params.push(month);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const [rows] = await db.query(
+    `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.mission_text,
+            vr.trip_start_at, vr.trip_end_at, vr.requester_name, vr.status,
+            va.driver_id, va.plate_no_snapshot, va.driver_name_snapshot,
+            vtl.log_status, vtl.morning_departure_at, vtl.morning_odometer,
+            vtl.afternoon_return_at, vtl.afternoon_odometer, vtl.distance_km
+     FROM vehicle_requests vr
+     INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
+     LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
+     ${whereClause}
+     ORDER BY vr.trip_start_at ASC, vr.id ASC`,
+    params
+  );
+
+  return rows;
+}
+
 async function getDetailForUser(vehicleRequestId, user) {
   const [rows] = await db.query(
     `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
@@ -138,6 +170,7 @@ async function logAfternoon(vehicleRequestId, user, returnTime, odometer) {
 
 module.exports = {
   getDetailForUser,
+  listMonthlyReport,
   listQueueForUser,
   logAfternoon,
   logMorning

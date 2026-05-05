@@ -162,6 +162,12 @@ function formatDate(value) {
   return thaiDate(value);
 }
 
+function getPassengerCount(formData) {
+  const companionCount = Array.isArray(formData.companions) ? formData.companions.length : 0;
+  const explicitCount = Number(formData.passengerCount || formData.passenger_count || 0);
+  return Math.max(1, explicitCount || companionCount + 1);
+}
+
 function getDurationDays(formData) {
   const numericDays = Number(formData.durationDays);
   if (numericDays > 0) {
@@ -441,6 +447,13 @@ function drawPeriodAndTransport(doc, state, formData) {
   });
 
   // เพิ่มแถว 'เวลา' เพื่อแสดงช่วงเวลาที่ขอไปราชการ
+  drawFieldRow(doc, state, {
+    label: 'จำนวนผู้โดยสารรวม',
+    value: `${getPassengerCount(formData)} คน`,
+    labelWidth: 84,
+    minHeight: 26
+  });
+
   const timeValue = formatTimeRange(formData.startTime, formData.endTime);
 
   drawFieldRow(doc, state, {
@@ -702,14 +715,15 @@ function renderApprovalSection(doc, formData, state) {
     lineGap: 3
   });
 
-  const dividerY = y + 40 + opinionHeight;
+  const dividerY = y + 28 + opinionHeight;
   drawDottedRule(doc, x + 10, x + boxWidth - 10, dividerY);
 
   setBodyFont(doc, true);
   doc.text('ผลอนุมัติ', x + 10, dividerY + 10, { width: 54 });
 
-  drawChoiceCircle(doc, x + 74, dividerY + 8, 'อนุมัติ', formData.approvalStatus === 'approved');
-  drawChoiceCircle(doc, x + 196, dividerY + 8, 'ไม่อนุมัติ', formData.approvalStatus === 'rejected');
+  // Leave both options blank by default so the form can be signed manually.
+  drawChoiceCircle(doc, x + 74, dividerY + 8, 'อนุมัติ', false);
+  drawChoiceCircle(doc, x + 196, dividerY + 8, 'ไม่อนุมัติ', false);
 
   setBodyFont(doc, false);
   doc.text('ลงชื่อ', x + boxWidth - 220, dividerY + 24, { width: 34 });
@@ -719,10 +733,8 @@ function renderApprovalSection(doc, formData, state) {
     width: 208,
     align: 'center'
   });
-  doc.text(formData.approverPosition || ' ', x + boxWidth - 220, dividerY + 74, {
-    width: 208,
-    align: 'center'
-  });
+  doc.text('ตำแหน่ง', x + boxWidth - 220, dividerY + 74, { width: 54 });
+  drawDottedRule(doc, x + boxWidth - 170, x + boxWidth - 12, dividerY + 92);
 
   setBodyFont(doc, false);
   doc.text(

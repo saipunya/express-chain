@@ -117,6 +117,7 @@ app.use((req, res, next) => {
 // เพิ่มบรรทัดนี้เพื่อเตรียม summaryByYear/top ให้ทุก view (อ่าน member6667.json)
 app.use(require('./middlewares/memberCoopLocals'));
 
+app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(morgan('dev'));
 const onlineStatus = require('./middlewares/onlineMiddleware');

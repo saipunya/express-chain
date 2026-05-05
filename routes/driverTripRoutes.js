@@ -7,6 +7,8 @@ const router = express.Router();
 router.use(requireLogin);
 
 router.get('/queue', controller.queue);
+router.get('/report', controller.report);
+router.get('/report/pdf', controller.exportReportPdf);
 router.get('/:vehicleRequestId', controller.detail);
 router.post('/:vehicleRequestId/morning', controller.logMorning);
 router.post('/:vehicleRequestId/afternoon', controller.logAfternoon);

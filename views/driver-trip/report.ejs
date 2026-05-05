@@ -1,0 +1,142 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h3 class="mb-1">รายงานการใช้รถยนต์รายเดือน</h3>
+    <p class="text-muted mb-0">กรองตามชื่อพนักงานขับรถยนต์และเดือน เพื่อดูรายการงานและส่งออก PDF</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/driver-trip/queue" class="btn btn-outline-secondary">กลับคิวงาน</a>
+    <% if (selectedDriverId) { %>
+      <a href="/driver-trip/report/pdf?driverId=<%= encodeURIComponent(selectedDriverId) %>&month=<%= encodeURIComponent(month) %>" target="_blank" class="btn btn-danger">
+        ส่งออก PDF
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<% if (warning) { %>
+  <div class="alert alert-warning"><%= warning %></div>
+<% } %>
+
+<form method="GET" action="/driver-trip/report" class="card shadow-sm border-0 mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label">พนักงานขับรถ</label>
+        <select class="form-select" name="driverId" required>
+          <option value="">เลือกพนักงานขับรถ</option>
+          <% (drivers || []).forEach((driver) => { %>
+            <option value="<%= driver.id %>" <%= String(selectedDriverId) === String(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">เดือน</label>
+        <select class="form-select" name="month" required>
+          <% (monthOptions || []).forEach((option) => { %>
+            <option value="<%= option.value %>" <%= String(month) === String(option.value) ? 'selected' : '' %>><%= option.label %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-3 d-grid">
+        <button type="submit" class="btn btn-primary">แสดงผล</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">จำนวนงานทั้งหมด</div>
+        <div class="fs-3 fw-bold"><%= summary.total || 0 %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">บันทึกเช้าแล้ว</div>
+        <div class="fs-3 fw-bold"><%= summary.morningLogged || 0 %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">เสร็จสิ้นแล้ว</div>
+        <div class="fs-3 fw-bold"><%= summary.completed || 0 %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">ระยะทางรวม</div>
+        <div class="fs-3 fw-bold"><%= Number(summary.distance || 0).toFixed(1) %> กม.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0">รายการเดือน <%= monthLabel %></h5>
+      <div class="small text-muted"><%= selectedDriver ? selectedDriver.driver_name : '-' %></div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>วันเดินทาง</th>
+          <th>เลขที่คำขอ</th>
+          <th>ปลายทาง</th>
+          <th>เวลา/ไมล์</th>
+          <th>ระยะทาง</th>
+          <th>สถานะ</th>
+          <th class="text-end">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!items.length) { %>
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">ไม่พบรายการในเดือนนี้</td>
+          </tr>
+        <% } %>
+        <% items.forEach((item) => { %>
+          <tr>
+            <td><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '-' %></td>
+            <td><%= item.vehicle_request_no %></td>
+            <td>
+              <div class="fw-semibold"><%= item.destination_text %></div>
+              <small class="text-muted"><%= item.requester_name %></small>
+            </td>
+            <td>
+              <div>เช้า: <%= item.morning_departure_at ? new Date(item.morning_departure_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></div>
+              <div>บ่าย: <%= item.afternoon_return_at ? new Date(item.afternoon_return_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></div>
+            </td>
+            <td>
+              <div>ออก: <%= item.morning_odometer || '-' %></div>
+              <div>เข้า: <%= item.afternoon_odometer || '-' %></div>
+            </td>
+            <td>
+              <span class="badge <%= item.log_status === 'completed' ? 'bg-success' : item.log_status === 'morning_logged' ? 'bg-warning text-dark' : 'bg-danger' %>">
+                <%= item.log_status === 'completed' ? 'เสร็จสิ้น' : item.log_status === 'morning_logged' ? 'บันทึกเช้าแล้ว' : 'เข้าใหม่' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

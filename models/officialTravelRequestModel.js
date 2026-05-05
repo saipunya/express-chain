@@ -457,6 +457,12 @@ async function cancel(id, user) {
       throw error;
     }
 
+    if (travelRequest.status === 'approved' && user?.mClass !== 'admin') {
+      const error = new Error('TRAVEL_CANCEL_FORBIDDEN');
+      error.code = 'TRAVEL_CANCEL_FORBIDDEN';
+      throw error;
+    }
+
     if (['in_progress', 'completed'].includes(travelRequest.vehicle_request_status)) {
       const error = new Error('LINKED_VEHICLE_ACTIVE');
       error.code = 'LINKED_VEHICLE_ACTIVE';

@@ -18,8 +18,22 @@
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body">
         <dl class="row mb-0">
-          <dt class="col-sm-4">อ้างอิงคำขอไปราชการ</dt><dd class="col-sm-8"><a href="/vehicle-approval/travel/<%= item.travel_request_id %>"><%= item.travel_request_no %></a></dd>
-          <dt class="col-sm-4">สถานะคำขอไปราชการ</dt><dd class="col-sm-8"><span class="badge bg-<%= item.travel_status === 'approved' ? 'success' : item.travel_status === 'submitted' ? 'warning text-dark' : 'secondary' %>"><%= item.travel_status %></span></dd>
+          <dt class="col-sm-4">อ้างอิงคำขอไปราชการ</dt>
+          <dd class="col-sm-8">
+            <% if (item.travel_request_id) { %>
+              <a href="/vehicle-approval/travel/<%= item.travel_request_id %>"><%= item.travel_request_no %></a>
+            <% } else { %>
+              <span class="badge bg-secondary">คำขอใช้รถยนต์ตรง</span>
+            <% } %>
+          </dd>
+          <dt class="col-sm-4">สถานะคำขอไปราชการ</dt>
+          <dd class="col-sm-8">
+            <% if (item.travel_request_id) { %>
+              <span class="badge bg-<%= item.travel_status === 'approved' ? 'success' : item.travel_status === 'submitted' ? 'warning text-dark' : 'secondary' %>"><%= item.travel_status %></span>
+            <% } else { %>
+              <span class="text-muted">-</span>
+            <% } %>
+          </dd>
           <dt class="col-sm-4">ผู้ขอใช้รถ</dt><dd class="col-sm-8"><%= item.requester_name %> (<%= item.requester_position || '-' %>)</dd>
           <dt class="col-sm-4">ปลายทาง</dt><dd class="col-sm-8"><%= item.destination_text %></dd>
           <dt class="col-sm-4">ภารกิจ</dt><dd class="col-sm-8"><%= item.mission_text %></dd>
@@ -73,11 +87,8 @@
               <label class="form-label">หมายเหตุการมอบหมาย</label>
               <textarea class="form-control" name="assignment_note" rows="3"><%= assignmentSelection.assignment_note || '' %></textarea>
             </div>
-            <button type="submit" class="btn btn-success w-100" <%= item.travel_status !== 'approved' ? 'disabled' : '' %>>อนุมัติคำขอใช้รถพร้อมมอบหมาย</button>
+            <button type="submit" class="btn btn-success w-100" <%= item.travel_request_id && item.travel_status !== 'approved' ? 'disabled' : '' %>>อนุมัติคำขอใช้รถพร้อมมอบหมาย</button>
           </form>
-          <% if (item.travel_status !== 'approved') { %>
-            <p class="small text-danger mb-3">ต้องอนุมัติคำขอไปราชการก่อน</p>
-          <% } %>
         <% } %>
 
         <% if (item.status === 'submitted' || item.status === 'approved') { %>

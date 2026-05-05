@@ -1,6 +1,7 @@
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
 const vehicleRequestModel = require('../models/vehicleRequestModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
+const { previewRunningNumber } = require('../services/runningNumberService');
 
 function toDateInput(value) {
   if (!value) {
@@ -81,6 +82,29 @@ function appendCurrentTravelOption(travelOptions, item) {
   ];
 }
 
+function hasDirectVehicleAccess(user) {
+  return Boolean(user && ['admin', 'pbt'].includes(user.mClass));
+}
+
+function isDirectVehicleRequest(item = {}) {
+  return !item.travel_request_id;
+}
+
+function getDefaultVehicleRequestItem(user = {}, overrides = {}) {
+  return {
+    vehicle_request_no: overrides.vehicle_request_no || '',
+    request_date: overrides.request_date || new Date().toISOString().slice(0, 10),
+    learn_to: overrides.learn_to || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ',
+    travel_request_id: '',
+    requester_name: overrides.requester_name || user.fullname || '',
+    requester_position: overrides.requester_position || user.position || '',
+    destination_text: overrides.destination_text || '',
+    mission_text: overrides.mission_text || '',
+    passenger_count: overrides.passenger_count || 1,
+    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10)
+  };
+}
+
 async function validateTravelRequestSelection(travelRequestId, currentVehicleRequestId = null) {
   if (!travelRequestId) {
     return 'กรุณาเลือกคำขอไปราชการ';
@@ -105,6 +129,10 @@ async function validateTravelRequestSelection(travelRequestId, currentVehicleReq
   return null;
 }
 
+async function resolveVehicleRequestNoForDirect() {
+  return previewRunningNumber('vehicle_requests');
+}
+
 async function resolveVehicleRequestNoByTravelRequestId(travelRequestId, fallback = '') {
   if (!travelRequestId) {
     return fallback;
@@ -123,9 +151,9 @@ function mapBody(req) {
   const operationDate = req.body.operation_date || toDateInput(req.body.trip_start_at);
   const dateRange = buildSingleDayRange(operationDate);
   return {
-    travel_request_id: req.body.travel_request_id,
+    travel_request_id: req.body.travel_request_id || null,
     vehicle_request_no: req.body.vehicle_request_no,
-    request_date: new Date().toISOString().slice(0, 10),
+    request_date: req.body.request_date || new Date().toISOString().slice(0, 10),
     learn_to: req.body.learn_to,
     requester_member_id: user.id || null,
     requester_name: req.body.requester_name,
@@ -152,6 +180,35 @@ async function renderForm(res, overrides = {}) {
     travelOptions,
     error: overrides.error || null,
     warning: overrides.warning || null,
+    isDirectMode: false,
+    submitLabel: overrides.submitLabel || 'บันทึก'
+  });
+}
+
+async function renderDirectForm(res, overrides = {}) {
+  const user = overrides.user || res.locals.user || {};
+  const vehicleRequestNo = overrides.vehicle_request_no || await resolveVehicleRequestNoForDirect();
+  const item = overrides.item || {
+    vehicle_request_no: vehicleRequestNo,
+    request_date: overrides.request_date || new Date().toISOString().slice(0, 10),
+    learn_to: overrides.learn_to || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ',
+    travel_request_id: '',
+    requester_name: overrides.requester_name || user.fullname || '',
+    requester_position: overrides.requester_position || user.position || '',
+    destination_text: overrides.destination_text || '',
+    mission_text: overrides.mission_text || '',
+    passenger_count: overrides.passenger_count || 1,
+    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10)
+  };
+
+  res.render('vehicle-request/form', {
+    title: overrides.title || 'คำขอใช้รถตรง',
+    formAction: overrides.formAction || '/vehicle-request/create-direct',
+    item,
+    travelOptions: [],
+    error: overrides.error || null,
+    warning: overrides.warning || null,
+    isDirectMode: true,
     submitLabel: overrides.submitLabel || 'บันทึก'
   });
 }
@@ -295,6 +352,23 @@ exports.createForm = async (req, res) => {
   }
 };
 
+exports.createDirectForm = async (req, res) => {
+  try {
+    if (!hasDirectVehicleAccess(req.session?.user)) {
+      return res.status(403).send('ไม่มีสิทธิ์สร้างคำขอใช้รถยนต์ตรง');
+    }
+
+    return renderDirectForm(res, {
+      user: req.session?.user,
+      formAction: '/vehicle-request/create-direct',
+      submitLabel: 'บันทึกคำขอใช้รถยนต์'
+    });
+  } catch (error) {
+    console.error('Error rendering direct vehicle request form:', error);
+    res.status(500).send('ไม่สามารถโหลดฟอร์มคำขอใช้รถยนต์ตรงได้');
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     const validationError = await validateTravelRequestSelection(req.body.travel_request_id);
@@ -326,6 +400,70 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.createDirect = async (req, res) => {
+  try {
+    if (!hasDirectVehicleAccess(req.session?.user)) {
+      return res.status(403).send('ไม่มีสิทธิ์สร้างคำขอใช้รถยนต์ตรง');
+    }
+
+    const vehicleRequestNo = req.body.vehicle_request_no || await resolveVehicleRequestNoForDirect();
+    const id = await vehicleRequestModel.create({
+      ...mapBody(req),
+      travel_request_id: null,
+      vehicle_request_no: vehicleRequestNo
+    });
+    res.redirect(`/vehicle-request/${id}`);
+  } catch (error) {
+    console.error('Error creating direct vehicle request:', error);
+    return renderDirectForm(res, {
+      user: req.session?.user,
+      formAction: '/vehicle-request/create-direct',
+      item: {
+        ...req.body,
+        travel_request_id: '',
+        vehicle_request_no: req.body.vehicle_request_no || await resolveVehicleRequestNoForDirect()
+      },
+      error: error.message || 'บันทึกคำขอใช้รถยนต์ตรงไม่สำเร็จ'
+    });
+  }
+};
+
+exports.updateDirect = async (req, res) => {
+  try {
+    if (!hasDirectVehicleAccess(req.session?.user)) {
+      return res.status(403).send('ไม่มีสิทธิ์แก้ไขคำขอใช้รถยนต์ตรง');
+    }
+
+    const current = await vehicleRequestModel.getById(req.params.id);
+    if (!current) {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+
+    const vehicleRequestNo = req.body.vehicle_request_no || current.vehicle_request_no || await resolveVehicleRequestNoForDirect();
+    await vehicleRequestModel.update(req.params.id, {
+      ...mapBody(req),
+      travel_request_id: null,
+      vehicle_request_no: vehicleRequestNo,
+      status: current.status
+    });
+    res.redirect(`/vehicle-request/${req.params.id}`);
+  } catch (error) {
+    console.error('Error updating direct vehicle request:', error);
+    const current = await vehicleRequestModel.getById(req.params.id).catch(() => null);
+    return renderDirectForm(res, {
+      user: req.session?.user,
+      title: 'แก้ไขคำขอใช้รถยนต์ตรง',
+      formAction: `/vehicle-request/${req.params.id}/edit-direct`,
+      item: {
+        ...req.body,
+        travel_request_id: '',
+        vehicle_request_no: req.body.vehicle_request_no || current?.vehicle_request_no || await resolveVehicleRequestNoForDirect()
+      },
+      error: error.message || 'บันทึกการแก้ไขคำขอใช้รถยนต์ตรงไม่สำเร็จ'
+    });
+  }
+};
+
 exports.viewOne = async (req, res) => {
   try {
     const item = await vehicleRequestModel.getDetailById(req.params.id);
@@ -347,6 +485,19 @@ exports.editForm = async (req, res) => {
     const item = await vehicleRequestModel.getDetailById(req.params.id);
     if (!item) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+    if (!item.travel_request_id) {
+      if (!hasDirectVehicleAccess(req.session?.user)) {
+        return res.status(403).send('ไม่มีสิทธิ์แก้ไขคำขอใช้รถยนต์ตรง');
+      }
+      item.operation_date = toDateInput(item.trip_start_at);
+      return renderDirectForm(res, {
+        user: req.session?.user,
+        title: 'แก้ไขคำขอใช้รถยนต์ตรง',
+        formAction: `/vehicle-request/${item.id}/edit-direct`,
+        item,
+        submitLabel: 'บันทึกการแก้ไข'
+      });
     }
     item.operation_date = toDateInput(item.trip_start_at);
     let travelOptions = await officialTravelRequestModel.listEligibleForVehicleRequest();

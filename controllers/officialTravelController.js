@@ -272,8 +272,12 @@ function canEditTravelRequest(item) {
   return item && item.status !== 'cancelled';
 }
 
-function canCancelTravelRequest(item) {
+function canCancelTravelRequest(item, user) {
   if (!item || !['draft', 'submitted', 'approved'].includes(item.status)) {
+    return false;
+  }
+
+  if (item.status === 'approved' && user?.mClass !== 'admin') {
     return false;
   }
 
@@ -309,6 +313,10 @@ function buildCancelErrorMessage(error) {
     return 'สถานะปัจจุบันของคำขอไปราชการไม่สามารถยกเลิกได้';
   }
 
+  if (error.code === 'TRAVEL_CANCEL_FORBIDDEN') {
+    return 'เฉพาะ admin เท่านั้นที่สามารถยกเลิกคำขอไปราชการที่อนุมัติแล้วได้';
+  }
+
   return 'ไม่สามารถยกเลิกคำขอไปราชการได้';
 }
 
@@ -331,7 +339,7 @@ async function renderDetail(res, item, overrides = {}) {
     error: overrides.error || null,
     notice: overrides.notice || null,
     canEdit: canEditTravelRequest(item),
-    canCancel: canCancelTravelRequest(item),
+    canCancel: canCancelTravelRequest(item, res.locals.user),
     canDelete: canDeleteTravelRequest(item, res.locals.user)
   });
 }
@@ -715,6 +723,18 @@ exports.exportTravelRequestPdf = async (req, res) => {
 
 exports.cancel = async (req, res) => {
   try {
+    const current = await officialTravelRequestModel.getDetailById(req.params.id);
+    if (!current) {
+      return res.status(404).send('ไม่พบคำขอไปราชการ');
+    }
+
+    const user = req.session?.user;
+    if (current.status === 'approved' && user?.mClass !== 'admin') {
+      return renderDetail(res.status(403), current, {
+        error: 'เฉพาะ admin เท่านั้นที่สามารถยกเลิกคำขอไปราชการที่อนุมัติแล้วได้'
+      });
+    }
+
     await officialTravelRequestModel.cancel(req.params.id, req.session?.user);
     await gitgumTravelSyncService.removeTravel(req.params.id);
 

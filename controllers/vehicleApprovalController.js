@@ -228,7 +228,7 @@ exports.approveVehicle = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
-    if (item.travel_status !== 'approved') {
+    if (item.travel_request_id && item.travel_status !== 'approved') {
       return res.status(400).send('ต้องอนุมัติคำขอไปราชการก่อนจึงจะอนุมัติคำขอใช้รถได้');
     }
 
@@ -273,7 +273,7 @@ exports.approveVehicle = async (req, res) => {
     });
 
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
-    if (updatedItem) {
+    if (updatedItem && updatedItem.travel_request_id) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
     }
@@ -288,7 +288,7 @@ exports.rejectVehicle = async (req, res) => {
   try {
     await vehicleRequestModel.reject(req.params.id, req.session?.user, req.body.approval_comment);
     const item = await vehicleRequestModel.getDetailById(req.params.id);
-    if (item) {
+    if (item && item.travel_request_id) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(item.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
     }
@@ -355,7 +355,7 @@ exports.assignVehicle = async (req, res) => {
     });
 
     const updatedItem = await vehicleRequestModel.getDetailById(req.params.id);
-    if (updatedItem) {
+    if (updatedItem && updatedItem.travel_request_id) {
       const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
       await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
     }

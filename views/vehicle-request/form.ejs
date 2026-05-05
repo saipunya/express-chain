@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
   <div>
     <h3 class="mb-1"><%= title %></h3>
-    <p class="text-muted mb-0">บันทึกใบขออนุญาตใช้รถส่วนกลาง</p>
+    <p class="text-muted mb-0"><%= isDirectMode ? 'บันทึกคำขอใช้รถยนต์ตรง' : 'บันทึกใบขออนุญาตใช้รถส่วนกลาง' %></p>
   </div>
 </div>
 
@@ -16,7 +16,13 @@
   <div class="alert alert-warning"><%= warning %></div>
 <% } %>
 
-<% if (!travelOptions.length) { %>
+<% if (isDirectMode) { %>
+  <div class="alert alert-info">
+    ฟอร์มนี้สำหรับคำขอใช้รถยนต์ตรง และสามารถใช้งานได้เฉพาะ `admin` หรือ `pbt`
+  </div>
+<% } %>
+
+<% if (!isDirectMode && !travelOptions.length) { %>
   <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>ยังไม่มีคำขอไปราชการที่พร้อมสร้างคำขอใช้รถราชการ</div>
     <a href="/official-travel/create" class="btn btn-sm btn-outline-primary">สร้างคำขอไปราชการ</a>
@@ -25,11 +31,14 @@
 
 <form action="<%= formAction %>" method="POST" class="card shadow-sm border-0">
   <div class="card-body">
+    <% if (isDirectMode) { %>
+      <input type="hidden" name="request_mode" value="direct">
+    <% } %>
     <div class="row g-3">
       <div class="col-md-3">
         <label class="form-label">เลขที่คำขอใช้รถ</label>
         <input type="text" class="form-control" name="vehicle_request_no" id="vehicle-request-no-input" value="<%= item.vehicle_request_no || '' %>" readonly>
-        <div class="form-text">ใช้เลขเดียวกับคำขอไปราชการ</div>
+        <div class="form-text"><%= isDirectMode ? 'ระบบสร้างเลขที่คำขอรถยนต์ตรงให้' : 'ใช้เลขเดียวกับคำขอไปราชการ' %></div>
       </div>
       <div class="col-md-3">
         <label class="form-label">วันที่คำขอ</label>
@@ -39,6 +48,7 @@
         <label class="form-label">เรียน</label>
         <input type="text" class="form-control" name="learn_to" value="<%= item.learn_to || '' %>">
       </div>
+      <% if (!isDirectMode) { %>
       <div class="col-md-12">
         <label class="form-label">อ้างอิงคำขอไปราชการ</label>
         <select class="form-select" name="travel_request_id" id="travel-request-select" required>
@@ -79,6 +89,7 @@
           </dl>
         </div>
       </div>
+      <% } %>
       <div class="col-md-4">
         <label class="form-label">ผู้ขอใช้รถ</label>
         <input type="text" class="form-control" name="requester_name" id="requester-name-input" value="<%= item.requester_name || '' %>" required>
@@ -106,14 +117,15 @@
     </div>
   </div>
   <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-    <button type="submit" class="btn btn-success" <%= !travelOptions.length ? 'disabled' : '' %>><%= submitLabel %></button>
+    <button type="submit" class="btn btn-success" <%= !isDirectMode && !travelOptions.length ? 'disabled' : '' %>><%= submitLabel %></button>
   </div>
 </form>
 
 <script>
   (() => {
     const travelSelect = document.getElementById('travel-request-select');
-    if (!travelSelect) {
+    const isDirectMode = <%= isDirectMode ? 'true' : 'false' %>;
+    if (isDirectMode || !travelSelect) {
       return;
     }
 

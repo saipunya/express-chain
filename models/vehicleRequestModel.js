@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 function mapPayload(payload) {
   return {
-    travel_request_id: payload.travel_request_id,
+    travel_request_id: payload.travel_request_id || null,
     vehicle_request_no: payload.vehicle_request_no,
     request_date: payload.request_date,
     learn_to: payload.learn_to || null,
@@ -34,7 +34,7 @@ async function listAll() {
     SELECT vr.*, tr.request_no AS travel_request_no, tr.subject AS travel_subject,
            va.plate_no_snapshot, va.driver_name_snapshot, vtl.log_status
     FROM vehicle_requests vr
-    INNER JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
+    LEFT JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
     LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
     LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
     ORDER BY vr.request_date DESC, vr.id DESC
@@ -70,7 +70,7 @@ async function listReport(filters = {}) {
             vtl.afternoon_return_at, vtl.afternoon_odometer,
             vtl.distance_km, vtl.log_status
      FROM vehicle_requests vr
-     INNER JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
+     LEFT JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
      LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
      LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
      ${whereClause}
@@ -102,7 +102,7 @@ async function getDetailById(id) {
            vtl.morning_departure_at, vtl.morning_odometer, vtl.afternoon_return_at, vtl.afternoon_odometer,
            vtl.distance_km, vtl.log_status
     FROM vehicle_requests vr
-    INNER JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
+    LEFT JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
     LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
     LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
     WHERE vr.id = ?
@@ -201,7 +201,7 @@ async function listPendingApproval() {
            tr.status AS travel_status, tr.requester_group AS travel_requester_group,
            va.plate_no_snapshot, va.driver_name_snapshot
     FROM vehicle_requests vr
-    INNER JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
+    LEFT JOIN official_travel_requests tr ON tr.id = vr.travel_request_id
     LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
     WHERE vr.status IN ('submitted', 'approved')
     ORDER BY vr.submitted_at ASC, vr.id ASC

@@ -96,12 +96,7 @@
                 <td><%= item.git_place || '-' %></td>
                 <td><%= item.git_goto || '-' %></td>
                 <td><%= item.git_respon || '-' %></td>
-                <td>
-                  <small class="text-muted">
-                    <%= item.git_saveby %>
-                    <br><%= new Date(item.git_savedate).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit' }) %>
-                  </small>
-                </td>
+               
                 <% if(user){ %>
                 <td class="text-center text-nowrap">
                   <div class="btn-group btn-group-sm" role="group">

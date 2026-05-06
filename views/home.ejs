@@ -5146,7 +5146,7 @@ const _memberSummaryTotals = {
               <i class="bi bi-car-front-fill me-2"></i> ข้อมูลการใช้รถยนต์ราชการล่าสุด
             </h2>
             <div class="text-muted small">
-              แสดงรายการอนุมัติที่มีการขอใช้รถยนต์จากคำขอไปราชการ
+              แสดงรายการอนุมัติที่มีการขอใช้รถยนต์จากคำขอไปราชการเท่านั้น
             </div>
           </div>
           <div class="d-flex flex-column flex-sm-row align-items-center gap-2">
@@ -5176,16 +5176,17 @@ const _memberSummaryTotals = {
                   </thead>
                   <tbody>
                     <% vehicleRequests.forEach(function(vr) { %>
+                      <% const vehicleUseStart = vr.trip_start_at || vr.start_at; %>
                       <tr class="js-open-usecar" style="cursor:pointer"
-                        data-date="<%= vr.start_at ? (new Date(vr.start_at)).toLocaleDateString('th-TH') : '-' %>"
-                        data-time="<%= vr.start_at ? (new Date(vr.start_at)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %>"
+                        data-date="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %>"
+                        data-time="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %>"
                         data-no-car="<%= vr.plate_no_snapshot || '-' %>"
                         data-place="<%= vr.destination_text || '-' %>"
                         data-act="<%= vr.purpose_text || '-' %>"
                         data-respon="<%= vr.requester_name || '-' %>"
                       >
-                        <td class="text-center"><%= vr.start_at ? (new Date(vr.start_at)).toLocaleDateString('th-TH') : '-' %></td>
-                        <td class="text-center"><%= vr.start_at ? (new Date(vr.start_at)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                        <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %></td>
+                        <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
                         <td><%= vr.plate_no_snapshot || '-' %></td>
                         <td><%= vr.destination_text || '-' %></td>
                         <td><%= vr.purpose_text || '-' %></td>

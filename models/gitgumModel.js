@@ -4,8 +4,17 @@ function buildWorkflowTravelKey(travelRequestId) {
   return `workflow_travel:${travelRequestId}`;
 }
 
+function buildMeetingRoomKey(meetingId) {
+  return `meetingroom:${meetingId}`;
+}
+
 function parseWorkflowTravelId(saveBy) {
   const match = String(saveBy || '').match(/^workflow_travel:(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
+function parseMeetingRoomId(saveBy) {
+  const match = String(saveBy || '').match(/^meetingroom:(\d+)$/);
   return match ? Number(match[1]) : null;
 }
 
@@ -68,6 +77,14 @@ exports.findByWorkflowTravelId = async (travelRequestId) => {
   return rows[0] || null;
 };
 
+exports.findByMeetingRoomId = async (meetingId) => {
+  const [rows] = await db.query(
+    'SELECT * FROM tbl_gitgum WHERE git_saveby = ? ORDER BY git_id DESC LIMIT 1',
+    [buildMeetingRoomKey(meetingId)]
+  );
+  return rows[0] || null;
+};
+
 // อัปเดตข้อมูล
 exports.update = async (id, data) => {
   const sql = `UPDATE tbl_gitgum SET
@@ -85,6 +102,10 @@ exports.delete = async (id) => {
 
 exports.deleteByWorkflowTravelId = async (travelRequestId) => {
   await db.query('DELETE FROM tbl_gitgum WHERE git_saveby = ?', [buildWorkflowTravelKey(travelRequestId)]);
+};
+
+exports.deleteByMeetingRoomId = async (meetingId) => {
+  await db.query('DELETE FROM tbl_gitgum WHERE git_saveby = ?', [buildMeetingRoomKey(meetingId)]);
 };
 
 // หาเฉพาะกิจกรรมของวันนี้
@@ -149,4 +170,6 @@ exports.findRecent = async (limit = 5) => {
 };
 
 exports.buildWorkflowTravelKey = buildWorkflowTravelKey;
+exports.buildMeetingRoomKey = buildMeetingRoomKey;
 exports.parseWorkflowTravelId = parseWorkflowTravelId;
+exports.parseMeetingRoomId = parseMeetingRoomId;

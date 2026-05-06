@@ -1,4 +1,5 @@
 const meetingModel = require('../models/meetingRoomModel');
+const meetingRoomGitgumSyncService = require('../services/meetingRoomGitgumSyncService');
 
 // List all bookings
 exports.list = async (req, res) => {
@@ -20,7 +21,7 @@ exports.create = async (req, res) => {
   }
   try {
     const { mee_date, mee_time, mee_subject, mee_room, mee_respon, mee_saveby, mee_savedate } = req.body;
-    await meetingModel.create({
+    const meetingId = await meetingModel.create({
       mee_date,
       mee_time,
       mee_subject,
@@ -28,6 +29,15 @@ exports.create = async (req, res) => {
       mee_respon,
       mee_saveby,
       mee_savedate
+    });
+    const meeting = await meetingModel.getById(meetingId);
+    await meetingRoomGitgumSyncService.syncMeetingRoom(meeting || {
+      mee_id: meetingId,
+      mee_date,
+      mee_time,
+      mee_subject,
+      mee_room,
+      mee_respon
     });
     res.redirect('/meetingroom');
   } catch (err) {
@@ -60,6 +70,8 @@ exports.edit = async (req, res) => {
       mee_saveby,
       mee_savedate
     });
+    const meeting = await meetingModel.getById(id);
+    await meetingRoomGitgumSyncService.syncMeetingRoom(meeting);
     res.redirect('/meetingroom');
   } catch (err) {
     console.error('Error updating meeting:', err);
@@ -71,7 +83,10 @@ exports.edit = async (req, res) => {
 exports.remove = async (req, res) => {
   const { id } = req.params;
   try {
-    await meetingModel.remove(id);
+    const affectedRows = await meetingModel.remove(id);
+    if (affectedRows > 0) {
+      await meetingRoomGitgumSyncService.removeMeetingRoom(id);
+    }
     res.redirect('/meetingroom');
   } catch (err) {
     console.error('Error deleting meeting:', err);

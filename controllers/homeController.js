@@ -32,6 +32,15 @@ const Finance = require('../models/financeModel');
 
 const activeCoopModel = require('../models/activeCoopModel');
 
+const UPCOMING_VEHICLE_REQUEST_STATUSES = new Set([
+  'approved',
+  'assigned',
+  'in_progress',
+  'อนุมัติ',
+  'มอบหมายแล้ว',
+  'กำลังเดินทาง'
+]);
+
 function getBangkokDateKey(value = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -62,17 +71,23 @@ const homeController = {
       const ruleFiles = await ruleModel.getLastUploads();
       const rabiabFiles = await rabiabModel.getLastUploads();
       const businessFiles = await businessModel.getLastUploads(10);
-      // ดึงเฉพาะรายการไปราชการที่ขอใช้รถยนต์ราชการและมี vehicle_request อนุมัติแล้ว
+      // ดึงรายการไปราชการที่มีคำขอใช้รถยนต์และมีกำหนดใช้รถตั้งแต่วันนี้เป็นต้นไป
+      // ไม่รวมคำขอใช้รถยนต์ตรง (create-direct) ซึ่งไม่มี official travel request ผูกอยู่
       const vehicleRequestsRaw = await officialTravelRequestModel.listReport({});
       const todayKey = getBangkokDateKey();
-      // เงื่อนไข: ต้องมี vehicle_request_id, สถานะอนุมัติ และกำหนดวันปฏิบัติงานตั้งแต่วันนี้เป็นต้นไป
+      // หลังมอบหมายรถแล้วสถานะจะเป็น assigned/in_progress จึงต้องนับเป็นรายการใช้งานด้วย
       const vehicleRequests = (vehicleRequestsRaw || [])
-        .filter(vr => vr.vehicle_request_id && (vr.vehicle_request_status === 'approved' || vr.vehicle_request_status === 'อนุมัติ'))
+        .filter(vr => vr.id && vr.vehicle_request_id && UPCOMING_VEHICLE_REQUEST_STATUSES.has(String(vr.vehicle_request_status || '').trim()))
         .filter(vr => {
-          const startKey = getBangkokDateKey(vr.start_at);
+          const startKey = getBangkokDateKey(vr.trip_start_at || vr.start_at);
           return startKey && todayKey && startKey >= todayKey;
+        })
+        .sort((a, b) => {
+          const aTime = new Date(a.trip_start_at || a.start_at || 0).getTime();
+          const bTime = new Date(b.trip_start_at || b.start_at || 0).getTime();
+          return aTime - bTime;
         });
-      const vehicleRequestsShow = vehicleRequests.slice(0, 5); // แสดง 5 รายการล่าสุด
+      const vehicleRequestsShow = vehicleRequests.slice(0, 5); // แสดง 5 รายการที่ใกล้ถึงก่อน
       const lastProjects = await Project.getLast(10);
       const lastRq2 = await Rq2.getLast(10);
       const lastCommands = await Command.getLast(10);

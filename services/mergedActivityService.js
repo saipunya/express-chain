@@ -40,7 +40,9 @@ function toYMD(value) {
 
 function buildGitgumEvent(row) {
   const workflowTravelId = gitgumModel.parseWorkflowTravelId(row.git_saveby);
+  const meetingRoomId = gitgumModel.parseMeetingRoomId(row.git_saveby);
   const isWorkflowTravel = Boolean(workflowTravelId);
+  const isMeetingRoom = Boolean(meetingRoomId);
   const dateStr = toYMD(row.git_date);
   const timeStr = toHHmm(row.git_time);
   const start = dateStr ? (timeStr ? `${dateStr}T${timeStr}` : dateStr) : undefined;
@@ -57,8 +59,8 @@ function buildGitgumEvent(row) {
     start,
     allDay: !timeStr,
     extendedProps: {
-      sourceType: isWorkflowTravel ? 'travel_request' : 'gitgum',
-      sourceLabel: isWorkflowTravel ? 'คำขอไปราชการ' : 'กิจกรรมสำนักงาน',
+      sourceType: isWorkflowTravel ? 'travel_request' : (isMeetingRoom ? 'meetingroom' : 'gitgum'),
+      sourceLabel: isWorkflowTravel ? 'คำขอไปราชการ' : (isMeetingRoom ? 'จองห้องประชุม' : 'กิจกรรมสำนักงาน'),
       timeLabel: row.git_time || null,
       requestNumber,
       place: row.git_place,
@@ -66,7 +68,7 @@ function buildGitgumEvent(row) {
       goto: row.git_goto,
       group: row.git_group,
       maihed: row.git_maihed,
-      detailUrl: isWorkflowTravel ? `/official-travel/${workflowTravelId}` : `/gitgum/view/${row.git_id}`
+      detailUrl: isWorkflowTravel ? `/official-travel/${workflowTravelId}` : (isMeetingRoom ? '/meetingroom' : `/gitgum/view/${row.git_id}`)
     }
   };
 }

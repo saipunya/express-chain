@@ -21,7 +21,8 @@ function combineDateAndTime(dateValue, timeValue) {
 async function listQueueForUser(user) {
   const [rows] = await db.query(
     `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
-            vr.requester_name, vr.status, va.plate_no_snapshot, va.driver_name_snapshot,
+            vr.requester_name, vr.status, va.vehicle_id, va.driver_id, va.assignment_note,
+            va.plate_no_snapshot, va.driver_name_snapshot,
             vtl.log_status, vtl.morning_departure_at, vtl.afternoon_return_at
      FROM vehicle_requests vr
      INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id

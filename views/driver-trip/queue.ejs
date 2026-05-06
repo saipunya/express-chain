@@ -89,6 +89,18 @@
   <% if (warning) { %>
     <div class="alert alert-warning"><%= warning %></div>
   <% } %>
+  <% if (success) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <%= success %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <%= error %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+    </div>
+  <% } %>
 
   <% function getQueueStatusLabel(item) {
        if (!item.log_status) return 'เข้าใหม่';
@@ -140,7 +152,19 @@
                   </span>
                 </td>
                 <td class="text-end">
-                  <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
+                  <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                    <% if (canManageAssignments) { %>
+                      <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#assignmentModal-<%= item.vehicle_request_id %>">
+                        <i class="bi bi-pencil-square me-1"></i>แก้ไข
+                      </button>
+                      <form action="/driver-trip/<%= item.vehicle_request_id %>/cancel" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันยกเลิกงานนี้? รายการที่เกี่ยวข้องในปฏิทินงานจะถูกลบออกด้วย');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                          <i class="bi bi-x-circle me-1"></i>ยกเลิก
+                        </button>
+                      </form>
+                    <% } %>
+                    <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
+                  </div>
                 </td>
               </tr>
             <% }) %>
@@ -183,7 +207,19 @@
                   </div>
                 </div>
 
-                <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary w-100">เปิดงาน</a>
+                <div class="d-grid gap-2">
+                  <% if (canManageAssignments) { %>
+                    <button type="button" class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#assignmentModal-<%= item.vehicle_request_id %>">
+                      <i class="bi bi-pencil-square me-1"></i>แก้ไขรถ/คนขับ
+                    </button>
+                    <form action="/driver-trip/<%= item.vehicle_request_id %>/cancel" method="POST" onsubmit="return confirm('ยืนยันยกเลิกงานนี้? รายการที่เกี่ยวข้องในปฏิทินงานจะถูกลบออกด้วย');">
+                      <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-x-circle me-1"></i>ยกเลิกงาน
+                      </button>
+                    </form>
+                  <% } %>
+                  <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary w-100">เปิดงาน</a>
+                </div>
               </div>
             </div>
           <% }) %>
@@ -191,6 +227,58 @@
       </div>
     </div>
   <% }) %>
+
+  <% if (canManageAssignments) { %>
+    <% (items || []).forEach((item) => { %>
+      <div class="modal fade" id="assignmentModal-<%= item.vehicle_request_id %>" tabindex="-1" aria-labelledby="assignmentModalLabel-<%= item.vehicle_request_id %>" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <form action="/driver-trip/<%= item.vehicle_request_id %>/assignment" method="POST">
+              <div class="modal-header">
+                <div>
+                  <h5 class="modal-title" id="assignmentModalLabel-<%= item.vehicle_request_id %>">แก้ไขรถและคนขับ</h5>
+                  <div class="small text-muted"><%= item.vehicle_request_no %> · <%= item.destination_text %></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label" for="vehicle-<%= item.vehicle_request_id %>">รถยนต์</label>
+                  <select id="vehicle-<%= item.vehicle_request_id %>" class="form-select" name="vehicle_id" required>
+                    <option value="">เลือกรถ</option>
+                    <% (vehicles || []).forEach((vehicle) => { %>
+                      <option value="<%= vehicle.id %>" <%= Number(item.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>>
+                        <%= vehicle.plate_no %> - <%= vehicle.vehicle_name || 'รถราชการ' %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="driver-<%= item.vehicle_request_id %>">คนขับ</label>
+                  <select id="driver-<%= item.vehicle_request_id %>" class="form-select" name="driver_id" required>
+                    <option value="">เลือกคนขับ</option>
+                    <% (drivers || []).forEach((driver) => { %>
+                      <option value="<%= driver.id %>" <%= Number(item.driver_id) === Number(driver.id) ? 'selected' : '' %>>
+                        <%= driver.driver_name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label" for="assignment-note-<%= item.vehicle_request_id %>">หมายเหตุ</label>
+                  <textarea id="assignment-note-<%= item.vehicle_request_id %>" class="form-control" name="assignment_note" rows="3"><%= item.assignment_note || '' %></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary" <%= !(vehicles || []).length || !(drivers || []).length ? 'disabled' : '' %>>บันทึก</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
 </div>
 
 <%- include('../partials/footer') %>

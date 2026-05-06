@@ -351,8 +351,55 @@ async function reject(id, user, approvalComment = null) {
   );
 }
 
+async function cancelDriverQueueItem(id, user) {
+  const actor = user?.fullname || user?.username || 'system';
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[item]] = await connection.query(
+      `SELECT id, travel_request_id, status
+       FROM vehicle_requests
+       WHERE id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!item) {
+      const error = new Error('NOT_FOUND');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    if (!['assigned', 'in_progress'].includes(item.status)) {
+      const error = new Error('QUEUE_CANCEL_NOT_ALLOWED');
+      error.code = 'QUEUE_CANCEL_NOT_ALLOWED';
+      throw error;
+    }
+
+    await connection.query(
+      `UPDATE vehicle_requests
+       SET status = 'cancelled',
+           cancelled_at = NOW(),
+           updated_by = ?
+       WHERE id = ?`,
+      [actor, id]
+    );
+
+    await connection.commit();
+    return item;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   approve,
+  cancelDriverQueueItem,
   create,
   createWithConnection,
   getById,

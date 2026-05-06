@@ -94,6 +94,10 @@ function sanitizeText(value, fallback = '-') {
   return text || fallback;
 }
 
+function normalizeInlineText(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
 function sanitizeTime(value) {
   return String(value ?? '').trim();
 }
@@ -476,40 +480,6 @@ function drawPeriodAndTransport(doc, state, formData) {
   state.cursorY += 2;
 }
 
-function drawEstimatedCostSection(doc, state, formData) {
-  const hasEstimatedCosts =
-    formData.transport_type === 'official_vehicle' ||
-    Number(formData.estimatedAllowance) > 0 ||
-    Number(formData.estimatedLodging) > 0 ||
-    Number(formData.estimatedFuel) > 0;
-
-  if (!hasEstimatedCosts) {
-    return;
-  }
-
-  ensurePageSpace(doc, state, 88);
-  setBodyFont(doc, true, FONT_SIZE.section);
-  doc.text('ประมาณการค่าใช้จ่าย', PAGE_MARGIN.left, state.cursorY, { width: state.contentWidth });
-  state.cursorY += 18;
-
-  const rows = [
-    ['ค่าเบี้ยเลี้ยง (บาท)', formData.estimatedAllowance],
-    ['ค่าที่พัก (บาท)', formData.estimatedLodging],
-    ['ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)', formData.estimatedFuel]
-  ];
-
-  rows.forEach(([label, value]) => {
-    drawFieldRow(doc, state, {
-      label,
-      value: value != null && String(value).trim() !== '' ? String(value) : '-',
-      labelWidth: 160,
-      minHeight: 26
-    });
-  });
-
-  state.cursorY += 2;
-}
-
 function renderHeader(doc, formData, state) {
   setBodyFont(doc, true, FONT_SIZE.title);
   doc.text(formData.documentTitle, PAGE_MARGIN.left, state.cursorY, {
@@ -564,131 +534,59 @@ function renderHeader(doc, formData, state) {
 }
 
 function renderBody(doc, formData, state) {
-  // renderBody: intro/middle/closing handling follows below
-  // FIX START: Split body into three blocks (intro, middle, closing).
-  // - Intro: fixed at the 'เรียน' value column (preserve original Y)
-  // - Middle: expanded width to use more horizontal space, first-line indented
-  // - Closing: fixed at the original closing Y position so signature/approval not moved
-
   const labelWidthForLearn = 52; // matches header 'เรียน' labelWidth
   const valueLeftX = PAGE_MARGIN.left + labelWidthForLearn + 4;
-
-
-
-  // Build parts
-const requesterPart = `ข้าพเจ้า ${sanitizeText(formData.requesterName, '')} ตำแหน่ง ${sanitizeText(formData.requesterPosition, '')} สังกัด ${sanitizeText(formData.requesterDepartment, '')}`;
-
-const companions = Array.isArray(formData.companions) ? formData.companions : [];
-const companionItems = companions
-  .map((c) => {
-    const name = sanitizeText(c?.name || '', '');
-    const pos = sanitizeText(c?.position || '', '');
-    return [name, pos].filter(Boolean).join(' ตำแหน่ง ');
-  })
-  .filter(Boolean);
-
-const companionsPart = companionItems.length
-  ? `พร้อมด้วย ${companionItems.join(', ')}`
-  : '';
-
-const timePart = formatTimeRange(formData.startTime, formData.endTime);
-const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน เวลา ${timePart} พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
-
-
-
-  const closingPart = sanitizeText(formData.closingText, '');
-
-  // Prepare text with Thai break hints
-const introTextRaw = requesterPart;
-const middleTextRaw = [companionsPart, travelPart].filter(Boolean).join(' ');
-const fullMainRaw = [introTextRaw, middleTextRaw].filter(Boolean).join(' ');
   const lineGap = 2;
   const paragraphGap = 8;
+  const mainLeftX = PAGE_MARGIN.left;
+  const mainWidth = state.contentWidth;
+  const firstLineIndent = valueLeftX - mainLeftX;
+  const closingWidth = state.contentWidth - firstLineIndent - 4;
 
-  // Original width used for intro/closing (same as previous behavior)
-  const originalWidth = state.contentWidth - (valueLeftX - PAGE_MARGIN.left) - 4;
+  const requesterPart = `ข้าพเจ้า ${sanitizeText(formData.requesterName, '')} ตำแหน่ง ${sanitizeText(formData.requesterPosition, '')} สังกัด ${sanitizeText(formData.requesterDepartment, '')}`;
+  const companions = Array.isArray(formData.companions) ? formData.companions : [];
+  const companionItems = companions
+    .map((companion) => {
+      const name = sanitizeText(companion?.name || '', '');
+      const position = sanitizeText(companion?.position || '', '');
+      return [name, position].filter(Boolean).join(' ตำแหน่ง ');
+    })
+    .filter(Boolean);
+  const companionsPart = companionItems.length ? `พร้อมด้วย ${companionItems.join(', ')}` : '';
+  const timePart = formatTimeRange(formData.startTime, formData.endTime);
+  const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน เวลา ${timePart} พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
+  const mainText = normalizeInlineText([requesterPart, companionsPart, travelPart].filter(Boolean).join(' '));
+  const closingText = sanitizeText(formData.closingText, '');
 
-  // FIX START: Use original Thai text without inserting invisible separators
-  const introText = sanitizeText(introTextRaw, '');
-  const middleText = sanitizeText(middleTextRaw, '');
-  const fullMainText = sanitizeText(fullMainRaw, '');
-  const closingText = sanitizeText(closingPart, '');
-  // FIX END
-
-  // Measure original main block height so we can preserve closing Y
-  const originalMainHeight = doc.heightOfString(fullMainText, {
-    width: originalWidth,
-    lineGap
-  });
-
-  const closingHeight = doc.heightOfString(closingText, {
-    width: originalWidth,
-    lineGap
-  });
-
-  // Ensure page has space for the whole block (original main + closing)
-  ensurePageSpace(doc, state, originalMainHeight + paragraphGap + closingHeight + 6);
-
-  // Anchor positions
-  const introY = state.cursorY; // fixed Y for intro
-
-  // Intro: render at the 'เรียน' column using original width
   setBodyFont(doc, false);
-  doc.text(introText, valueLeftX, introY, {
-    width: originalWidth,
+  const mainHeight = doc.heightOfString(mainText, {
+    width: mainWidth,
     lineGap,
-    align: 'left'
+    indent: firstLineIndent
   });
-
-  const introHeight = doc.heightOfString(introText, {
-    width: originalWidth,
+  const closingHeight = doc.heightOfString(closingText, {
+    width: closingWidth,
     lineGap
   });
 
-  // Middle: attempt to render wider across the page while keeping first-line indent
-  const middleLeftX = PAGE_MARGIN.left + 2; // small inner margin
-  const middleWidth = Math.max(20, state.contentWidth - 4);
-  const middleIndent = Math.max(0, valueLeftX - middleLeftX); // keep first-line indent aligned with intro
+  ensurePageSpace(doc, state, mainHeight + paragraphGap + closingHeight + paragraphGap);
 
-  let middleHeight = doc.heightOfString(middleText, {
-    width: middleWidth,
+  const mainY = state.cursorY;
+  doc.text(mainText, mainLeftX, mainY, {
+    width: mainWidth,
     lineGap,
-    indent: middleIndent
+    align: 'left',
+    indent: firstLineIndent
   });
 
-  // Amount of vertical space originally allocated to the main body after the intro
-  let allowedMiddleHeight = originalMainHeight - introHeight - paragraphGap;
-  if (allowedMiddleHeight < 0) allowedMiddleHeight = 0;
-
-  // If the expanded middle would overflow the original space, fall back to original width to avoid overlap
- const middleY = introY + introHeight + 2;
- 
-  // วาด middle เต็มหน้าเลย ไม่ต้อง fallback
-doc.text(middleText, middleLeftX, middleY, {
-  width: middleWidth,
-  lineGap,
-  align: 'left',
-  indent: 0
-});
-
-// คำนวณความสูงตาม width ใหม่
-middleHeight = doc.heightOfString(middleText, {
-  width: middleWidth,
-  lineGap,
-  indent: 0
-});
-
-  // Closing: keep at the same Y as the original layout (introY + originalMainHeight + paragraphGap)
-  const closingY = middleY + middleHeight + paragraphGap;
+  const closingY = mainY + mainHeight + paragraphGap;
   doc.text(closingText, valueLeftX, closingY, {
-    width: originalWidth,
+    width: closingWidth,
     lineGap,
     align: 'left'
   });
 
-  // Advance cursor to just after closing so signature/approval sections remain in place
   state.cursorY = closingY + closingHeight + paragraphGap;
-  // FIX END
 }
 
 function renderSignature(doc, formData, state) {
@@ -814,7 +712,6 @@ async function generateOfficialTravelRequestPdf(res, formData = {}, options = {}
 
   renderHeader(doc, normalized, state);
   renderBody(doc, normalized, state);
-  drawEstimatedCostSection(doc, state, normalized);
   renderSignature(doc, normalized, state);
   renderApprovalSection(doc, normalized, state);
 

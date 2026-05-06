@@ -1,5 +1,10 @@
 const vehicleTripLogModel = require('../models/vehicleTripLogModel');
 const driverMasterModel = require('../models/driverMasterModel');
+const vehicleMasterModel = require('../models/vehicleMasterModel');
+const vehicleRequestModel = require('../models/vehicleRequestModel');
+const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
+const officialTravelRequestModel = require('../models/officialTravelRequestModel');
+const gitgumTravelSyncService = require('../services/gitgumTravelSyncService');
 const generateDriverTripMonthlyPdf = require('../utils/pdf/driverTripMonthlyReportPdf');
 
 function isMissingWorkflowTable(error) {
@@ -57,14 +62,42 @@ function buildMonthOptions(totalMonths = 24) {
   return options;
 }
 
+function hasQueueAssignmentAccess(user = {}) {
+  const levels = [user.mClass, user.m_class, user.level]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  return levels.some((level) => ['admin', 'pbt'].includes(level));
+}
+
+function getActorName(user) {
+  return user?.fullname || user?.username || 'system';
+}
+
+function redirectQueueWithMessage(res, type, message) {
+  const query = new URLSearchParams({ [type]: message });
+  return res.redirect(`/driver-trip/queue?${query.toString()}`);
+}
+
 exports.queue = async (req, res) => {
   try {
+    const canManageAssignments = hasQueueAssignmentAccess(req.session?.user);
     const items = await vehicleTripLogModel.listQueueForUser(req.session?.user);
+    const [vehicles, drivers] = canManageAssignments
+      ? await Promise.all([
+        vehicleMasterModel.listActive(),
+        driverMasterModel.listActive()
+      ])
+      : [[], []];
     const newItems = items.filter((item) => !isLoggedTrip(item));
     const loggedItems = items.filter((item) => isLoggedTrip(item));
     res.render('driver-trip/queue', {
       title: 'คิวงานคนขับรถ',
       items,
+      vehicles,
+      drivers,
+      canManageAssignments,
+      success: req.query.success || null,
+      error: req.query.error || null,
       queueGroups: [
         {
           key: 'new',
@@ -88,6 +121,11 @@ exports.queue = async (req, res) => {
       return res.render('driver-trip/queue', {
         title: 'คิวงานคนขับรถ',
         items: [],
+        vehicles: [],
+        drivers: [],
+        canManageAssignments: hasQueueAssignmentAccess(req.session?.user),
+        success: null,
+        error: null,
         queueGroups: [
           {
             key: 'new',
@@ -109,6 +147,89 @@ exports.queue = async (req, res) => {
     }
     console.error('Error loading driver queue:', error);
     res.status(500).send('ไม่สามารถโหลดคิวงานคนขับรถได้');
+  }
+};
+
+exports.updateAssignment = async (req, res) => {
+  try {
+    const [item, vehicles, drivers] = await Promise.all([
+      vehicleRequestModel.getDetailById(req.params.vehicleRequestId),
+      vehicleMasterModel.listActive(),
+      driverMasterModel.listActive()
+    ]);
+
+    if (!item) {
+      return redirectQueueWithMessage(res, 'error', 'ไม่พบคำขอใช้รถที่ต้องการแก้ไข');
+    }
+
+    if (!['assigned', 'in_progress'].includes(item.status)) {
+      return redirectQueueWithMessage(res, 'error', 'แก้ไขรถและคนขับได้เฉพาะงานที่อยู่ในคิวเดินรถ');
+    }
+
+    const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
+    const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
+
+    if (!selectedVehicle || !selectedDriver) {
+      return redirectQueueWithMessage(res, 'error', 'กรุณาเลือกรถและคนขับให้ถูกต้อง');
+    }
+
+    const overlapping = await vehicleAssignmentModel.findOverlappingAssignment(
+      selectedVehicle.id,
+      item.trip_start_at,
+      item.trip_end_at,
+      item.id
+    );
+
+    if (overlapping) {
+      return redirectQueueWithMessage(
+        res,
+        'error',
+        `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`
+      );
+    }
+
+    await vehicleAssignmentModel.upsertAssignment({
+      vehicle_request_id: item.id,
+      vehicle_id: selectedVehicle.id,
+      driver_id: selectedDriver.id,
+      assigned_by_member_id: req.session?.user?.id || null,
+      assignment_note: req.body.assignment_note || null,
+      plate_no_snapshot: selectedVehicle.plate_no,
+      driver_name_snapshot: selectedDriver.driver_name,
+      updated_by: getActorName(req.session?.user)
+    });
+
+    const updatedItem = await vehicleRequestModel.getDetailById(item.id);
+    if (updatedItem && updatedItem.travel_request_id) {
+      const updatedTravelItem = await officialTravelRequestModel.getDetailById(updatedItem.travel_request_id);
+      await gitgumTravelSyncService.syncApprovedTravel(updatedTravelItem);
+    }
+
+    return redirectQueueWithMessage(res, 'success', 'อัปเดตรถและคนขับเรียบร้อยแล้ว');
+  } catch (error) {
+    console.error('Error updating driver queue assignment:', error);
+    return redirectQueueWithMessage(res, 'error', 'ไม่สามารถอัปเดตรถและคนขับได้');
+  }
+};
+
+exports.cancelQueueItem = async (req, res) => {
+  try {
+    const item = await vehicleRequestModel.cancelDriverQueueItem(req.params.vehicleRequestId, req.session?.user);
+    if (item.travel_request_id) {
+      await gitgumTravelSyncService.removeTravel(item.travel_request_id);
+    }
+
+    return redirectQueueWithMessage(res, 'success', 'ยกเลิกงานและลบรายการในปฏิทินงานเรียบร้อยแล้ว');
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return redirectQueueWithMessage(res, 'error', 'ไม่พบงานที่ต้องการยกเลิก');
+    }
+    if (error.code === 'QUEUE_CANCEL_NOT_ALLOWED') {
+      return redirectQueueWithMessage(res, 'error', 'ยกเลิกได้เฉพาะงานที่อยู่ในคิวเดินรถ');
+    }
+
+    console.error('Error cancelling driver queue item:', error);
+    return redirectQueueWithMessage(res, 'error', 'ไม่สามารถยกเลิกงานได้');
   }
 };
 

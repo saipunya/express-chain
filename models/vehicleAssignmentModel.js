@@ -80,7 +80,11 @@ async function upsertAssignmentWithConnection(connection, payload) {
 
   await connection.query(
     `UPDATE vehicle_requests
-     SET status = 'assigned', updated_by = ?
+     SET status = CASE
+           WHEN status = 'approved' THEN 'assigned'
+           ELSE status
+         END,
+         updated_by = ?
      WHERE id = ?`,
     [payload.updated_by || null, payload.vehicle_request_id]
   );

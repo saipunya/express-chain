@@ -117,6 +117,30 @@
         <label class="form-label">วันที่ปฏิบัติงาน</label>
         <input type="date" class="form-control" name="operation_date" id="operation-date-input" value="<%= item.operation_date || '' %>" required>
       </div>
+      <% if (isDirectMode) { %>
+      <div class="col-md-6">
+        <label class="form-label">รถ</label>
+        <select class="form-select" name="vehicle_id" required>
+          <option value="">เลือกรถ</option>
+          <% (vehicles || []).forEach((vehicle) => { %>
+            <option value="<%= vehicle.id %>" <%= Number(item.vehicle_id || assignmentSelection?.vehicle_id) === Number(vehicle.id) ? 'selected' : '' %>><%= vehicle.plate_no %> - <%= vehicle.vehicle_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">คนขับ</label>
+        <select class="form-select" name="driver_id" required>
+          <option value="">เลือกคนขับ</option>
+          <% (drivers || []).forEach((driver) => { %>
+            <option value="<%= driver.id %>" <%= Number(item.driver_id || assignmentSelection?.driver_id) === Number(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">หมายเหตุการมอบหมาย</label>
+        <textarea class="form-control" name="assignment_note" rows="3"><%= item.assignment_note || assignmentSelection?.assignment_note || '' %></textarea>
+      </div>
+      <% } %>
       <div class="col-md-12">
         <label class="form-label">ภารกิจ / เหตุผล</label>
         <textarea class="form-control" name="mission_text" id="mission-input" rows="4" required><%= item.mission_text || '' %></textarea>

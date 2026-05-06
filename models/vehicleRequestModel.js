@@ -131,9 +131,85 @@ async function create(payload) {
   return result.insertId;
 }
 
+async function createWithConnection(connection, payload) {
+  const data = mapPayload(payload);
+  const [result] = await connection.query(
+    `INSERT INTO vehicle_requests (
+      travel_request_id, vehicle_request_no, request_date, learn_to, requester_member_id,
+      requester_name, requester_position, destination_text, mission_text, passenger_count,
+      trip_start_at, trip_end_at, status, submitted_at, approved_at, rejected_at,
+      cancelled_at, completed_at, approver_member_id, approver_name, approver_position,
+      approval_comment, created_by, updated_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.travel_request_id, data.vehicle_request_no, data.request_date, data.learn_to, data.requester_member_id,
+      data.requester_name, data.requester_position, data.destination_text, data.mission_text, data.passenger_count,
+      data.trip_start_at, data.trip_end_at, data.status, data.submitted_at, data.approved_at, data.rejected_at,
+      data.cancelled_at, data.completed_at, data.approver_member_id, data.approver_name, data.approver_position,
+      data.approval_comment, data.created_by, data.updated_by
+    ]
+  );
+  return result.insertId;
+}
+
 async function update(id, payload) {
   const data = mapPayload(payload);
   await db.query(
+    `UPDATE vehicle_requests SET
+      travel_request_id = ?,
+      request_date = ?,
+      learn_to = ?,
+      requester_member_id = ?,
+      requester_name = ?,
+      requester_position = ?,
+      destination_text = ?,
+      mission_text = ?,
+      passenger_count = ?,
+      trip_start_at = ?,
+      trip_end_at = ?,
+      status = ?,
+      submitted_at = ?,
+      approved_at = ?,
+      rejected_at = ?,
+      cancelled_at = ?,
+      completed_at = ?,
+      approver_member_id = ?,
+      approver_name = ?,
+      approver_position = ?,
+      approval_comment = ?,
+      updated_by = ?
+    WHERE id = ?`,
+    [
+      data.travel_request_id,
+      data.request_date,
+      data.learn_to,
+      data.requester_member_id,
+      data.requester_name,
+      data.requester_position,
+      data.destination_text,
+      data.mission_text,
+      data.passenger_count,
+      data.trip_start_at,
+      data.trip_end_at,
+      data.status,
+      data.submitted_at,
+      data.approved_at,
+      data.rejected_at,
+      data.cancelled_at,
+      data.completed_at,
+      data.approver_member_id,
+      data.approver_name,
+      data.approver_position,
+      data.approval_comment,
+      data.updated_by,
+      id
+    ]
+  );
+}
+
+async function updateWithConnection(connection, id, payload) {
+  const data = mapPayload(payload);
+  await connection.query(
     `UPDATE vehicle_requests SET
       travel_request_id = ?,
       request_date = ?,
@@ -278,6 +354,7 @@ async function reject(id, user, approvalComment = null) {
 module.exports = {
   approve,
   create,
+  createWithConnection,
   getById,
   getByTravelRequestId,
   getDetailById,
@@ -287,5 +364,6 @@ module.exports = {
   reject,
   submit,
   update,
+  updateWithConnection,
   forceApprove
 };

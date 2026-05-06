@@ -1,5 +1,9 @@
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
+const db = require('../config/db');
 const vehicleRequestModel = require('../models/vehicleRequestModel');
+const vehicleMasterModel = require('../models/vehicleMasterModel');
+const driverMasterModel = require('../models/driverMasterModel');
+const vehicleAssignmentModel = require('../models/vehicleAssignmentModel');
 const workflowNotificationService = require('../services/workflowNotificationService');
 const { previewRunningNumber } = require('../services/runningNumberService');
 
@@ -92,6 +96,21 @@ function isDirectVehicleRequest(item = {}) {
   return !item.travel_request_id;
 }
 
+function buildDirectAssignmentSelection(item = {}, overrides = {}) {
+  return {
+    vehicle_id: overrides.vehicle_id || item.vehicle_id || '',
+    driver_id: overrides.driver_id || item.driver_id || '',
+    assignment_note: overrides.assignment_note || item.assignment_note || ''
+  };
+}
+
+async function loadDirectAssignmentOptions() {
+  return Promise.all([
+    vehicleMasterModel.listActive(),
+    driverMasterModel.listActive()
+  ]);
+}
+
 function getDefaultVehicleRequestItem(user = {}, overrides = {}) {
   return {
     vehicle_request_no: overrides.vehicle_request_no || '',
@@ -103,7 +122,10 @@ function getDefaultVehicleRequestItem(user = {}, overrides = {}) {
     destination_text: overrides.destination_text || '',
     mission_text: overrides.mission_text || '',
     passenger_count: overrides.passenger_count || 1,
-    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10)
+    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10),
+    vehicle_id: overrides.vehicle_id || overrides.item?.vehicle_id || '',
+    driver_id: overrides.driver_id || overrides.item?.driver_id || '',
+    assignment_note: overrides.assignment_note || overrides.item?.assignment_note || ''
   };
 }
 
@@ -148,6 +170,39 @@ async function resolveVehicleRequestNoByTravelRequestId(travelRequestId, fallbac
   return travelRequest.request_no;
 }
 
+async function validateDirectAssignmentSelection(vehicles, drivers, vehicleId, driverId, startAt, endAt, currentVehicleRequestId = null) {
+  if (!vehicleId) {
+    return 'กรุณาเลือกรถ';
+  }
+
+  if (!driverId) {
+    return 'กรุณาเลือกคนขับ';
+  }
+
+  const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(vehicleId));
+  if (!selectedVehicle) {
+    return 'ไม่พบรถที่เลือก';
+  }
+
+  const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(driverId));
+  if (!selectedDriver) {
+    return 'ไม่พบคนขับที่เลือก';
+  }
+
+  const overlapping = await vehicleAssignmentModel.findOverlappingAssignment(
+    selectedVehicle.id,
+    startAt,
+    endAt,
+    currentVehicleRequestId
+  );
+
+  if (overlapping) {
+    return `รถ ${selectedVehicle.plate_no} ถูกมอบหมายทับช่วงเวลาให้คำขอ ${overlapping.vehicle_request_no} แล้ว`;
+  }
+
+  return null;
+}
+
 function mapBody(req) {
   const user = req.session?.user || {};
   const operationDate = req.body.operation_date || toDateInput(req.body.trip_start_at);
@@ -189,6 +244,7 @@ async function renderForm(res, overrides = {}) {
 
 async function renderDirectForm(res, overrides = {}) {
   const user = overrides.user || res.locals.user || {};
+  const [vehicles, drivers] = await loadDirectAssignmentOptions();
   const item = {
     ...(overrides.item || {}),
     vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
@@ -200,13 +256,19 @@ async function renderDirectForm(res, overrides = {}) {
     destination_text: overrides.destination_text || '',
     mission_text: overrides.mission_text || '',
     passenger_count: overrides.passenger_count || 1,
-    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10)
+    operation_date: overrides.operation_date || new Date().toISOString().slice(0, 10),
+    vehicle_id: overrides.vehicle_id || overrides.item?.vehicle_id || '',
+    driver_id: overrides.driver_id || overrides.item?.driver_id || '',
+    assignment_note: overrides.assignment_note || overrides.item?.assignment_note || ''
   };
 
   res.render('vehicle-request/form', {
     title: overrides.title || 'คำขอใช้รถตรง',
     formAction: overrides.formAction || '/vehicle-request/create-direct',
     item,
+    vehicles,
+    drivers,
+    assignmentSelection: buildDirectAssignmentSelection(item, overrides),
     travelOptions: [],
     error: overrides.error || null,
     warning: overrides.warning || null,
@@ -408,12 +470,52 @@ exports.createDirect = async (req, res) => {
       return res.status(403).send('ไม่มีสิทธิ์สร้างคำขอใช้รถยนต์ตรง');
     }
 
-    const id = await vehicleRequestModel.create({
-      ...mapBody(req),
-      travel_request_id: null,
-      vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
-    });
-    res.redirect(`/vehicle-request/${id}`);
+    const [vehicles, drivers] = await loadDirectAssignmentOptions();
+    const payload = mapBody(req);
+    const validationError = await validateDirectAssignmentSelection(
+      vehicles,
+      drivers,
+      req.body.vehicle_id,
+      req.body.driver_id,
+      payload.trip_start_at,
+      payload.trip_end_at
+    );
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
+    const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
+    const connection = await db.getConnection();
+
+    try {
+      await connection.beginTransaction();
+      const id = await vehicleRequestModel.createWithConnection(connection, {
+        ...payload,
+        travel_request_id: null,
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        status: 'draft'
+      });
+
+      await vehicleAssignmentModel.upsertAssignmentWithConnection(connection, {
+        vehicle_request_id: id,
+        vehicle_id: selectedVehicle.id,
+        driver_id: selectedDriver.id,
+        assigned_by_member_id: req.session?.user?.id || null,
+        assignment_note: req.body.assignment_note || null,
+        plate_no_snapshot: selectedVehicle.plate_no,
+        driver_name_snapshot: selectedDriver.driver_name,
+        updated_by: req.session?.user?.fullname || req.session?.user?.username || 'system'
+      });
+
+      await connection.commit();
+      res.redirect(`/vehicle-request/${id}`);
+    } catch (transactionError) {
+      await connection.rollback();
+      throw transactionError;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('Error creating direct vehicle request:', error);
     return renderDirectForm(res, {
@@ -424,6 +526,9 @@ exports.createDirect = async (req, res) => {
         travel_request_id: '',
         vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
       },
+      vehicle_id: req.body.vehicle_id || '',
+      driver_id: req.body.driver_id || '',
+      assignment_note: req.body.assignment_note || '',
       error: error.message || 'บันทึกคำขอใช้รถยนต์ตรงไม่สำเร็จ'
     });
   }
@@ -435,21 +540,61 @@ exports.updateDirect = async (req, res) => {
       return res.status(403).send('ไม่มีสิทธิ์แก้ไขคำขอใช้รถยนต์ตรง');
     }
 
-    const current = await vehicleRequestModel.getById(req.params.id);
+    const current = await vehicleRequestModel.getDetailById(req.params.id);
     if (!current) {
       return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
     }
 
-    await vehicleRequestModel.update(req.params.id, {
-      ...mapBody(req),
-      travel_request_id: null,
-      vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
-      status: current.status
-    });
-    res.redirect(`/vehicle-request/${req.params.id}`);
+    const [vehicles, drivers] = await loadDirectAssignmentOptions();
+    const payload = mapBody(req);
+    const validationError = await validateDirectAssignmentSelection(
+      vehicles,
+      drivers,
+      req.body.vehicle_id,
+      req.body.driver_id,
+      payload.trip_start_at,
+      payload.trip_end_at,
+      req.params.id
+    );
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
+    const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
+    const connection = await db.getConnection();
+
+    try {
+      await connection.beginTransaction();
+      await vehicleRequestModel.updateWithConnection(connection, req.params.id, {
+        ...payload,
+        travel_request_id: null,
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        status: current.status
+      });
+
+      await vehicleAssignmentModel.upsertAssignmentWithConnection(connection, {
+        vehicle_request_id: Number(req.params.id),
+        vehicle_id: selectedVehicle.id,
+        driver_id: selectedDriver.id,
+        assigned_by_member_id: req.session?.user?.id || null,
+        assignment_note: req.body.assignment_note || null,
+        plate_no_snapshot: selectedVehicle.plate_no,
+        driver_name_snapshot: selectedDriver.driver_name,
+        updated_by: req.session?.user?.fullname || req.session?.user?.username || 'system'
+      });
+
+      await connection.commit();
+      res.redirect(`/vehicle-request/${req.params.id}`);
+    } catch (transactionError) {
+      await connection.rollback();
+      throw transactionError;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error('Error updating direct vehicle request:', error);
-    const current = await vehicleRequestModel.getById(req.params.id).catch(() => null);
+    const current = await vehicleRequestModel.getDetailById(req.params.id).catch(() => null);
     return renderDirectForm(res, {
       user: req.session?.user,
       title: 'แก้ไขคำขอใช้รถยนต์ตรง',
@@ -459,6 +604,9 @@ exports.updateDirect = async (req, res) => {
         travel_request_id: '',
         vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
       },
+      vehicle_id: req.body.vehicle_id || current?.vehicle_id || '',
+      driver_id: req.body.driver_id || current?.driver_id || '',
+      assignment_note: req.body.assignment_note || current?.assignment_note || '',
       error: error.message || 'บันทึกการแก้ไขคำขอใช้รถยนต์ตรงไม่สำเร็จ'
     });
   }

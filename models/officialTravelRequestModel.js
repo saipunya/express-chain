@@ -215,7 +215,7 @@ async function create(payload, companions = []) {
         estimated_allowance, estimated_lodging, estimated_fuel,
         requires_vehicle_request, status, submitted_at, approved_at, rejected_at, cancelled_at,
         approver_member_id, approver_name, approver_position, approval_comment, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.request_no, data.request_date, data.subject, data.learn_to, data.requester_member_id, data.requester_name,
         data.requester_position, data.requester_group, data.purpose_text, data.destination_text, data.start_at, data.end_at,

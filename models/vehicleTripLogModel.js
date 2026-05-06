@@ -125,10 +125,10 @@ async function logAfternoon(vehicleRequestId, user, returnTime, odometer) {
   try {
     await connection.beginTransaction();
     const [rows] = await connection.query(
-      `SELECT vtl.morning_odometer, vr.trip_end_at
+      `SELECT vehicle_trip_logs.morning_odometer, vr.trip_end_at
        FROM vehicle_trip_logs
        INNER JOIN vehicle_requests vr ON vr.id = vehicle_trip_logs.vehicle_request_id
-       WHERE vehicle_request_id = ?
+       WHERE vehicle_trip_logs.vehicle_request_id = ?
        LIMIT 1`,
       [vehicleRequestId]
     );

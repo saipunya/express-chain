@@ -129,6 +129,27 @@
       <% } %>
     </div>
 
+    <% const hasEstimatedCosts = item.transport_type === 'official_vehicle' || Number(item.estimated_allowance) > 0 || Number(item.estimated_lodging) > 0 || Number(item.estimated_fuel) > 0; %>
+    <% if (hasEstimatedCosts) { %>
+      <div style="margin: 16px 0 24px;">
+        <div class="section-title">ประมาณการค่าใช้จ่าย</div>
+        <table style="width:100%; border-collapse:collapse; font-size:16px; line-height:2;">
+          <tr>
+            <td style="width: 50%; padding: 4px 0;">ค่าเบี้ยเลี้ยง (บาท)</td>
+            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_allowance ?? '-' %></strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;">ค่าที่พัก (บาท)</td>
+            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_lodging ?? '-' %></strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0;">ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)</td>
+            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_fuel ?? '-' %></strong></td>
+          </tr>
+        </table>
+      </div>
+    <% } %>
+
     <div class="signature-block">
       <div class="signature-area">
         <div style="margin-bottom: 48px;">&nbsp;</div>

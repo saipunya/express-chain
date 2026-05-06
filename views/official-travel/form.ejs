@@ -139,6 +139,30 @@
           <option value="1" <%= Number(item.requires_vehicle_request) === 1 ? 'selected' : '' %>>ต้องใช้</option>
         </select>
       </div>
+      <div class="col-12 <%= item.transport_type === 'official_vehicle' ? '' : 'd-none' %>" id="estimated-cost-section">
+        <div class="border rounded-3 p-3 bg-light-subtle">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+              <h5 class="mb-1">ประมาณการค่าใช้จ่าย</h5>
+              <div class="text-muted small">แสดงในแบบ PDF เมื่อใช้รถยนต์ราชการ</div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">ค่าเบี้ยเลี้ยง (บาท)</label>
+              <input type="number" class="form-control" name="estimated_allowance" min="0" step="0.01" value="<%= item.estimated_allowance ?? '' %>">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">ค่าที่พัก (บาท)</label>
+              <input type="number" class="form-control" name="estimated_lodging" min="0" step="0.01" value="<%= item.estimated_lodging ?? '' %>">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)</label>
+              <input type="number" class="form-control" name="estimated_fuel" min="0" step="0.01" value="<%= item.estimated_fuel ?? '' %>">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <hr class="my-4">
@@ -199,6 +223,7 @@
     const transportTypeSelect = document.getElementById('transport-type-select');
     const transportOtherInput = document.getElementById('transport-other-input');
     const requiresVehicleSelect = document.getElementById('requires-vehicle-select');
+    const estimatedCostSection = document.getElementById('estimated-cost-section');
 
     if (!rowsContainer || !addButton || !rowTemplate) {
       return;
@@ -272,6 +297,12 @@
       }
 
       const transportType = transportTypeSelect.value;
+      if (estimatedCostSection) {
+        estimatedCostSection.classList.toggle('d-none', transportType !== 'official_vehicle');
+        estimatedCostSection.querySelectorAll('input').forEach((input) => {
+          input.disabled = transportType !== 'official_vehicle';
+        });
+      }
       transportOtherInput.disabled = transportType !== 'other';
       transportOtherInput.placeholder = transportType === 'other' ? 'ระบุรายละเอียดพาหนะ' : 'ใช้เมื่อเลือก "อื่น ๆ"';
 

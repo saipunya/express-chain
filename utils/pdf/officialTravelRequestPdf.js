@@ -222,6 +222,9 @@ function normalizeFormData(formData = {}) {
     endTime: sanitizeTime(formData.endTime || formData.end_time),
     durationDays: getDurationDays(formData),
     transportDetails: sanitizeText(formData.transportDetails),
+    estimatedAllowance: formData.estimatedAllowance ?? formData.estimated_allowance ?? null,
+    estimatedLodging: formData.estimatedLodging ?? formData.estimated_lodging ?? null,
+    estimatedFuel: formData.estimatedFuel ?? formData.estimated_fuel ?? null,
     closingText: sanitizeText(formData.closingText || DEFAULTS.closingText),
     signerName: sanitizeText(formData.signerName || formData.requesterName),
     signerPosition: sanitizeText(formData.signerPosition || formData.requesterPosition),
@@ -468,6 +471,40 @@ function drawPeriodAndTransport(doc, state, formData) {
     value: formData.transportDetails,
     labelWidth: 62,
     minHeight: 26
+  });
+
+  state.cursorY += 2;
+}
+
+function drawEstimatedCostSection(doc, state, formData) {
+  const hasEstimatedCosts =
+    formData.transport_type === 'official_vehicle' ||
+    Number(formData.estimatedAllowance) > 0 ||
+    Number(formData.estimatedLodging) > 0 ||
+    Number(formData.estimatedFuel) > 0;
+
+  if (!hasEstimatedCosts) {
+    return;
+  }
+
+  ensurePageSpace(doc, state, 88);
+  setBodyFont(doc, true, FONT_SIZE.section);
+  doc.text('ประมาณการค่าใช้จ่าย', PAGE_MARGIN.left, state.cursorY, { width: state.contentWidth });
+  state.cursorY += 18;
+
+  const rows = [
+    ['ค่าเบี้ยเลี้ยง (บาท)', formData.estimatedAllowance],
+    ['ค่าที่พัก (บาท)', formData.estimatedLodging],
+    ['ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)', formData.estimatedFuel]
+  ];
+
+  rows.forEach(([label, value]) => {
+    drawFieldRow(doc, state, {
+      label,
+      value: value != null && String(value).trim() !== '' ? String(value) : '-',
+      labelWidth: 160,
+      minHeight: 26
+    });
   });
 
   state.cursorY += 2;
@@ -777,6 +814,7 @@ async function generateOfficialTravelRequestPdf(res, formData = {}, options = {}
 
   renderHeader(doc, normalized, state);
   renderBody(doc, normalized, state);
+  drawEstimatedCostSection(doc, state, normalized);
   renderSignature(doc, normalized, state);
   renderApprovalSection(doc, normalized, state);
 

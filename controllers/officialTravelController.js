@@ -181,7 +181,12 @@ function buildTravelRequestPdfFormData(item) {
     startDate: item.start_at || item.request_date,
     endDate: item.end_at || item.start_at || item.request_date,
     durationDays: calculateDisplayDurationDays(item.start_at, item.end_at, item.duration_days),
+    transport_type: item.transport_type,
+    transport_other_text: item.transport_other_text,
     transportDetails: formatTransportLabel(item),
+    estimatedAllowance: item.estimated_allowance,
+    estimatedLodging: item.estimated_lodging,
+    estimatedFuel: item.estimated_fuel,
     closingText: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ',
     signerName: item.requester_name || '-',
     signerPosition: item.requester_position || item.requester_group || '-',
@@ -242,6 +247,9 @@ async function mapBody(req) {
     duration_hours: req.body.duration_hours || duration_hours,
     transport_type: req.body.transport_type,
     transport_other_text: req.body.transport_other_text,
+    estimated_allowance: req.body.estimated_allowance,
+    estimated_lodging: req.body.estimated_lodging,
+    estimated_fuel: req.body.estimated_fuel,
     out_of_province: req.body.out_of_province === '1',
     requires_vehicle_request: req.body.requires_vehicle_request === '1',
     status: req.body.status || 'draft',
@@ -489,6 +497,9 @@ exports.createForm = async (req, res) => {
       requester_position: req.session?.user?.position || '',
       requester_group: requesterGroup,
       transport_type: 'official_vehicle',
+      estimated_allowance: null,
+      estimated_lodging: null,
+      estimated_fuel: null,
       out_of_province: 0,
       requires_vehicle_request: 1,
       operation_date: requestDate.toISOString().slice(0, 10),
@@ -518,6 +529,9 @@ exports.createForm = async (req, res) => {
         requester_position: req.session?.user?.position || '',
         requester_group: requesterGroup,
         transport_type: 'official_vehicle',
+        estimated_allowance: null,
+        estimated_lodging: null,
+        estimated_fuel: null,
         out_of_province: 0,
         requires_vehicle_request: 1,
         operation_date: requestDate.toISOString().slice(0, 10)
@@ -563,7 +577,10 @@ exports.create = async (req, res) => {
       item: {
         ...req.body,
         request_no: await previewRunningNumber('official_travel_requests'),
-        requester_group: requesterGroup
+        requester_group: requesterGroup,
+        estimated_allowance: req.body.estimated_allowance ?? null,
+        estimated_lodging: req.body.estimated_lodging ?? null,
+        estimated_fuel: req.body.estimated_fuel ?? null
       },
       companions: mapCompanions(req),
       error: 'บันทึกคำขอไม่สำเร็จ',
@@ -661,7 +678,10 @@ exports.update = async (req, res) => {
       formAction: `/official-travel/${req.params.id}/edit`,
       item: {
         ...req.body,
-        requester_group: requesterGroup
+        requester_group: requesterGroup,
+        estimated_allowance: req.body.estimated_allowance ?? null,
+        estimated_lodging: req.body.estimated_lodging ?? null,
+        estimated_fuel: req.body.estimated_fuel ?? null
       },
       companions: mapCompanions(req),
       error: 'บันทึกการแก้ไขไม่สำเร็จ',
@@ -730,6 +750,11 @@ exports.printView = async (req, res) => {
       requester_group: item.requester_group,
       subject: item.subject,
       companions: item.companions,
+      transport_type: item.transport_type,
+      transport_other_text: item.transport_other_text,
+      estimated_allowance: item.estimated_allowance,
+      estimated_lodging: item.estimated_lodging,
+      estimated_fuel: item.estimated_fuel,
     };
     res.render('vehicle-request/print', {
       title: 'พิมพ์คำขอไปราชการ',

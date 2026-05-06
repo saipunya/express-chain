@@ -8,6 +8,14 @@ function toBooleanFlag(value) {
   return value ? 1 : 0;
 }
 
+function toMoneyValue(value) {
+  if (value === '' || value == null) {
+    return null;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
 function normalizeCompanions(companions = []) {
   return companions
     .map((companion, index) => ({
@@ -59,6 +67,9 @@ function mapPayload(payload) {
     duration_hours: payload.duration_hours || null,
     transport_type: payload.transport_type,
     transport_other_text: payload.transport_other_text || null,
+    estimated_allowance: toMoneyValue(payload.estimated_allowance),
+    estimated_lodging: toMoneyValue(payload.estimated_lodging),
+    estimated_fuel: toMoneyValue(payload.estimated_fuel),
     out_of_province: toBooleanFlag(payload.out_of_province),
     requires_vehicle_request: toBooleanFlag(payload.requires_vehicle_request),
     status: payload.status || 'draft',
@@ -201,13 +212,15 @@ async function create(payload, companions = []) {
         request_no, request_date, subject, learn_to, requester_member_id, requester_name,
         requester_position, requester_group, purpose_text, destination_text, start_at, end_at,
         duration_days, duration_hours, transport_type, transport_other_text, out_of_province,
+        estimated_allowance, estimated_lodging, estimated_fuel,
         requires_vehicle_request, status, submitted_at, approved_at, rejected_at, cancelled_at,
         approver_member_id, approver_name, approver_position, approval_comment, created_by, updated_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.request_no, data.request_date, data.subject, data.learn_to, data.requester_member_id, data.requester_name,
         data.requester_position, data.requester_group, data.purpose_text, data.destination_text, data.start_at, data.end_at,
         data.duration_days, data.duration_hours, data.transport_type, data.transport_other_text, data.out_of_province,
+        data.estimated_allowance, data.estimated_lodging, data.estimated_fuel,
         data.requires_vehicle_request, data.status, data.submitted_at, data.approved_at, data.rejected_at, data.cancelled_at,
         data.approver_member_id, data.approver_name, data.approver_position, data.approval_comment, data.created_by, data.updated_by
       ]
@@ -246,6 +259,9 @@ async function update(id, payload, companions = []) {
         duration_hours = ?,
         transport_type = ?,
         transport_other_text = ?,
+        estimated_allowance = ?,
+        estimated_lodging = ?,
+        estimated_fuel = ?,
         out_of_province = ?,
         requires_vehicle_request = ?,
         status = ?,
@@ -275,6 +291,9 @@ async function update(id, payload, companions = []) {
         data.duration_hours,
         data.transport_type,
         data.transport_other_text,
+        data.estimated_allowance,
+        data.estimated_lodging,
+        data.estimated_fuel,
         data.out_of_province,
         data.requires_vehicle_request,
         data.status,

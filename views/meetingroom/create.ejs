@@ -1,47 +1,244 @@
 <%- include('../partials/header.ejs') %>
-  <div class="container my-5">
-    <h1 class="mb-4">เพิ่มการจองห้องประชุม</h1>
+<%
+  const now = new Date();
+  const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const roomOptions = [
+    { value: 'พิทยาลงกรณ์', label: 'ห้องประชุมพิทยาลงกรณ์' },
+    { value: 'ดอกกระเจียว', label: 'ห้องประชุมดอกกระเจียว' }
+  ];
+%>
 
-    <form action="/meetingroom/create" method="POST" class="row g-3">
-      <div class="col-md-4">
-        <label for="mee_date" class="form-label">วันที่ประชุม(ใช้ปี ค.ศ.)</label>
-        <input type="date" id="mee_date" name="mee_date" class="form-control" required>
+<div class="meetingroom-form-page py-4 py-lg-5">
+  <div class="container">
+    <div class="form-shell">
+      <div class="form-hero">
+        <div class="form-hero__icon">
+          <i class="bi bi-calendar-plus"></i>
+        </div>
+        <div class="form-hero__copy">
+          <p class="form-kicker mb-1">Meeting Room</p>
+          <h1 class="form-title mb-2">เพิ่มการจองห้องประชุม</h1>
+          <p class="form-subtitle mb-0">กรอกข้อมูลให้ครบ แล้วบันทึกลงตารางได้ทันที รายการจะไปแสดงต่อในหน้ารวมแบบเดียวกัน</p>
+        </div>
       </div>
-      <div class="col-md-4">
-        <label for="mee_time" class="form-label">เวลา</label>
-        <input type="text" id="mee_time" name="mee_time" class="form-control" placeholder="เช่น 09.00-12.00 น." required>
-      </div>
-      <div class="col-md-4">
-        <div class="mb-3">
+
+      <div class="form-card">
+        <form action="/meetingroom/create" method="POST" class="row g-4">
+          <div class="col-12 col-lg-4">
+            <label for="mee_date" class="form-label">วันที่ประชุม</label>
+            <input type="date" id="mee_date" name="mee_date" class="form-control form-control-lg" value="<%= todayLocal %>" required>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <label for="mee_time" class="form-label">เวลา</label>
+            <input type="text" id="mee_time" name="mee_time" class="form-control form-control-lg" placeholder="เช่น 09.00-12.00 น." required>
+          </div>
+
+          <div class="col-12 col-lg-4">
             <label for="mee_room" class="form-label">ห้องประชุม</label>
-            <select
-                class="form-select form-select-md"
-                name="mee_room"
-                id="mee_room"
-                required >
-                <option selected disabled>++โปรดเลือก++</option>
-                <option value="พิทยาลงกรณ์">ห้องประชุมพิทยาลงกรณ์</option>
-                <option value="ดอกกระเจียว">ห้องประชุมดอกกระเจียว</option>
+            <select class="form-select form-select-lg" name="mee_room" id="mee_room" required>
+              <option value="" selected disabled>++โปรดเลือก++</option>
+              <% roomOptions.forEach(room => { %>
+                <option value="<%= room.value %>"><%= room.label %></option>
+              <% }) %>
             </select>
-         </div>
-      </div>
+          </div>
 
-      <div class="col-12">
-        <label for="mee_subject" class="form-label">เรื่อง/วัตถุประสงค์</label>
-        <textarea id="mee_subject" name="mee_subject" class="form-control" rows="3" required></textarea>
-      </div>
+          <div class="col-12">
+            <label for="mee_subject" class="form-label">เรื่อง/วัตถุประสงค์</label>
+            <textarea id="mee_subject" name="mee_subject" class="form-control" rows="4" placeholder="ระบุหัวข้อการประชุมหรือวัตถุประสงค์สั้น ๆ" required></textarea>
+          </div>
 
-      <div class="col-md-4">
-        <label for="mee_respon" class="form-label">ผู้รับผิดชอบ</label>
-        <input type="text" id="mee_respon" name="mee_respon" class="form-control" required>
-      </div>
-      <input type="hidden" name="mee_saveby" value="<%= user ? user.name : '' %>">
-      <input type="hidden" name="mee_savedate" value="<%= new Date().toISOString().slice(0,10) %>">
+          <div class="col-12 col-lg-6">
+            <label for="mee_respon" class="form-label">ผู้รับผิดชอบ</label>
+            <input type="text" id="mee_respon" name="mee_respon" class="form-control form-control-lg" required>
+          </div>
 
-      <div class="col-12 d-flex gap-2">
-        <button class="btn btn-primary" type="submit">บันทึก</button>
-        <a href="/meetingroom" class="btn btn-secondary">กลับหน้าหลัก</a>
+          <div class="col-12 col-lg-6">
+            <label class="form-label d-block">ข้อมูลบันทึก</label>
+            <div class="meta-panel">
+              <div class="meta-panel__item">
+                <span>ผู้บันทึก</span>
+                <strong><%= user ? user.name : '-' %></strong>
+              </div>
+              <div class="meta-panel__item">
+                <span>วันที่บันทึก</span>
+                <strong><%= todayLocal %></strong>
+              </div>
+            </div>
+          </div>
+
+          <input type="hidden" name="mee_saveby" value="<%= user ? user.name : '' %>">
+          <input type="hidden" name="mee_savedate" value="<%= todayLocal %>">
+
+          <div class="col-12">
+            <div class="form-actions">
+              <a href="/meetingroom" class="btn btn-outline-secondary btn-action">
+                <i class="bi bi-arrow-left"></i>
+                กลับหน้ารวม
+              </a>
+              <button class="btn btn-primary btn-action" type="submit">
+                <i class="bi bi-check2-circle"></i>
+                บันทึกการจอง
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   </div>
-  <%- include('../partials/footer.ejs') %>
+</div>
+
+<style>
+  .meetingroom-form-page {
+    min-height: calc(100vh - 140px);
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.08), transparent 28%),
+      #f7f9fc;
+  }
+
+  .form-shell {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .form-hero,
+  .form-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #e8eef7;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    border-radius: 22px;
+  }
+
+  .form-hero {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .form-hero__icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-size: 1.5rem;
+    flex: 0 0 auto;
+  }
+
+  .form-kicker {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0;
+  }
+
+  .form-title {
+    color: #0f172a;
+    font-weight: 800;
+    line-height: 1.12;
+  }
+
+  .form-subtitle {
+    color: #64748b;
+    max-width: 60ch;
+  }
+
+  .form-card {
+    padding: 1.25rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.45rem;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 16px;
+    border-color: #dbe5f0;
+    min-height: 52px;
+    box-shadow: none;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.08);
+  }
+
+  textarea.form-control {
+    min-height: 132px;
+  }
+
+  .meta-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .meta-panel__item {
+    border: 1px solid #e7edf6;
+    border-radius: 16px;
+    background: #f8fbff;
+    padding: 0.9rem 1rem;
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .meta-panel__item span {
+    font-size: 0.78rem;
+    color: #64748b;
+  }
+
+  .meta-panel__item strong {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 0.25rem;
+  }
+
+  .btn-action {
+    min-width: 160px;
+    min-height: 46px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    .form-hero {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .meta-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+
+    .btn-action {
+      width: 100%;
+    }
+  }
+</style>
+
+<%- include('../partials/footer.ejs') %>

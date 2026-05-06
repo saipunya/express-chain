@@ -1,7 +1,12 @@
 <%- include('partials/header',{title : 'coop chain' }) %>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
+<style>
+  .hover-shadow:hover {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+      transition: 0.3s;
+    }
+</style>
 
   <div class="container my-5">
     <div class="card shadow-lg rounded overflow-hidden">
@@ -648,14 +653,6 @@
       </div>
     </section>
     <% } %>
-      <style>
-        .hover-shadow:hover {
-          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-          transition: 0.3s;
-        }
-      </style>
-
-
       <section class="py-4 bg-light">
         <div class="container-lg">
           <div class="row">

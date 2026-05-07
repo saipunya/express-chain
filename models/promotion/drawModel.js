@@ -115,7 +115,8 @@ async function getDrawsList(limit = 500, storeId = null) {
             pc.code AS code_value,
             pr.name AS prize_name,
             c.name AS campaign_name,
-            s.name AS store_name
+            s.name AS store_name,
+            s.store_code
      FROM promotion_draws d
      LEFT JOIN promotion_codes pc ON d.code_id = pc.id
      LEFT JOIN promotion_prizes pr ON d.prize_id = pr.id
@@ -138,7 +139,7 @@ async function getDrawsList(limit = 500, storeId = null) {
  */
 async function getDrawByUser(customerPhone, limit = 100) {
   const [rows] = await db.query(
-    `SELECT d.*, pc.code AS code_value, pr.name AS prize_name, c.name AS campaign_name, s.name AS store_name
+    `SELECT d.*, pc.code AS code_value, pr.name AS prize_name, c.name AS campaign_name, s.name AS store_name, s.store_code
      FROM promotion_draws d
      LEFT JOIN promotion_codes pc ON d.code_id = pc.id
      LEFT JOIN promotion_prizes pr ON d.prize_id = pr.id

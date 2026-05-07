@@ -153,6 +153,22 @@
     color: #334155;
   }
 
+  .promo-status-scheduled {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .promo-status-expired {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .promo-campaign-meta {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
   .promo-date {
     color: #0f172a;
     font-weight: 500;
@@ -231,6 +247,22 @@
       </div>
     <% } %>
 
+    <%
+      const nowTs = Date.now();
+      const getCampaignTimeState = (campaign) => {
+        const startTs = campaign && campaign.start_at ? new Date(campaign.start_at).getTime() : null;
+        const endTs = campaign && campaign.end_at ? new Date(campaign.end_at).getTime() : null;
+        const active = Boolean(campaign && campaign.active);
+        const expired = Number.isFinite(endTs) && endTs < nowTs;
+        const upcoming = Number.isFinite(startTs) && startTs > nowTs;
+        const usable = active && !expired && !upcoming;
+        if (expired) return { key: 'expired', label: 'หมดอายุแล้ว', className: 'promo-status-expired', detail: 'เกินช่วงเวลาที่กำหนดแล้ว' };
+        if (upcoming) return { key: 'scheduled', label: 'ยังไม่เริ่ม', className: 'promo-status-scheduled', detail: 'รอถึงเวลาเริ่มต้น' };
+        if (usable) return { key: 'usable', label: 'ยังใช้ได้', className: 'promo-status-active', detail: 'อยู่ในช่วงใช้งานปกติ' };
+        return { key: 'inactive', label: 'ปิดใช้งาน', className: 'promo-status-inactive', detail: 'ถูกปิดใช้งานโดยแอดมิน' };
+      };
+    %>
+
     <div class="card promo-campaign-form-card">
       <div class="card-body p-4">
         <h5 class="fw-bold mb-3">➕ เพิ่มแคมเปญ</h5>
@@ -308,6 +340,7 @@
             <tbody>
               <% if (Array.isArray(campaigns) && campaigns.length) { %>
                 <% campaigns.forEach(c => { %>
+                  <% const campaignState = getCampaignTimeState(c); %>
                   <tr>
                     <td>
                       <span class="promo-campaign-id">#<%= c.id %></span>
@@ -324,11 +357,8 @@
                       <% } %>
                     </td>
                     <td>
-                      <% if (c.active) { %>
-                        <span class="promo-status promo-status-active">Active</span>
-                      <% } else { %>
-                        <span class="promo-status promo-status-inactive">Inactive</span>
-                      <% } %>
+                      <span class="promo-status <%= campaignState.className %>"><%= campaignState.label %></span>
+                      <div class="promo-campaign-meta"><%= campaignState.detail %></div>
                     </td>
                     <td>
                       <span class="promo-date">
@@ -339,6 +369,9 @@
                       <span class="promo-date">
                         <%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %>
                       </span>
+                      <div class="promo-campaign-meta">
+                        <%= campaignState.label %>
+                      </div>
                     </td>
                     <td>
                       <div class="promo-action-stack">
@@ -351,6 +384,9 @@
                             <%= c.active ? 'Deactivate' : 'Activate' %>
                           </button>
                         </form>
+                        <a href="#editCampaignModal-<%= c.id %>" class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="modal">
+                          <%= campaignState.key === 'expired' ? 'View expired campaign' : 'Check campaign' %>
+                        </a>
                       </div>
                     </td>
                   </tr>
@@ -372,6 +408,7 @@
 </div>
 <% if (Array.isArray(campaigns) && campaigns.length) { %>
   <% campaigns.forEach(c => { %>
+    <% const campaignStateModal = getCampaignTimeState(c); %>
     <div class="modal fade" id="editCampaignModal-<%= c.id %>" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -404,7 +441,7 @@
                 </div>
                 <div class="col-12">
                   <small class="text-muted">
-                    สาขา: <%= c.store_name || '-' %> (<%= c.store_code || '-' %>) • สถานะปัจจุบัน: <%= c.active ? 'Active' : 'Inactive' %>
+                    สาขา: <%= c.store_name || '-' %> (<%= c.store_code || '-' %>) • สถานะปัจจุบัน: <%= c.active ? 'Active' : 'Inactive' %> • <%= campaignStateModal.label %>
                   </small>
                 </div>
               </div>

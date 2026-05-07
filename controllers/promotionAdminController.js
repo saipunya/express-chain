@@ -158,8 +158,16 @@ function canManageCampaign(req, campaign) {
 exports.dashboard = async (req, res) => {
   try {
     const scope = getScope(req);
-    const counts = await promotionModel.getCodeCounts(scope);
-    return res.render('promotion/admin/dashboard', { title: 'Promotion Admin', counts, promotionAdmin: req.promotionAdmin });
+    const [counts, storeSummaries] = await Promise.all([
+      promotionModel.getCodeCounts(scope),
+      promotionModel.getStoreDashboardSummaries(scope)
+    ]);
+    return res.render('promotion/admin/dashboard', {
+      title: 'Promotion Admin',
+      counts,
+      storeSummaries,
+      promotionAdmin: req.promotionAdmin
+    });
   } catch (err) {
     console.error('promotionAdmin.dashboard error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
@@ -629,13 +637,59 @@ exports.codes = async (req, res) => {
     const scope = getScope(req);
     const scopedStoreId = getScopedStoreId(req);
     const limit = parseInt(req.query.limit, 10) || 500;
-    const codes = await promotionModel.getCodesList(limit, scope);
+    const showExpired = req.query.show_expired === '1' || req.query.show_expired === 'true';
+    let selectedStoreId = parsePositiveInt(req.query.store_id);
+    let selectedCampaignId = parsePositiveInt(req.query.campaign_id);
+
+    if (scope && scope.role === 'coop_admin') {
+      selectedStoreId = scopedStoreId;
+    }
+
+    let selectedCampaign = null;
+    if (selectedCampaignId) {
+      selectedCampaign = await promotionModel.getCampaignById(selectedCampaignId);
+      if (!selectedCampaign) {
+        req.flash('danger', 'ไม่พบแคมเปญที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+      if (!selectedStoreId) {
+        selectedStoreId = Number(selectedCampaign.store_id) || null;
+      }
+      if (selectedStoreId && Number(selectedCampaign.store_id) !== Number(selectedStoreId)) {
+        req.flash('danger', 'แคมเปญนี้ไม่ได้อยู่ในสาขาที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+    }
+
+    const summary = await promotionModel.getCodeSummary(scope, {
+      storeId: selectedStoreId,
+      campaignId: selectedCampaignId
+    });
+    const codes = await promotionModel.getCodesList(limit, scope, {
+      storeId: selectedStoreId,
+      campaignId: selectedCampaignId,
+      includeExpired: showExpired
+    });
     const stores = await promotionModel.getStoresList(scope);
-    const campaigns = await promotionModel.getCampaignsWithStore(scopedStoreId);
+    const campaigns = await promotionModel.getCampaignsWithStore(selectedStoreId || scopedStoreId);
+    const selectedStore = selectedStoreId ? await promotionModel.getStoreById(selectedStoreId) : null;
     // If there are newly generated codes from previous POST, show them and clear session
     const newCodes = (req.session && req.session.newCodes) || null;
     if (req.session && req.session.newCodes) delete req.session.newCodes;
-    return res.render('promotion/admin/codes', { title: 'Codes', codes, stores, campaigns, newCodes, promotionAdmin: req.promotionAdmin });
+    return res.render('promotion/admin/codes', {
+      title: 'Codes',
+      codes,
+      stores,
+      campaigns,
+      newCodes,
+      summary,
+      selectedStoreId,
+      selectedCampaignId,
+      selectedStore,
+      selectedCampaign,
+      showExpired,
+      promotionAdmin: req.promotionAdmin
+    });
   } catch (err) {
     console.error('promotionAdmin.codes error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
@@ -657,9 +711,7 @@ exports.generateCodes = async (req, res) => {
     const campaignId = campaignIdRaw ? parseInt(campaignIdRaw, 10) : null;
     const quantity = parseInt(quantityRaw, 10);
 
-    if (scope && scope.role === 'coop_admin') {
-      storeId = scopedStoreId;
-    }
+    if (scope && scope.role === 'coop_admin') storeId = scopedStoreId;
 
     if (!Number.isInteger(storeId) || storeId <= 0) {
       req.flash('danger', 'กรุณาเลือกสาขาให้ถูกต้อง');
@@ -689,7 +741,7 @@ exports.generateCodes = async (req, res) => {
     // Store newly generated codes in session so GET can display them (PRG pattern)
     if (req.session) req.session.newCodes = newCodes;
     req.flash('success', `สร้างโค้ดสำเร็จ ${newCodes.length} รายการ`);
-    return res.redirect('/promotion/admin/codes');
+    return res.redirect(`/promotion/admin/codes?store_id=${storeId}${campaignId ? `&campaign_id=${campaignId}` : ''}`);
   } catch (err) {
     console.error('promotionAdmin.generateCodes error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะสร้างโค้ด');
@@ -706,6 +758,54 @@ exports.draws = async (req, res) => {
   } catch (err) {
     console.error('promotionAdmin.draws error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.clearCodes = async (req, res) => {
+  try {
+    const scope = getScope(req);
+    const scopedStoreId = getScopedStoreId(req);
+    let storeId = parsePositiveInt(req.body.store_id);
+    let campaignId = parsePositiveInt(req.body.campaign_id);
+
+    if (scope && scope.role === 'coop_admin') {
+      storeId = scopedStoreId;
+    }
+
+    if (campaignId) {
+      const campaign = await promotionModel.getCampaignById(campaignId);
+      if (!campaign) {
+        req.flash('danger', 'ไม่พบแคมเปญที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+      if (!storeId) {
+        storeId = Number(campaign.store_id) || null;
+      }
+      if (storeId && Number(campaign.store_id) !== Number(storeId)) {
+        req.flash('danger', 'แคมเปญนี้ไม่ได้อยู่ในสาขาที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+    }
+
+    if (!storeId) {
+      req.flash('danger', 'กรุณาเลือกสาขาก่อนล้างโค้ด');
+      return res.redirect('/promotion/admin/codes');
+    }
+
+    const removed = await promotionModel.clearUnusedCodes(scope, {
+      storeId,
+      campaignId
+    });
+
+    const scopeLabel = campaignId
+      ? `แคมเปญ #${campaignId}`
+      : `สาขา #${storeId}`;
+    req.flash('success', `ลบโค้ด unused/expired จำนวน ${removed} รายการจาก ${scopeLabel} แล้ว`);
+    return res.redirect(`/promotion/admin/codes?store_id=${storeId}${campaignId ? `&campaign_id=${campaignId}` : ''}`);
+  } catch (err) {
+    console.error('promotionAdmin.clearCodes error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะล้างโค้ด');
+    return res.redirect('/promotion/admin/codes');
   }
 };
 

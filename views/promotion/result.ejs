@@ -75,6 +75,58 @@
     margin-bottom: 20px;
   }
 
+  .promo-message {
+    margin: 0 auto 18px;
+    max-width: 560px;
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-weight: 600;
+  }
+
+  .promo-message-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  .promo-message-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  .promo-message-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .promo-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+  }
+
+  .promo-store-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+  }
+
   .promo-actions {
     display: flex;
     flex-wrap: wrap;
@@ -143,6 +195,17 @@
 
       <% const drawSafe = (typeof draw !== 'undefined') ? draw : null; %>
       <% const hasPrize = drawSafe && drawSafe.prize_id && drawSafe.prize_type !== 'other'; %>
+      <% const isClaimed = drawSafe && drawSafe.draw_status === 'claimed'; %>
+      <% const isDeclined = drawSafe && drawSafe.draw_status === 'declined'; %>
+      <% const originPlayUrl = drawSafe && drawSafe.store_code ? '/promotion/store/' + drawSafe.store_code + '/play' : '/promotion/play'; %>
+      <% const originLabel = drawSafe && drawSafe.store_name ? (drawSafe.store_name + (drawSafe.store_code ? ' (' + drawSafe.store_code + ')' : '')) : null; %>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="promo-message promo-message-<%= messageType || 'info' %>">
+          <%= message %>
+        </div>
+      <% } %>
+
       <% if (hasPrize) { %>
 
         <div class="promo-result-icon">🎉</div>
@@ -150,6 +213,22 @@
         <div class="promo-result-title promo-result-win">
           ยินดีด้วย! คุณได้รับรางวัล
         </div>
+
+        <div class="promo-status-pill">
+          <% if (isClaimed) { %>
+            เคลมแล้ว
+          <% } else if (isDeclined) { %>
+            ปฏิเสธรางวัลแล้ว
+          <% } else { %>
+            รอการเคลม
+          <% } %>
+        </div>
+
+        <% if (originLabel) { %>
+          <div class="promo-store-pill">
+            สโตร์ต้นทาง: <%= originLabel %>
+          </div>
+        <% } %>
 
         <div class="promo-prize-name">
           <%= drawSafe.prize_name %>
@@ -160,15 +239,9 @@
         </div>
 
         <div class="promo-actions">
-          <form method="post" action="/promotion/claim">
-            <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
-            <button class="promo-btn promo-btn-success">🎁 เคลมรางวัล</button>
-          </form>
-
-          <form method="post" action="/promotion/decline">
-            <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
-            <button class="promo-btn promo-btn-danger">ปฏิเสธ</button>
-          </form>
+          <a href="<%= originPlayUrl %>" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
+            ← กลับสโตร์เดิม
+          </a>
         </div>
 
       <% } else { %>
@@ -184,18 +257,12 @@
         </div>
 
         <div class="promo-actions">
-          <a href="/promotion/play" class="promo-btn promo-btn-primary">
-            🔄 ลองใหม่
+          <a href="<%= originPlayUrl %>" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
+            ← กลับสโตร์เดิม
           </a>
         </div>
 
       <% } %>
-
-      <div class="promo-actions mt-3">
-        <a href="/promotion" class="promo-btn promo-btn-outline">
-          ← กลับหน้าแรก
-        </a>
-      </div>
 
     </div>
   </div>

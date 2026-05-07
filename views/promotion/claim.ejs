@@ -1,0 +1,314 @@
+<!-- include header -->
+<%- include('header.ejs') %>
+
+<style>
+  .promo-claim-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .promo-claim-card {
+    width: 100%;
+    max-width: 760px;
+    background: #fff;
+    border-radius: 32px;
+    padding: 36px 28px;
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-claim-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(37,99,235,0.15), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(59,130,246,0.12), transparent 28%);
+    pointer-events: none;
+  }
+
+  .promo-claim-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .promo-claim-icon {
+    font-size: 76px;
+    margin-bottom: 12px;
+  }
+
+  .promo-claim-title {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #16a34a;
+    margin-bottom: 10px;
+  }
+
+  .promo-claim-subtitle {
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .promo-claim-box {
+    max-width: 620px;
+    margin: 0 auto;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    padding: 22px;
+    text-align: left;
+  }
+
+  .promo-claim-form label {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .promo-claim-input {
+    min-height: 54px;
+    border-radius: 14px;
+    border: 1.5px solid #cbd5e1;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .promo-claim-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+  }
+
+  .promo-claim-message {
+    margin: 0 auto 18px;
+    max-width: 620px;
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-weight: 600;
+  }
+
+  .promo-claim-message-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  .promo-claim-message-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+
+  .promo-claim-message-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .promo-claim-prize {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #dbeafe;
+    margin-bottom: 18px;
+  }
+
+  .promo-claim-prize-name {
+    font-weight: 800;
+    color: #1d4ed8;
+    font-size: 1.2rem;
+  }
+
+  .promo-claim-prize-desc {
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .promo-claim-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .promo-claim-store {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .promo-claim-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .promo-btn {
+    min-height: 54px;
+    padding: 12px 22px;
+    border-radius: 14px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .promo-btn-primary {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(37,99,235,0.25);
+  }
+
+  .promo-btn-primary:hover {
+    transform: translateY(-2px);
+  }
+
+  .promo-btn-outline {
+    background: #fff;
+    border: 2px solid #cbd5e1;
+    color: #0f172a;
+  }
+
+  @media(max-width:768px){
+    .promo-claim-title {
+      font-size: 1.7rem;
+    }
+
+    .promo-claim-actions {
+      flex-direction: column;
+    }
+
+    .promo-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="promo-claim-page">
+  <div class="promo-claim-card">
+    <div class="promo-claim-inner">
+      <% const drawSafe = (typeof draw !== 'undefined') ? draw : null; %>
+      <% const hasPrize = drawSafe && drawSafe.prize_id && drawSafe.prize_type !== 'other'; %>
+      <% const isClaimed = drawSafe && drawSafe.draw_status === 'claimed'; %>
+      <% const isDeclined = drawSafe && drawSafe.draw_status === 'declined'; %>
+      <% const originResultUrl = drawSafe ? '/promotion/result/' + drawSafe.draw_token : '/promotion'; %>
+      <% const originPlayUrl = drawSafe && drawSafe.store_code ? '/promotion/store/' + drawSafe.store_code + '/play' : '/promotion/play'; %>
+      <% const originLabel = drawSafe && drawSafe.store_name ? (drawSafe.store_name + (drawSafe.store_code ? ' (' + drawSafe.store_code + ')' : '')) : null; %>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="promo-claim-message promo-claim-message-<%= messageType || 'info' %>">
+          <%= message %>
+        </div>
+      <% } %>
+
+      <% if (hasPrize) { %>
+        <div class="text-center">
+          <div class="promo-claim-icon">🎁</div>
+          <div class="promo-claim-title">กรอกข้อมูลเพื่อเคลมรางวัล</div>
+          <div class="promo-claim-subtitle">โปรดระบุชื่อผู้รับรางวัลและเบอร์โทรศัพท์สำหรับติดต่อกลับ</div>
+        </div>
+
+        <div class="promo-claim-box">
+          <% if (originLabel) { %>
+            <div class="promo-claim-store">
+              สโตร์ต้นทาง: <%= originLabel %>
+            </div>
+          <% } %>
+
+          <div class="promo-claim-prize">
+            <div class="promo-claim-meta">
+              <% if (isClaimed) { %>
+                เคลมแล้ว
+              <% } else if (isDeclined) { %>
+                ปฏิเสธรางวัลแล้ว
+              <% } else { %>
+                รอการยืนยัน
+              <% } %>
+            </div>
+            <div class="promo-claim-prize-name"><%= drawSafe.prize_name %></div>
+            <div class="promo-claim-prize-desc"><%= drawSafe.prize_description || '' %></div>
+          </div>
+
+          <% if (!isClaimed && !isDeclined) { %>
+            <form class="promo-claim-form" method="post" action="/promotion/claim">
+              <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
+
+              <div class="mb-3">
+                <label for="customer_name" class="form-label">ชื่อ-นามสกุล</label>
+                <input
+                  type="text"
+                  id="customer_name"
+                  name="customer_name"
+                  class="form-control promo-claim-input"
+                  value="<%= typeof customer_name !== 'undefined' && customer_name ? customer_name : '' %>"
+                  placeholder="กรอกชื่อผู้รับรางวัล"
+                  required
+                  maxlength="100"
+                >
+              </div>
+
+              <div class="mb-3">
+                <label for="customer_phone" class="form-label">เบอร์โทรศัพท์</label>
+                <input
+                  type="tel"
+                  id="customer_phone"
+                  name="customer_phone"
+                  class="form-control promo-claim-input"
+                  value="<%= typeof customer_phone !== 'undefined' && customer_phone ? customer_phone : '' %>"
+                  placeholder="กรอกเบอร์โทรศัพท์"
+                  required
+                  maxlength="32"
+                >
+              </div>
+
+              <div class="promo-claim-actions">
+                <button type="submit" class="promo-btn promo-btn-primary">ยืนยันการเคลม</button>
+                <a href="<%= originResultUrl %>" class="promo-btn promo-btn-outline text-decoration-none d-inline-flex align-items-center justify-content-center">
+                  กลับไปหน้าผลรางวัล
+                </a>
+              </div>
+            </form>
+          <% } else { %>
+            <div class="promo-claim-actions">
+              <a href="<%= originResultUrl %>" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
+                ดูผลรางวัล
+              </a>
+              <a href="<%= originPlayUrl %>" class="promo-btn promo-btn-outline text-decoration-none d-inline-flex align-items-center justify-content-center">
+                กลับสโตร์เดิม
+              </a>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="text-center">
+          <div class="promo-claim-icon">ℹ️</div>
+          <div class="promo-claim-title" style="color:#1d4ed8;">ไม่พบข้อมูลรางวัล</div>
+          <div class="promo-claim-subtitle">กรุณากลับไปตรวจสอบผลการจับรางวัลอีกครั้ง</div>
+        </div>
+
+        <div class="promo-claim-actions justify-content-center">
+          <a href="/promotion" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
+            กลับหน้าแรก
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<!-- include footer -->
+<%- include('footer.ejs') %>

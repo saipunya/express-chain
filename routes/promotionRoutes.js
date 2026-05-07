@@ -33,6 +33,7 @@ router.post('/kiosk/claim', promotionController.kioskClaim);
 router.post('/kiosk/decline', promotionController.kioskDecline);
 router.post('/validate-code', promotionController.validateCode);
 router.post('/draw', promotionController.draw);
+router.get('/claim/:token', promotionController.showClaimForm);
 router.post('/claim', promotionController.claim);
 router.post('/decline', promotionController.decline);
 router.get('/result/:token', promotionController.result);
@@ -53,6 +54,7 @@ router.post('/admin/prizes/:id/status', promotionAdminController.updatePrizeStat
 router.post('/admin/prizes/:id/delete', promotionAdminController.deletePrize);
 router.get('/admin/codes', promotionAdminController.codes);
 router.post('/admin/codes/generate', promotionAdminController.generateCodes);
+router.post('/admin/codes/clear', promotionAdminController.clearCodes);
 router.get('/admin/draws', promotionAdminController.draws);
 router.get('/admin/stores', promotionAdminController.stores);
 router.post('/admin/stores', promotionAdminController.createStore);

@@ -156,6 +156,81 @@
     color: #64748b;
   }
 
+  .promo-summary-card {
+    margin-top: 24px;
+    border: none;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  }
+
+  .promo-summary-head {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 18px 20px;
+  }
+
+  .promo-summary-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+
+  .promo-summary-subtitle {
+    color: #64748b;
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
+
+  .promo-summary-table {
+    margin-bottom: 0;
+  }
+
+  .promo-summary-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 13px 14px;
+    white-space: nowrap;
+  }
+
+  .promo-summary-table tbody td {
+    padding: 13px 14px;
+    vertical-align: middle;
+    border-color: #eef2f7;
+    color: #0f172a;
+  }
+
+  .promo-summary-store {
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .promo-summary-code {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.84rem;
+    color: #2563eb;
+    background: #eff6ff;
+    border-radius: 10px;
+    padding: 4px 9px;
+  }
+
+  .promo-summary-num {
+    font-weight: 700;
+  }
+
+  .promo-summary-empty {
+    padding: 30px 16px !important;
+    color: #64748b !important;
+  }
+
   @media (max-width: 767.98px) {
     .promo-admin-dashboard {
       padding: 24px 0 36px;
@@ -173,6 +248,10 @@
     .promo-stat-card {
       border-radius: 18px;
       padding: 18px 16px;
+    }
+
+    .promo-summary-head {
+      padding: 16px;
     }
   }
 </style>
@@ -271,6 +350,60 @@
             <div class="promo-stat-foot">หมดอายุแล้ว</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="card promo-summary-card">
+      <div class="promo-summary-head">
+        <div class="promo-summary-title">สรุปแยกตามสโตร์</div>
+        <p class="promo-summary-subtitle">
+          ภาพรวมการใช้งานโค้ดและผลการสุ่มของแต่ละสโตร์
+        </p>
+      </div>
+      <div class="table-responsive">
+        <table class="table promo-summary-table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Store</th>
+              <th>Campaigns</th>
+              <th>Prizes</th>
+              <th>Codes</th>
+              <th>Unused</th>
+              <th>Drawn</th>
+              <th>Claimed</th>
+              <th>Declined</th>
+              <th>Draw Records</th>
+              <th>Admin Users</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (Array.isArray(storeSummaries) && storeSummaries.length) { %>
+              <% storeSummaries.forEach(store => { %>
+                <tr>
+                  <td>
+                    <div class="promo-summary-store"><%= store.name %></div>
+                    <div class="promo-summary-code"><%= store.store_code || '-' %></div>
+                  </td>
+                  <td class="promo-summary-num"><%= store.campaigns || 0 %></td>
+                  <td class="promo-summary-num"><%= store.prizes || 0 %></td>
+                  <td class="promo-summary-num"><%= store.total_codes || 0 %></td>
+                  <td class="promo-summary-num text-success"><%= store.unused_codes || 0 %></td>
+                  <td class="promo-summary-num text-primary"><%= store.drawn_codes || 0 %></td>
+                  <td class="promo-summary-num text-info"><%= store.claimed_codes || 0 %></td>
+                  <td class="promo-summary-num text-warning"><%= store.declined_codes || 0 %></td>
+                  <td class="promo-summary-num"><%= store.total_draws || 0 %></td>
+                  <td class="promo-summary-num"><%= store.coop_admin_users || 0 %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="10" class="text-center promo-summary-empty">
+                  ยังไม่พบข้อมูลสรุปแยกสโตร์
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
       </div>
     </div>
 

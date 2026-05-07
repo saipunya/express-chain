@@ -31,6 +31,20 @@ function sanitizeStoreCode(raw) {
   return String(raw || '').trim().toUpperCase().slice(0, 50).replace(/[^A-Z0-9_-]/g, '');
 }
 
+function renderResultPage(res, status, options = {}) {
+  return res.status(status).render('promotion/result', {
+    title: 'ผลการจับรางวัล',
+    ...options
+  });
+}
+
+function renderClaimPage(res, status, options = {}) {
+  return res.status(status).render('promotion/claim', {
+    title: 'เคลมรางวัล',
+    ...options
+  });
+}
+
 async function findStoreByCode(storeCodeRaw) {
   const storeCode = sanitizeStoreCode(storeCodeRaw);
   if (!storeCode) return null;
@@ -844,8 +858,7 @@ exports.claim = async (req, res) => {
   const customerName = sanitizeName(req.body.customer_name || '');
   const customerPhone = sanitizePhone(req.body.customer_phone || '');
 
-  if (!isValidToken(token)) return res.status(400).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'Token ไม่ถูกต้อง', messageType: 'danger' });
-  if (!customerName || !customerPhone) return res.status(400).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'กรุณาระบุชื่อและเบอร์โทรศัพท์', messageType: 'danger' });
+  if (!isValidToken(token)) return renderClaimPage(res, 400, { message: 'Token ไม่ถูกต้อง', messageType: 'danger' });
 
   const conn = await db.getConnection();
   try {
@@ -854,31 +867,66 @@ exports.claim = async (req, res) => {
     const drawRow = await promotionModel.lockDrawByToken(conn, token);
     if (!drawRow) {
       await conn.rollback();
-      return res.status(404).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
+      return renderClaimPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
     }
 
     if (drawRow.draw_status !== 'drawn') {
       await conn.rollback();
-      return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'การจับรางวัลนี้ไม่สามารถเคลมได้', messageType: 'warning' });
+      return renderClaimPage(res, 200, {
+        draw: drawRow,
+        message: 'การจับรางวัลนี้ไม่สามารถเคลมได้',
+        messageType: 'warning',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
     }
 
     if (!drawRow.prize_id) {
       await conn.rollback();
-      return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'ไม่พบรางวัลที่จะเคลม', messageType: 'info' });
+      return renderClaimPage(res, 200, {
+        draw: drawRow,
+        message: 'ไม่พบรางวัลที่จะเคลม',
+        messageType: 'info',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
+    }
+
+    if (!customerName || !customerPhone) {
+      await conn.rollback();
+      return renderClaimPage(res, 400, {
+        draw: drawRow,
+        message: 'กรุณาระบุชื่อและเบอร์โทรศัพท์',
+        messageType: 'danger',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
     }
 
     // lock prize row
     const prizeLocked = await promotionModel.lockPrizeById(conn, drawRow.prize_id);
     if (!prizeLocked) {
       await conn.rollback();
-      return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'ไม่สามารถประมวลผลรางวัลได้ (ล็อกไม่สำเร็จ)', messageType: 'danger' });
+      return renderClaimPage(res, 500, {
+        draw: drawRow,
+        message: 'ไม่สามารถประมวลผลรางวัลได้ (ล็อกไม่สำเร็จ)',
+        messageType: 'danger',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
     }
 
     // mark draw claimed
     const ok1 = await promotionModel.markDrawClaimed(conn, drawRow.id, customerName, customerPhone);
     if (!ok1) {
       await conn.rollback();
-      return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'ไม่สามารถอัปเดตสถานะการเคลมได้', messageType: 'danger' });
+      return renderClaimPage(res, 500, {
+        draw: drawRow,
+        message: 'ไม่สามารถอัปเดตสถานะการเคลมได้',
+        messageType: 'danger',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
     }
 
     // mark code claimed
@@ -888,7 +936,13 @@ exports.claim = async (req, res) => {
     const okInv = await promotionModel.decrementReservedAndRemaining(conn, drawRow.prize_id);
     if (!okInv) {
       await conn.rollback();
-      return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'ไม่สามารถอัปเดตสต็อกได้', messageType: 'danger' });
+      return renderClaimPage(res, 500, {
+        draw: drawRow,
+        message: 'ไม่สามารถอัปเดตสต็อกได้',
+        messageType: 'danger',
+        customer_name: customerName,
+        customer_phone: customerPhone
+      });
     }
 
     await conn.commit();
@@ -896,9 +950,32 @@ exports.claim = async (req, res) => {
   } catch (err) {
     try { await conn.rollback(); } catch (e) { }
     console.error('promotion.claim error', err);
-    return res.status(500).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'เกิดข้อผิดพลาดขณะเคลม', messageType: 'danger' });
+    return renderClaimPage(res, 500, { message: 'เกิดข้อผิดพลาดขณะเคลม', messageType: 'danger' });
   } finally {
     try { conn.release(); } catch (e) { }
+  }
+};
+
+/**
+ * GET /promotion/claim/:token
+ * Show the claim form for a winning draw.
+ */
+exports.showClaimForm = async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidToken(token)) {
+      return renderClaimPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
+    }
+
+    const draw = await promotionModel.getDrawWithDetailsByToken(token);
+    if (!draw) {
+      return renderClaimPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
+    }
+
+    return renderClaimPage(res, 200, { draw });
+  } catch (err) {
+    console.error('promotion.showClaimForm error', err);
+    return renderClaimPage(res, 500, { message: 'เกิดข้อผิดพลาด', messageType: 'danger' });
   }
 };
 
@@ -961,16 +1038,16 @@ exports.decline = async (req, res) => {
 exports.result = async (req, res) => {
   try {
     const token = String(req.params.token || '').trim();
-    if (!isValidToken(token)) return res.status(404).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
+    if (!isValidToken(token)) return renderResultPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
 
     const draw = await promotionModel.getDrawWithDetailsByToken(token);
     if (!draw) {
-      return res.status(404).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
+      return renderResultPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
     }
 
-    return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw });
+    return renderResultPage(res, 200, { draw });
   } catch (err) {
     console.error('promotion.result error', err);
-    return res.status(500).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'เกิดข้อผิดพลาด', messageType: 'danger' });
+    return renderResultPage(res, 500, { message: 'เกิดข้อผิดพลาด', messageType: 'danger' });
   }
 };

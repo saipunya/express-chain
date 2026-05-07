@@ -218,6 +218,7 @@
           <table class="table promo-draws-table table-hover mb-0">
             <thead>
               <tr>
+                <th>Store</th>
                 <th>Token</th>
                 <th>Code</th>
                 <th>Prize</th>
@@ -233,6 +234,14 @@
               <% if (Array.isArray(draws) && draws.length) { %>
                 <% draws.forEach(d => { %>
                   <tr>
+                    <td>
+                      <% if (d.store_name) { %>
+                        <div class="fw-semibold"><%= d.store_name %></div>
+                        <div class="text-muted small"><%= d.store_code || '-' %></div>
+                      <% } else { %>
+                        <span class="promo-muted">-</span>
+                      <% } %>
+                    </td>
                     <td>
                       <span class="promo-token" title="<%= d.draw_token %>">
                         <%= d.draw_token %>
@@ -266,7 +275,7 @@
                 <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="9" class="text-center promo-empty">
+                  <td colspan="10" class="text-center promo-empty">
                     ยังไม่พบประวัติการจับรางวัลในระบบ
                   </td>
                 </tr>

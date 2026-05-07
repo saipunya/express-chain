@@ -91,6 +91,74 @@ async function getStoreImpactCounts(storeId) {
   return rows[0] || { campaigns: 0, prizes: 0, codes: 0, draws: 0, coop_admin_users: 0 };
 }
 
+async function getStoreDashboardSummaries(scope = null) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const where = scopedStoreId ? 'WHERE s.id = ?' : '';
+  const params = scopedStoreId ? [scopedStoreId] : [];
+  const [rows] = await db.query(
+    `SELECT
+       s.id,
+       s.name,
+       s.store_code,
+       COALESCE(campaign_stats.campaigns, 0) AS campaigns,
+       COALESCE(prize_stats.prizes, 0) AS prizes,
+       COALESCE(admin_stats.coop_admin_users, 0) AS coop_admin_users,
+       COALESCE(code_stats.total, 0) AS total_codes,
+       COALESCE(code_stats.unused, 0) AS unused_codes,
+       COALESCE(code_stats.drawn, 0) AS drawn_codes,
+       COALESCE(code_stats.claimed, 0) AS claimed_codes,
+       COALESCE(code_stats.declined, 0) AS declined_codes,
+       COALESCE(code_stats.expired, 0) AS expired_codes,
+       COALESCE(draw_stats.total, 0) AS total_draws,
+       COALESCE(draw_stats.drawn, 0) AS drawn_draws,
+       COALESCE(draw_stats.claimed, 0) AS claimed_draws,
+       COALESCE(draw_stats.declined, 0) AS declined_draws
+     FROM stores s
+     LEFT JOIN (
+       SELECT store_id, COUNT(*) AS campaigns
+       FROM promotion_campaigns
+       GROUP BY store_id
+     ) campaign_stats ON campaign_stats.store_id = s.id
+     LEFT JOIN (
+       SELECT store_id, COUNT(*) AS prizes
+       FROM promotion_prizes
+       GROUP BY store_id
+     ) prize_stats ON prize_stats.store_id = s.id
+     LEFT JOIN (
+       SELECT store_id, COUNT(*) AS coop_admin_users
+       FROM promotion_admin_users
+       WHERE role = 'coop_admin'
+       GROUP BY store_id
+     ) admin_stats ON admin_stats.store_id = s.id
+     LEFT JOIN (
+       SELECT
+         store_id,
+         COUNT(*) AS total,
+         SUM(status = 'unused') AS unused,
+         SUM(status = 'drawn') AS drawn,
+         SUM(status = 'claimed') AS claimed,
+         SUM(status = 'declined') AS declined,
+         SUM(status = 'expired') AS expired
+       FROM promotion_codes
+       GROUP BY store_id
+     ) code_stats ON code_stats.store_id = s.id
+     LEFT JOIN (
+       SELECT
+         store_id,
+         COUNT(*) AS total,
+         SUM(draw_status = 'drawn') AS drawn,
+         SUM(draw_status = 'claimed') AS claimed,
+         SUM(draw_status = 'declined') AS declined
+       FROM promotion_draws
+       GROUP BY store_id
+     ) draw_stats ON draw_stats.store_id = s.id
+     ${where}
+     ORDER BY s.name ASC`,
+    params
+  );
+  return rows;
+}
+
 async function deleteStoreById(storeId) {
   const [result] = await db.query('DELETE FROM stores WHERE id = ?', [storeId]);
   return Boolean(result && result.affectedRows > 0);
@@ -151,6 +219,7 @@ module.exports = {
   updateStoreMetadataById,
   getStoreImpactCounts,
   deleteStoreById,
+  getStoreDashboardSummaries,
   getCampaignById,
   getActiveCampaignByStore,
   getCampaignByCodeInStore,
@@ -163,6 +232,7 @@ module.exports = {
   getDrawByToken,
   // Admin/read-only helpers
   getCodeCounts,
+  getCodeSummary,
   getCampaignsWithStore,
   getStoresList,
   getPrizesList,
@@ -174,6 +244,7 @@ module.exports = {
   deletePrizeById,
   createPrize,
   getCodesList,
+  clearUnusedCodes,
   getDrawsList,
   createCodesBatch,
   // Transactional helpers
@@ -236,13 +307,39 @@ async function decrementReservedOnly(connection, prizeId) {
 
  
 
+function buildCodeFilters(scope = null, filters = {}) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const selectedStoreId = scopedStoreId || (Number.isInteger(Number(filters.storeId)) && Number(filters.storeId) > 0 ? Number(filters.storeId) : null);
+  const selectedCampaignId = Number.isInteger(Number(filters.campaignId)) && Number(filters.campaignId) > 0
+    ? Number(filters.campaignId)
+    : null;
+
+  const where = [];
+  const params = [];
+
+  if (selectedStoreId) {
+    where.push('store_id = ?');
+    params.push(selectedStoreId);
+  }
+
+  if (selectedCampaignId) {
+    where.push('campaign_id = ?');
+    params.push(selectedCampaignId);
+  }
+
+  return {
+    selectedStoreId,
+    selectedCampaignId,
+    whereSql: where.length ? `WHERE ${where.join(' AND ')}` : '',
+    params
+  };
+}
+
 /**
  * Get aggregate counts for promotion codes by status
  */
-async function getCodeCounts(scope = null) {
-  const scopedStoreId = getScopedStoreId(scope);
-  const where = scopedStoreId ? 'WHERE store_id = ?' : '';
-  const params = scopedStoreId ? [scopedStoreId] : [];
+async function getCodeCounts(scope = null, filters = {}) {
+  const { whereSql, params } = buildCodeFilters(scope, filters);
   const [rows] = await db.query(
     `SELECT
        COUNT(*) AS total,
@@ -252,10 +349,37 @@ async function getCodeCounts(scope = null) {
        SUM(status = 'declined') AS declined,
        SUM(status = 'expired') AS expired
      FROM promotion_codes
-     ${where}`,
+     ${whereSql}`,
     params
   );
-  return rows[0] || { total: 0, unused: 0, drawn: 0, claimed: 0, declined: 0, expired: 0 };
+  const row = rows[0] || { total: 0, unused: 0, drawn: 0, claimed: 0, declined: 0, expired: 0 };
+  return {
+    ...row,
+    used: Math.max(0, Number(row.total || 0) - Number(row.unused || 0))
+  };
+}
+
+async function getCodeSummary(scope = null, filters = {}) {
+  const { selectedStoreId, selectedCampaignId, whereSql, params } = buildCodeFilters(scope, filters);
+  const [rows] = await db.query(
+    `SELECT
+       COUNT(*) AS total,
+       SUM(status = 'unused') AS unused,
+       SUM(status = 'drawn') AS drawn,
+       SUM(status = 'claimed') AS claimed,
+       SUM(status = 'declined') AS declined,
+       SUM(status = 'expired') AS expired
+     FROM promotion_codes
+     ${whereSql}`,
+    params
+  );
+  const row = rows[0] || { total: 0, unused: 0, drawn: 0, claimed: 0, declined: 0, expired: 0 };
+  return {
+    ...row,
+    used: Math.max(0, Number(row.total || 0) - Number(row.unused || 0)),
+    selectedStoreId,
+    selectedCampaignId
+  };
 }
 
  
@@ -265,21 +389,75 @@ async function getCodeCounts(scope = null) {
 /**
  * Get codes list (read-only)
  */
-async function getCodesList(limit = 500, scope = null) {
-  const scopedStoreId = getScopedStoreId(scope);
-  const where = scopedStoreId ? 'WHERE pc.store_id = ?' : '';
-  const params = scopedStoreId ? [scopedStoreId, limit] : [limit];
+async function getCodesList(limit = 500, scope = null, filters = {}) {
+  const { whereSql, params } = buildCodeFilters(scope, filters);
+  const includeExpired = Boolean(filters.includeExpired);
+  const statusClause = includeExpired ? '' : (whereSql ? ' AND pc.status <> \'expired\'' : 'WHERE pc.status <> \'expired\'');
+  const listParams = [...params, limit];
   const [rows] = await db.query(
-    `SELECT pc.*, c.name AS campaign_name, s.name AS store_name, s.store_code
+     `SELECT pc.*, c.name AS campaign_name, s.name AS store_name, s.store_code
      FROM promotion_codes pc
      LEFT JOIN promotion_campaigns c ON pc.campaign_id = c.id
      LEFT JOIN stores s ON pc.store_id = s.id
-     ${where}
+     ${whereSql ? whereSql.replace(/store_id|campaign_id/g, 'pc.$&') : ''}${statusClause}
      ORDER BY pc.issued_at DESC
      LIMIT ?`,
-    params
+    listParams
   );
   return rows;
+}
+
+async function clearUnusedCodes(scope = null, filters = {}) {
+  const { whereSql, params } = buildCodeFilters(scope, filters);
+  if (!params.length) {
+    return 0;
+  }
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
+      `SELECT id
+       FROM promotion_codes
+       ${whereSql ? `${whereSql} AND` : 'WHERE'} status IN ('unused', 'expired')
+       FOR UPDATE`,
+      params
+    );
+
+    const ids = Array.isArray(rows) ? rows.map(r => r.id).filter(Boolean) : [];
+    if (!ids.length) {
+      await connection.commit();
+      return 0;
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    try {
+      const [result] = await connection.query(
+        `DELETE FROM promotion_codes WHERE id IN (${placeholders})`,
+        ids
+      );
+      await connection.commit();
+      return Number(result && result.affectedRows) || 0;
+    } catch (deleteErr) {
+      // Fallback to a soft clear if hard delete is blocked by schema constraints.
+      await connection.rollback();
+      await connection.beginTransaction();
+      const [result] = await connection.query(
+        `UPDATE promotion_codes
+         SET status = 'expired', updated_at = NOW()
+         WHERE id IN (${placeholders})`,
+        ids
+      );
+      await connection.commit();
+      return Number(result && result.affectedRows) || 0;
+    }
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
 }
 
  

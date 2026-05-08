@@ -154,7 +154,12 @@ async function validateTravelRequestSelection(travelRequestId, currentVehicleReq
 }
 
 async function resolveVehicleRequestNoForDirect() {
-  return previewRunningNumber('vehicle_requests');
+  try {
+    return await previewRunningNumber('vehicle_requests');
+  } catch (error) {
+    console.error('Error previewing direct vehicle request number:', error);
+    return DIRECT_VEHICLE_REQUEST_NO;
+  }
 }
 
 async function resolveVehicleRequestNoByTravelRequestId(travelRequestId, fallback = '') {
@@ -245,9 +250,10 @@ async function renderForm(res, overrides = {}) {
 async function renderDirectForm(res, overrides = {}) {
   const user = overrides.user || res.locals.user || {};
   const [vehicles, drivers] = await loadDirectAssignmentOptions();
+  const vehicleRequestNo = overrides.vehicle_request_no || await resolveVehicleRequestNoForDirect();
   const item = {
     ...(overrides.item || {}),
-    vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+    vehicle_request_no: vehicleRequestNo,
     request_date: overrides.request_date || new Date().toISOString().slice(0, 10),
     learn_to: overrides.learn_to || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ',
     travel_request_id: '',
@@ -297,14 +303,16 @@ exports.list = async (req, res) => {
     res.render('vehicle-request/list', {
       title: 'รายการคำขอใช้รถราชการ',
       items,
-      warning: null
+      warning: null,
+      notice: req.query.notice === 'deleted' ? 'ลบคำขอใช้รถยนต์ตรงเรียบร้อยแล้ว' : null
     });
   } catch (error) {
     if (isMissingWorkflowTable(error)) {
       return res.render('vehicle-request/list', {
         title: 'รายการคำขอใช้รถราชการ',
         items: [],
-        warning: 'ยังไม่พบตาราง workflow คำขอใช้รถในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นข้อมูลจริง'
+        warning: 'ยังไม่พบตาราง workflow คำขอใช้รถในฐานข้อมูล กรุณารัน migration ก่อนจึงจะเห็นข้อมูลจริง',
+        notice: null
       });
     }
     console.error('Error listing vehicle requests:', error);
@@ -490,10 +498,11 @@ exports.createDirect = async (req, res) => {
 
     try {
       await connection.beginTransaction();
+      const vehicleRequestNo = await resolveVehicleRequestNoForDirect();
       const id = await vehicleRequestModel.createWithConnection(connection, {
         ...payload,
         travel_request_id: null,
-        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        vehicle_request_no: vehicleRequestNo,
         status: 'draft'
       });
 
@@ -524,8 +533,8 @@ exports.createDirect = async (req, res) => {
       item: {
         ...req.body,
         travel_request_id: '',
-        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
       },
+      vehicle_request_no: req.body.vehicle_request_no || DIRECT_VEHICLE_REQUEST_NO,
       vehicle_id: req.body.vehicle_id || '',
       driver_id: req.body.driver_id || '',
       assignment_note: req.body.assignment_note || '',
@@ -566,10 +575,11 @@ exports.updateDirect = async (req, res) => {
 
     try {
       await connection.beginTransaction();
+      const vehicleRequestNo = current.vehicle_request_no || await resolveVehicleRequestNoForDirect();
       await vehicleRequestModel.updateWithConnection(connection, req.params.id, {
         ...payload,
         travel_request_id: null,
-        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        vehicle_request_no: vehicleRequestNo,
         status: current.status
       });
 
@@ -602,7 +612,7 @@ exports.updateDirect = async (req, res) => {
       item: {
         ...req.body,
         travel_request_id: '',
-        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO
+        vehicle_request_no: current?.vehicle_request_no || DIRECT_VEHICLE_REQUEST_NO
       },
       vehicle_id: req.body.vehicle_id || current?.vehicle_id || '',
       driver_id: req.body.driver_id || current?.driver_id || '',
@@ -620,11 +630,42 @@ exports.viewOne = async (req, res) => {
     }
     res.render('vehicle-request/detail', {
       title: 'รายละเอียดคำขอใช้รถราชการ',
-      item
+      item,
+      user: req.session?.user,
+      canDeleteDirect: !item.travel_request_id && hasDirectVehicleAccess(req.session?.user) && item.status === 'draft'
     });
   } catch (error) {
     console.error('Error loading vehicle request:', error);
     res.status(500).send('ไม่สามารถโหลดรายละเอียดคำขอใช้รถได้');
+  }
+};
+
+exports.deleteDirect = async (req, res) => {
+  try {
+    if (!hasDirectVehicleAccess(req.session?.user)) {
+      return res.status(403).send('ไม่มีสิทธิ์ลบคำขอใช้รถยนต์ตรง');
+    }
+
+    const item = await vehicleRequestModel.getDetailById(req.params.id);
+    if (!item) {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+
+    await vehicleRequestModel.removeDirect(req.params.id, req.session?.user);
+    return res.redirect('/vehicle-request?notice=deleted');
+  } catch (error) {
+    if (error.code === 'DIRECT_ONLY') {
+      return res.status(400).send('ลบได้เฉพาะคำขอใช้รถยนต์ตรง');
+    }
+    if (error.code === 'DIRECT_DELETE_NOT_ALLOWED') {
+      return res.status(400).send('ลบได้เฉพาะคำขอสถานะร่างเท่านั้น');
+    }
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).send('ไม่พบคำขอใช้รถราชการ');
+    }
+
+    console.error('Error deleting direct vehicle request:', error);
+    res.status(500).send('ไม่สามารถลบคำขอใช้รถยนต์ตรงได้');
   }
 };
 

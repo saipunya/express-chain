@@ -16,6 +16,7 @@ router.get('/:id', controller.viewOne);
 router.get('/:id/edit', controller.editForm);
 router.post('/:id/edit', controller.update);
 router.post('/:id/edit-direct', requireLevel(['admin', 'pbt']), controller.updateDirect);
+router.post('/:id/delete-direct', requireLevel(['admin', 'pbt']), controller.deleteDirect);
 router.post('/:id/submit', controller.submit);
 router.get('/:id/print', controller.printView);
 

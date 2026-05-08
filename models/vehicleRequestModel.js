@@ -397,6 +397,57 @@ async function cancelDriverQueueItem(id, user) {
   }
 }
 
+async function removeDirect(id, user = null) {
+  const actor = user?.fullname || user?.username || 'system';
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[item]] = await connection.query(
+      `SELECT id, travel_request_id, status
+       FROM vehicle_requests
+       WHERE id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (!item) {
+      const error = new Error('NOT_FOUND');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    if (item.travel_request_id) {
+      const error = new Error('DIRECT_ONLY');
+      error.code = 'DIRECT_ONLY';
+      throw error;
+    }
+
+    if (item.status !== 'draft') {
+      const error = new Error('DIRECT_DELETE_NOT_ALLOWED');
+      error.code = 'DIRECT_DELETE_NOT_ALLOWED';
+      throw error;
+    }
+
+    await connection.query('DELETE FROM vehicle_trip_logs WHERE vehicle_request_id = ?', [id]);
+    await connection.query('DELETE FROM vehicle_assignments WHERE vehicle_request_id = ?', [id]);
+    await connection.query(
+      'UPDATE vehicle_requests SET updated_by = ? WHERE id = ?',
+      [actor, id]
+    );
+    await connection.query('DELETE FROM vehicle_requests WHERE id = ?', [id]);
+
+    await connection.commit();
+    return item;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   approve,
   cancelDriverQueueItem,
@@ -409,6 +460,7 @@ module.exports = {
   listReport,
   listPendingApproval,
   reject,
+  removeDirect,
   submit,
   update,
   updateWithConnection,

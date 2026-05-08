@@ -3,7 +3,10 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
     <h3 class="mb-1">รายละเอียดงานขับรถ</h3>
-    <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <p class="text-muted mb-0"><%= item.vehicle_request_no %></p>
+      <span class="badge text-bg-light border"><%= item.travel_request_id ? 'คำขอปกติ' : 'คำขอใช้รถยนต์ตรง' %></span>
+    </div>
   </div>
   <a href="/driver-trip/queue" class="btn btn-outline-secondary">กลับคิวงาน</a>
 </div>
@@ -16,6 +19,26 @@
   <div class="col-lg-7">
     <div class="card shadow-sm border-0">
       <div class="card-body">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <div class="text-muted small mb-1">ประเภทงาน</div>
+              <div class="fw-semibold"><%= item.travel_request_id ? 'คำขอปกติ' : 'คำขอใช้รถยนต์ตรง' %></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <div class="text-muted small mb-1">รถ</div>
+              <div class="fw-semibold"><%= item.plate_no_snapshot || '-' %></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <div class="text-muted small mb-1">คนขับ</div>
+              <div class="fw-semibold"><%= item.driver_name_snapshot || '-' %></div>
+            </div>
+          </div>
+        </div>
         <dl class="row mb-0">
           <dt class="col-sm-4">ผู้ขอ</dt><dd class="col-sm-8"><%= item.requester_name %></dd>
           <dt class="col-sm-4">ปลายทาง</dt><dd class="col-sm-8"><%= item.destination_text %></dd>

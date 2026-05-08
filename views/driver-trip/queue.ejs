@@ -109,6 +109,10 @@
        return item.log_status;
      } %>
 
+  <% function getRequestTypeLabel(item) {
+       return item.travel_request_id ? 'คำขอปกติ' : 'คำขอใช้รถยนต์ตรง';
+     } %>
+
   <% (queueGroups || []).forEach((group) => { %>
     <div class="card shadow-sm queue-card mb-4">
       <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -139,7 +143,10 @@
             <% } %>
             <% group.items.forEach((item) => { %>
               <tr>
-                <td><%= item.vehicle_request_no %></td>
+                <td>
+                  <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                  <span class="badge text-bg-light border mt-1"><%= getRequestTypeLabel(item) %></span>
+                </td>
                 <td><%= item.requester_name %></td>
                 <td><%= item.destination_text %></td>
                 <td>
@@ -184,6 +191,7 @@
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                   <div>
                     <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+                    <span class="badge text-bg-light border mt-1"><%= getRequestTypeLabel(item) %></span>
                     <div class="small text-muted"><%= item.requester_name %></div>
                   </div>
                   <span class="badge <%= item.log_status ? 'bg-success' : 'bg-danger' %> text-nowrap">
@@ -194,6 +202,11 @@
                 <div class="mb-3">
                   <div class="meta-label">ปลายทาง</div>
                   <div class="meta-value"><%= item.destination_text %></div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="meta-label">ประเภทงาน</div>
+                  <div class="meta-value"><%= getRequestTypeLabel(item) %></div>
                 </div>
 
                 <div class="row g-2 mb-3">

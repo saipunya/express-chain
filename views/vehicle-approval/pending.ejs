@@ -86,4 +86,67 @@
   </div>
 </div>
 
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h5 class="mb-0">สถานะรถ 7 วันข้างหน้า</h5>
+      <div class="small text-muted">
+        <% if (availabilityStart && availabilityEnd) { %>
+          ช่วง <%= new Date(availabilityStart).toLocaleDateString('th-TH', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' }) %> ถึง <%= new Date(availabilityEnd).toLocaleDateString('th-TH', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' }) %>
+        <% } else { %>
+          แสดงสถานะรถที่มีการมอบหมายในช่วง 7 วันถัดไป
+        <% } %>
+      </div>
+    </div>
+    <span class="badge bg-primary"><%= vehicleAvailability.length %> คัน</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="min-width: 160px; position: sticky; left: 0; background: #f8f9fa; z-index: 2;">วันที่</th>
+          <% (vehicleAvailability || []).forEach((vehicle) => { %>
+            <th class="text-center" style="min-width: 170px;">
+              <div class="fw-semibold"><%= vehicle.plate_no %></div>
+              <div class="small text-muted"><%= vehicle.vehicle_name || '-' %></div>
+            </th>
+          <% }) %>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!(availabilityMatrix || []).length) { %>
+          <tr>
+            <td colspan="<%= (vehicleAvailability || []).length + 1 %>" class="text-center py-4 text-muted">ยังไม่มีข้อมูลรถในช่วง 7 วันข้างหน้า</td>
+          </tr>
+        <% } %>
+        <% (availabilityMatrix || []).forEach((row) => { %>
+          <tr>
+            <th class="table-light" style="position: sticky; left: 0; z-index: 1;"><%= row.date_label %></th>
+            <% (row.cells || []).forEach((cell) => { %>
+              <td class="align-top">
+                <% if (cell.available) { %>
+                  <div class="badge bg-success mb-2">ว่าง</div>
+                <% } else { %>
+                  <div class="badge bg-danger mb-2">ไม่ว่าง</div>
+                  <% cell.assignments.forEach((assignment) => { %>
+                    <div class="mb-2 p-2 rounded border bg-light">
+                      <div class="fw-semibold"><%= assignment.vehicle_request_no %></div>
+                      <div class="small text-muted">
+                        <%= new Date(assignment.trip_start_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }) %>
+                        ถึง
+                        <%= new Date(assignment.trip_end_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }) %>
+                      </div>
+                      <div class="small">คนขับ: <%= assignment.driver_name || '-' %></div>
+                    </div>
+                  <% }) %>
+                <% } %>
+              </td>
+            <% }) %>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <%- include('../partials/footer') %>

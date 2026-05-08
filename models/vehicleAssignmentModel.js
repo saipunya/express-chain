@@ -31,6 +31,33 @@ async function findOverlappingAssignment(vehicleId, startAt, endAt, excludedVehi
   return rows[0] || null;
 }
 
+async function listUpcomingVehicleAvailability(startAt, endAt) {
+  const [rows] = await db.query(
+    `SELECT
+       va.vehicle_id,
+       vm.plate_no,
+       vm.vehicle_name,
+       vr.id AS vehicle_request_id,
+       vr.vehicle_request_no,
+       vr.trip_start_at,
+       vr.trip_end_at,
+       vr.status AS vehicle_request_status,
+       COALESCE(va.driver_name_snapshot, dm.driver_name) AS driver_name,
+       va.assignment_note
+     FROM vehicle_assignments va
+     INNER JOIN vehicle_requests vr ON vr.id = va.vehicle_request_id
+     INNER JOIN vehicle_masters vm ON vm.id = va.vehicle_id
+     LEFT JOIN driver_masters dm ON dm.id = va.driver_id
+     WHERE vr.status IN ('assigned', 'in_progress')
+       AND vr.trip_start_at <= ?
+       AND vr.trip_end_at >= ?
+     ORDER BY vm.plate_no ASC, vr.trip_start_at ASC, vr.id ASC`,
+    [endAt, startAt]
+  );
+
+  return rows;
+}
+
 async function upsertAssignment(payload) {
   const connection = await db.getConnection();
   try {
@@ -92,6 +119,7 @@ async function upsertAssignmentWithConnection(connection, payload) {
 
 module.exports = {
   findOverlappingAssignment,
+  listUpcomingVehicleAvailability,
   upsertAssignment,
   upsertAssignmentWithConnection
 };

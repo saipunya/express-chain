@@ -128,6 +128,7 @@ exports.mobileCalendarView = async (req, res) => {
         date: dateStr,
         time: props.timeLabel || (event.allDay ? null : String(event.start).slice(11, 16)),
         activity: event.title,
+        dateLabel: props.dateLabel || null,
         place: props.place || null,
         respon: props.respon || null,
         goto: props.goto || null,

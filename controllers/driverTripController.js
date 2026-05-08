@@ -20,6 +20,21 @@ function isLoggedTrip(item = {}) {
   );
 }
 
+function isDirectQueueItem(item = {}) {
+  return !item.travel_request_id;
+}
+
+function sortByTripStartAsc(items = []) {
+  return [...items].sort((left, right) => {
+    const leftTime = new Date(left.trip_start_at || 0).getTime();
+    const rightTime = new Date(right.trip_start_at || 0).getTime();
+    if (Number.isNaN(leftTime) && Number.isNaN(rightTime)) return 0;
+    if (Number.isNaN(leftTime)) return 1;
+    if (Number.isNaN(rightTime)) return -1;
+    return leftTime - rightTime;
+  });
+}
+
 function formatMonthKeyLocal(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
@@ -88,8 +103,12 @@ exports.queue = async (req, res) => {
         driverMasterModel.listActive()
       ])
       : [[], []];
-    const newItems = items.filter((item) => !isLoggedTrip(item));
-    const loggedItems = items.filter((item) => isLoggedTrip(item));
+    const directItems = items.filter((item) => isDirectQueueItem(item));
+    const officialItems = items.filter((item) => !isDirectQueueItem(item));
+    const directNewItems = sortByTripStartAsc(directItems.filter((item) => !isLoggedTrip(item)));
+    const directLoggedItems = sortByTripStartAsc(directItems.filter((item) => isLoggedTrip(item)));
+    const officialNewItems = sortByTripStartAsc(officialItems.filter((item) => !isLoggedTrip(item)));
+    const officialLoggedItems = sortByTripStartAsc(officialItems.filter((item) => isLoggedTrip(item)));
     res.render('driver-trip/queue', {
       title: 'คิวงานคนขับรถ',
       items,
@@ -100,18 +119,32 @@ exports.queue = async (req, res) => {
       error: req.query.error || null,
       queueGroups: [
         {
-          key: 'new',
-          title: 'เข้าใหม่',
+          key: 'direct-new',
+          title: 'คำขอใช้รถยนต์ตรง - เข้าใหม่',
           subtitle: 'ยังไม่บันทึกเวลาและไมล์',
           badgeClass: 'bg-danger',
-          items: newItems
+          items: directNewItems
         },
         {
-          key: 'logged',
-          title: 'บันทึกเวลาและไมล์แล้ว',
+          key: 'direct-logged',
+          title: 'คำขอใช้รถยนต์ตรง - บันทึกแล้ว',
           subtitle: 'มีการบันทึกเวลา/ไมล์อย่างน้อย 1 รายการ',
           badgeClass: 'bg-success',
-          items: loggedItems
+          items: directLoggedItems
+        },
+        {
+          key: 'official-new',
+          title: 'คำขอปกติ - เข้าใหม่',
+          subtitle: 'ยังไม่บันทึกเวลาและไมล์',
+          badgeClass: 'bg-warning text-dark',
+          items: officialNewItems
+        },
+        {
+          key: 'official-logged',
+          title: 'คำขอปกติ - บันทึกแล้ว',
+          subtitle: 'มีการบันทึกเวลา/ไมล์อย่างน้อย 1 รายการ',
+          badgeClass: 'bg-success',
+          items: officialLoggedItems
         }
       ],
       warning: null
@@ -128,15 +161,29 @@ exports.queue = async (req, res) => {
         error: null,
         queueGroups: [
           {
-            key: 'new',
-            title: 'เข้าใหม่',
+            key: 'direct-new',
+            title: 'คำขอใช้รถยนต์ตรง - เข้าใหม่',
             subtitle: 'ยังไม่บันทึกเวลาและไมล์',
             badgeClass: 'bg-danger',
             items: []
           },
           {
-            key: 'logged',
-            title: 'บันทึกเวลาและไมล์แล้ว',
+            key: 'direct-logged',
+            title: 'คำขอใช้รถยนต์ตรง - บันทึกแล้ว',
+            subtitle: 'มีการบันทึกเวลา/ไมล์อย่างน้อย 1 รายการ',
+            badgeClass: 'bg-success',
+            items: []
+          },
+          {
+            key: 'official-new',
+            title: 'คำขอปกติ - เข้าใหม่',
+            subtitle: 'ยังไม่บันทึกเวลาและไมล์',
+            badgeClass: 'bg-warning text-dark',
+            items: []
+          },
+          {
+            key: 'official-logged',
+            title: 'คำขอปกติ - บันทึกแล้ว',
             subtitle: 'มีการบันทึกเวลา/ไมล์อย่างน้อย 1 รายการ',
             badgeClass: 'bg-success',
             items: []

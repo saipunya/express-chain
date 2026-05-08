@@ -34,6 +34,135 @@ function getActorName(user) {
   return user?.fullname || user?.username || 'system';
 }
 
+function formatBangkokDateYmd(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
+function addBangkokDays(ymd, days) {
+  if (!ymd) {
+    return null;
+  }
+  const date = new Date(`${ymd}T00:00:00+07:00`);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  date.setDate(date.getDate() + Number(days || 0));
+  return formatBangkokDateYmd(date);
+}
+
+function groupVehicleAvailability(rows = [], vehicles = []) {
+  const grouped = new Map();
+  rows.forEach((row) => {
+    const key = String(row.vehicle_id);
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key).push({
+      vehicle_request_id: row.vehicle_request_id,
+      vehicle_request_no: row.vehicle_request_no,
+      trip_start_at: row.trip_start_at,
+      trip_end_at: row.trip_end_at,
+      vehicle_request_status: row.vehicle_request_status,
+      driver_name: row.driver_name || '-',
+      assignment_note: row.assignment_note || null
+    });
+  });
+
+  return vehicles.map((vehicle) => {
+    const assignments = grouped.get(String(vehicle.id)) || [];
+    return {
+      ...vehicle,
+      is_available: assignments.length === 0,
+      status_label: assignments.length === 0 ? 'ว่าง' : 'ไม่ว่าง',
+      badge_class: assignments.length === 0 ? 'bg-success' : 'bg-danger',
+      assignments
+    };
+  });
+}
+
+function buildAvailabilityDates(startYmd, endYmd) {
+  if (!startYmd || !endYmd) {
+    return [];
+  }
+
+  const dates = [];
+  const current = new Date(`${startYmd}T00:00:00+07:00`);
+  const last = new Date(`${endYmd}T00:00:00+07:00`);
+  if (Number.isNaN(current.getTime()) || Number.isNaN(last.getTime())) {
+    return [];
+  }
+
+  while (current <= last) {
+    dates.push(formatBangkokDateYmd(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function formatThaiDateOnly(value) {
+  if (!value) {
+    return '-';
+  }
+  const date = new Date(`${value}T00:00:00+07:00`);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return new Intl.DateTimeFormat('th-TH', {
+    timeZone: 'Asia/Bangkok',
+    dateStyle: 'medium'
+  }).format(date);
+}
+
+function buildAvailabilityMatrix(dates = [], vehicles = [], assignments = []) {
+  const assignmentsByVehicle = new Map();
+  assignments.forEach((assignment) => {
+    const key = String(assignment.vehicle_id);
+    if (!assignmentsByVehicle.has(key)) {
+      assignmentsByVehicle.set(key, []);
+    }
+    assignmentsByVehicle.get(key).push(assignment);
+  });
+
+  return dates.map((dateKey) => {
+    const dateStart = new Date(`${dateKey}T00:00:00+07:00`);
+    const dateEnd = new Date(`${dateKey}T23:59:59+07:00`);
+    const cells = vehicles.map((vehicle) => {
+      const activeAssignments = (assignmentsByVehicle.get(String(vehicle.id)) || []).filter((assignment) => {
+        const startAt = new Date(assignment.trip_start_at);
+        const endAt = new Date(assignment.trip_end_at);
+        return startAt <= dateEnd && endAt >= dateStart;
+      });
+
+      return {
+        vehicle_id: vehicle.id,
+        plate_no: vehicle.plate_no,
+        vehicle_name: vehicle.vehicle_name,
+        available: activeAssignments.length === 0,
+        assignments: activeAssignments.map((assignment) => ({
+          vehicle_request_id: assignment.vehicle_request_id,
+          vehicle_request_no: assignment.vehicle_request_no,
+          trip_start_at: assignment.trip_start_at,
+          trip_end_at: assignment.trip_end_at,
+          vehicle_request_status: assignment.vehicle_request_status,
+          driver_name: assignment.driver_name || '-',
+          assignment_note: assignment.assignment_note || null
+        }))
+      };
+    });
+
+    return {
+      date_key: dateKey,
+      date_label: formatThaiDateOnly(dateKey),
+      cells
+    };
+  });
+}
+
 async function renderVehicleDetail(res, item, overrides = {}) {
   const vehicles = overrides.vehicles || await vehicleMasterModel.listActive();
   const drivers = overrides.drivers || await driverMasterModel.listActive();
@@ -73,11 +202,29 @@ exports.dashboard = async (req, res) => {
 
 exports.pending = async (req, res) => {
   try {
-    const { travelItems, vehicleItems } = await loadPendingCounts();
+    const [pendingCounts, activeVehicles] = await Promise.all([
+      loadPendingCounts(),
+      vehicleMasterModel.listActive()
+    ]);
+    const { travelItems, vehicleItems } = pendingCounts;
+    const availabilityStart = formatBangkokDateYmd(new Date());
+    const availabilityEnd = addBangkokDays(availabilityStart, 7);
+    const availabilityRows = await vehicleAssignmentModel.listUpcomingVehicleAvailability(
+      availabilityStart,
+      availabilityEnd
+    );
+    const vehicleAvailability = groupVehicleAvailability(availabilityRows, activeVehicles);
+    const availabilityDates = buildAvailabilityDates(availabilityStart, availabilityEnd);
+    const availabilityMatrix = buildAvailabilityMatrix(availabilityDates, activeVehicles, availabilityRows);
     res.render('vehicle-approval/pending', {
       title: 'คิวอนุมัติคำขอ',
       travelItems,
       vehicleItems,
+      vehicleAvailability,
+      availabilityDates,
+      availabilityMatrix,
+      availabilityStart,
+      availabilityEnd,
       warning: null
     });
   } catch (error) {
@@ -86,6 +233,11 @@ exports.pending = async (req, res) => {
         title: 'คิวอนุมัติคำขอ',
         travelItems: [],
         vehicleItems: [],
+        vehicleAvailability: [],
+        availabilityDates: [],
+        availabilityMatrix: [],
+        availabilityStart: null,
+        availabilityEnd: null,
         warning: 'ยังไม่พบตาราง workflow สำหรับคิวอนุมัติในฐานข้อมูล กรุณารัน migration ก่อนจึงจะใช้งานหน้านี้ได้เต็มรูปแบบ'
       });
     }

@@ -79,6 +79,7 @@ async function generateDriverTripMonthlyPdf(res, payload = {}, options = {}) {
 
   const doc = new PDFDocument({
     size: 'A4',
+    layout: 'landscape',
     margins: PAGE_MARGIN,
     info: {
       Title: `รายงานการใช้รถยนต์ประจำเดือน ${payload.monthLabel || ''}`,
@@ -94,12 +95,12 @@ async function generateDriverTripMonthlyPdf(res, payload = {}, options = {}) {
 
   const fullWidth = doc.page.width - PAGE_MARGIN.left - PAGE_MARGIN.right;
   const widths = [
-    Math.round(fullWidth * 0.11),
+    Math.round(fullWidth * 0.10),
+    Math.round(fullWidth * 0.15),
+    Math.round(fullWidth * 0.23),
+    Math.round(fullWidth * 0.18),
     Math.round(fullWidth * 0.16),
-    Math.round(fullWidth * 0.20),
-    Math.round(fullWidth * 0.19),
-    Math.round(fullWidth * 0.16),
-    fullWidth - Math.round(fullWidth * 0.11) - Math.round(fullWidth * 0.16) - Math.round(fullWidth * 0.20) - Math.round(fullWidth * 0.19) - Math.round(fullWidth * 0.16)
+    fullWidth - Math.round(fullWidth * 0.10) - Math.round(fullWidth * 0.15) - Math.round(fullWidth * 0.23) - Math.round(fullWidth * 0.18) - Math.round(fullWidth * 0.16)
   ];
 
   let y = PAGE_MARGIN.top;

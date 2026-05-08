@@ -8,37 +8,41 @@
     body {
       font-family: 'Sarabun', 'TH SarabunPSK', 'TH Sarabun New', Arial, sans-serif;
       margin: 0;
-      padding: 24px;
+      padding: 18px;
       background: #fff;
       color: #111;
+      font-size: 15px;
+      line-height: 1.45;
     }
     .print-sheet {
       max-width: 900px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 18px;
       box-sizing: border-box;
     }
     .document-header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
     }
     .document-header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 24px;
       letter-spacing: 0.05em;
     }
     .document-header h2 {
-      margin: 8px 0 0;
-      font-size: 20px;
+      margin: 6px 0 0;
+      font-size: 16px;
       font-weight: 400;
     }
     .meta-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.35;
     }
     .meta-table td {
-      padding: 8px 6px;
+      padding: 5px 6px;
       vertical-align: top;
       border-bottom: 1px dotted #999;
     }
@@ -48,31 +52,52 @@
       white-space: nowrap;
     }
     .section-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
-      margin: 20px 0 8px;
+      margin: 14px 0 6px;
     }
     .signature-block {
-      margin-top: 48px;
+      margin-top: 28px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
     }
+    .signature-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+    }
     .signature-area {
       min-width: 320px;
+      flex: 1;
+      text-align: center;
+    }
+    .signature-area.left {
+      text-align: center;
+    }
+    .signature-area.right {
       text-align: center;
     }
     .no-print {
-      margin-bottom: 24px;
+      margin-bottom: 14px;
       text-align: right;
     }
     .summary-block {
-      font-size: 18px;
-      line-height: 2;
-      margin-bottom: 24px;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 16px;
     }
     .summary-block span {
       display: block;
+    }
+    .companions-list {
+      margin: 0 0 0 22px;
+      padding: 0;
+    }
+    .companions-list li {
+      margin: 0 0 3px;
+      line-height: 1.35;
     }
     @media print {
       .no-print { display: none; }
@@ -88,7 +113,7 @@
     </div>
 
     <div class="document-header">
-      <h1 style="font-size:32px;margin-bottom:8px;">บันทึกข้อความ</h1>
+      <h1 style="font-size:24px;margin-bottom:6px;">บันทึกข้อความ</h1>
       <h2>คำขออนุญาตเดินทางไปราชการ</h2>
     </div>
 
@@ -140,7 +165,7 @@
       </tr>
       <tr>
         <td class="label">เรียน</td>
-        <td colspan="3"><%= item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ' %></td>
+        <td colspan="3"><%= item.learn_to || 'ผู้อำนวยการสำนักงานสหกรณ์จังหวัดชัยภูมิ' %></td>
       </tr>
     </table>
 
@@ -156,7 +181,7 @@
     <div>
       <div class="section-title">ผู้ร่วมเดินทาง</div>
       <% if (item.companions && item.companions.length > 0) { %>
-        <ol>
+        <ol class="companions-list">
           <% item.companions.forEach((companion) => { %>
             <li><%= companion.companion_name %> (<%= companion.companion_position || '-' %>)</li>
           <% }) %>
@@ -170,29 +195,39 @@
     <% if (hasEstimatedCosts) { %>
       <div style="margin: 16px 0 24px;">
         <div class="section-title">ประมาณการค่าใช้จ่าย</div>
-        <table style="width:100%; border-collapse:collapse; font-size:16px; line-height:2;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px; line-height:1.45;">
           <tr>
-            <td style="width: 50%; padding: 4px 0;">ค่าเบี้ยเลี้ยง (บาท)</td>
-            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_allowance ?? '-' %></strong></td>
+            <td style="width: 50%; padding: 3px 0;">ค่าเบี้ยเลี้ยง (บาท)</td>
+            <td style="padding: 3px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_allowance ?? '-' %></strong></td>
           </tr>
           <tr>
-            <td style="padding: 4px 0;">ค่าที่พัก (บาท)</td>
-            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_lodging ?? '-' %></strong></td>
+            <td style="padding: 3px 0;">ค่าที่พัก (บาท)</td>
+            <td style="padding: 3px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_lodging ?? '-' %></strong></td>
           </tr>
           <tr>
-            <td style="padding: 4px 0;">ค่าน้ำมัน/พาหนะเชื้อเพลิง (บาท)</td>
-            <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_fuel ?? '-' %></strong></td>
+            <td style="padding: 3px 0;">ค่าน้ำมัน/พาหนะเชื้อเพลิง (บาท)</td>
+            <td style="padding: 3px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_fuel ?? '-' %></strong></td>
           </tr>
         </table>
       </div>
     <% } %>
 
     <div class="signature-block">
-      <div class="signature-area">
-        <div style="margin-bottom: 48px;">&nbsp;</div>
-        <div>ลงชื่อ....................................................</div>
-        <div>(<%= item.requester_name || '-' %>)</div>
-        <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>
+      <div class="signature-row">
+        <div class="signature-area left">
+          <div style="margin-bottom: 48px;">&nbsp;</div>
+          <div>ผู้เห็นชอบ</div>
+          <div>ลงชื่อ....................................................</div>
+          <div>(....................................................)</div>
+          <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>
+        </div>
+        <div class="signature-area right">
+          <div style="margin-bottom: 48px;">&nbsp;</div>
+          <div>ผู้ขออนุมัติ</div>
+          <div>ลงชื่อ....................................................</div>
+          <div>(<%= item.requester_name || '-' %>)</div>
+          <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>
+        </div>
       </div>
     </div>
   </div>

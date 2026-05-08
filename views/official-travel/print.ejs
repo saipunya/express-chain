@@ -79,6 +79,9 @@
     .signature-area.right {
       text-align: center;
     }
+    .signature-signature-line {
+      margin-top: 24px;
+    }
     .no-print {
       margin-bottom: 14px;
       text-align: right;
@@ -141,6 +144,11 @@
       return type || '-';
     }
 
+    function displayRequesterGroup(groupText) {
+      if (!groupText) return '-';
+      return groupText === 'กลุ่ม กตส' ? 'กลุ่มตรวจการสหกรณ์' : groupText;
+    }
+
     const startDate = thaiDate(item.start_at);
     const endDate = thaiDate(item.end_at || item.start_at);
     const startTime = thaiTime(item.start_at);
@@ -170,7 +178,7 @@
     </table>
 
     <div class="summary-block">
-      <span>ข้าพเจ้า <strong><%= item.requester_name || '-' %></strong> ตำแหน่ง <strong><%= item.requester_position || '-' %></strong> กลุ่มงาน <strong><%= item.requester_group || '-' %></strong></span>
+      <span>ข้าพเจ้า <strong><%= item.requester_name || '-' %></strong> ตำแหน่ง <strong><%= item.requester_position || '-' %></strong> กลุ่มงาน <strong><%= displayRequesterGroup(item.requester_group) %></strong></span>
       <span>มีความประสงค์ขออนุญาตไปราชการเพื่อ <strong><%= item.purpose_text || '-' %></strong></span>
       <span>สถานที่ <strong><%= item.destination_text || '-' %></strong></span>
       <span>ระหว่างวันที่ <strong><%= startDate %></strong> ถึงวันที่ <strong><%= endDate %></strong></span>
@@ -217,14 +225,14 @@
         <div class="signature-area left">
           <div style="margin-bottom: 48px;">&nbsp;</div>
           <div>ผู้เห็นชอบ</div>
-          <div>ลงชื่อ....................................................</div>
+          <div class="signature-signature-line">ลงชื่อ....................................................</div>
           <div>(....................................................)</div>
           <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>
         </div>
         <div class="signature-area right">
           <div style="margin-bottom: 48px;">&nbsp;</div>
           <div>ผู้ขออนุมัติ</div>
-          <div>ลงชื่อ....................................................</div>
+          <div class="signature-signature-line">ลงชื่อ....................................................</div>
           <div>(<%= item.requester_name || '-' %>)</div>
           <div style="margin-top: 4px;">ตำแหน่ง....................................................</div>
         </div>

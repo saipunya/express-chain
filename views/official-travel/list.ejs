@@ -38,7 +38,7 @@
           <th>วันที่</th>
           <th>เรื่อง</th>
           <th>ผู้ขอ</th>
-          <th>วันที่ปฏิบัติงาน</th>
+          <th>ช่วงวันที่ปฏิบัติงาน</th>
           <th>คำขอใช้รถ</th>
           <th>สถานะ</th>
           <th class="text-end">จัดการ</th>
@@ -70,7 +70,7 @@
               <small class="text-muted"><%= item.requester_group || '-' %></small>
             </td>
             <td>
-              <div><%= thaiDate(item.start_at) %></div>
+              <div><%= thaiDate(item.start_at) %> ถึง <%= thaiDate(item.end_at || item.start_at) %></div>
             </td>
             <td>
               <% if (Number(item.requires_vehicle_request) !== 1) { %>

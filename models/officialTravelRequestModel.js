@@ -117,7 +117,7 @@ async function listReport(filters = {}) {
   const params = [];
 
   if (filters.dateFrom) {
-    conditions.push('DATE(tr.start_at) >= ?');
+    conditions.push('DATE(tr.end_at) >= ?');
     params.push(filters.dateFrom);
   }
 

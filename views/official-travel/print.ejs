@@ -27,6 +27,11 @@
       font-size: 28px;
       letter-spacing: 0.05em;
     }
+    .document-header h2 {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 400;
+    }
     .meta-table {
       width: 100%;
       border-collapse: collapse;
@@ -61,6 +66,14 @@
       margin-bottom: 24px;
       text-align: right;
     }
+    .summary-block {
+      font-size: 18px;
+      line-height: 2;
+      margin-bottom: 24px;
+    }
+    .summary-block span {
+      display: block;
+    }
     @media print {
       .no-print { display: none; }
       body { padding: 0; }
@@ -76,18 +89,44 @@
 
     <div class="document-header">
       <h1 style="font-size:32px;margin-bottom:8px;">บันทึกข้อความ</h1>
+      <h2>คำขออนุญาตเดินทางไปราชการ</h2>
     </div>
+
     <% function thaiDate(dateStr) {
       if (!dateStr) return '-';
       const d = new Date(dateStr);
-      if (isNaN(d)) return '-';
-      const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-      return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
-    } %>
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleDateString('th-TH', { dateStyle: 'long', timeZone: 'Asia/Bangkok' });
+    }
+
+    function thaiTime(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+    }
+
+    function transportLabel(type, otherText) {
+      if (type === 'official_vehicle') return 'รถยนต์ราชการ';
+      if (type === 'private_vehicle') return 'รถยนต์ส่วนตัว';
+      if (type === 'public_transport') return 'รถโดยสารสาธารณะ';
+      if (type === 'airplane') return 'เครื่องบิน';
+      if (type === 'train') return 'รถไฟ';
+      if (type === 'other') return otherText || 'อื่น ๆ';
+      return type || '-';
+    }
+
+    const startDate = thaiDate(item.start_at);
+    const endDate = thaiDate(item.end_at || item.start_at);
+    const startTime = thaiTime(item.start_at);
+    const endTime = thaiTime(item.end_at);
+    const departmentName = item.department_name || item.requester_group || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ';
+    %>
+
     <table class="meta-table">
       <tr>
         <td class="label">ส่วนราชการ</td>
-        <td colspan="3"><%= item.department_name || 'สำนักงาน/กลุ่มงาน/หน่วยงาน' %></td>
+        <td colspan="3"><%= departmentName %></td>
       </tr>
       <tr>
         <td class="label">ที่</td>
@@ -101,19 +140,17 @@
       </tr>
       <tr>
         <td class="label">เรียน</td>
-        <td colspan="3"><%= item.learn_to || '-' %></td>
+        <td colspan="3"><%= item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ' %></td>
       </tr>
     </table>
 
-    <div style="margin-bottom: 24px; font-size: 16px; line-height: 2.1;">
+    <div class="summary-block">
       <span>ข้าพเจ้า <strong><%= item.requester_name || '-' %></strong> ตำแหน่ง <strong><%= item.requester_position || '-' %></strong> กลุ่มงาน <strong><%= item.requester_group || '-' %></strong></span>
-      <span>มีความประสงค์ขออนุญาตไปราชการเพื่อ <strong><%= item.purpose_text || '-' %></strong></span><br>
+      <span>มีความประสงค์ขออนุญาตไปราชการเพื่อ <strong><%= item.purpose_text || '-' %></strong></span>
       <span>สถานที่ <strong><%= item.destination_text || '-' %></strong></span>
-      <span>ในวันที่ <strong><%= item.start_at ? thaiDate(item.start_at) : '-' %></strong></span>
-      <% if (item.end_at && item.end_at !== item.start_at) { %>
-        <span>ถึงวันที่ <strong><%= thaiDate(item.end_at) %></strong></span>
-      <% } %>
-      <span>วิธีเดินทาง <strong><%= item.transport_type || '-' %> <%= item.transport_other_text || '' %></strong></span>
+      <span>ระหว่างวันที่ <strong><%= startDate %></strong> ถึงวันที่ <strong><%= endDate %></strong></span>
+      <span>เวลา <strong><%= startTime %></strong> ถึง <strong><%= endTime %></strong></span>
+      <span>วิธีเดินทาง <strong><%= transportLabel(item.transport_type, item.transport_other_text) %></strong></span>
     </div>
 
     <div>
@@ -143,7 +180,7 @@
             <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_lodging ?? '-' %></strong></td>
           </tr>
           <tr>
-            <td style="padding: 4px 0;">ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)</td>
+            <td style="padding: 4px 0;">ค่าน้ำมัน/พาหนะเชื้อเพลิง (บาท)</td>
             <td style="padding: 4px 0; border-bottom: 1px dotted #999;"><strong><%= item.estimated_fuel ?? '-' %></strong></td>
           </tr>
         </table>

@@ -25,8 +25,8 @@
     <table class="table table-hover mb-0 align-middle">
       <thead class="table-light">
         <tr>
-          <th class="text-center">วันที่</th>
-          <th class="text-center">เวลา</th>
+          <th class="text-center">ช่วงวันที่</th>
+          <th class="text-center">ช่วงเวลา</th>
           <th>เลขที่คำขอ</th>
           <th>เรื่อง</th>
           <th>ผู้ขอ</th>
@@ -44,13 +44,16 @@
           </tr>
         <% } %>
         <% (items || []).forEach((item) => { %>
-          <% const tripDate = item.start_at ? new Date(item.start_at) : null; %>
+          <% const tripStart = item.start_at ? new Date(item.start_at) : null; %>
+          <% const tripEnd = item.end_at ? new Date(item.end_at) : tripStart; %>
           <tr>
             <td class="text-center">
-              <%= tripDate ? tripDate.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %>
+              <%= tripStart ? tripStart.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %>
+              <div class="small text-muted">ถึง <%= tripEnd ? tripEnd.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %></div>
             </td>
             <td class="text-center">
-              <%= tripDate ? tripDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %>
+              <%= tripStart ? tripStart.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %>
+              <div class="small text-muted">ถึง <%= tripEnd ? tripEnd.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %></div>
             </td>
             <td>
               <a href="/official-travel/<%= item.id %>" class="text-decoration-none fw-semibold">

@@ -40,6 +40,26 @@ function toTimeInput(value) {
   return str.slice(11, 16) || '';
 }
 
+function buildTripDateRange(startDate, endDate, startTime, endTime) {
+  if (!startDate) {
+    return { start_at: null, end_at: null, error: null };
+  }
+
+  const normalizedStartDate = toDateInput(startDate);
+  const normalizedEndDate = endDate ? toDateInput(endDate) : normalizedStartDate;
+  if (normalizedStartDate && normalizedEndDate && normalizedEndDate < normalizedStartDate) {
+    return { start_at: null, end_at: null, error: 'END_BEFORE_START' };
+  }
+
+  const normalizedStartTime = startTime || '00:00';
+  const normalizedEndTime = endTime || '23:59';
+  return {
+    start_at: `${normalizedStartDate} ${normalizedStartTime}:00`,
+    end_at: `${normalizedEndDate} ${normalizedEndTime}:00`,
+    error: null
+  };
+}
+
 function getBangkokDateKey(value = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -73,22 +93,9 @@ function filterUpcomingVehicleUseRows(rows = []) {
     if (!(status === 'approved' || status === 'อนุมัติ')) {
       return false;
     }
-    const startKey = getBangkokDateKey(row.start_at);
-    return Boolean(startKey && todayKey && startKey >= todayKey);
+    const endKey = getBangkokDateKey(row.end_at || row.start_at);
+    return Boolean(endKey && todayKey && endKey >= todayKey);
   });
-}
-
-function buildSingleDayRange(operationDate, startTime, endTime) {
-  if (!operationDate) {
-    return { start_at: null, end_at: null };
-  }
-
-  const normalizedStart = startTime || '00:00';
-  const normalizedEnd = endTime || '23:59';
-  return {
-    start_at: `${operationDate} ${normalizedStart}:00`,
-    end_at: `${operationDate} ${normalizedEnd}:00`
-  };
 }
 
 function calculateDuration(startAt, endAt) {
@@ -225,10 +232,16 @@ async function resolveRequesterGroup(req, memberId = null) {
 
 async function mapBody(req) {
   const user = req.session?.user || {};
-  const operationDate = req.body.operation_date || toDateInput(req.body.start_at);
+  const startDate = req.body.start_date || req.body.operation_date || toDateInput(req.body.start_at);
+  const endDate = req.body.end_date || startDate;
   const startTime = req.body.start_time || '00:00';
   const endTime = req.body.end_time || '23:59';
-  const dateRange = buildSingleDayRange(operationDate, startTime, endTime);
+  const dateRange = buildTripDateRange(startDate, endDate, startTime, endTime);
+  if (dateRange.error === 'END_BEFORE_START') {
+    const error = new Error('END_BEFORE_START');
+    error.code = 'END_BEFORE_START';
+    throw error;
+  }
   const { duration_days, duration_hours } = calculateDuration(dateRange.start_at, dateRange.end_at);
   return {
     request_no: req.body.request_no,
@@ -502,9 +515,8 @@ exports.createForm = async (req, res) => {
       estimated_fuel: null,
       out_of_province: 0,
       requires_vehicle_request: 1,
-      operation_date: requestDate.toISOString().slice(0, 10),
-      start_time: '08:00',
-      end_time: '17:00',
+      start_date: requestDate.toISOString().slice(0, 10),
+      end_date: requestDate.toISOString().slice(0, 10),
       start_time: '08:00',
       end_time: '17:00'
     };
@@ -534,7 +546,10 @@ exports.createForm = async (req, res) => {
         estimated_fuel: null,
         out_of_province: 0,
         requires_vehicle_request: 1,
-        operation_date: requestDate.toISOString().slice(0, 10)
+        start_date: requestDate.toISOString().slice(0, 10),
+        end_date: requestDate.toISOString().slice(0, 10),
+        start_time: '08:00',
+        end_time: '17:00'
       };
       return renderForm(res, {
         title: 'สร้างคำขอไปราชการ',
@@ -570,6 +585,9 @@ exports.create = async (req, res) => {
     res.redirect(`/official-travel/${id}${notice ? `?notice=${notice}` : ''}`);
   } catch (error) {
     console.error('Error creating official travel request:', error);
+    const errorMessage = error?.code === 'END_BEFORE_START'
+      ? 'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น'
+      : 'บันทึกคำขอไม่สำเร็จ';
     const requesterGroup = await resolveRequesterGroup(req);
     await renderForm(res, {
       title: 'สร้างคำขอไปราชการ',
@@ -583,7 +601,7 @@ exports.create = async (req, res) => {
         estimated_fuel: req.body.estimated_fuel ?? null
       },
       companions: mapCompanions(req),
-      error: 'บันทึกคำขอไม่สำเร็จ',
+      error: errorMessage,
       submitLabel: 'บันทึกร่าง'
     });
   }
@@ -614,7 +632,8 @@ exports.editForm = async (req, res) => {
       return res.status(400).send('ไม่สามารถแก้ไขคำขอไปราชการที่ถูกยกเลิกแล้ว');
     }
     item.requester_group = await resolveRequesterGroup(req, item.requester_member_id);
-    item.operation_date = toDateInput(item.start_at);
+    item.start_date = toDateInput(item.start_at);
+    item.end_date = toDateInput(item.end_at || item.start_at);
     item.start_time = toTimeInput(item.start_at);
     item.end_time = toTimeInput(item.end_at);
     await renderForm(res, {
@@ -672,6 +691,9 @@ exports.update = async (req, res) => {
     res.redirect(`/official-travel/${req.params.id}${notice ? `?notice=${notice}` : ''}`);
   } catch (error) {
     console.error('Error updating official travel request:', error);
+    const errorMessage = error?.code === 'END_BEFORE_START'
+      ? 'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น'
+      : 'บันทึกการแก้ไขไม่สำเร็จ';
     const requesterGroup = await resolveRequesterGroup(req);
     await renderForm(res, {
       title: 'แก้ไขคำขอไปราชการ',
@@ -684,7 +706,7 @@ exports.update = async (req, res) => {
         estimated_fuel: req.body.estimated_fuel ?? null
       },
       companions: mapCompanions(req),
-      error: 'บันทึกการแก้ไขไม่สำเร็จ',
+      error: errorMessage,
       submitLabel: 'บันทึกการแก้ไข'
     });
   }
@@ -733,32 +755,9 @@ exports.printView = async (req, res) => {
     if (!item) {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
-    const passengerCount = Math.max(1, 1 + (Array.isArray(item.companions) ? item.companions.length : 0));
-    // Map official travel fields to vehicle-request/print fields
-    const mapped = {
-      vehicle_request_no: item.request_no,
-      requester_name: item.requester_name,
-      requester_position: item.requester_position,
-      destination_text: item.destination_text,
-      mission_text: item.purpose_text,
-      trip_start_at: item.start_at,
-      trip_end_at: item.end_at,
-      passenger_count: passengerCount,
-      learn_to: item.learn_to,
-      request_date: item.request_date,
-      department_name: item.department_name,
-      requester_group: item.requester_group,
-      subject: item.subject,
-      companions: item.companions,
-      transport_type: item.transport_type,
-      transport_other_text: item.transport_other_text,
-      estimated_allowance: item.estimated_allowance,
-      estimated_lodging: item.estimated_lodging,
-      estimated_fuel: item.estimated_fuel,
-    };
-    res.render('vehicle-request/print', {
+    res.render('official-travel/print', {
       title: 'พิมพ์คำขอไปราชการ',
-      item: mapped,
+      item,
       layout: false
     });
   } catch (error) {

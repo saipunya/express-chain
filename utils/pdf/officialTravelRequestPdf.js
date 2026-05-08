@@ -643,7 +643,7 @@ function renderApprovalSection(doc, formData, state) {
   doc.rect(x, y, boxWidth, boxHeight).lineWidth(1).stroke('#444444');
 
   setBodyFont(doc, true);
-  doc.text('ความเห็น / ผลการพิจารณา', x + 10, y + 8, { width: boxWidth - 20 });
+  doc.text('ความเห็น', x + 10, y + 8, { width: boxWidth - 20 });
   setBodyFont(doc, false);
   doc.text(formData.opinionText, x + 64, y + 32, {
     width: opinionWidth,
@@ -654,11 +654,11 @@ function renderApprovalSection(doc, formData, state) {
   drawDottedRule(doc, x + 10, x + boxWidth - 10, dividerY);
 
   setBodyFont(doc, true);
-  doc.text('ผลอนุมัติ', x + 10, dividerY + 10, { width: 54 });
+  doc.text('ความเห็น', x + 10, dividerY + 10, { width: 54 });
 
   // Leave both options blank by default so the form can be signed manually.
-  drawChoiceCircle(doc, x + 74, dividerY + 8, 'อนุมัติ', false);
-  drawChoiceCircle(doc, x + 196, dividerY + 8, 'ไม่อนุมัติ', false);
+  drawChoiceCircle(doc, x + 74, dividerY + 8, 'เห็นชอบ', false);
+  drawChoiceCircle(doc, x + 196, dividerY + 8, 'ไม่เห็นชอบ', false);
 
   setBodyFont(doc, false);
   doc.text('ลงชื่อ', x + boxWidth - 220, dividerY + 24, { width: 34 });

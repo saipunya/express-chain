@@ -502,8 +502,12 @@ exports.createDirect = async (req, res) => {
       const id = await vehicleRequestModel.createWithConnection(connection, {
         ...payload,
         travel_request_id: null,
+
         vehicle_request_no: vehicleRequestNo,
-        status: 'draft'
+        status: 'draft',
+
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        status: 'assigned'
       });
 
       await vehicleAssignmentModel.upsertAssignmentWithConnection(connection, {
@@ -579,8 +583,13 @@ exports.updateDirect = async (req, res) => {
       await vehicleRequestModel.updateWithConnection(connection, req.params.id, {
         ...payload,
         travel_request_id: null,
+
         vehicle_request_no: vehicleRequestNo,
-        status: current.status
+        status: current.status,
+
+        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
+        status: current.status === 'draft' ? 'assigned' : current.status
+
       });
 
       await vehicleAssignmentModel.upsertAssignmentWithConnection(connection, {

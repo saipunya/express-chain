@@ -20,14 +20,15 @@ function combineDateAndTime(dateValue, timeValue) {
 
 async function listQueueForUser(user) {
   const [rows] = await db.query(
-    `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
+    `SELECT vr.id AS vehicle_request_id, vr.travel_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
             vr.requester_name, vr.status, va.vehicle_id, va.driver_id, va.assignment_note,
             va.plate_no_snapshot, va.driver_name_snapshot,
             vtl.log_status, vtl.morning_departure_at, vtl.afternoon_return_at
      FROM vehicle_requests vr
      INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
      LEFT JOIN vehicle_trip_logs vtl ON vtl.vehicle_request_id = vr.id
-     WHERE vr.status IN ('assigned', 'in_progress')
+     WHERE (vr.status IN ('assigned', 'in_progress'))
+        OR (vr.travel_request_id IS NULL AND vr.status = 'draft')
      ORDER BY vr.trip_start_at ASC, vr.id ASC`,
   );
   return rows;
@@ -49,7 +50,7 @@ async function listMonthlyReport({ driverId = null, month = null } = {}) {
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const [rows] = await db.query(
-    `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.mission_text,
+    `SELECT vr.id AS vehicle_request_id, vr.travel_request_id, vr.vehicle_request_no, vr.destination_text, vr.mission_text,
             vr.trip_start_at, vr.trip_end_at, vr.requester_name, vr.status,
             va.driver_id, va.plate_no_snapshot, va.driver_name_snapshot,
             vtl.log_status, vtl.morning_departure_at, vtl.morning_odometer,
@@ -67,7 +68,7 @@ async function listMonthlyReport({ driverId = null, month = null } = {}) {
 
 async function getDetailForUser(vehicleRequestId, user) {
   const [rows] = await db.query(
-    `SELECT vr.id AS vehicle_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
+    `SELECT vr.id AS vehicle_request_id, vr.travel_request_id, vr.vehicle_request_no, vr.destination_text, vr.trip_start_at, vr.trip_end_at,
             vr.requester_name, vr.mission_text, vr.status,
             va.vehicle_id, va.driver_id, va.plate_no_snapshot, va.driver_name_snapshot,
             vtl.id AS trip_log_id, vtl.morning_departure_at, vtl.morning_odometer,

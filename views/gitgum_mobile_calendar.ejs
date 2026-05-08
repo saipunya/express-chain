@@ -403,7 +403,7 @@
                  data-event="<%= eventJson %>" 
                  onclick="showEventDetail(this)">
               <div class="event-date">
-                <span class="date-badge"><%= formatThaiDate(event.date) %><%= isToday ? ' (วันนี้)' : '' %></span>
+                <span class="date-badge"><%= event.dateLabel || formatThaiDate(event.date) %><%= isToday ? ' (วันนี้)' : '' %></span>
                 <% if (event.time) { %>
                   <span class="time-badge">🕐 <%= event.time %> น.</span>
                 <% } %>
@@ -544,7 +544,7 @@
       
       document.getElementById('modalTitle').textContent = event.activity || 'รายละเอียดกิจกรรม';
       document.getElementById('modalSourceLabel').textContent = event.sourceLabel || '-';
-      document.getElementById('modalDate').textContent = formatFullThaiDate(event.date);
+      document.getElementById('modalDate').textContent = event.dateLabel || formatFullThaiDate(event.date);
       document.getElementById('modalTime').textContent = event.time ? event.time + ' น.' : '-';
       document.getElementById('modalActivity').textContent = event.activity || '-';
       document.getElementById('modalPlace').textContent = event.place || '-';

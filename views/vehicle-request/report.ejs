@@ -74,6 +74,9 @@
             <td>
               <div class="fw-semibold"><%= item.travel_request_no || item.vehicle_request_no %></div>
               <small class="text-muted"><%= new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'short' }) %></small>
+              <div class="mt-1">
+                <span class="badge text-bg-light border"><%= item.travel_request_id ? 'คำขอปกติ' : 'คำขอใช้รถยนต์ตรง' %></span>
+              </div>
             </td>
             <td>
               <div class="fw-semibold"><%= item.travel_request_no %></div>

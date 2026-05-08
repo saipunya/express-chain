@@ -1,6 +1,11 @@
 const gitgumModel = require('../models/gitgumModel');
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
 
+const THAI_MONTHS_SHORT = [
+  'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+];
+
 function toHHmm(value) {
   if (!value) {
     return null;
@@ -38,11 +43,48 @@ function toYMD(value) {
   return String(value).slice(0, 10);
 }
 
+function addDaysYmd(ymd, days) {
+  if (!ymd) {
+    return null;
+  }
+  const date = new Date(`${ymd}T00:00:00+07:00`);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  date.setDate(date.getDate() + Number(days || 0));
+  return toYMD(date);
+}
+
+function formatThaiDateYmd(ymd) {
+  if (!ymd) {
+    return '-';
+  }
+  const [year, month, day] = String(ymd).slice(0, 10).split('-').map(Number);
+  if (!year || !month || !day) {
+    return '-';
+  }
+  const thaiYear = year + 543;
+  return `${day} ${THAI_MONTHS_SHORT[month - 1]} ${thaiYear}`;
+}
+
+function formatThaiDateRange(startYmd, endYmd) {
+  if (!startYmd) {
+    return '-';
+  }
+  if (!endYmd || startYmd === endYmd) {
+    return formatThaiDateYmd(startYmd);
+  }
+  return `${formatThaiDateYmd(startYmd)} ถึง ${formatThaiDateYmd(endYmd)}`;
+}
+
 function buildGitgumEvent(row) {
   const workflowTravelId = gitgumModel.parseWorkflowTravelId(row.git_saveby);
   const meetingRoomId = gitgumModel.parseMeetingRoomId(row.git_saveby);
   const isWorkflowTravel = Boolean(workflowTravelId);
   const isMeetingRoom = Boolean(meetingRoomId);
+  if (isWorkflowTravel) {
+    return null;
+  }
   const dateStr = toYMD(row.git_date);
   const timeStr = toHHmm(row.git_time);
   const start = dateStr ? (timeStr ? `${dateStr}T${timeStr}` : dateStr) : undefined;
@@ -59,8 +101,9 @@ function buildGitgumEvent(row) {
     start,
     allDay: !timeStr,
     extendedProps: {
-      sourceType: isWorkflowTravel ? 'travel_request' : (isMeetingRoom ? 'meetingroom' : 'gitgum'),
-      sourceLabel: isWorkflowTravel ? 'คำขอไปราชการ' : (isMeetingRoom ? 'จองห้องประชุม' : 'กิจกรรมสำนักงาน'),
+      sourceType: isMeetingRoom ? 'meetingroom' : 'gitgum',
+      sourceLabel: isMeetingRoom ? 'จองห้องประชุม' : 'กิจกรรมสำนักงาน',
+      dateLabel: formatThaiDateRange(dateStr, dateStr),
       timeLabel: row.git_time || null,
       requestNumber,
       place: row.git_place,
@@ -80,9 +123,12 @@ function buildTravelEvent(row) {
     return null;
   }
 
+  const endStr = toYMD(row.end_at);
+  const end = endStr && endStr !== dateStr ? addDaysYmd(endStr, 1) : undefined;
   const startTime = toHHmm(row.start_at);
   const endTime = toHHmm(row.end_at);
   const timeLabel = startTime ? (endTime && endTime !== startTime ? `${startTime} - ${endTime}` : startTime) : null;
+  const dateLabel = formatThaiDateRange(dateStr, endStr);
 
   const companions = row.companion_names ? `ผู้ร่วมเดินทาง: ${row.companion_names}` : null;
   const vehicleSummary = row.plate_no_snapshot || row.driver_name_snapshot
@@ -94,11 +140,13 @@ function buildTravelEvent(row) {
     id: `travel-${row.id}`,
     title: [row.subject, row.destination_text ? `@${row.destination_text}` : null].filter(Boolean).join(' '),
     start,
+    end,
     allDay: true,
     extendedProps: {
       sourceType: 'travel_request',
       sourceLabel: 'คำขอไปราชการ',
       requestNumber: row.request_no,
+      dateLabel,
       approvalStatus: row.status,
       transportType: row.transport_type,
       vehicleRequestNo: row.vehicle_request_no || null,
@@ -121,15 +169,9 @@ async function getMergedCalendarEvents({ startDate, endDate }) {
     officialTravelRequestModel.listApprovedInRange(startDate, endDate)
   ]);
 
-  const syncedTravelIds = new Set(
-    gitgumRows
-      .map((row) => gitgumModel.parseWorkflowTravelId(row.git_saveby))
-      .filter(Boolean)
-  );
-
   return [
     ...gitgumRows.map(buildGitgumEvent),
-    ...travelRows.filter((row) => !syncedTravelIds.has(Number(row.id))).map(buildTravelEvent)
+    ...travelRows.map(buildTravelEvent)
   ]
     .filter(Boolean)
     .sort((left, right) => String(left.start).localeCompare(String(right.start)));

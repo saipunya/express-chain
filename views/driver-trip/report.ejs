@@ -19,12 +19,12 @@
   <div class="alert alert-warning"><%= warning %></div>
 <% } %>
 
-<form method="GET" action="/driver-trip/report" class="card shadow-sm border-0 mb-4">
+<form method="GET" action="/driver-trip/report" class="card shadow-sm border-0 mb-4" id="driverTripReportForm">
   <div class="card-body">
     <div class="row g-3 align-items-end">
       <div class="col-md-5">
         <label class="form-label">พนักงานขับรถ</label>
-        <select class="form-select" name="driverId" required>
+        <select class="form-select" name="driverId" required onchange="document.getElementById('driverTripReportForm').submit()">
           <option value="">เลือกพนักงานขับรถ</option>
           <% (drivers || []).forEach((driver) => { %>
             <option value="<%= driver.id %>" <%= String(selectedDriverId) === String(driver.id) ? 'selected' : '' %>><%= driver.driver_name %></option>
@@ -33,14 +33,11 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">เดือน</label>
-        <select class="form-select" name="month" required>
+        <select class="form-select" name="month" required onchange="document.getElementById('driverTripReportForm').submit()">
           <% (monthOptions || []).forEach((option) => { %>
             <option value="<%= option.value %>" <%= String(month) === String(option.value) ? 'selected' : '' %>><%= option.label %></option>
           <% }) %>
         </select>
-      </div>
-      <div class="col-md-3 d-grid">
-        <button type="submit" class="btn btn-primary">แสดงผล</button>
       </div>
     </div>
   </div>
@@ -111,7 +108,12 @@
         <% items.forEach((item) => { %>
           <tr>
             <td><%= item.trip_start_at ? new Date(item.trip_start_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '-' %></td>
-            <td><%= item.vehicle_request_no %></td>
+            <td>
+              <div class="fw-semibold"><%= item.vehicle_request_no %></div>
+              <div class="mt-1">
+                <span class="badge text-bg-light border"><%= item.travel_request_id ? 'คำขอปกติ' : 'คำขอใช้รถยนต์ตรง' %></span>
+              </div>
+            </td>
             <td>
               <div class="fw-semibold"><%= item.destination_text %></div>
               <small class="text-muted"><%= item.requester_name %></small>

@@ -84,11 +84,14 @@
         // เติมข้อมูลลงใน Modal
         document.getElementById('eventTitle').textContent = e.title || 'รายละเอียดกิจกรรม';
         const start = e.start ? new Date(e.start) : null;
+        const end = e.end ? new Date(e.end) : null;
         const thDate = start ? start.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
+        const thEndDate = end ? new Date(end.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
+        const dateLabel = p.dateLabel || (thEndDate && start ? `${thDate} ถึง ${thEndDate}` : thDate);
         const thTime = start ? start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
         document.getElementById('eventSource').textContent = p.sourceLabel || 'กิจกรรม';
         document.getElementById('eventRequestNumber').textContent = p.requestNumber || p.vehicleRequestNo || '-';
-        document.getElementById('eventDate').textContent = thDate;
+        document.getElementById('eventDate').textContent = dateLabel;
         document.getElementById('eventTime').textContent = p.timeLabel || thTime;
         document.getElementById('eventVehicle').textContent = p.vehiclePlate || '-';
         document.getElementById('eventDriver').textContent = p.driverName || '-';

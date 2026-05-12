@@ -1,130 +1,248 @@
-<%- include('../partials/header', { title: 'รายละเอียด Sangket' }) %>
-<div class="container my-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-9 col-xl-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle"></i> รายละเอียดสังเกต
-          </h5>
-          <div class="d-flex gap-2">
-            <a href="/sangket/edit/<%= item.sang_id %>" class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i> แก้ไข</a>
-            <a href="/sangket" class="btn btn-sm btn-outline-light">← กลับ</a>
+<%- include('../partials/header.ejs', { title: title || 'รายละเอียดข้อสังเกต' }) %>
+<%
+  const categoriesList = (item && item.categories) || [];
+  const actions = (item && item.actions) || [];
+  const severityLabel = {
+    serious_order: 'ร้ายแรง / คำสั่ง',
+    advice: 'คำแนะนำ',
+    fact_check: 'ตรวจข้อเท็จจริง'
+  }[item?.severity_case] || '-';
+  const statusLabel = item?.status || '-';
+  const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
+%>
+
+<style>
+  .sangket-view-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .view-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .view-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .detail-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem 1.1rem;
+    height: 100%;
+  }
+  .detail-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+  }
+  .detail-value {
+    color: #0f172a;
+    font-weight: 600;
+  }
+  .timeline-item {
+    border-left: 3px solid #bde8df;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0.35rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #0f8f7b;
+  }
+  .action-box {
+    border: 1px dashed #cfe8df;
+    background: #f7fcfa;
+    border-radius: 18px;
+  }
+  .sangket-view-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .badge-soft {
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+  }
+  .mini-note {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.35rem;
+  }
+</style>
+
+<div class="sangket-view-page py-4">
+  <div class="container">
+    <div class="view-shell">
+      <div class="view-hero p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+          <div>
+            <div class="eyebrow mb-2">Sangket</div>
+            <h1 class="h3 fw-bold mb-2"><%= item.cooperative_name %></h1>
+            <p class="text-muted mb-0">
+              <%= item.fiscal_year_end || '-' %> | หนังสือ <%= item.audit_office_letter_no || '-' %>
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2 align-items-start">
+            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-pill">แก้ไข</a>
+            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับรายการ</a>
           </div>
         </div>
-        <div class="card-body">
-          <dl class="row mb-0">
-            <dt class="col-sm-4">กลุ่ม</dt><dd class="col-sm-8"><span class="badge text-bg-secondary"><%= item.sang_group %></span></dd>
-            <dt class="col-sm-4">รหัส</dt><dd class="col-sm-8"><%= item.sang_code %></dd>
-            <dt class="col-sm-4">ชื่อ</dt><dd class="col-sm-8"><%= item.sang_name %></dd>
-            <dt class="col-sm-4">วันสิ้นปี</dt><dd class="col-sm-8"><%= item.sang_enddate ? new Date(item.sang_enddate).toLocaleDateString('th-TH') : '-' %></dd>
-            <dt class="col-sm-4">เลขรับหนังสือ</dt><dd class="col-sm-8"><%= item.sang_rabbook || '-' %></dd>
-            <dt class="col-sm-4">วันที่รับ</dt><dd class="col-sm-8"><%= item.sang_rabdate ? new Date(item.sang_rabdate).toLocaleDateString('th-TH') : '-' %></dd>
-            <dt class="col-sm-4">ผู้ตรวจบัญชี</dt><dd class="col-sm-8"><%= item.sang_accounter || '-' %></dd>
-            <dt class="col-sm-4">การตรวจ</dt><dd class="col-sm-8"><%= item.sang_check || '-' %></dd>
+      </div>
 
-            <!-- explode รายละเอียด-->
-            <!-- loop group รายละเอียด และ เงินที่เกี่ยวข้อง -->
+      <div class="p-4 p-lg-5">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3">
+            <div class="detail-card">
+              <div class="detail-label">ประเภท</div>
+              <div class="detail-value"><%= item.coop_type === 'group_farmer' ? 'กลุ่มเกษตรกร' : 'สหกรณ์' %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="detail-card">
+              <div class="detail-label">กสส.</div>
+              <div class="detail-value"><%= item.promotion_group_no || '-' %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="detail-card">
+              <div class="detail-label">กรณี</div>
+              <div class="detail-value"><%= severityLabel %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="detail-card">
+              <div class="detail-label">สถานะ</div>
+              <div class="detail-value"><span class="badge text-bg-primary"><%= statusLabel %></span></div>
+            </div>
+          </div>
+        </div>
 
-            <%
-                // helper: add commas only to numbers that follow the Thai words:
-                // "จำนวนเงิน", "จำนวน", "เป็นเงิน"
-                function formatNumbersInText(val) {
-                    if (val === undefined || val === null || val === '') return '-';
-                    var s = String(val);
-                    // match the keywords (prioritize "จำนวนเงิน" first) then an optional colon and the number
-                    // example matches: "จำนวน 1000", "เป็นเงิน1000.50", "จำนวนเงิน: 1234"
-                    return s.replace(/(จำนวนเงิน|จำนวน|เป็นเงิน)\s*[:：]?\s*(-?\d+(?:\.\d+)?)/g, function(_, kw, num) {
-                        // remove any existing commas before parsing
-                        var raw = num.replace(/,/g, '');
-                        var n = Number(raw);
-                        if (isNaN(n)) return kw + ' ' + num;
-                        return kw + ' ' + n.toLocaleString('en-US');
-                    });
-                }
+        <div class="row g-3 mb-4">
+          <div class="col-lg-8">
+            <div class="detail-card h-100">
+              <div class="detail-label mb-2">รายละเอียดข้อสังเกต</div>
+              <div class="detail-value" style="white-space: pre-line; line-height: 1.7;"><%= item.observation_text || '-' %></div>
+              <hr>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="detail-label">มูลค่าความเสียหาย</div>
+                  <div class="detail-value"><%= item.potential_damage_amount ? fmtMoney(item.potential_damage_amount) + ' บาท' : '-' %></div>
+                </div>
+                <div class="col-md-4">
+                  <div class="detail-label">ลำดับข้อ</div>
+                  <div class="detail-value"><%= item.observation_no || '-' %></div>
+                </div>
+                <div class="col-md-4">
+                  <div class="detail-label">กำหนดติดตาม</div>
+                  <div class="detail-value"><%= item.due_date || '-' %></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="detail-card h-100">
+              <div class="detail-label mb-2">หมวดข้อสังเกต</div>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <% if (categoriesList.length) { %>
+                  <% categoriesList.forEach((cat) => { %>
+                    <span class="badge text-bg-light border badge-soft"><%= cat.name %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </div>
+              <div class="mini-note">ผู้สอบบัญชี: <%= item.auditor_name || '-' %></div>
+              <div class="mini-note">หนังสือรับ: <%= item.received_date || '-' %></div>
+              <div class="mini-note">วันที่หนังสือ: <%= item.audit_office_letter_date || '-' %></div>
+              <div class="mini-note">แหล่งข้อมูล: <%= item.source_sheet || '-' %> แถว <%= item.source_row || '-' %></div>
+            </div>
+          </div>
+        </div>
 
-                // normalize sang_detail into an array (split by comma if string)
-                var detailArr = [];
-                if (Array.isArray(item.sang_detail)) {
-                    detailArr = item.sang_detail;
-                } else if (typeof item.sang_detail === 'string' && item.sang_detail.indexOf(',') !== -1) {
-                    detailArr = item.sang_detail.split(/\s*,\s*/).map(function(s){ return s.trim(); });
-                } else if (item.sang_detail != null) {
-                    detailArr = [item.sang_detail];
-                }
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="detail-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">ประวัติการติดตามผล</h5>
+                <span class="badge text-bg-success"><%= actions.length %> รายการ</span>
+              </div>
+              <% if (actions.length) { %>
+                <div class="d-grid gap-3">
+                  <% actions.forEach((action) => { %>
+                    <div class="timeline-item">
+                      <div class="d-flex justify-content-between gap-3">
+                        <div class="fw-semibold"><%= action.action_type %></div>
+                        <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
+                      </div>
+                      <div class="small text-muted">
+                        <%= action.letter_no || '-' %>
+                        <% if (action.letter_date) { %> | <%= action.letter_date %><% } %>
+                      </div>
+                      <div class="mt-1" style="white-space: pre-line;"><%= action.action_detail || '-' %></div>
+                      <% if (action.result) { %>
+                        <div class="mt-1 text-success" style="white-space: pre-line;"><%= action.result %></div>
+                      <% } %>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <div class="text-muted">ยังไม่มีการบันทึกติดตามผล</div>
+              <% } %>
+            </div>
+          </div>
 
-                // normalize sang_money into an array (split by comma if string)
-                var moneyArr = [];
-                if (Array.isArray(item.sang_money)) {
-                    moneyArr = item.sang_money;
-                } else if (typeof item.sang_money === 'string' && item.sang_money.indexOf(',') !== -1) {
-                    moneyArr = item.sang_money.split(/\s*,\s*/).map(function(s){ return s.trim(); });
-                } else if (item.sang_money != null) {
-                    moneyArr = [item.sang_money];
-                }
-
-                // normalize sang_maihed (หมายเหตุ) into an array (split by comma if string)
-                var noteArr = [];
-                if (Array.isArray(item.sang_maihed)) {
-                    noteArr = item.sang_maihed;
-                } else if (typeof item.sang_maihed === 'string' && item.sang_maihed.indexOf(',') !== -1) {
-                    noteArr = item.sang_maihed.split(/\s*,\s*/).map(function(s){ return s.trim(); });
-                } else if (item.sang_maihed != null) {
-                    noteArr = [item.sang_maihed];
-                }
-
-                var maxLen = Math.max(detailArr.length, moneyArr.length, noteArr.length);
-            %>
-
-            <dt class="col-sm-4">รายละเอียดและเงินที่เกี่ยวข้อง</dt>
-            <dd class="col-sm-8">
-                <table class="table table-sm table-bordered mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:5%;">no.</th>
-                            <th>รายละเอียด</th>
-                            <th>เงินที่เกี่ยวข้อง</th>
-                            <th>หมายเหตุ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (maxLen > 0) { %>
-                            <% for (var i = 0; i < maxLen; i++) { %>
-                                <tr>
-                                    <td><%= i + 1 %></td>
-                                    <td style="white-space: pre-line"><%= (detailArr[i] !== undefined && detailArr[i] !== null && detailArr[i] !== '') ? formatNumbersInText(detailArr[i]) : '-' %></td>
-                                    <td style="white-space: pre-line"><%= (moneyArr[i] !== undefined && moneyArr[i] !== null && moneyArr[i] !== '') ? formatNumbersInText(moneyArr[i]) : '-' %></td>
-                                    <td style="white-space: pre-line"><%= (noteArr[i] !== undefined && noteArr[i] !== null && noteArr[i] !== '') ? formatNumbersInText(noteArr[i]) : '-' %></td>
-                                </tr>
-                            <% } %>
-                        <% } else { %>
-                            <tr>
-                                <td>1</td>
-                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_detail || '-') %></td>
-                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_money || '-') %></td>
-                                <td style="white-space: pre-line"><%= formatNumbersInText(item.sang_maihed || '-') %></td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </dd>
-           
-
-            <dt class="col-sm-4">ประเภทกรณี</dt>
-            <dd class="col-sm-8"><%= item.sang_type || '-' %></dd>
-            <dt class="col-sm-4">เลขส่งหนังสือ</dt>
-            <dd class="col-sm-8"><%= item.sang_sentbook || '-' %></dd>
-            <dt class="col-sm-4">วันที่ส่ง</dt>
-            <dd class="col-sm-8"><%= item.sang_sentdate ? new Date(item.sang_sentdate).toLocaleDateString('th-TH') : '-' %></dd>
-            <dt class="col-sm-4">หมวด/ประเภท</dt>
-            <dd class="col-sm-8"><%= item.sang_category || '-' %></dd>
-            <!-- หมายเหตุ ถูกย้ายไปรวมในตารางด้านบนเป็นคอลัมน์ที่ 4 -->
-            <dt class="col-sm-4">สถานะ</dt>
-            <dd class="col-sm-8"><span class="badge <%= item.sang_status === 'yes' ? 'text-bg-success' : 'text-bg-secondary' %>"><%= item.sang_status || '-' %></span></dd>
-          </dl>
+          <div class="col-lg-5">
+            <div class="action-box p-4">
+              <h5 class="fw-bold mb-3">เพิ่มหนังสือติดตาม / คำแนะนำ</h5>
+              <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions" class="row g-3">
+                <div class="col-12">
+                  <label class="form-label">ประเภทการติดตาม</label>
+                  <select name="action_type" class="form-select">
+                    <option value="follow_up">ติดตามผล</option>
+                    <option value="order">คำสั่ง</option>
+                    <option value="advice">คำแนะนำ</option>
+                    <option value="fact_check">ตรวจข้อเท็จจริง</option>
+                    <option value="close">ปิดเรื่อง</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">เลขหนังสือ</label>
+                  <input type="text" name="letter_no" class="form-control">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">วันที่หนังสือ</label>
+                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 ม.ค. 69">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">รายละเอียด</label>
+                  <textarea name="action_detail" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">ผลลัพธ์</label>
+                  <textarea name="result" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="col-12 d-grid">
+                  <button type="submit" class="btn btn-primary">บันทึกติดตามผล</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <%- include('../partials/footer') %>

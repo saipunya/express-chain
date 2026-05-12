@@ -1,67 +1,580 @@
-<%- include('../partials/header', { title: 'Sangket' }) %>
-<div class="container my-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-    <div class="d-flex align-items-center gap-2">
-      <h3 class="mb-0">รายการสังเกต (Sangket)</h3>
-      <span class="badge bg-secondary text-light">รวม <%= (pagination && pagination.total) || (items?.length||0) %> รายการ</span>
+<%- include('../partials/header.ejs', { title: title || 'ทะเบียนข้อสังเกต' }) %>
+<%
+  const summary = (dashboard && dashboard.summary) || {};
+  const groupRows = (dashboard && dashboard.groupRows) || [];
+  const categoryRows = (dashboard && dashboard.categoryRows) || [];
+  const dueSoonRows = (dashboard && dashboard.dueSoonRows) || [];
+  const latestRows = (dashboard && dashboard.latestRows) || [];
+  const activeFiltersCount = [
+    filters.search,
+    filters.groupNo,
+    filters.categoryId,
+    filters.status,
+    filters.severityCase,
+    filters.auditType,
+    filters.coopType,
+    filters.fiscalYearEnd
+  ].filter(Boolean).length;
+  const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
+  const severityBadge = (value) => {
+    if (value === 'serious_order') return 'danger';
+    if (value === 'advice') return 'warning';
+    if (value === 'fact_check') return 'info';
+    return 'secondary';
+  };
+  const severityLabel = (value) => {
+    if (value === 'serious_order') return 'ร้ายแรง';
+    if (value === 'advice') return 'คำแนะนำ';
+    if (value === 'fact_check') return 'ตรวจข้อเท็จจริง';
+    return '-';
+  };
+  const statusBadge = (value) => {
+    if (value === 'resolved' || value === 'closed') return 'success';
+    if (value === 'in_progress' || value === 'monitoring') return 'primary';
+    return 'secondary';
+  };
+  const statusLabel = (value) => {
+    if (value === 'new') return 'ใหม่';
+    if (value === 'in_progress') return 'กำลังดำเนินการ';
+    if (value === 'monitoring') return 'ติดตาม';
+    if (value === 'resolved') return 'ปิดแล้ว';
+    if (value === 'closed') return 'ยุติ';
+    return '-';
+  };
+%>
+
+<style>
+  .sangket-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .sangket-hero,
+  .sangket-panel {
+    border: 1px solid #e5eef0;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.94);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+  }
+  .sangket-hero {
+    overflow: hidden;
+  }
+  .sangket-hero__surface {
+    background:
+      linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(45, 212, 191, 0.03) 45%, rgba(255,255,255,0.92));
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+  .hero-title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+  }
+  .hero-subtitle {
+    color: #64748b;
+    max-width: 68ch;
+  }
+  .metric-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    height: 100%;
+  }
+  .metric-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+  .metric-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .metric-note {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+  .quick-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .quick-filters .btn {
+    border-radius: 999px;
+  }
+  .mobile-cards {
+    display: none;
+  }
+  .mobile-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  }
+  .mobile-card + .mobile-card {
+    margin-top: 0.75rem;
+  }
+  .mobile-card__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .mobile-card__title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+  .mobile-card__meta {
+    color: #64748b;
+    font-size: 0.86rem;
+  }
+  .mobile-card__text {
+    margin-top: 0.65rem;
+    color: #334155;
+    line-height: 1.55;
+  }
+  .mobile-card__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sangket-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .sangket-page .btn-primary:hover,
+  .sangket-page .btn-primary:focus {
+    background-color: #0c7c6b;
+    border-color: #0c7c6b;
+  }
+  .sangket-page .btn-outline-primary {
+    color: #0f8f7b;
+    border-color: #9ddfd4;
+  }
+  .sangket-page .btn-outline-primary:hover {
+    background: #eefbf8;
+    color: #0f766e;
+    border-color: #84dccc;
+  }
+  .table thead th {
+    background: #f4faf8;
+    color: #0f172a;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .table td {
+    vertical-align: top;
+  }
+  .table td,
+  .table th {
+    overflow-wrap: anywhere;
+  }
+  .observation-cell {
+    max-width: 36rem;
+  }
+  .observation-text {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .action-icons {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+  .icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+  }
+  .soft-badge {
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .list-group-item {
+    border-color: #e8eef3;
+  }
+  @media (max-width: 767.98px) {
+    .hero-title { font-size: 1.45rem; }
+    .metric-value { font-size: 1.25rem; }
+    .mobile-cards { display: block; }
+    .desktop-table { display: none; }
+  }
+  @media (min-width: 768px) {
+    .mobile-cards { display: none; }
+  }
+</style>
+
+<div class="sangket-page py-4">
+  <div class="container">
+    <div class="sangket-hero mb-4">
+      <div class="sangket-hero__surface p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
+          <div class="flex-grow-1">
+            <div class="eyebrow mb-2">Sangket</div>
+            <h1 class="hero-title mb-2">ทะเบียนข้อสังเกตจากการสอบบัญชี</h1>
+            <p class="hero-subtitle mb-0">
+              บันทึกแบบ 1 ข้อสังเกตต่อ 1 แถว เชื่อมกับสหกรณ์ รายงานสอบบัญชี หมวดข้อสังเกต และหนังสือติดตามผล เพื่อค้นหา สรุป และนำออก Excel/PDF ได้ง่ายขึ้น
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2 align-items-start">
+            <a href="/sangket/report" class="btn btn-outline-secondary rounded-pill">
+              <i class="bi bi-printer me-1"></i> รายงาน
+            </a>
+            <a href="/sangket/import" class="btn btn-outline-primary rounded-pill">
+              <i class="bi bi-file-earmark-arrow-up me-1"></i> นำเข้า Excel
+            </a>
+            <a href="/sangket/create" class="btn btn-primary rounded-pill">
+              <i class="bi bi-plus-circle me-1"></i> บันทึกข้อสังเกต
+            </a>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-6 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-label">ข้อสังเกตทั้งหมด</div>
+              <div class="metric-value"><%= summary.total_observations || 0 %></div>
+              <div class="metric-note">จำนวนข้อสังเกตที่บันทึกไว้</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-label">มูลค่าความเสียหายรวม</div>
+              <div class="metric-value"><%= fmtMoney(summary.total_damage || 0) %></div>
+              <div class="metric-note">บาท</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-label">รายการค้างดำเนินการ</div>
+              <div class="metric-value"><%= summary.open_items || 0 %></div>
+              <div class="metric-note">สถานะ new / in_progress / monitoring</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-label">ใกล้ครบกำหนด</div>
+              <div class="metric-value"><%= summary.due_soon || 0 %></div>
+              <div class="metric-note">ภายใน 14 วัน</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <form class="d-flex" method="GET" action="">
-        <div class="input-group">
-          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control" name="search" placeholder="ค้นหา ชื่อ/รหัส/กลุ่ม" value="<%= search || '' %>">
-          <button class="btn btn-primary" type="submit">ค้นหา</button>
-          <a href="/sangket" class="btn btn-outline-secondary">ล้าง</a>
+
+    <div class="sangket-panel mb-4 p-3 p-lg-4">
+      <form class="row g-3 align-items-end" method="GET" action="/sangket">
+        <div class="col-12 col-lg-3">
+          <label class="form-label fw-semibold">ค้นหา</label>
+          <input type="text" name="search" value="<%= filters.search || '' %>" class="form-control" placeholder="ชื่อสหกรณ์ / เลขหนังสือ / ข้อความข้อสังเกต">
+        </div>
+        <div class="col-6 col-lg-2">
+          <label class="form-label fw-semibold">กสส.</label>
+          <select name="groupNo" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <% groups.forEach((group) => { %>
+              <option value="<%= group.group_no %>" <%= String(filters.groupNo || '') === String(group.group_no) ? 'selected' : '' %>>
+                กสส. <%= group.group_no %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label class="form-label fw-semibold">หมวด</label>
+          <select name="categoryId" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <% categories.forEach((cat) => { %>
+              <option value="<%= cat.id %>" <%= String(filters.categoryId || '') === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label class="form-label fw-semibold">สถานะ</label>
+          <select name="status" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <% ['new','in_progress','resolved','monitoring','closed'].forEach((s) => { %>
+              <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= statusLabel(s) %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-6 col-lg-2">
+          <label class="form-label fw-semibold">กรณี</label>
+          <select name="severityCase" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <option value="serious_order" <%= filters.severityCase === 'serious_order' ? 'selected' : '' %>>ร้ายแรง</option>
+            <option value="advice" <%= filters.severityCase === 'advice' ? 'selected' : '' %>>คำแนะนำ</option>
+            <option value="fact_check" <%= filters.severityCase === 'fact_check' ? 'selected' : '' %>>ตรวจข้อเท็จจริง</option>
+          </select>
+        </div>
+        <div class="col-12 col-lg-1 d-grid">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i></button>
         </div>
       </form>
-      <a href="/sangket/create" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i> เพิ่ม</a>
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mt-3 pt-3 border-top">
+        <div class="quick-filters">
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'new' ? 'active' : '' %>" href="?status=new">ใหม่</a>
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'in_progress' ? 'active' : '' %>" href="?status=in_progress">กำลังดำเนินการ</a>
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'monitoring' ? 'active' : '' %>" href="?status=monitoring">ติดตาม</a>
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'resolved' ? 'active' : '' %>" href="?status=resolved">ปิดแล้ว</a>
+        </div>
+        <div class="small text-muted">
+          <%= activeFiltersCount ? `${activeFiltersCount} ตัวกรองใช้งานอยู่` : 'ยังไม่ได้เลือกตัวกรอง' %>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover align-middle mb-0">
-          <thead class="table-light">
+    <div class="row g-3 mb-4">
+      <div class="col-lg-4">
+      <div class="sangket-panel p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">ค้างดำเนินการ</h6>
+            <span class="soft-badge bg-light text-dark"><%= summary.open_items || 0 %></span>
+          </div>
+          <div class="list-group list-group-flush">
+            <% (dueSoonRows || []).slice(0, 6).forEach((row) => { %>
+              <a href="/sangket/view/<%= row.observation_id %>" class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between gap-3">
+                  <div class="flex-grow-1">
+                    <div class="fw-semibold text-truncate"><%= row.cooperative_name %></div>
+                    <div class="small text-muted text-truncate"><%= row.observation_text %></div>
+                  </div>
+                  <div class="text-end">
+                    <div class="small fw-semibold"><%= row.due_date || '-' %></div>
+                    <div class="badge text-bg-primary"><%= row.status %></div>
+                  </div>
+                </div>
+              </a>
+            <% }) %>
+            <% if (!dueSoonRows || !dueSoonRows.length) { %>
+              <div class="text-muted small">ไม่มีรายการใกล้ครบกำหนด</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="sangket-panel p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">แยกตาม กสส.</h6>
+          </div>
+          <div class="list-group list-group-flush">
+            <% groupRows.forEach((group) => { %>
+              <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span>กสส. <%= group.group_no || 0 %></span>
+                <span class="badge text-bg-success"><%= group.total %></span>
+              </div>
+            <% }) %>
+            <% if (!groupRows.length) { %>
+              <div class="text-muted small">ยังไม่มีข้อมูล</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="sangket-panel p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">แยกตามหมวด</h6>
+          </div>
+          <div class="list-group list-group-flush">
+            <% categoryRows.forEach((cat) => { %>
+              <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span class="me-2"><%= cat.name %></span>
+                <span class="badge text-bg-info"><%= cat.total %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sangket-panel p-3 p-lg-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h6 class="mb-1 fw-bold">รายการล่าสุด</h6>
+          <div class="text-muted small">ดูเร็ว ๆ ก่อนลงรายละเอียด</div>
+        </div>
+        <a href="/sangket/report" class="btn btn-sm btn-outline-secondary">รายงาน</a>
+      </div>
+      <div class="mobile-cards">
+        <% (latestRows || []).slice(0, 6).forEach((row) => { %>
+          <div class="mobile-card">
+            <div class="mobile-card__top">
+              <div class="flex-grow-1">
+                <div class="mobile-card__title"><%= row.cooperative_name %></div>
+                <div class="mobile-card__meta">กสส. <%= row.promotion_group_no || '-' %> | <%= row.fiscal_year_end || '-' %></div>
+              </div>
+              <span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
+            </div>
+            <div class="mobile-card__text">
+              <%= row.observation_text || '-' %>
+            </div>
+            <div class="mobile-card__footer">
+              <div class="d-flex flex-wrap gap-1">
+                <% if (row.categories && row.categories.length) { %>
+                  <% row.categories.slice(0, 2).forEach((cat) => { %>
+                    <span class="badge text-bg-light border"><%= cat.name %></span>
+                  <% }) %>
+                <% } %>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-sm btn-outline-primary icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-sm btn-outline-secondary icon-btn" title="แก้ไข" aria-label="แก้ไข">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+        <% if (!latestRows || !latestRows.length) { %>
+          <div class="text-muted">ยังไม่มีรายการล่าสุด</div>
+        <% } %>
+      </div>
+      <div class="table-responsive desktop-table">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
             <tr>
-              <th style="width: 80px;" class="text-center">#</th>
-              <th>กลุ่ม</th>
-              <th>รหัส</th>
-              <th>ชื่อ</th>
-              <th class="text-nowrap">วันสิ้นปี</th>
-              <th class="text-nowrap">รับหนังสือ</th>
-              <th class="text-nowrap">รับวันที่</th>
-              <th class="text-nowrap">สถานะ</th>
-              <th style="width:160px;" class="text-center">การทำงาน</th>
+              <th>สหกรณ์</th>
+              <th>ปีบัญชี</th>
+              <th>หนังสือ</th>
+              <th>ข้อสังเกต</th>
+              <th>สถานะ</th>
+              <th class="text-end">การทำงาน</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% (latestRows || []).slice(0, 6).forEach((row) => { %>
+              <tr>
+                <td>
+                  <div class="fw-semibold"><%= row.cooperative_name %></div>
+                  <div class="small text-muted">กสส. <%= row.promotion_group_no || '-' %></div>
+                </td>
+                <td><%= row.fiscal_year_end || '-' %></td>
+                <td><%= row.audit_office_letter_no || '-' %></td>
+                <td class="observation-cell"><div class="observation-text"><%= row.observation_text || '-' %></div></td>
+                <td><span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span></td>
+                <td class="text-end">
+                  <div class="action-icons justify-content-end">
+                    <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-sm btn-outline-primary icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-sm btn-outline-secondary icon-btn" title="แก้ไข" aria-label="แก้ไข">
+                      <i class="bi bi-pencil-square"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sangket-panel mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 p-3 px-lg-4 pt-lg-4">
+        <div>
+          <h5 class="mb-1 fw-bold">รายการข้อสังเกต</h5>
+          <div class="text-muted small">แสดง <%= items.length %> รายการ จากทั้งหมด <%= pagination.total %> รายการ</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="/sangket" class="btn btn-outline-secondary btn-sm">ล้างตัวกรอง</a>
+          <a href="/sangket/create" class="btn btn-primary btn-sm">บันทึกใหม่</a>
+        </div>
+      </div>
+      <div class="table-responsive desktop-table">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 80px;">#</th>
+              <th>สหกรณ์</th>
+              <th>ปีบัญชี</th>
+              <th>หนังสือ</th>
+              <th>ข้อสังเกต</th>
+              <th>หมวด</th>
+              <th>กรณี</th>
+              <th>สถานะ</th>
+              <th class="text-end">การทำงาน</th>
             </tr>
           </thead>
           <tbody>
             <% if (items && items.length) { %>
-              <% items.forEach((it, i)=> { %>
+              <% items.forEach((row, idx) => { %>
                 <tr>
-                  <td class="text-center"><%= ((pagination?.page||1)-1)*(pagination?.pageSize||10) + i + 1 %></td>
-                  <td><span class="badge text-bg-secondary"><%= it.sang_group %></span></td>
-                  <td><%= it.sang_code %></td>
-                  <td><a href="/sangket/view/<%= it.sang_id %>" class="text-decoration-none"><%= it.sang_name %></a></td>
-                  <td class="text-nowrap"><%= it.sang_enddate ? new Date(it.sang_enddate).toISOString().split('T')[0] : '-' %></td>
-                  <td><%= it.sang_rabbook || '-' %></td>
-                  <td class="text-nowrap"><%= it.sang_rabdate ? new Date(it.sang_rabdate).toISOString().split('T')[0] : '-' %></td>
-                  <td><span class="badge text-bg-info"><%= it.sang_status || '-' %></span></td>
-                  <td class="text-center text-nowrap">
-                    <a href="/sangket/view/<%= it.sang_id %>" class="btn btn-outline-primary btn-sm me-1"><i class="bi bi-eye"></i></a>
-                    <a href="/sangket/edit/<%= it.sang_id %>" class="btn btn-warning btn-sm me-1"><i class="bi bi-pencil-square"></i></a>
-                    <form action="/sangket/delete/<%= it.sang_id %>" method="POST" style="display:inline" onsubmit="return confirm('ลบรายการนี้หรือไม่?')">
-                      <button class="btn btn-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
-                    </form>
+                  <td><%= ((pagination.page - 1) * pagination.pageSize) + idx + 1 %></td>
+                  <td>
+                    <div class="fw-semibold"><%= row.cooperative_name %></div>
+                    <div class="small text-muted">
+                      <%= row.coop_type === 'group_farmer' ? 'กลุ่มเกษตรกร' : 'สหกรณ์' %>
+                      <% if (row.promotion_group_no) { %> | กสส. <%= row.promotion_group_no %><% } %>
+                    </div>
+                  </td>
+                  <td><%= row.fiscal_year_end || '-' %></td>
+                  <td>
+                    <div><%= row.audit_office_letter_no || '-' %></div>
+                    <div class="small text-muted"><%= row.received_date || '-' %></div>
+                  </td>
+                  <td class="observation-cell">
+                    <div class="observation-text"><%= row.observation_text || '-' %></div>
+                    <div class="small text-muted mt-1">
+                      <%= row.auditor_name || '-' %>
+                      <% if (row.potential_damage_amount) { %>
+                        | <%= fmtMoney(row.potential_damage_amount) %> บาท
+                      <% } %>
+                    </div>
+                  </td>
+                  <td>
+                    <% if (row.categories && row.categories.length) { %>
+                      <div class="d-flex flex-wrap gap-1">
+                        <% row.categories.slice(0, 2).forEach((cat) => { %>
+                          <span class="badge text-bg-light border"><%= cat.name %></span>
+                        <% }) %>
+                        <% if (row.categories.length > 2) { %>
+                          <span class="badge text-bg-secondary">+<%= row.categories.length - 2 %></span>
+                        <% } %>
+                      </div>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+                  <td><span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span></td>
+                  <td><span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span></td>
+                  <td class="text-end">
+                    <div class="action-icons justify-content-end">
+                      <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-outline-primary btn-sm icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-outline-secondary btn-sm icon-btn" title="แก้ไข" aria-label="แก้ไข">
+                        <i class="bi bi-pencil-square"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               <% }) %>
             <% } else { %>
               <tr>
                 <td colspan="9">
-                  <div class="text-center py-4 text-muted">
+                  <div class="text-center py-5 text-muted">
                     <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                    ไม่พบข้อมูล
+                    ยังไม่มีข้อมูลข้อสังเกต
                   </div>
                 </td>
               </tr>
@@ -69,23 +582,64 @@
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
 
-  <% if (pagination && pagination.totalPages > 1) { %>
-    <nav class="mt-3">
-      <ul class="pagination justify-content-center">
-        <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
-          <a class="page-link" href="?search=<%= encodeURIComponent(search||'') %>&page=<%= (pagination.page-1) %>&pageSize=<%= pagination.pageSize %>">ก่อนหน้า</a>
-        </li>
-        <% for (let p = 1; p <= pagination.totalPages; p++) { %>
-          <li class="page-item <%= p===pagination.page ? 'active' : '' %>"><a class="page-link" href="?search=<%= encodeURIComponent(search||'') %>&page=<%= p %>&pageSize=<%= pagination.pageSize %>"><%= p %></a></li>
+      <div class="mobile-cards px-3 pb-3">
+        <% if (items && items.length) { %>
+          <% items.forEach((row) => { %>
+            <div class="mobile-card">
+              <div class="mobile-card__top">
+                <div class="flex-grow-1">
+                  <div class="mobile-card__title"><%= row.cooperative_name %></div>
+                  <div class="mobile-card__meta">
+                    <%= row.fiscal_year_end || '-' %> | <%= row.audit_office_letter_no || '-' %>
+                  </div>
+                </div>
+                <span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span>
+              </div>
+              <div class="mobile-card__text"><%= row.observation_text || '-' %></div>
+              <div class="mobile-card__footer">
+                <div class="d-flex flex-wrap gap-1">
+                  <% if (row.categories && row.categories.length) { %>
+                    <% row.categories.slice(0, 2).forEach((cat) => { %>
+                      <span class="badge text-bg-light border"><%= cat.name %></span>
+                    <% }) %>
+                  <% } %>
+                </div>
+                <div class="d-flex gap-2">
+                  <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-sm btn-outline-primary icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-sm btn-outline-secondary icon-btn" title="แก้ไข" aria-label="แก้ไข">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="px-3 pb-3 text-muted">ยังไม่มีข้อมูลข้อสังเกต</div>
         <% } %>
-        <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
-          <a class="page-link" href="?search=<%= encodeURIComponent(search||'') %>&page=<%= (pagination.page+1) %>&pageSize=<%= pagination.pageSize %>">ถัดไป</a>
-        </li>
-      </ul>
-    </nav>
-  <% } %>
+      </div>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <nav class="d-flex justify-content-center">
+        <ul class="pagination">
+          <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
+            <a class="page-link" href="?search=<%= encodeURIComponent(filters.search || '') %>&groupNo=<%= filters.groupNo || '' %>&categoryId=<%= filters.categoryId || '' %>&status=<%= filters.status || '' %>&severityCase=<%= filters.severityCase || '' %>&auditType=<%= filters.auditType || '' %>&fiscalYearEnd=<%= filters.fiscalYearEnd || '' %>&page=<%= pagination.page - 1 %>&pageSize=<%= pagination.pageSize %>">ก่อนหน้า</a>
+          </li>
+          <% for (let p = 1; p <= pagination.totalPages; p += 1) { %>
+            <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
+              <a class="page-link" href="?search=<%= encodeURIComponent(filters.search || '') %>&groupNo=<%= filters.groupNo || '' %>&categoryId=<%= filters.categoryId || '' %>&status=<%= filters.status || '' %>&severityCase=<%= filters.severityCase || '' %>&auditType=<%= filters.auditType || '' %>&fiscalYearEnd=<%= filters.fiscalYearEnd || '' %>&page=<%= p %>&pageSize=<%= pagination.pageSize %>"><%= p %></a>
+            </li>
+          <% } %>
+          <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
+            <a class="page-link" href="?search=<%= encodeURIComponent(filters.search || '') %>&groupNo=<%= filters.groupNo || '' %>&categoryId=<%= filters.categoryId || '' %>&status=<%= filters.status || '' %>&severityCase=<%= filters.severityCase || '' %>&auditType=<%= filters.auditType || '' %>&fiscalYearEnd=<%= filters.fiscalYearEnd || '' %>&page=<%= pagination.page + 1 %>&pageSize=<%= pagination.pageSize %>">ถัดไป</a>
+          </li>
+        </ul>
+      </nav>
+    <% } %>
+  </div>
 </div>
+
 <%- include('../partials/footer') %>

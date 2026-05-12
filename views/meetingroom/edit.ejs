@@ -118,26 +118,26 @@
   </div>
 
   <style>
-    .meetingroom-form-page {
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.08), transparent 28%),
-        #f7f9fc;
-    }
+  .meetingroom-form-page {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.07), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+  }
 
     .form-shell {
       display: grid;
       gap: 1.25rem;
     }
 
-    .form-hero,
-    .form-card {
-      background: rgba(255, 255, 255, 0.94);
-      border: 1px solid #e8eef7;
-      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
-      border-radius: 22px;
-    }
+  .form-hero,
+  .form-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #e3f0ea;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    border-radius: 22px;
+  }
 
     .form-hero {
       padding: 1.25rem;
@@ -146,14 +146,14 @@
       gap: 1rem;
     }
 
-    .form-hero__icon {
+  .form-hero__icon {
       width: 60px;
       height: 60px;
       border-radius: 18px;
       display: grid;
       place-items: center;
-      background: rgba(37, 99, 235, 0.1);
-      color: #2563eb;
+    background: rgba(16, 185, 129, 0.1);
+    color: #0f8f7b;
       font-size: 1.5rem;
       flex: 0 0 auto;
     }
@@ -187,19 +187,19 @@
       margin-bottom: 0.45rem;
     }
 
-    .form-control,
-    .form-select {
-      border-radius: 16px;
-      border-color: #dbe5f0;
-      min-height: 52px;
-      box-shadow: none;
-    }
+  .form-control,
+  .form-select {
+    border-radius: 16px;
+    border-color: #d6e8e1;
+    min-height: 52px;
+    box-shadow: none;
+  }
 
-    .form-control:focus,
-    .form-select:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.08);
-    }
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #8dd4c7;
+    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.08);
+  }
 
     textarea.form-control {
       min-height: 132px;
@@ -211,10 +211,10 @@
       gap: 0.75rem;
     }
 
-    .meta-panel__item {
-      border: 1px solid #e7edf6;
-      border-radius: 16px;
-      background: #f8fbff;
+  .meta-panel__item {
+    border: 1px solid #e1efea;
+    border-radius: 16px;
+    background: #f7fcfa;
       padding: 0.9rem 1rem;
       display: grid;
       gap: 0.15rem;
@@ -238,16 +238,38 @@
       padding-top: 0.25rem;
     }
 
-    .btn-action {
+  .btn-action {
       min-width: 160px;
       min-height: 46px;
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      font-weight: 600;
-    }
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  .meetingroom-form-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+
+  .meetingroom-form-page .btn-primary:hover,
+  .meetingroom-form-page .btn-primary:focus {
+    background-color: #0c7c6b;
+    border-color: #0c7c6b;
+  }
+
+  .meetingroom-form-page .btn-outline-secondary {
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+
+  .meetingroom-form-page .btn-outline-secondary:hover,
+  .meetingroom-form-page .btn-outline-secondary:focus {
+    background: #f4f6f9;
+    color: #334155;
+  }
 
     @media (max-width: 768px) {
       .form-hero {

@@ -1,110 +1,308 @@
-<%- include('../partials/header', { title: (item ? 'แก้ไข' : 'เพิ่ม') + ' Sangket' }) %>
-<div class="container my-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-10 col-xl-9">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 d-flex align-items-center gap-2">
-            <i class="bi bi-journal-text"></i> <%= item ? 'แก้ไข' : 'เพิ่ม' %> รายการสังเกต
-          </h5>
-          <a href="/sangket" class="btn btn-sm btn-outline-light">← กลับ</a>
+<%- include('../partials/header.ejs', { title: title || 'บันทึกข้อสังเกต' }) %>
+<%
+  const isEdit = Boolean(item && item.id);
+  const actionUrl = isEdit ? `/sangket/edit/${item.id}` : '/sangket/create';
+  const selectedCategoryIds = Array.isArray(item && item.category_ids) ? item.category_ids.map(String) : (item && item.category_id ? [String(item.category_id)] : []);
+  const currentStatus = (item && item.status) || 'new';
+%>
+
+<style>
+  .sangket-form-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.07), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.05), transparent 26%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .form-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .form-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .form-hero__title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .form-hero__subtitle {
+    color: #64748b;
+  }
+  .section-title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .form-label {
+    font-weight: 600;
+    color: #334155;
+  }
+  .form-control,
+  .form-select {
+    border-radius: 14px;
+    border-color: #dbe8e3;
+    min-height: 48px;
+    box-shadow: none;
+  }
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #8dd4c7;
+    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.08);
+  }
+  textarea.form-control {
+    min-height: 120px;
+  }
+  .mini-note {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  .category-box {
+    border: 1px solid #e5edf2;
+    border-radius: 14px;
+    padding: 0.85rem 0.9rem;
+    background: #fbfdfc;
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+  }
+  .category-box input {
+    margin-top: 0.2rem;
+  }
+  .action-panel {
+    border: 1px dashed #cfe8df;
+    background: #f7fcfa;
+    border-radius: 18px;
+  }
+  .sangket-form-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .sangket-form-page .btn-outline-secondary {
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .sangket-form-page .btn-outline-secondary:hover {
+    background: #f4f6f9;
+  }
+  @media (max-width: 767.98px) {
+    .category-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="sangket-form-page py-4">
+  <div class="container">
+    <div class="form-shell">
+      <div class="form-hero p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div>
+            <div class="eyebrow mb-2">Sangket</div>
+            <h1 class="form-hero__title mb-2"><%= isEdit ? 'แก้ไขข้อสังเกต' : 'บันทึกข้อสังเกตใหม่' %></h1>
+            <p class="form-hero__subtitle mb-0">บันทึกข้อมูลสหกรณ์ รายงานสอบบัญชี ข้อสังเกตหลายข้อ และหมวดที่เกี่ยวข้องแบบ normalized</p>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับหน้ารวม</a>
+            <a href="/sangket/import" class="btn btn-outline-primary rounded-pill">นำเข้า Excel</a>
+          </div>
         </div>
-        <form method="POST" action="<%= item ? ('/sangket/edit/' + item.sang_id) : '/sangket/create' %>">
-          <div class="card-body">
-            <% if (error) { %>
-              <div class="alert alert-danger py-2 px-3"><%= error %></div>
-            <% } %>
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label class="form-label">กลุ่ม</label>
-                <select name="sang_group" class="form-select">
-                  <% const gval = item?.sang_group || '';
-                     const groups = ['group1','group2','group3','group4','group5']; %>
-                  <option value="">-</option>
-                  <% groups.forEach(g => { %>
-                    <option value="<%= g %>" <%= g===gval ? 'selected' : '' %>><%= g %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">รหัส</label>
-                <input type="text" name="sang_code" class="form-control" required value="<%= item?.sang_code || '' %>">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">ชื่อสถาบัน</label>
-                <input type="text" name="sang_name" class="form-control" required value="<%= item?.sang_name || '' %>">
-              </div>
+      </div>
 
-              <div class="col-md-3">
-                <label class="form-label">วันสิ้นปี</label>
-                <input type="date" name="sang_enddate" class="form-control" value="<%= item?.sang_enddate ? new Date(item.sang_enddate).toISOString().split('T')[0] : '' %>">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">เลขรับหนังสือ</label>
-                <input type="text" name="sang_rabbook" class="form-control" value="<%= item?.sang_rabbook || '' %>">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">วันที่รับ</label>
-                <input type="date" name="sang_rabdate" class="form-control" value="<%= item?.sang_rabdate ? new Date(item.sang_rabdate).toISOString().split('T')[0] : '' %>">
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">สถานะ</label>
-                <select name="sang_status" class="form-select">
-                  <% const st = item?.sang_status || 'no'; %>
-                  <option value="no" <%= st==='no'?'selected':'' %>>no</option>
-                  <option value="yes" <%= st==='yes'?'selected':'' %>>yes</option>
-                </select>
-              </div>
+      <form action="<%= actionUrl %>" method="POST" class="p-4 p-lg-5">
+        <% if (error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
 
-              <div class="col-md-4">
-                <label class="form-label">ผู้ตรวจบัญชี</label>
-                <input type="text" name="sang_accounter" class="form-control" value="<%= item?.sang_accounter || '' %>">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">ประเภทการตรวจ</label>
-                <input type="text" name="sang_check" class="form-control" value="<%= item?.sang_check || '' %>">
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">ประเภทกรณี</label>
-                <input type="text" name="sang_type" class="form-control" value="<%= item?.sang_type || '' %>">
-              </div>
+        <div class="row g-4">
+          <div class="col-12">
+            <h5 class="section-title mb-0">1) ข้อมูลสหกรณ์</h5>
+          </div>
+          <div class="col-12 col-lg-6">
+            <label class="form-label">ชื่อสหกรณ์ / กลุ่มเกษตรกร</label>
+            <input type="text" name="cooperative_name" class="form-control" required value="<%= item?.cooperative_name || item?.sang_name || '' %>" placeholder="เช่น สอ.ครู ชัยภูมิ จำกัด">
+          </div>
+          <div class="col-6 col-lg-3">
+            <label class="form-label">ประเภท</label>
+            <select name="coop_type" class="form-select">
+              <option value="cooperative" <%= String(item?.coop_type || '') !== 'group_farmer' ? 'selected' : '' %>>สหกรณ์</option>
+              <option value="group_farmer" <%= String(item?.coop_type || '') === 'group_farmer' ? 'selected' : '' %>>กลุ่มเกษตรกร</option>
+            </select>
+          </div>
+          <div class="col-6 col-lg-3">
+            <label class="form-label">กสส.</label>
+            <input type="number" name="promotion_group_no" class="form-control" min="1" max="99" value="<%= item?.promotion_group_no || '' %>">
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">เขต / จังหวัด / อำเภอ</label>
+            <input type="text" name="district" class="form-control" value="<%= item?.district || '' %>" placeholder="ถ้ามี">
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">สถานะสหกรณ์</label>
+            <input type="text" name="cooperative_status" class="form-control" value="<%= item?.cooperative_status || '' %>" placeholder="ถ้ามี">
+          </div>
 
-              <div class="col-md-4">
-                <label class="form-label">เลขส่งหนังสือ</label>
-                <input type="text" name="sang_sentbook" class="form-control" value="<%= item?.sang_sentbook || '' %>">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">วันที่ส่ง</label>
-                <input type="date" name="sang_sentdate" class="form-control" value="<%= item?.sang_sentdate ? new Date(item.sang_sentdate).toISOString().split('T')[0] : '' %>">
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">หมวด/ประเภท</label>
-                <input type="text" name="sang_category" class="form-control" value="<%= item?.sang_category || '' %>">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">เงินที่เกี่ยวข้อง</label>
-                <input type="text" name="sang_money" class="form-control" placeholder="เช่น 0,0,0" value="<%= item?.sang_money || '' %>">
-              </div>
+          <div class="col-12">
+            <h5 class="section-title mb-0 mt-2">2) ข้อมูลรายงานสอบบัญชี</h5>
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">ปีบัญชีสิ้นสุด</label>
+            <input type="text" name="fiscal_year_end" class="form-control" value="<%= item?.fiscal_year_end || '' %>" placeholder="เช่น 30 ก.ย. 68">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">หนังสือสตส. เลขที่</label>
+            <input type="text" name="audit_office_letter_no" class="form-control" value="<%= item?.audit_office_letter_no || '' %>">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">วันที่หนังสือ</label>
+            <input type="text" name="audit_office_letter_date" class="form-control" value="<%= item?.audit_office_letter_date || '' %>" placeholder="เช่น 25 พ.ย. 2568">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">วันที่รับหนังสือ</label>
+            <input type="text" name="received_date" class="form-control" value="<%= item?.received_date || '' %>" placeholder="เช่น 26 พ.ย. 2568">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">ผู้สอบบัญชี</label>
+            <input type="text" name="auditor_name" class="form-control" value="<%= item?.auditor_name || '' %>">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">ประเภทงานตรวจ</label>
+            <select name="audit_type" class="form-select">
+              <option value="">-</option>
+              <option value="interim" <%= String(item?.audit_type || '') === 'interim' ? 'selected' : '' %>>ระหว่างปี</option>
+              <option value="annual" <%= String(item?.audit_type || '') === 'annual' ? 'selected' : '' %>>ประจำปี</option>
+            </select>
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">เลขอ้างอิงต้นทาง</label>
+            <input type="text" name="source_sheet" class="form-control" value="<%= item?.source_sheet || '' %>" placeholder="กรณีนำเข้า Excel">
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">แถวต้นทาง</label>
+            <input type="number" name="source_row" class="form-control" value="<%= item?.source_row || '' %>" min="1">
+          </div>
 
-              <div class="col-12">
-                <label class="form-label">รายละเอียด (ข้อสังเกต)</label>
-                <textarea name="sang_detail" class="form-control" rows="4"><%= item?.sang_detail || '' %></textarea>
-              </div>
-              <div class="col-12">
-                <label class="form-label">หมายเหตุ</label>
-                <textarea name="sang_maihed" class="form-control" rows="3"><%= item?.sang_maihed || '' %></textarea>
-              </div>
-
-              <input type="hidden" name="sang_savedate" value="<%= item?.sang_savedate ? new Date(item.sang_savedate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0] %>">
+          <div class="col-12">
+            <h5 class="section-title mb-0 mt-2">3) ข้อมูลข้อสังเกต</h5>
+          </div>
+          <div class="col-12 col-lg-2">
+            <label class="form-label">ลำดับข้อ</label>
+            <input type="number" name="observation_no" class="form-control" min="1" value="<%= item?.observation_no || '' %>">
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">กรณีข้อสังเกต</label>
+            <select name="severity_case" class="form-select">
+              <option value="">-</option>
+              <option value="serious_order" <%= item?.severity_case === 'serious_order' ? 'selected' : '' %>>ร้ายแรง / ออกคำสั่ง</option>
+              <option value="advice" <%= item?.severity_case === 'advice' ? 'selected' : '' %>>ไม่ร้ายแรง / ออกคำแนะนำ</option>
+              <option value="fact_check" <%= item?.severity_case === 'fact_check' ? 'selected' : '' %>>ข้อเท็จจริงไม่ครบ / ตรวจเพิ่ม</option>
+            </select>
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">สถานะ</label>
+            <select name="status" class="form-select">
+              <% ['new','in_progress','monitoring','resolved','closed'].forEach((status) => { %>
+                <option value="<%= status %>" <%= currentStatus === status ? 'selected' : '' %>><%= status %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-12 col-lg-3">
+            <label class="form-label">หมวดหลัก</label>
+            <select name="category_id" class="form-select">
+              <option value="">-</option>
+              <% categories.forEach((cat) => { %>
+                <option value="<%= cat.id %>" <%= String(item?.category_id || '') === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">หมวดเพิ่มเติม</label>
+            <div class="category-grid">
+              <% categories.forEach((cat) => { %>
+                <label class="category-box">
+                  <input type="checkbox" name="category_ids[]" value="<%= cat.id %>" <%= selectedCategoryIds.includes(String(cat.id)) ? 'checked' : '' %>>
+                  <span>
+                    <strong class="d-block"><%= cat.name %></strong>
+                    <span class="mini-note">หมวด <%= cat.id %></span>
+                  </span>
+                </label>
+              <% }) %>
             </div>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-            <a href="/sangket" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> ย้อนกลับ</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-1"></i> บันทึก</button>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">มูลค่าความเสียหาย</label>
+            <input type="text" name="potential_damage_amount" class="form-control" value="<%= item?.potential_damage_amount || '' %>" placeholder="เช่น 125000.00">
           </div>
-        </form>
-      </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">กำหนดติดตาม</label>
+            <input type="date" name="due_date" class="form-control" value="<%= item?.due_date || '' %>">
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label">วันที่ปิดเรื่อง</label>
+            <input type="date" name="resolved_date" class="form-control" value="<%= item?.resolved_date || '' %>">
+          </div>
+          <div class="col-12">
+            <label class="form-label">รายละเอียดข้อสังเกต</label>
+            <textarea name="observation_text" class="form-control" rows="5" required><%= item?.observation_text || '' %></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea name="remark" class="form-control" rows="3"><%= item?.remark || '' %></textarea>
+          </div>
+
+          <div class="col-12">
+            <div class="action-panel p-3 p-lg-4">
+              <h5 class="section-title mb-3">4) หนังสือติดตาม / คำสั่ง / คำแนะนำ</h5>
+              <div class="row g-3">
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">ประเภทการติดตาม</label>
+                  <select name="action_type" class="form-select">
+                    <option value="">-</option>
+                    <option value="order">คำสั่ง</option>
+                    <option value="advice">คำแนะนำ</option>
+                    <option value="fact_check">ตรวจข้อเท็จจริง</option>
+                    <option value="follow_up">ติดตามผล</option>
+                    <option value="close">ปิดเรื่อง</option>
+                  </select>
+                </div>
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">เลขหนังสือ</label>
+                  <input type="text" name="letter_no" class="form-control" value="<%= item?.letter_no || '' %>">
+                </div>
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">วันที่หนังสือ</label>
+                  <input type="text" name="letter_date" class="form-control" value="<%= item?.letter_date || '' %>">
+                </div>
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">ผู้บันทึก</label>
+                  <input type="text" name="created_by" class="form-control" value="<%= item?.created_by || (user ? (user.fullname || user.username || '') : '') %>">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">รายละเอียดการติดตาม</label>
+                  <textarea name="action_detail" class="form-control" rows="3" placeholder="คำสั่ง / คำแนะนำ / ผลการติดตาม"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">ผลลัพธ์</label>
+                  <textarea name="result" class="form-control" rows="2"></textarea>
+                </div>
+              </div>
+              <div class="mini-note mt-2">ถ้าไม่ต้องการบันทึกการติดตามตอนนี้ ปล่อยส่วนนี้ว่างได้</div>
+            </div>
+          </div>
+
+          <div class="col-12 d-flex flex-wrap gap-2 justify-content-end pt-2">
+            <a href="/sangket" class="btn btn-outline-secondary rounded-pill px-4">ยกเลิก</a>
+            <button type="submit" class="btn btn-primary rounded-pill px-4"><%= isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อสังเกต' %></button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
+
 <%- include('../partials/footer') %>

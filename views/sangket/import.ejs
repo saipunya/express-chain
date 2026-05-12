@@ -1,0 +1,124 @@
+<%- include('../partials/header.ejs', { title: title || 'นำเข้าข้อสังเกตจาก Excel' }) %>
+
+<style>
+  .sangket-import-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .import-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.96);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .import-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .import-shell .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .hint-list li + li {
+    margin-top: 0.4rem;
+  }
+</style>
+
+<div class="sangket-import-page py-4">
+  <div class="container">
+    <div class="import-shell">
+      <div class="import-hero p-4 p-lg-5">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+          <div>
+            <div class="eyebrow mb-2">Sangket</div>
+            <h1 class="h3 fw-bold mb-2">นำเข้าข้อสังเกตจาก Excel</h1>
+            <p class="text-muted mb-0">
+              ใช้ไฟล์ลักษณะเดียวกับ <code>ข้อสังเกตรวม 1-5.xlsx</code> เพื่อแยกข้อมูลออกเป็นสหกรณ์, รายงานสอบบัญชี, ข้อสังเกต, หมวด และหนังสือติดตามผล
+            </p>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับหน้ารวม</a>
+            <a href="/sangket/create" class="btn btn-outline-primary rounded-pill">บันทึกด้วยมือ</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 p-lg-5">
+        <% if (error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+
+        <% if (summary) { %>
+          <div class="alert alert-success">
+            นำเข้าสำเร็จ: <%= summary.sheets %> ชีต, <%= summary.cooperatives %> สหกรณ์, <%= summary.reports %> รายงาน, <%= summary.observations %> ข้อสังเกต, <%= summary.actions %> หนังสือติดตาม
+          </div>
+        <% } %>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">อัปโหลดไฟล์</h5>
+                <form action="/sangket/import" method="POST" enctype="multipart/form-data" class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">ไฟล์ Excel (.xlsx)</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx" required>
+                  </div>
+                  <div class="col-12 d-grid d-sm-flex justify-content-sm-end gap-2">
+                    <button type="submit" class="btn btn-primary px-4">เริ่มนำเข้า</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">สิ่งที่ระบบอ่านจากไฟล์</h5>
+                <ul class="hint-list mb-0">
+                  <li>แต่ละชีตคือ กสส.1 - กสส.5</li>
+                  <li>1 แถวหลัก = 1 ข้อสังเกต</li>
+                  <li>หมวด 1-6 จะถูกเก็บแบบหลายค่าได้</li>
+                  <li>เลขหนังสือ / วันที่ / ผู้สอบบัญชี จะถูกแยกเป็นรายงาน</li>
+                  <li>หนังสือติดตาม / คำสั่ง / คำแนะนำ จะถูกเก็บเป็น action history</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">คำแนะนำการเตรียมไฟล์</h5>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="p-3 rounded-3 bg-light h-100">
+                  <div class="fw-semibold mb-1">1) ใช้ไฟล์ต้นทางเดิม</div>
+                  <div class="text-muted small">ไฟล์ควรมีหัวตารางตามรูปแบบรายงานเพื่อให้ระบบจับคอลัมน์ได้ถูกต้อง</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded-3 bg-light h-100">
+                  <div class="fw-semibold mb-1">2) เก็บหลายข้อสังเกตได้</div>
+                  <div class="text-muted small">สหกรณ์เดียวกันสามารถมีหลายแถวข้อสังเกตในรายงานเดียวกัน</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded-3 bg-light h-100">
+                  <div class="fw-semibold mb-1">3) หมวดหลายค่า</div>
+                  <div class="text-muted small">หากข้อสังเกตมีหลายหมวด ระบบจะบันทึกเป็น primary + map table ให้อัตโนมัติ</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

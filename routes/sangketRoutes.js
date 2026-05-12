@@ -2,21 +2,22 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/sangketController');
 
-// List + search + pagination
 router.get('/', controller.index);
+router.get('/report', controller.report);
+router.get('/report.xlsx', controller.exportExcel);
+router.get('/report.pdf', controller.exportPdf);
+router.get('/import', controller.importForm);
+router.post('/import', controller.upload.single('file'), controller.importExcel);
 
-// Create
 router.get('/create', controller.createForm);
 router.post('/create', controller.create);
 
-// View detail
 router.get('/view/:id', controller.view);
+router.post('/view/:id/actions', controller.addAction);
 
-// Edit
 router.get('/edit/:id', controller.editForm);
 router.post('/edit/:id', controller.update);
 
-// Delete
 router.post('/delete/:id', controller.delete);
 
 module.exports = router;

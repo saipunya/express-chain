@@ -1,0 +1,163 @@
+<%- include('../partials/header.ejs', { title: title || 'รายงานทะเบียนข้อสังเกต' }) %>
+<%
+  const summary = (dashboard && dashboard.summary) || {};
+  const categoriesList = Array.isArray(categories) ? categories : [];
+  const categoryLegend = categoriesList.map((cat) => `${cat.id} = ${cat.name}`).join(' | ');
+  const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
+  const qs = new URLSearchParams();
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      qs.set(key, value);
+    }
+  });
+  const querySuffix = qs.toString() ? `?${qs.toString()}` : '';
+%>
+
+<style>
+  .sangket-report-page {
+    background: #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .report-shell {
+    background: #fff;
+    border: 1px solid #e5eef0;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  }
+  .report-head {
+    border-bottom: 1px solid #edf2f4;
+  }
+  .report-metric {
+    border: 1px solid #e5edf2;
+    border-radius: 16px;
+    padding: 0.85rem 1rem;
+    background: #fbfdfc;
+  }
+  .report-shell table {
+    font-size: 0.95rem;
+  }
+  .report-shell .table thead th {
+    font-size: 0.92rem;
+  }
+  .report-shell .alert.small {
+    font-size: 0.92rem;
+  }
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    .sangket-report-page {
+      background: #fff !important;
+    }
+    .report-shell {
+      box-shadow: none !important;
+    }
+  }
+</style>
+
+<div class="sangket-report-page py-4">
+  <div class="container">
+    <div class="report-shell">
+      <div class="report-head p-4 p-lg-5 d-flex flex-column flex-lg-row justify-content-between gap-3 no-print">
+        <div>
+          <div class="eyebrow mb-2">Sangket</div>
+          <h1 class="h3 fw-bold mb-2">รายงานทะเบียนข้อสังเกต</h1>
+          <p class="text-muted mb-0">หน้าสรุปสำหรับพิมพ์ / ส่งออกต่อจากข้อมูลที่กรองแล้ว</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับรายการ</a>
+          <a href="/sangket/report.xlsx<%= querySuffix %>" class="btn btn-outline-success rounded-pill">Export Excel</a>
+          <a href="/sangket/report.pdf<%= querySuffix %>" class="btn btn-primary rounded-pill">Download PDF</a>
+        </div>
+      </div>
+
+      <div class="p-4 p-lg-5">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3">
+            <div class="report-metric">
+              <div class="small text-muted">ข้อสังเกตทั้งหมด</div>
+              <div class="h4 fw-bold mb-0"><%= summary.total_observations || 0 %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="report-metric">
+              <div class="small text-muted">มูลค่าความเสียหายรวม</div>
+              <div class="h4 fw-bold mb-0"><%= fmtMoney(summary.total_damage || 0) %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="report-metric">
+              <div class="small text-muted">ค้างดำเนินการ</div>
+              <div class="h4 fw-bold mb-0"><%= summary.open_items || 0 %></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="report-metric">
+              <div class="small text-muted">ใกล้ครบกำหนด</div>
+              <div class="h4 fw-bold mb-0"><%= summary.due_soon || 0 %></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-light border small mb-3">
+          <strong>หมวด:</strong> <%= categoryLegend || '-' %>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>สหกรณ์</th>
+                <th>ปีบัญชี</th>
+                <th>หนังสือ</th>
+                <th>ข้อสังเกต</th>
+                <th>หมวด</th>
+                <th>กรณี</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (items && items.length) { %>
+                <% items.forEach((row, idx) => { %>
+                  <tr>
+                    <td><%= idx + 1 %></td>
+                    <td>
+                      <div class="fw-semibold"><%= row.cooperative_name %></div>
+                      <div class="text-muted small">กสส. <%= row.promotion_group_no || '-' %></div>
+                    </td>
+                    <td><%= row.fiscal_year_end || '-' %></td>
+                    <td>
+                      <div><%= row.audit_office_letter_no || '-' %></div>
+                      <div class="text-muted small"><%= row.received_date || '-' %></div>
+                    </td>
+                    <td style="min-width: 340px; white-space: pre-line;"><%= row.observation_text || '-' %></td>
+                    <td>
+                      <% if (row.categories && row.categories.length) { %>
+                        <div class="d-flex flex-wrap gap-1">
+                          <% row.categories.forEach((cat) => { %>
+                            <span class="badge text-bg-light border" title="<%= cat.name %>"><%= cat.id %></span>
+                          <% }) %>
+                        </div>
+                      <% } else { %>
+                        -
+                      <% } %>
+                    </td>
+                    <td><%= row.severity_case || '-' %></td>
+                    <td><%= row.status || '-' %></td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-5">ไม่พบข้อมูล</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

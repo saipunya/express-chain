@@ -44,6 +44,7 @@ function getFilters(query = {}) {
 function pickBody(body = {}) {
   return {
     cooperative_name: body.cooperative_name || body.sang_name || '',
+    c_code: body.c_code || null,
     coop_type: body.coop_type || 'cooperative',
     promotion_group_no: body.promotion_group_no || null,
     district: body.district || null,
@@ -180,7 +181,8 @@ async function renderForm(res, item, error = null) {
     error,
     categories,
     groups: refs.groups,
-    cooperatives: refs.cooperatives
+    cooperatives: refs.cooperatives,
+    activeCoopHierarchy: refs.activeCoopHierarchy || []
   });
 }
 
@@ -226,9 +228,11 @@ const controller = {
   report: async (req, res) => {
     try {
       const filters = getFilters(req.query);
+      const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+      const pageSize = Math.max(parseInt(req.query.pageSize || '10', 10), 1);
       const [dashboard, pageData, categories, refs] = await Promise.all([
         Sangket.getDashboard(filters),
-        Sangket.getPaged(filters, 1, 1000),
+        Sangket.getPaged(filters, page, pageSize),
         Sangket.getCategoryOptions(),
         Sangket.getReferenceData()
       ]);
@@ -239,7 +243,15 @@ const controller = {
         dashboard,
         items: pageData.rows,
         categories,
-        groups: refs.groups
+        groups: refs.groups,
+        pagination: {
+          page,
+          pageSize,
+          total: pageData.total,
+          totalPages: Math.max(1, Math.ceil(pageData.total / pageSize)),
+          hasPrev: page > 1,
+          hasNext: page < Math.max(1, Math.ceil(pageData.total / pageSize))
+        }
       });
     } catch (error) {
       console.error('Sangket report error:', error);

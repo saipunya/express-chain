@@ -11,6 +11,7 @@ const CATEGORY_SEED = [
 ];
 
 let schemaReadyPromise = null;
+let activeCoopLookupPromise = null;
 
 function textValue(value) {
   if (value === null || value === undefined) return '';
@@ -99,6 +100,181 @@ function severityActionType(severityCase) {
   }
 }
 
+function normalizeCoopName(value) {
+  let text = String(value ?? '').trim().replace(/\s+/g, ' ');
+  if (!text) return '';
+
+  text = text
+    .replace(/\s*จำกัด\s*\(มหาชน\)\s*$/u, '')
+    .replace(/\s*จำกัด\s*$/u, '')
+    .trim();
+
+  if (/^สค\.\s*/u.test(text)) {
+    text = text.replace(/^สค\.\s*/u, 'สหกรณ์เครดิตยูเนี่ยน ');
+  } else if (/^สอ\.\s*/u.test(text)) {
+    text = text.replace(/^สอ\.\s*/u, 'สหกรณ์ออมทรัพย์ ');
+  } else if (/^สห\.\s*/u.test(text)) {
+    text = text.replace(/^สห\.\s*/u, 'สหกรณ์ ');
+  }
+
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function comparableCoopName(value) {
+  return normalizeCoopName(value)
+    .replace(/[^\p{L}\p{N}]+/gu, '')
+    .toLowerCase();
+}
+
+async function getActiveCoopLookup() {
+  if (activeCoopLookupPromise) return activeCoopLookupPromise;
+
+  activeCoopLookupPromise = (async () => {
+    const [rows] = await db.query(
+      'SELECT c_code, c_name, coop_group FROM active_coop WHERE c_name IS NOT NULL AND c_name <> ""'
+    );
+
+    const exactMap = new Map();
+    const normalizedMap = new Map();
+
+    for (const row of rows) {
+      const rawKey = String(row.c_name || '').trim();
+      const normalizedKey = normalizeCoopName(row.c_name);
+      const comparableKey = comparableCoopName(row.c_name);
+
+      if (rawKey && !exactMap.has(rawKey)) {
+        exactMap.set(rawKey, row);
+      }
+
+      const bucket = normalizedMap.get(normalizedKey) || [];
+      bucket.push(row);
+      normalizedMap.set(normalizedKey, bucket);
+
+      const comparableBucket = normalizedMap.get(comparableKey) || [];
+      comparableBucket.push(row);
+      normalizedMap.set(comparableKey, comparableBucket);
+    }
+
+    return { rows, exactMap, normalizedMap };
+  })();
+
+  return activeCoopLookupPromise;
+}
+
+async function resolveActiveCoopByName(name) {
+  const lookup = await getActiveCoopLookup();
+  const raw = String(name || '').trim();
+  if (!raw) return null;
+
+  const direct = lookup.exactMap.get(raw);
+  if (direct) return direct;
+
+  const normalized = normalizeCoopName(raw);
+  const comparable = comparableCoopName(raw);
+  const candidates = [
+    ...(lookup.normalizedMap.get(normalized) || []),
+    ...(lookup.normalizedMap.get(comparable) || [])
+  ];
+
+  if (!candidates.length) return null;
+
+  const ranked = candidates
+    .map((row) => {
+      const activeNormalized = normalizeCoopName(row.c_name);
+      const activeComparable = comparableCoopName(row.c_name);
+      const exact = activeNormalized === normalized || activeComparable === comparable;
+      const includes = activeNormalized.includes(normalized) || normalized.includes(activeNormalized) || activeComparable.includes(comparable) || comparable.includes(activeComparable);
+      return { row, exact, includes, lenDiff: Math.abs(activeNormalized.length - normalized.length) };
+    })
+    .sort((a, b) => Number(b.exact) - Number(a.exact) || Number(b.includes) - Number(a.includes) || a.lenDiff - b.lenDiff);
+
+  return ranked[0]?.row || null;
+}
+
+async function resolveActiveCoopByCode(code) {
+  const lookup = await getActiveCoopLookup();
+  const raw = String(code || '').trim();
+  if (!raw) return null;
+  return lookup.rows.find((row) => String(row.c_code || '').trim() === raw) || null;
+}
+
+async function getActiveCoopHierarchy() {
+  const [rows] = await db.query(
+    `SELECT c_code, c_name, coop_group, c_group
+     FROM active_coop
+     WHERE c_name IS NOT NULL AND c_name <> ''
+     ORDER BY coop_group ASC, c_group ASC, c_name ASC`
+  );
+
+  const coopGroups = [];
+  const groupIndex = new Map();
+
+  for (const row of rows) {
+    const coopGroup = String(row.coop_group || '').trim() || 'ไม่ระบุ';
+    const cGroup = String(row.c_group || '').trim() || 'ไม่ระบุกลุ่ม';
+    const coopGroupKey = coopGroup;
+    const cGroupKey = `${coopGroupKey}::${cGroup}`;
+
+    if (!groupIndex.has(coopGroupKey)) {
+      const node = { coop_group: coopGroup, c_groups: [] };
+      groupIndex.set(coopGroupKey, node);
+      coopGroups.push(node);
+    }
+
+    const coopNode = groupIndex.get(coopGroupKey);
+    let cGroupNode = coopNode.c_groups.find((group) => group.c_group === cGroup);
+    if (!cGroupNode) {
+      cGroupNode = { c_group: cGroup, items: [] };
+      coopNode.c_groups.push(cGroupNode);
+    }
+    cGroupNode.items.push({
+      c_code: row.c_code,
+      c_name: row.c_name,
+      coop_group: row.coop_group,
+      c_group: row.c_group
+    });
+  }
+
+  return coopGroups;
+}
+
+async function backfillCooperativeCodes() {
+  const [rows] = await db.query(
+    'SELECT id, name, c_code FROM sangket_cooperatives WHERE name IS NOT NULL AND name <> ""'
+  );
+
+  for (const row of rows) {
+    // eslint-disable-next-line no-await-in-loop
+    const match = await resolveActiveCoopByName(row.name);
+    const nextCode = match?.c_code || null;
+    const currentCode = row.c_code || null;
+    if (nextCode && nextCode !== currentCode) {
+      // eslint-disable-next-line no-await-in-loop
+      await db.query('UPDATE sangket_cooperatives SET c_code = ? WHERE id = ?', [nextCode, row.id]);
+    }
+  }
+}
+
+async function ensureColumn(tableName, columnName, columnSql, afterColumn = null) {
+  const [rows] = await db.query(`SHOW COLUMNS FROM ${tableName} LIKE ?`, [columnName]);
+  if (rows.length) return;
+  const afterSql = afterColumn ? ` AFTER ${afterColumn}` : '';
+  await db.query(`ALTER TABLE ${tableName} ADD COLUMN ${columnSql}${afterSql}`);
+}
+
+async function ensureIndex(tableName, indexName, createSql) {
+  const [rows] = await db.query(
+    `SELECT 1
+     FROM information_schema.statistics
+     WHERE table_schema = DATABASE()
+       AND table_name = ?
+       AND index_name = ?`,
+    [tableName, indexName]
+  );
+  if (rows.length) return;
+  await db.query(createSql);
+}
+
 async function ensureSchema() {
   if (schemaReadyPromise) return schemaReadyPromise;
 
@@ -107,6 +283,7 @@ async function ensureSchema() {
       CREATE TABLE IF NOT EXISTS sangket_cooperatives (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        c_code VARCHAR(20) NULL,
         coop_type ENUM('cooperative', 'group_farmer') NOT NULL DEFAULT 'cooperative',
         promotion_group_no TINYINT NULL,
         district VARCHAR(120) NULL,
@@ -116,6 +293,12 @@ async function ensureSchema() {
         UNIQUE KEY uniq_coop (name, coop_type, promotion_group_no)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    await ensureColumn('sangket_cooperatives', 'c_code', 'c_code VARCHAR(20) NULL', 'name');
+    await ensureIndex(
+      'sangket_cooperatives',
+      'idx_sangket_cooperatives_c_code',
+      'CREATE INDEX idx_sangket_cooperatives_c_code ON sangket_cooperatives (c_code)'
+    );
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS sangket_audit_reports (
@@ -206,34 +389,40 @@ async function ensureSchema() {
         [category.id, category.name, category.sort_order]
       );
     }
+
+    await backfillCooperativeCodes();
   })();
 
   return schemaReadyPromise;
 }
 
-async function findOrCreateCooperative({ name, coopType, promotionGroupNo, district, status }) {
+async function findOrCreateCooperative({ name, cCode, coopType, promotionGroupNo, district, status }) {
+  const nameMatch = await resolveActiveCoopByName(name);
+  const codeMatch = cCode ? await resolveActiveCoopByCode(cCode) : null;
+  const resolvedCode = nameMatch?.c_code || codeMatch?.c_code || null;
   const [existingRows] = await db.query(
     `SELECT * FROM sangket_cooperatives
-     WHERE name = ? AND coop_type = ? AND (promotion_group_no <=> ?)
+     WHERE (c_code = ? AND c_code IS NOT NULL AND c_code <> '')
+        OR (name = ? AND coop_type = ? AND (promotion_group_no <=> ?))
      LIMIT 1`,
-    [name, coopType, promotionGroupNo]
+    [resolvedCode, name, coopType, promotionGroupNo]
   );
 
   if (existingRows[0]) {
     const coop = existingRows[0];
     await db.query(
       `UPDATE sangket_cooperatives
-       SET district = ?, status = ?
+       SET c_code = ?, district = ?, status = ?
        WHERE id = ?`,
-      [district || null, status || null, coop.id]
+      [resolvedCode, district || null, status || null, coop.id]
     );
     return coop.id;
   }
 
   const [result] = await db.query(
-    `INSERT INTO sangket_cooperatives (name, coop_type, promotion_group_no, district, status)
-     VALUES (?, ?, ?, ?, ?)`,
-    [name, coopType, promotionGroupNo || null, district || null, status || null]
+    `INSERT INTO sangket_cooperatives (name, c_code, coop_type, promotion_group_no, district, status)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [name, resolvedCode, coopType, promotionGroupNo || null, district || null, status || null]
   );
   return result.insertId;
 }
@@ -360,6 +549,7 @@ async function fetchObservationRows(whereSql, params, limitClause = '') {
       r.source_row AS report_source_row,
       c.id AS cooperative_id,
       c.name AS cooperative_name,
+      c.c_code AS cooperative_code,
       c.coop_type,
       c.promotion_group_no,
       c.district,
@@ -381,8 +571,8 @@ function buildWhere(filters = {}) {
 
   if (filters.search) {
     const kw = `%${filters.search}%`;
-    where.push('(c.name LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_text LIKE ? OR o.remark LIKE ?)');
-    params.push(kw, kw, kw, kw, kw);
+    where.push('(c.name LIKE ? OR c.c_code LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_text LIKE ? OR o.remark LIKE ?)');
+    params.push(kw, kw, kw, kw, kw, kw);
   }
 
   if (filters.groupNo) {
@@ -500,6 +690,7 @@ async function create(payload) {
 
   const cooperativeId = await findOrCreateCooperative({
     name: payload.cooperative_name || payload.sang_name || '',
+    cCode: payload.c_code || null,
     coopType: payload.coop_type || payload.sang_coop_type || 'cooperative',
     promotionGroupNo: payload.promotion_group_no || payload.sang_group || null,
     district: payload.district || payload.sang_district || null,
@@ -568,10 +759,14 @@ async function update(id, payload) {
 
   await db.query(
     `UPDATE sangket_cooperatives
-     SET name = ?, coop_type = ?, promotion_group_no = ?, district = ?, status = ?
+     SET name = ?, c_code = ?, coop_type = ?, promotion_group_no = ?, district = ?, status = ?
      WHERE id = ?`,
     [
       payload.cooperative_name || payload.sang_name || current.cooperative_name,
+      (await resolveActiveCoopByName(payload.cooperative_name || payload.sang_name || current.cooperative_name))?.c_code
+        || (payload.c_code && (await resolveActiveCoopByCode(payload.c_code))?.c_code)
+        || current.cooperative_code
+        || null,
       payload.coop_type || current.coop_type,
       payload.promotion_group_no || payload.sang_group || current.promotion_group_no || null,
       payload.district || current.district || null,
@@ -775,6 +970,7 @@ async function getDashboard(filters = {}) {
       o.status,
       o.due_date,
       c.name AS cooperative_name,
+      c.c_code AS cooperative_code,
       c.promotion_group_no,
       r.fiscal_year_end,
       r.audit_office_letter_no
@@ -822,12 +1018,13 @@ async function getReferenceData() {
      ORDER BY c.promotion_group_no ASC`
   );
   const [cooperatives] = await db.query(
-    `SELECT id, name, coop_type, promotion_group_no
+    `SELECT id, c_code, name, coop_type, promotion_group_no
      FROM sangket_cooperatives
      ORDER BY promotion_group_no ASC, name ASC`
   );
+  const activeCoopHierarchy = await getActiveCoopHierarchy();
   const categories = await getCategoryOptions();
-  return { groups, cooperatives, categories };
+  return { groups, cooperatives, categories, activeCoopHierarchy };
 }
 
 async function importWorkbook(filePath, uploadedBy = 'system') {
@@ -873,6 +1070,7 @@ async function importWorkbook(filePath, uploadedBy = 'system') {
       if (hasNewReport) {
         currentCooperativeId = await findOrCreateCooperative({
           name: cooperativeName,
+          cCode: null,
           coopType,
           promotionGroupNo,
           district: null,

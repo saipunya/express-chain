@@ -2,6 +2,19 @@
 <%
   const categoriesList = (item && item.categories) || [];
   const actions = (item && item.actions) || [];
+  const categoryItems = categoriesList.map((cat) => {
+    const name = String(cat.name || '').trim();
+    const shortName = name.length > 30 ? `${name.slice(0, 30).trimEnd()}…` : name;
+    return { id: cat.id, name, shortName };
+  });
+  const actionTypeLabel = (value) => {
+    if (value === 'follow_up') return 'ติดตามผล';
+    if (value === 'order') return 'คำสั่ง';
+    if (value === 'advice') return 'คำแนะนำ';
+    if (value === 'fact_check') return 'ตรวจข้อเท็จจริง';
+    if (value === 'close') return 'ปิดเรื่อง';
+    return value || '-';
+  };
   const severityLabel = {
     serious_order: 'ร้ายแรง / คำสั่ง',
     advice: 'คำแนะนำ',
@@ -75,6 +88,17 @@
     border-radius: 999px;
     padding: 0.35rem 0.7rem;
   }
+  .category-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .category-pill {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+  }
   .mini-note {
     font-size: 0.85rem;
     color: #64748b;
@@ -91,12 +115,17 @@
             <div class="eyebrow mb-2">Sangket</div>
             <h1 class="h3 fw-bold mb-2"><%= item.cooperative_name %></h1>
             <p class="text-muted mb-0">
+              <i class="bi bi-hash me-1"></i><%= item.cooperative_code || '-' %> |
               <%= item.fiscal_year_end || '-' %> | หนังสือ <%= item.audit_office_letter_no || '-' %>
             </p>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-start">
-            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-pill">แก้ไข</a>
-            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับรายการ</a>
+            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-pill">
+              <i class="bi bi-pencil-square me-1"></i> แก้ไข
+            </a>
+            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">
+              <i class="bi bi-arrow-left-circle me-1"></i> กลับรายการ
+            </a>
           </div>
         </div>
       </div>
@@ -154,15 +183,22 @@
           <div class="col-lg-4">
             <div class="detail-card h-100">
               <div class="detail-label mb-2">หมวดข้อสังเกต</div>
-              <div class="d-flex flex-wrap gap-2 mb-3">
-                <% if (categoriesList.length) { %>
-                  <% categoriesList.forEach((cat) => { %>
-                    <span class="badge text-bg-light border badge-soft"><%= cat.name %></span>
+              <div class="category-grid mb-3">
+                <% if (categoryItems.length) { %>
+                  <% categoryItems.forEach((cat) => { %>
+                    <span class="badge text-bg-light border badge-soft category-pill" title="<%= cat.name %>">
+                      <span class="fw-semibold">#<%= cat.id %></span>
+                      <span class="text-muted">-</span>
+                      <%= cat.shortName || cat.name || '-' %>
+                    </span>
                   <% }) %>
                 <% } else { %>
                   <span class="text-muted">-</span>
                 <% } %>
               </div>
+              <% if (categoryItems.length) { %>
+                <div class="mini-note mt-2">หมายเหตุ: hover ที่ป้ายหมวดเพื่อดูชื่อเต็ม</div>
+              <% } %>
               <div class="mini-note">ผู้สอบบัญชี: <%= item.auditor_name || '-' %></div>
               <div class="mini-note">หนังสือรับ: <%= item.received_date || '-' %></div>
               <div class="mini-note">วันที่หนังสือ: <%= item.audit_office_letter_date || '-' %></div>
@@ -183,11 +219,11 @@
                   <% actions.forEach((action) => { %>
                     <div class="timeline-item">
                       <div class="d-flex justify-content-between gap-3">
-                        <div class="fw-semibold"><%= action.action_type %></div>
+                        <div class="fw-semibold"><%= actionTypeLabel(action.action_type) %></div>
                         <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
                       </div>
                       <div class="small text-muted">
-                        <%= action.letter_no || '-' %>
+                        <i class="bi bi-journal-text me-1"></i><%= action.letter_no || '-' %>
                         <% if (action.letter_date) { %> | <%= action.letter_date %><% } %>
                       </div>
                       <div class="mt-1" style="white-space: pre-line;"><%= action.action_detail || '-' %></div>
@@ -223,7 +259,7 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label">วันที่หนังสือ</label>
-                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 ม.ค. 69">
+                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 เม.ย. 69">
                 </div>
                 <div class="col-12">
                   <label class="form-label">รายละเอียด</label>
@@ -234,7 +270,9 @@
                   <textarea name="result" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="col-12 d-grid">
-                  <button type="submit" class="btn btn-primary">บันทึกติดตามผล</button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send-check me-1"></i> บันทึกการติดตามผล
+                  </button>
                 </div>
               </form>
             </div>

@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { requireLogin } = require('../middlewares/authMiddleware');
 const controller = require('../controllers/sangketController');
+
+router.use(requireLogin);
 
 router.get('/', controller.index);
 router.get('/report', controller.report);

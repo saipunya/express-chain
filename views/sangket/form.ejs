@@ -81,6 +81,14 @@
     background: #f7fcfa;
     border-radius: 18px;
   }
+  .coop-selector {
+    border: 1px solid #d6ebe4;
+    background: linear-gradient(180deg, #fbfffe 0%, #f5fbf8 100%);
+    border-radius: 18px;
+  }
+  .coop-selector .form-control[readonly] {
+    background-color: #f8fafc;
+  }
   .sangket-form-page .btn-primary {
     background-color: #0f8f7b;
     border-color: #0f8f7b;
@@ -119,24 +127,68 @@
           <div class="alert alert-danger"><%= error %></div>
         <% } %>
 
+        <%
+          const initialCooperativeCode = item?.cooperative_code || item?.c_code || '';
+          const initialCooperativeName = item?.cooperative_name || item?.sang_name || '';
+          const initialCoopType = item?.coop_type || '';
+          const initialPromotionGroupNo = item?.promotion_group_no || '';
+        %>
+        <input type="hidden" name="cooperative_name" id="cooperative_name" value="<%= initialCooperativeName %>">
+        <input type="hidden" name="c_code" id="cooperative_code" value="<%= initialCooperativeCode %>">
+        <input type="hidden" name="coop_type" id="coop_type" value="<%= initialCoopType %>">
+        <input type="hidden" name="promotion_group_no" id="promotion_group_no" value="<%= initialPromotionGroupNo %>">
+
         <div class="row g-4">
           <div class="col-12">
-            <h5 class="section-title mb-0">1) ข้อมูลสหกรณ์</h5>
+            <h5 class="section-title mb-0">1. ข้อมูลสหกรณ์</h5>
           </div>
-          <div class="col-12 col-lg-6">
-            <label class="form-label">ชื่อสหกรณ์ / กลุ่มเกษตรกร</label>
-            <input type="text" name="cooperative_name" class="form-control" required value="<%= item?.cooperative_name || item?.sang_name || '' %>" placeholder="เช่น สอ.ครู ชัยภูมิ จำกัด">
-          </div>
-          <div class="col-6 col-lg-3">
-            <label class="form-label">ประเภท</label>
-            <select name="coop_type" class="form-select">
-              <option value="cooperative" <%= String(item?.coop_type || '') !== 'group_farmer' ? 'selected' : '' %>>สหกรณ์</option>
-              <option value="group_farmer" <%= String(item?.coop_type || '') === 'group_farmer' ? 'selected' : '' %>>กลุ่มเกษตรกร</option>
-            </select>
-          </div>
-          <div class="col-6 col-lg-3">
-            <label class="form-label">กสส.</label>
-            <input type="number" name="promotion_group_no" class="form-control" min="1" max="99" value="<%= item?.promotion_group_no || '' %>">
+          <div class="col-12 col-lg-7">
+            <div class="coop-selector p-3 p-lg-4">
+              <div class="row g-3">
+                <div class="col-12 col-lg-4">
+                  <label class="form-label">เลือกประเภท</label>
+                  <select id="coop_group_select" class="form-select" required>
+                    <option value="">เลือกประเภท</option>
+                    <% (activeCoopHierarchy || []).forEach((group) => { %>
+                      <option value="<%= group.coop_group %>"><%= group.coop_group %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="col-12 col-lg-4">
+                  <label class="form-label">เลือกกลุ่มส่งเสริม</label>
+                  <select id="c_group_select" class="form-select" disabled required>
+                    <option value="">เลือกกลุ่มส่งเสริม</option>
+                  </select>
+                </div>
+                <div class="col-12 col-lg-4">
+                  <label class="form-label">เลือกสถาบัน</label>
+                  <select id="c_name_select" class="form-select" disabled required>
+                    <option value="">เลือกสถาบัน</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <div class="mini-note">
+                    เลือกตามลำดับ <code>ประเภท</code> &gt; <code>กลุ่มส่งเสริม</code> &gt; <code>สถาบัน</code> แล้วระบบจะเก็บ <code>c_code</code> ให้เอง
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                      <label class="form-label">สถาบันที่เลือก</label>
+                      <input type="text" id="selected_coop_name" class="form-control" readonly value="<%= initialCooperativeName %>" placeholder="ยังไม่ได้เลือก">
+                    </div>
+                    <div class="col-6 col-lg-3">
+                      <label class="form-label">c_code</label>
+                      <input type="text" id="selected_coop_code" class="form-control" readonly value="<%= initialCooperativeCode %>" placeholder="-">
+                    </div>
+                    <div class="col-6 col-lg-3">
+                      <label class="form-label">ประเภท</label>
+                      <input type="text" id="selected_coop_type" class="form-control" readonly value="<%= initialCoopType === 'group_farmer' ? 'กลุ่มเกษตรกร' : (initialCoopType === 'cooperative' ? 'สหกรณ์' : '') %>" placeholder="-">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="col-12 col-lg-4">
             <label class="form-label">เขต / จังหวัด / อำเภอ</label>
@@ -148,7 +200,7 @@
           </div>
 
           <div class="col-12">
-            <h5 class="section-title mb-0 mt-2">2) ข้อมูลรายงานสอบบัญชี</h5>
+            <h5 class="section-title mb-0 mt-2">2. ข้อมูลรายงานสอบบัญชี</h5>
           </div>
           <div class="col-12 col-lg-3">
             <label class="form-label">ปีบัญชีสิ้นสุด</label>
@@ -304,5 +356,290 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const activeCoopHierarchy = <%- JSON.stringify(activeCoopHierarchy || []).replace(/</g, '\\u003c') %>;
+    const initialCooperativeCode = <%- JSON.stringify(initialCooperativeCode || '').replace(/</g, '\\u003c') %>;
+    const initialCooperativeName = <%- JSON.stringify(initialCooperativeName || '').replace(/</g, '\\u003c') %>;
+    const initialCoopType = <%- JSON.stringify(initialCoopType || '').replace(/</g, '\\u003c') %>;
+    const initialPromotionGroupNo = <%- JSON.stringify(initialPromotionGroupNo || '').replace(/</g, '\\u003c') %>;
+
+    const els = {
+      coopGroup: document.getElementById('coop_group_select'),
+      cGroup: document.getElementById('c_group_select'),
+      cName: document.getElementById('c_name_select'),
+      hiddenName: document.getElementById('cooperative_name'),
+      hiddenCode: document.getElementById('cooperative_code'),
+      hiddenType: document.getElementById('coop_type'),
+      hiddenPromotion: document.getElementById('promotion_group_no'),
+      previewName: document.getElementById('selected_coop_name'),
+      previewCode: document.getElementById('selected_coop_code'),
+      previewType: document.getElementById('selected_coop_type')
+    };
+
+    function clean(text) {
+      return String(text || '').trim();
+    }
+
+    function groupNoFromText(text) {
+      const match = clean(text).match(/(\d+)/);
+      return match ? match[1] : '';
+    }
+
+    function coopTypeFromGroup(coopGroup) {
+      const group = clean(coopGroup);
+      if (group === 'กลุ่มเกษตรกร') return 'group_farmer';
+      if (group === 'สหกรณ์') return 'cooperative';
+      return initialCoopType || '';
+    }
+
+    function setPreview(item) {
+      if (!item) {
+        els.previewName.value = '';
+        els.previewCode.value = '';
+        els.previewType.value = '';
+        return;
+      }
+
+      const coopName = item ? clean(item.c_name) : clean(els.hiddenName.value || initialCooperativeName);
+      const coopCode = item ? clean(item.c_code) : clean(els.hiddenCode.value || initialCooperativeCode);
+      const coopType = item ? coopTypeFromGroup(item.coop_group) : clean(els.hiddenType.value || initialCoopType);
+      els.previewName.value = coopName;
+      els.previewCode.value = coopCode;
+      els.previewType.value = coopType === 'group_farmer' ? 'กลุ่มเกษตรกร' : (coopType === 'cooperative' ? 'สหกรณ์' : '');
+    }
+
+    function setHiddenFromItem(item) {
+      if (!item) return;
+      els.hiddenName.value = clean(item.c_name);
+      els.hiddenCode.value = clean(item.c_code);
+      els.hiddenType.value = coopTypeFromGroup(item.coop_group);
+      els.hiddenPromotion.value = groupNoFromText(item.c_group) || clean(initialPromotionGroupNo);
+      setPreview(item);
+    }
+
+    function renderOptions(select, items, placeholder, selectedValue) {
+      select.innerHTML = '';
+      const first = document.createElement('option');
+      first.value = '';
+      first.textContent = placeholder;
+      select.appendChild(first);
+
+      items.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        if (selectedValue && String(selectedValue) === String(item.value)) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+      select.disabled = items.length === 0;
+    }
+
+    function findGroupNode(coopGroup) {
+      return activeCoopHierarchy.find((group) => clean(group.coop_group) === clean(coopGroup)) || null;
+    }
+
+    function findCGroupNode(groupNode, cGroup) {
+      if (!groupNode) return null;
+      return (groupNode.c_groups || []).find((group) => clean(group.c_group) === clean(cGroup)) || null;
+    }
+
+    function findItemByCode(code) {
+      const target = clean(code);
+      if (!target) return null;
+      for (const group of activeCoopHierarchy) {
+        for (const cGroup of group.c_groups || []) {
+          const found = (cGroup.items || []).find((item) => clean(item.c_code) === target);
+          if (found) return { group, cGroup, item: found };
+        }
+      }
+      return null;
+    }
+
+    function findItemByName(name) {
+      const target = clean(name);
+      if (!target) return null;
+      for (const group of activeCoopHierarchy) {
+        for (const cGroup of group.c_groups || []) {
+          const found = (cGroup.items || []).find((item) => clean(item.c_name) === target);
+          if (found) return { group, cGroup, item: found };
+        }
+      }
+      return null;
+    }
+
+    function populateCoopGroups(selectedValue = '') {
+      renderOptions(
+        els.coopGroup,
+        activeCoopHierarchy.map((group) => ({
+          value: group.coop_group,
+          label: group.coop_group
+        })),
+        'เลือกประเภท',
+        selectedValue
+      );
+    }
+
+    function populateCGroups(coopGroup, selectedValue = '') {
+      const groupNode = findGroupNode(coopGroup);
+      const items = (groupNode?.c_groups || []).map((group) => ({
+        value: group.c_group,
+        label: group.c_group
+      }));
+      renderOptions(els.cGroup, items, 'เลือกกลุ่มส่งเสริม', selectedValue);
+      els.cGroup.disabled = !groupNode;
+    }
+
+    function populateCNames(coopGroup, cGroup, selectedValue = '') {
+      const groupNode = findGroupNode(coopGroup);
+      const cGroupNode = findCGroupNode(groupNode, cGroup);
+      const items = (cGroupNode?.items || []).map((item) => ({
+        value: item.c_code,
+        label: `${item.c_name}${item.c_code ? ` (${item.c_code})` : ''}`
+      }));
+      renderOptions(els.cName, items, 'เลือกสถาบัน', selectedValue);
+      els.cName.disabled = !cGroupNode;
+    }
+
+    function resetSelection(keepGroup = false) {
+      if (!keepGroup) els.coopGroup.value = '';
+      els.cGroup.innerHTML = '<option value="">เลือกกลุ่มส่งเสริม</option>';
+      els.cGroup.disabled = true;
+      els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
+      els.cName.disabled = true;
+      els.hiddenName.value = '';
+      els.hiddenCode.value = '';
+      els.hiddenType.value = '';
+      els.hiddenPromotion.value = '';
+      setPreview(null);
+    }
+
+    function applyCurrentSelection() {
+      const selectedCode = clean(els.cName.value || initialCooperativeCode);
+      const selectedGroup = clean(els.coopGroup.value);
+      const selectedCGroup = clean(els.cGroup.value);
+
+      if (!selectedGroup) {
+        setPreview(null);
+        return;
+      }
+
+      populateCGroups(selectedGroup, selectedCGroup);
+      if (!selectedCGroup) {
+        setPreview(null);
+        return;
+      }
+
+      populateCNames(selectedGroup, selectedCGroup, selectedCode);
+      if (!selectedCode) {
+        const groupNode = findGroupNode(selectedGroup);
+        const cGroupNode = findCGroupNode(groupNode, selectedCGroup);
+        if (!cGroupNode?.items?.length) {
+          setPreview(null);
+          return;
+        }
+      }
+
+      const found = findItemByCode(selectedCode) || findItemByName(initialCooperativeName);
+      if (found) {
+        setHiddenFromItem(found.item);
+        els.coopGroup.value = found.group.coop_group;
+        populateCGroups(found.group.coop_group, found.cGroup.c_group);
+        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
+        els.cGroup.value = found.cGroup.c_group;
+        els.cName.value = found.item.c_code;
+        setHiddenFromItem(found.item);
+        return;
+      }
+
+      setPreview(null);
+    }
+
+    els.coopGroup.addEventListener('change', () => {
+      const groupValue = clean(els.coopGroup.value);
+      if (!groupValue) {
+        resetSelection(true);
+        return;
+      }
+      populateCGroups(groupValue);
+      els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
+      els.cName.disabled = true;
+      els.hiddenName.value = '';
+      els.hiddenCode.value = '';
+      els.hiddenType.value = coopTypeFromGroup(groupValue);
+      els.hiddenPromotion.value = '';
+      setPreview(null);
+    });
+
+    els.cGroup.addEventListener('change', () => {
+      const groupValue = clean(els.coopGroup.value);
+      const cGroupValue = clean(els.cGroup.value);
+      if (!groupValue || !cGroupValue) {
+        els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
+        els.cName.disabled = true;
+        setPreview(null);
+        return;
+      }
+      populateCNames(groupValue, cGroupValue);
+      els.hiddenPromotion.value = groupNoFromText(cGroupValue);
+      setPreview(null);
+    });
+
+    els.cName.addEventListener('change', () => {
+      const found = findItemByCode(els.cName.value);
+      if (!found) {
+        els.hiddenName.value = '';
+        els.hiddenCode.value = '';
+        els.hiddenType.value = coopTypeFromGroup(els.coopGroup.value);
+        setPreview(null);
+        return;
+      }
+      els.coopGroup.value = found.group.coop_group;
+      els.cGroup.value = found.cGroup.c_group;
+      setHiddenFromItem(found.item);
+      populateCGroups(found.group.coop_group, found.cGroup.c_group);
+      populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
+      els.cName.value = found.item.c_code;
+    });
+
+    populateCoopGroups();
+    if (initialCooperativeCode) {
+      const found = findItemByCode(initialCooperativeCode);
+      if (found) {
+        els.coopGroup.value = found.group.coop_group;
+        populateCGroups(found.group.coop_group, found.cGroup.c_group);
+        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
+        els.cGroup.value = found.cGroup.c_group;
+        els.cName.value = found.item.c_code;
+        setHiddenFromItem(found.item);
+        return;
+      }
+    }
+
+    if (initialCooperativeName) {
+      const found = findItemByName(initialCooperativeName);
+      if (found) {
+        els.coopGroup.value = found.group.coop_group;
+        populateCGroups(found.group.coop_group, found.cGroup.c_group);
+        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
+        els.cGroup.value = found.cGroup.c_group;
+        els.cName.value = found.item.c_code;
+        setHiddenFromItem(found.item);
+        return;
+      }
+    }
+
+    if (initialCoopType) {
+      els.hiddenType.value = initialCoopType;
+    }
+    if (initialPromotionGroupNo) {
+      els.hiddenPromotion.value = initialPromotionGroupNo;
+    }
+    setPreview(null);
+  })();
+</script>
 
 <%- include('../partials/footer') %>

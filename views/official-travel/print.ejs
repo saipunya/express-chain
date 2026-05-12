@@ -154,6 +154,7 @@
     const startTime = thaiTime(item.start_at);
     const endTime = thaiTime(item.end_at);
     const departmentName = item.department_name || item.requester_group || 'สำนักงานสหกรณ์จังหวัดชัยภูมิ';
+    const learnToLabel = (item.vehicleRequest && item.vehicleRequest.learn_to) || item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ';
     %>
 
     <table class="meta-table">
@@ -173,7 +174,7 @@
       </tr>
       <tr>
         <td class="label">เรียน</td>
-        <td colspan="3"><%= item.learn_to || 'ผู้อำนวยการสำนักงานสหกรณ์จังหวัดชัยภูมิ' %></td>
+        <td colspan="3"><%= learnToLabel %></td>
       </tr>
     </table>
 

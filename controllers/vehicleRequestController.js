@@ -287,6 +287,10 @@ function isMissingWorkflowTable(error) {
   return error && error.code === 'ER_NO_SUCH_TABLE';
 }
 
+function isDuplicateVehicleRequestNoError(error) {
+  return Boolean(error && (error.code === 'ER_DUP_ENTRY' || error.errno === 1062));
+}
+
 function defaultReportFilters(query = {}) {
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -495,20 +499,31 @@ exports.createDirect = async (req, res) => {
     const selectedVehicle = vehicles.find((vehicle) => Number(vehicle.id) === Number(req.body.vehicle_id));
     const selectedDriver = drivers.find((driver) => Number(driver.id) === Number(req.body.driver_id));
     const connection = await db.getConnection();
+    const requestedVehicleRequestNo = String(req.body.vehicle_request_no || '').trim();
+    const vehicleRequestNo = requestedVehicleRequestNo || await resolveVehicleRequestNoForDirect();
+    const directPayload = {
+      ...payload,
+      travel_request_id: null,
+      vehicle_request_no: vehicleRequestNo,
+      status: 'assigned'
+    };
 
     try {
       await connection.beginTransaction();
-      const vehicleRequestNo = await resolveVehicleRequestNoForDirect();
-      const id = await vehicleRequestModel.createWithConnection(connection, {
-        ...payload,
-        travel_request_id: null,
+      let id;
+      try {
+        id = await vehicleRequestModel.createWithConnection(connection, directPayload);
+      } catch (createError) {
+        if (!isDuplicateVehicleRequestNoError(createError)) {
+          throw createError;
+        }
 
-        vehicle_request_no: vehicleRequestNo,
-        status: 'draft',
-
-        vehicle_request_no: DIRECT_VEHICLE_REQUEST_NO,
-        status: 'assigned'
-      });
+        const retryVehicleRequestNo = await resolveVehicleRequestNoForDirect();
+        id = await vehicleRequestModel.createWithConnection(connection, {
+          ...directPayload,
+          vehicle_request_no: retryVehicleRequestNo
+        });
+      }
 
       await vehicleAssignmentModel.upsertAssignmentWithConnection(connection, {
         vehicle_request_id: id,

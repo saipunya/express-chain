@@ -148,7 +148,8 @@ function formatTransportLabel(item = {}) {
   return extraDetails.length ? `${label} ${extraDetails.join(' ')}` : label;
 }
 
-function buildTravelRequestPdfFormData(item) {
+function buildTravelRequestPdfFormData(item, options = {}) {
+  const preferVehicleLearnTo = options.preferVehicleLearnTo !== false;
   const departmentFallback = item.requester_group
     ? `สำนักงานสหกรณ์จังหวัดชัยภูมิ ${item.requester_group}`
     : 'สำนักงานสหกรณ์จังหวัดชัยภูมิ';
@@ -164,7 +165,7 @@ function buildTravelRequestPdfFormData(item) {
     bookNo: item.request_no || '-',
     date: item.request_date || item.created_at || new Date(),
     subject: item.subject || OFFICIAL_TRAVEL_SUBJECT,
-    learnTo: item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ',
+    learnTo: (preferVehicleLearnTo ? item.vehicleRequest?.learn_to : null) || item.learn_to || 'ผู้ว่าราชการจังหวัดชัยภูมิ',
     requesterName: item.requester_name || '-',
     requesterPosition: item.requester_position || '-',
     requesterDepartment: item.requester_group || '-',
@@ -784,7 +785,9 @@ exports.exportTravelRequestPdf = async (req, res) => {
       return res.status(404).send('ไม่พบคำขอไปราชการ');
     }
 
-    await generateOfficialTravelRequestPdf(res, buildTravelRequestPdfFormData(item), {
+    await generateOfficialTravelRequestPdf(res, buildTravelRequestPdfFormData(item, {
+      preferVehicleLearnTo: false
+    }), {
       fileName: buildTravelRequestPdfFileName(item)
     });
   } catch (error) {

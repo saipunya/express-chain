@@ -179,7 +179,7 @@ async function getDetailById(id) {
   const [companions, vehicleRows] = await Promise.all([
     getCompanions(id),
     db.query(
-      `SELECT vr.id, vr.vehicle_request_no, vr.status, vr.trip_start_at, vr.trip_end_at,
+      `SELECT vr.id, vr.vehicle_request_no, vr.status, vr.learn_to, vr.trip_start_at, vr.trip_end_at,
               va.vehicle_id, va.driver_id, va.plate_no_snapshot, va.driver_name_snapshot
        FROM vehicle_requests vr
        LEFT JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id

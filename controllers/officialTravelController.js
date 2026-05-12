@@ -84,17 +84,8 @@ function getBangkokDateKey(value = new Date()) {
 }
 
 function filterUpcomingVehicleUseRows(rows = []) {
-  const todayKey = getBangkokDateKey();
   return (rows || []).filter((row) => {
-    if (!row?.vehicle_request_id) {
-      return false;
-    }
-    const status = row.vehicle_request_status;
-    if (!(status === 'approved' || status === 'อนุมัติ')) {
-      return false;
-    }
-    const endKey = getBangkokDateKey(row.end_at || row.start_at);
-    return Boolean(endKey && todayKey && endKey >= todayKey);
+    return Boolean(row?.vehicle_request_id);
   });
 }
 

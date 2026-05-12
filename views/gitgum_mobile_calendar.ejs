@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ปฏิทินงาน">
   <meta name="theme-color" content="#4A90A4">
-  <link rel="apple-touch-icon" href="/icon/calendar-icon-192.svg">
+  <link rel="apple-touch-icon" href="/icon/calendar-icon-180.png">
   <link rel="manifest" href="/manifest-calendar.json">
-  <link rel="icon" type="image/svg+xml" href="/icon/calendar-icon-192.svg">
+  <link rel="icon" type="image/png" href="/icon/calendar-icon-192.png">
   <title>📅 ปฏิทินกิจกรรม</title>
   <style>
     * {
@@ -17,7 +17,7 @@
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
       font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -25,26 +25,163 @@
       padding: 12px;
       padding-bottom: 80px;
     }
-    
+
     .header {
       text-align: center;
       color: white;
       padding: 16px 0;
       margin-bottom: 16px;
     }
-    
+
     .header h1 {
       font-size: 1.5rem;
       font-weight: 600;
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    
+
     .header .today-date {
       font-size: 0.9rem;
       opacity: 0.9;
       margin-top: 4px;
     }
-    
+
+    .install-panel {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.24);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin: 0 auto 16px;
+      color: white;
+      max-width: 760px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 10px;
+      z-index: 40;
+    }
+
+    .install-panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .install-text {
+      min-width: 0;
+    }
+
+    .install-platform {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .install-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .install-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.92;
+    }
+
+    .install-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .install-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #0f172a;
+      background: #fff;
+    }
+
+    .install-btn.secondary {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.45);
+    }
+
+    .install-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .ios-install-steps {
+      margin: 10px 0 0 18px;
+      padding: 0;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.95);
+    }
+
+    .ios-install-steps li + li {
+      margin-top: 4px;
+    }
+
+    .app-installed-badge {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #d1fae5;
+      font-weight: 600;
+    }
+
+    .refresh-hint {
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.8rem;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .month-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 4px 16px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .month-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .month-nav-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 0 0 auto;
+    }
+
+    .month-nav-btn:hover,
+    .month-nav-btn.active {
+      background: white;
+      color: #4A90A4;
+    }
+
     .month-section {
       background: white;
       border-radius: 16px;
@@ -52,7 +189,7 @@
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-    
+
     .month-header {
       background: linear-gradient(135deg, #4A90A4 0%, #357ABD 100%);
       color: white;
@@ -66,15 +203,15 @@
       top: 0;
       z-index: 10;
     }
-    
+
     .month-header .month-icon {
       font-size: 1.3rem;
     }
-    
+
     .event-list {
       padding: 8px;
     }
-    
+
     .event-item {
       background: #f8f9fa;
       border-radius: 12px;
@@ -84,24 +221,28 @@
       cursor: pointer;
       transition: all 0.2s ease;
     }
-    
-    .event-item:hover, .event-item:active {
+
+    .event-item:hover,
+    .event-item:active,
+    .event-item:focus-visible {
       transform: translateX(4px);
       background: #e9ecef;
+      outline: none;
     }
-    
+
     .event-item.today {
       border-left-color: #28a745;
       background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
     }
-    
+
     .event-date {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 6px;
+      flex-wrap: wrap;
     }
-    
+
     .date-badge {
       background: #4A90A4;
       color: white;
@@ -110,11 +251,11 @@
       font-size: 0.8rem;
       font-weight: 600;
     }
-    
+
     .event-item.today .date-badge {
       background: #28a745;
     }
-    
+
     .time-badge {
       background: #6c757d;
       color: white;
@@ -122,7 +263,7 @@
       border-radius: 12px;
       font-size: 0.75rem;
     }
-    
+
     .event-title {
       font-size: 1rem;
       font-weight: 600;
@@ -130,13 +271,14 @@
       margin-bottom: 4px;
       line-height: 1.4;
     }
-    
+
     .event-place {
       font-size: 0.85rem;
       color: #666;
       display: flex;
       align-items: center;
       gap: 4px;
+      flex-wrap: wrap;
     }
 
     .event-source {
@@ -151,7 +293,7 @@
       font-size: 0.72rem;
       font-weight: 600;
     }
-    
+
     .event-participants {
       font-size: 0.85rem;
       color: #5a6c7d;
@@ -161,16 +303,29 @@
       margin-top: 4px;
       padding-top: 4px;
       border-top: 1px dashed #dee2e6;
+      flex-wrap: wrap;
     }
-    
-    /* Modal Styles */
+
+    .no-events {
+      text-align: center;
+      padding: 60px 20px;
+      color: white;
+    }
+
+    .no-events-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+
+    .no-events-text {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
     .modal-overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0,0,0,0.6);
       z-index: 1000;
       align-items: center;
@@ -178,11 +333,11 @@
       padding: 20px;
       backdrop-filter: blur(4px);
     }
-    
+
     .modal-overlay.active {
       display: flex;
     }
-    
+
     .modal-content {
       background: white;
       border-radius: 20px;
@@ -192,7 +347,7 @@
       overflow-y: auto;
       animation: modalSlideUp 0.3s ease;
     }
-    
+
     @keyframes modalSlideUp {
       from {
         transform: translateY(50px);
@@ -203,7 +358,7 @@
         opacity: 1;
       }
     }
-    
+
     .modal-header {
       background: linear-gradient(135deg, #4A90A4 0%, #357ABD 100%);
       color: white;
@@ -211,13 +366,13 @@
       border-radius: 20px 20px 0 0;
       position: relative;
     }
-    
+
     .modal-header h3 {
       font-size: 1.1rem;
       font-weight: 600;
       padding-right: 30px;
     }
-    
+
     .modal-close {
       position: absolute;
       top: 12px;
@@ -234,11 +389,11 @@
       align-items: center;
       justify-content: center;
     }
-    
+
     .modal-body {
       padding: 20px;
     }
-    
+
     .detail-row {
       display: flex;
       align-items: flex-start;
@@ -246,11 +401,11 @@
       padding: 10px 0;
       border-bottom: 1px solid #eee;
     }
-    
+
     .detail-row:last-child {
       border-bottom: none;
     }
-    
+
     .detail-icon {
       width: 36px;
       height: 36px;
@@ -262,78 +417,46 @@
       font-size: 1.1rem;
       flex-shrink: 0;
     }
-    
+
     .detail-content {
       flex: 1;
     }
-    
+
     .detail-label {
       font-size: 0.75rem;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    
+
     .detail-value {
       font-size: 0.95rem;
       color: #333;
       margin-top: 2px;
+      word-break: break-word;
     }
-    
-    .no-events {
-      text-align: center;
-      padding: 60px 20px;
-      color: white;
-    }
-    
-    .no-events-icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-    }
-    
-    .no-events-text {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-    
-    /* Pull to refresh indicator */
-    .refresh-hint {
-      text-align: center;
-      color: rgba(255,255,255,0.7);
-      font-size: 0.8rem;
-      padding: 8px;
-      margin-bottom: 8px;
-    }
-    
-    /* Quick jump to month */
-    .month-nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 0 4px 16px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    .month-nav::-webkit-scrollbar {
-      display: none;
-    }
-    
-    .month-nav-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .month-nav-btn:hover, .month-nav-btn.active {
-      background: white;
-      color: #4A90A4;
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        padding-bottom: 76px;
+      }
+
+      .header h1 {
+        font-size: 1.3rem;
+      }
+
+      .install-panel {
+        padding: 12px 14px;
+      }
+
+      .install-panel-top {
+        align-items: flex-start;
+      }
+
+      .modal-content {
+        max-width: none;
+      }
     }
   </style>
 </head>
@@ -342,50 +465,74 @@
     <h1>📅 ปฏิทินกิจกรรม</h1>
     <div class="today-date" id="todayDate"></div>
   </div>
-  
-  <div class="refresh-hint">↓ ดึงลงเพื่อรีเฟรช</div>
-  
-  <% 
-    const monthKeys = Object.keys(groupedByMonth).sort();
-    const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+  <div class="install-panel" id="installPanel">
+    <div class="install-panel-top">
+      <div class="install-text">
+        <div class="install-platform" id="platformLabel">ตรวจหาอุปกรณ์...</div>
+        <div class="install-title" id="installTitle">เพิ่มปฏิทินนี้ลงหน้าจอหลัก</div>
+        <div class="install-subtitle" id="installSubtitle">ติดตั้งเป็นแอปเพื่อเปิดได้เร็วขึ้น และใช้งานแบบเต็มหน้าจอ</div>
+      </div>
+      <div class="install-actions">
+        <button type="button" class="install-btn" id="installAppBtn" style="display:none;">ติดตั้งแอป</button>
+        <button type="button" class="install-btn secondary" id="showIosHelpBtn" style="display:none;">วิธีติดตั้งบน iPhone</button>
+      </div>
+    </div>
+    <div id="iosHelpBox" style="display:none;">
+      <div style="margin-top:10px; font-weight:700; font-size:0.9rem;">วิธี Add to Home Screen บน iPhone/iPad</div>
+      <ol class="ios-install-steps">
+        <li>เปิดหน้านี้ด้วย Safari</li>
+        <li>แตะปุ่ม Share ด้านล่าง</li>
+        <li>เลือก Add to Home Screen</li>
+        <li>กด Add เพื่อเพิ่มไอคอนไว้ที่หน้าจอหลัก</li>
+      </ol>
+    </div>
+    <div id="installedBadge" class="app-installed-badge">ติดตั้งแล้ว - เปิดใช้งานจากหน้าจอหลักได้เลย</div>
+  </div>
+
+  <div class="refresh-hint">⬇ ดึงลงเพื่อรีเฟรช</div>
+
+  <%
+    const monthKeys = Object.keys(groupedByMonth || {}).sort();
+    const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-    
-    // Get today's date string
+
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10);
-    
+
     function formatThaiDate(dateStr) {
       const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return '-';
       const day = d.getDate();
       const dayName = thaiDays[d.getDay()];
       return `${dayName} ${day}`;
     }
-    
+
     function getMonthName(monthKey) {
       const [year, month] = monthKey.split('-');
-      const thaiYear = parseInt(year) + 543;
-      return `${thaiMonths[parseInt(month)]} ${thaiYear}`;
+      const thaiYear = parseInt(year, 10) + 543;
+      return `${thaiMonths[parseInt(month, 10)]} ${thaiYear}`;
     }
   %>
-  
+
   <% if (monthKeys.length > 1) { %>
-  <div class="month-nav">
-    <% monthKeys.forEach((key, idx) => { %>
-      <button class="month-nav-btn<%= idx === 0 ? ' active' : '' %>" onclick="scrollToMonth('<%= key %>')">
-        <%= getMonthName(key) %>
-      </button>
-    <% }); %>
-  </div>
+    <div class="month-nav" id="monthNav">
+      <% monthKeys.forEach((key, idx) => { %>
+        <button class="month-nav-btn<%= idx === 0 ? ' active' : '' %>" type="button" onclick="scrollToMonth('<%= key %>', this)">
+          <%= getMonthName(key) %>
+        </button>
+      <% }); %>
+    </div>
   <% } %>
-  
+
   <% if (monthKeys.length === 0) { %>
     <div class="no-events">
       <div class="no-events-icon">📭</div>
       <div class="no-events-text">ไม่มีกิจกรรมที่กำหนดไว้</div>
     </div>
   <% } else { %>
-    <% monthKeys.forEach(monthKey => { 
+    <% monthKeys.forEach((monthKey) => {
       const events = groupedByMonth[monthKey];
     %>
       <div class="month-section" id="month-<%= monthKey %>">
@@ -395,17 +542,22 @@
           <span style="margin-left: auto; font-size: 0.85rem; opacity: 0.8;">(<%= events.length %> รายการ)</span>
         </div>
         <div class="event-list">
-          <% events.forEach(event => { 
+          <% events.forEach((event) => {
             const isToday = event.date === todayStr;
             const eventJson = JSON.stringify(event).replace(/"/g, '&quot;');
           %>
-            <div class="event-item<%= isToday ? ' today' : '' %>" 
-                 data-event="<%= eventJson %>" 
-                 onclick="showEventDetail(this)">
+            <div
+              class="event-item<%= isToday ? ' today' : '' %>"
+              data-event="<%= eventJson %>"
+              onclick="showEventDetail(this)"
+              tabindex="0"
+              role="button"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); this.click();}"
+            >
               <div class="event-date">
                 <span class="date-badge"><%= event.dateLabel || formatThaiDate(event.date) %><%= isToday ? ' (วันนี้)' : '' %></span>
                 <% if (event.time) { %>
-                  <span class="time-badge">🕐 <%= event.time %> น.</span>
+                  <span class="time-badge">⏰ <%= event.time %> น.</span>
                 <% } %>
               </div>
               <div class="event-title"><%= event.activity || '-' %></div>
@@ -424,13 +576,12 @@
       </div>
     <% }); %>
   <% } %>
-  
-  <!-- Modal for event details -->
+
   <div class="modal-overlay" id="eventModal" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 id="modalTitle">รายละเอียดกิจกรรม</h3>
-        <button class="modal-close" onclick="closeModal()">✕</button>
+        <button class="modal-close" type="button" onclick="closeModal()">×</button>
       </div>
       <div class="modal-body">
         <div class="detail-row">
@@ -448,7 +599,7 @@
           </div>
         </div>
         <div class="detail-row">
-          <div class="detail-icon">🕐</div>
+          <div class="detail-icon">⏰</div>
           <div class="detail-content">
             <div class="detail-label">เวลา</div>
             <div class="detail-value" id="modalTime">-</div>
@@ -478,7 +629,7 @@
         <div class="detail-row">
           <div class="detail-icon">🎯</div>
           <div class="detail-content">
-            <div class="detail-label">ผู้เข้าร่วม/เป้าหมาย</div>
+            <div class="detail-label">ผู้เข้าร่วม / เป้าหมาย</div>
             <div class="detail-value" id="modalGoto">-</div>
           </div>
         </div>
@@ -506,32 +657,120 @@
       </div>
     </div>
   </div>
-  
+
   <script>
-    // Set today's date in header
     const today = new Date();
-    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
     const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
     const thaiYear = today.getFullYear() + 543;
     const calendarDataset = <%- JSON.stringify(groupedByMonth || {}) %>;
     const todayISODate = today.toISOString().slice(0, 10);
     const todayMonthKey = todayISODate.slice(0, 7);
     const todayEventCount = ((calendarDataset[todayMonthKey] || []).filter(ev => ev.date === todayISODate)).length;
-    document.getElementById('todayDate').textContent = 
+
+    document.getElementById('todayDate').textContent =
       `วัน${thaiDays[today.getDay()]}ที่ ${today.getDate()} ${thaiMonths[today.getMonth()]} ${thaiYear}`;
-    
-    // Format date for modal
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    const installPanel = document.getElementById('installPanel');
+    const platformLabel = document.getElementById('platformLabel');
+    const installTitle = document.getElementById('installTitle');
+    const installSubtitle = document.getElementById('installSubtitle');
+    const installAppBtn = document.getElementById('installAppBtn');
+    const showIosHelpBtn = document.getElementById('showIosHelpBtn');
+    const iosHelpBox = document.getElementById('iosHelpBox');
+    const installedBadge = document.getElementById('installedBadge');
+    let deferredPrompt = null;
+
+    function setPlatformCopy() {
+      if (!platformLabel || !installTitle || !installSubtitle) return;
+
+      if (isStandalone) {
+        platformLabel.textContent = 'ติดตั้งแล้ว';
+        installTitle.textContent = 'เปิดใช้งานเป็นแอปแล้ว';
+        installSubtitle.textContent = 'คุณสามารถเปิดใช้งานจากหน้าจอหลักได้ทันที';
+        return;
+      }
+
+      if (isIos) {
+        platformLabel.textContent = 'iPhone / iPad';
+        installTitle.textContent = 'เพิ่มไปยังหน้าจอหลักบน iPhone';
+        installSubtitle.textContent = 'เปิดหน้านี้ใน Safari แล้วใช้ปุ่มแชร์เพื่อ Add to Home Screen';
+        return;
+      }
+
+      platformLabel.textContent = deferredPrompt ? 'Android / Chrome' : 'Desktop / Browser';
+      installTitle.textContent = deferredPrompt ? 'ติดตั้งเป็นแอปได้แล้ว' : 'เพิ่มปฏิทินนี้ลงหน้าจอหลัก';
+      installSubtitle.textContent = deferredPrompt
+        ? 'แตะปุ่มติดตั้งเพื่อเพิ่มไอคอนไว้บนหน้าจอหลัก'
+        : 'ถ้าเบราว์เซอร์รองรับ จะมีปุ่มติดตั้งแสดงให้กด';
+    }
+
+    function setInstalledState() {
+      if (installAppBtn) installAppBtn.style.display = 'none';
+      if (showIosHelpBtn) showIosHelpBtn.style.display = 'none';
+      if (iosHelpBox) iosHelpBox.style.display = 'none';
+      if (installedBadge) installedBadge.style.display = 'block';
+      setPlatformCopy();
+    }
+
+    function setInstallState() {
+      if (installedBadge) installedBadge.style.display = 'none';
+      if (installAppBtn) installAppBtn.style.display = deferredPrompt ? 'inline-block' : 'none';
+      if (showIosHelpBtn) showIosHelpBtn.style.display = isIos && !deferredPrompt ? 'inline-block' : 'none';
+      setPlatformCopy();
+    }
+
+    if (isStandalone) {
+      setInstalledState();
+    } else {
+      setInstallState();
+    }
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      if (!isStandalone) setInstallState();
+    });
+
+    if (installAppBtn) {
+      installAppBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try {
+          await deferredPrompt.userChoice;
+        } catch (err) {
+          // Browser handles the prompt outcome.
+        } finally {
+          deferredPrompt = null;
+          if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            setInstalledState();
+          } else {
+            setInstallState();
+          }
+        }
+      });
+    }
+
+    if (showIosHelpBtn && iosHelpBox) {
+      showIosHelpBtn.addEventListener('click', () => {
+        iosHelpBox.style.display = iosHelpBox.style.display === 'none' ? 'block' : 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      setInstalledState();
+    });
+
     function formatFullThaiDate(dateStr) {
       const d = new Date(dateStr);
-      const day = d.getDate();
-      const month = thaiMonths[d.getMonth()];
-      const year = d.getFullYear() + 543;
-      const dayName = thaiDays[d.getDay()];
-      return `วัน${dayName}ที่ ${day} ${month} ${year}`;
+      if (Number.isNaN(d.getTime())) return dateStr || '-';
+      return `วัน${thaiDays[d.getDay()]}ที่ ${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
     }
-    
-    // Show event detail modal
+
     function showEventDetail(element) {
       const eventData = element.getAttribute('data-event');
       let event;
@@ -541,11 +780,11 @@
         console.error('Error parsing event data:', e);
         return;
       }
-      
+
       document.getElementById('modalTitle').textContent = event.activity || 'รายละเอียดกิจกรรม';
       document.getElementById('modalSourceLabel').textContent = event.sourceLabel || '-';
       document.getElementById('modalDate').textContent = event.dateLabel || formatFullThaiDate(event.date);
-      document.getElementById('modalTime').textContent = event.time ? event.time + ' น.' : '-';
+      document.getElementById('modalTime').textContent = event.time ? `${event.time} น.` : '-';
       document.getElementById('modalActivity').textContent = event.activity || '-';
       document.getElementById('modalPlace').textContent = event.place || '-';
       document.getElementById('modalRespon').textContent = event.respon || '-';
@@ -562,35 +801,31 @@
         detailLink.href = '#';
         linkRow.style.display = 'none';
       }
-      
+
       document.getElementById('eventModal').classList.add('active');
       document.body.style.overflow = 'hidden';
     }
-    
-    // Close modal
+
     function closeModal(e) {
       if (e && e.target !== e.currentTarget) return;
       document.getElementById('eventModal').classList.remove('active');
       document.body.style.overflow = '';
     }
-    
-    // Scroll to month
-    function scrollToMonth(monthKey) {
+
+    function scrollToMonth(monthKey, btn) {
       const element = document.getElementById('month-' + monthKey);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Update active button
-        document.querySelectorAll('.month-nav-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.month-nav-btn').forEach(el => el.classList.remove('active'));
+        if (btn) btn.classList.add('active');
       }
     }
-    
-    // Pull to refresh
+
     let touchStartY = 0;
     document.addEventListener('touchstart', e => {
       touchStartY = e.touches[0].clientY;
     });
-    
+
     document.addEventListener('touchend', e => {
       const touchEndY = e.changedTouches[0].clientY;
       const diff = touchEndY - touchStartY;
@@ -598,13 +833,11 @@
         location.reload();
       }
     });
-    
-    // Close modal on escape key
+
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeModal();
     });
-    
-    // Register service worker for PWA
+
     function syncAppBadge(count) {
       if (typeof count !== 'number') return;
       const clearBadge = () => {
@@ -616,14 +849,17 @@
           }).catch(() => {});
         }
       };
+
       if (!count) {
         clearBadge();
         return;
       }
+
       if ('setAppBadge' in navigator) {
         navigator.setAppBadge(count).catch(() => {});
         return;
       }
+
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
           if (reg && reg.setAppBadge) reg.setAppBadge(count);
@@ -635,7 +871,7 @@
       navigator.serviceWorker.register('/sw-calendar.js').then((registration) => {
         registration.update().catch(() => {});
       }).catch(() => {
-        // Service worker registration failed, app still works offline
+        // Service worker registration failed, but the app still works.
       }).finally(() => syncAppBadge(todayEventCount));
     } else {
       syncAppBadge(todayEventCount);

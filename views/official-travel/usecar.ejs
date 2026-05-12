@@ -1,10 +1,120 @@
 <%- include('../partials/header') %>
 <%- include('../partials/travel-navbar', { currentPage: 'travel' }) %>
 
+<style>
+  .usecar-hero {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.08));
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .usecar-mobile-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .usecar-mobile-card {
+    display: block;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .usecar-mobile-card:hover,
+  .usecar-mobile-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: #0d6efd;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+    color: inherit;
+    outline: none;
+  }
+
+  .usecar-label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-bottom: 0.2rem;
+  }
+
+  .usecar-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    word-break: break-word;
+  }
+
+  .usecar-muted {
+    font-size: 0.9rem;
+    color: #475569;
+    word-break: break-word;
+  }
+
+  .usecar-status {
+    white-space: normal;
+  }
+
+  @media (max-width: 767.98px) {
+    .usecar-hero {
+      padding: 1rem;
+      border-radius: 1rem;
+    }
+  }
+</style>
+
+<%
+  const formatThaiDate = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'Asia/Bangkok'
+    });
+  };
+
+  const formatThaiTime = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleTimeString('th-TH', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Bangkok'
+    });
+  };
+
+  const formatStatusLabel = (status) => {
+    if (status === 'approved') return 'อนุมัติ';
+    if (status === 'submitted') return 'รอพิจารณา';
+    if (status === 'rejected') return 'ไม่อนุมัติ';
+    if (status === 'cancelled') return 'ยกเลิก';
+    return status || '-';
+  };
+
+  const formatStatusClass = (status) => {
+    if (status === 'approved') return 'bg-success';
+    if (status === 'submitted') return 'bg-warning text-dark';
+    if (status === 'rejected') return 'bg-danger';
+    if (status === 'cancelled') return 'bg-secondary';
+    return 'bg-info text-dark';
+  };
+%>
+
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-  <div>
+  <div class="usecar-hero flex-grow-1">
     <h3 class="mb-1">ข้อมูลการใช้รถยนต์ราชการ</h3>
-    <p class="text-muted mb-0">แสดงเฉพาะรายการที่มีกำหนดปฏิบัติงานตั้งแต่วันนี้เป็นต้นไป</p>
+    <p class="text-muted mb-0">แสดงทุกรายการที่มีการขอใช้รถจากคำขอไปราชการ</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
     <span class="badge rounded-pill text-bg-success px-3 py-2">
@@ -21,7 +131,7 @@
 </div>
 
 <div class="card shadow-sm border-0">
-  <div class="table-responsive">
+  <div class="d-none d-md-block table-responsive">
     <table class="table table-hover mb-0 align-middle">
       <thead class="table-light">
         <tr>
@@ -40,20 +150,18 @@
       <tbody>
         <% if (!items || !items.length) { %>
           <tr>
-            <td colspan="10" class="text-center py-4 text-muted">ยังไม่มีรายการใช้รถตั้งแต่วันนี้เป็นต้นไป</td>
+            <td colspan="10" class="text-center py-4 text-muted">ยังไม่มีรายการใช้รถ</td>
           </tr>
         <% } %>
         <% (items || []).forEach((item) => { %>
-          <% const tripStart = item.start_at ? new Date(item.start_at) : null; %>
-          <% const tripEnd = item.end_at ? new Date(item.end_at) : tripStart; %>
           <tr>
             <td class="text-center">
-              <%= tripStart ? tripStart.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %>
-              <div class="small text-muted">ถึง <%= tripEnd ? tripEnd.toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok' }) : '-' %></div>
+              <%= formatThaiDate(item.start_at) %>
+              <div class="small text-muted">ถึง <%= formatThaiDate(item.end_at || item.start_at) %></div>
             </td>
             <td class="text-center">
-              <%= tripStart ? tripStart.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %>
-              <div class="small text-muted">ถึง <%= tripEnd ? tripEnd.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '-' %></div>
+              <%= formatThaiTime(item.start_at) %>
+              <div class="small text-muted">ถึง <%= formatThaiTime(item.end_at || item.start_at) %></div>
             </td>
             <td>
               <a href="/official-travel/<%= item.id %>" class="text-decoration-none fw-semibold">
@@ -78,14 +186,75 @@
             </td>
             <td><%= item.driver_name_snapshot || '-' %></td>
             <td>
-              <span class="badge bg-info text-dark">
-                <%= item.vehicle_request_status === 'approved' ? 'อนุมัติ' : (item.vehicle_request_status || '-') %>
+              <span class="badge <%= formatStatusClass(item.vehicle_request_status) %>">
+                <%= formatStatusLabel(item.vehicle_request_status) %>
               </span>
             </td>
           </tr>
         <% }) %>
       </tbody>
     </table>
+  </div>
+
+  <div class="d-md-none p-3">
+    <% if (!items || !items.length) { %>
+      <div class="text-center py-4 text-muted">ยังไม่มีรายการใช้รถ</div>
+    <% } else { %>
+      <div class="usecar-mobile-list">
+        <% (items || []).forEach((item) => { %>
+          <a href="/official-travel/<%= item.id %>" class="usecar-mobile-card">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+              <div>
+                <span class="usecar-label">เลขที่คำขอ</span>
+                <div class="usecar-value"><%= item.request_no || '-' %></div>
+                <div class="usecar-muted"><%= item.subject || '-' %></div>
+              </div>
+              <span class="badge <%= formatStatusClass(item.vehicle_request_status) %> usecar-status">
+                <%= formatStatusLabel(item.vehicle_request_status) %>
+              </span>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-6">
+                <span class="usecar-label">ช่วงวัน</span>
+                <div class="usecar-value"><%= formatThaiDate(item.start_at) %></div>
+                <div class="usecar-muted">ถึง <%= formatThaiDate(item.end_at || item.start_at) %></div>
+              </div>
+              <div class="col-6">
+                <span class="usecar-label">ช่วงเวลา</span>
+                <div class="usecar-value"><%= formatThaiTime(item.start_at) %></div>
+                <div class="usecar-muted">ถึง <%= formatThaiTime(item.end_at || item.start_at) %></div>
+              </div>
+              <div class="col-12">
+                <span class="usecar-label">ผู้ขอ</span>
+                <div class="usecar-value"><%= item.requester_name || '-' %></div>
+                <div class="usecar-muted"><%= item.requester_group || '-' %></div>
+              </div>
+              <div class="col-12">
+                <span class="usecar-label">สถานที่</span>
+                <div class="usecar-muted"><%= item.destination_text || '-' %></div>
+              </div>
+              <div class="col-12">
+                <span class="usecar-label">กิจกรรม</span>
+                <div class="usecar-muted"><%= item.purpose_text || '-' %></div>
+              </div>
+              <div class="col-12">
+                <span class="usecar-label">รถ / พขร.</span>
+                <div class="usecar-value"><%= item.plate_no_snapshot || '-' %></div>
+                <div class="usecar-muted"><%= item.driver_name_snapshot || '-' %></div>
+                <% if (item.vehicle_request_no) { %>
+                  <div class="usecar-muted"><%= item.vehicle_request_no %></div>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+              <span class="btn btn-outline-primary btn-sm">ดูรายละเอียด</span>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
   </div>
 </div>
 

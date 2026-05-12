@@ -715,6 +715,58 @@
     overflow: visible;
   }
 
+  .usecar-mobile-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .usecar-mobile-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-lighter);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .usecar-mobile-card:hover,
+  .usecar-mobile-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    outline: none;
+  }
+
+  .usecar-mobile-card .badge {
+    white-space: normal;
+  }
+
+  .usecar-mobile-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.15rem;
+  }
+
+  .usecar-mobile-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  .usecar-mobile-secondary {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    word-break: break-word;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .section-block {
@@ -4216,7 +4268,7 @@ const _memberSummaryTotals = {
               </div>
               <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
-                <label for="rememberMe" class="form-check-label">จดจำฉัน</label>
+                <label for="rememberMe" class="form-check-label" style="position: relative; color: rgb(36, 35, 35); font-size: 14px;">จำรหัสไว้</label>
               </div>
               <div class="d-grid mb-3">
                 <button type="submit" class="btn btn-success btn-lg">
@@ -4372,13 +4424,7 @@ const _memberSummaryTotals = {
     });
   }
 %>
-<section class="section-block meeting-today-card m-2">
-    <div class="meeting-today-body">
-      <a href="/pbt-plan" class="nav-link">
-      <img src="/images/planpon.png" alt="แผน" class="img-fluid">
-      </a>
-    </div>
-</section>
+
 
 
 <!-- ================= Stats ================= -->
@@ -4979,6 +5025,7 @@ const _memberSummaryTotals = {
       });
     });
 
+  })();
 </script>
 <!-- Downloads calendar modal -->
 <div class="modal fade modal-elevated" id="downloadsCalendarModal" tabindex="-1" aria-hidden="true">
@@ -5153,48 +5200,103 @@ const _memberSummaryTotals = {
             <span class="badge rounded-pill text-bg-success px-3 py-2">
               ทั้งหมด <%= typeof vehicleRequestsCount !== 'undefined' ? vehicleRequestsCount : (vehicleRequests ? vehicleRequests.length : 0) %> รายการ
             </span>
-            <a href="/official-travel/usecar" class="btn btn-outline-primary btn-sm">
-              ดูข้อมูลเพิ่มเติม
-            </a>
           </div>
         </div>
         <div class="card modern-card shadow-sm border-0">
           <div class="card-gradient-bar"></div>
           <div class="card-body">
             <% if (vehicleRequests && vehicleRequests.length > 0) { %>
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="table-head-soft">
-                    <tr>
-                      <th class="text-center">วันที่</th>
-                      <th class="text-center">เวลา</th>
-                      <th>ทะเบียนรถ</th>
-                      <th>สถานที่</th>
-                      <th>กิจกรรม</th>
-                      <th>ผู้รับผิดชอบ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% vehicleRequests.forEach(function(vr) { %>
-                      <% const vehicleUseStart = vr.trip_start_at || vr.start_at; %>
-                      <tr class="js-open-usecar" style="cursor:pointer"
-                        data-date="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %>"
-                        data-time="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %>"
-                        data-no-car="<%= vr.plate_no_snapshot || '-' %>"
-                        data-place="<%= vr.destination_text || '-' %>"
-                        data-act="<%= vr.purpose_text || '-' %>"
-                        data-respon="<%= vr.requester_name || '-' %>"
-                      >
-                        <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %></td>
-                        <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
-                        <td><%= vr.plate_no_snapshot || '-' %></td>
-                        <td><%= vr.destination_text || '-' %></td>
-                        <td><%= vr.purpose_text || '-' %></td>
-                        <td><%= vr.requester_name || '-' %></td>
+              <div class="d-none d-md-block">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead class="table-head-soft">
+                      <tr>
+                        <th class="text-center">วันที่</th>
+                        <th class="text-center">เวลา</th>
+                        <th>ทะเบียนรถ</th>
+                        <th>สถานที่</th>
+                        <th>กิจกรรม</th>
+                        <th>ผู้รับผิดชอบ</th>
                       </tr>
-                    <% }); %>
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      <% vehicleRequests.forEach(function(vr) { %>
+                        <% const vehicleUseStart = vr.trip_start_at || vr.start_at; %>
+                        <% const vehicleDateText = vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-'; %>
+                        <% const vehicleTimeText = vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-'; %>
+                        <% const vehicleTooltip = `วันที่ ${vehicleDateText} | ทะเบียนรถ ${vr.plate_no_snapshot || '-'} | สถานที่ ${vr.destination_text || '-'}`; %>
+                        <tr class="js-usecar-tooltip" style="cursor: help"
+                          data-bs-toggle="tooltip"
+                          data-bs-trigger="hover focus"
+                          data-bs-container="body"
+                          data-bs-placement="top"
+                          title="<%= vehicleTooltip %>"
+                          data-date="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %>"
+                          data-time="<%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %>"
+                          data-no-car="<%= vr.plate_no_snapshot || '-' %>"
+                          data-place="<%= vr.destination_text || '-' %>"
+                          data-act="<%= vr.purpose_text || '-' %>"
+                          data-respon="<%= vr.requester_name || '-' %>"
+                        >
+                          <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-' %></td>
+                          <td class="text-center"><%= vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-' %></td>
+                          <td><%= vr.plate_no_snapshot || '-' %></td>
+                          <td><%= vr.destination_text || '-' %></td>
+                          <td class="text-start"><%= vr.purpose_text || '-' %></td>
+                          <td><%= vr.requester_name || '-' %></td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="d-md-none usecar-mobile-list">
+                <% vehicleRequests.forEach(function(vr) { %>
+                  <% const vehicleUseStart = vr.trip_start_at || vr.start_at; %>
+                  <% const vehicleDateText = vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleDateString('th-TH') : '-'; %>
+                  <% const vehicleTimeText = vehicleUseStart ? (new Date(vehicleUseStart)).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-'; %>
+                  <% const vehicleTooltip = `วันที่ ${vehicleDateText} | ทะเบียนรถ ${vr.plate_no_snapshot || '-'} | สถานที่ ${vr.destination_text || '-'}`; %>
+                  <div class="usecar-mobile-card js-usecar-tooltip" tabindex="0"
+                    data-bs-toggle="tooltip"
+                    data-bs-trigger="click hover focus"
+                    data-bs-container="body"
+                    data-bs-placement="top"
+                    title="<%= vehicleTooltip %>"
+                    data-date="<%= vehicleDateText %>"
+                    data-time="<%= vehicleTimeText %>"
+                    data-no-car="<%= vr.plate_no_snapshot || '-' %>"
+                    data-place="<%= vr.destination_text || '-' %>"
+                    data-act="<%= vr.purpose_text || '-' %>"
+                    data-respon="<%= vr.requester_name || '-' %>"
+                  >
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                      <div>
+                        <span class="usecar-mobile-label">วันที่และเวลา</span>
+                        <div class="usecar-mobile-value"><%= vehicleDateText %></div>
+                        <div class="usecar-mobile-secondary"><%= vehicleTimeText %> น.</div>
+                      </div>
+                      <span class="badge rounded-pill text-bg-light text-primary border">แตะ/ชี้เพื่อดูรายละเอียด</span>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-6">
+                        <span class="usecar-mobile-label">ทะเบียนรถ</span>
+                        <div class="usecar-mobile-value"><%= vr.plate_no_snapshot || '-' %></div>
+                      </div>
+                      <div class="col-6">
+                        <span class="usecar-mobile-label">ผู้รับผิดชอบ</span>
+                        <div class="usecar-mobile-value"><%= vr.requester_name || '-' %></div>
+                      </div>
+                      <div class="col-12">
+                        <span class="usecar-mobile-label">สถานที่</span>
+                        <div class="usecar-mobile-secondary"><%= vr.destination_text || '-' %></div>
+                      </div>
+                      <div class="col-12">
+                        <span class="usecar-mobile-label">กิจกรรม</span>
+                        <div class="usecar-mobile-secondary"><%= vr.purpose_text || '-' %></div>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
               </div>
             <% } else { %>
               <div class="text-center text-muted py-3">ไม่มีข้อมูลการใช้รถ</div>
@@ -5210,67 +5312,6 @@ const _memberSummaryTotals = {
     </div>
   </div>
 </section>
-
-<!-- Added: Usecar Detail Modal -->
-<div class="modal fade" id="usecarModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header modal-gradient py-2">
-        <h5 class="modal-title mb-0"><i class="bi bi-car-front-fill me-1"></i> รายละเอียดการใช้รถ</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="usecarModalLoading" class="text-center d-none">
-          <div class="spinner-border text-primary mb-3" role="status"></div>
-          <div class="small text-muted">กำลังโหลด...</div>
-        </div>
-        <div id="usecarModalError" class="alert alert-danger d-none"></div>
-        <dl class="row mb-0" id="usecarModalContent">
-          <dt class="col-4">วันที่</dt>
-          <dd class="col-8" id="ucDate">-</dd>
-          <dt class="col-4">เวลา</dt>
-          <dd class="col-8" id="ucTime">-</dd>
-          <dt class="col-4">ทะเบียนรถ</dt>
-          <dd class="col-8" id="ucNoCar">-</dd>
-          <dt class="col-4">สถานที่</dt>
-          <dd class="col-8" id="ucPlace">-</dd>
-          <dt class="col-4">กิจกรรม</dt>
-          <dd class="col-8" id="ucAct">-</dd>
-          <dt class="col-4">ผู้รับผิดชอบ</dt>
-          <dd class="col-8" id="ucRespon">-</dd>
-        </dl>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // Usecar modal populate (client-side only using data-* attributes)
-  (function() {
-    document.addEventListener('click', function(e) {
-      const btn = e.target.closest('.js-open-usecar');
-      if (!btn) return;
-      const date = btn.getAttribute('data-date') || '-';
-      const time = btn.getAttribute('data-time') || '-';
-      const place = btn.getAttribute('data-place') || '-';
-      const act = btn.getAttribute('data-act') || '-';
-      const respon = btn.getAttribute('data-respon') || '-';
-      const noCar = btn.getAttribute('data-no-car') || '-';
-      document.getElementById('ucDate').textContent = date;
-      document.getElementById('ucTime').textContent = time + ' น.';
-      document.getElementById('ucNoCar').textContent = noCar;
-      document.getElementById('ucPlace').textContent = place;
-      document.getElementById('ucAct').textContent = act;
-      document.getElementById('ucRespon').textContent = respon;
-      // If Bootstrap auto trigger fails for some reason, ensure show programmatically
-      const modalEl = document.getElementById('usecarModal');
-      if (modalEl) {
-        const instance = bootstrap && bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
-        if (instance) instance.show();
-      }
-    });
-  })();
-</script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.progress-bar[data-progress]').forEach(function(bar) {

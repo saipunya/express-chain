@@ -282,8 +282,16 @@
     min-height: 50px;
   }
 
-  .promo-clear-btn {
+  .promo-clear-btn,
+  .promo-reset-btn {
     min-height: 50px;
+  }
+
+  .promo-reset-box {
+    border: 1px solid #fecaca;
+    border-radius: 16px;
+    background: #fff7f7;
+    padding: 14px;
   }
 
   @media (max-width: 767.98px) {
@@ -314,6 +322,7 @@
     <% const selectedCampaignObj = selectedCampaign || (selectedCampaignId ? campaignsSafe.find(c => Number(c.id) === Number(selectedCampaignId)) : null); %>
     <% const showExpiredSafe = Boolean(showExpired); %>
     <% const canClear = Boolean(selectedStoreId || selectedCampaignId); %>
+    <% const canReset = Number(summarySafe.total || 0) > 0; %>
     <% const clearScopeLabel = selectedCampaignObj
       ? selectedCampaignObj.name + (selectedStoreObj ? ' / ' + selectedStoreObj.name : '')
       : selectedStoreObj
@@ -555,6 +564,30 @@
                 </div>
               <% } %>
             </form>
+
+            <div class="promo-reset-box mt-3">
+              <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <div>
+                  <h6 class="fw-bold text-danger mb-1">Reset all codes</h6>
+                  <div class="promo-grid-note">
+                    ลบโค้ดทุกสถานะใน scope ปัจจุบัน เพื่อเริ่มต้นชุดโค้ดใหม่ทั้งหมด
+                  </div>
+                </div>
+              </div>
+              <form method="POST" action="/promotion/admin/codes/reset"
+                    onsubmit="return confirm('ยืนยัน RESET โค้ดทั้งหมดใน scope นี้? การทำรายการนี้จะลบโค้ดทุกสถานะและไม่สามารถย้อนกลับได้');">
+                <input type="hidden" name="store_id" value="<%= scopeStoreIdValue || '' %>">
+                <input type="hidden" name="campaign_id" value="<%= selectedCampaignId || '' %>">
+                <button class="btn btn-danger promo-reset-btn w-100 <%= canReset ? '' : 'disabled' %>" <%= canReset ? '' : 'disabled' %>>
+                  Reset all codes
+                </button>
+                <% if (!canReset) { %>
+                  <div class="promo-filter-help mt-2">
+                    ยังไม่มีโค้ดใน scope นี้ให้รีเซ็ต
+                  </div>
+                <% } %>
+              </form>
+            </div>
           </div>
         </div>
       </div>

@@ -387,6 +387,12 @@
                         <a href="#editCampaignModal-<%= c.id %>" class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="modal">
                           <%= campaignState.key === 'expired' ? 'View expired campaign' : 'Check campaign' %>
                         </a>
+                        <form method="POST" action="/promotion/admin/campaigns/<%= c.id %>/delete"
+                              onsubmit="return confirm('ยืนยันลบแคมเปญนี้ใช่หรือไม่?');">
+                          <button class="btn btn-outline-danger btn-sm w-100">
+                            Delete
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>

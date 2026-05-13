@@ -21,7 +21,9 @@ const {
   getCampaignByCodeInStore,
   createCampaign,
   updateCampaignById,
-  setCampaignActiveById
+  setCampaignActiveById,
+  getCampaignImpactCounts,
+  deleteCampaignById
 } = require('./promotion/campaignModel');
 const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList } = require('./promotion/drawModel');
 
@@ -226,6 +228,8 @@ module.exports = {
   createCampaign,
   updateCampaignById,
   setCampaignActiveById,
+  getCampaignImpactCounts,
+  deleteCampaignById,
   getCodeByValue,
   getCodeWithCampaign,
   getAvailablePrizesByCampaign,
@@ -245,6 +249,7 @@ module.exports = {
   createPrize,
   getCodesList,
   clearUnusedCodes,
+  resetCodes,
   getDrawsList,
   createCodesBatch,
   // Transactional helpers
@@ -460,7 +465,59 @@ async function clearUnusedCodes(scope = null, filters = {}) {
   }
 }
 
- 
+async function resetCodes(scope = null, filters = {}) {
+  const { whereSql, params } = buildCodeFilters(scope, filters);
+  const codeWhereSql = whereSql ? whereSql.replace(/\b(store_id|campaign_id)\b/g, 'pc.$1') : '';
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    let drawReferencesCleared = 0;
+    let drawRowsDeleted = 0;
+    try {
+      const [drawResult] = await connection.query(
+        `UPDATE promotion_draws d
+         INNER JOIN promotion_codes pc ON d.code_id = pc.id
+         SET d.code_id = NULL, d.updated_at = NOW()
+         ${codeWhereSql}`,
+        params
+      );
+      drawReferencesCleared = Number(drawResult && drawResult.affectedRows) || 0;
+    } catch (drawUpdateErr) {
+      await connection.rollback();
+      await connection.beginTransaction();
+
+      const [drawDeleteResult] = await connection.query(
+        `DELETE d
+         FROM promotion_draws d
+         INNER JOIN promotion_codes pc ON d.code_id = pc.id
+         ${codeWhereSql}`,
+        params
+      );
+      drawRowsDeleted = Number(drawDeleteResult && drawDeleteResult.affectedRows) || 0;
+    }
+
+    const [deleteResult] = await connection.query(
+      `DELETE pc
+       FROM promotion_codes pc
+       ${codeWhereSql}`,
+      params
+    );
+
+    await connection.commit();
+    return {
+      removed: Number(deleteResult && deleteResult.affectedRows) || 0,
+      drawReferencesCleared,
+      drawRowsDeleted
+    };
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
+}
 
 /**
  * Get list of stores for admin selects

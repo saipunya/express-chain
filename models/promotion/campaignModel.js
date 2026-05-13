@@ -110,6 +110,22 @@ async function setCampaignActiveById(campaignId, active) {
   );
 }
 
+async function getCampaignImpactCounts(campaignId) {
+  const [rows] = await db.query(
+    `SELECT
+       (SELECT COUNT(*) FROM promotion_codes WHERE campaign_id = ?) AS codes,
+       (SELECT COUNT(*) FROM promotion_prizes WHERE campaign_id = ?) AS prizes,
+       (SELECT COUNT(*) FROM promotion_draws WHERE campaign_id = ?) AS draws`,
+    [campaignId, campaignId, campaignId]
+  );
+  return rows[0] || { codes: 0, prizes: 0, draws: 0 };
+}
+
+async function deleteCampaignById(campaignId) {
+  const [result] = await db.query('DELETE FROM promotion_campaigns WHERE id = ?', [campaignId]);
+  return Boolean(result && result.affectedRows > 0);
+}
+
 module.exports = {
   getCampaignById,
   getActiveCampaignByStore,
@@ -117,5 +133,7 @@ module.exports = {
   getCampaignByCodeInStore,
   createCampaign,
   updateCampaignById,
-  setCampaignActiveById
+  setCampaignActiveById,
+  getCampaignImpactCounts,
+  deleteCampaignById
 };

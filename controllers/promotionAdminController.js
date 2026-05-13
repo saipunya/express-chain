@@ -358,6 +358,48 @@ exports.updateCampaignStatus = async (req, res) => {
   }
 };
 
+exports.deleteCampaign = async (req, res) => {
+  try {
+    const campaignId = parsePositiveInt(req.params.id);
+    if (!campaignId) {
+      req.flash('danger', 'รหัสแคมเปญไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const campaign = await promotionModel.getCampaignById(campaignId);
+    if (!campaign) {
+      req.flash('danger', 'ไม่พบแคมเปญ');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+    if (!canManageCampaign(req, campaign)) {
+      req.flash('danger', 'คุณไม่มีสิทธิ์ลบแคมเปญรายการนี้');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const impact = await promotionModel.getCampaignImpactCounts(campaignId);
+    const codes = Number(impact.codes || 0);
+    const prizes = Number(impact.prizes || 0);
+    const draws = Number(impact.draws || 0);
+    if (codes || prizes || draws) {
+      req.flash('danger', `ไม่สามารถลบแคมเปญได้ เพราะยังมีข้อมูลอ้างอิงอยู่ (codes ${codes}, prizes ${prizes}, draws ${draws})`);
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    const deleted = await promotionModel.deleteCampaignById(campaignId);
+    if (!deleted) {
+      req.flash('danger', 'ไม่สามารถลบแคมเปญได้');
+      return res.redirect('/promotion/admin/campaigns');
+    }
+
+    req.flash('success', `ลบแคมเปญ "${campaign.name}" แล้ว`);
+    return res.redirect('/promotion/admin/campaigns');
+  } catch (err) {
+    console.error('promotionAdmin.deleteCampaign error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะลบแคมเปญ');
+    return res.redirect('/promotion/admin/campaigns');
+  }
+};
+
 exports.prizes = async (req, res) => {
   try {
     const scope = getScope(req);
@@ -805,6 +847,59 @@ exports.clearCodes = async (req, res) => {
   } catch (err) {
     console.error('promotionAdmin.clearCodes error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะล้างโค้ด');
+    return res.redirect('/promotion/admin/codes');
+  }
+};
+
+exports.resetCodes = async (req, res) => {
+  try {
+    const scope = getScope(req);
+    const scopedStoreId = getScopedStoreId(req);
+    let storeId = parsePositiveInt(req.body.store_id);
+    let campaignId = parsePositiveInt(req.body.campaign_id);
+
+    if (scope && scope.role === 'coop_admin') {
+      storeId = scopedStoreId;
+    }
+
+    if (campaignId) {
+      const campaign = await promotionModel.getCampaignById(campaignId);
+      if (!campaign) {
+        req.flash('danger', 'ไม่พบแคมเปญที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+      if (!storeId) {
+        storeId = Number(campaign.store_id) || null;
+      }
+      if (storeId && Number(campaign.store_id) !== Number(storeId)) {
+        req.flash('danger', 'แคมเปญนี้ไม่ได้อยู่ในสาขาที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+    }
+
+    if (scope && scope.role === 'coop_admin' && !storeId) {
+      req.flash('danger', 'ไม่พบสาขาที่ผูกกับผู้ใช้งานนี้');
+      return res.redirect('/promotion/admin/codes');
+    }
+
+    const result = await promotionModel.resetCodes(scope, {
+      storeId,
+      campaignId
+    });
+
+    const scopeLabel = campaignId
+      ? `แคมเปญ #${campaignId}`
+      : storeId
+        ? `สาขา #${storeId}`
+        : 'ทุกสาขา';
+    const drawNote = result.drawRowsDeleted
+      ? ` และลบประวัติการสุ่มที่อ้างถึงโค้ด ${result.drawRowsDeleted} รายการ`
+      : '';
+    req.flash('success', `รีเซ็ตโค้ดทั้งหมด ${result.removed} รายการจาก ${scopeLabel}${drawNote} แล้ว`);
+    return res.redirect(`/promotion/admin/codes${storeId ? `?store_id=${storeId}` : ''}${campaignId ? `${storeId ? '&' : '?'}campaign_id=${campaignId}` : ''}`);
+  } catch (err) {
+    console.error('promotionAdmin.resetCodes error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะรีเซ็ตโค้ด');
     return res.redirect('/promotion/admin/codes');
   }
 };

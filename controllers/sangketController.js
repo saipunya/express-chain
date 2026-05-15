@@ -56,6 +56,7 @@ function pickBody(body = {}) {
     received_date: body.received_date || body.sang_sentdate || null,
     audit_type: body.audit_type || null,
     observation_no: body.observation_no || null,
+    observation_title: body.observation_title || body.title || body.subject || body.sang_title || null,
     observation_text: body.observation_text || body.sang_detail || null,
     potential_damage_amount: body.potential_damage_amount || body.sang_money || null,
     severity_case: body.severity_case || null,
@@ -75,6 +76,14 @@ function pickBody(body = {}) {
     source_sheet: body.source_sheet || null,
     source_row: body.source_row || null
   };
+}
+
+function observationTitle(row = {}) {
+  const explicit = String(row.observation_title || '').trim();
+  if (explicit) return explicit;
+  const fallback = String(row.observation_text || '').trim();
+  if (!fallback) return '-';
+  return fallback.length > 120 ? `${fallback.slice(0, 117).trimEnd()}...` : fallback;
 }
 
 function statusLabel(value) {
@@ -192,12 +201,10 @@ const controller = {
   index: async (req, res) => {
     try {
       const filters = getFilters(req.query);
-      const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-      const pageSize = Math.max(parseInt(req.query.pageSize || '10', 10), 1);
 
-      const [dashboard, pageData, refs, categories] = await Promise.all([
+      const [dashboard, coopData, refs, categories] = await Promise.all([
         Sangket.getDashboard(filters),
-        Sangket.getCooperativePaged(filters, page, pageSize),
+        Sangket.getCooperativeAll(filters),
         Sangket.getReferenceData(),
         Sangket.getCategoryOptions()
       ]);
@@ -206,16 +213,8 @@ const controller = {
         title: 'ทะเบียนข้อสังเกต',
         filters,
         dashboard,
-        items: pageData.rows,
-        cooperativeTotal: pageData.total,
-        pagination: {
-          page,
-          pageSize,
-          total: pageData.total,
-          totalPages: Math.max(1, Math.ceil(pageData.total / pageSize)),
-          hasPrev: page > 1,
-          hasNext: page < Math.max(1, Math.ceil(pageData.total / pageSize))
-        },
+        items: coopData.rows,
+        cooperativeTotal: coopData.total,
         groups: refs.groups,
         cooperatives: refs.cooperatives,
         categories
@@ -299,6 +298,7 @@ const controller = {
         { header: 'ปีบัญชี', key: 'fiscal_year_end', width: 16 },
         { header: 'เลขหนังสือ', key: 'audit_office_letter_no', width: 18 },
         { header: 'วันที่รับ', key: 'received_date', width: 14 },
+        { header: 'หัวข้อข้อสังเกต', key: 'observation_title', width: 36 },
         { header: 'ข้อสังเกต', key: 'observation_text', width: 48 },
         { header: 'หมวด', key: 'categories', width: 28 },
         { header: 'กรณี', key: 'severity_case', width: 18 },
@@ -320,6 +320,7 @@ const controller = {
           fiscal_year_end: row.fiscal_year_end || '',
           audit_office_letter_no: row.audit_office_letter_no || '',
           received_date: row.received_date || '',
+          observation_title: observationTitle(row),
           observation_text: row.observation_text || '',
           categories: (row.categories || []).map((cat) => cat.name || categoryLookup.get(Number(cat.id)) || '').filter(Boolean).join(', '),
           severity_case: severityLabel(row.severity_case),
@@ -363,6 +364,7 @@ const controller = {
         { text: 'สหกรณ์', bold: true, color: '#fff' },
         { text: 'ปีบัญชี', bold: true, color: '#fff' },
         { text: 'เลขหนังสือ', bold: true, color: '#fff' },
+        { text: 'หัวข้อข้อสังเกต', bold: true, color: '#fff' },
         { text: 'ข้อสังเกต', bold: true, color: '#fff' },
         { text: 'หมวด', bold: true, color: '#fff' },
         { text: 'กรณี', bold: true, color: '#fff' },
@@ -375,6 +377,7 @@ const controller = {
           { text: safeText(row.cooperative_name), noWrap: false, fontSize: 9 },
           { text: safeText(row.fiscal_year_end), noWrap: false },
           { text: `${safeText(row.audit_office_letter_no)}\n${safeText(row.received_date, '')}`.trim(), noWrap: false },
+          { text: safeText(observationTitle(row)), noWrap: false },
           { text: safeText(row.observation_text), noWrap: false },
           { text: compactCategoryCodes(row), alignment: 'center', noWrap: false },
           { text: severityLabel(row.severity_case), noWrap: false },
@@ -426,7 +429,7 @@ const controller = {
           {
             table: {
               headerRows: 1,
-              widths: [18, 128, 40, 76, 280, 44, 54, 62],
+              widths: [16, 96, 40, 62, 110, 170, 42, 50, 58],
               body
             },
             dontBreakRows: true,
@@ -615,6 +618,19 @@ const controller = {
     } catch (error) {
       console.error('Add sangket action error:', error);
       res.status(500).send('บันทึกการติดตามผลไม่สำเร็จ');
+    }
+  },
+
+  deleteAction: async (req, res) => {
+    try {
+      const observationId = req.params.id;
+      const actionId = req.params.actionId;
+      const ok = await Sangket.deleteAction(observationId, actionId);
+      if (!ok) return res.status(404).send('ไม่พบรายการติดตามผล');
+      res.redirect(`/sangket/view/${observationId}`);
+    } catch (error) {
+      console.error('Delete sangket action error:', error);
+      res.status(500).send('ลบประวัติการติดตามไม่สำเร็จ');
     }
   }
 };

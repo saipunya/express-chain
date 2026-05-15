@@ -325,6 +325,7 @@ async function ensureSchema() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         audit_report_id INT NOT NULL,
         observation_no INT NULL,
+        observation_title VARCHAR(255) NULL,
         observation_text TEXT NULL,
         potential_damage_amount DECIMAL(15,2) NULL,
         severity_case ENUM('serious_order', 'advice', 'fact_check') NULL,
@@ -344,6 +345,7 @@ async function ensureSchema() {
         KEY idx_obs_due (due_date)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    await ensureColumn('sangket_observations', 'observation_title', 'observation_title VARCHAR(255) NULL', 'observation_no');
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS sangket_observation_categories (
@@ -490,6 +492,16 @@ async function findOrCreateReport(data) {
   return result.insertId;
 }
 
+function deriveObservationTitle(payload = {}) {
+  const explicit = payload.observation_title || payload.title || payload.subject || payload.sang_title || '';
+  const explicitText = String(explicit).trim();
+  if (explicitText) return explicitText.slice(0, 255);
+
+  const detail = String(payload.observation_text || payload.sang_detail || '').trim();
+  if (!detail) return null;
+  return detail.length > 120 ? `${detail.slice(0, 117).trimEnd()}...` : detail;
+}
+
 async function attachCategories(rows) {
   if (!rows.length) return rows;
   const ids = rows.map((row) => row.observation_id).filter(Boolean);
@@ -525,6 +537,7 @@ async function fetchObservationRows(whereSql, params, limitClause = '') {
       o.id AS observation_id,
       o.audit_report_id,
       o.observation_no,
+      o.observation_title,
       o.observation_text,
       o.potential_damage_amount,
       o.severity_case,
@@ -571,8 +584,8 @@ function buildWhere(filters = {}) {
 
   if (filters.search) {
     const kw = `%${filters.search}%`;
-    where.push('(c.name LIKE ? OR c.c_code LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_text LIKE ? OR o.remark LIKE ?)');
-    params.push(kw, kw, kw, kw, kw, kw);
+    where.push('(c.name LIKE ? OR c.c_code LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_title LIKE ? OR o.observation_text LIKE ? OR o.remark LIKE ?)');
+    params.push(kw, kw, kw, kw, kw, kw, kw);
   }
 
   if (filters.groupNo) {
@@ -685,6 +698,19 @@ async function addObservationAction(observationId, data = {}) {
   return result.insertId;
 }
 
+async function deleteObservationAction(observationId, actionId) {
+  await ensureSchema();
+  const observation = await getById(observationId);
+  if (!observation) return null;
+
+  const [result] = await db.query(
+    'DELETE FROM sangket_observation_actions WHERE id = ? AND observation_id = ?',
+    [actionId, observationId]
+  );
+
+  return result.affectedRows > 0;
+}
+
 async function create(payload) {
   await ensureSchema();
 
@@ -711,11 +737,12 @@ async function create(payload) {
 
   const [result] = await db.query(
     `INSERT INTO sangket_observations
-      (audit_report_id, observation_no, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, due_date, resolved_date, remark, source_sheet, source_row)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (audit_report_id, observation_no, observation_title, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, due_date, resolved_date, remark, source_sheet, source_row)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       auditReportId,
       payload.observation_no || null,
+      deriveObservationTitle(payload),
       payload.observation_text || payload.sang_detail || null,
       payload.potential_damage_amount ?? payload.sang_money ?? null,
       payload.severity_case || payload.sang_severity_case || null,
@@ -794,10 +821,11 @@ async function update(id, payload) {
 
   await db.query(
     `UPDATE sangket_observations
-     SET observation_no = ?, observation_text = ?, potential_damage_amount = ?, severity_case = ?, category_id = ?, status = ?, responsible_user_id = ?, due_date = ?, resolved_date = ?, remark = ?, source_sheet = ?, source_row = ?
+     SET observation_no = ?, observation_title = ?, observation_text = ?, potential_damage_amount = ?, severity_case = ?, category_id = ?, status = ?, responsible_user_id = ?, due_date = ?, resolved_date = ?, remark = ?, source_sheet = ?, source_row = ?
      WHERE id = ?`,
     [
       payload.observation_no || current.observation_no || null,
+      deriveObservationTitle(payload) || current.observation_title || deriveObservationTitle(current) || null,
       payload.observation_text || payload.sang_detail || current.observation_text || null,
       payload.potential_damage_amount ?? payload.sang_money ?? current.potential_damage_amount ?? null,
       payload.severity_case || payload.sang_severity_case || current.severity_case || null,
@@ -1052,6 +1080,46 @@ async function getCooperativePaged(filters = {}, page = 1, pageSize = 10) {
   };
 }
 
+async function getCooperativeAll(filters = {}) {
+  await ensureSchema();
+  const { whereSql, params } = buildWhere(filters);
+  const baseFrom = `
+     FROM sangket_observations o
+     INNER JOIN sangket_audit_reports r ON r.id = o.audit_report_id
+     INNER JOIN sangket_cooperatives c ON c.id = r.cooperative_id
+  `;
+
+  const [rows] = await db.query(
+    `SELECT
+      c.id AS cooperative_id,
+      c.name AS cooperative_name,
+      c.c_code AS cooperative_code,
+      c.coop_type,
+      c.promotion_group_no,
+      c.district,
+      c.status AS cooperative_status,
+      COUNT(DISTINCT o.id) AS observation_total,
+      SUM(CASE WHEN o.status IN ('new', 'in_progress', 'monitoring') THEN 1 ELSE 0 END) AS open_items,
+      SUM(CASE WHEN o.status IN ('resolved', 'closed') THEN 1 ELSE 0 END) AS closed_items,
+      COALESCE(SUM(COALESCE(o.potential_damage_amount, 0)), 0) AS total_damage,
+      MAX(o.updated_at) AS latest_activity_at,
+      MAX(o.due_date) AS latest_due_date,
+      MAX(r.received_date) AS latest_received_date,
+      MAX(r.fiscal_year_end) AS latest_fiscal_year_end,
+      MAX(r.audit_office_letter_no) AS latest_audit_office_letter_no
+     ${baseFrom}
+     ${whereSql}
+     GROUP BY c.id, c.name, c.c_code, c.coop_type, c.promotion_group_no, c.district, c.status
+     ORDER BY latest_activity_at DESC, c.promotion_group_no ASC, c.name ASC`,
+    params
+  );
+
+  return {
+    rows,
+    total: rows.length
+  };
+}
+
 async function getCooperativeById(id) {
   await ensureSchema();
   const cooperativeId = Number(id);
@@ -1074,7 +1142,7 @@ async function getCooperativeById(id) {
   if (!cooperative) return null;
 
   const observations = await fetchObservationRows('WHERE c.id = ?', [cooperativeId]);
-  const [withCategories] = await attachCategories(observations);
+  const withCategories = await attachCategories(observations);
   const observationIds = withCategories.map((row) => row.observation_id).filter(Boolean);
 
   const actionBucket = new Map();
@@ -1240,11 +1308,12 @@ async function importWorkbook(filePath, uploadedBy = 'system') {
 
       const [result] = await db.query(
         `INSERT INTO sangket_observations
-          (audit_report_id, observation_no, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, due_date, resolved_date, remark, source_sheet, source_row)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (audit_report_id, observation_no, observation_title, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, due_date, resolved_date, remark, source_sheet, source_row)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           currentReportId,
           observationNo || currentObservationNo || null,
+          deriveObservationTitle({ observation_text: observationText }),
           observationText,
           potentialDamageAmount,
           severityCase,
@@ -1283,6 +1352,7 @@ module.exports = {
   ensureSchema,
   getDashboard,
   getCooperativePaged,
+  getCooperativeAll,
   getCooperativeById,
   getPaged,
   getExportRows,
@@ -1293,6 +1363,7 @@ module.exports = {
   update,
   delete: deleteObservation,
   addAction: addObservationAction,
+  deleteAction: deleteObservationAction,
   importWorkbook,
   CATEGORY_SEED
 };

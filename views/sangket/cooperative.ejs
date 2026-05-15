@@ -29,6 +29,7 @@
   const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
   const observationsCount = Array.isArray(observations) ? observations.length : 0;
   const latestObservation = observationsCount ? observations[0] : null;
+  const observationTitle = (row) => row?.observation_title || (row?.observation_text ? row.observation_text.slice(0, 120) : '-');
 %>
 
 <style>
@@ -275,6 +276,9 @@
                 <div class="small text-muted">
                   <%= latestObservation.audit_office_letter_no || '-' %> | <%= latestObservation.received_date || '-' %>
                 </div>
+                <div class="mt-2 fw-semibold">
+                  <%= latestObservation.observation_title || (latestObservation.observation_text ? latestObservation.observation_text.slice(0, 120) : '-') %>
+                </div>
                 <div class="mt-2" style="white-space: pre-line; line-height: 1.6;">
                   <%= latestObservation.observation_text || '-' %>
                 </div>
@@ -298,7 +302,7 @@
                 <div class="observation-head">
                   <div class="flex-grow-1">
                     <div class="observation-title">
-                      <% if (row.observation_no) { %>#<%= row.observation_no %> <% } %><%= row.observation_text ? row.observation_text.slice(0, 120) : '-' %>
+                      <% if (row.observation_no) { %>#<%= row.observation_no %> <% } %><%= observationTitle(row) %>
                     </div>
                     <div class="observation-meta">
                       ปีบัญชี <%= row.fiscal_year_end || '-' %> | หนังสือ <%= row.audit_office_letter_no || '-' %> | รับเรื่อง <%= row.received_date || '-' %>
@@ -312,7 +316,6 @@
                     <div class="small text-muted mt-1">ติดตาม <%= row.due_date || '-' %></div>
                   </div>
                 </div>
-
                 <div class="observation-text"><%= row.observation_text || '-' %></div>
 
                 <div class="category-grid">

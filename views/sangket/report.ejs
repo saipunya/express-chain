@@ -518,6 +518,7 @@
                 </div>
                 <span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span>
               </div>
+              <div class="fw-semibold mb-1"><%= row.observation_title || (row.observation_text ? row.observation_text.slice(0, 120) : '-') %></div>
               <div class="mobile-report-card__text"><%= row.observation_text || '-' %></div>
               <div class="mobile-report-card__footer">
                 <div class="d-flex flex-wrap gap-1">
@@ -556,6 +557,7 @@
               <th>สหกรณ์</th>
               <th>ปีบัญชี</th>
               <th>หนังสือ</th>
+              <th>หัวข้อ</th>
               <th>ข้อสังเกต</th>
               <th>หมวด</th>
               <th>ความรุนแรง</th>
@@ -587,6 +589,9 @@
                     <div class="small text-muted">
                       <i class="bi bi-calendar-event me-1"></i> <%= row.received_date || '-' %>
                     </div>
+                  </td>
+                  <td>
+                    <div class="fw-semibold"><%= row.observation_title || (row.observation_text ? row.observation_text.slice(0, 120) : '-') %></div>
                   </td>
                   <td class="report-observation">
                     <div class="report-observation__text"><%= row.observation_text || '-' %></div>
@@ -631,12 +636,12 @@
                 </tr>
               <% }) %>
             <% } else { %>
-              <tr>
-                <td colspan="9">
-                  <div class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                    ไม่พบข้อมูลตามเงื่อนไขที่เลือก
-                  </div>
+            <tr>
+              <td colspan="10">
+                <div class="text-center py-5 text-muted">
+                  <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                  ไม่พบข้อมูลตามเงื่อนไขที่เลือก
+                </div>
                 </td>
               </tr>
             <% } %>

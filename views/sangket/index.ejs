@@ -3,7 +3,6 @@
   const summary = (dashboard && dashboard.summary) || {};
   const groupRows = (dashboard && dashboard.groupRows) || [];
   const categoryRows = (dashboard && dashboard.categoryRows) || [];
-  const dueSoonRows = (dashboard && dashboard.dueSoonRows) || [];
   const activeFiltersCount = [
     filters.search,
     filters.groupNo,
@@ -16,13 +15,15 @@
   ].filter(Boolean).length;
 
   const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
+  const statusOptions = [
+    { value: 'new', label: 'ใหม่' },
+    { value: 'in_progress', label: 'กำลังดำเนินการ' },
+    { value: 'monitoring', label: 'ติดตาม' },
+    { value: 'resolved', label: 'ปิดแล้ว' },
+    { value: 'closed', label: 'ยุติ' }
+  ];
   const statusLabel = (value) => {
-    if (value === 'new') return 'ใหม่';
-    if (value === 'in_progress') return 'กำลังดำเนินการ';
-    if (value === 'monitoring') return 'ติดตาม';
-    if (value === 'resolved') return 'ปิดแล้ว';
-    if (value === 'closed') return 'ยุติ';
-    return '-';
+    return statusOptions.find((item) => item.value === value)?.label || '-';
   };
   const severityLabel = (value) => {
     if (value === 'serious_order') return 'ร้ายแรง';
@@ -46,8 +47,7 @@
     severityCase: filters.severityCase || '',
     auditType: filters.auditType || '',
     coopType: filters.coopType || '',
-    fiscalYearEnd: filters.fiscalYearEnd || '',
-    pageSize: pagination.pageSize || 10
+    fiscalYearEnd: filters.fiscalYearEnd || ''
   };
   const buildQuery = (overrides = {}) => {
     const params = new URLSearchParams();
@@ -241,6 +241,12 @@
   .list-group-item {
     border-color: #e8eef3;
   }
+  .filter-list-item {
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+  .filter-list-item:hover {
+    transform: translateY(-1px);
+  }
   @media (max-width: 767.98px) {
     .hero-title { font-size: 1.45rem; }
     .metric-value { font-size: 1.25rem; }
@@ -297,7 +303,7 @@
             <div class="metric-card">
               <div class="metric-label">รายการค้างดำเนินการ</div>
               <div class="metric-value"><%= summary.open_items || 0 %></div>
-              <div class="metric-note">สถานะ new / in_progress / monitoring</div>
+              <div class="metric-note">สถานะ <%= ['new', 'in_progress', 'monitoring'].map(statusLabel).join(' / ') %></div>
             </div>
           </div>
           <div class="col-6 col-lg-3">
@@ -341,8 +347,8 @@
           <label class="form-label fw-semibold">สถานะ</label>
           <select name="status" class="form-select">
             <option value="">ทั้งหมด</option>
-            <% ['new','in_progress','resolved','monitoring','closed'].forEach((s) => { %>
-              <option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= statusLabel(s) %></option>
+            <% statusOptions.forEach((option) => { %>
+              <option value="<%= option.value %>" <%= filters.status === option.value ? 'selected' : '' %>><%= option.label %></option>
             <% }) %>
           </select>
         </div>
@@ -361,10 +367,9 @@
       </form>
       <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mt-3 pt-3 border-top">
         <div class="quick-filters">
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'new' ? 'active' : '' %>" href="<%= buildQuery({ status: 'new', page: 1 }) %>">ใหม่</a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'in_progress' ? 'active' : '' %>" href="<%= buildQuery({ status: 'in_progress', page: 1 }) %>">กำลังดำเนินการ</a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'monitoring' ? 'active' : '' %>" href="<%= buildQuery({ status: 'monitoring', page: 1 }) %>">ติดตาม</a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'resolved' ? 'active' : '' %>" href="<%= buildQuery({ status: 'resolved', page: 1 }) %>">ปิดแล้ว</a>
+          <% statusOptions.slice(0, 4).forEach((option) => { %>
+            <a class="btn btn-sm btn-outline-secondary <%= filters.status === option.value ? 'active' : '' %>" href="<%= buildQuery({ status: option.value }) %>"><%= option.label %></a>
+          <% }) %>
         </div>
         <div class="small text-muted">
           <%= activeFiltersCount ? `${activeFiltersCount} ตัวกรองใช้งานอยู่` : 'ยังไม่ได้เลือกตัวกรอง' %>
@@ -373,44 +378,17 @@
     </div>
 
     <div class="row g-3 mb-4">
-      <div class="col-lg-4">
-        <div class="sangket-panel p-3 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0 fw-bold">สหกรณ์ที่ต้องติดตามเร็ว</h6>
-            <span class="soft-badge bg-light text-dark"><%= summary.due_soon || 0 %></span>
-          </div>
-          <div class="list-group list-group-flush">
-            <% (dueSoonRows || []).slice(0, 6).forEach((row) => { %>
-              <a href="/sangket/view/<%= row.observation_id %>" class="list-group-item list-group-item-action px-0">
-                <div class="d-flex justify-content-between gap-3">
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold text-truncate"><%= row.cooperative_name %></div>
-                    <div class="small text-muted text-truncate"><%= row.observation_text %></div>
-                  </div>
-                  <div class="text-end">
-                    <div class="small fw-semibold"><%= row.due_date || '-' %></div>
-                    <div class="badge text-bg-primary"><%= statusLabel(row.status) %></div>
-                  </div>
-                </div>
-              </a>
-            <% }) %>
-            <% if (!dueSoonRows || !dueSoonRows.length) { %>
-              <div class="text-muted small">ไม่มีรายการใกล้ครบกำหนด</div>
-            <% } %>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-4">
+      <div class="col-lg-6">
         <div class="sangket-panel p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0 fw-bold">แยกตาม กสส.</h6>
           </div>
           <div class="list-group list-group-flush">
             <% groupRows.forEach((group) => { %>
-              <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <a href="<%= buildQuery({ groupNo: group.group_no }) %>" class="list-group-item list-group-item-action filter-list-item d-flex justify-content-between align-items-center px-0 text-decoration-none">
                 <span>กสส. <%= group.group_no || 0 %></span>
                 <span class="badge text-bg-success"><%= group.total %></span>
-              </div>
+              </a>
             <% }) %>
             <% if (!groupRows.length) { %>
               <div class="text-muted small">ยังไม่มีข้อมูล</div>
@@ -418,17 +396,17 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-6">
         <div class="sangket-panel p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0 fw-bold">แยกตามหมวด</h6>
           </div>
           <div class="list-group list-group-flush">
             <% categoryRows.forEach((cat) => { %>
-              <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <a href="<%= buildQuery({ categoryId: cat.id }) %>" class="list-group-item list-group-item-action filter-list-item d-flex justify-content-between align-items-center px-0 text-decoration-none">
                 <span class="me-2"><%= cat.name %></span>
                 <span class="badge text-bg-info"><%= cat.total %></span>
-              </div>
+              </a>
             <% }) %>
           </div>
         </div>
@@ -439,7 +417,7 @@
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 p-3 px-lg-4 pt-lg-4">
         <div>
           <h5 class="mb-1 fw-bold">รายการสหกรณ์</h5>
-          <div class="text-muted small">แสดง <%= items.length %> สหกรณ์ จากทั้งหมด <%= pagination.total %> สหกรณ์</div>
+          <div class="text-muted small">แสดงทั้งหมด <%= items.length %> สหกรณ์</div>
         </div>
         <div class="d-flex flex-wrap gap-2">
           <a href="/sangket" class="btn btn-outline-secondary btn-sm">ล้างตัวกรอง</a>
@@ -559,23 +537,6 @@
       </div>
     </div>
 
-    <% if (pagination.totalPages > 1) { %>
-      <nav class="d-flex justify-content-center">
-        <ul class="pagination">
-          <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
-            <a class="page-link" href="<%= buildQuery({ page: pagination.page - 1 }) %>">ก่อนหน้า</a>
-          </li>
-          <% for (let p = 1; p <= pagination.totalPages; p += 1) { %>
-            <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
-              <a class="page-link" href="<%= buildQuery({ page: p }) %>"><%= p %></a>
-            </li>
-          <% } %>
-          <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
-            <a class="page-link" href="<%= buildQuery({ page: pagination.page + 1 }) %>">ถัดไป</a>
-          </li>
-        </ul>
-      </nav>
-    <% } %>
   </div>
 </div>
 

@@ -8,11 +8,11 @@
     return { id: cat.id, name, shortName };
   });
   const actionTypeLabel = (value) => {
-    if (value === 'follow_up') return 'ติดตามผล';
-    if (value === 'order') return 'คำสั่ง';
-    if (value === 'advice') return 'คำแนะนำ';
-    if (value === 'fact_check') return 'ตรวจข้อเท็จจริง';
-    if (value === 'close') return 'ปิดเรื่อง';
+    if (value === 'follow_up') return 'หนังสือติดตาม';
+    if (value === 'order') return 'หนังสือสั่งการ';
+    if (value === 'advice') return 'หนังสือคำแนะนำ';
+    if (value === 'fact_check') return 'หนังสือตรวจข้อเท็จจริง';
+    if (value === 'close') return 'หนังสือปิดเรื่อง';
     return value || '-';
   };
   const severityLabel = {
@@ -20,6 +20,7 @@
     advice: 'คำแนะนำ',
     fact_check: 'ตรวจข้อเท็จจริง'
   }[item?.severity_case] || '-';
+  const observationTitle = item?.observation_title || (item?.observation_text ? item.observation_text.slice(0, 120) : '-');
   const statusLabel = item?.status || '-';
   const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
 %>
@@ -114,6 +115,7 @@
           <div>
             <div class="eyebrow mb-2">Sangket</div>
             <h1 class="h3 fw-bold mb-2"><%= item.cooperative_name %></h1>
+            <div class="text-dark fw-semibold mb-2"><%= observationTitle %></div>
             <p class="text-muted mb-0">
               <i class="bi bi-hash me-1"></i><%= item.cooperative_code || '-' %> |
               <%= item.fiscal_year_end || '-' %> | หนังสือ <%= item.audit_office_letter_no || '-' %>
@@ -161,6 +163,8 @@
         <div class="row g-3 mb-4">
           <div class="col-lg-8">
             <div class="detail-card h-100">
+              <div class="detail-label mb-2">หัวข้อข้อสังเกต</div>
+              <div class="detail-value mb-3"><%= observationTitle %></div>
               <div class="detail-label mb-2">รายละเอียดข้อสังเกต</div>
               <div class="detail-value" style="white-space: pre-line; line-height: 1.7;"><%= item.observation_text || '-' %></div>
               <hr>
@@ -211,7 +215,7 @@
           <div class="col-lg-7">
             <div class="detail-card">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 fw-bold">ประวัติการติดตามผล</h5>
+                <h5 class="mb-0 fw-bold">หนังสือจากนายทะเบียนสหกรณ์</h5>
                 <span class="badge text-bg-success"><%= actions.length %> รายการ</span>
               </div>
               <% if (actions.length) { %>
@@ -220,10 +224,17 @@
                     <div class="timeline-item">
                       <div class="d-flex justify-content-between gap-3">
                         <div class="fw-semibold"><%= actionTypeLabel(action.action_type) %></div>
-                        <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
+                        <div class="d-flex align-items-start gap-2">
+                          <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
+                          <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions/<%= action.id %>/delete" onsubmit="return confirm('ต้องการลบหนังสือรายการนี้ใช่ไหม');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="ลบหนังสือ" aria-label="ลบหนังสือ">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </form>
+                        </div>
                       </div>
                       <div class="small text-muted">
-                        <i class="bi bi-journal-text me-1"></i><%= action.letter_no || '-' %>
+                        <i class="bi bi-journal-text me-1"></i>เลขที่ <%= action.letter_no || '-' %>
                         <% if (action.letter_date) { %> | <%= action.letter_date %><% } %>
                       </div>
                       <div class="mt-1" style="white-space: pre-line;"><%= action.action_detail || '-' %></div>
@@ -234,27 +245,27 @@
                   <% }) %>
                 </div>
               <% } else { %>
-                <div class="text-muted">ยังไม่มีการบันทึกติดตามผล</div>
+                <div class="text-muted">ยังไม่มีการบันทึกหนังสือจากนายทะเบียนสหกรณ์</div>
               <% } %>
             </div>
           </div>
 
           <div class="col-lg-5">
             <div class="action-box p-4">
-              <h5 class="fw-bold mb-3">เพิ่มหนังสือติดตาม / คำแนะนำ</h5>
+              <h5 class="fw-bold mb-3">เพิ่มหนังสือจากนายทะเบียนสหกรณ์</h5>
               <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions" class="row g-3">
                 <div class="col-12">
-                  <label class="form-label">ประเภทการติดตาม</label>
+                  <label class="form-label">ประเภทหนังสือ</label>
                   <select name="action_type" class="form-select">
-                    <option value="follow_up">ติดตามผล</option>
-                    <option value="order">คำสั่ง</option>
-                    <option value="advice">คำแนะนำ</option>
-                    <option value="fact_check">ตรวจข้อเท็จจริง</option>
-                    <option value="close">ปิดเรื่อง</option>
+                    <option value="follow_up">หนังสือติดตาม</option>
+                    <option value="order">หนังสือสั่งการ</option>
+                    <option value="advice">หนังสือคำแนะนำ</option>
+                    <option value="fact_check">หนังสือตรวจข้อเท็จจริง</option>
+                    <option value="close">หนังสือปิดเรื่อง</option>
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">เลขหนังสือ</label>
+                  <label class="form-label">เลขที่หนังสือ</label>
                   <input type="text" name="letter_no" class="form-control">
                 </div>
                 <div class="col-12">
@@ -262,16 +273,16 @@
                   <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 เม.ย. 69">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">รายละเอียด</label>
+                  <label class="form-label">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
                   <textarea name="action_detail" class="form-control" rows="4"></textarea>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">ผลลัพธ์</label>
+                  <label class="form-label">หมายเหตุ/ผลการดำเนินการ</label>
                   <textarea name="result" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="col-12 d-grid">
                   <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-send-check me-1"></i> บันทึกการติดตามผล
+                    <i class="bi bi-send-check me-1"></i> บันทึกหนังสือ
                   </button>
                 </div>
               </form>

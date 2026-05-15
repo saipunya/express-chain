@@ -273,6 +273,10 @@
             </select>
           </div>
           <div class="col-12">
+            <label class="form-label">หัวข้อข้อสังเกต</label>
+            <input type="text" name="observation_title" class="form-control" value="<%= item?.observation_title || item?.title || '' %>" placeholder="หัวข้อสั้น ๆ ของข้อสังเกต">
+          </div>
+          <div class="col-12">
             <label class="form-label">หมวดเพิ่มเติม</label>
             <div class="category-grid">
               <% categories.forEach((cat) => { %>
@@ -309,21 +313,21 @@
 
           <div class="col-12">
             <div class="action-panel p-3 p-lg-4">
-              <h5 class="section-title mb-3">4) หนังสือติดตาม / คำสั่ง / คำแนะนำ</h5>
+              <h5 class="section-title mb-3">4) หนังสือจากนายทะเบียนสหกรณ์</h5>
               <div class="row g-3">
                 <div class="col-12 col-lg-3">
-                  <label class="form-label">ประเภทการติดตาม</label>
+                  <label class="form-label">ประเภทหนังสือ</label>
                   <select name="action_type" class="form-select">
                     <option value="">-</option>
-                    <option value="order">คำสั่ง</option>
-                    <option value="advice">คำแนะนำ</option>
-                    <option value="fact_check">ตรวจข้อเท็จจริง</option>
-                    <option value="follow_up">ติดตามผล</option>
-                    <option value="close">ปิดเรื่อง</option>
+                    <option value="order">หนังสือสั่งการ</option>
+                    <option value="advice">หนังสือคำแนะนำ</option>
+                    <option value="fact_check">หนังสือตรวจข้อเท็จจริง</option>
+                    <option value="follow_up">หนังสือติดตาม</option>
+                    <option value="close">หนังสือปิดเรื่อง</option>
                   </select>
                 </div>
                 <div class="col-12 col-lg-3">
-                  <label class="form-label">เลขหนังสือ</label>
+                  <label class="form-label">เลขที่หนังสือ</label>
                   <input type="text" name="letter_no" class="form-control" value="<%= item?.letter_no || '' %>">
                 </div>
                 <div class="col-12 col-lg-3">
@@ -335,15 +339,15 @@
                   <input type="text" name="created_by" class="form-control" value="<%= item?.created_by || (user ? (user.fullname || user.username || '') : '') %>">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">รายละเอียดการติดตาม</label>
-                  <textarea name="action_detail" class="form-control" rows="3" placeholder="คำสั่ง / คำแนะนำ / ผลการติดตาม"></textarea>
+                  <label class="form-label">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
+                  <textarea name="action_detail" class="form-control" rows="3" placeholder="เช่น สั่งแก้ไข, ให้คำแนะนำ, ขอเอกสารเพิ่มเติม"></textarea>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">ผลลัพธ์</label>
+                  <label class="form-label">หมายเหตุ/ผลการดำเนินการ</label>
                   <textarea name="result" class="form-control" rows="2"></textarea>
                 </div>
               </div>
-              <div class="mini-note mt-2">ถ้าไม่ต้องการบันทึกการติดตามตอนนี้ ปล่อยส่วนนี้ว่างได้</div>
+              <div class="mini-note mt-2">ถ้ายังไม่มีหนังสือจากนายทะเบียนสหกรณ์ในขณะนี้ ปล่อยส่วนนี้ว่างได้</div>
             </div>
           </div>
 

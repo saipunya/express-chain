@@ -197,7 +197,7 @@ const controller = {
 
       const [dashboard, pageData, refs, categories] = await Promise.all([
         Sangket.getDashboard(filters),
-        Sangket.getPaged(filters, page, pageSize),
+        Sangket.getCooperativePaged(filters, page, pageSize),
         Sangket.getReferenceData(),
         Sangket.getCategoryOptions()
       ]);
@@ -207,6 +207,7 @@ const controller = {
         filters,
         dashboard,
         items: pageData.rows,
+        cooperativeTotal: pageData.total,
         pagination: {
           page,
           pageSize,
@@ -515,6 +516,24 @@ const controller = {
     } catch (error) {
       console.error('View sangket error:', error);
       res.status(500).send('ไม่สามารถแสดงรายละเอียดได้');
+    }
+  },
+
+  cooperativeView: async (req, res) => {
+    try {
+      const result = await Sangket.getCooperativeById(req.params.id);
+      if (!result) return res.status(404).send('ไม่พบข้อมูลสหกรณ์');
+
+      res.render('sangket/cooperative', {
+        title: 'รายละเอียดสหกรณ์',
+        cooperative: result.cooperative,
+        summary: result.summary,
+        statusRows: result.statusRows,
+        observations: result.observations
+      });
+    } catch (error) {
+      console.error('Cooperative sangket view error:', error);
+      res.status(500).send('ไม่สามารถแสดงรายละเอียดสหกรณ์ได้');
     }
   },
 

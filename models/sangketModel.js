@@ -1001,6 +1001,145 @@ async function getDashboard(filters = {}) {
   };
 }
 
+async function getCooperativePaged(filters = {}, page = 1, pageSize = 10) {
+  await ensureSchema();
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safePageSize = Math.max(1, parseInt(pageSize, 10) || 10);
+  const offset = (safePage - 1) * safePageSize;
+  const { whereSql, params } = buildWhere(filters);
+  const baseFrom = `
+     FROM sangket_observations o
+     INNER JOIN sangket_audit_reports r ON r.id = o.audit_report_id
+     INNER JOIN sangket_cooperatives c ON c.id = r.cooperative_id
+  `;
+
+  const [[countRow]] = await db.query(
+    `SELECT COUNT(DISTINCT c.id) AS total
+     ${baseFrom}
+     ${whereSql}`,
+    params
+  );
+
+  const [rows] = await db.query(
+    `SELECT
+      c.id AS cooperative_id,
+      c.name AS cooperative_name,
+      c.c_code AS cooperative_code,
+      c.coop_type,
+      c.promotion_group_no,
+      c.district,
+      c.status AS cooperative_status,
+      COUNT(DISTINCT o.id) AS observation_total,
+      SUM(CASE WHEN o.status IN ('new', 'in_progress', 'monitoring') THEN 1 ELSE 0 END) AS open_items,
+      SUM(CASE WHEN o.status IN ('resolved', 'closed') THEN 1 ELSE 0 END) AS closed_items,
+      COALESCE(SUM(COALESCE(o.potential_damage_amount, 0)), 0) AS total_damage,
+      MAX(o.updated_at) AS latest_activity_at,
+      MAX(o.due_date) AS latest_due_date,
+      MAX(r.received_date) AS latest_received_date,
+      MAX(r.fiscal_year_end) AS latest_fiscal_year_end,
+      MAX(r.audit_office_letter_no) AS latest_audit_office_letter_no
+     ${baseFrom}
+     ${whereSql}
+     GROUP BY c.id, c.name, c.c_code, c.coop_type, c.promotion_group_no, c.district, c.status
+     ORDER BY latest_activity_at DESC, c.promotion_group_no ASC, c.name ASC
+     LIMIT ? OFFSET ?`,
+    [...params, safePageSize, offset]
+  );
+
+  return {
+    rows,
+    total: Number(countRow.total || 0)
+  };
+}
+
+async function getCooperativeById(id) {
+  await ensureSchema();
+  const cooperativeId = Number(id);
+  if (!Number.isFinite(cooperativeId) || cooperativeId <= 0) return null;
+
+  const [[cooperative]] = await db.query(
+    `SELECT
+      id AS cooperative_id,
+      name AS cooperative_name,
+      c_code AS cooperative_code,
+      coop_type,
+      promotion_group_no,
+      district,
+      status AS cooperative_status
+     FROM sangket_cooperatives
+     WHERE id = ?`,
+    [cooperativeId]
+  );
+
+  if (!cooperative) return null;
+
+  const observations = await fetchObservationRows('WHERE c.id = ?', [cooperativeId]);
+  const [withCategories] = await attachCategories(observations);
+  const observationIds = withCategories.map((row) => row.observation_id).filter(Boolean);
+
+  const actionBucket = new Map();
+  if (observationIds.length) {
+    const placeholders = observationIds.map(() => '?').join(',');
+    const [actions] = await db.query(
+      `SELECT *
+       FROM sangket_observation_actions
+       WHERE observation_id IN (${placeholders})
+       ORDER BY created_at DESC, id DESC`,
+      observationIds
+    );
+
+    for (const action of actions) {
+      if (!actionBucket.has(action.observation_id)) {
+        actionBucket.set(action.observation_id, []);
+      }
+      actionBucket.get(action.observation_id).push(action);
+    }
+  }
+
+  const [summaryRows] = await db.query(
+    `SELECT
+      COUNT(DISTINCT o.id) AS observation_total,
+      COALESCE(SUM(COALESCE(o.potential_damage_amount, 0)), 0) AS total_damage,
+      SUM(CASE WHEN o.status IN ('new', 'in_progress', 'monitoring') THEN 1 ELSE 0 END) AS open_items,
+      SUM(CASE WHEN o.status IN ('resolved', 'closed') THEN 1 ELSE 0 END) AS closed_items,
+      SUM(CASE WHEN o.due_date IS NOT NULL AND o.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS due_soon
+     FROM sangket_observations o
+     INNER JOIN sangket_audit_reports r ON r.id = o.audit_report_id
+     INNER JOIN sangket_cooperatives c ON c.id = r.cooperative_id
+     WHERE c.id = ?`,
+    [cooperativeId]
+  );
+
+  const [statusRows] = await db.query(
+    `SELECT o.status, COUNT(DISTINCT o.id) AS total
+     FROM sangket_observations o
+     INNER JOIN sangket_audit_reports r ON r.id = o.audit_report_id
+     INNER JOIN sangket_cooperatives c ON c.id = r.cooperative_id
+     WHERE c.id = ?
+     GROUP BY o.status
+     ORDER BY total DESC`,
+    [cooperativeId]
+  );
+
+  const observationsWithActions = withCategories.map((row) => ({
+    ...row,
+    actions: actionBucket.get(row.observation_id) || []
+  }));
+
+  return {
+    cooperative,
+    summary: {
+      observation_total: Number(summaryRows[0]?.observation_total || 0),
+      total_damage: Number(summaryRows[0]?.total_damage || 0),
+      open_items: Number(summaryRows[0]?.open_items || 0),
+      closed_items: Number(summaryRows[0]?.closed_items || 0),
+      due_soon: Number(summaryRows[0]?.due_soon || 0)
+    },
+    statusRows,
+    observations: observationsWithActions
+  };
+}
+
 async function getCategoryOptions() {
   await ensureSchema();
   const [rows] = await db.query(
@@ -1143,6 +1282,8 @@ async function importWorkbook(filePath, uploadedBy = 'system') {
 module.exports = {
   ensureSchema,
   getDashboard,
+  getCooperativePaged,
+  getCooperativeById,
   getPaged,
   getExportRows,
   getById,

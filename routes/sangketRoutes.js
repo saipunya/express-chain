@@ -15,6 +15,7 @@ router.post('/import', controller.upload.single('file'), controller.importExcel)
 router.get('/create', controller.createForm);
 router.post('/create', controller.create);
 
+router.get('/cooperatives/:id', controller.cooperativeView);
 router.get('/view/:id', controller.view);
 router.post('/view/:id/actions', controller.addAction);
 

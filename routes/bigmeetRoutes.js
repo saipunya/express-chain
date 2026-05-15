@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bigmeetController = require('../controllers/bigmeetController');
+const bigmeetUpload = require('../middleware/bigmeetUpload');
 
 // List
 router.get('/', bigmeetController.list);
@@ -12,6 +13,7 @@ router.get('/api/:id', bigmeetController.get);
 // Create
 router.get('/new', bigmeetController.createForm);
 router.post('/', bigmeetController.create);
+router.post('/import', bigmeetUpload.single('file'), bigmeetController.importExcel);
 
 // Edit
 router.get('/edit/:id', bigmeetController.editForm);

@@ -1,4 +1,5 @@
 <%- include('../partials/header') %>
+<% const canEditMileage = user && ['admin', 'hiring'].includes(user.mClass); %>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
@@ -18,6 +19,8 @@
 <% if (warning) { %>
   <div class="alert alert-warning"><%= warning %></div>
 <% } %>
+
+<div id="driverTripReportFeedback"></div>
 
 <form method="GET" action="/driver-trip/report" class="card shadow-sm border-0 mb-4" id="driverTripReportForm">
   <div class="card-body">
@@ -132,7 +135,18 @@
               </span>
             </td>
             <td class="text-end">
-              <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-sm btn-outline-primary">เปิดงาน</a>
+              <div class="btn-group btn-group-sm" role="group">
+                <a href="/driver-trip/<%= item.vehicle_request_id %>" class="btn btn-outline-primary">เปิดงาน</a>
+                <% if (canEditMileage) { %>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editMileageModal-<%= item.vehicle_request_id %>">
+                  แก้ไขไมล์
+                </button>
+                <% } %>
+              </div>
             </td>
           </tr>
         <% }) %>
@@ -140,5 +154,80 @@
     </table>
   </div>
 </div>
+
+<% if (canEditMileage) { (items || []).forEach((item) => { %>
+  <div class="modal fade" id="editMileageModal-<%= item.vehicle_request_id %>" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="POST" action="/driver-trip/report/<%= item.vehicle_request_id %>/mileage">
+          <div class="modal-header">
+            <h5 class="modal-title">แก้ไขข้อมูลไมล์</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="driverId" value="<%= selectedDriverId %>">
+            <input type="hidden" name="month" value="<%= month %>">
+            <div class="mb-3">
+              <label class="form-label">ไมล์เช้า</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                class="form-control"
+                name="morning_odometer"
+                value="<%= item.morning_odometer !== null && item.morning_odometer !== undefined ? item.morning_odometer : '' %>">
+            </div>
+            <div>
+              <label class="form-label">ไมล์บ่าย</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                class="form-control"
+                name="afternoon_odometer"
+                value="<%= item.afternoon_odometer !== null && item.afternoon_odometer !== undefined ? item.afternoon_odometer : '' %>">
+            </div>
+            <div class="form-text mt-2">ถ้าปล่อยว่าง ระบบจะคงค่าปัจจุบันไว้</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) } %>
+
+<script>
+  (function () {
+    const feedback = document.getElementById('driverTripReportFeedback');
+    if (!feedback) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const error = params.get('error');
+    if (!success && !error) return;
+
+    const alertClass = success ? 'alert-success' : 'alert-danger';
+    const message = success || error;
+    const alert = document.createElement('div');
+    alert.className = 'alert ' + alertClass + ' alert-dismissible fade show';
+    alert.setAttribute('role', 'alert');
+
+    const text = document.createElement('span');
+    text.textContent = message;
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    closeButton.setAttribute('aria-label', 'Close');
+
+    alert.appendChild(text);
+    alert.appendChild(closeButton);
+    feedback.appendChild(alert);
+  })();
+</script>
 
 <%- include('../partials/footer') %>

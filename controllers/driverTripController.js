@@ -93,6 +93,7 @@ function redirectQueueWithMessage(res, type, message) {
   return res.redirect(`/driver-trip/queue?${query.toString()}`);
 }
 
+
 exports.queue = async (req, res) => {
   try {
     const canManageAssignments = hasQueueAssignmentAccess(req.session?.user);
@@ -428,5 +429,41 @@ exports.logAfternoon = async (req, res) => {
     }
     console.error('Error logging afternoon trip:', error);
     res.status(500).send('ไม่สามารถบันทึกเวลากลับและเลขไมล์บ่ายได้');
+  }
+};
+
+exports.updateMileage = async (req, res) => {
+  const month = normalizeMonthKey(req.body.month || req.query.month);
+  const driverId = String(req.body.driverId || req.query.driverId || '').trim();
+
+  try {
+    await vehicleTripLogModel.updateMileage(req.params.vehicleRequestId, req.session?.user, {
+      morningOdometer: req.body.morning_odometer === '' ? undefined : req.body.morning_odometer,
+      afternoonOdometer: req.body.afternoon_odometer === '' ? undefined : req.body.afternoon_odometer
+    });
+
+    const query = new URLSearchParams({
+      month,
+      driverId,
+      success: 'Mileage updated successfully'
+    });
+    return res.redirect(`/driver-trip/report?${query.toString()}`);
+  } catch (error) {
+    const message = error.code === 'INVALID_ODOMETER'
+      ? 'Please enter a valid odometer value'
+      : error.code === 'TRIP_LOG_NOT_FOUND'
+        ? 'Trip log not found'
+        : 'Unable to update mileage';
+
+    if (error.code !== 'INVALID_ODOMETER' && error.code !== 'TRIP_LOG_NOT_FOUND') {
+      console.error('Error updating trip mileage:', error);
+    }
+
+    const query = new URLSearchParams({
+      month,
+      driverId,
+      error: message
+    });
+    return res.redirect(`/driver-trip/report?${query.toString()}`);
   }
 };

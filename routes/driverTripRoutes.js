@@ -11,6 +11,7 @@ router.post('/:vehicleRequestId/assignment', requireLevel(['admin', 'pbt']), con
 router.post('/:vehicleRequestId/cancel', requireLevel(['admin', 'pbt']), controller.cancelQueueItem);
 router.get('/report', controller.report);
 router.get('/report/pdf', controller.exportReportPdf);
+router.post('/report/:vehicleRequestId/mileage', requireLevel(['admin', 'hiring']), controller.updateMileage);
 router.get('/:vehicleRequestId', controller.detail);
 router.post('/:vehicleRequestId/morning', controller.logMorning);
 router.post('/:vehicleRequestId/afternoon', controller.logAfternoon);

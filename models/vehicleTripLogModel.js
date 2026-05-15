@@ -170,10 +170,89 @@ async function logAfternoon(vehicleRequestId, user, returnTime, odometer) {
   }
 }
 
+function normalizeOptionalOdometer(value) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || numericValue < 0) {
+    const error = new Error('INVALID_ODOMETER');
+    error.code = 'INVALID_ODOMETER';
+    throw error;
+  }
+
+  return numericValue;
+}
+
+async function updateMileage(vehicleRequestId, user, payload = {}) {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [[row]] = await connection.query(
+      `SELECT
+         vtl.morning_odometer,
+         vtl.afternoon_odometer
+       FROM vehicle_trip_logs vtl
+       WHERE vtl.vehicle_request_id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [vehicleRequestId]
+    );
+
+    if (!row) {
+      const error = new Error('TRIP_LOG_NOT_FOUND');
+      error.code = 'TRIP_LOG_NOT_FOUND';
+      throw error;
+    }
+
+    const currentMorning = row.morning_odometer === null ? null : Number(row.morning_odometer);
+    const currentAfternoon = row.afternoon_odometer === null ? null : Number(row.afternoon_odometer);
+    const nextMorning = payload.morningOdometer === undefined
+      ? currentMorning
+      : normalizeOptionalOdometer(payload.morningOdometer);
+    const nextAfternoon = payload.afternoonOdometer === undefined
+      ? currentAfternoon
+      : normalizeOptionalOdometer(payload.afternoonOdometer);
+
+    let nextDistance = null;
+    if (nextMorning !== null && nextAfternoon !== null) {
+      const distance = Number(nextAfternoon) - Number(nextMorning);
+      nextDistance = distance >= 0 ? distance : null;
+    }
+
+    const nextLogStatus = nextMorning !== null && nextAfternoon !== null
+      ? 'completed'
+      : nextMorning !== null
+        ? 'morning_logged'
+        : 'not_started';
+
+    await connection.query(
+      `UPDATE vehicle_trip_logs
+       SET morning_odometer = ?,
+           afternoon_odometer = ?,
+           distance_km = ?,
+           log_status = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE vehicle_request_id = ?`,
+      [nextMorning, nextAfternoon, nextDistance, nextLogStatus, vehicleRequestId]
+    );
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   getDetailForUser,
   listMonthlyReport,
   listQueueForUser,
+  updateMileage,
   logAfternoon,
   logMorning
 };

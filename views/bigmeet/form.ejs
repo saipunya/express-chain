@@ -1,25 +1,56 @@
 <%- include('../partials/header') %>
 
+<%
+  const _coops = (typeof coops === 'undefined' || !Array.isArray(coops)) ? [] : coops;
+  const _groups = (typeof groups === 'undefined' || !Array.isArray(groups)) ? [] : groups;
+  const knownTypes = ['ใน', 'นอก', 'กลุ่มเกษตรกร'];
+  const knownStatuses = ['met_within_150', 'met_over_150', 'not_met'];
+  const getCurrentBudgetYear = () => {
+    const now = new Date();
+    return now.getMonth() >= 9 ? now.getFullYear() + 544 : now.getFullYear() + 543;
+  };
+  const currentBudgetYear = getCurrentBudgetYear();
+
+  const toInputDate = (value) => {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    return [
+      d.getFullYear(),
+      ('0' + (d.getMonth() + 1)).slice(-2),
+      ('0' + d.getDate()).slice(-2)
+    ].join('-');
+  };
+
+  const toBuddhistYear = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    const num = Number(text);
+    if (!Number.isFinite(num)) return text;
+    if (num > 0 && num < 2400) return String(num + 543);
+    return String(Math.trunc(num));
+  };
+
+  const currentType = item && item.big_type ? String(item.big_type) : '';
+  const currentStatus = item && item.big_meeting_status ? String(item.big_meeting_status) : '';
+  const currentBuddhistYear = toBuddhistYear(item && item.big_endyear);
+%>
+
 <div class="container-fluid mt-4">
   <div class="row">
     <div class="col-12">
       <div class="card shadow">
         <div class="card-header bg-primary text-white">
           <h5 class="mb-0">
-            <i class="fas fa-users me-2"></i><%= (item && item.big_id) ? 'แก้ไขข้อมูลการประชุมใหญ่' : 'บันทึกการประชุมใหญ่' %>
+            <i class="fas fa-users me-2"></i><%= (item && item.big_id) ? 'แก้ไขทะเบียนประชุมใหญ่' : 'บันทึกทะเบียนประชุมใหญ่' %>
           </h5>
         </div>
         <div class="card-body">
-          <% 
-            const _coops = (typeof coops === 'undefined' || !Array.isArray(coops)) ? [] : coops;
-            const _groups = (typeof groups === 'undefined' || !Array.isArray(groups)) ? [] : groups;
-          %>
-
           <% if (Array.isArray(errors) && errors.length) { %>
             <div class="alert alert-danger" role="alert">
               <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>กรุณาตรวจสอบข้อมูล:</h6>
               <ul class="mb-0">
-                <% errors.forEach(err => { %> <li><%= err %></li> <% }) %>
+                <% errors.forEach(err => { %><li><%= err %></li><% }) %>
               </ul>
             </div>
           <% } %>
@@ -28,7 +59,7 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="coop_group" class="form-label">กลุ่มสถาบัน <span class="text-danger">*</span></label>
+                  <label for="coop_group" class="form-label">กลุ่ม / ประเภทหน่วยงาน <span class="text-danger">*</span></label>
                   <select class="form-select" id="coop_group" name="coop_group" required>
                     <option value="">-- เลือกกลุ่ม --</option>
                     <% _groups.forEach(function(g){ %>
@@ -39,9 +70,9 @@
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="coop_code" class="form-label">ชื่อสถาบัน <span class="text-danger">*</span></label>
+                  <label for="coop_code" class="form-label">ชื่อสหกรณ์ / กลุ่มเกษตรกร <span class="text-danger">*</span></label>
                   <select class="form-select" id="coop_code" name="coop_code" required>
-                    <option value="">-- เลือกสถาบัน --</option>
+                    <option value="">-- เลือกหน่วยงาน --</option>
                   </select>
                 </div>
               </div>
@@ -50,21 +81,69 @@
             <input type="hidden" id="big_code" name="big_code" value="<%= (item && item.big_code) || '' %>">
 
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="mb-3">
-                  <label for="big_endyear" class="form-label">ปีที่สิ้นสุดรอบบัญชี (พ.ศ.) <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="big_endyear" name="big_endyear" maxlength="4" placeholder="เช่น 2566" pattern="\d{4}" value="<%= (item && item.big_endyear) || '' %>" required>
-                  <div class="form-text">ระบุปี พ.ศ. 4 หลัก (เช่น 2566)</div>
+                  <label for="big_type" class="form-label">ประเภทตามทะเบียน <span class="text-danger">*</span></label>
+                  <select class="form-select" id="big_type" name="big_type" required>
+                    <% if (currentType && !knownTypes.includes(currentType)) { %>
+                      <option value="<%= currentType %>" selected><%= currentType %></option>
+                    <% } %>
+                    <option value="">-- เลือกประเภท --</option>
+                    <option value="ใน" <%= currentType === 'ใน' ? 'selected' : '' %>>ในภาคเกษตร</option>
+                    <option value="นอก" <%= currentType === 'นอก' ? 'selected' : '' %>>นอกภาคเกษตร</option>
+                    <option value="กลุ่มเกษตรกร" <%= currentType === 'กลุ่มเกษตรกร' ? 'selected' : '' %>>กลุ่มเกษตรกร</option>
+                  </select>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="mb-3">
-                  <label for="big_type" class="form-label">มีงบการเงินหรือไม่ <span class="text-danger">*</span></label>
-                  <select class="form-select" name="big_type" id="big_type" required>
-                    <option value="">-- เลือก --</option>
-                    <option value="มีงบการเงิน" <%= (item && item.big_type === 'มีงบการเงิน') ? 'selected' : '' %>>มีงบการเงิน</option>
-                    <option value="ไม่มีงบการเงิน" <%= (item && item.big_type === 'ไม่มีงบการเงิน') ? 'selected' : '' %>>ไม่มีงบการเงิน</option>
+                  <label for="big_endyear" class="form-label">ปีสิ้นสุดรอบบัญชี (พ.ศ.) <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="big_endyear" name="big_endyear" maxlength="4" pattern="\d{4}" placeholder="เช่น 2568" value="<%= currentBuddhistYear || '' %>" required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">ปีงบประมาณ</label>
+                  <input type="text" class="form-control" value="<%= currentBudgetYear %>" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="big_fiscal_end_date" class="form-label">วันสิ้นปีบัญชี</label>
+                  <input type="date" class="form-control" id="big_fiscal_end_date" name="big_fiscal_end_date" value="<%= toInputDate(item && item.big_fiscal_end_date) %>" readonly>
+                  <div class="form-text">ระบบคำนวณจาก `active_coop.end_date` ตามปีปัจจุบันอัตโนมัติ</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="big_deadline_date" class="form-label">กำหนดวันสุดท้ายของการประชุมใหญ่ 150 วัน</label>
+                  <input type="date" class="form-control" id="big_deadline_date" name="big_deadline_date" value="<%= toInputDate(item && item.big_deadline_date) %>" readonly>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="big_meeting_status" class="form-label">สถานะการประชุม <span class="text-danger">*</span></label>
+                  <select class="form-select" id="big_meeting_status" name="big_meeting_status" required>
+                    <% if (currentStatus && !knownStatuses.includes(currentStatus)) { %>
+                      <option value="<%= currentStatus %>" selected><%= currentStatus %></option>
+                    <% } %>
+                    <option value="met_within_150" <%= currentStatus === 'met_within_150' ? 'selected' : '' %>>ประชุมภายใน 150 วัน</option>
+                    <option value="met_over_150" <%= currentStatus === 'met_over_150' ? 'selected' : '' %>>ประชุมเกิน 150 วัน</option>
+                    <option value="not_met" <%= currentStatus === 'not_met' ? 'selected' : '' %>>ยังไม่ได้ประชุม</option>
                   </select>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="big_date" class="form-label">วันที่จัดประชุมใหญ่</label>
+                  <input type="date" class="form-control" id="big_date" name="big_date" value="<%= toInputDate(item && item.big_date) %>">
+                  <div class="form-text">ถ้ายังไม่ได้ประชุม ให้เลือกสถานะเป็น “ยังไม่ได้ประชุม”</div>
                 </div>
               </div>
             </div>
@@ -72,33 +151,20 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="big_date" class="form-label">วันที่ประชุม <span class="text-danger">*</span></label>
-                  <% 
-                    let formattedBigDate = '';
-                    if (item && item.big_date) {
-                      const d = new Date(item.big_date);
-                      formattedBigDate = [
-                        d.getFullYear(),
-                        ('0' + (d.getMonth() + 1)).slice(-2),
-                        ('0' + d.getDate()).slice(-2)
-                      ].join('-');
-                    }
-                  %>
-                  <input type="date" class="form-control" id="big_date" name="big_date" value="<%= formattedBigDate %>" required>
+                  <label for="big_reason" class="form-label">เหตุที่ประชุมไม่ได้ / หมายเหตุจากหนังสือ</label>
+                  <textarea class="form-control" id="big_reason" name="big_reason" rows="3" placeholder="เช่น ประชุมใหญ่ไม่ได้"><%= (item && item.big_reason) || '' %></textarea>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="big_note" class="form-label">หมายเหตุเพิ่มเติม</label>
+                  <textarea class="form-control" id="big_note" name="big_note" rows="3" placeholder="บันทึกข้อมูลเพิ่มเติม"><%= (item && item.big_note) || '' %></textarea>
                 </div>
               </div>
             </div>
 
-            <!-- Hidden fields for audit trail -->
             <input type="hidden" name="big_saveby" value="<%= locals.user ? (locals.user.username || locals.user.name) : '' %>">
-            <% 
-              const now = new Date();
-              const todayLocal = [
-                now.getFullYear(),
-                ('0' + (now.getMonth() + 1)).slice(-2),
-                ('0' + now.getDate()).slice(-2)
-              ].join('-');
-            %>
+            <% const now = new Date(); const todayLocal = [now.getFullYear(), ('0' + (now.getMonth() + 1)).slice(-2), ('0' + now.getDate()).slice(-2)].join('-'); %>
             <input type="hidden" name="big_savedate" value="<%= todayLocal %>">
 
             <div class="d-flex justify-content-between mt-4">
@@ -117,67 +183,157 @@
 </div>
 
 <script>
-// ข้อมูลสหกรณ์ทั้งหมดจาก server
 const COOPS = <%- JSON.stringify(_coops) %>;
+const currentBudgetYear = <%- JSON.stringify(currentBudgetYear) %>;
 
 const groupSelect = document.getElementById('coop_group');
 const coopSelect = document.getElementById('coop_code');
 const bigCodeInput = document.getElementById('big_code');
+const bigTypeSelect = document.getElementById('big_type');
+const statusSelect = document.getElementById('big_meeting_status');
+const meetingDateInput = document.getElementById('big_date');
 const form = document.getElementById('bigmeetForm');
 const submitBtn = document.getElementById('submitBtn');
 
 function renderCoopsForGroup(group) {
-  // ล้างรายการเดิม
-  coopSelect.innerHTML = '<option value="">-- เลือกสถาบัน --</option>';
+  coopSelect.innerHTML = '<option value="">-- เลือกหน่วยงาน --</option>';
   if (!group) return;
 
   const items = COOPS.filter(c => c.c_group === group);
   items.forEach(c => {
     const opt = document.createElement('option');
-    opt.value = c.c_code;           // เก็บค่า c_code
-    opt.textContent = c.c_name;     // แสดงชื่อสถาบัน
+    opt.value = c.c_code;
+    opt.textContent = c.c_name;
+    opt.dataset.inOutGroup = c.in_out_group || '';
+    opt.dataset.coopGroup = c.coop_group || '';
+    opt.dataset.endDay = c.end_day || '';
+    opt.dataset.endDate = c.end_date || '';
     coopSelect.appendChild(opt);
   });
 
-  // ถ้ามีค่าเดิมใน big_code ให้เลือกตรงกับนั้น
   if (bigCodeInput.value) {
     coopSelect.value = bigCodeInput.value;
   }
 }
 
+function syncTypeFromSelectedCoop() {
+  const opt = coopSelect.options[coopSelect.selectedIndex];
+  if (!opt) return;
+  const inOut = (opt.dataset.inOutGroup || '').trim();
+  const coopGroup = (opt.dataset.coopGroup || '').trim();
+  const derived = inOut || coopGroup;
+  if (derived) {
+    const existing = Array.from(bigTypeSelect.options).find(o => o.value === derived);
+    if (!existing) {
+      const newOpt = document.createElement('option');
+      newOpt.value = derived;
+      newOpt.textContent = derived;
+      bigTypeSelect.insertBefore(newOpt, bigTypeSelect.options[1] || null);
+    }
+    bigTypeSelect.value = derived;
+  }
+}
+
+function normalizeMonthDay(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (/^\d{2}-\d{2}$/.test(text)) return text;
+  const parts = text.match(/^(\d{1,2})([^\d]+)$/);
+  if (!parts) return '';
+  const day = String(parts[1]).padStart(2, '0');
+  const thaiMonthMap = {
+    'มกราคม': '01',
+    'กุมภาพันธ์': '02',
+    'มีนาคม': '03',
+    'เมษายน': '04',
+    'พฤษภาคม': '05',
+    'มิถุนายน': '06',
+    'กรกฎาคม': '07',
+    'สิงหาคม': '08',
+    'กันยายน': '09',
+    'ตุลาคม': '10',
+    'พฤศจิกายน': '11',
+    'ธันวาคม': '12',
+  };
+  const month = thaiMonthMap[parts[2]];
+  return month ? `${month}-${day}` : '';
+}
+
+function addDays(isoDate, days) {
+  if (!isoDate) return '';
+  const d = new Date(`${isoDate}T00:00:00`);
+  if (isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+}
+
+function updateDerivedDatesFromSelectedCoop() {
+  const opt = coopSelect.options[coopSelect.selectedIndex];
+  if (!opt || !opt.value) {
+    document.getElementById('big_fiscal_end_date').value = '';
+    document.getElementById('big_deadline_date').value = '';
+    return;
+  }
+
+  const monthDay = normalizeMonthDay(opt.dataset.endDay || opt.dataset.endDate || '');
+  if (!monthDay) {
+    document.getElementById('big_fiscal_end_date').value = '';
+    document.getElementById('big_deadline_date').value = '';
+    return;
+  }
+
+  const fiscalEnd = `${currentBudgetYear - (parseInt(monthDay.slice(0, 2), 10) >= 10 ? 544 : 543)}-${monthDay}`;
+  document.getElementById('big_fiscal_end_date').value = fiscalEnd;
+  document.getElementById('big_deadline_date').value = addDays(fiscalEnd, 150);
+}
+
+function toggleMeetingDateRequired() {
+  const isNotMet = statusSelect.value === 'not_met';
+  meetingDateInput.required = !isNotMet;
+  if (isNotMet) {
+    meetingDateInput.value = '';
+  }
+}
+
 groupSelect.addEventListener('change', (e) => {
   renderCoopsForGroup(e.target.value);
-  // เมื่อเปลี่ยนกลุ่ม ล้างค่า big_code และ coop_code
   bigCodeInput.value = '';
+  bigTypeSelect.value = '';
+  syncTypeFromSelectedCoop();
+  updateDerivedDatesFromSelectedCoop();
 });
 
 coopSelect.addEventListener('change', (e) => {
-  // ตั้งค่า big_code จาก c_code ที่เลือก
   bigCodeInput.value = e.target.value || '';
+  syncTypeFromSelectedCoop();
+  updateDerivedDatesFromSelectedCoop();
 });
 
-// Form validation and submission
+statusSelect.addEventListener('change', toggleMeetingDateRequired);
+
 form.addEventListener('submit', async function(e) {
   e.preventDefault();
-  
-  // Basic validation
-  if (!groupSelect.value || !coopSelect.value || !document.getElementById('big_endyear').value || 
-      !document.getElementById('big_type').value || !document.getElementById('big_date').value) {
-    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+  if (!groupSelect.value || !coopSelect.value || !document.getElementById('big_endyear').value ||
+      !document.getElementById('big_fiscal_end_date').value || !bigTypeSelect.value || !statusSelect.value) {
+    alert('กรุณากรอกข้อมูลให้ครบ');
     return;
   }
-  
-  // Show loading state
+
+  if (statusSelect.value !== 'not_met' && !meetingDateInput.value) {
+    alert('กรุณาระบุวันที่ประชุม');
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังบันทึก...';
-  
+
   try {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    
     const isEdit = <%= (item && item.big_id) ? 'true' : 'false' %>;
     const url = isEdit ? '/bigmeet/update/<%= (item && item.big_id) %>' : '/bigmeet';
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -186,9 +342,8 @@ form.addEventListener('submit', async function(e) {
       },
       body: new URLSearchParams(data)
     });
-    
+
     if (response.ok) {
-      // Check if response is JSON (AJAX) or HTML redirect
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const result = await response.json();
@@ -199,7 +354,6 @@ form.addEventListener('submit', async function(e) {
           alert(result.error || 'เกิดข้อผิดพลาด');
         }
       } else {
-        // HTML response - redirect
         window.location.href = '/bigmeet';
       }
     } else {
@@ -209,13 +363,11 @@ form.addEventListener('submit', async function(e) {
     console.error('Submit error:', error);
     alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
   } finally {
-    // Reset button state
     submitBtn.disabled = false;
     submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>บันทึกข้อมูล';
   }
 });
 
-// เติมค่าเริ่มต้นกรณีกลับมาจาก error พร้อม item.big_code
 (function init() {
   const currentCode = bigCodeInput.value;
   if (currentCode) {
@@ -224,7 +376,15 @@ form.addEventListener('submit', async function(e) {
       groupSelect.value = found.c_group;
       renderCoopsForGroup(found.c_group);
       coopSelect.value = currentCode;
+      syncTypeFromSelectedCoop();
+      updateDerivedDatesFromSelectedCoop();
     }
+  } else {
+    toggleMeetingDateRequired();
+  }
+
+  if (statusSelect.value) {
+    toggleMeetingDateRequired();
   }
 })();
 </script>

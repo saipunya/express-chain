@@ -1,23 +1,105 @@
 <%- include('../partials/header') %>
 <% const canEditServer = (user && (user.mClass === 'kbs' || user.mClass === 'admin')); %>
 
-<div class="container-fluid mt-4">
-  <!-- Toast Notification -->
-  <div id="toast" class="toast position-fixed top-0 end-0 m-3" style="z-index: 1050; display: none;">
-    <div class="toast-body bg-success text-white">
-      <span id="toastMessage"></span>
-    </div>
-  </div>
+<%
+  const meetingStatusLabels = {
+    met_within_150: { text: 'ประชุมภายใน 150 วัน', className: 'bg-success' },
+    met_over_150: { text: 'ประชุมเกิน 150 วัน', className: 'bg-warning text-dark' },
+    not_met: { text: 'ยังไม่ได้ประชุม', className: 'bg-danger' },
+  };
 
+  const typeLabels = {
+    ใน: 'ในภาคเกษตร',
+    นอก: 'นอกภาคเกษตร',
+    'กลุ่มเกษตรกร': 'กลุ่มเกษตรกร',
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
+  };
+
+  const normalizeYear = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    const num = Number(text);
+    if (!Number.isFinite(num)) return text;
+    if (num > 0 && num < 2400) return String(num + 543);
+    return String(Math.trunc(num));
+  };
+
+  function getCurrentBudgetYear() {
+    const now = new Date();
+    return now.getMonth() >= 9 ? now.getFullYear() + 544 : now.getFullYear() + 543;
+  }
+
+  const currentBudgetYear = getCurrentBudgetYear();
+  const thaiMonthMap = {
+    'มกราคม': '01',
+    'กุมภาพันธ์': '02',
+    'มีนาคม': '03',
+    'เมษายน': '04',
+    'พฤษภาคม': '05',
+    'มิถุนายน': '06',
+    'กรกฎาคม': '07',
+    'สิงหาคม': '08',
+    'กันยายน': '09',
+    'ตุลาคม': '10',
+    'พฤศจิกายน': '11',
+    'ธันวาคม': '12'
+  };
+
+  const normalizeMonthDay = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    if (/^\d{2}-\d{2}$/.test(text)) return text;
+    const match = text.replace(/\s+/g, '').match(/^(\d{1,2})([^\d]+)$/);
+    if (!match) return '';
+    const month = thaiMonthMap[match[2]];
+    return month ? `${month}-${String(match[1]).padStart(2, '0')}` : '';
+  };
+
+  const addDays = (isoDate, days) => {
+    if (!isoDate) return '';
+    const d = new Date(`${isoDate}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    d.setDate(d.getDate() + Number(days || 0));
+    return d.toISOString().slice(0, 10);
+  };
+
+  const getFiscalEndDate = (item) => {
+    const monthDay = normalizeMonthDay(item.end_day || item.end_date);
+    const budgetYear = Number(item.big_budget_year || currentBudgetYear);
+    if (monthDay && Number.isFinite(budgetYear)) {
+      const month = parseInt(monthDay.slice(0, 2), 10);
+      const year = month >= 10 ? budgetYear - 544 : budgetYear - 543;
+      return `${year}-${monthDay}`;
+    }
+    return item.big_fiscal_end_date || '';
+  };
+
+  const getDeadlineDate = (item) => {
+    const fiscalEndDate = getFiscalEndDate(item);
+    if (fiscalEndDate) return addDays(fiscalEndDate, 150);
+    return item.big_deadline_date || '';
+  };
+
+  const statusLabel = (value) => meetingStatusLabels[value] || { text: value || '-', className: 'bg-secondary' };
+  const typeLabel = (value) => typeLabels[value] || value || '-';
+%>
+
+<div class="container-fluid mt-4">
   <div class="card shadow-sm mb-4">
     <div class="card-header bg-white">
       <div class="row align-items-center">
-        <div class="col-md-6">
+        <div class="col-md-7">
           <h5 class="m-0 fw-bold text-primary">
-            <i class="fas fa-users me-2"></i>การประชุมใหญ่สหกรณ์และกลุ่มเกษตรกร
+            <i class="fas fa-users me-2"></i>ทะเบียนคุมประชุมใหญ่
           </h5>
+          <div class="text-muted small mt-1">ระบบจัดเก็บการประชุมใหญ่ของสหกรณ์และกลุ่มเกษตรกร</div>
         </div>
-        <div class="col-md-6 text-end">
+        <div class="col-md-5 text-md-end mt-3 mt-md-0">
           <a href="/dashboard" class="btn btn-secondary btn-sm me-2">
             <i class="fas fa-arrow-left me-1"></i>กลับหน้าหลัก
           </a>
@@ -28,88 +110,90 @@
       </div>
     </div>
     <div class="card-body">
+      <% if (message) { %>
+        <div class="alert alert-info mb-3">
+          <i class="fas fa-info-circle me-2"></i><%= message %>
+        </div>
+      <% } %>
+
       <div class="row g-3">
-        <div class="col-12 col-lg-6">
-          <div class="d-flex flex-wrap align-items-center gap-3">
-            <div>
-              <label class="form-label small text-muted mb-1">ปีงบประมาณ</label>
-              <select id="fySelect" class="form-select form-select-sm"></select>
+        <div class="col-12 col-xl-5">
+          <div class="border rounded-3 p-3 bg-light h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0 text-primary"><i class="fas fa-file-excel me-2"></i>นำเข้าจาก Excel</h6>
+              <span class="badge bg-primary">รองรับ .xls / .xlsx</span>
             </div>
-            <div class="small text-muted">
-              สรุปสถานะจากปีงบฯ ที่เลือก
+            <form action="/bigmeet/import" method="post" enctype="multipart/form-data" class="row g-2">
+              <div class="col-12">
+                <input type="file" name="file" class="form-control" accept=".xls,.xlsx" required>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-upload me-1"></i>นำเข้าข้อมูล
+                </button>
+              </div>
+            </form>
+            <div class="form-text mt-2">
+              ใช้ไฟล์ทะเบียนคุมประชุมใหญ่ที่มีคอลัมน์ชื่อสหกรณ์, วันสิ้นปีทางบัญชี, กำหนด 150 วัน และวันที่ประชุม
             </div>
           </div>
-          <div class="border rounded p-3 bg-light mt-2">
+        </div>
+
+        <div class="col-12 col-xl-7">
+          <div class="border rounded-3 p-3 bg-light h-100">
             <div class="row text-center g-2">
               <div class="col-12 col-md-4">
-                <div class="text-muted small">จำนวนทั้งหมด (ในรายการนี้)</div>
+                <div class="text-muted small">จำนวนทั้งหมด</div>
                 <div class="fw-bold" id="sumTotal">-</div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">ประชุมใหญ่แล้ว</div>
+                <div class="text-muted small">ประชุมแล้ว</div>
                 <div class="fw-bold text-success" id="sumMet">-</div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">ยังไม่ได้ประชุมใหญ่</div>
+                <div class="text-muted small">ยังไม่ได้ประชุม</div>
                 <div class="fw-bold text-danger" id="sumNotMet">-</div>
               </div>
             </div>
-            <div class="text-center small text-muted mt-1" id="sumRange">-</div>
+            <div class="text-center small text-muted mt-2" id="sumRange">-</div>
           </div>
         </div>
-        <div class="col-12 col-lg-6">
-          <!-- สรุปจำนวนการประชุมใหญ่แยกตามประเภท -->
-          <div class="border rounded p-3 bg-light mt-2">
-            <h6 class="text-center mb-3 text-primary">
-              <i class="fas fa-chart-pie me-2"></i>สรุปจำนวนการประชุมใหญ่แยกตามประเภท
-            </h6>
-            <div class="row text-center g-2">
-              <div class="col-12 col-md-4">
-                <div class="text-muted small">สหกรณ์ภาคการเกษตร (ใน)</div>
-                <div class="fw-bold text-info" id="agriMet">-</div>
-                <div class="text-muted small">ยังไม่ได้ประชุม</div>
-                <div class="fw-bold text-warning" id="agriNotMet">-</div>
-              </div>
-              <div class="col-12 col-md-4">
-                <div class="text-muted small">สหกรณ์นอกภาคการเกษตร (นอก)</div>
-                <div class="fw-bold text-info" id="nonAgriMet">-</div>
-                <div class="text-muted small">ยังไม่ได้ประชุม</div>
-                <div class="fw-bold text-warning" id="nonAgriNotMet">-</div>
-              </div>
-              <div class="col-12 col-md-4">
-                <div class="text-muted small">กลุ่มเกษตรกร</div>
-                <div class="fw-bold text-info" id="farmerMet">-</div>
-                <div class="text-muted small">ยังไม่ได้ประชุม</div>
-                <div class="fw-bold text-warning" id="farmerNotMet">-</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-lg-6">
-          <div class="row g-2 align-items-end">
-            <div class="col-12 col-md-6">
+
+        <div class="col-12">
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
               <label class="form-label small text-muted mb-1">ค้นหา</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์หรือรหัส...">
+                <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์ หรือรหัส...">
               </div>
             </div>
-            <div class="col-6 col-md-3">
-              <label class="form-label small text-muted mb-1">ปีสิ้นสุด</label>
+            <div class="col-6 col-md-2">
+              <label class="form-label small text-muted mb-1">ปีงบประมาณ</label>
               <select id="yearFilter" class="form-select">
                 <option value="">ทุกปี</option>
               </select>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-2">
               <label class="form-label small text-muted mb-1">ประเภท</label>
               <select id="typeFilter" class="form-select">
                 <option value="">ทุกประเภท</option>
-                <option value="มีงบการเงิน">มีงบการเงิน</option>
-                <option value="ไม่มีงบการเงิน">ไม่มีงบการเงิน</option>
+                <option value="ใน">ในภาคเกษตร</option>
+                <option value="นอก">นอกภาคเกษตร</option>
+                <option value="กลุ่มเกษตรกร">กลุ่มเกษตรกร</option>
               </select>
             </div>
-            <div class="col-12">
-              <button id="clearFilters" class="btn btn-outline-secondary btn-sm w-100">
+            <div class="col-6 col-md-2">
+              <label class="form-label small text-muted mb-1">สถานะประชุม</label>
+              <select id="statusFilter" class="form-select">
+                <option value="">ทุกสถานะ</option>
+                <option value="met_within_150">ประชุมภายใน 150 วัน</option>
+                <option value="met_over_150">ประชุมเกิน 150 วัน</option>
+                <option value="not_met">ยังไม่ได้ประชุม</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-2">
+              <button id="clearFilters" class="btn btn-outline-secondary w-100">
                 <i class="fas fa-times me-1"></i>ล้างตัวกรอง
               </button>
             </div>
@@ -119,7 +203,6 @@
     </div>
   </div>
 
-  <!-- Loading Spinner -->
   <div id="loadingSpinner" class="text-center py-4" style="display: none;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -132,12 +215,15 @@
         <table class="table table-hover table-striped align-middle mb-0" width="100%" cellspacing="0">
           <thead class="table-light">
             <tr>
-              <th class="text-center" style="width: 70px;">#</th>
-              <th>ชื่อสหกรณ์</th>
-              <th class="text-center" style="width: 140px;">ปีสิ้นสุด</th>
-              <th class="text-center" style="width: 140px;">ประเภท</th>
-              <th class="text-center" style="width: 160px;">วันที่ประชุม</th>
-              <th class="text-center" style="width: 140px;">วันที่บันทึก</th>
+              <th class="text-center" style="width: 60px;">#</th>
+              <th>ชื่อสหกรณ์ / กลุ่ม</th>
+              <th class="text-center" style="width: 120px;">ประเภท</th>
+              <th class="text-center" style="width: 130px;">ปีงบประมาณ</th>
+              <th class="text-center" style="width: 130px;">วันสิ้นปีบัญชี</th>
+              <th class="text-center" style="width: 130px;">กำหนด 150 วัน</th>
+              <th class="text-center" style="width: 150px;">สถานะ</th>
+              <th class="text-center" style="width: 140px;">วันประชุม</th>
+              <th>เหตุ / หมายเหตุ</th>
               <% if (canEditServer) { %>
                 <th class="text-center" style="width: 90px;">แก้ไข</th>
                 <th class="text-center" style="width: 90px;">ลบ</th>
@@ -150,22 +236,17 @@
     </div>
   </div>
 
-  <!-- Pagination -->
   <nav aria-label="Page navigation" class="mt-3">
     <ul class="pagination justify-content-center" id="pagination"></ul>
   </nav>
 </div>
 
 <script>
-  // Data management
+  const canEdit = <%= canEditServer ? 'true' : 'false' %>;
   let currentPage = 1;
   const itemsPerPage = 10;
   let allItems = <%- JSON.stringify(items || []) %>;
   let filteredItems = [...allItems];
-
-  // User permission
-  const userClass = '<%= user ? user.mClass : "" %>';
-  const canEdit = (userClass === 'kbs' || userClass === 'admin');
 
   document.addEventListener('DOMContentLoaded', function() {
     populateYearFilter();
@@ -174,9 +255,9 @@
     initFiscalYearSummary();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const successMessage = urlParams.get('success');
+    const successMessage = urlParams.get('message') || urlParams.get('success');
     if (successMessage) {
-      showToast(successMessage || 'ดำเนินการสำเร็จ');
+      showToast(successMessage);
     }
   });
 
@@ -189,8 +270,72 @@
       .replace(/'/g, '&#39;');
   }
 
+  function normalizeYear(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    const num = Number(text);
+    if (!Number.isFinite(num)) return text;
+    if (num > 0 && num < 2400) return String(num + 543);
+    return String(Math.trunc(num));
+  }
+
+  function getCurrentBudgetYear() {
+    const now = new Date();
+    return now.getMonth() >= 9 ? now.getFullYear() + 544 : now.getFullYear() + 543;
+  }
+
+  const currentBudgetYear = getCurrentBudgetYear();
+  const thaiMonthMap = {
+    'มกราคม': '01',
+    'กุมภาพันธ์': '02',
+    'มีนาคม': '03',
+    'เมษายน': '04',
+    'พฤษภาคม': '05',
+    'มิถุนายน': '06',
+    'กรกฎาคม': '07',
+    'สิงหาคม': '08',
+    'กันยายน': '09',
+    'ตุลาคม': '10',
+    'พฤศจิกายน': '11',
+    'ธันวาคม': '12'
+  };
+
+  function normalizeMonthDay(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    if (/^\d{2}-\d{2}$/.test(text)) return text;
+    const match = text.replace(/\s+/g, '').match(/^(\d{1,2})([^\d]+)$/);
+    if (!match) return '';
+    const month = thaiMonthMap[match[2]];
+    return month ? `${month}-${String(match[1]).padStart(2, '0')}` : '';
+  }
+
+  function addDays(isoDate, days) {
+    if (!isoDate) return '';
+    const d = new Date(`${isoDate}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    d.setDate(d.getDate() + Number(days || 0));
+    return d.toISOString().slice(0, 10);
+  }
+
+  function getFiscalEndDate(item) {
+    const monthDay = normalizeMonthDay(item.end_day || item.end_date);
+    const budgetYear = Number(item.big_budget_year || item.big_endyear || currentBudgetYear);
+    if (monthDay && Number.isFinite(budgetYear)) {
+      const year = parseInt(monthDay.slice(0, 2), 10) >= 10 ? budgetYear - 544 : budgetYear - 543;
+      return `${year}-${monthDay}`;
+    }
+    return item.big_fiscal_end_date || '';
+  }
+
+  function getDeadlineDate(item) {
+    const fiscalEndDate = getFiscalEndDate(item);
+    if (fiscalEndDate) return addDays(fiscalEndDate, 150);
+    return item.big_deadline_date || '';
+  }
+
   function populateYearFilter() {
-    const years = [...new Set(allItems.map(item => item.big_endyear).filter(Boolean))]
+    const years = [...new Set(allItems.map(item => normalizeYear(item.big_budget_year || item.big_endyear)).filter(Boolean))]
       .sort()
       .reverse();
     const yearFilter = document.getElementById('yearFilter');
@@ -206,11 +351,13 @@
     document.getElementById('searchInput').addEventListener('input', filterAndRender);
     document.getElementById('yearFilter').addEventListener('change', filterAndRender);
     document.getElementById('typeFilter').addEventListener('change', filterAndRender);
+    document.getElementById('statusFilter').addEventListener('change', filterAndRender);
 
     document.getElementById('clearFilters').addEventListener('click', function() {
       document.getElementById('searchInput').value = '';
       document.getElementById('yearFilter').value = '';
       document.getElementById('typeFilter').value = '';
+      document.getElementById('statusFilter').value = '';
       filterAndRender();
     });
   }
@@ -219,14 +366,16 @@
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const yearFilter = document.getElementById('yearFilter').value;
     const typeFilter = document.getElementById('typeFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
 
     filteredItems = allItems.filter(item => {
       const name = String(item.c_name || '').toLowerCase();
       const code = String(item.big_code || '').toLowerCase();
       const matchesSearch = !searchTerm || name.includes(searchTerm) || code.includes(searchTerm);
-      const matchesYear = !yearFilter || String(item.big_endyear || '') === yearFilter;
-      const matchesType = !typeFilter || item.big_type === typeFilter;
-      return matchesSearch && matchesYear && matchesType;
+      const matchesYear = !yearFilter || normalizeYear(item.big_budget_year || item.big_endyear) === yearFilter;
+      const matchesType = !typeFilter || String(item.big_type || '') === typeFilter;
+      const matchesStatus = !statusFilter || String(item.big_meeting_status || '') === statusFilter;
+      return matchesSearch && matchesYear && matchesType && matchesStatus;
     });
 
     currentPage = 1;
@@ -239,26 +388,26 @@
     return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH');
   }
 
-  function formatEndDate(item) {
-    let displayEndDateBE = item.big_endyear || '-';
-    const endDayVal = item.end_day ? String(item.end_day).trim() : '';
+  function formatType(value) {
+    if (value === 'ใน') return 'ในภาคเกษตร';
+    if (value === 'นอก') return 'นอกภาคเกษตร';
+    if (value === 'กลุ่มเกษตรกร') return 'กลุ่มเกษตรกร';
+    return value || '-';
+  }
 
-    if (item.big_endyear && endDayVal && endDayVal.includes('-')) {
-      try {
-        const ceYear = parseInt(item.big_endyear, 10) - 543;
-        const isoStr = ceYear + '-' + endDayVal;
-        const dateObj = new Date(isoStr + 'T00:00:00');
-        if (!isNaN(dateObj.getTime())) {
-          displayEndDateBE = dateObj.toLocaleDateString('th-TH', {
-            day: 'numeric', month: 'long', year: 'numeric'
-          });
-        }
-      } catch (e) {
-        displayEndDateBE = item.big_endyear || '-';
-      }
-    }
+  function formatStatusBadge(status) {
+    if (status === 'met_within_150') return '<span class="badge bg-success">ประชุมภายใน 150 วัน</span>';
+    if (status === 'met_over_150') return '<span class="badge bg-warning text-dark">ประชุมเกิน 150 วัน</span>';
+    if (status === 'not_met') return '<span class="badge bg-danger">ยังไม่ได้ประชุม</span>';
+    return '<span class="badge bg-secondary">' + escapeHtml(status || '-') + '</span>';
+  }
 
-    return displayEndDateBE;
+  function formatNote(item) {
+    const parts = [];
+    if (item.big_reason) parts.push(item.big_reason);
+    if (item.big_note) parts.push(item.big_note);
+    const joined = parts.filter(Boolean).join(' | ');
+    return joined ? escapeHtml(joined) : '-';
   }
 
   function renderTable() {
@@ -266,16 +415,16 @@
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const pageItems = filteredItems.slice(startIndex, endIndex);
-    const colCount = canEdit ? 8 : 6;
+    const colSpan = canEdit ? 11 : 9;
 
     if (pageItems.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="${colCount}" class="text-center py-5">
+          <td colspan="${colSpan}" class="text-center py-5">
             <div class="text-muted">
               <i class="fas fa-search fa-3x mb-3"></i>
               <div class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
-              <div>ลองปรับเปลี่ยนตัวกรองหรือคำค้นหา</div>
+              <div>ลองปรับตัวกรองหรือคำค้นหา</div>
             </div>
           </td>
         </tr>
@@ -288,43 +437,37 @@
       const globalIndex = startIndex + index + 1;
       const name = escapeHtml(item.c_name || item.big_code || '-');
       const code = escapeHtml(item.big_code || '-');
-      const typeText = escapeHtml(item.big_type || '-');
-      const displayEndDateBE = formatEndDate(item);
+      const typeText = escapeHtml(formatType(item.big_type));
+      const fiscalEndDate = formatLocalDate(getFiscalEndDate(item));
+      const deadlineDate = formatLocalDate(getDeadlineDate(item));
       const meetingDate = formatLocalDate(item.big_date);
-      const savedDate = formatLocalDate(item.big_savedate);
-      const saveBy = escapeHtml(item.big_saveby || '');
 
       return `
         <tr data-id="${item.big_id}">
-          <td class="text-center">
-            <span class="badge bg-primary rounded-pill">${globalIndex}</span>
-          </td>
+          <td class="text-center"><span class="badge bg-primary rounded-pill">${globalIndex}</span></td>
           <td>
             <div class="fw-bold">${name}</div>
             <small class="text-muted">รหัส: ${code}</small>
           </td>
-          <td class="text-center">
-            <div class="text-nowrap">${displayEndDateBE}</div>
-          </td>
-          <td class="text-center">
-            ${item.big_type === 'มีงบการเงิน'
-              ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>' + typeText + '</span>'
-              : '<span class="badge bg-warning"><i class="fas fa-times-circle me-1"></i>' + typeText + '</span>'}
-          </td>
+          <td class="text-center">${typeText}</td>
+          <td class="text-center">${escapeHtml(normalizeYear(item.big_budget_year || item.big_endyear) || '-')}</td>
+          <td class="text-center">${fiscalEndDate}</td>
+          <td class="text-center">${deadlineDate}</td>
+          <td class="text-center">${formatStatusBadge(item.big_meeting_status)}</td>
           <td class="text-center">
             <div>${meetingDate}</div>
-            <small class="text-muted">${saveBy}</small>
+            <small class="text-muted">${item.big_saveby ? escapeHtml(item.big_saveby) : ''}</small>
           </td>
-          <td class="text-center">${savedDate}</td>
+          <td>${formatNote(item)}</td>
           ${canEdit ? `
             <td class="text-center">
               <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-                <i class="fas fa-edit"></i>แก้ไข
+                <i class="fas fa-edit"></i>
               </a>
             </td>
             <td class="text-center">
               <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
-                <i class="fas fa-trash"></i>ลบ
+                <i class="fas fa-trash"></i>
               </button>
             </td>
           ` : ''}
@@ -391,9 +534,7 @@
     try {
       const response = await fetch(`/bigmeet/delete/${id}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.ok) {
@@ -413,8 +554,24 @@
   }
 
   function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
+    let toast = document.getElementById('toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      toast.className = 'toast position-fixed top-0 end-0 m-3';
+      toast.style.zIndex = '1050';
+      toast.style.display = 'none';
+      toast.innerHTML = '<div class="toast-body text-white"><span id="toastMessage"></span></div>';
+      document.body.appendChild(toast);
+    }
+
+    let toastMessage = document.getElementById('toastMessage');
+    if (!toastMessage) {
+      toastMessage = document.createElement('span');
+      toastMessage.id = 'toastMessage';
+      toast.querySelector('.toast-body').appendChild(toastMessage);
+    }
+
     const toastBody = toast.querySelector('.toast-body');
     toastMessage.textContent = message;
     toastBody.className = `toast-body ${type === 'success' ? 'bg-success' : 'bg-danger'} text-white`;
@@ -464,19 +621,9 @@
       if (!json || !json.success) throw new Error(json && json.error ? json.error : 'Failed');
 
       const d = json.data;
-      
-      // อัพเดทข้อมูลสรุปทั้งหมด
       document.getElementById('sumTotal').textContent = d.totalCoopsInList;
       document.getElementById('sumMet').textContent = d.metInFiscalYear;
       document.getElementById('sumNotMet').textContent = d.notMetInFiscalYear;
-
-      // อัพเดทข้อมูลสรุปแยกตามประเภท
-      document.getElementById('agriMet').textContent = d.agriMet;
-      document.getElementById('agriNotMet').textContent = d.agriNotMet;
-      document.getElementById('nonAgriMet').textContent = d.nonAgriMet;
-      document.getElementById('nonAgriNotMet').textContent = d.nonAgriNotMet;
-      document.getElementById('farmerMet').textContent = d.farmerMet;
-      document.getElementById('farmerNotMet').textContent = d.farmerNotMet;
 
       const fmt = (iso) => {
         if (!iso) return '-';
@@ -489,16 +636,9 @@
       document.getElementById('sumRange').textContent = rangeText;
     } catch (e) {
       console.error('loadFiscalYearSummary:', e);
-      // Fallback to original behavior
       document.getElementById('sumTotal').textContent = allItems.length;
       document.getElementById('sumMet').textContent = '-';
       document.getElementById('sumNotMet').textContent = '-';
-      document.getElementById('agriMet').textContent = '-';
-      document.getElementById('agriNotMet').textContent = '-';
-      document.getElementById('nonAgriMet').textContent = '-';
-      document.getElementById('nonAgriNotMet').textContent = '-';
-      document.getElementById('farmerMet').textContent = '-';
-      document.getElementById('farmerNotMet').textContent = '-';
       document.getElementById('sumRange').textContent = 'โหลดสรุปไม่สำเร็จ';
     }
   }

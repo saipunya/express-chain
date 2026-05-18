@@ -4,7 +4,7 @@
 <% function canDelete(meeting) {
   if (!user) return false;
   if (isAdmin) return true;
-  return meeting.mee_saveby === user.fullname || meeting.mee_saveby === user.username;
+  return meeting.mee_saveby === user.fullname || meeting.mee_saveby === user.username || meeting.mee_saveby === user.name;
 } %>
 <%
   function parseLocalDate(value) {
@@ -374,6 +374,12 @@
 (function() {
   // Meeting data from server
   const meetings = <%- JSON.stringify(meetings || []) %>;
+  const currentUser = <%- user ? JSON.stringify({
+    fullname: user.fullname,
+    username: user.username,
+    name: user.name,
+    mClass: user.mClass
+  }) : 'null' %>;
   
   // Current date state
   let currentDate = new Date();
@@ -567,14 +573,21 @@
     const deleteBtn = document.getElementById('md-delete-btn');
     const deleteForm = document.getElementById('md-delete-form');
     const meetingId = data.meetingId || data.id;
+    const canCurrentUserDelete = currentUser && (
+      currentUser.mClass === 'admin' ||
+      currentUser.mClass === 'pbt' ||
+      currentUser.fullname === data.saveby ||
+      currentUser.username === data.saveby ||
+      currentUser.name === data.saveby
+    );
     
     if (editBtn && meetingId) {
-      editBtn.href = `/meetingroom/${meetingId}/edit`;
+      editBtn.href = `/meetingroom/edit/${meetingId}`;
     }
     
     if (deleteBtn && deleteForm && meetingId) {
-      deleteBtn.style.display = 'inline-block';
-      deleteForm.action = `/meetingroom/${meetingId}?_method=DELETE`;
+      deleteBtn.style.display = canCurrentUserDelete ? 'inline-block' : 'none';
+      deleteForm.action = `/meetingroom/delete/${meetingId}`;
     }
   }
 
@@ -605,11 +618,13 @@
   
   // Existing modal and delete functionality
   document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       if (confirm('ยืนยันการลบรายการนี้?')) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/meetingroom/${this.dataset.id}?_method=DELETE`;
+        form.action = `/meetingroom/delete/${this.dataset.id}`;
         document.body.appendChild(form);
         form.submit();
       }
@@ -1316,14 +1331,16 @@
           const currentUser = <%- user ? JSON.stringify({
             fullname: user.fullname,
             username: user.username,
+            name: user.name,
             mClass: user.mClass
           }) : 'null' %>;
-          
+
           const canDelete = currentUser && (
             currentUser.mClass === 'admin' || 
             currentUser.mClass === 'pbt' ||
             currentUser.fullname === d.saveby || 
-            currentUser.username === d.saveby
+            currentUser.username === d.saveby ||
+            currentUser.name === d.saveby
           );
           
           if (mdDeleteBtn) {
@@ -1346,7 +1363,9 @@
       const deleteButtons = document.querySelectorAll('.btn-delete');
       
       deleteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(event) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
           const id = this.dataset.id;
           const subject = this.dataset.subject;
           

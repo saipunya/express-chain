@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const meetingCtrl = require('../controllers/meetingRoomController');
-const { isAdmin, isAdminOrOwner } = require('../middleware/authMiddleware');
+const { isAdminOrOwner } = require('../middleware/authMiddleware');
+
+const isMeetingRoomAdmin = (req, res, next) => {
+  const userClass = req.session?.user?.mClass;
+  if (userClass === 'admin' || userClass === 'pbt') {
+    return next();
+  }
+  return res.render('error_page', { message: 'ไม่มีสิทธิ์เข้าใช้งานหน้านี้' });
+};
 
 // Public: list bookings
 router.get('/', meetingCtrl.list);
@@ -10,9 +18,9 @@ router.get('/', meetingCtrl.list);
 router.get('/create', meetingCtrl.create);
 router.post('/create', meetingCtrl.create);
 
-// Admin only: edit
-router.get('/edit/:id', isAdmin, meetingCtrl.edit);
-router.post('/edit/:id', isAdmin, meetingCtrl.edit);
+// Admin/PBT only: edit
+router.get('/edit/:id', isMeetingRoomAdmin, meetingCtrl.edit);
+router.post('/edit/:id', isMeetingRoomAdmin, meetingCtrl.edit);
 
 // Admin or owner: delete
 router.post('/delete/:id', isAdminOrOwner, meetingCtrl.remove);

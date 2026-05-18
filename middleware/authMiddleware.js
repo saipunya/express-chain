@@ -13,8 +13,8 @@ exports.isAdminOrOwner = async (req, res, next) => {
     return res.render('error_page', { message: 'กรุณาเข้าสู่ระบบ' });
   }
   
-  // Admin can delete any booking
-  if (req.session.user.mClass === 'admin') {
+  // Admin/PBT can delete any meeting room booking.
+  if (req.session.user.mClass === 'admin' || req.session.user.mClass === 'pbt') {
     return next();
   }
   
@@ -27,7 +27,11 @@ exports.isAdminOrOwner = async (req, res, next) => {
     }
     
     // Check if the current user is the one who created the booking
-    if (meeting.mee_saveby === req.session.user.fullname || meeting.mee_saveby === req.session.user.username) {
+    if (
+      meeting.mee_saveby === req.session.user.fullname ||
+      meeting.mee_saveby === req.session.user.username ||
+      meeting.mee_saveby === req.session.user.name
+    ) {
       return next();
     }
     

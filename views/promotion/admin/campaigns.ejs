@@ -1,207 +1,36 @@
 <!-- include header -->
 <%- include('../header.ejs', { title: title }) %>
 <style>
-  .promo-campaign-page {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    min-height: 100vh;
-    padding: 40px 0 56px;
+  /* campaign-page specific */
+  .pcmp-id-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 48px; padding: 5px 10px;
+    border-radius: 9px; background: #eff6ff; color: #2563eb;
+    font-weight: 800; font-size: .84rem;
   }
+  .pcmp-name { font-weight: 700; color: #0f172a; }
+  .pcmp-meta { color: #94a3b8; font-size: .8rem; margin-top: 3px; }
+  .pcmp-date { font-weight: 500; white-space: nowrap; font-size: .88rem; }
 
-  .promo-campaign-shell {
-    max-width: 1280px;
-    margin: 0 auto;
-  }
-
-  .promo-campaign-topbar {
-    background: rgba(255,255,255,0.96);
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-    margin-bottom: 24px;
-  }
-
-  .promo-campaign-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #2563eb;
-    font-size: 0.92rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .promo-campaign-title {
-    font-size: clamp(1.8rem, 3vw, 2.5rem);
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.08;
-    margin-bottom: 10px;
-    letter-spacing: -0.03em;
-  }
-
-  .promo-campaign-desc {
-    color: #64748b;
-    margin-bottom: 0;
-    line-height: 1.7;
-    max-width: 760px;
-  }
-
-  .promo-campaign-back {
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-weight: 600;
-    border-width: 1.5px;
-  }
-
-  .promo-campaign-card {
-    border: none;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-  }
-
-  .promo-campaign-form-card {
-    border: none;
-    border-radius: 24px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-    margin-bottom: 18px;
-  }
-
-  .promo-campaign-form-card .form-control,
-  .promo-campaign-form-card .form-select {
-    border-radius: 12px;
-  }
-
-  .promo-campaign-table {
-    margin-bottom: 0;
-  }
-
-  .promo-campaign-table thead th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 0.83rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 14px 16px;
-    white-space: nowrap;
-  }
-
-  .promo-campaign-table tbody td {
-    padding: 15px 16px;
-    vertical-align: middle;
-    border-color: #eef2f7;
-    color: #0f172a;
-    font-size: 0.95rem;
-  }
-
-  .promo-campaign-table tbody tr:hover {
-    background: #f8fbff;
-  }
-
-  .promo-campaign-id {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 52px;
-    padding: 6px 10px;
-    border-radius: 10px;
-    background: #eff6ff;
-    color: #2563eb;
-    font-weight: 800;
-    font-size: 0.85rem;
-  }
-
-  .promo-campaign-name {
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  .promo-store-name {
-    font-weight: 600;
-    color: #0f172a;
-  }
-
-  .promo-store-code {
-    color: #64748b;
-    font-size: 0.88rem;
-  }
-
-  .promo-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .promo-status-active {
-    background: #dcfce7;
-    color: #15803d;
-  }
-
-  .promo-status-inactive {
-    background: #e2e8f0;
-    color: #334155;
-  }
-
-  .promo-status-scheduled {
-    background: #dbeafe;
-    color: #1d4ed8;
-  }
-
-  .promo-status-expired {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-
-  .promo-campaign-meta {
-    color: #64748b;
-    font-size: 0.85rem;
-    margin-top: 4px;
-  }
-
-  .promo-date {
-    color: #0f172a;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .promo-empty {
-    padding: 36px 16px !important;
-    color: #64748b !important;
-    font-size: 0.98rem;
-  }
-
-  .promo-action-stack {
-    display: grid;
-    gap: 6px;
-    min-width: 140px;
-  }
-
-  @media (max-width: 767.98px) {
-    .promo-campaign-page {
-      padding: 24px 0 36px;
-    }
-
-    .promo-campaign-topbar {
-      padding: 18px;
-      border-radius: 18px;
-    }
-  }
 </style>
 
-<div class="promo-campaign-page">
-  <div class="container promo-campaign-shell">
-    <% const storesSafe = Array.isArray(stores) ? stores : []; %>
+<% const storesSafe = Array.isArray(stores) ? stores : []; %>
+<div class="pad-layout">
+<%- include('./_sidebar.ejs', { currentPage: 'campaigns', promotionAdmin, counts: {} }) %>
+<div class="pad-main">
+  <header class="pad-topbar">
+    <div class="pad-topbar-left">
+      <button class="pad-sidebar-toggle" id="padToggle" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+      <div>
+        <div class="pad-page-title"><i class="bi bi-megaphone me-2 text-primary"></i>Campaigns</div>
+        <div class="pad-breadcrumb">Promotion Admin › จัดการแคมเปญ</div>
+      </div>
+    </div>
+    <div class="pad-topbar-right">
+      <span class="pad-date-badge"><i class="bi bi-calendar3 me-1"></i><span id="padDateNow"></span></span>
+    </div>
+  </header>
+  <main class="pad-body">
     <%
       const toDateTimeLocal = (raw) => {
         if (!raw) return '';
@@ -212,37 +41,8 @@
       };
     %>
 
-    <div class="promo-campaign-topbar">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
-        <div>
-          <div class="promo-campaign-badge">
-            <span>📣</span>
-            <span>Promotion Campaign Manager</span>
-          </div>
-          <h1 class="promo-campaign-title"><%= title %></h1>
-          <p class="promo-campaign-desc">
-            รายการแคมเปญทั้งหมด พร้อมข้อมูลร้าน สถานะการเปิดใช้งาน และช่วงเวลาของกิจกรรมในระบบ
-          </p>
-        </div>
-
-        <div class="d-flex gap-2 align-items-center">
-          <% if (promotionAdmin) { %>
-            <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
-          <% } %>
-          <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
-            <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
-            <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
-          <% } %>
-          <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm promo-campaign-back">
-            Back to dashboard
-          </a>
-          <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
-        </div>
-      </div>
-    </div>
-
     <% if (locals && locals.flash) { %>
-      <div class="alert alert-<%= locals.flash.type || 'info' %> rounded-3 mb-3">
+      <div class="alert alert-<%= locals.flash.type || 'info' %> pad-flash">
         <%= locals.flash.message %>
       </div>
     <% } %>
@@ -256,16 +56,15 @@
         const expired = Number.isFinite(endTs) && endTs < nowTs;
         const upcoming = Number.isFinite(startTs) && startTs > nowTs;
         const usable = active && !expired && !upcoming;
-        if (expired) return { key: 'expired', label: 'หมดอายุแล้ว', className: 'promo-status-expired', detail: 'เกินช่วงเวลาที่กำหนดแล้ว' };
-        if (upcoming) return { key: 'scheduled', label: 'ยังไม่เริ่ม', className: 'promo-status-scheduled', detail: 'รอถึงเวลาเริ่มต้น' };
-        if (usable) return { key: 'usable', label: 'ยังใช้ได้', className: 'promo-status-active', detail: 'อยู่ในช่วงใช้งานปกติ' };
-        return { key: 'inactive', label: 'ปิดใช้งาน', className: 'promo-status-inactive', detail: 'ถูกปิดใช้งานโดยแอดมิน' };
+        if (expired) return { key: 'expired', label: 'หมดอายุแล้ว', className: 'ps-expired', detail: 'เกินช่วงเวลาที่กำหนดแล้ว' };
+        if (upcoming) return { key: 'scheduled', label: 'ยังไม่เริ่ม', className: 'ps-scheduled', detail: 'รอถึงเวลาเริ่มต้น' };
+        if (usable) return { key: 'usable', label: 'ยังใช้ได้', className: 'ps-active', detail: 'อยู่ในช่วงใช้งานปกติ' };
+        return { key: 'inactive', label: 'ปิดใช้งาน', className: 'ps-inactive', detail: 'ถูกปิดใช้งานโดยแอดมิน' };
       };
     %>
 
-    <div class="card promo-campaign-form-card">
-      <div class="card-body p-4">
-        <h5 class="fw-bold mb-3">➕ เพิ่มแคมเปญ</h5>
+    <div class="pad-form-card">
+      <div class="pad-form-title"><i class="bi bi-plus-circle-fill text-primary"></i> เพิ่มแคมเปญใหม่</div>
         <form method="POST" action="/promotion/admin/campaigns" class="row g-3" autocomplete="off">
           <div class="col-md-3">
             <label class="form-label">สาขา</label>
@@ -316,25 +115,30 @@
           </div>
 
           <div class="col-12 d-flex justify-content-end">
-            <button class="btn btn-primary">บันทึกแคมเปญ</button>
+            <button class="btn btn-primary px-4 fw-bold"><i class="bi bi-check-circle me-1"></i> บันทึกแคมเปญ</button>
           </div>
         </form>
-      </div>
     </div>
 
-    <div class="card promo-campaign-card">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table promo-campaign-table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Campaign ID</th>
-                <th>Name</th>
-                <th>Store</th>
-                <th>Active</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Actions</th>
+    <div class="pad-card">
+      <div class="pad-card-head">
+        <div>
+          <div class="pad-card-title"><i class="bi bi-table me-2 text-primary"></i>รายการแคมเปญทั้งหมด</div>
+          <div class="pad-card-subtitle">พร้อมข้อมูลร้าน สถานะ และช่วงเวลา</div>
+        </div>
+        <% if (Array.isArray(campaigns)) { %><span class="pad-card-badge"><%= campaigns.length %> แคมเปญ</span><% } %>
+      </div>
+      <div class="table-responsive">
+        <table class="table pad-tbl table-hover mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>ชื่อแคมเปญ</th>
+              <th>สาขา</th>
+              <th>สถานะ</th>
+              <th>เริ่มต้น</th>
+              <th>สิ้นสุด</th>
+              <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -342,75 +146,55 @@
                 <% campaigns.forEach(c => { %>
                   <% const campaignState = getCampaignTimeState(c); %>
                   <tr>
+                    <td><span class="pcmp-id-chip">#<%= c.id %></span></td>
                     <td>
-                      <span class="promo-campaign-id">#<%= c.id %></span>
-                    </td>
-                    <td>
-                      <div class="promo-campaign-name"><%= c.name %></div>
+                      <div class="pcmp-name"><%= c.name %></div>
+                      <div class="pcmp-meta"><%= c.campaign_code || '' %></div>
                     </td>
                     <td>
                       <% if (c.store_name) { %>
-                        <div class="promo-store-name"><%= c.store_name %></div>
-                        <div class="promo-store-code"><%= c.store_code || '-' %></div>
-                      <% } else { %>
-                        <span class="text-muted">-</span>
-                      <% } %>
+                        <div class="pad-semibold"><%= c.store_name %></div>
+                        <span class="pad-store-chip"><%= c.store_code || '-' %></span>
+                      <% } else { %><span class="pad-muted">-</span><% } %>
                     </td>
                     <td>
-                      <span class="promo-status <%= campaignState.className %>"><%= campaignState.label %></span>
-                      <div class="promo-campaign-meta"><%= campaignState.detail %></div>
+                      <span class="pad-status <%= campaignState.className %>"><%= campaignState.label %></span>
+                      <div class="pcmp-meta"><%= campaignState.detail %></div>
                     </td>
+                    <td><span class="pcmp-date"><%= c.start_at ? new Date(c.start_at).toLocaleString('th-TH') : '-' %></span></td>
+                    <td><span class="pcmp-date"><%= c.end_at ? new Date(c.end_at).toLocaleString('th-TH') : '-' %></span></td>
                     <td>
-                      <span class="promo-date">
-                        <%= c.start_at ? new Date(c.start_at).toLocaleString() : '-' %>
-                      </span>
-                    </td>
-                    <td>
-                      <span class="promo-date">
-                        <%= c.end_at ? new Date(c.end_at).toLocaleString() : '-' %>
-                      </span>
-                      <div class="promo-campaign-meta">
-                        <%= campaignState.label %>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="promo-action-stack">
+                      <div class="pad-action-group">
                         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editCampaignModal-<%= c.id %>">
-                          Edit
+                          <i class="bi bi-pencil me-1"></i>Edit
                         </button>
                         <form method="POST" action="/promotion/admin/campaigns/<%= c.id %>/status">
                           <input type="hidden" name="active" value="<%= c.active ? '0' : '1' %>">
-                          <button class="btn btn-outline-warning btn-sm w-100">
-                            <%= c.active ? 'Deactivate' : 'Activate' %>
-                          </button>
+                          <button class="btn btn-outline-warning btn-sm w-100"><%= c.active ? 'Deactivate' : 'Activate' %></button>
                         </form>
-                        <a href="#editCampaignModal-<%= c.id %>" class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="modal">
-                          <%= campaignState.key === 'expired' ? 'View expired campaign' : 'Check campaign' %>
-                        </a>
                         <form method="POST" action="/promotion/admin/campaigns/<%= c.id %>/delete"
                               onsubmit="return confirm('ยืนยันลบแคมเปญนี้ใช่หรือไม่?');">
-                          <button class="btn btn-outline-danger btn-sm w-100">
-                            Delete
-                          </button>
+                          <button class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash me-1"></i>Delete</button>
                         </form>
                       </div>
                     </td>
                   </tr>
                 <% }) %>
               <% } else { %>
-                <tr>
-                  <td colspan="7" class="text-center promo-empty">
-                    ยังไม่พบรายการแคมเปญในระบบ
-                  </td>
-                </tr>
+              <tr>
+                <td colspan="7" class="pad-empty-cell">
+                  <span class="pad-empty-icon d-block">📋</span>
+                  <span class="pad-empty-text">ยังไม่พบรายการแคมเปญในระบบ</span>
+                </td>
+              </tr>
               <% } %>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-
-  </div>
+  </main>
+</div>
 </div>
 <% if (Array.isArray(campaigns) && campaigns.length) { %>
   <% campaigns.forEach(c => { %>

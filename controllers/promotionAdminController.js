@@ -648,16 +648,14 @@ exports.deletePrize = async (req, res) => {
       req.flash('danger', 'คุณไม่มีสิทธิ์ลบของรางวัลรายการนี้');
       return res.redirect('/promotion/admin/prizes');
     }
-    if (Number(prize.reserved_qty || 0) > 0) {
-      req.flash('danger', 'ไม่สามารถลบได้ เพราะยังมีรางวัลที่ถูกจองอยู่');
-      return res.redirect('/promotion/admin/prizes');
-    }
 
     const drawRefs = await promotionModel.countPrizeDrawReferences(prizeId);
     if (drawRefs > 0) {
       req.flash('danger', 'ไม่สามารถลบได้ เพราะมีประวัติการจับรางวัลอ้างอิงรายการนี้');
       return res.redirect('/promotion/admin/prizes');
     }
+    // Note: reserved_qty > 0 with drawRefs = 0 is a stale reservation (e.g. from
+    // a code reset that didn't release it). We allow deletion in this case.
 
     const deleted = await promotionModel.deletePrizeById(prizeId);
     if (!deleted) {

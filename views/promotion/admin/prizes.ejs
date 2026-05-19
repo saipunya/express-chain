@@ -1,210 +1,65 @@
 <!-- include header -->
 <%- include('../header.ejs', { title: title }) %>
 <style>
-  .promo-prize-page {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    min-height: 100vh;
-    padding: 40px 0;
-  }
-
-  .promo-shell {
-    max-width: 1200px;
-    margin: auto;
-  }
-
-  .promo-header {
-    background: #fff;
-    border-radius: 22px;
-    padding: 24px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
-  }
-
-  .promo-title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  .promo-desc {
-    color: #64748b;
-  }
-
-  .promo-card {
-    border-radius: 22px;
-    overflow: hidden;
-    border: none;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
-  }
-
-  .promo-form-card {
-    border-radius: 22px;
-    border: none;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
-  }
-
-  .promo-form-card .form-control,
-  .promo-form-card .form-select {
-    border-radius: 12px;
-  }
-
-  .promo-table thead th {
-    background: #f8fafc;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-  }
-
-  .promo-table tbody tr:hover {
-    background: #f1f5f9;
-  }
-
-  .progress {
-    height: 8px;
-    border-radius: 999px;
-  }
-
-  .badge-soft {
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .badge-active {
-    background: #dcfce7;
-    color: #15803d;
-  }
-
-  .badge-inactive {
-    background: #e2e8f0;
-    color: #334155;
-  }
-
-  .action-stack {
-    display: grid;
-    gap: 6px;
-    min-width: 140px;
-  }
-
+  /* prizes-page specific */
   .prize-thumb {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    object-fit: cover;
-    display: block;
+    width: 64px; height: 64px; border-radius: 12px;
+    border: 1px solid #e2e8f0; background: #f8fafc;
+    object-fit: cover; display: block;
   }
-
   .prize-thumb-empty {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
-    border: 1px dashed #cbd5e1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 0.8rem;
-    background: #f8fafc;
+    width: 64px; height: 64px; border-radius: 12px;
+    border: 1px dashed #cbd5e1; display: flex; align-items: center;
+    justify-content: center; color: #94a3b8; font-size: .8rem; background: #f8fafc;
   }
-
   .prize-preview-card {
-    width: 160px;
-    height: 160px;
-    border-radius: 14px;
-    border: 1px dashed #cbd5e1;
-    background: #f8fafc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    width: 160px; height: 160px; border-radius: 14px;
+    border: 1px dashed #cbd5e1; background: #f8fafc;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
-
-  .prize-preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .prize-preview-empty {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-
-  .modal[id^="editPrizeModal-"] .modal-dialog {
-    margin: 1rem auto;
-  }
-
-  .modal[id^="editPrizeModal-"] .modal-content {
-    max-height: calc(100vh - 2rem);
-    overflow: hidden;
-  }
-
-  .modal[id^="editPrizeModal-"] .modal-header {
-    position: sticky;
-    top: 0;
-    background: #fff;
-    z-index: 3;
-  }
-
-  .modal[id^="editPrizeModal-"] .modal-body {
-    overflow-y: auto;
-    max-height: calc(100vh - 210px);
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .modal[id^="editPrizeModal-"] .modal-footer {
-    position: sticky;
-    bottom: 0;
-    background: #fff;
-    z-index: 3;
-    border-top: 1px solid #e2e8f0;
-  }
+  .prize-preview-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .prize-preview-empty { color: #94a3b8; font-size: .9rem; font-weight: 600; }
+  .progress { height: 8px; border-radius: 999px; }
+  .badge-soft { padding: 6px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .badge-active   { background: #dcfce7; color: #15803d; }
+  .badge-inactive { background: #e2e8f0; color: #334155; }
+  .action-stack { display: grid; gap: 6px; min-width: 140px; }
+  .modal[id^="editPrizeModal-"] .modal-dialog  { margin: 1rem auto; }
+  .modal[id^="editPrizeModal-"] .modal-content { max-height: calc(100vh - 2rem); overflow: hidden; }
+  .modal[id^="editPrizeModal-"] .modal-header  { position: sticky; top: 0; background: #fff; z-index: 3; }
+  .modal[id^="editPrizeModal-"] .modal-body    { overflow-y: auto; max-height: calc(100vh - 210px); -webkit-overflow-scrolling: touch; }
+  .modal[id^="editPrizeModal-"] .modal-footer  { position: sticky; bottom: 0; background: #fff; z-index: 3; border-top: 1px solid #e2e8f0; }
 </style>
 
-<div class="promo-prize-page">
-  <div class="container promo-shell">
-    <% const storesSafe = Array.isArray(stores) ? stores : []; %>
-    <% const campaignsSafe = Array.isArray(campaigns) ? campaigns : []; %>
-
-    <!-- HEADER -->
-    <div class="promo-header d-flex justify-content-between align-items-start">
+<%
+  const storesSafe = Array.isArray(stores) ? stores : [];
+  const campaignsSafe = Array.isArray(campaigns) ? campaigns : [];
+%>
+<div class="pad-layout">
+<%- include('./_sidebar.ejs', { currentPage: 'prizes', promotionAdmin, counts: {} }) %>
+<div class="pad-main">
+  <header class="pad-topbar">
+    <div class="pad-topbar-left">
+      <button class="pad-sidebar-toggle" id="padToggle" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
       <div>
-        <h1 class="promo-title"><%= title %></h1>
-        <p class="promo-desc mb-0">
-          รายการของรางวัล พร้อมสถานะคงเหลือและการใช้งานจริง
-        </p>
-      </div>
-      <div class="d-flex gap-2 align-items-center">
-        <% if (promotionAdmin) { %>
-          <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
-        <% } %>
-        <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
-          <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
-          <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
-        <% } %>
-        <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm">
-          ← Dashboard
-        </a>
-        <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+        <div class="pad-page-title"><i class="bi bi-gift me-2 text-success"></i>Prize Manager</div>
+        <div class="pad-breadcrumb">Promotion Admin › จัดการของรางวัล</div>
       </div>
     </div>
+    <div class="pad-topbar-right">
+      <span class="pad-date-badge"><i class="bi bi-calendar3 me-1"></i><span id="padDateNow"></span></span>
+    </div>
+  </header>
+  <main class="pad-body">
 
     <% if (locals && locals.flash) { %>
-      <div class="alert alert-<%= locals.flash.type || 'info' %> rounded-3 mb-3">
+      <div class="alert alert-<%= locals.flash.type || 'info' %> pad-flash">
         <%= locals.flash.message %>
       </div>
     <% } %>
 
-    <div class="card promo-form-card">
-      <div class="card-body p-4">
-        <h5 class="fw-bold mb-3">➕ เพิ่มของรางวัล</h5>
+    <div class="pad-form-card">
+      <div class="pad-form-title"><i class="bi bi-plus-circle-fill text-success me-1"></i> เพิ่มของรางวัลใหม่</div>
         <form method="POST" action="/promotion/admin/prizes" class="row g-3 prize-image-form" autocomplete="off" enctype="multipart/form-data">
           <div class="col-md-3">
             <label class="form-label">สาขา</label>
@@ -294,16 +149,22 @@
           </div>
 
           <div class="col-12 d-flex justify-content-end">
-            <button class="btn btn-primary">บันทึกของรางวัล</button>
+            <button class="btn btn-success px-4 fw-bold"><i class="bi bi-check-circle me-1"></i> บันทึกของรางวัล</button>
           </div>
         </form>
-      </div>
     </div>
 
     <!-- TABLE -->
-    <div class="card promo-card">
+    <div class="pad-card">
+      <div class="pad-card-head">
+        <div>
+          <div class="pad-card-title"><i class="bi bi-gift me-2 text-success"></i>รายการของรางวัลทั้งหมด</div>
+          <div class="pad-card-subtitle">พร้อมสถานะคงเหลือ จองแล้ว และน้ำหนักสำหรับสุ่ม</div>
+        </div>
+        <% if (Array.isArray(prizes)) { %><span class="pad-card-badge"><%= prizes.length %> รายการ</span><% } %>
+      </div>
       <div class="table-responsive">
-        <table class="table promo-table mb-0 align-middle">
+        <table class="table pad-tbl mb-0 align-middle">
           <thead>
             <tr>
               <th>Prize</th>
@@ -393,17 +254,19 @@
               <% }) %>
             <% } else { %>
               <tr>
-                <td colspan="10" class="text-center text-muted py-4">
-                  ยังไม่มีรายการของรางวัล
+              <td class="text-center text-muted py-4">
+                  <span class="pad-empty-icon d-block">🎁</span>
+                  <span class="pad-empty-text">ยังไม่มีรายการของรางวัล</span>
                 </td>
               </tr>
             <% } %>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
-
-  </div>
+  </main>
+</div>
 </div>
 <% if (Array.isArray(prizes) && prizes.length) { %>
   <% prizes.forEach(p => { %>

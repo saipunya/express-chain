@@ -1,413 +1,739 @@
 <!-- include header -->
 <%- include('../header.ejs', { title: title }) %>
 <style>
-  .promo-admin-dashboard {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    min-height: 100vh;
-    padding: 40px 0 56px;
-  }
-
-  .promo-admin-shell {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .promo-admin-topbar {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-    margin-bottom: 24px;
-  }
-
-  .promo-admin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #2563eb;
-    font-size: 0.92rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .promo-admin-title {
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.08;
-    margin-bottom: 10px;
-    letter-spacing: -0.03em;
-  }
-
-  .promo-admin-desc {
-    color: #64748b;
-    margin-bottom: 0;
-    line-height: 1.7;
-    max-width: 760px;
-  }
-
-  .promo-admin-nav {
+  /* ── Layout ── */
+  .pad-layout {
     display: flex;
-    flex-wrap: wrap;
+    min-height: 100vh;
+    background: #f1f5f9;
+  }
+
+  /* ── Sidebar ── */
+  .pad-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1040;
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+  }
+  .pad-sidebar-brand {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .pad-sidebar-logo {
+    display: flex;
+    align-items: center;
     gap: 10px;
+    text-decoration: none;
   }
-
-  .promo-admin-nav .btn {
+  .pad-sidebar-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
     border-radius: 12px;
-    padding: 10px 14px;
-    font-weight: 600;
-    border-width: 1.5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .pad-sidebar-logo-text {
+    font-weight: 800;
+    font-size: 1.02rem;
+    color: #f8fafc;
+    line-height: 1.2;
+  }
+  .pad-sidebar-logo-sub {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    font-weight: 500;
   }
 
-  .promo-stat-card {
-    border: none;
-    border-radius: 22px;
-    padding: 20px 18px;
-    height: 100%;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    overflow: hidden;
-    position: relative;
+  .pad-sidebar-user {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .pad-user-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; color: #fff; font-weight: 700; flex-shrink: 0;
+  }
+  .pad-user-name {
+    font-size: 0.9rem; font-weight: 700; color: #f1f5f9; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pad-user-role {
+    font-size: 0.72rem; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
   }
 
-  .promo-stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.1);
+  .pad-sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
-
-  .promo-stat-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: 0.12;
-    pointer-events: none;
-  }
-
-  .promo-stat-total {
-    background: #ffffff;
-  }
-  .promo-stat-total::before {
-    background: linear-gradient(135deg, #2563eb, #60a5fa);
-  }
-
-  .promo-stat-unused {
-    background: #ffffff;
-  }
-  .promo-stat-unused::before {
-    background: linear-gradient(135deg, #16a34a, #4ade80);
-  }
-
-  .promo-stat-drawn {
-    background: #ffffff;
-  }
-  .promo-stat-drawn::before {
-    background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  }
-
-  .promo-stat-claimed {
-    background: #ffffff;
-  }
-  .promo-stat-claimed::before {
-    background: linear-gradient(135deg, #0891b2, #67e8f9);
-  }
-
-  .promo-stat-declined {
-    background: #ffffff;
-  }
-  .promo-stat-declined::before {
-    background: linear-gradient(135deg, #f59e0b, #fcd34d);
-  }
-
-  .promo-stat-expired {
-    background: #ffffff;
-  }
-  .promo-stat-expired::before {
-    background: linear-gradient(135deg, #ef4444, #fda4af);
-  }
-
-  .promo-stat-inner {
-    position: relative;
-    z-index: 1;
-  }
-
-  .promo-stat-label {
-    font-size: 0.88rem;
+  .pad-sidebar-section {
+    font-size: 0.68rem;
     font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 10px;
-  }
-
-  .promo-stat-value {
-    font-size: clamp(1.8rem, 4vw, 2.4rem);
-    font-weight: 800;
-    line-height: 1;
-    color: #0f172a;
-    margin-bottom: 8px;
-  }
-
-  .promo-stat-foot {
-    font-size: 0.9rem;
-    color: #64748b;
-  }
-
-  .promo-summary-card {
-    margin-top: 24px;
-    border: none;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-  }
-
-  .promo-summary-head {
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 18px 20px;
-  }
-
-  .promo-summary-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 4px;
-  }
-
-  .promo-summary-subtitle {
-    color: #64748b;
-    margin-bottom: 0;
-    font-size: 0.95rem;
-  }
-
-  .promo-summary-table {
-    margin-bottom: 0;
-  }
-
-  .promo-summary-table thead th {
-    background: #f8fafc;
     color: #475569;
-    font-size: 0.8rem;
-    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
+    padding: 10px 10px 4px;
+    margin-top: 6px;
+  }
+  .pad-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #94a3b8;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+  }
+  .pad-nav-link:hover { background: rgba(255,255,255,0.07); color: #f1f5f9; }
+  .pad-nav-link.active { background: rgba(59,130,246,0.18); color: #60a5fa; }
+  .pad-nav-link .bi { font-size: 1.05rem; flex-shrink: 0; }
+  .pad-nav-link-badge {
+    margin-left: auto;
+    background: rgba(59,130,246,0.25);
+    color: #60a5fa;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  .pad-sidebar-footer {
+    padding: 12px 12px 20px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .pad-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #f87171;
+    font-size: 0.92rem;
+    font-weight: 600;
+    width: 100%;
+    transition: background 0.15s;
+  }
+  .pad-logout-btn:hover { background: rgba(239,68,68,0.12); color: #fca5a5; }
+
+  /* ── Main content ── */
+  .pad-main {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Topbar ── */
+  .pad-topbar {
+    background: #fff;
     border-bottom: 1px solid #e2e8f0;
-    padding: 13px 14px;
+    padding: 0 28px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .pad-topbar-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .pad-sidebar-toggle {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    color: #64748b; font-size: 1.3rem; padding: 6px;
+  }
+  .pad-page-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+  }
+  .pad-breadcrumb {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+  }
+  .pad-topbar-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pad-date-badge {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-weight: 600;
     white-space: nowrap;
   }
 
-  .promo-summary-table tbody td {
-    padding: 13px 14px;
-    vertical-align: middle;
-    border-color: #eef2f7;
-    color: #0f172a;
+  /* ── Page body ── */
+  .pad-body {
+    padding: 28px;
+    flex: 1;
   }
 
-  .promo-summary-store {
+  /* ── Stat cards ── */
+  .pad-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .pad-stat-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.18s, box-shadow 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pad-stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(15,23,42,0.1); }
+  .pad-stat-card-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+  }
+  .accent-blue  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+  .accent-green { background: linear-gradient(90deg, #16a34a, #4ade80); }
+  .accent-violet{ background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .accent-cyan  { background: linear-gradient(90deg, #0891b2, #22d3ee); }
+  .accent-amber { background: linear-gradient(90deg, #d97706, #fbbf24); }
+  .accent-red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+  .pad-stat-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    margin-bottom: 14px;
+  }
+  .icon-blue   { background: #eff6ff; color: #2563eb; }
+  .icon-green  { background: #f0fdf4; color: #16a34a; }
+  .icon-violet { background: #f5f3ff; color: #7c3aed; }
+  .icon-cyan   { background: #ecfeff; color: #0891b2; }
+  .icon-amber  { background: #fffbeb; color: #d97706; }
+  .icon-red    { background: #fef2f2; color: #dc2626; }
+
+  .pad-stat-value {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
     font-weight: 800;
     color: #0f172a;
+    line-height: 1;
+    margin-bottom: 4px;
   }
-
-  .promo-summary-code {
-    display: inline-block;
-    margin-top: 4px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.84rem;
-    color: #2563eb;
-    background: #eff6ff;
-    border-radius: 10px;
-    padding: 4px 9px;
-  }
-
-  .promo-summary-num {
+  .pad-stat-label {
+    font-size: 0.78rem;
     font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .pad-stat-bar-wrap {
+    height: 5px;
+    background: #f1f5f9;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .pad-stat-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s ease;
+  }
+  .pad-stat-pct {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    font-weight: 600;
   }
 
-  .promo-summary-empty {
-    padding: 30px 16px !important;
-    color: #64748b !important;
+  /* ── Summary table card ── */
+  .pad-table-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    overflow: hidden;
+  }
+  .pad-table-head {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pad-table-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+  }
+  .pad-table-subtitle {
+    font-size: 0.84rem;
+    color: #94a3b8;
+    margin: 2px 0 0;
+  }
+  .pad-table-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #475569;
+    white-space: nowrap;
+  }
+  .pad-tbl thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 11px 16px;
+    white-space: nowrap;
+  }
+  .pad-tbl tbody td {
+    padding: 13px 16px;
+    vertical-align: middle;
+    border-color: #f1f5f9;
+    color: #1e293b;
+    font-size: 0.9rem;
+  }
+  .pad-tbl tbody tr:hover { background: #f8fafc; }
+  .pad-tbl .store-name { font-weight: 700; color: #0f172a; }
+  .pad-tbl .store-code {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.76rem;
+    color: #3b82f6;
+    background: #eff6ff;
+    border-radius: 6px;
+    padding: 2px 7px;
+    margin-top: 3px;
+  }
+  .pad-num { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pad-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 36px;
+    font-size: 0.8rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .pill-blue   { background: #eff6ff; color: #2563eb; }
+  .pill-green  { background: #f0fdf4; color: #15803d; }
+  .pill-violet { background: #f5f3ff; color: #7c3aed; }
+  .pill-cyan   { background: #ecfeff; color: #0e7490; }
+  .pill-amber  { background: #fffbeb; color: #b45309; }
+  .pill-slate  { background: #f8fafc; color: #475569; }
+
+  .pad-tbl-empty {
+    padding: 48px 20px !important;
+    text-align: center;
+    color: #94a3b8 !important;
+  }
+  .pad-tbl-empty-icon { font-size: 2.2rem; margin-bottom: 8px; opacity: 0.5; }
+  .pad-tbl-empty-text { font-size: 0.92rem; font-weight: 600; }
+
+  /* ── Quick actions ── */
+  .pad-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .pad-qa-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pad-qa-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(15,23,42,0.09);
+    border-color: #bfdbfe;
+    color: inherit;
+  }
+  .pad-qa-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .pad-qa-label { font-size: 0.9rem; font-weight: 700; color: #0f172a; }
+  .pad-qa-desc  { font-size: 0.78rem; color: #94a3b8; line-height: 1.4; }
+
+  /* ── Mobile overlay ── */
+  .pad-sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.45);
+    z-index: 1039;
   }
 
+  /* ── Responsive ── */
+  @media (max-width: 1199.98px) {
+    .pad-stat-grid { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 767.98px) {
-    .promo-admin-dashboard {
-      padding: 24px 0 36px;
+    .pad-sidebar {
+      transform: translateX(-100%);
     }
-
-    .promo-admin-topbar {
-      padding: 18px;
-      border-radius: 18px;
+    .pad-sidebar.open {
+      transform: translateX(0);
+      box-shadow: 4px 0 32px rgba(15,23,42,0.25);
     }
-
-    .promo-admin-nav .btn {
-      width: 100%;
-    }
-
-    .promo-stat-card {
-      border-radius: 18px;
-      padding: 18px 16px;
-    }
-
-    .promo-summary-head {
-      padding: 16px;
-    }
+    .pad-sidebar-overlay.open { display: block; }
+    .pad-sidebar-toggle { display: block; }
+    .pad-main { margin-left: 0; }
+    .pad-topbar { padding: 0 16px; }
+    .pad-body { padding: 16px; }
+    .pad-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .pad-quick-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .pad-table-head { padding: 16px; }
+    .pad-tbl thead th, .pad-tbl tbody td { padding: 10px 12px; }
+  }
+  @media (max-width: 479.98px) {
+    .pad-stat-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 
-<div class="promo-admin-dashboard">
-  <div class="container promo-admin-shell">
+<div class="pad-layout">
 
-    <div class="promo-admin-topbar">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
+  <!-- Sidebar -->
+  <aside class="pad-sidebar" id="padSidebar">
+    <div class="pad-sidebar-brand">
+      <a href="/promotion/admin" class="pad-sidebar-logo">
+        <div class="pad-sidebar-logo-icon">🎁</div>
         <div>
-          <div class="promo-admin-badge">
-            <span>📊</span>
-            <span>Promotion Admin Dashboard</span>
-          </div>
-          <h1 class="promo-admin-title"><%= title %></h1>
-          <p class="promo-admin-desc">
-            แดชบอร์ดสรุปสถานะโปรโมชั่น ภาพรวมการใช้งานโค้ด และผลลัพธ์การร่วมกิจกรรมทั้งหมดในระบบ
-          </p>
+          <div class="pad-sidebar-logo-text">Promo Admin</div>
+          <div class="pad-sidebar-logo-sub">Management Console</div>
         </div>
+      </a>
+    </div>
 
-        <div class="promo-admin-nav">
-          <% if (promotionAdmin) { %>
-            <span class="btn btn-light btn-sm disabled">
-              <%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)
-            </span>
-          <% } %>
-          <a href="/promotion/admin/campaigns" class="btn btn-outline-primary btn-sm">Campaigns</a>
-          <a href="/promotion/admin/prizes" class="btn btn-outline-primary btn-sm">Prizes</a>
-          <a href="/promotion/admin/codes" class="btn btn-outline-primary btn-sm">Codes</a>
-          <a href="/promotion/admin/draws" class="btn btn-outline-primary btn-sm">Draws</a>
-          <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
-            <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
-            <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
-          <% } %>
-          <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+    <% if (promotionAdmin) { %>
+    <div class="pad-sidebar-user">
+      <div class="d-flex align-items-center gap-2">
+        <div class="pad-user-avatar">
+          <%= (promotionAdmin.display_name || promotionAdmin.username || 'A').charAt(0).toUpperCase() %>
+        </div>
+        <div style="min-width:0">
+          <div class="pad-user-name"><%= promotionAdmin.display_name || promotionAdmin.username %></div>
+          <div class="pad-user-role"><%= promotionAdmin.role === 'super_admin' ? '⭐ Super Admin' : promotionAdmin.role %></div>
         </div>
       </div>
     </div>
+    <% } %>
 
-    <div class="row g-3">
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-total">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Total Codes</div>
-            <div class="promo-stat-value"><%= counts.total || 0 %></div>
-            <div class="promo-stat-foot">โค้ดทั้งหมดในระบบ</div>
-          </div>
-        </div>
-      </div>
+    <nav class="pad-sidebar-nav">
+      <div class="pad-sidebar-section">ภาพรวม</div>
+      <a href="/promotion/admin" class="pad-nav-link active">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
 
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-unused">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Unused</div>
-            <div class="promo-stat-value"><%= counts.unused || 0 %></div>
-            <div class="promo-stat-foot">พร้อมใช้งาน</div>
-          </div>
-        </div>
-      </div>
+      <div class="pad-sidebar-section">จัดการโปรโมชั่น</div>
+      <a href="/promotion/admin/campaigns" class="pad-nav-link">
+        <i class="bi bi-megaphone"></i> Campaigns
+      </a>
+      <a href="/promotion/admin/prizes" class="pad-nav-link">
+        <i class="bi bi-gift"></i> Prizes
+      </a>
+      <a href="/promotion/admin/codes" class="pad-nav-link">
+        <i class="bi bi-upc-scan"></i> Codes
+        <% if (counts && counts.unused > 0) { %>
+          <span class="pad-nav-link-badge"><%= counts.unused %></span>
+        <% } %>
+      </a>
+      <a href="/promotion/admin/draws" class="pad-nav-link">
+        <i class="bi bi-shuffle"></i> Draws
+      </a>
 
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-drawn">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Drawn</div>
-            <div class="promo-stat-value"><%= counts.drawn || 0 %></div>
-            <div class="promo-stat-foot">ถูกนำไปสุ่มแล้ว</div>
-          </div>
-        </div>
-      </div>
+      <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+      <div class="pad-sidebar-section">ระบบ</div>
+      <a href="/promotion/admin/users" class="pad-nav-link">
+        <i class="bi bi-people"></i> Admin Users
+      </a>
+      <a href="/promotion/admin/stores" class="pad-nav-link">
+        <i class="bi bi-shop"></i> Stores
+      </a>
+      <% } %>
+    </nav>
 
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-claimed">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Claimed</div>
-            <div class="promo-stat-value"><%= counts.claimed || 0 %></div>
-            <div class="promo-stat-foot">เคลมรางวัลสำเร็จ</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-declined">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Declined</div>
-            <div class="promo-stat-value"><%= counts.declined || 0 %></div>
-            <div class="promo-stat-foot">ปฏิเสธรางวัล</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-md-4 col-xl-2">
-        <div class="promo-stat-card promo-stat-expired">
-          <div class="promo-stat-inner text-center">
-            <div class="promo-stat-label">Expired</div>
-            <div class="promo-stat-value"><%= counts.expired || 0 %></div>
-            <div class="promo-stat-foot">หมดอายุแล้ว</div>
-          </div>
-        </div>
-      </div>
+    <div class="pad-sidebar-footer">
+      <a href="/promotion/admin/logout" class="pad-logout-btn">
+        <i class="bi bi-box-arrow-left"></i> ออกจากระบบ
+      </a>
     </div>
+  </aside>
 
-    <div class="card promo-summary-card">
-      <div class="promo-summary-head">
-        <div class="promo-summary-title">สรุปแยกตามสโตร์</div>
-        <p class="promo-summary-subtitle">
-          ภาพรวมการใช้งานโค้ดและผลการสุ่มของแต่ละสโตร์
-        </p>
+  <!-- Overlay for mobile -->
+  <div class="pad-sidebar-overlay" id="padOverlay"></div>
+
+  <!-- Main -->
+  <div class="pad-main">
+
+    <!-- Topbar -->
+    <header class="pad-topbar">
+      <div class="pad-topbar-left">
+        <button class="pad-sidebar-toggle" id="padToggle" aria-label="Toggle sidebar">
+          <i class="bi bi-list"></i>
+        </button>
+        <div>
+          <div class="pad-page-title">Dashboard</div>
+          <div class="pad-breadcrumb">Promotion Admin › ภาพรวมระบบ</div>
+        </div>
       </div>
-      <div class="table-responsive">
-        <table class="table promo-summary-table table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Store</th>
-              <th>Campaigns</th>
-              <th>Prizes</th>
-              <th>Codes</th>
-              <th>Unused</th>
-              <th>Drawn</th>
-              <th>Claimed</th>
-              <th>Declined</th>
-              <th>Draw Records</th>
-              <th>Admin Users</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (Array.isArray(storeSummaries) && storeSummaries.length) { %>
-              <% storeSummaries.forEach(store => { %>
+      <div class="pad-topbar-right">
+        <span class="pad-date-badge">
+          <i class="bi bi-calendar3 me-1"></i>
+          <span id="padDateNow"></span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <main class="pad-body">
+
+      <!-- ── Stat cards ── -->
+      <%
+        const total   = counts.total   || 0;
+        const unused  = counts.unused  || 0;
+        const drawn   = counts.drawn   || 0;
+        const claimed = counts.claimed || 0;
+        const declined= counts.declined|| 0;
+        const expired = counts.expired || 0;
+        function pct(n) { return total > 0 ? Math.round(n / total * 100) : 0; }
+      %>
+      <div class="pad-stat-grid">
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-blue"></div>
+          <div class="pad-stat-icon icon-blue"><i class="bi bi-ticket-perforated"></i></div>
+          <div class="pad-stat-value"><%= total %></div>
+          <div class="pad-stat-label">Total Codes</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-blue" style="width:100%"></div>
+          </div>
+          <div class="pad-stat-pct">โค้ดทั้งหมดในระบบ</div>
+        </div>
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-green"></div>
+          <div class="pad-stat-icon icon-green"><i class="bi bi-check-circle"></i></div>
+          <div class="pad-stat-value"><%= unused %></div>
+          <div class="pad-stat-label">Unused</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-green" style="width:<%= pct(unused) %>%"></div>
+          </div>
+          <div class="pad-stat-pct"><%= pct(unused) %>% พร้อมใช้งาน</div>
+        </div>
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-violet"></div>
+          <div class="pad-stat-icon icon-violet"><i class="bi bi-shuffle"></i></div>
+          <div class="pad-stat-value"><%= drawn %></div>
+          <div class="pad-stat-label">Drawn</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-violet" style="width:<%= pct(drawn) %>%"></div>
+          </div>
+          <div class="pad-stat-pct"><%= pct(drawn) %>% ถูกสุ่มแล้ว</div>
+        </div>
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-cyan"></div>
+          <div class="pad-stat-icon icon-cyan"><i class="bi bi-bag-check"></i></div>
+          <div class="pad-stat-value"><%= claimed %></div>
+          <div class="pad-stat-label">Claimed</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-cyan" style="width:<%= pct(claimed) %>%"></div>
+          </div>
+          <div class="pad-stat-pct"><%= pct(claimed) %>% เคลมสำเร็จ</div>
+        </div>
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-amber"></div>
+          <div class="pad-stat-icon icon-amber"><i class="bi bi-x-circle"></i></div>
+          <div class="pad-stat-value"><%= declined %></div>
+          <div class="pad-stat-label">Declined</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-amber" style="width:<%= pct(declined) %>%"></div>
+          </div>
+          <div class="pad-stat-pct"><%= pct(declined) %>% ปฏิเสธรางวัล</div>
+        </div>
+
+        <div class="pad-stat-card">
+          <div class="pad-stat-card-accent accent-red"></div>
+          <div class="pad-stat-icon icon-red"><i class="bi bi-clock-history"></i></div>
+          <div class="pad-stat-value"><%= expired %></div>
+          <div class="pad-stat-label">Expired</div>
+          <div class="pad-stat-bar-wrap">
+            <div class="pad-stat-bar accent-red" style="width:<%= pct(expired) %>%"></div>
+          </div>
+          <div class="pad-stat-pct"><%= pct(expired) %>% หมดอายุ</div>
+        </div>
+
+      </div>
+
+      <!-- ── Quick actions ── -->
+      <div class="pad-quick-grid">
+        <a href="/promotion/admin/campaigns" class="pad-qa-card">
+          <div class="pad-qa-icon icon-blue"><i class="bi bi-megaphone-fill"></i></div>
+          <div>
+            <div class="pad-qa-label">Campaigns</div>
+            <div class="pad-qa-desc">จัดการแคมเปญโปรโมชั่น</div>
+          </div>
+        </a>
+        <a href="/promotion/admin/prizes" class="pad-qa-card">
+          <div class="pad-qa-icon icon-violet"><i class="bi bi-gift-fill"></i></div>
+          <div>
+            <div class="pad-qa-label">Prizes</div>
+            <div class="pad-qa-desc">ตั้งค่ารางวัลในระบบ</div>
+          </div>
+        </a>
+        <a href="/promotion/admin/codes" class="pad-qa-card">
+          <div class="pad-qa-icon icon-green"><i class="bi bi-upc-scan"></i></div>
+          <div>
+            <div class="pad-qa-label">Codes</div>
+            <div class="pad-qa-desc">ตรวจสอบและจัดการโค้ด</div>
+          </div>
+        </a>
+        <a href="/promotion/admin/draws" class="pad-qa-card">
+          <div class="pad-qa-icon icon-cyan"><i class="bi bi-shuffle"></i></div>
+          <div>
+            <div class="pad-qa-label">Draws</div>
+            <div class="pad-qa-desc">ประวัติการสุ่มรางวัล</div>
+          </div>
+        </a>
+        <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+        <a href="/promotion/admin/users" class="pad-qa-card">
+          <div class="pad-qa-icon icon-amber"><i class="bi bi-people-fill"></i></div>
+          <div>
+            <div class="pad-qa-label">Admin Users</div>
+            <div class="pad-qa-desc">จัดการผู้ดูแลระบบ</div>
+          </div>
+        </a>
+        <a href="/promotion/admin/stores" class="pad-qa-card">
+          <div class="pad-qa-icon icon-red"><i class="bi bi-shop-window"></i></div>
+          <div>
+            <div class="pad-qa-label">Stores</div>
+            <div class="pad-qa-desc">จัดการร้านค้าในระบบ</div>
+          </div>
+        </a>
+        <% } %>
+      </div>
+
+      <!-- ── Store Summary Table ── -->
+      <div class="pad-table-card">
+        <div class="pad-table-head">
+          <div>
+            <div class="pad-table-title"><i class="bi bi-shop me-2 text-primary"></i>สรุปแยกตามสโตร์</div>
+            <div class="pad-table-subtitle">ภาพรวมการใช้งานโค้ดและผลการสุ่มของแต่ละสโตร์</div>
+          </div>
+          <% if (Array.isArray(storeSummaries)) { %>
+          <span class="pad-table-badge"><i class="bi bi-building me-1"></i><%= storeSummaries.length %> สโตร์</span>
+          <% } %>
+        </div>
+        <div class="table-responsive">
+          <table class="table pad-tbl mb-0">
+            <thead>
+              <tr>
+                <th>Store</th>
+                <th class="text-center">Campaigns</th>
+                <th class="text-center">Prizes</th>
+                <th class="text-center">Codes</th>
+                <th class="text-center">Unused</th>
+                <th class="text-center">Drawn</th>
+                <th class="text-center">Claimed</th>
+                <th class="text-center">Declined</th>
+                <th class="text-center">Draw Records</th>
+                <th class="text-center">Admins</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (Array.isArray(storeSummaries) && storeSummaries.length) { %>
+                <% storeSummaries.forEach(store => { %>
                 <tr>
                   <td>
-                    <div class="promo-summary-store"><%= store.name %></div>
-                    <div class="promo-summary-code"><%= store.store_code || '-' %></div>
+                    <div class="store-name"><%= store.name %></div>
+                    <span class="store-code"><%= store.store_code || '-' %></span>
                   </td>
-                  <td class="promo-summary-num"><%= store.campaigns || 0 %></td>
-                  <td class="promo-summary-num"><%= store.prizes || 0 %></td>
-                  <td class="promo-summary-num"><%= store.total_codes || 0 %></td>
-                  <td class="promo-summary-num text-success"><%= store.unused_codes || 0 %></td>
-                  <td class="promo-summary-num text-primary"><%= store.drawn_codes || 0 %></td>
-                  <td class="promo-summary-num text-info"><%= store.claimed_codes || 0 %></td>
-                  <td class="promo-summary-num text-warning"><%= store.declined_codes || 0 %></td>
-                  <td class="promo-summary-num"><%= store.total_draws || 0 %></td>
-                  <td class="promo-summary-num"><%= store.coop_admin_users || 0 %></td>
+                  <td class="text-center"><span class="pad-pill pill-slate pad-num"><%= store.campaigns || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-violet pad-num"><%= store.prizes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-blue pad-num"><%= store.total_codes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-green pad-num"><%= store.unused_codes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-violet pad-num"><%= store.drawn_codes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-cyan pad-num"><%= store.claimed_codes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-pill pill-amber pad-num"><%= store.declined_codes || 0 %></span></td>
+                  <td class="text-center"><span class="pad-num"><%= store.total_draws || 0 %></span></td>
+                  <td class="text-center"><span class="pad-num"><%= store.coop_admin_users || 0 %></span></td>
                 </tr>
-              <% }) %>
-            <% } else { %>
+                <% }) %>
+              <% } else { %>
               <tr>
-                <td colspan="10" class="text-center promo-summary-empty">
-                  ยังไม่พบข้อมูลสรุปแยกสโตร์
+                <td colspan="10" class="pad-tbl-empty">
+                  <div class="pad-tbl-empty-icon"><i class="bi bi-inbox"></i></div>
+                  <div class="pad-tbl-empty-text">ยังไม่พบข้อมูลสรุปแยกสโตร์</div>
                 </td>
               </tr>
-            <% } %>
-          </tbody>
-        </table>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
+    </main>
   </div>
 </div>
+
+<script>
+  // Sidebar toggle
+  const sidebar  = document.getElementById('padSidebar');
+  const overlay  = document.getElementById('padOverlay');
+  const toggle   = document.getElementById('padToggle');
+  function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+  if (toggle)  toggle.addEventListener('click', openSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  // Date display
+  const dateEl = document.getElementById('padDateNow');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+</script>
+
 <!-- include footer -->
 <%- include('../footer.ejs') %>

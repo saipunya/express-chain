@@ -475,6 +475,22 @@ async function resetCodes(scope = null, filters = {}) {
 
     let drawReferencesCleared = 0;
     let drawRowsDeleted = 0;
+
+    // Release prize reservations for pending draws (draw_status='drawn') linked to codes
+    // being reset — prevents stale reserved_qty from blocking future prize deletion.
+    if (codeWhereSql) {
+      await connection.query(
+        `UPDATE promotion_prizes pp
+         INNER JOIN promotion_draws d  ON d.prize_id = pp.id AND d.draw_status = 'drawn'
+         INNER JOIN promotion_codes pc ON d.code_id   = pc.id
+         SET pp.reserved_qty  = GREATEST(0, pp.reserved_qty - 1),
+             pp.remaining_qty = pp.remaining_qty + 1,
+             pp.updated_at    = NOW()
+         ${codeWhereSql}`,
+        params
+      );
+    }
+
     try {
       const [drawResult] = await connection.query(
         `UPDATE promotion_draws d
@@ -487,6 +503,20 @@ async function resetCodes(scope = null, filters = {}) {
     } catch (drawUpdateErr) {
       await connection.rollback();
       await connection.beginTransaction();
+
+      // Re-release reservations after rollback (previous release was undone)
+      if (codeWhereSql) {
+        await connection.query(
+          `UPDATE promotion_prizes pp
+           INNER JOIN promotion_draws d  ON d.prize_id = pp.id AND d.draw_status = 'drawn'
+           INNER JOIN promotion_codes pc ON d.code_id   = pc.id
+           SET pp.reserved_qty  = GREATEST(0, pp.reserved_qty - 1),
+               pp.remaining_qty = pp.remaining_qty + 1,
+               pp.updated_at    = NOW()
+           ${codeWhereSql}`,
+          params
+        );
+      }
 
       const [drawDeleteResult] = await connection.query(
         `DELETE d

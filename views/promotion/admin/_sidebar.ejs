@@ -1,0 +1,257 @@
+<%#
+  Promotion Admin – Shared Sidebar Partial
+  Required locals:
+    promotionAdmin  – session admin object
+    currentPage     – 'dashboard' | 'campaigns' | 'prizes' | 'codes' | 'draws' | 'users' | 'stores'
+    counts          – (optional) object with .unused for badge
+%>
+<% const _cp  = typeof currentPage  !== 'undefined' ? currentPage  : ''; %>
+<% const _cnt = (typeof counts !== 'undefined' && counts) ? counts : {}; %>
+<% const _adm = typeof promotionAdmin !== 'undefined' ? promotionAdmin : null; %>
+
+<style>
+  /* ─── Shared Layout ─────────────────────────────── */
+  .pad-layout { display: flex; min-height: 100vh; background: #f1f5f9; }
+
+  /* ─── Sidebar ────────────────────────────────────── */
+  .pad-sidebar {
+    width: 260px; flex-shrink: 0;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; height: 100vh;
+    z-index: 1040; transition: transform .28s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+  }
+  .pad-sidebar-brand  { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .pad-sidebar-logo   { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .pad-sidebar-logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .pad-sidebar-logo-text { font-weight: 800; font-size: 1rem; color: #f8fafc; line-height: 1.2; }
+  .pad-sidebar-logo-sub  { font-size: .73rem; color: #94a3b8; font-weight: 500; }
+
+  .pad-sidebar-user { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .pad-user-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: .95rem; color: #fff; font-weight: 700; flex-shrink: 0;
+  }
+  .pad-user-name { font-size: .9rem; font-weight: 700; color: #f1f5f9; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pad-user-role { font-size: .72rem; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+
+  .pad-sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .pad-sidebar-section { font-size: .68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .08em; padding: 10px 10px 4px; margin-top: 6px; }
+  .pad-nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px; text-decoration: none;
+    color: #94a3b8; font-size: .92rem; font-weight: 600;
+    transition: background .15s, color .15s;
+  }
+  .pad-nav-link:hover          { background: rgba(255,255,255,.07); color: #f1f5f9; }
+  .pad-nav-link.active         { background: rgba(59,130,246,.18);  color: #60a5fa; }
+  .pad-nav-link .bi            { font-size: 1.05rem; flex-shrink: 0; }
+  .pad-nav-link-badge {
+    margin-left: auto; background: rgba(59,130,246,.25);
+    color: #60a5fa; font-size: .7rem; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .pad-sidebar-footer { padding: 12px 12px 20px; border-top: 1px solid rgba(255,255,255,.07); }
+  .pad-logout-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px; text-decoration: none;
+    color: #f87171; font-size: .92rem; font-weight: 600; width: 100%;
+    transition: background .15s;
+  }
+  .pad-logout-btn:hover { background: rgba(239,68,68,.12); color: #fca5a5; }
+
+  /* ─── Main area ──────────────────────────────────── */
+  .pad-main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ─── Topbar ─────────────────────────────────────── */
+  .pad-topbar {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 0 28px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .pad-topbar-left    { display: flex; align-items: center; gap: 12px; }
+  .pad-sidebar-toggle { display: none; background: none; border: none; cursor: pointer; color: #64748b; font-size: 1.3rem; padding: 6px; }
+  .pad-page-title     { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0; }
+  .pad-breadcrumb     { font-size: .8rem; color: #94a3b8; margin: 0; }
+  .pad-topbar-right   { display: flex; align-items: center; gap: 10px; }
+  .pad-date-badge     { font-size: .8rem; color: #64748b; background: #f1f5f9; padding: 5px 12px; border-radius: 8px; font-weight: 600; white-space: nowrap; }
+
+  /* ─── Body padding ───────────────────────────────── */
+  .pad-body { padding: 28px; flex: 1; }
+
+  /* ─── Shared card ────────────────────────────────── */
+  .pad-card {
+    background: #fff; border-radius: 18px; border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15,23,42,.06); overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .pad-card-head {
+    padding: 18px 24px; border-bottom: 1px solid #f1f5f9;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .pad-card-title    { font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0; }
+  .pad-card-subtitle { font-size: .84rem; color: #94a3b8; margin: 2px 0 0; }
+  .pad-card-badge    { font-size: .78rem; font-weight: 700; padding: 5px 12px; border-radius: 8px; background: #f1f5f9; color: #475569; white-space: nowrap; }
+
+  /* ─── Shared form card ───────────────────────────── */
+  .pad-form-card {
+    background: #fff; border-radius: 18px; border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(15,23,42,.06); padding: 24px; margin-bottom: 20px;
+  }
+  .pad-form-card .form-control, .pad-form-card .form-select { border-radius: 10px; }
+  .pad-form-title { font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+
+  /* ─── Shared table ───────────────────────────────── */
+  .pad-tbl thead th {
+    background: #f8fafc; color: #475569;
+    font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+    border-top: none; border-bottom: 1px solid #e2e8f0;
+    padding: 11px 16px; white-space: nowrap;
+  }
+  .pad-tbl tbody td   { padding: 13px 16px; vertical-align: middle; border-color: #f1f5f9; color: #1e293b; font-size: .9rem; }
+  .pad-tbl tbody tr:hover { background: #f8fafc; }
+
+  /* ─── Status badges ──────────────────────────────── */
+  .pad-status {
+    display: inline-flex; align-items: center;
+    border-radius: 999px; padding: 5px 12px;
+    font-size: .79rem; font-weight: 700; white-space: nowrap; gap: 5px;
+  }
+  .ps-active    { background: #dcfce7; color: #15803d; }
+  .ps-inactive  { background: #e2e8f0; color: #334155; }
+  .ps-scheduled { background: #dbeafe; color: #1d4ed8; }
+  .ps-expired   { background: #fee2e2; color: #b91c1c; }
+  .ps-drawn     { background: #ede9fe; color: #6d28d9; }
+  .ps-claimed   { background: #dcfce7; color: #15803d; }
+  .ps-declined  { background: #fee2e2; color: #b91c1c; }
+  .ps-unused    { background: #dcfce7; color: #15803d; }
+
+  /* ─── Code chip ──────────────────────────────────── */
+  .pad-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .85rem; color: #2563eb; background: #eff6ff;
+    border-radius: 8px; padding: 3px 8px; display: inline-block;
+  }
+  .pad-store-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .76rem; color: #3b82f6; background: #eff6ff;
+    border-radius: 6px; padding: 2px 7px; display: inline-block; margin-top: 3px;
+  }
+
+  /* ─── Misc ───────────────────────────────────────── */
+  .pad-num      { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pad-muted    { color: #94a3b8; }
+  .pad-semibold { font-weight: 600; color: #0f172a; }
+  .pad-action-col { min-width: 130px; }
+  .pad-action-group { display: flex; flex-direction: column; gap: 5px; }
+  .pad-action-group .btn { font-size: .79rem; font-weight: 600; border-radius: 8px; padding: 5px 10px; }
+  .pad-empty-cell { padding: 48px 20px !important; text-align: center; }
+  .pad-empty-icon { font-size: 2rem; opacity: .35; margin-bottom: 8px; display: block; }
+  .pad-empty-text { font-size: .9rem; font-weight: 600; color: #94a3b8; }
+
+  /* ─── Flash ──────────────────────────────────────── */
+  .pad-flash { border-radius: 12px; margin-bottom: 18px; }
+
+  /* ─── Overlay ────────────────────────────────────── */
+  .pad-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1039; }
+
+  /* ─── Responsive ─────────────────────────────────── */
+  @media (max-width: 767.98px) {
+    .pad-sidebar { transform: translateX(-100%); }
+    .pad-sidebar.open { transform: translateX(0); box-shadow: 4px 0 32px rgba(15,23,42,.25); }
+    .pad-sidebar-overlay.open { display: block; }
+    .pad-sidebar-toggle { display: block; }
+    .pad-main { margin-left: 0; }
+    .pad-topbar { padding: 0 16px; }
+    .pad-body { padding: 16px; }
+  }
+</style>
+
+<aside class="pad-sidebar" id="padSidebar">
+  <div class="pad-sidebar-brand">
+    <a href="/promotion/admin" class="pad-sidebar-logo">
+      <div class="pad-sidebar-logo-icon">🎁</div>
+      <div>
+        <div class="pad-sidebar-logo-text">Promo Admin</div>
+        <div class="pad-sidebar-logo-sub">Management Console</div>
+      </div>
+    </a>
+  </div>
+
+  <% if (_adm) { %>
+  <div class="pad-sidebar-user">
+    <div class="d-flex align-items-center gap-2">
+      <div class="pad-user-avatar">
+        <%= (_adm.display_name || _adm.username || 'A').charAt(0).toUpperCase() %>
+      </div>
+      <div style="min-width:0">
+        <div class="pad-user-name"><%= _adm.display_name || _adm.username %></div>
+        <div class="pad-user-role"><%= _adm.role === 'super_admin' ? '⭐ Super Admin' : _adm.role %></div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <nav class="pad-sidebar-nav">
+    <div class="pad-sidebar-section">ภาพรวม</div>
+    <a href="/promotion/admin" class="pad-nav-link <%= _cp === 'dashboard' ? 'active' : '' %>">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+
+    <div class="pad-sidebar-section">จัดการโปรโมชั่น</div>
+    <a href="/promotion/admin/campaigns" class="pad-nav-link <%= _cp === 'campaigns' ? 'active' : '' %>">
+      <i class="bi bi-megaphone"></i> Campaigns
+    </a>
+    <a href="/promotion/admin/prizes" class="pad-nav-link <%= _cp === 'prizes' ? 'active' : '' %>">
+      <i class="bi bi-gift"></i> Prizes
+    </a>
+    <a href="/promotion/admin/codes" class="pad-nav-link <%= _cp === 'codes' ? 'active' : '' %>">
+      <i class="bi bi-upc-scan"></i> Codes
+      <% if (_cnt.unused > 0) { %>
+        <span class="pad-nav-link-badge"><%= _cnt.unused %></span>
+      <% } %>
+    </a>
+    <a href="/promotion/admin/draws" class="pad-nav-link <%= _cp === 'draws' ? 'active' : '' %>">
+      <i class="bi bi-shuffle"></i> Draws
+    </a>
+
+    <% if (_adm && _adm.role === 'super_admin') { %>
+    <div class="pad-sidebar-section">ระบบ</div>
+    <a href="/promotion/admin/users" class="pad-nav-link <%= _cp === 'users' ? 'active' : '' %>">
+      <i class="bi bi-people"></i> Admin Users
+    </a>
+    <a href="/promotion/admin/stores" class="pad-nav-link <%= _cp === 'stores' ? 'active' : '' %>">
+      <i class="bi bi-shop"></i> Stores
+    </a>
+    <% } %>
+  </nav>
+
+  <div class="pad-sidebar-footer">
+    <a href="/promotion/admin/logout" class="pad-logout-btn">
+      <i class="bi bi-box-arrow-left"></i> ออกจากระบบ
+    </a>
+  </div>
+</aside>
+
+<div class="pad-sidebar-overlay" id="padOverlay"></div>
+
+<script>
+  (function () {
+    const _sb = document.getElementById('padSidebar');
+    const _ov = document.getElementById('padOverlay');
+    const _tg = document.getElementById('padToggle');
+    if (_tg) _tg.addEventListener('click', function () { _sb.classList.add('open'); _ov.classList.add('open'); });
+    if (_ov) _ov.addEventListener('click', function () { _sb.classList.remove('open'); _ov.classList.remove('open'); });
+    const _de = document.getElementById('padDateNow');
+    if (_de) _de.textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  })();
+</script>

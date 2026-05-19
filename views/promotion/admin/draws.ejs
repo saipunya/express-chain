@@ -1,292 +1,106 @@
 <!-- include header -->
 <%- include('../header.ejs', { title: title }) %>
 <style>
-  .promo-draws-page {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    min-height: 100vh;
-    padding: 40px 0 56px;
-  }
-
-  .promo-draws-shell {
-    max-width: 1280px;
-    margin: 0 auto;
-  }
-
-  .promo-draws-topbar {
-    background: rgba(255,255,255,0.96);
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-    margin-bottom: 24px;
-  }
-
-  .promo-draws-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #2563eb;
-    font-size: 0.92rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
-
-  .promo-draws-title {
-    font-size: clamp(1.8rem, 3vw, 2.5rem);
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.08;
-    margin-bottom: 10px;
-    letter-spacing: -0.03em;
-  }
-
-  .promo-draws-desc {
-    color: #64748b;
-    margin-bottom: 0;
-    line-height: 1.7;
-    max-width: 760px;
-  }
-
-  .promo-draws-back {
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-weight: 600;
-    border-width: 1.5px;
-  }
-
-  .promo-draws-card {
-    border: none;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-  }
-
-  .promo-draws-table {
-    margin-bottom: 0;
-  }
-
-  .promo-draws-table thead th {
-    background: #f8fafc;
-    color: #475569;
-    font-size: 0.83rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 14px 16px;
-    white-space: nowrap;
-  }
-
-  .promo-draws-table tbody td {
-    padding: 14px 16px;
-    vertical-align: middle;
-    border-color: #eef2f7;
-    color: #0f172a;
-    font-size: 0.95rem;
-  }
-
-  .promo-draws-table tbody tr:hover {
-    background: #f8fbff;
-  }
-
-  .promo-token {
-    display: inline-block;
-    max-width: 220px;
+  /* draws-page specific */
+  .pdraw-token {
+    display: inline-block; max-width: 200px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.85rem;
-    color: #1e293b;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 6px 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .promo-code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.9rem;
-    color: #2563eb;
-    background: #eff6ff;
-    border-radius: 10px;
-    padding: 5px 10px;
-    display: inline-block;
-  }
-
-  .promo-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: capitalize;
-    white-space: nowrap;
-  }
-
-  .promo-status-drawn {
-    background: #ede9fe;
-    color: #6d28d9;
-  }
-
-  .promo-status-claimed {
-    background: #dcfce7;
-    color: #15803d;
-  }
-
-  .promo-status-declined {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-
-  .promo-status-other {
-    background: #e2e8f0;
-    color: #334155;
-  }
-
-  .promo-prize {
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  .promo-muted {
-    color: #94a3b8;
-  }
-
-  .promo-empty {
-    padding: 36px 16px !important;
-    color: #64748b !important;
-    font-size: 0.98rem;
-  }
-
-  @media (max-width: 767.98px) {
-    .promo-draws-page {
-      padding: 24px 0 36px;
-    }
-
-    .promo-draws-topbar {
-      padding: 18px;
-      border-radius: 18px;
-    }
-
-    .promo-token {
-      max-width: 180px;
-    }
+    font-size: .82rem; color: #1e293b; background: #f8fafc;
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
   }
 </style>
 
-<div class="promo-draws-page">
-  <div class="container promo-draws-shell">
+<div class="pad-layout">
+<%- include('./_sidebar.ejs', { currentPage: 'draws', promotionAdmin, counts: {} }) %>
+<div class="pad-main">
 
-    <div class="promo-draws-topbar">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-3">
+  <header class="pad-topbar">
+    <div class="pad-topbar-left">
+      <button class="pad-sidebar-toggle" id="padToggle" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+      <div>
+        <div class="pad-page-title"><i class="bi bi-shuffle me-2 text-violet" style="color:#7c3aed"></i>Draw History</div>
+        <div class="pad-breadcrumb">Promotion Admin › ประวัติการสุ่มรางวัล</div>
+      </div>
+    </div>
+    <div class="pad-topbar-right">
+      <span class="pad-date-badge"><i class="bi bi-calendar3 me-1"></i><span id="padDateNow"></span></span>
+    </div>
+  </header>
+
+  <main class="pad-body">
+    <div class="pad-card">
+      <div class="pad-card-head">
         <div>
-          <div class="promo-draws-badge">
-            <span>🎲</span>
-            <span>Promotion Draw History</span>
-          </div>
-          <h1 class="promo-draws-title"><%= title %></h1>
-          <p class="promo-draws-desc">
-            ประวัติการจับรางวัลทั้งหมด พร้อมสถานะการเคลม การปฏิเสธ และข้อมูลผู้ร่วมกิจกรรมในระบบ
-          </p>
+          <div class="pad-card-title"><i class="bi bi-list-ul me-2 text-primary"></i>รายการสุ่มรางวัลทั้งหมด</div>
+          <div class="pad-card-subtitle">ประวัติการจับรางวัล พร้อมสถานะเคลม/ปฏิเสธ และข้อมูลลูกค้า</div>
         </div>
-
-        <div class="d-flex gap-2 align-items-center">
-          <% if (promotionAdmin) { %>
-            <small class="text-muted"><%= promotionAdmin.display_name || promotionAdmin.username %> (<%= promotionAdmin.role %>)</small>
-          <% } %>
-          <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
-            <a href="/promotion/admin/users" class="btn btn-outline-primary btn-sm">Admin Users</a>
-            <a href="/promotion/admin/stores" class="btn btn-outline-primary btn-sm">Stores</a>
-          <% } %>
-          <a href="/promotion/admin" class="btn btn-outline-secondary btn-sm promo-draws-back">
-            Back to dashboard
-          </a>
-          <a href="/promotion/admin/logout" class="btn btn-outline-danger btn-sm">Logout</a>
-        </div>
+        <% if (Array.isArray(draws)) { %>
+          <span class="pad-card-badge"><%= draws.length %> รายการ</span>
+        <% } %>
       </div>
-    </div>
-
-    <div class="card promo-draws-card">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table promo-draws-table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>Store</th>
-                <th>Token</th>
-                <th>Code</th>
-                <th>Prize</th>
-                <th>Status</th>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Drawn At</th>
-                <th>Claimed At</th>
-                <th>Declined At</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (Array.isArray(draws) && draws.length) { %>
-                <% draws.forEach(d => { %>
-                  <tr>
-                    <td>
-                      <% if (d.store_name) { %>
-                        <div class="fw-semibold"><%= d.store_name %></div>
-                        <div class="text-muted small"><%= d.store_code || '-' %></div>
-                      <% } else { %>
-                        <span class="promo-muted">-</span>
-                      <% } %>
-                    </td>
-                    <td>
-                      <span class="promo-token" title="<%= d.draw_token %>">
-                        <%= d.draw_token %>
-                      </span>
-                    </td>
-                    <td>
-                      <% if (d.code_value) { %>
-                        <span class="promo-code"><%= d.code_value %></span>
-                      <% } else { %>
-                        <span class="promo-muted">-</span>
-                      <% } %>
-                    </td>
-                    <td>
-                      <span class="promo-prize"><%= d.prize_name || '-' %></span>
-                    </td>
-                    <td>
-                      <span class="promo-status 
-                        <%= d.draw_status === 'drawn' ? 'promo-status-drawn' : '' %>
-                        <%= d.draw_status === 'claimed' ? 'promo-status-claimed' : '' %>
-                        <%= d.draw_status === 'declined' ? 'promo-status-declined' : '' %>
-                        <%= !['drawn','claimed','declined'].includes(d.draw_status) ? 'promo-status-other' : '' %>">
-                        <%= d.draw_status %>
-                      </span>
-                    </td>
-                    <td><%= d.customer_name || '-' %></td>
-                    <td><%= d.customer_phone || '-' %></td>
-                    <td><%= d.drawn_at ? new Date(d.drawn_at).toLocaleString() : '-' %></td>
-                    <td><%= d.claimed_at ? new Date(d.claimed_at).toLocaleString() : '-' %></td>
-                    <td><%= d.declined_at ? new Date(d.declined_at).toLocaleString() : '-' %></td>
-                  </tr>
-                <% }) %>
-              <% } else { %>
+      <div class="table-responsive">
+        <table class="table pad-tbl table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Store</th>
+              <th>Token</th>
+              <th>Code</th>
+              <th>Prize</th>
+              <th>Status</th>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Drawn At</th>
+              <th>Claimed At</th>
+              <th>Declined At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (Array.isArray(draws) && draws.length) { %>
+              <% draws.forEach(d => { %>
                 <tr>
-                  <td colspan="10" class="text-center promo-empty">
-                    ยังไม่พบประวัติการจับรางวัลในระบบ
+                  <td>
+                    <% if (d.store_name) { %>
+                      <div class="pad-semibold"><%= d.store_name %></div>
+                      <span class="pad-store-chip"><%= d.store_code || '-' %></span>
+                    <% } else { %><span class="pad-muted">-</span><% } %>
                   </td>
+                  <td>
+                    <span class="pdraw-token" title="<%= d.draw_token %>"><%= d.draw_token %></span>
+                  </td>
+                  <td>
+                    <% if (d.code_value) { %><span class="pad-code"><%= d.code_value %></span>
+                    <% } else { %><span class="pad-muted">-</span><% } %>
+                  </td>
+                  <td class="pad-semibold"><%= d.prize_name || '-' %></td>
+                  <td>
+                    <%
+                      const ds = d.draw_status || '';
+                      const dsCls = ds === 'drawn' ? 'ps-drawn' : ds === 'claimed' ? 'ps-claimed' : ds === 'declined' ? 'ps-declined' : 'ps-inactive';
+                    %>
+                    <span class="pad-status <%= dsCls %>"><%= ds || '-' %></span>
+                  </td>
+                  <td><%= d.customer_name || '-' %></td>
+                  <td><%= d.customer_phone || '-' %></td>
+                  <td class="pad-muted" style="font-size:.82rem;white-space:nowrap"><%= d.drawn_at   ? new Date(d.drawn_at).toLocaleString('th-TH')   : '-' %></td>
+                  <td class="pad-muted" style="font-size:.82rem;white-space:nowrap"><%= d.claimed_at ? new Date(d.claimed_at).toLocaleString('th-TH') : '-' %></td>
+                  <td class="pad-muted" style="font-size:.82rem;white-space:nowrap"><%= d.declined_at? new Date(d.declined_at).toLocaleString('th-TH'): '-' %></td>
                 </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
+              <% }) %>
+            <% } else { %>
+            <tr>
+              <td colspan="10" class="pad-empty-cell">
+                <span class="pad-empty-icon d-block">🎲</span>
+                <span class="pad-empty-text">ยังไม่พบประวัติการสุ่มรางวัลในระบบ</span>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
       </div>
     </div>
-
-  </div>
+  </main>
+</div>
 </div>
 <!-- include footer -->
 <%- include('../footer.ejs') %>

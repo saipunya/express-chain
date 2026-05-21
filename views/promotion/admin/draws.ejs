@@ -54,6 +54,12 @@
   </header>
 
   <main class="pad-body">
+    <% if (locals && locals.flash) { %>
+      <div class="alert alert-<%= locals.flash.type || 'info' %> pad-flash">
+        <%= locals.flash.message %>
+      </div>
+    <% } %>
+
     <%
       const overall = overallSummary || {};
       const daily = Array.isArray(dailySummary) ? dailySummary : [];
@@ -110,6 +116,23 @@
         </div>
       </div>
     </div>
+
+    <% if (pendingDraws > 0) { %>
+      <div class="pad-card mb-4">
+        <div class="pad-card-head">
+          <div>
+            <div class="pad-card-title"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Clear Pending Draws</div>
+            <div class="pad-card-subtitle">เคลียร์รายการสถานะ <code>drawn</code> ที่ยังรอรับ/ปฏิเสธ โดยคืน Reserved กลับ Remaining และเปลี่ยนสถานะเป็น declined</div>
+          </div>
+          <form method="POST" action="/promotion/admin/draws/clear-pending"
+                onsubmit="return confirm('ยืนยันเคลียร์รายการ drawn ที่ค้างอยู่ทั้งหมดใน scope นี้? ระบบจะคืน Reserved กลับ Remaining และเปลี่ยนสถานะเป็น declined');">
+            <button class="btn btn-outline-danger btn-sm">
+              Clear <%= pendingDraws %> drawn
+            </button>
+          </form>
+        </div>
+      </div>
+    <% } %>
 
     <div class="pad-card mb-4">
       <div class="pad-card-head">

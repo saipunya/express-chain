@@ -255,6 +255,7 @@ module.exports = {
   clearUnusedCodes,
   resetCodes,
   hardResetCodes,
+  clearPendingDraws,
   getDrawsList,
   getDrawOverallSummary,
   getDrawDailySummary,
@@ -616,6 +617,88 @@ async function hardResetCodes(scope = null, filters = {}) {
       removed: Number(deleteResult && deleteResult.affectedRows) || 0,
       drawReferencesCleared,
       drawRowsDeleted
+    };
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
+}
+
+async function clearPendingDraws(scope = null) {
+  const scopedStoreId = getScopedStoreId(scope);
+  const whereSql = scopedStoreId ? 'WHERE d.store_id = ?' : '';
+  const params = scopedStoreId ? [scopedStoreId] : [];
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [drawRows] = await connection.query(
+      `SELECT d.id, d.code_id, d.prize_id
+       FROM promotion_draws d
+       ${whereSql}
+       ${whereSql ? 'AND' : 'WHERE'} d.draw_status = 'drawn'
+       FOR UPDATE`,
+      params
+    );
+
+    if (!Array.isArray(drawRows) || !drawRows.length) {
+      await connection.commit();
+      return {
+        cleared: 0,
+        releasedReservations: 0,
+        updatedCodes: 0
+      };
+    }
+
+    const drawIds = drawRows.map((row) => Number(row.id)).filter((id) => Number.isInteger(id) && id > 0);
+    const codeIds = drawRows.map((row) => Number(row.code_id)).filter((id) => Number.isInteger(id) && id > 0);
+    const drawPlaceholders = drawIds.map(() => '?').join(',');
+    const codePlaceholders = codeIds.map(() => '?').join(',');
+
+    const [releaseResult] = await connection.query(
+      `UPDATE promotion_prizes pp
+       INNER JOIN promotion_draws d ON d.prize_id = pp.id
+       SET pp.reserved_qty = GREATEST(0, pp.reserved_qty - 1),
+           pp.remaining_qty = pp.remaining_qty + 1,
+           pp.updated_at = NOW()
+       WHERE d.id IN (${drawPlaceholders})
+         AND d.draw_status = 'drawn'
+         AND pp.reserved_qty > 0`,
+      drawIds
+    );
+
+    const [drawUpdateResult] = await connection.query(
+      `UPDATE promotion_draws
+       SET draw_status = 'declined',
+           declined_at = NOW(),
+           metadata = JSON_SET(COALESCE(metadata, JSON_OBJECT()), '$.admin_cleared', true, '$.admin_cleared_at', DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')),
+           updated_at = NOW()
+       WHERE id IN (${drawPlaceholders})
+         AND draw_status = 'drawn'`,
+      drawIds
+    );
+
+    let updatedCodes = 0;
+    if (codeIds.length) {
+      const [codeUpdateResult] = await connection.query(
+        `UPDATE promotion_codes
+         SET status = 'declined',
+             updated_at = NOW()
+         WHERE id IN (${codePlaceholders})
+           AND status = 'drawn'`,
+        codeIds
+      );
+      updatedCodes = Number(codeUpdateResult && codeUpdateResult.affectedRows) || 0;
+    }
+
+    await connection.commit();
+    return {
+      cleared: Number(drawUpdateResult && drawUpdateResult.affectedRows) || 0,
+      releasedReservations: Number(releaseResult && releaseResult.affectedRows) || 0,
+      updatedCodes
     };
   } catch (err) {
     try { await connection.rollback(); } catch (e) { /* ignore */ }

@@ -406,6 +406,12 @@
                 <button type="submit" class="promo-btn promo-btn-success">รับรางวัล</button>
               </div>
             </form>
+            <form method="post" action="/promotion/decline" class="mb-0">
+              <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
+              <div class="promo-decision-actions">
+                <button type="submit" class="promo-btn promo-btn-danger" onclick="return confirm('คุณต้องการปฏิเสธรางวัลใช่หรือไม่?');">ปฏิเสธรางวัล</button>
+              </div>
+            </form>
           </div>
         <% } %>
 

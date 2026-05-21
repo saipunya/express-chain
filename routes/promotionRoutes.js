@@ -61,6 +61,7 @@ router.post('/admin/codes/clear', promotionAdminController.clearCodes);
 router.post('/admin/codes/reset', promotionAdminController.resetCodes);
 router.post('/admin/codes/reset-hard', promotionAdminController.hardResetCodes);
 router.get('/admin/draws', promotionAdminController.draws);
+router.post('/admin/draws/clear-pending', promotionAdminController.clearPendingDraws);
 router.get('/admin/stores', promotionAdminController.stores);
 router.post('/admin/stores', promotionAdminController.createStore);
 router.post('/admin/stores/:id/update', promotionAdminController.updateStore);

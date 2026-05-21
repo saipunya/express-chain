@@ -1184,6 +1184,27 @@ exports.hardResetCodes = async (req, res) => {
   }
 };
 
+exports.clearPendingDraws = async (req, res) => {
+  try {
+    const scope = getScope(req);
+    const result = await promotionModel.clearPendingDraws(scope);
+    const cleared = Number(result.cleared || 0);
+    const released = Number(result.releasedReservations || 0);
+    const updatedCodes = Number(result.updatedCodes || 0);
+
+    if (!cleared) {
+      req.flash('info', 'ไม่มีรายการสถานะ drawn ที่ค้างอยู่ให้เคลียร์');
+    } else {
+      req.flash('success', `เคลียร์รายการ drawn แล้ว ${cleared} รายการ, คืน Reserved กลับ Remaining ${released} รายการ, อัปเดตโค้ด ${updatedCodes} รายการ`);
+    }
+    return res.redirect('/promotion/admin/draws');
+  } catch (err) {
+    console.error('promotionAdmin.clearPendingDraws error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะเคลียร์รายการ drawn');
+    return res.redirect('/promotion/admin/draws');
+  }
+};
+
 exports.stores = async (req, res) => {
   if (!ensureSuperAdmin(req, res)) return;
 

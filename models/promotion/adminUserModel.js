@@ -75,6 +75,22 @@ async function updatePasswordHash(id, passwordHash) {
   return Number(result && result.affectedRows) || 0;
 }
 
+async function countByRole(role) {
+  const [rows] = await db.query(
+    'SELECT COUNT(*) AS total FROM promotion_admin_users WHERE role = ?',
+    [role]
+  );
+  return Number(rows[0] && rows[0].total) || 0;
+}
+
+async function deleteById(id) {
+  const [result] = await db.query(
+    'DELETE FROM promotion_admin_users WHERE id = ? LIMIT 1',
+    [id]
+  );
+  return Number(result && result.affectedRows) || 0;
+}
+
 async function touchLastLogin(id) {
   await db.query(
     'UPDATE promotion_admin_users SET last_login_at = NOW(), updated_at = NOW() WHERE id = ?',
@@ -90,5 +106,7 @@ module.exports = {
   updateUserProfile,
   updateStatus,
   updatePasswordHash,
+  countByRole,
+  deleteById,
   touchLastLogin
 };

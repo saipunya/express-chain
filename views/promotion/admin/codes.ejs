@@ -39,7 +39,10 @@
   const selectedCampaignObj = selectedCampaign || (selectedCampaignId ? campaignsSafe.find(c => Number(c.id)    === Number(selectedCampaignId)) : null);
   const showExpiredSafe = Boolean(showExpired);
   const canClear        = Boolean(selectedStoreId || selectedCampaignId);
-  const canReset        = Number(summarySafe.total || 0) > 0;
+  const canResetByRole  = Boolean(promotionAdmin && (promotionAdmin.role === 'super_admin' || promotionAdmin.role === 'coop_admin'));
+  const resettableTotal = Number(summarySafe.unused || 0) + Number(summarySafe.expired || 0) + Number(summarySafe.drawn || 0);
+  const canReset        = canResetByRole && resettableTotal > 0;
+  const canHardReset    = Boolean(promotionAdmin && promotionAdmin.role === 'super_admin') && Number(summarySafe.total || 0) > 0;
   const clearScopeLabel = selectedCampaignObj
     ? selectedCampaignObj.name + (selectedStoreObj ? ' / ' + selectedStoreObj.name : '')
     : selectedStoreObj ? selectedStoreObj.name : 'ทั้งหมด';
@@ -269,18 +272,44 @@
             </div>
 
             <div class="pcode-reset-box">
-              <div class="fw-bold text-danger mb-1" style="font-size:.9rem"><i class="bi bi-exclamation-triangle me-1"></i>Reset all codes</div>
-              <p class="pcode-filter-help mb-2">ลบโค้ดทุกสถานะใน scope ปัจจุบัน เพื่อเริ่มต้นชุดโค้ดใหม่ทั้งหมด</p>
+              <div class="fw-bold text-danger mb-1" style="font-size:.9rem"><i class="bi bi-arrow-repeat me-1"></i>Reset non-winning codes</div>
+              <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
+                <p class="pcode-filter-help mb-2">รีเซ็ตเฉพาะโค้ดสถานะ <code>unused</code>, <code>expired</code>, <code>drawn</code> ของสาขาคุณ และเก็บประวัติการรับ/ปฏิเสธรางวัลไว้</p>
+              <% } else { %>
+                <p class="pcode-filter-help mb-2">รีเซ็ตเฉพาะโค้ดสถานะ <code>unused</code>, <code>expired</code>, <code>drawn</code> เพื่อเริ่มรอบใหม่ โดยคงประวัติ <code>claimed</code> และ <code>declined</code></p>
+              <% } %>
               <form method="POST" action="/promotion/admin/codes/reset"
-                    onsubmit="return confirm('ยืนยัน RESET โค้ดทั้งหมดใน scope นี้? การทำรายการนี้จะลบโค้ดทุกสถานะและไม่สามารถย้อนกลับได้');">
+                    onsubmit="return confirm('ยืนยัน RESET โค้ด non-winning ใน scope นี้? ระบบจะลบเฉพาะ unused/expired/drawn และเก็บประวัติ claimed/declined ไว้');">
                 <input type="hidden" name="store_id"   value="<%= scopeStoreIdValue || '' %>">
                 <input type="hidden" name="campaign_id" value="<%= selectedCampaignId || '' %>">
                 <button class="btn btn-danger w-100 btn-sm <%= canReset ? '' : 'disabled' %>" <%= canReset ? '' : 'disabled' %>>
-                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reset all codes
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reset non-winning codes
                 </button>
-                <% if (!canReset) { %><div class="pcode-filter-help mt-1">ยังไม่มีโค้ดใน scope นี้ให้รีเซ็ต</div><% } %>
+                <% if (!canResetByRole) { %>
+                  <div class="pcode-filter-help mt-1 text-danger">เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถรีเซ็ตโค้ดได้</div>
+                <% } else if (!canReset) { %>
+                  <div class="pcode-filter-help mt-1">ยังไม่มีโค้ดสถานะ unused/expired/drawn ใน scope นี้</div>
+                <% } %>
               </form>
             </div>
+
+            <% if (promotionAdmin && promotionAdmin.role === 'super_admin') { %>
+              <div class="pcode-reset-box">
+                <div class="fw-bold text-danger mb-1" style="font-size:.9rem"><i class="bi bi-exclamation-triangle me-1"></i>Hard reset all codes (Super admin)</div>
+                <p class="pcode-filter-help mb-2 text-danger">ลบโค้ดทุกสถานะใน scope ปัจจุบัน (รวม <code>claimed</code>/<code>declined</code>) ใช้เฉพาะกรณีฉุกเฉิน</p>
+                <form method="POST" action="/promotion/admin/codes/reset-hard"
+                      onsubmit="return confirm('ยืนยัน HARD RESET โค้ดทั้งหมดใน scope นี้? ระบบจะลบโค้ดทุกสถานะรวมประวัติที่เกี่ยวข้อง และไม่สามารถย้อนกลับได้');">
+                  <input type="hidden" name="store_id"   value="<%= scopeStoreIdValue || '' %>">
+                  <input type="hidden" name="campaign_id" value="<%= selectedCampaignId || '' %>">
+                  <button class="btn btn-outline-danger w-100 btn-sm <%= canHardReset ? '' : 'disabled' %>" <%= canHardReset ? '' : 'disabled' %>>
+                    <i class="bi bi-exclamation-octagon me-1"></i>Hard reset all codes
+                  </button>
+                  <% if (!canHardReset) { %>
+                    <div class="pcode-filter-help mt-1">ยังไม่มีโค้ดใน scope นี้ให้ hard reset</div>
+                  <% } %>
+                </form>
+              </div>
+            <% } %>
 
           </div>
         </div>

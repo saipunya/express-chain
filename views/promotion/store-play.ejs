@@ -1,0 +1,160 @@
+<%- include('header.ejs') %>
+<style>
+  .promo-store-play-page {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    min-height: 100vh;
+    padding: 46px 0 62px;
+  }
+
+  .promo-store-play-shell {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .promo-store-play-hero {
+    text-align: center;
+    margin-bottom: 26px;
+  }
+
+  .promo-store-play-title {
+    font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .promo-store-play-desc {
+    color: #64748b;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .promo-store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+
+  .promo-store-card {
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .promo-store-card h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .promo-store-meta {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .promo-store-code {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.82rem;
+    font-weight: 700;
+    width: fit-content;
+  }
+
+  .promo-store-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  .promo-store-btn {
+    flex: 1;
+    min-height: 40px;
+    border-radius: 10px;
+    font-weight: 700;
+    border: 0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .promo-store-btn-play {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #fff;
+  }
+
+  .promo-store-btn-kiosk {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+  }
+
+  .promo-empty {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .promo-back {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .promo-back a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+</style>
+
+<div class="promo-store-play-page">
+  <div class="container promo-store-play-shell">
+    <div class="promo-store-play-hero">
+      <h1 class="promo-store-play-title">เลือกสาขาเพื่อเล่นเกม</h1>
+      <p class="promo-store-play-desc">
+        เลือกสาขาที่คุณอยู่ เพื่อเข้าเล่นเกมลุ้นรางวัลของสาขานั้นโดยตรง
+      </p>
+    </div>
+
+    <% if (Array.isArray(stores) && stores.length) { %>
+      <div class="promo-store-grid">
+        <% stores.forEach((store) => { %>
+          <div class="promo-store-card">
+            <span class="promo-store-code"><i class="bi bi-shop"></i> <%= store.store_code %></span>
+            <h3><%= store.name || '-' %></h3>
+            <div class="promo-store-meta"><%= store.description || 'ไม่มีคำอธิบายสาขา' %></div>
+            <div class="promo-store-actions">
+              <a class="promo-store-btn promo-store-btn-play" href="<%= store.play_url %>">เล่นเกม</a>
+              <a class="promo-store-btn promo-store-btn-kiosk" href="<%= store.kiosk_url %>">Kiosk</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="promo-empty">
+        ยังไม่มีสาขาที่พร้อมใช้งานในขณะนี้
+      </div>
+    <% } %>
+
+    <div class="promo-back">
+      <a href="/promotion"><i class="bi bi-chevron-left"></i> กลับหน้าโปรโมชั่น</a>
+    </div>
+  </div>
+</div>
+
+<%- include('footer.ejs') %>

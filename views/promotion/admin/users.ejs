@@ -139,6 +139,7 @@
               <th>Last Login</th>
               <th style="min-width: 340px;">Profile Update</th>
               <th style="min-width: 260px;">Reset Password</th>
+              <th style="min-width: 150px;">Delete User</th>
             </tr>
           </thead>
           <tbody>
@@ -215,11 +216,21 @@
                       </div>
                     </form>
                   </td>
+                  <td>
+                    <% const isSelfUser = promotionAdmin && Number(promotionAdmin.id) === Number(u.id); %>
+                    <% if (isSelfUser) { %>
+                      <small class="text-muted">Current account</small>
+                    <% } else { %>
+                      <form method="POST" action="/promotion/admin/users/<%= u.id %>/delete" class="text-end" onsubmit="return confirm('ยืนยันลบผู้ใช้งาน <%= u.username %> ?');">
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                      </form>
+                    <% } %>
+                  </td>
                 </tr>
               <% }) %>
             <% } else { %>
               <tr>
-                <td colspan="6" class="text-center text-muted py-4">ยังไม่พบบัญชีผู้ใช้งาน admin</td>
+                <td colspan="7" class="text-center text-muted py-4">ยังไม่พบบัญชีผู้ใช้งาน admin</td>
               </tr>
             <% } %>
           </tbody>

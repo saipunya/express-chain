@@ -9,6 +9,31 @@
     border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 8px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
   }
+  .pdraw-report-card {
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+    padding: 16px;
+    height: 100%;
+  }
+  .pdraw-report-label {
+    font-size: .78rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .pdraw-report-value {
+    font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+    color: #0f172a;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .pdraw-mini-note {
+    font-size: .82rem;
+    color: #94a3b8;
+  }
 </style>
 
 <div class="pad-layout">
@@ -29,6 +54,106 @@
   </header>
 
   <main class="pad-body">
+    <%
+      const overall = overallSummary || {};
+      const daily = Array.isArray(dailySummary) ? dailySummary : [];
+      const reportDaysSafe = Number(reportDays || 30);
+      const totalDraws = Number(overall.total_draws || 0);
+      const claimedDraws = Number(overall.claimed_draws || 0);
+      const declinedDraws = Number(overall.declined_draws || 0);
+      const pendingDraws = Number(overall.pending_draws || 0);
+      const uniqueClaimedCustomers = Number(overall.unique_claimed_customers || 0);
+      const claimRate = totalDraws > 0 ? ((claimedDraws / totalDraws) * 100) : 0;
+    %>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Total Draws</div>
+          <div class="pdraw-report-value"><%= totalDraws %></div>
+          <div class="pdraw-mini-note">สะสมทั้งหมด</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Claimed</div>
+          <div class="pdraw-report-value" style="color:#15803d"><%= claimedDraws %></div>
+          <div class="pdraw-mini-note">รับรางวัลแล้ว</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Declined</div>
+          <div class="pdraw-report-value" style="color:#b45309"><%= declinedDraws %></div>
+          <div class="pdraw-mini-note">ปฏิเสธรางวัล</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Pending</div>
+          <div class="pdraw-report-value" style="color:#7c3aed"><%= pendingDraws %></div>
+          <div class="pdraw-mini-note">รอรับ/ปฏิเสธ</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Claim Rate</div>
+          <div class="pdraw-report-value"><%= claimRate.toFixed(1) %>%</div>
+          <div class="pdraw-mini-note">อัตรารับรางวัล</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-2">
+        <div class="pdraw-report-card">
+          <div class="pdraw-report-label">Unique Claimed</div>
+          <div class="pdraw-report-value"><%= uniqueClaimedCustomers %></div>
+          <div class="pdraw-mini-note">เบอร์ที่รับรางวัลไม่ซ้ำ</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pad-card mb-4">
+      <div class="pad-card-head">
+        <div>
+          <div class="pad-card-title"><i class="bi bi-bar-chart-line me-2 text-success"></i>สรุปรายวัน</div>
+          <div class="pad-card-subtitle">สรุปผลการสุ่มย้อนหลัง <%= reportDaysSafe %> วัน</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table pad-tbl mb-0">
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th class="text-end">สุ่มทั้งหมด</th>
+              <th class="text-end">รับรางวัล</th>
+              <th class="text-end">ปฏิเสธ</th>
+              <th class="text-end">ค้างดำเนินการ</th>
+              <th class="text-end">ผู้รับไม่ซ้ำ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (daily.length) { %>
+              <% daily.forEach(row => { %>
+                <tr>
+                  <td><%= row.report_date ? new Date(row.report_date).toLocaleDateString('th-TH') : '-' %></td>
+                  <td class="text-end"><%= Number(row.total_draws || 0) %></td>
+                  <td class="text-end"><%= Number(row.claimed_draws || 0) %></td>
+                  <td class="text-end"><%= Number(row.declined_draws || 0) %></td>
+                  <td class="text-end"><%= Number(row.pending_draws || 0) %></td>
+                  <td class="text-end"><%= Number(row.unique_claimed_customers || 0) %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" class="pad-empty-cell">
+                  <span class="pad-empty-text">ยังไม่มีข้อมูลสรุปรายวันในช่วงเวลาที่เลือก</span>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="pad-card">
       <div class="pad-card-head">
         <div>

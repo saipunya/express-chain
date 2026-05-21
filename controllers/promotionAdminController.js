@@ -6,6 +6,7 @@ const path = require('path');
 
 const USERNAME_REGEX = /^[a-z0-9._-]{3,100}$/;
 const ALLOWED_PRIZE_TYPES = new Set(['free_product', 'discount', 'coupon', 'credit', 'other']);
+const ALLOWED_COUPON_KINDS = new Set(['cash', 'discount']);
 const STORE_CODE_REGEX = /^[A-Z0-9_-]{2,50}$/;
 const CAMPAIGN_CODE_REGEX = /^[A-Z0-9_-]{2,100}$/;
 
@@ -98,6 +99,34 @@ function sanitizeCampaignCode(raw) {
   return String(raw || '').trim().toUpperCase().slice(0, 100);
 }
 
+function buildCampaignCodePrefix(storeCodeRaw) {
+  const storeCode = sanitizeStoreCode(storeCodeRaw).replace(/[^A-Z0-9]/g, '');
+  const normalized = storeCode || 'STORE';
+  return `${normalized}CAMPAIGN`;
+}
+
+async function generateCampaignCodeForStore(storeId, storeCodeRaw) {
+  const prefix = buildCampaignCodePrefix(storeCodeRaw);
+
+  // Prefer readable running numbers first, e.g. STORE1CAMPAIGN001.
+  for (let i = 1; i <= 9999; i += 1) {
+    const suffix = String(i).padStart(3, '0');
+    const candidate = sanitizeCampaignCode(`${prefix}${suffix}`);
+    const exists = await promotionModel.getCampaignByCodeInStore(storeId, candidate);
+    if (!exists) return candidate;
+  }
+
+  // Fallback with random suffix in case sequence range is fully used.
+  for (let i = 0; i < 200; i += 1) {
+    const randomSuffix = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+    const candidate = sanitizeCampaignCode(`${prefix}${randomSuffix}`);
+    const exists = await promotionModel.getCampaignByCodeInStore(storeId, candidate);
+    if (!exists) return candidate;
+  }
+
+  throw new Error('Unable to generate unique campaign code');
+}
+
 function parseDateTimeInput(raw) {
   const input = String(raw || '').trim();
   if (!input) return { value: null, valid: true, provided: false };
@@ -129,18 +158,142 @@ function withStoreActiveFlag(store) {
 
 function withPrizeImage(prize) {
   const metadataObj = parseMetadataObject(prize.metadata);
+  const inventory = getPrizeInventoryState(prize);
   return {
     ...prize,
     metadata_obj: metadataObj,
-    image_url: sanitizeImageUrl(metadataObj.image_url || '')
+    image_url: sanitizeImageUrl(metadataObj.image_url || ''),
+    inventory
   };
 }
 
-function buildPrizeMetadata(existingRaw, imageUrl) {
+function getPrizeInventoryState(prize) {
+  const initialQty = Math.max(Number.parseInt(prize && prize.initial_qty, 10) || 0, 0);
+  const remainingQty = Math.max(Number.parseInt(prize && prize.remaining_qty, 10) || 0, 0);
+  const reservedQty = Math.max(Number.parseInt(prize && prize.reserved_qty, 10) || 0, 0);
+  const consumedQty = Math.max(initialQty - remainingQty - reservedQty, 0);
+  const pendingDraws = Math.max(Number.parseInt(prize && prize.pending_draws, 10) || 0, 0);
+  const claimedDraws = Math.max(Number.parseInt(prize && prize.claimed_draws, 10) || 0, 0);
+  const declinedDraws = Math.max(Number.parseInt(prize && prize.declined_draws, 10) || 0, 0);
+  const expectedInitialQty = Math.max(initialQty, pendingDraws + claimedDraws);
+  const expectedReservedQty = pendingDraws;
+  const expectedRemainingQty = Math.max(expectedInitialQty - claimedDraws - expectedReservedQty, 0);
+  const needsReconcile = Boolean(
+    initialQty !== expectedInitialQty ||
+    remainingQty !== expectedRemainingQty ||
+    reservedQty !== expectedReservedQty ||
+    consumedQty !== claimedDraws
+  );
+  const accountedQty = Math.min(initialQty, remainingQty + reservedQty + consumedQty);
+  const availablePercent = initialQty > 0 ? (remainingQty / initialQty) * 100 : 0;
+  const reservedPercent = initialQty > 0 ? (reservedQty / initialQty) * 100 : 0;
+  const consumedPercent = initialQty > 0 ? (consumedQty / initialQty) * 100 : 0;
+
+  return {
+    initialQty,
+    remainingQty,
+    reservedQty,
+    consumedQty,
+    pendingDraws,
+    claimedDraws,
+    declinedDraws,
+    expectedInitialQty,
+    expectedRemainingQty,
+    expectedReservedQty,
+    needsReconcile,
+    accountedQty,
+    minInitialQty: consumedQty + reservedQty,
+    availablePercent,
+    reservedPercent,
+    consumedPercent
+  };
+}
+
+function buildPrizeMetadata(existingRaw, imageUrl, pricingDetails) {
   const metadataObj = parseMetadataObject(existingRaw);
+
+  delete metadataObj.discount_percent;
+  delete metadataObj.coupon_kind;
+  delete metadataObj.coupon_cash_amount;
+  delete metadataObj.coupon_discount_percent;
+  delete metadataObj.full_price_amount;
+
   if (imageUrl) metadataObj.image_url = imageUrl;
   else delete metadataObj.image_url;
+
+  if (pricingDetails && Number.isInteger(pricingDetails.discount_percent)) {
+    metadataObj.discount_percent = pricingDetails.discount_percent;
+  }
+  if (pricingDetails && pricingDetails.coupon_kind) {
+    metadataObj.coupon_kind = pricingDetails.coupon_kind;
+  }
+  if (pricingDetails && Number.isInteger(pricingDetails.coupon_cash_amount)) {
+    metadataObj.coupon_cash_amount = pricingDetails.coupon_cash_amount;
+  }
+  if (pricingDetails && Number.isInteger(pricingDetails.coupon_discount_percent)) {
+    metadataObj.coupon_discount_percent = pricingDetails.coupon_discount_percent;
+  }
+  if (pricingDetails && Number.isInteger(pricingDetails.full_price_amount)) {
+    metadataObj.full_price_amount = pricingDetails.full_price_amount;
+  }
+
   return Object.keys(metadataObj).length > 0 ? JSON.stringify(metadataObj) : null;
+}
+
+function parsePrizePricingDetails(type, body) {
+  const fullPriceAmount = Number.parseInt(body.full_price_amount, 10);
+
+  if (type === 'discount') {
+    if (!Number.isInteger(fullPriceAmount) || fullPriceAmount < 1 || fullPriceAmount > 1000000000) {
+      return { ok: false, message: 'ประเภท discount ต้องระบุราคาเต็ม 1 - 1,000,000,000 บาท' };
+    }
+    const discountPercent = Number.parseInt(body.discount_percent, 10);
+    if (!Number.isInteger(discountPercent) || discountPercent < 1 || discountPercent > 100) {
+      return { ok: false, message: 'ประเภท discount ต้องระบุเปอร์เซ็นต์ส่วนลด 1-100%' };
+    }
+    return { ok: true, value: { full_price_amount: fullPriceAmount, discount_percent: discountPercent } };
+  }
+
+  if (type === 'coupon') {
+    if (!Number.isInteger(fullPriceAmount) || fullPriceAmount < 1 || fullPriceAmount > 1000000000) {
+      return { ok: false, message: 'ประเภท coupon ต้องระบุราคาเต็ม 1 - 1,000,000,000 บาท' };
+    }
+    const couponKindRaw = sanitizePrizeText(body.coupon_kind, 32).toLowerCase();
+    const couponKind = ALLOWED_COUPON_KINDS.has(couponKindRaw) ? couponKindRaw : null;
+    if (!couponKind) {
+      return { ok: false, message: 'ประเภท coupon ต้องเลือกชนิดคูปอง (เงินสด/ส่วนลด)' };
+    }
+
+    if (couponKind === 'cash') {
+      const couponCashAmount = Number.parseInt(body.coupon_cash_amount, 10);
+      if (!Number.isInteger(couponCashAmount) || couponCashAmount < 1 || couponCashAmount > 1000000000) {
+        return { ok: false, message: 'คูปองเงินสดต้องระบุมูลค่า 1 - 1,000,000,000 บาท' };
+      }
+      return {
+        ok: true,
+        value: {
+          full_price_amount: fullPriceAmount,
+          coupon_kind: 'cash',
+          coupon_cash_amount: couponCashAmount
+        }
+      };
+    }
+
+    const couponDiscountPercent = Number.parseInt(body.coupon_discount_percent, 10);
+    if (!Number.isInteger(couponDiscountPercent) || couponDiscountPercent < 1 || couponDiscountPercent > 100) {
+      return { ok: false, message: 'คูปองส่วนลดต้องระบุเปอร์เซ็นต์ส่วนลด 1-100%' };
+    }
+    return {
+      ok: true,
+      value: {
+        full_price_amount: fullPriceAmount,
+        coupon_kind: 'discount',
+        coupon_discount_percent: couponDiscountPercent
+      }
+    };
+  }
+
+  return { ok: true, value: {} };
 }
 
 function canManagePrize(req, prize) {
@@ -204,7 +357,7 @@ exports.createCampaign = async (req, res) => {
       storeId = scopedStoreId;
     }
 
-    const campaignCode = sanitizeCampaignCode(req.body.campaign_code);
+    let campaignCode = '';
     const name = sanitizePrizeText(req.body.name, 255);
     const description = sanitizePrizeText(req.body.description, 2000);
     const active = req.body.active === '1';
@@ -213,10 +366,6 @@ exports.createCampaign = async (req, res) => {
 
     if (!storeId) {
       req.flash('danger', 'กรุณาเลือกสาขาให้ถูกต้อง');
-      return res.redirect('/promotion/admin/campaigns');
-    }
-    if (!CAMPAIGN_CODE_REGEX.test(campaignCode)) {
-      req.flash('danger', 'campaign_code ต้องเป็น A-Z, 0-9, _ หรือ - (2-100 ตัว)');
       return res.redirect('/promotion/admin/campaigns');
     }
     if (!name) {
@@ -237,6 +386,8 @@ exports.createCampaign = async (req, res) => {
       req.flash('danger', 'ไม่พบสาขาที่เลือก');
       return res.redirect('/promotion/admin/campaigns');
     }
+
+    campaignCode = await generateCampaignCodeForStore(store.id, store.store_code);
 
     const duplicate = await promotionModel.getCampaignByCodeInStore(storeId, campaignCode);
     if (duplicate) {
@@ -282,14 +433,14 @@ exports.updateCampaign = async (req, res) => {
       return res.redirect('/promotion/admin/campaigns');
     }
 
-    const campaignCode = sanitizeCampaignCode(req.body.campaign_code);
+    const campaignCode = sanitizeCampaignCode(campaign.campaign_code);
     const name = sanitizePrizeText(req.body.name, 255);
     const description = sanitizePrizeText(req.body.description, 2000);
     const startAtParsed = parseDateTimeInput(req.body.start_at);
     const endAtParsed = parseDateTimeInput(req.body.end_at);
 
     if (!CAMPAIGN_CODE_REGEX.test(campaignCode)) {
-      req.flash('danger', 'campaign_code ต้องเป็น A-Z, 0-9, _ หรือ - (2-100 ตัว)');
+      req.flash('danger', 'campaign_code ของแคมเปญนี้ไม่ถูกต้อง');
       return res.redirect('/promotion/admin/campaigns');
     }
     if (!name) {
@@ -302,12 +453,6 @@ exports.updateCampaign = async (req, res) => {
     }
     if (startAtParsed.value && endAtParsed.value && startAtParsed.value > endAtParsed.value) {
       req.flash('danger', 'วันเริ่มต้นต้องไม่มากกว่าวันสิ้นสุด');
-      return res.redirect('/promotion/admin/campaigns');
-    }
-
-    const duplicate = await promotionModel.getCampaignByCodeInStore(campaign.store_id, campaignCode);
-    if (duplicate && Number(duplicate.id) !== Number(campaign.id)) {
-      req.flash('danger', `campaign_code ${campaignCode} ถูกใช้งานแล้วในสาขานี้`);
       return res.redirect('/promotion/admin/campaigns');
     }
 
@@ -465,6 +610,12 @@ exports.createPrize = async (req, res) => {
       req.flash('danger', 'ประเภทของรางวัลไม่ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
+    const pricing = parsePrizePricingDetails(type, req.body || {});
+    if (!pricing.ok) {
+      cleanupUploadedPromotionPrizeImage(req);
+      req.flash('danger', pricing.message);
+      return res.redirect('/promotion/admin/prizes');
+    }
     if (imageUrlRaw && !imageUrlFromText && !imageUrlFromUpload) {
       cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ลิงก์รูปของรางวัลไม่ถูกต้อง (รองรับเฉพาะ http/https หรือ path ภายในระบบ)');
@@ -507,7 +658,7 @@ exports.createPrize = async (req, res) => {
       name,
       description: description || null,
       type,
-      metadata: buildPrizeMetadata(null, imageUrl || null),
+      metadata: buildPrizeMetadata(null, imageUrl || null, pricing.value),
       initial_qty: initialQty,
       weight,
       active
@@ -552,6 +703,7 @@ exports.updatePrize = async (req, res) => {
     const imageUrlFromUpload = getUploadedPromotionPrizeImageUrl(req);
     const imageUrl = imageUrlFromUpload || imageUrlFromText;
     const typeRaw = sanitizePrizeText(req.body.type, 32);
+    const initialQty = Number.parseInt(req.body.initial_qty, 10);
     const weight = Number.parseInt(req.body.weight, 10);
     const type = ALLOWED_PRIZE_TYPES.has(typeRaw) ? typeRaw : null;
 
@@ -565,9 +717,21 @@ exports.updatePrize = async (req, res) => {
       req.flash('danger', 'ประเภทของรางวัลไม่ถูกต้อง');
       return res.redirect('/promotion/admin/prizes');
     }
+    const pricing = parsePrizePricingDetails(type, req.body || {});
+    if (!pricing.ok) {
+      cleanupUploadedPromotionPrizeImage(req);
+      req.flash('danger', pricing.message);
+      return res.redirect('/promotion/admin/prizes');
+    }
     if (imageUrlRaw && !imageUrlFromText && !imageUrlFromUpload) {
       cleanupUploadedPromotionPrizeImage(req);
       req.flash('danger', 'ลิงก์รูปของรางวัลไม่ถูกต้อง (รองรับเฉพาะ http/https หรือ path ภายในระบบ)');
+      return res.redirect('/promotion/admin/prizes');
+    }
+
+    if (!Number.isInteger(initialQty) || initialQty < 0 || initialQty > 1000000) {
+      cleanupUploadedPromotionPrizeImage(req);
+      req.flash('danger', 'จำนวนรางวัลต้องเป็นตัวเลข 0 - 1,000,000');
       return res.redirect('/promotion/admin/prizes');
     }
 
@@ -579,14 +743,35 @@ exports.updatePrize = async (req, res) => {
       return res.redirect('/promotion/admin/prizes');
     }
 
-    await promotionModel.updatePrizeById(prizeId, {
+    const currentInitial = Number.parseInt(prize.initial_qty, 10) || 0;
+    const currentRemaining = Number.parseInt(prize.remaining_qty, 10) || 0;
+    const currentReserved = Number.parseInt(prize.reserved_qty, 10) || 0;
+    const consumedQty = Math.max(currentInitial - currentRemaining - currentReserved, 0);
+    const minInitialQty = consumedQty + currentReserved;
+    if (initialQty < minInitialQty) {
+      cleanupUploadedPromotionPrizeImage(req);
+      req.flash('danger', `จำนวนรางวัลน้อยเกินไป ต้องไม่น้อยกว่า ${minInitialQty} (มีจองอยู่ ${currentReserved} และถูกใช้ไปแล้ว ${consumedQty})`);
+      return res.redirect('/promotion/admin/prizes');
+    }
+
+    const updateResult = await promotionModel.updatePrizeWithStockById(prizeId, {
       prize_code: prizeCode || null,
       name,
       description: description || null,
       type,
-      metadata: buildPrizeMetadata(prize.metadata, imageUrl || null),
+      metadata: buildPrizeMetadata(prize.metadata, imageUrl || null, pricing.value),
+      initial_qty: initialQty,
       weight
     });
+    if (!updateResult.ok) {
+      cleanupUploadedPromotionPrizeImage(req);
+      if (updateResult.reason === 'stock_too_low') {
+        req.flash('danger', `Stock is too low. Minimum is ${updateResult.minInitialQty} (Reserved ${updateResult.reservedQty}, Used ${updateResult.consumedQty}).`);
+      } else {
+        req.flash('danger', 'Prize not found.');
+      }
+      return res.redirect('/promotion/admin/prizes');
+    }
 
     if (imageUrlFromUpload && oldImageUrl && oldImageUrl !== imageUrlFromUpload) {
       deleteLocalPromotionPrizeImage(oldImageUrl);
@@ -627,6 +812,42 @@ exports.updatePrizeStatus = async (req, res) => {
   } catch (err) {
     console.error('promotionAdmin.updatePrizeStatus error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะเปลี่ยนสถานะของรางวัล');
+    return res.redirect('/promotion/admin/prizes');
+  }
+};
+
+exports.reconcilePrizeInventory = async (req, res) => {
+  try {
+    const prizeId = parsePositiveInt(req.params.id);
+    if (!prizeId) {
+      req.flash('danger', 'รหัสของรางวัลไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/prizes');
+    }
+
+    const prize = await promotionModel.getPrizeById(prizeId);
+    if (!prize) {
+      req.flash('danger', 'ไม่พบของรางวัล');
+      return res.redirect('/promotion/admin/prizes');
+    }
+    if (!canManagePrize(req, prize)) {
+      req.flash('danger', 'คุณไม่มีสิทธิ์จัดการของรางวัลรายการนี้');
+      return res.redirect('/promotion/admin/prizes');
+    }
+
+    const result = await promotionModel.reconcilePrizeInventoryById(prizeId);
+    if (!result.ok) {
+      req.flash('danger', 'ไม่สามารถปรับสต็อกของรางวัลได้');
+      return res.redirect('/promotion/admin/prizes');
+    }
+
+    req.flash(
+      'success',
+      `Reconciled "${prize.name}": Stock ${result.before.initialQty} -> ${result.after.initialQty}, Remaining ${result.before.remainingQty} -> ${result.after.remainingQty}, Reserved ${result.before.reservedQty} -> ${result.after.reservedQty}, Used ${result.after.usedQty}.`
+    );
+    return res.redirect('/promotion/admin/prizes');
+  } catch (err) {
+    console.error('promotionAdmin.reconcilePrizeInventory error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะปรับสต็อกของรางวัล');
     return res.redirect('/promotion/admin/prizes');
   }
 };
@@ -793,8 +1014,19 @@ exports.draws = async (req, res) => {
   try {
     const scopedStoreId = getScopedStoreId(req);
     const limit = parseInt(req.query.limit, 10) || 500;
+    const reportDaysRaw = parseInt(req.query.report_days, 10);
+    const reportDays = Number.isInteger(reportDaysRaw) ? Math.max(1, Math.min(365, reportDaysRaw)) : 30;
     const draws = await promotionModel.getDrawsList(limit, scopedStoreId);
-    return res.render('promotion/admin/draws', { title: 'Draws', draws, promotionAdmin: req.promotionAdmin });
+    const overallSummary = await promotionModel.getDrawOverallSummary(scopedStoreId);
+    const dailySummary = await promotionModel.getDrawDailySummary(reportDays, scopedStoreId);
+    return res.render('promotion/admin/draws', {
+      title: 'Draws',
+      draws,
+      overallSummary,
+      dailySummary,
+      reportDays,
+      promotionAdmin: req.promotionAdmin
+    });
   } catch (err) {
     console.error('promotionAdmin.draws error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
@@ -852,6 +1084,11 @@ exports.clearCodes = async (req, res) => {
 exports.resetCodes = async (req, res) => {
   try {
     const scope = getScope(req);
+    if (!scope || (scope.role !== 'super_admin' && scope.role !== 'coop_admin')) {
+      req.flash('danger', 'คุณไม่มีสิทธิ์รีเซ็ตโค้ด');
+      return res.redirect('/promotion/admin/codes');
+    }
+
     const scopedStoreId = getScopedStoreId(req);
     let storeId = parsePositiveInt(req.body.store_id);
     let campaignId = parsePositiveInt(req.body.campaign_id);
@@ -890,14 +1127,59 @@ exports.resetCodes = async (req, res) => {
       : storeId
         ? `สาขา #${storeId}`
         : 'ทุกสาขา';
-    const drawNote = result.drawRowsDeleted
-      ? ` และลบประวัติการสุ่มที่อ้างถึงโค้ด ${result.drawRowsDeleted} รายการ`
+    const drawNote = result.pendingDrawRowsDeleted
+      ? ` และลบรายการสุ่มที่ค้างอยู่ ${result.pendingDrawRowsDeleted} รายการ`
       : '';
-    req.flash('success', `รีเซ็ตโค้ดทั้งหมด ${result.removed} รายการจาก ${scopeLabel}${drawNote} แล้ว`);
+    req.flash('success', `รีเซ็ตโค้ด non-winning (unused/expired/drawn) ${result.removed} รายการจาก ${scopeLabel}${drawNote} แล้ว`);
     return res.redirect(`/promotion/admin/codes${storeId ? `?store_id=${storeId}` : ''}${campaignId ? `${storeId ? '&' : '?'}campaign_id=${campaignId}` : ''}`);
   } catch (err) {
     console.error('promotionAdmin.resetCodes error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะรีเซ็ตโค้ด');
+    return res.redirect('/promotion/admin/codes');
+  }
+};
+
+exports.hardResetCodes = async (req, res) => {
+  if (!ensureSuperAdmin(req, res)) return;
+
+  try {
+    const scope = getScope(req);
+    let storeId = parsePositiveInt(req.body.store_id);
+    let campaignId = parsePositiveInt(req.body.campaign_id);
+
+    if (campaignId) {
+      const campaign = await promotionModel.getCampaignById(campaignId);
+      if (!campaign) {
+        req.flash('danger', 'ไม่พบแคมเปญที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+      if (!storeId) {
+        storeId = Number(campaign.store_id) || null;
+      }
+      if (storeId && Number(campaign.store_id) !== Number(storeId)) {
+        req.flash('danger', 'แคมเปญนี้ไม่ได้อยู่ในสาขาที่เลือก');
+        return res.redirect('/promotion/admin/codes');
+      }
+    }
+
+    const result = await promotionModel.hardResetCodes(scope, {
+      storeId,
+      campaignId
+    });
+
+    const scopeLabel = campaignId
+      ? `แคมเปญ #${campaignId}`
+      : storeId
+        ? `สาขา #${storeId}`
+        : 'ทุกสาขา';
+    const drawNote = result.drawRowsDeleted
+      ? ` และลบประวัติการสุ่มที่อ้างถึงโค้ด ${result.drawRowsDeleted} รายการ`
+      : '';
+    req.flash('success', `HARD RESET โค้ดทั้งหมด ${result.removed} รายการจาก ${scopeLabel}${drawNote} แล้ว`);
+    return res.redirect(`/promotion/admin/codes${storeId ? `?store_id=${storeId}` : ''}${campaignId ? `${storeId ? '&' : '?'}campaign_id=${campaignId}` : ''}`);
+  } catch (err) {
+    console.error('promotionAdmin.hardResetCodes error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะ hard reset โค้ด');
     return res.redirect('/promotion/admin/codes');
   }
 };
@@ -1300,6 +1582,50 @@ exports.resetUserPassword = async (req, res) => {
   } catch (err) {
     console.error('promotionAdmin.resetUserPassword error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะรีเซ็ตรหัสผ่าน');
+    return res.redirect('/promotion/admin/users');
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  if (!ensureSuperAdmin(req, res)) return;
+
+  try {
+    const userId = parsePositiveInt(req.params.id);
+    if (!userId) {
+      req.flash('danger', 'รหัสผู้ใช้งานไม่ถูกต้อง');
+      return res.redirect('/promotion/admin/users');
+    }
+
+    const target = await adminUserModel.getById(userId);
+    if (!target) {
+      req.flash('danger', 'ไม่พบผู้ใช้งาน');
+      return res.redirect('/promotion/admin/users');
+    }
+
+    if (req.promotionAdmin && Number(req.promotionAdmin.id) === Number(target.id)) {
+      req.flash('danger', 'ไม่สามารถลบบัญชีของตัวเองได้');
+      return res.redirect('/promotion/admin/users');
+    }
+
+    if (target.role === 'super_admin') {
+      const superAdminCount = await adminUserModel.countByRole('super_admin');
+      if (superAdminCount <= 1) {
+        req.flash('danger', 'ไม่สามารถลบ super_admin คนสุดท้ายได้');
+        return res.redirect('/promotion/admin/users');
+      }
+    }
+
+    const affected = await adminUserModel.deleteById(target.id);
+    if (affected < 1) {
+      req.flash('danger', 'ไม่สามารถลบผู้ใช้งานได้');
+      return res.redirect('/promotion/admin/users');
+    }
+
+    req.flash('success', `ลบผู้ใช้งาน ${target.username} แล้ว`);
+    return res.redirect('/promotion/admin/users');
+  } catch (err) {
+    console.error('promotionAdmin.deleteUser error', err);
+    req.flash('danger', 'เกิดข้อผิดพลาดขณะลบผู้ใช้งาน');
     return res.redirect('/promotion/admin/users');
   }
 };

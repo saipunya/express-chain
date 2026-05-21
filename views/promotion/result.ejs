@@ -70,9 +70,135 @@
     margin-bottom: 6px;
   }
 
+  .promo-prize-visual {
+    width: min(100%, 460px);
+    margin: 0 auto 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .promo-prize-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .promo-prize-image-empty {
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    color: #64748b;
+    font-weight: 700;
+  }
+
   .promo-prize-desc {
     color: #64748b;
     margin-bottom: 20px;
+  }
+
+  .promo-benefit-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 2px auto 16px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 10px 22px rgba(2, 132, 199, 0.24);
+  }
+
+  .promo-prize-detail-box {
+    width: min(100%, 560px);
+    margin: 0 auto 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: #f8fafc;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .promo-prize-detail-title {
+    font-size: 0.85rem;
+    color: #334155;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .promo-prize-detail-text {
+    color: #475569;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .promo-decision-box {
+    width: min(100%, 560px);
+    margin: 0 auto 16px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: #fff;
+    text-align: left;
+  }
+
+  .promo-decision-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .promo-decision-input {
+    min-height: 48px;
+    border-radius: 10px;
+  }
+
+  .promo-decision-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .promo-price-grid {
+    width: min(100%, 560px);
+    margin: 0 auto 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .promo-price-item {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    background: #fff;
+    padding: 10px 12px;
+  }
+
+  .promo-price-label {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .promo-price-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .promo-price-value.payable {
+    color: #059669;
   }
 
   .promo-message {
@@ -183,8 +309,16 @@
       flex-direction: column;
     }
 
+    .promo-price-grid {
+      grid-template-columns: 1fr;
+    }
+
     .promo-btn {
       width: 100%;
+    }
+
+    .promo-decision-actions {
+      flex-direction: column;
     }
   }
 </style>
@@ -195,10 +329,7 @@
 
       <% const drawSafe = (typeof draw !== 'undefined') ? draw : null; %>
       <% const hasPrize = drawSafe && drawSafe.prize_id && drawSafe.prize_type !== 'other'; %>
-      <% const isClaimed = drawSafe && drawSafe.draw_status === 'claimed'; %>
-      <% const isDeclined = drawSafe && drawSafe.draw_status === 'declined'; %>
-      <% const originPlayUrl = drawSafe && drawSafe.store_code ? '/promotion/store/' + drawSafe.store_code + '/play' : '/promotion/play'; %>
-      <% const originLabel = drawSafe && drawSafe.store_name ? (drawSafe.store_name + (drawSafe.store_code ? ' (' + drawSafe.store_code + ')' : '')) : null; %>
+      <% const isDrawn = drawSafe && drawSafe.draw_status === 'drawn'; %>
 
       <% if (typeof message !== 'undefined' && message) { %>
         <div class="promo-message promo-message-<%= messageType || 'info' %>">
@@ -214,35 +345,69 @@
           ยินดีด้วย! คุณได้รับรางวัล
         </div>
 
-        <div class="promo-status-pill">
-          <% if (isClaimed) { %>
-            เคลมแล้ว
-          <% } else if (isDeclined) { %>
-            ปฏิเสธรางวัลแล้ว
+        <div class="promo-prize-visual">
+          <% if (drawSafe.prize_image_url) { %>
+            <img src="<%= drawSafe.prize_image_url %>" alt="<%= drawSafe.prize_name || 'Prize image' %>" class="promo-prize-image">
           <% } else { %>
-            รอการเคลม
+            <div class="promo-prize-image-empty">🎁 รูปรางวัลจะปรากฏเมื่อมีการอัปโหลด</div>
           <% } %>
         </div>
-
-        <% if (originLabel) { %>
-          <div class="promo-store-pill">
-            สโตร์ต้นทาง: <%= originLabel %>
-          </div>
-        <% } %>
 
         <div class="promo-prize-name">
           <%= drawSafe.prize_name %>
         </div>
 
+        <% if (drawSafe.prize_benefit_text) { %>
+          <div class="promo-benefit-chip">สิทธิ์ที่ได้รับ: <%= drawSafe.prize_benefit_text %></div>
+        <% } %>
+
+        <% if (drawSafe.prize_full_price_amount || drawSafe.prize_payable_amount === 0 || drawSafe.prize_payable_amount) { %>
+          <div class="promo-price-grid">
+            <% if (drawSafe.prize_full_price_amount) { %>
+              <div class="promo-price-item">
+                <div class="promo-price-label">ราคาเต็มสินค้า</div>
+                <div class="promo-price-value"><%= Number(drawSafe.prize_full_price_amount).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) %> บาท</div>
+              </div>
+            <% } %>
+            <% if (drawSafe.prize_payable_amount === 0 || drawSafe.prize_payable_amount) { %>
+              <div class="promo-price-item">
+                <div class="promo-price-label">ราคาที่ต้องจ่าย</div>
+                <div class="promo-price-value payable"><%= Number(drawSafe.prize_payable_amount).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) %> บาท</div>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
+
         <div class="promo-prize-desc">
           <%= drawSafe.prize_description || '' %>
         </div>
 
-        <div class="promo-actions">
-          <a href="<%= originPlayUrl %>" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
-            ← กลับสโตร์เดิม
-          </a>
-        </div>
+        <% if (drawSafe.prize_description) { %>
+          <div class="promo-prize-detail-box">
+            <div class="promo-prize-detail-title">รายละเอียดของรางวัล</div>
+            <p class="promo-prize-detail-text"><%= drawSafe.prize_description %></p>
+          </div>
+        <% } %>
+
+        <% if (isDrawn) { %>
+          <div class="promo-decision-box">
+            <div class="promo-decision-title">ฟอร์มยืนยันการรับรางวัล (กรอกชื่อและเบอร์โทร)</div>
+            <form method="post" action="/promotion/claim" class="mb-2">
+              <input type="hidden" name="draw_token" value="<%= drawSafe.draw_token %>">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <input type="text" class="form-control promo-decision-input" name="customer_name" placeholder="ชื่อ-นามสกุล" maxlength="100" value="<%= drawSafe.customer_name || '' %>" required>
+                </div>
+                <div class="col-md-6">
+                  <input type="tel" class="form-control promo-decision-input" name="customer_phone" placeholder="เบอร์โทรศัพท์" maxlength="32" value="<%= drawSafe.customer_phone || '' %>" required>
+                </div>
+              </div>
+              <div class="promo-decision-actions">
+                <button type="submit" class="promo-btn promo-btn-success">รับรางวัล</button>
+              </div>
+            </form>
+          </div>
+        <% } %>
 
       <% } else { %>
 
@@ -252,15 +417,7 @@
           ขออภัย คุณไม่ได้รับรางวัล
         </div>
 
-        <div class="promo-prize-desc">
-          ลองใหม่อีกครั้งในโอกาสถัดไปนะครับ
-        </div>
-
-        <div class="promo-actions">
-          <a href="<%= originPlayUrl %>" class="promo-btn promo-btn-primary text-decoration-none d-inline-flex align-items-center justify-content-center">
-            ← กลับสโตร์เดิม
-          </a>
-        </div>
+        <div class="promo-prize-desc">ลองใหม่อีกครั้งในโอกาสถัดไปนะครับ</div>
 
       <% } %>
 

@@ -24,6 +24,8 @@
   .badge-active   { background: #dcfce7; color: #15803d; }
   .badge-inactive { background: #e2e8f0; color: #334155; }
   .action-stack { display: grid; gap: 6px; min-width: 140px; }
+  .prize-pricing-block { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px; background: #f8fafc; }
+  .prize-pay-preview { font-weight: 700; color: #0f172a; }
   .modal[id^="editPrizeModal-"] .modal-dialog  { margin: 1rem auto; }
   .modal[id^="editPrizeModal-"] .modal-content { max-height: calc(100vh - 2rem); overflow: hidden; }
   .modal[id^="editPrizeModal-"] .modal-header  { position: sticky; top: 0; background: #fff; z-index: 3; }
@@ -116,13 +118,61 @@
 
           <div class="col-md-3">
             <label class="form-label">ประเภท</label>
-            <select class="form-select" name="type" required>
+            <select class="form-select" name="type" data-prize-type required>
               <option value="free_product">free_product</option>
               <option value="discount">discount</option>
               <option value="coupon">coupon</option>
               <option value="credit">credit</option>
               <option value="other">other (ไม่ได้รางวัล)</option>
             </select>
+          </div>
+
+          <div class="col-md-7" data-pricing-root>
+            <label class="form-label">รายละเอียดราคา/สิทธิประโยชน์</label>
+            <div class="prize-pricing-block" data-type-section="discount" style="display:none;">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                  <label class="form-label mb-1">ราคาเต็มสินค้า (บาท)</label>
+                  <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" placeholder="เช่น 590">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label mb-1">ส่วนลด (%)</label>
+                  <input type="number" class="form-control" name="discount_percent" min="1" max="100" placeholder="เช่น 10">
+                </div>
+                <div class="col-md-4">
+                  <div class="text-muted small">ต้องระบุเมื่อเลือกประเภท discount</div>
+                  <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาที่ต้องจ่าย: -</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prize-pricing-block" data-type-section="coupon" style="display:none;">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label mb-1">ราคาเต็มสินค้า (บาท)</label>
+                  <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" placeholder="เช่น 590">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label mb-1">ชนิดคูปอง</label>
+                  <select class="form-select" name="coupon_kind" data-coupon-kind>
+                    <option value="">เลือกชนิดคูปอง</option>
+                    <option value="cash">คูปองเงินสด</option>
+                    <option value="discount">คูปองส่วนลด</option>
+                  </select>
+                </div>
+                <div class="col-md-4" data-coupon-section="cash" style="display:none;">
+                  <label class="form-label mb-1">มูลค่าคูปองเงินสด (บาท)</label>
+                  <input type="number" class="form-control" name="coupon_cash_amount" min="1" max="1000000000" placeholder="เช่น 100">
+                </div>
+                <div class="col-md-4" data-coupon-section="discount" style="display:none;">
+                  <label class="form-label mb-1">ส่วนลด (%)</label>
+                  <input type="number" class="form-control" name="coupon_discount_percent" min="1" max="100" placeholder="เช่น 15">
+                </div>
+                <div class="col-12">
+                  <div class="small mt-1 prize-pay-preview" data-pay-preview="coupon">ราคาที่ต้องจ่าย: -</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="col-md-2">
@@ -183,13 +233,42 @@
           <tbody>
             <% if (Array.isArray(prizes) && prizes.length) { %>
               <% prizes.forEach(p => { 
-                const remaining = Number(p.remaining_qty || 0);
-                const reserved = Number(p.reserved_qty || 0);
-                const total = remaining + reserved;
-                const percent = total > 0 ? (reserved / total) * 100 : 0;
+                const inventory = p.inventory || {};
+                const remaining = Number(inventory.remainingQty ?? p.remaining_qty ?? 0);
+                const reserved = Number(inventory.reservedQty ?? p.reserved_qty ?? 0);
+                const stock = Number(inventory.initialQty ?? p.initial_qty ?? 0);
+                const consumed = Number(inventory.consumedQty ?? Math.max(stock - remaining - reserved, 0));
+                const needsReconcile = Boolean(inventory.needsReconcile);
+                const remainingPercent = Math.max(0, Math.min(100, Number(inventory.availablePercent ?? (stock > 0 ? (remaining / stock) * 100 : 0))));
+                const reservedPercent = Math.max(0, Math.min(100, Number(inventory.reservedPercent ?? (stock > 0 ? (reserved / stock) * 100 : 0))));
+                const consumedPercent = Math.max(0, Math.min(100, Number(inventory.consumedPercent ?? (stock > 0 ? (consumed / stock) * 100 : 0))));
+                const meta = p.metadata_obj || {};
+                const fullPrice = Number(meta.full_price_amount || 0);
+                const hasFullPrice = Number.isFinite(fullPrice) && fullPrice > 0;
+                let payablePrice = null;
+                if (hasFullPrice && p.type === 'discount') {
+                  const dp = Number(meta.discount_percent || 0);
+                  if (dp > 0 && dp <= 100) payablePrice = Math.max(fullPrice - (fullPrice * dp / 100), 0);
+                }
+                if (hasFullPrice && p.type === 'coupon' && meta.coupon_kind === 'cash') {
+                  const cash = Number(meta.coupon_cash_amount || 0);
+                  if (cash > 0) payablePrice = Math.max(fullPrice - cash, 0);
+                }
+                if (hasFullPrice && p.type === 'coupon' && meta.coupon_kind === 'discount') {
+                  const cp = Number(meta.coupon_discount_percent || 0);
+                  if (cp > 0 && cp <= 100) payablePrice = Math.max(fullPrice - (fullPrice * cp / 100), 0);
+                }
+                if (hasFullPrice && p.type === 'free_product') {
+                  payablePrice = 0;
+                }
               %>
               <tr>
-                <td class="fw-bold"><%= p.name %></td>
+                <td class="fw-bold">
+                  <%= p.name %>
+                  <% if (needsReconcile) { %>
+                    <div class="small text-danger fw-semibold">Inventory mismatch</div>
+                  <% } %>
+                </td>
                 <td>
                   <% if (p.image_url) { %>
                     <a href="<%= p.image_url %>" target="_blank" rel="noopener noreferrer">
@@ -199,7 +278,24 @@
                     <div class="prize-thumb-empty">No image</div>
                   <% } %>
                 </td>
-                <td><span class="text-muted"><%= p.type || '-' %></span></td>
+                <td>
+                  <span class="text-muted"><%= p.type || '-' %></span>
+                  <% if (p.type === 'discount' && Number.isInteger(Number(meta.discount_percent))) { %>
+                    <div class="small text-primary">ลด <%= Number(meta.discount_percent) %>%</div>
+                  <% } %>
+                  <% if (p.type === 'coupon' && meta.coupon_kind === 'cash') { %>
+                    <div class="small text-primary">คูปองเงินสด <%= Number(meta.coupon_cash_amount || 0).toLocaleString('th-TH') %> บาท</div>
+                  <% } %>
+                  <% if (p.type === 'coupon' && meta.coupon_kind === 'discount') { %>
+                    <div class="small text-primary">คูปองส่วนลด <%= Number(meta.coupon_discount_percent || 0) %>%</div>
+                  <% } %>
+                  <% if (hasFullPrice) { %>
+                    <div class="small text-muted">ราคาเต็ม <%= Number(fullPrice).toLocaleString('th-TH') %> บาท</div>
+                  <% } %>
+                  <% if (payablePrice !== null) { %>
+                    <div class="small fw-bold text-success">ต้องจ่าย <%= Number(payablePrice).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) %> บาท</div>
+                  <% } %>
+                </td>
 
                 <td><%= p.campaign_name || '-' %></td>
 
@@ -217,14 +313,23 @@
 
                 <!-- 🔥 PROGRESS BAR -->
                 <td style="min-width:150px;">
-                  <div class="progress">
-                    <div class="progress-bar bg-primary" 
-                      style="width:<%= percent %>%">
-                    </div>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="fw-semibold"><%= stock %></span>
+                    <span class="text-muted">used <%= consumed %></span>
+                  </div>
+                  <div class="progress" title="Remaining + Reserved + Used = Stock">
+                    <div class="progress-bar bg-success" style="width:<%= remainingPercent %>%"></div>
+                    <div class="progress-bar bg-warning" style="width:<%= reservedPercent %>%"></div>
+                    <div class="progress-bar bg-secondary" style="width:<%= consumedPercent %>%"></div>
                   </div>
                   <small class="text-muted">
-                    <%= Math.round(percent) %>% used
+                    R <%= remaining %> / Res <%= reserved %> / Used <%= consumed %>
                   </small>
+                  <% if (needsReconcile) { %>
+                    <small class="text-danger d-block">
+                      Draw truth: R <%= inventory.expectedRemainingQty %> / Res <%= inventory.expectedReservedQty %> / Used <%= inventory.claimedDraws %>
+                    </small>
+                  <% } %>
                 </td>
 
                 <td>
@@ -246,8 +351,16 @@
                       </button>
                     </form>
                     <form method="POST" action="/promotion/admin/prizes/<%= p.id %>/delete" onsubmit="return confirm('ยืนยันการลบรางวัลนี้?');">
+                      <% if (needsReconcile) { %>
+                        <button class="btn btn-outline-info btn-sm w-100"
+                                type="submit"
+                                form="reconcilePrizeForm-<%= p.id %>">Reconcile</button>
+                      <% } %>
                       <button class="btn btn-outline-danger btn-sm w-100">Delete</button>
                     </form>
+                    <% if (needsReconcile) { %>
+                      <form id="reconcilePrizeForm-<%= p.id %>" method="POST" action="/promotion/admin/prizes/<%= p.id %>/reconcile" onsubmit="return confirm('Reconcile inventory from draw history for this prize?');"></form>
+                    <% } %>
                   </div>
                 </td>
               </tr>
@@ -270,6 +383,14 @@
 </div>
 <% if (Array.isArray(prizes) && prizes.length) { %>
   <% prizes.forEach(p => { %>
+    <%
+      const inventory = p.inventory || {};
+      const editRemaining = Number(inventory.remainingQty ?? p.remaining_qty ?? 0);
+      const editReserved = Number(inventory.reservedQty ?? p.reserved_qty ?? 0);
+      const editStock = Number(inventory.initialQty ?? p.initial_qty ?? 0);
+      const editConsumed = Number(inventory.consumedQty ?? Math.max(editStock - editRemaining - editReserved, 0));
+      const editMinStock = Number(inventory.minInitialQty ?? (editConsumed + editReserved));
+    %>
     <div class="modal fade" id="editPrizeModal-<%= p.id %>" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -306,13 +427,65 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">ประเภท</label>
-                  <select class="form-select" name="type" required>
+                  <select class="form-select" name="type" data-prize-type required>
                     <option value="free_product" <%= p.type === 'free_product' ? 'selected' : '' %>>free_product</option>
                     <option value="discount" <%= p.type === 'discount' ? 'selected' : '' %>>discount</option>
                     <option value="coupon" <%= p.type === 'coupon' ? 'selected' : '' %>>coupon</option>
                     <option value="credit" <%= p.type === 'credit' ? 'selected' : '' %>>credit</option>
                     <option value="other" <%= p.type === 'other' ? 'selected' : '' %>>other (ไม่ได้รางวัล)</option>
                   </select>
+                </div>
+                <div class="col-md-8" data-pricing-root>
+                  <label class="form-label">รายละเอียดราคา/สิทธิประโยชน์</label>
+                  <div class="prize-pricing-block" data-type-section="discount" style="display:none;">
+                    <div class="row g-2 align-items-end">
+                      <div class="col-md-4">
+                        <label class="form-label mb-1">ราคาเต็มสินค้า (บาท)</label>
+                        <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" value="<%= Number((p.metadata_obj && p.metadata_obj.full_price_amount) || '') || '' %>">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label mb-1">ส่วนลด (%)</label>
+                        <input type="number" class="form-control" name="discount_percent" min="1" max="100" value="<%= Number((p.metadata_obj && p.metadata_obj.discount_percent) || '') || '' %>">
+                      </div>
+                      <div class="col-md-4">
+                        <div class="text-muted small">ต้องระบุเมื่อเลือกประเภท discount</div>
+                        <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาที่ต้องจ่าย: -</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="prize-pricing-block" data-type-section="coupon" style="display:none;">
+                    <div class="row g-2">
+                      <div class="col-md-4">
+                        <label class="form-label mb-1">ราคาเต็มสินค้า (บาท)</label>
+                        <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" value="<%= Number((p.metadata_obj && p.metadata_obj.full_price_amount) || '') || '' %>">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label mb-1">ชนิดคูปอง</label>
+                        <select class="form-select" name="coupon_kind" data-coupon-kind>
+                          <option value="">เลือกชนิดคูปอง</option>
+                          <option value="cash" <%= p.metadata_obj && p.metadata_obj.coupon_kind === 'cash' ? 'selected' : '' %>>คูปองเงินสด</option>
+                          <option value="discount" <%= p.metadata_obj && p.metadata_obj.coupon_kind === 'discount' ? 'selected' : '' %>>คูปองส่วนลด</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4" data-coupon-section="cash" style="display:none;">
+                        <label class="form-label mb-1">มูลค่าคูปองเงินสด (บาท)</label>
+                        <input type="number" class="form-control" name="coupon_cash_amount" min="1" max="1000000000" value="<%= Number((p.metadata_obj && p.metadata_obj.coupon_cash_amount) || '') || '' %>">
+                      </div>
+                      <div class="col-md-4" data-coupon-section="discount" style="display:none;">
+                        <label class="form-label mb-1">ส่วนลด (%)</label>
+                        <input type="number" class="form-control" name="coupon_discount_percent" min="1" max="100" value="<%= Number((p.metadata_obj && p.metadata_obj.coupon_discount_percent) || '') || '' %>">
+                      </div>
+                      <div class="col-12">
+                        <div class="small mt-1 prize-pay-preview" data-pay-preview="coupon">ราคาที่ต้องจ่าย: -</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">จำนวนรางวัล</label>
+                  <input type="number" name="initial_qty" class="form-control" min="<%= editMinStock %>" max="1000000" value="<%= editStock %>" required>
+                  <small class="text-muted d-block">Stock total. Remaining <%= editRemaining %> | Reserved <%= editReserved %> | Used <%= editConsumed %> | Min <%= editMinStock %></small>
+                  <small class="text-muted">คงเหลือปัจจุบัน <%= Number(p.remaining_qty || 0) %> | จองอยู่ <%= Number(p.reserved_qty || 0) %></small>
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Weight</label>
@@ -327,7 +500,7 @@
                   <textarea class="form-control" name="description" rows="3" maxlength="2000"><%= p.description || '' %></textarea>
                 </div>
                 <div class="col-12">
-                  <small class="text-muted">หมายเหตุ: การแก้ไขนี้จะไม่เปลี่ยนจำนวนคงเหลือ/จำนวนจองของรางวัล</small>
+                  <small class="text-muted">หมายเหตุ: ระบบจะปรับจำนวนคงเหลือให้อัตโนมัติตามจำนวนรางวัลใหม่ โดยไม่กระทบจำนวนที่จองอยู่</small>
                 </div>
               </div>
             </div>
@@ -445,6 +618,116 @@
       });
 
       refreshPreview();
+    });
+  })();
+
+  (function () {
+    const forms = Array.from(document.querySelectorAll('.prize-image-form'));
+    if (!forms.length) return;
+
+    const syncPricingFields = (form) => {
+      const typeSelect = form.querySelector('[data-prize-type]');
+      const root = form.querySelector('[data-pricing-root]');
+      if (!typeSelect || !root) return;
+
+      const sections = {
+        discount: root.querySelector('[data-type-section="discount"]'),
+        coupon: root.querySelector('[data-type-section="coupon"]')
+      };
+
+      const discountInput = root.querySelector('input[name="discount_percent"]');
+      const fullPriceInputs = Array.from(root.querySelectorAll('input[name="full_price_amount"]'));
+      const couponKind = root.querySelector('[data-coupon-kind]');
+      const couponCashWrap = root.querySelector('[data-coupon-section="cash"]');
+      const couponDiscountWrap = root.querySelector('[data-coupon-section="discount"]');
+      const couponCashInput = root.querySelector('input[name="coupon_cash_amount"]');
+      const couponDiscountInput = root.querySelector('input[name="coupon_discount_percent"]');
+      const discountPayPreview = root.querySelector('[data-pay-preview="discount"]');
+      const couponPayPreview = root.querySelector('[data-pay-preview="coupon"]');
+
+      const type = String(typeSelect.value || '');
+      const isDiscount = type === 'discount';
+      const isCoupon = type === 'coupon';
+
+      if (sections.discount) sections.discount.style.display = isDiscount ? '' : 'none';
+      if (sections.coupon) sections.coupon.style.display = isCoupon ? '' : 'none';
+      if (discountInput) discountInput.required = isDiscount;
+
+      const enabledIndex = isDiscount ? 0 : (isCoupon ? 1 : -1);
+      const sharedFullPriceValue = fullPriceInputs
+        .map((input) => String(input.value || '').trim())
+        .find((value) => value !== '') || '';
+      fullPriceInputs.forEach((input, index) => {
+        const enabled = index === enabledIndex;
+        input.disabled = !enabled;
+        input.required = enabled;
+        if (enabled) input.value = sharedFullPriceValue;
+      });
+
+      const fullPriceInput = fullPriceInputs.find((input) => !input.disabled) || null;
+      if (couponKind) couponKind.required = isCoupon;
+
+      if (!isDiscount && discountInput) discountInput.value = '';
+      if (!(isDiscount || isCoupon) && fullPriceInput) fullPriceInput.value = '';
+      if (!isCoupon && couponKind) couponKind.value = '';
+
+      const kind = String((couponKind && couponKind.value) || '');
+      const showCash = isCoupon && kind === 'cash';
+      const showDiscount = isCoupon && kind === 'discount';
+
+      if (couponCashWrap) couponCashWrap.style.display = showCash ? '' : 'none';
+      if (couponDiscountWrap) couponDiscountWrap.style.display = showDiscount ? '' : 'none';
+      if (couponCashInput) couponCashInput.required = showCash;
+      if (couponDiscountInput) couponDiscountInput.required = showDiscount;
+
+      if (!showCash && couponCashInput) couponCashInput.value = '';
+      if (!showDiscount && couponDiscountInput) couponDiscountInput.value = '';
+
+      const fullPrice = Number((fullPriceInput && fullPriceInput.value) || 0);
+      const discountPercent = Number((discountInput && discountInput.value) || 0);
+      const couponCashAmount = Number((couponCashInput && couponCashInput.value) || 0);
+      const couponDiscountPercent = Number((couponDiscountInput && couponDiscountInput.value) || 0);
+
+      const formatMoney = (v) => Number(v).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+      if (discountPayPreview) {
+        if (isDiscount && fullPrice > 0 && discountPercent > 0 && discountPercent <= 100) {
+          const payable = Math.max(fullPrice - (fullPrice * discountPercent / 100), 0);
+          discountPayPreview.textContent = `ราคาที่ต้องจ่าย: ${formatMoney(payable)} บาท`;
+        } else {
+          discountPayPreview.textContent = 'ราคาที่ต้องจ่าย: -';
+        }
+      }
+
+      if (couponPayPreview) {
+        if (isCoupon && fullPrice > 0 && kind === 'cash' && couponCashAmount > 0) {
+          const payable = Math.max(fullPrice - couponCashAmount, 0);
+          couponPayPreview.textContent = `ราคาที่ต้องจ่าย: ${formatMoney(payable)} บาท`;
+        } else if (isCoupon && fullPrice > 0 && kind === 'discount' && couponDiscountPercent > 0 && couponDiscountPercent <= 100) {
+          const payable = Math.max(fullPrice - (fullPrice * couponDiscountPercent / 100), 0);
+          couponPayPreview.textContent = `ราคาที่ต้องจ่าย: ${formatMoney(payable)} บาท`;
+        } else {
+          couponPayPreview.textContent = 'ราคาที่ต้องจ่าย: -';
+        }
+      }
+    };
+
+    forms.forEach((form) => {
+      const typeSelect = form.querySelector('[data-prize-type]');
+      const couponKind = form.querySelector('[data-coupon-kind]');
+      const fullPriceInputs = Array.from(form.querySelectorAll('input[name="full_price_amount"]'));
+      const discountInput = form.querySelector('input[name="discount_percent"]');
+      const couponCashInput = form.querySelector('input[name="coupon_cash_amount"]');
+      const couponDiscountInput = form.querySelector('input[name="coupon_discount_percent"]');
+      if (typeSelect) typeSelect.addEventListener('change', () => syncPricingFields(form));
+      if (couponKind) couponKind.addEventListener('change', () => syncPricingFields(form));
+      fullPriceInputs.forEach((fullPriceInput) => {
+        fullPriceInput.addEventListener('input', () => syncPricingFields(form));
+      });
+      if (discountInput) discountInput.addEventListener('input', () => syncPricingFields(form));
+      if (couponCashInput) couponCashInput.addEventListener('input', () => syncPricingFields(form));
+      if (couponDiscountInput) couponDiscountInput.addEventListener('input', () => syncPricingFields(form));
+      syncPricingFields(form);
     });
   })();
 </script>

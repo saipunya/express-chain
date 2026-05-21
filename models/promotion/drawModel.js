@@ -71,15 +71,17 @@ async function markDrawClaimed(connection, drawId, customerName, customerPhone) 
   return (result && result.affectedRows && result.affectedRows > 0) || false;
 }
 
-async function markDrawDeclined(connection, drawId) {
+async function markDrawDeclined(connection, drawId, customerName, customerPhone) {
   const [result] = await connection.query(
     `UPDATE promotion_draws
      SET draw_status = 'declined',
+         customer_name = ?,
+         customer_phone = ?,
          declined_at = NOW(),
          updated_at = NOW()
      WHERE id = ?
        AND draw_status = 'drawn'`,
-    [drawId]
+    [customerName || null, customerPhone || null, drawId]
   );
   return (result && result.affectedRows && result.affectedRows > 0) || false;
 }
@@ -91,6 +93,7 @@ async function getDrawWithDetailsByToken(token) {
             pr.name AS prize_name,
             pr.description AS prize_description,
             pr.type AS prize_type,
+          pr.metadata AS prize_metadata,
             c.name AS campaign_name,
             s.name AS store_name,
             s.store_code
@@ -130,6 +133,66 @@ async function getDrawsList(limit = 500, storeId = null) {
   return rows;
 }
 
+async function getDrawOverallSummary(storeId = null) {
+  const where = storeId ? 'WHERE d.store_id = ?' : '';
+  const params = storeId ? [storeId] : [];
+  const [rows] = await db.query(
+    `SELECT
+       COUNT(*) AS total_draws,
+       SUM(d.draw_status = 'claimed') AS claimed_draws,
+       SUM(d.draw_status = 'declined') AS declined_draws,
+       SUM(d.draw_status = 'drawn') AS pending_draws,
+       COUNT(DISTINCT CASE
+         WHEN d.draw_status = 'claimed' AND COALESCE(d.customer_phone, '') <> '' THEN d.customer_phone
+         ELSE NULL
+       END) AS unique_claimed_customers,
+       MIN(d.drawn_at) AS first_draw_at,
+       MAX(d.drawn_at) AS last_draw_at
+     FROM promotion_draws d
+     ${where}`,
+    params
+  );
+  return rows[0] || {
+    total_draws: 0,
+    claimed_draws: 0,
+    declined_draws: 0,
+    pending_draws: 0,
+    unique_claimed_customers: 0,
+    first_draw_at: null,
+    last_draw_at: null
+  };
+}
+
+async function getDrawDailySummary(days = 30, storeId = null) {
+  const safeDays = Number.isInteger(Number(days)) ? Math.max(1, Math.min(365, Number(days))) : 30;
+  const whereParts = ['d.drawn_at IS NOT NULL', 'd.drawn_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)'];
+  const params = [safeDays - 1];
+
+  if (storeId) {
+    whereParts.push('d.store_id = ?');
+    params.push(storeId);
+  }
+
+  const [rows] = await db.query(
+    `SELECT
+       DATE(d.drawn_at) AS report_date,
+       COUNT(*) AS total_draws,
+       SUM(d.draw_status = 'claimed') AS claimed_draws,
+       SUM(d.draw_status = 'declined') AS declined_draws,
+       SUM(d.draw_status = 'drawn') AS pending_draws,
+       COUNT(DISTINCT CASE
+         WHEN d.draw_status = 'claimed' AND COALESCE(d.customer_phone, '') <> '' THEN d.customer_phone
+         ELSE NULL
+       END) AS unique_claimed_customers
+     FROM promotion_draws d
+     WHERE ${whereParts.join(' AND ')}
+     GROUP BY DATE(d.drawn_at)
+     ORDER BY DATE(d.drawn_at) DESC`,
+    params
+  );
+  return rows;
+}
+
 /**
  * Get draws for a user (by customer phone).
  * Uses the pool `db` and returns an array of draw rows with related info.
@@ -162,5 +225,7 @@ module.exports = {
   markDrawDeclined,
   getDrawWithDetailsByToken,
   getDrawsList,
-  getDrawByUser
+  getDrawByUser,
+  getDrawOverallSummary,
+  getDrawDailySummary
 };

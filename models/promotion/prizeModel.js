@@ -60,9 +60,21 @@ async function getPrizesList(storeId = null) {
   const where = storeId ? 'WHERE p.store_id = ?' : '';
   const params = storeId ? [storeId] : [];
   const [rows] = await db.query(
-    `SELECT p.*, c.name AS campaign_name
+    `SELECT p.*, c.name AS campaign_name,
+            COALESCE(ds.pending_draws, 0) AS pending_draws,
+            COALESCE(ds.claimed_draws, 0) AS claimed_draws,
+            COALESCE(ds.declined_draws, 0) AS declined_draws
      FROM promotion_prizes p
      LEFT JOIN promotion_campaigns c ON p.campaign_id = c.id
+     LEFT JOIN (
+       SELECT prize_id,
+              SUM(draw_status = 'drawn') AS pending_draws,
+              SUM(draw_status = 'claimed') AS claimed_draws,
+              SUM(draw_status = 'declined') AS declined_draws
+       FROM promotion_draws
+       WHERE prize_id IS NOT NULL
+       GROUP BY prize_id
+     ) ds ON ds.prize_id = p.id
      ${where}
      ORDER BY c.name ASC, p.name ASC`,
     params
@@ -110,7 +122,7 @@ async function getPrizeById(prizeId) {
 async function updatePrizeById(prizeId, payload) {
   await db.query(
     `UPDATE promotion_prizes
-     SET prize_code = ?, name = ?, description = ?, type = ?, metadata = ?, weight = ?, updated_at = NOW()
+     SET prize_code = ?, name = ?, description = ?, type = ?, metadata = ?, initial_qty = ?, remaining_qty = ?, weight = ?, updated_at = NOW()
      WHERE id = ?`,
     [
       payload.prize_code || null,
@@ -118,10 +130,162 @@ async function updatePrizeById(prizeId, payload) {
       payload.description || null,
       payload.type,
       payload.metadata || null,
+      payload.initial_qty,
+      payload.remaining_qty,
       payload.weight,
       prizeId
     ]
   );
+}
+
+function toNonNegativeInt(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function getInventoryState(prize) {
+  const initialQty = toNonNegativeInt(prize && prize.initial_qty);
+  const remainingQty = toNonNegativeInt(prize && prize.remaining_qty);
+  const reservedQty = toNonNegativeInt(prize && prize.reserved_qty);
+  const consumedQty = Math.max(initialQty - remainingQty - reservedQty, 0);
+  return {
+    initialQty,
+    remainingQty,
+    reservedQty,
+    consumedQty,
+    minInitialQty: consumedQty + reservedQty
+  };
+}
+
+async function updatePrizeWithStockById(prizeId, payload) {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query('SELECT * FROM promotion_prizes WHERE id = ? FOR UPDATE', [prizeId]);
+    const prize = rows[0] || null;
+    if (!prize) {
+      await connection.rollback();
+      return { ok: false, reason: 'not_found' };
+    }
+
+    const current = getInventoryState(prize);
+    const nextInitialQty = Number.parseInt(payload.initial_qty, 10);
+    if (!Number.isInteger(nextInitialQty) || nextInitialQty < current.minInitialQty) {
+      await connection.rollback();
+      return {
+        ok: false,
+        reason: 'stock_too_low',
+        minInitialQty: current.minInitialQty,
+        reservedQty: current.reservedQty,
+        consumedQty: current.consumedQty
+      };
+    }
+
+    const nextRemainingQty = Math.max(nextInitialQty - current.consumedQty - current.reservedQty, 0);
+
+    await connection.query(
+      `UPDATE promotion_prizes
+       SET prize_code = ?, name = ?, description = ?, type = ?, metadata = ?, initial_qty = ?, remaining_qty = ?, weight = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [
+        payload.prize_code || null,
+        payload.name,
+        payload.description || null,
+        payload.type,
+        payload.metadata || null,
+        nextInitialQty,
+        nextRemainingQty,
+        payload.weight,
+        prizeId
+      ]
+    );
+
+    await connection.commit();
+    return {
+      ok: true,
+      remainingQty: nextRemainingQty,
+      reservedQty: current.reservedQty,
+      consumedQty: current.consumedQty
+    };
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
+}
+
+async function getPrizeDrawInventoryCounts(connection, prizeId) {
+  const executor = connection && typeof connection.query === 'function' ? connection : db;
+  const [rows] = await executor.query(
+    `SELECT
+       SUM(draw_status = 'drawn') AS pending_draws,
+       SUM(draw_status = 'claimed') AS claimed_draws,
+       SUM(draw_status = 'declined') AS declined_draws
+     FROM promotion_draws
+     WHERE prize_id = ?`,
+    [prizeId]
+  );
+  const row = rows[0] || {};
+  return {
+    pendingDraws: toNonNegativeInt(row.pending_draws),
+    claimedDraws: toNonNegativeInt(row.claimed_draws),
+    declinedDraws: toNonNegativeInt(row.declined_draws)
+  };
+}
+
+async function reconcilePrizeInventoryById(prizeId) {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query('SELECT * FROM promotion_prizes WHERE id = ? FOR UPDATE', [prizeId]);
+    const prize = rows[0] || null;
+    if (!prize) {
+      await connection.rollback();
+      return { ok: false, reason: 'not_found' };
+    }
+
+    const counts = await getPrizeDrawInventoryCounts(connection, prizeId);
+    const currentInitial = toNonNegativeInt(prize.initial_qty);
+    const minInitialQty = counts.pendingDraws + counts.claimedDraws;
+    const nextInitialQty = Math.max(currentInitial, minInitialQty);
+    const nextReservedQty = counts.pendingDraws;
+    const nextRemainingQty = Math.max(nextInitialQty - counts.claimedDraws - nextReservedQty, 0);
+
+    await connection.query(
+      `UPDATE promotion_prizes
+       SET initial_qty = ?,
+           remaining_qty = ?,
+           reserved_qty = ?,
+           updated_at = NOW()
+       WHERE id = ?`,
+      [nextInitialQty, nextRemainingQty, nextReservedQty, prizeId]
+    );
+
+    await connection.commit();
+    return {
+      ok: true,
+      before: {
+        initialQty: currentInitial,
+        remainingQty: toNonNegativeInt(prize.remaining_qty),
+        reservedQty: toNonNegativeInt(prize.reserved_qty)
+      },
+      after: {
+        initialQty: nextInitialQty,
+        remainingQty: nextRemainingQty,
+        reservedQty: nextReservedQty,
+        usedQty: counts.claimedDraws
+      },
+      counts
+    };
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
 }
 
 async function setPrizeActiveById(prizeId, active) {
@@ -177,6 +341,8 @@ module.exports = {
   getShowcasePrizesByStore,
   getPrizeById,
   updatePrizeById,
+  updatePrizeWithStockById,
+  reconcilePrizeInventoryById,
   setPrizeActiveById,
   countPrizeDrawReferences,
   deletePrizeById,

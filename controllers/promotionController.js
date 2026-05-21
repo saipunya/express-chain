@@ -31,6 +31,28 @@ function sanitizeStoreCode(raw) {
   return String(raw || '').trim().toUpperCase().slice(0, 50).replace(/[^A-Z0-9_-]/g, '');
 }
 
+async function getStoreCodeFromId(storeId) {
+  const parsedStoreId = Number.parseInt(storeId, 10);
+  if (!Number.isInteger(parsedStoreId) || parsedStoreId <= 0) return null;
+  const store = await promotionModel.getStoreById(parsedStoreId);
+  const storeCode = sanitizeStoreCode(store && store.store_code ? store.store_code : '');
+  return storeCode || null;
+}
+
+async function getPlayRedirectUrlFromStoreId(storeId) {
+  const storeCode = await getStoreCodeFromId(storeId);
+  return storeCode
+    ? `/promotion/store/${encodeURIComponent(storeCode)}/play`
+    : '/promotion/play';
+}
+
+async function getKioskRedirectUrlFromStoreId(storeId) {
+  const storeCode = await getStoreCodeFromId(storeId);
+  return storeCode
+    ? `/promotion/store/${encodeURIComponent(storeCode)}/kiosk`
+    : '/promotion/kiosk';
+}
+
 function renderResultPage(res, status, options = {}) {
   return res.status(status).render('promotion/result', {
     title: 'ผลการจับรางวัล',
@@ -80,6 +102,15 @@ function parseMetadataObject(raw) {
   }
 }
 
+function extractPrizeImageUrlFromMetadata(rawMetadata) {
+  const metadataObj = parseMetadataObject(rawMetadata);
+  const candidate = String((metadataObj && metadataObj.image_url) || '').trim();
+  if (!candidate) return null;
+  if (/^https?:\/\/[^\s]+$/i.test(candidate)) return candidate;
+  if (/^(\/|\.\/|\.\.\/)[^\s]+$/.test(candidate)) return candidate;
+  return null;
+}
+
 function extractDiscountPercent(text) {
   const source = String(text || '');
   const match = source.match(/(\d{1,3})\s*%/);
@@ -89,26 +120,122 @@ function extractDiscountPercent(text) {
   return value;
 }
 
-function derivePrizeBadgeText(prize) {
-  const type = String((prize && prize.type) || '').trim();
-  if (!type) return null;
+function parsePositiveIntValue(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+}
 
-  if (type === 'free_product') return 'ฟรี';
+function formatCurrencyValue(value) {
+  const safeValue = Number(value || 0);
+  if (!Number.isFinite(safeValue)) return '0';
+  return safeValue.toLocaleString('th-TH');
+}
+
+function derivePrizeBadge(prize, metadataObj) {
+  const type = String((prize && prize.type) || '').trim();
+  if (!type) return { text: null, className: null };
+
+  if (type === 'free_product') return { text: 'ฟรี', className: 'is-free' };
   if (type === 'discount') {
+    const metadataPercent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
+    if (metadataPercent && metadataPercent <= 100) {
+      return { text: `ลด ${metadataPercent}%`, className: 'is-discount' };
+    }
     const percent = extractDiscountPercent(`${prize && prize.name ? prize.name : ''} ${prize && prize.description ? prize.description : ''}`);
-    return percent ? `ลด ${percent}%` : 'ส่วนลด';
+    return percent ? { text: `ลด ${percent}%`, className: 'is-discount' } : { text: 'ส่วนลด', className: 'is-discount' };
   }
-  if (type === 'coupon') return 'คูปอง';
+  if (type === 'coupon') {
+    const couponKind = String((metadataObj && metadataObj.coupon_kind) || '').toLowerCase();
+    if (couponKind === 'cash') {
+      const amount = parsePositiveIntValue(metadataObj && metadataObj.coupon_cash_amount);
+      if (amount) return { text: `฿${formatCurrencyValue(amount)}`, className: 'is-coupon-cash' };
+      return { text: 'คูปองเงินสด', className: 'is-coupon-cash' };
+    }
+    if (couponKind === 'discount') {
+      const percent = parsePositiveIntValue(metadataObj && metadataObj.coupon_discount_percent);
+      if (percent && percent <= 100) return { text: `คูปองลด ${percent}%`, className: 'is-coupon-discount' };
+      return { text: 'คูปองส่วนลด', className: 'is-coupon-discount' };
+    }
+    return { text: 'คูปอง', className: 'is-coupon-discount' };
+  }
+  if (type === 'credit') return { text: 'เครดิต', className: 'is-credit' };
+  return { text: null, className: null };
+}
+
+function derivePrizeBenefitText(prize, metadataObj) {
+  const type = String((prize && prize.type) || '').trim();
+  if (!type || type === 'other') return null;
+
+  if (type === 'free_product') return 'ฟรีสินค้า';
+  if (type === 'discount') {
+    const metadataPercent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
+    if (metadataPercent && metadataPercent <= 100) return `ส่วนลด ${metadataPercent}%`;
+    const percent = extractDiscountPercent(`${prize && prize.name ? prize.name : ''} ${prize && prize.description ? prize.description : ''}`);
+    return percent ? `ส่วนลด ${percent}%` : 'ส่วนลดสินค้า';
+  }
+  if (type === 'coupon') {
+    const couponKind = String((metadataObj && metadataObj.coupon_kind) || '').toLowerCase();
+    if (couponKind === 'cash') {
+      const amount = parsePositiveIntValue(metadataObj && metadataObj.coupon_cash_amount);
+      return amount ? `คูปองเงินสด ${formatCurrencyValue(amount)} บาท` : 'คูปองเงินสด';
+    }
+    if (couponKind === 'discount') {
+      const percent = parsePositiveIntValue(metadataObj && metadataObj.coupon_discount_percent);
+      return percent && percent <= 100 ? `คูปองส่วนลด ${percent}%` : 'คูปองส่วนลดสินค้า';
+    }
+    return 'คูปอง';
+  }
   if (type === 'credit') return 'เครดิต';
   return null;
 }
 
+function derivePrizePriceSummary(prize, metadataObj) {
+  const type = String((prize && prize.type) || '').trim();
+  const fullPrice = parsePositiveIntValue(metadataObj && metadataObj.full_price_amount);
+  if (!fullPrice) return { full_price_amount: null, payable_amount: null };
+
+  if (type === 'discount') {
+    const percent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
+    if (percent && percent <= 100) {
+      const payable = Math.max(fullPrice - ((fullPrice * percent) / 100), 0);
+      return { full_price_amount: fullPrice, payable_amount: Number(payable.toFixed(2)) };
+    }
+  }
+
+  if (type === 'coupon') {
+    const couponKind = String((metadataObj && metadataObj.coupon_kind) || '').toLowerCase();
+    if (couponKind === 'cash') {
+      const cash = parsePositiveIntValue(metadataObj && metadataObj.coupon_cash_amount);
+      if (cash) {
+        const payable = Math.max(fullPrice - cash, 0);
+        return { full_price_amount: fullPrice, payable_amount: Number(payable.toFixed(2)) };
+      }
+    }
+    if (couponKind === 'discount') {
+      const percent = parsePositiveIntValue(metadataObj && metadataObj.coupon_discount_percent);
+      if (percent && percent <= 100) {
+        const payable = Math.max(fullPrice - ((fullPrice * percent) / 100), 0);
+        return { full_price_amount: fullPrice, payable_amount: Number(payable.toFixed(2)) };
+      }
+    }
+  }
+
+  if (type === 'free_product') {
+    return { full_price_amount: fullPrice, payable_amount: 0 };
+  }
+
+  return { full_price_amount: fullPrice, payable_amount: null };
+}
+
 function withPrizeImage(prize) {
   const metadataObj = parseMetadataObject(prize && prize.metadata);
+  const badge = derivePrizeBadge(prize, metadataObj);
   return {
     ...prize,
     image_url: metadataObj.image_url || null,
-    badge_text: derivePrizeBadgeText(prize)
+    badge_text: badge.text,
+    badge_class: badge.className
   };
 }
 
@@ -165,6 +292,16 @@ async function renderPlayWithContext(res, options = {}) {
   });
 }
 
+function withStoreActiveFlag(store) {
+  const metadataObj = parseMetadataObject(store && store.metadata);
+  const isActive = metadataObj.is_active !== false;
+  return {
+    ...store,
+    metadata_obj: metadataObj,
+    is_active: isActive
+  };
+}
+
 function isValidToken(token) {
   if (!token) return false;
   const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -180,6 +317,30 @@ exports.index = async (req, res) => {
   } catch (err) {
     console.error('promotion.index error', err);
     res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.playStores = async (req, res) => {
+  try {
+    const storesRaw = await promotionModel.getStoresList(null);
+    const stores = (Array.isArray(storesRaw) ? storesRaw : [])
+      .map(withStoreActiveFlag)
+      .filter((store) => store && store.is_active && store.store_code)
+      .map((store) => ({
+        ...store,
+        store_code: String(store.store_code).toUpperCase(),
+        play_url: `/promotion/store/${encodeURIComponent(String(store.store_code).toUpperCase())}/play`,
+        kiosk_url: `/promotion/${encodeURIComponent(String(store.store_code).toUpperCase())}/kiosk`
+      }));
+
+    return res.render('promotion/store-play', {
+      title: 'เลือกสาขาเพื่อเล่นเกม',
+      pageName: 'promotion-store-play',
+      stores
+    });
+  } catch (err) {
+    console.error('promotion.playStores error', err);
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
   }
 };
 
@@ -206,6 +367,38 @@ exports.playByStore = async (req, res) => {
     });
   } catch (err) {
     console.error('promotion.playByStore error', err);
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.playByStoreAlias = async (req, res) => {
+  try {
+    const storeCode = sanitizeStoreCode(req.params.storeCode);
+    if (!storeCode) return res.status(400).render('error_page', { message: 'รหัสสาขาไม่ถูกต้อง' });
+
+    const store = await findStoreByCode(storeCode);
+    if (!store) return res.status(404).render('error_page', { message: 'ไม่พบสาขาที่ต้องการ' });
+
+    const canonicalStoreCode = String(store.store_code || storeCode).toUpperCase();
+    return res.redirect(`/promotion/store/${encodeURIComponent(canonicalStoreCode)}/play`);
+  } catch (err) {
+    console.error('promotion.playByStoreAlias error', err);
+    return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
+  }
+};
+
+exports.kioskByStoreAlias = async (req, res) => {
+  try {
+    const storeCode = sanitizeStoreCode(req.params.storeCode);
+    if (!storeCode) return res.status(400).render('error_page', { message: 'รหัสสาขาไม่ถูกต้อง' });
+
+    const store = await findStoreByCode(storeCode);
+    if (!store) return res.status(404).render('error_page', { message: 'ไม่พบสาขาที่ต้องการ' });
+
+    const canonicalStoreCode = String(store.store_code || storeCode).toUpperCase();
+    return res.redirect(`/promotion/store/${encodeURIComponent(canonicalStoreCode)}/kiosk`);
+  } catch (err) {
+    console.error('promotion.kioskByStoreAlias error', err);
     return res.status(500).render('error_page', { message: 'เกิดข้อผิดพลาดภายในระบบ' });
   }
 };
@@ -416,7 +609,15 @@ exports.kioskDraw = async (req, res) => {
       draw_token: drawToken,
       draw_status: drawStatus,
       prize: (chosenPrize && chosenPrize.type !== 'other')
-        ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description }
+        ? {
+          id: chosenPrize.id,
+          name: chosenPrize.name,
+          description: chosenPrize.description,
+          image_url: extractPrizeImageUrlFromMetadata(chosenPrize.metadata),
+          benefit_text: derivePrizeBenefitText(chosenPrize, parseMetadataObject(chosenPrize.metadata)),
+          full_price_amount: derivePrizePriceSummary(chosenPrize, parseMetadataObject(chosenPrize.metadata)).full_price_amount,
+          payable_amount: derivePrizePriceSummary(chosenPrize, parseMetadataObject(chosenPrize.metadata)).payable_amount
+        }
         : null,
       campaign: { id: campaign.id, name: campaign.name },
       store: resolvedStore ? { id: resolvedStore.id, name: resolvedStore.name, store_code: resolvedStore.store_code } : null
@@ -478,6 +679,8 @@ exports.kioskClaim = async (req, res) => {
  */
 exports.kioskDecline = async (req, res) => {
   const token = String((req.body && req.body.draw_token) || '').trim();
+  const customerName = sanitizeName((req.body && req.body.customer_name) || '');
+  const customerPhone = sanitizePhone((req.body && req.body.customer_phone) || '');
   if (!isValidToken(token)) return res.json({ ok: false, message: 'Invalid token' });
 
   const conn = await db.getConnection();
@@ -487,7 +690,7 @@ exports.kioskDecline = async (req, res) => {
     if (!drawRow) { await conn.rollback(); return res.json({ ok: false, message: 'ไม่พบผลการจับรางวัล' }); }
     if (drawRow.draw_status !== 'drawn') { await conn.rollback(); return res.json({ ok: false, message: 'การจับรางวัลนี้ไม่สามารถปฏิเสธได้' }); }
 
-    const ok1 = await promotionModel.markDrawDeclined(conn, drawRow.id);
+    const ok1 = await promotionModel.markDrawDeclined(conn, drawRow.id, customerName, customerPhone);
     if (!ok1) { await conn.rollback(); return res.json({ ok: false, message: 'ไม่สามารถอัปเดตสถานะการปฏิเสธได้' }); }
 
     await promotionModel.markCodeStatus(conn, drawRow.code_id, 'declined');
@@ -498,7 +701,8 @@ exports.kioskDecline = async (req, res) => {
     }
 
     await conn.commit();
-    return res.json({ ok: true, message: 'ปฏิเสธรางวัลเรียบร้อย' });
+    const redirectUrl = await getKioskRedirectUrlFromStoreId(drawRow.store_id);
+    return res.json({ ok: true, message: 'ปฏิเสธรางวัลเรียบร้อย', redirect_url: redirectUrl });
   } catch (err) {
     try { await conn.rollback(); } catch (e) { }
     console.error('kioskDecline error', err);
@@ -833,7 +1037,15 @@ exports.draw = async (req, res) => {
         draw_status: drawStatus,
         store: resolvedStore ? { id: resolvedStore.id, name: resolvedStore.name, store_code: resolvedStore.store_code } : null,
         prize: (chosenPrize && chosenPrize.type !== 'other')
-          ? { id: chosenPrize.id, name: chosenPrize.name, description: chosenPrize.description }
+          ? {
+            id: chosenPrize.id,
+            name: chosenPrize.name,
+            description: chosenPrize.description,
+            image_url: extractPrizeImageUrlFromMetadata(chosenPrize.metadata),
+            benefit_text: derivePrizeBenefitText(chosenPrize, parseMetadataObject(chosenPrize.metadata)),
+            full_price_amount: derivePrizePriceSummary(chosenPrize, parseMetadataObject(chosenPrize.metadata)).full_price_amount,
+            payable_amount: derivePrizePriceSummary(chosenPrize, parseMetadataObject(chosenPrize.metadata)).payable_amount
+          }
           : null
       });
     }
@@ -985,6 +1197,8 @@ exports.showClaimForm = async (req, res) => {
  */
 exports.decline = async (req, res) => {
   const token = String(req.body.draw_token || '').trim();
+  const customerName = sanitizeName(req.body.customer_name || '');
+  const customerPhone = sanitizePhone(req.body.customer_phone || '');
   if (!isValidToken(token)) return res.status(400).render('promotion/result', { title: 'ผลการจับรางวัล', message: 'Token ไม่ถูกต้อง', messageType: 'danger' });
 
   const conn = await db.getConnection();
@@ -1003,7 +1217,7 @@ exports.decline = async (req, res) => {
     }
 
     // mark draw declined
-    const ok1 = await promotionModel.markDrawDeclined(conn, drawRow.id);
+    const ok1 = await promotionModel.markDrawDeclined(conn, drawRow.id, customerName, customerPhone);
     if (!ok1) {
       await conn.rollback();
       return res.render('promotion/result', { title: 'ผลการจับรางวัล', draw: drawRow, message: 'ไม่สามารถอัปเดตสถานะการปฏิเสธได้', messageType: 'danger' });
@@ -1022,7 +1236,8 @@ exports.decline = async (req, res) => {
     }
 
     await conn.commit();
-    return res.redirect(`/promotion/result/${token}`);
+    const redirectUrl = await getPlayRedirectUrlFromStoreId(drawRow.store_id);
+    return res.redirect(redirectUrl);
   } catch (err) {
     try { await conn.rollback(); } catch (e) { }
     console.error('promotion.decline error', err);
@@ -1044,6 +1259,21 @@ exports.result = async (req, res) => {
     if (!draw) {
       return renderResultPage(res, 404, { message: 'ไม่พบผลการจับรางวัล', messageType: 'danger' });
     }
+
+    const prizeMetadataObj = parseMetadataObject(draw.prize_metadata);
+    draw.prize_image_url = extractPrizeImageUrlFromMetadata(draw.prize_metadata);
+    draw.prize_benefit_text = derivePrizeBenefitText({
+      type: draw.prize_type,
+      name: draw.prize_name,
+      description: draw.prize_description
+    }, prizeMetadataObj);
+    const priceSummary = derivePrizePriceSummary({
+      type: draw.prize_type,
+      name: draw.prize_name,
+      description: draw.prize_description
+    }, prizeMetadataObj);
+    draw.prize_full_price_amount = priceSummary.full_price_amount;
+    draw.prize_payable_amount = priceSummary.payable_amount;
 
     return renderResultPage(res, 200, { draw });
   } catch (err) {

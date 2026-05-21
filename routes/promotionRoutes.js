@@ -21,6 +21,7 @@ function handlePrizeUpload(req, res, next) {
 router.use(flashMiddleware());
 
 router.get('/', promotionController.index);
+router.get('/stores/play', promotionController.playStores);
 router.get('/play', promotionController.play);
 router.get('/store/:storeCode/play', promotionController.playByStore);
 // Kiosk mode: single-screen, touch-friendly UI
@@ -52,11 +53,13 @@ router.get('/admin/prizes', promotionAdminController.prizes);
 router.post('/admin/prizes', handlePrizeUpload, promotionAdminController.createPrize);
 router.post('/admin/prizes/:id/update', handlePrizeUpload, promotionAdminController.updatePrize);
 router.post('/admin/prizes/:id/status', promotionAdminController.updatePrizeStatus);
+router.post('/admin/prizes/:id/reconcile', promotionAdminController.reconcilePrizeInventory);
 router.post('/admin/prizes/:id/delete', promotionAdminController.deletePrize);
 router.get('/admin/codes', promotionAdminController.codes);
 router.post('/admin/codes/generate', promotionAdminController.generateCodes);
 router.post('/admin/codes/clear', promotionAdminController.clearCodes);
 router.post('/admin/codes/reset', promotionAdminController.resetCodes);
+router.post('/admin/codes/reset-hard', promotionAdminController.hardResetCodes);
 router.get('/admin/draws', promotionAdminController.draws);
 router.get('/admin/stores', promotionAdminController.stores);
 router.post('/admin/stores', promotionAdminController.createStore);
@@ -68,5 +71,10 @@ router.post('/admin/users', promotionAdminController.createUser);
 router.post('/admin/users/:id/update', promotionAdminController.updateUser);
 router.post('/admin/users/:id/status', promotionAdminController.updateUserStatus);
 router.post('/admin/users/:id/reset-password', promotionAdminController.resetUserPassword);
+router.post('/admin/users/:id/delete', promotionAdminController.deleteUser);
+
+// Friendly alias: /promotion/{storeCode} -> /promotion/store/{storeCode}/play
+router.get('/:storeCode/kiosk', promotionController.kioskByStoreAlias);
+router.get('/:storeCode', promotionController.playByStoreAlias);
 
 module.exports = router;

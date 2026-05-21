@@ -65,7 +65,7 @@
 
     <div class="pad-form-card">
       <div class="pad-form-title"><i class="bi bi-plus-circle-fill text-primary"></i> เพิ่มแคมเปญใหม่</div>
-        <form method="POST" action="/promotion/admin/campaigns" class="row g-3" autocomplete="off">
+        <form method="POST" action="/promotion/admin/campaigns" class="row g-3" autocomplete="off" data-default-store-code="<%= storesSafe[0] && storesSafe[0].store_code ? storesSafe[0].store_code : '' %>">
           <div class="col-md-3">
             <label class="form-label">สาขา</label>
             <% if (promotionAdmin && promotionAdmin.role === 'coop_admin') { %>
@@ -75,7 +75,7 @@
               <select class="form-select" name="store_id" required>
                 <option value="">เลือกสาขา</option>
                 <% storesSafe.forEach(s => { %>
-                  <option value="<%= s.id %>"><%= s.name %> (<%= s.store_code || '-' %>)</option>
+                  <option value="<%= s.id %>" data-store-code="<%= s.store_code || '' %>"><%= s.name %> (<%= s.store_code || '-' %>)</option>
                 <% }) %>
               </select>
             <% } %>
@@ -83,7 +83,8 @@
 
           <div class="col-md-3">
             <label class="form-label">Campaign Code</label>
-            <input type="text" name="campaign_code" class="form-control" maxlength="100" required placeholder="เช่น CMP-STORE01-2026">
+            <input type="text" name="campaign_code" class="form-control" value="AUTO" readonly>
+            <div class="form-text">ระบบจะสร้างให้อัตโนมัติ เช่น STORE1CAMPAIGN001</div>
           </div>
 
           <div class="col-md-6">
@@ -211,7 +212,7 @@
               <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">Campaign Code</label>
-                  <input type="text" name="campaign_code" class="form-control" maxlength="100" value="<%= c.campaign_code || '' %>" required>
+                  <input type="text" name="campaign_code" class="form-control" maxlength="100" value="<%= c.campaign_code || '' %>" readonly>
                 </div>
                 <div class="col-md-8">
                   <label class="form-label">ชื่อแคมเปญ</label>

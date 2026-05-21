@@ -7,6 +7,8 @@ const {
   getShowcasePrizesByStore,
   getPrizeById,
   updatePrizeById,
+  updatePrizeWithStockById,
+  reconcilePrizeInventoryById,
   setPrizeActiveById,
   countPrizeDrawReferences,
   deletePrizeById,
@@ -25,7 +27,7 @@ const {
   getCampaignImpactCounts,
   deleteCampaignById
 } = require('./promotion/campaignModel');
-const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList } = require('./promotion/drawModel');
+const { getDrawByToken, createDrawRecord, lockDrawByToken, markDrawClaimed, markDrawDeclined, getDrawWithDetailsByToken, getDrawsList, getDrawOverallSummary, getDrawDailySummary } = require('./promotion/drawModel');
 
 /**
  * Get store by id
@@ -243,6 +245,8 @@ module.exports = {
   getShowcasePrizesByStore,
   getPrizeById,
   updatePrizeById,
+  updatePrizeWithStockById,
+  reconcilePrizeInventoryById,
   setPrizeActiveById,
   countPrizeDrawReferences,
   deletePrizeById,
@@ -250,7 +254,10 @@ module.exports = {
   getCodesList,
   clearUnusedCodes,
   resetCodes,
+  hardResetCodes,
   getDrawsList,
+  getDrawOverallSummary,
+  getDrawDailySummary,
   createCodesBatch,
   // Transactional helpers
   lockCodeByValue,
@@ -466,6 +473,75 @@ async function clearUnusedCodes(scope = null, filters = {}) {
 }
 
 async function resetCodes(scope = null, filters = {}) {
+  // Non-winning reset: keeps claimed/declined history for reporting/audit.
+  const { whereSql, params } = buildCodeFilters(scope, filters);
+  const statusParams = [...params, 'unused', 'expired', 'drawn'];
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
+      `SELECT id
+       FROM promotion_codes
+       ${whereSql ? `${whereSql} AND` : 'WHERE'} status IN (?, ?, ?)
+       FOR UPDATE`,
+      statusParams
+    );
+
+    const codeIds = Array.isArray(rows)
+      ? rows.map((r) => Number(r.id)).filter((id) => Number.isInteger(id) && id > 0)
+      : [];
+
+    if (!codeIds.length) {
+      await connection.commit();
+      return {
+        removed: 0,
+        pendingDrawRowsDeleted: 0,
+        releasedReservations: 0
+      };
+    }
+
+    const placeholders = codeIds.map(() => '?').join(',');
+
+    const [releaseResult] = await connection.query(
+      `UPDATE promotion_prizes pp
+       INNER JOIN promotion_draws d ON d.prize_id = pp.id AND d.draw_status = 'drawn'
+       SET pp.reserved_qty  = GREATEST(0, pp.reserved_qty - 1),
+           pp.remaining_qty = pp.remaining_qty + 1,
+           pp.updated_at    = NOW()
+       WHERE d.code_id IN (${placeholders})`,
+      codeIds
+    );
+
+    const [drawDeleteResult] = await connection.query(
+      `DELETE FROM promotion_draws
+       WHERE code_id IN (${placeholders})
+         AND draw_status = 'drawn'`,
+      codeIds
+    );
+
+    const [deleteResult] = await connection.query(
+      `DELETE FROM promotion_codes
+       WHERE id IN (${placeholders})`,
+      codeIds
+    );
+
+    await connection.commit();
+    return {
+      removed: Number(deleteResult && deleteResult.affectedRows) || 0,
+      pendingDrawRowsDeleted: Number(drawDeleteResult && drawDeleteResult.affectedRows) || 0,
+      releasedReservations: Number(releaseResult && releaseResult.affectedRows) || 0
+    };
+  } catch (err) {
+    try { await connection.rollback(); } catch (e) { /* ignore */ }
+    throw err;
+  } finally {
+    try { connection.release(); } catch (e) { /* ignore */ }
+  }
+}
+
+async function hardResetCodes(scope = null, filters = {}) {
   const { whereSql, params } = buildCodeFilters(scope, filters);
   const codeWhereSql = whereSql ? whereSql.replace(/\b(store_id|campaign_id)\b/g, 'pc.$1') : '';
 

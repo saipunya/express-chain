@@ -24,7 +24,10 @@ router.get('/login', noCache, (req, res) => {
   }
   const { registered } = req.query || {};
   const registeredMessage = registered ? 'สมัครสมาชิกสำเร็จ กำลังรอการอนุมัติจากผู้ดูแลระบบ' : null;
-  res.render('login', { registeredMessage });
+  const safeReturnTo = (typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/') && !req.session.returnTo.startsWith('/auth'))
+    ? req.session.returnTo
+    : '';
+  res.render('login', { registeredMessage, returnTo: safeReturnTo });
 });
 
 router.post('/login', authController.login);

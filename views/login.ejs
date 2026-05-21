@@ -39,6 +39,17 @@
             </div>
           </form>
 
+          <div class="text-center mt-3">
+            <button
+              type="button"
+              class="btn btn-link text-decoration-none"
+              data-return-to="<%= typeof returnTo !== 'undefined' ? returnTo : '' %>"
+              onclick="const target = this.dataset.returnTo; if (target) { window.location.href = target; } else if (window.history.length > 1) { window.history.back(); } else { window.location.href = '/promotion'; }"
+            >
+              กลับหน้าก่อนหน้า
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

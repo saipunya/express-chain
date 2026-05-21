@@ -542,6 +542,15 @@
     font-weight: 700;
   }
 
+  a.promo-kiosk-chip {
+    text-decoration: none;
+  }
+
+  a.promo-kiosk-chip:hover {
+    color: #1d4ed8;
+    background: #dbeafe;
+  }
+
   .promo-kiosk-chip-dot {
     width: 8px;
     height: 8px;
@@ -698,6 +707,10 @@ body.promo-spin-open {
             <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> กรอกง่าย</span>
             <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ปุ่มใหญ่</span>
             <span class="promo-kiosk-chip"><span class="promo-kiosk-chip-dot"></span> ใช้งานเร็ว</span>
+            <a class="promo-kiosk-chip" href="/promotion/admin">
+              <i class="bi bi-shield-lock"></i>
+              <span>สำหรับผู้ดูแล</span>
+            </a>
           </div>
 
           <% if (storeSafe && featuredPrizesSafe.length) { %>

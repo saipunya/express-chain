@@ -26,6 +26,8 @@
   .action-stack { display: grid; gap: 6px; min-width: 140px; }
   .prize-pricing-block { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px; background: #f8fafc; }
   .prize-pay-preview { font-weight: 700; color: #0f172a; }
+  .prize-chance-badge { display: inline-flex; align-items: center; justify-content: flex-end; min-width: 64px; padding: 4px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-weight: 800; font-size: .78rem; }
+  .prize-chance-note { display: block; margin-top: 3px; color: #64748b; font-size: .74rem; line-height: 1.25; }
   .modal[id^="editPrizeModal-"] .modal-dialog  { margin: 1rem auto; }
   .modal[id^="editPrizeModal-"] .modal-content { max-height: calc(100vh - 2rem); overflow: hidden; }
   .modal[id^="editPrizeModal-"] .modal-header  { position: sticky; top: 0; background: #fff; z-index: 3; }
@@ -36,6 +38,24 @@
 <%
   const storesSafe = Array.isArray(stores) ? stores : [];
   const campaignsSafe = Array.isArray(campaigns) ? campaigns : [];
+  const prizesSafe = Array.isArray(prizes) ? prizes : [];
+  const isPrizeChanceCounted = (prize) => {
+    if (!prize || !prize.active) return false;
+    const remainingQty = Number((prize.inventory && prize.inventory.remainingQty) ?? prize.remaining_qty ?? 0);
+    return prize.type === 'other' || remainingQty > 0;
+  };
+  const prizeWeightTotalsByCampaign = prizesSafe.reduce((acc, prize) => {
+    if (!isPrizeChanceCounted(prize)) return acc;
+    const campaignId = String(prize.campaign_id || '');
+    if (!campaignId) return acc;
+    acc[campaignId] = (acc[campaignId] || 0) + Math.max(Number(prize.weight || 0), 0);
+    return acc;
+  }, {});
+  const formatPrizeChance = (value) => {
+    if (!Number.isFinite(value) || value <= 0) return '0%';
+    if (value < 0.01) return '<0.01%';
+    return `${value.toLocaleString('th-TH', { minimumFractionDigits: value < 1 ? 2 : 1, maximumFractionDigits: value < 1 ? 2 : 1 })}%`;
+  };
 %>
 <div class="pad-layout">
 <%- include('./_sidebar.ejs', { currentPage: 'prizes', promotionAdmin, counts: {} }) %>
@@ -182,7 +202,8 @@
 
           <div class="col-md-2">
             <label class="form-label">Weight</label>
-            <input type="number" name="weight" class="form-control" value="1" min="1" max="1000000" required>
+            <input type="number" name="weight" class="form-control" value="1" min="1" max="1000000" required data-weight-input>
+            <small class="prize-chance-note" data-weight-preview data-mode="create">Chance: -</small>
           </div>
 
           <div class="col-md-2">
@@ -242,6 +263,11 @@
                 const remainingPercent = Math.max(0, Math.min(100, Number(inventory.availablePercent ?? (stock > 0 ? (remaining / stock) * 100 : 0))));
                 const reservedPercent = Math.max(0, Math.min(100, Number(inventory.reservedPercent ?? (stock > 0 ? (reserved / stock) * 100 : 0))));
                 const consumedPercent = Math.max(0, Math.min(100, Number(inventory.consumedPercent ?? (stock > 0 ? (consumed / stock) * 100 : 0))));
+                const countedForChance = isPrizeChanceCounted(p);
+                const campaignWeightTotal = Number(prizeWeightTotalsByCampaign[String(p.campaign_id || '')] || 0);
+                const prizeChancePercent = countedForChance && campaignWeightTotal > 0
+                  ? (Math.max(Number(p.weight || 0), 0) / campaignWeightTotal) * 100
+                  : 0;
                 const meta = p.metadata_obj || {};
                 const fullPrice = Number(meta.full_price_amount || 0);
                 const hasFullPrice = Number.isFinite(fullPrice) && fullPrice > 0;
@@ -309,6 +335,14 @@
 
                 <td class="text-end">
                   <span class="fw-semibold"><%= Number(p.weight || 0) %></span>
+                  <span class="prize-chance-badge"><%= formatPrizeChance(prizeChancePercent) %></span>
+                  <span class="prize-chance-note">
+                    <% if (countedForChance) { %>
+                      จาก weight รวมแคมเปญ <%= campaignWeightTotal.toLocaleString('th-TH') %>
+                    <% } else { %>
+                      ไม่นับตอนสุ่ม (ปิดใช้งาน/หมด)
+                    <% } %>
+                  </span>
                 </td>
 
                 <!-- 🔥 PROGRESS BAR -->
@@ -489,7 +523,19 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Weight</label>
-                  <input type="number" name="weight" class="form-control" min="1" max="1000000" value="<%= Number(p.weight || 1) %>" required>
+                  <input
+                    type="number"
+                    name="weight"
+                    class="form-control"
+                    min="1"
+                    max="1000000"
+                    value="<%= Number(p.weight || 1) %>"
+                    required
+                    data-weight-input
+                    data-campaign-id="<%= p.campaign_id || '' %>"
+                    data-current-weight="<%= isPrizeChanceCounted(p) ? Number(p.weight || 0) : 0 %>"
+                  >
+                  <small class="prize-chance-note" data-weight-preview data-mode="edit">Chance: -</small>
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Campaign</label>
@@ -515,6 +561,8 @@
   <% }) %>
 <% } %>
 <script>
+  const PRIZE_WEIGHT_TOTALS_BY_CAMPAIGN = <%- JSON.stringify(prizeWeightTotalsByCampaign) %>;
+
   (function () {
     const storeSelect = document.getElementById('storeSelect');
     const campaignSelect = document.getElementById('campaignSelect');
@@ -618,6 +666,54 @@
       });
 
       refreshPreview();
+    });
+  })();
+
+  (function () {
+    const formatChance = (value) => {
+      if (!Number.isFinite(value) || value <= 0) return '0%';
+      if (value < 0.01) return '<0.01%';
+      return value.toLocaleString('th-TH', {
+        minimumFractionDigits: value < 1 ? 2 : 1,
+        maximumFractionDigits: value < 1 ? 2 : 1
+      }) + '%';
+    };
+
+    const getSelectedCampaignId = (form, input) => {
+      const explicitCampaignId = input.getAttribute('data-campaign-id');
+      if (explicitCampaignId) return String(explicitCampaignId);
+      const campaignSelect = form.querySelector('select[name="campaign_id"]');
+      return campaignSelect ? String(campaignSelect.value || '') : '';
+    };
+
+    const syncWeightChance = (form) => {
+      const input = form.querySelector('[data-weight-input]');
+      const preview = form.querySelector('[data-weight-preview]');
+      if (!input || !preview) return;
+
+      const campaignId = getSelectedCampaignId(form, input);
+      const weight = Math.max(Number(input.value || 0), 0);
+      const currentWeight = Math.max(Number(input.getAttribute('data-current-weight') || 0), 0);
+      const baseTotal = Math.max(Number(PRIZE_WEIGHT_TOTALS_BY_CAMPAIGN[campaignId] || 0), 0);
+      const mode = preview.getAttribute('data-mode') || 'create';
+      const nextTotal = mode === 'edit'
+        ? Math.max(baseTotal - currentWeight + weight, 0)
+        : Math.max(baseTotal + weight, 0);
+      const chance = nextTotal > 0 ? (weight / nextTotal) * 100 : 0;
+
+      if (!campaignId) {
+        preview.textContent = 'Chance: เลือกแคมเปญก่อน';
+        return;
+      }
+      preview.textContent = `Chance: ${formatChance(chance)} จาก weight รวม ${nextTotal.toLocaleString('th-TH')}`;
+    };
+
+    document.querySelectorAll('.prize-image-form').forEach((form) => {
+      const weightInput = form.querySelector('[data-weight-input]');
+      const campaignSelect = form.querySelector('select[name="campaign_id"]');
+      if (weightInput) weightInput.addEventListener('input', () => syncWeightChance(form));
+      if (campaignSelect) campaignSelect.addEventListener('change', () => syncWeightChance(form));
+      syncWeightChance(form);
     });
   })();
 

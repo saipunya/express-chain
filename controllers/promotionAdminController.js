@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const adminUserModel = require('../models/promotion/adminUserModel');
 const fs = require('fs');
 const path = require('path');
+const ExcelJS = require('exceljs');
 
 const USERNAME_REGEX = /^[a-z0-9._-]{3,100}$/;
 const ALLOWED_PRIZE_TYPES = new Set(['free_product', 'discount', 'coupon', 'credit', 'other']);
@@ -89,6 +90,15 @@ function cleanupUploadedPromotionPrizeImage(req) {
   const uploadedUrl = getUploadedPromotionPrizeImageUrl(req);
   if (!uploadedUrl) return;
   deleteLocalPromotionPrizeImage(uploadedUrl);
+}
+
+function sanitizeDownloadName(raw, fallback = 'promotion-codes') {
+  const cleaned = String(raw || '')
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, '-')
+    .slice(0, 80);
+  return cleaned || fallback;
 }
 
 function sanitizeStoreCode(raw) {
@@ -999,13 +1009,124 @@ exports.generateCodes = async (req, res) => {
     // Generate codes (may be partial on extreme contention)
     const newCodes = await promotionModel.createCodesBatch(storeId, campaignId, quantity);
 
+    const store = await promotionModel.getStoreById(storeId);
+    const campaign = campaignId ? await promotionModel.getCampaignById(campaignId) : null;
+
     // Store newly generated codes in session so GET can display them (PRG pattern)
-    if (req.session) req.session.newCodes = newCodes;
+    if (req.session) {
+      req.session.newCodes = newCodes;
+      req.session.exportNewCodes = {
+        generatedAt: new Date().toISOString(),
+        storeName: store && store.name ? store.name : '',
+        storeCode: store && store.store_code ? store.store_code : '',
+        campaignName: campaign && campaign.name ? campaign.name : '',
+        campaignCode: campaign && campaign.campaign_code ? campaign.campaign_code : '',
+        codes: newCodes
+      };
+    }
     req.flash('success', `สร้างโค้ดสำเร็จ ${newCodes.length} รายการ`);
     return res.redirect(`/promotion/admin/codes?store_id=${storeId}${campaignId ? `&campaign_id=${campaignId}` : ''}`);
   } catch (err) {
     console.error('promotionAdmin.generateCodes error', err);
     req.flash('danger', 'เกิดข้อผิดพลาดขณะสร้างโค้ด');
+    return res.redirect('/promotion/admin/codes');
+  }
+};
+
+exports.exportNewCodesExcel = async (req, res) => {
+  try {
+    const exportPayload = req.session && req.session.exportNewCodes;
+    const codes = exportPayload && Array.isArray(exportPayload.codes) ? exportPayload.codes : [];
+
+    if (!codes.length) {
+      req.flash('warning', 'ยังไม่มีชุดโค้ดที่เพิ่งสร้างสำหรับส่งออก Excel');
+      return res.redirect('/promotion/admin/codes');
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Promotion Admin';
+    workbook.created = new Date();
+
+    const worksheet = workbook.addWorksheet('Promotion Codes', {
+      pageSetup: {
+        paperSize: 9,
+        orientation: 'portrait',
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+        margins: {
+          left: 0.3,
+          right: 0.3,
+          top: 0.5,
+          bottom: 0.5,
+          header: 0.2,
+          footer: 0.2
+        }
+      }
+    });
+
+    const storeLabel = [exportPayload.storeName, exportPayload.storeCode ? `(${exportPayload.storeCode})` : ''].filter(Boolean).join(' ');
+    const campaignLabel = [exportPayload.campaignName, exportPayload.campaignCode ? `(${exportPayload.campaignCode})` : ''].filter(Boolean).join(' ');
+
+    worksheet.mergeCells('A1:D1');
+    worksheet.getCell('A1').value = 'Promotion Codes';
+    worksheet.getCell('A1').font = { bold: true, size: 18 };
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+
+    worksheet.mergeCells('A2:D2');
+    worksheet.getCell('A2').value = [storeLabel || 'All stores', campaignLabel || 'All campaigns'].join(' / ');
+    worksheet.getCell('A2').alignment = { horizontal: 'center' };
+    worksheet.getCell('A2').font = { size: 11, color: { argb: 'FF475569' } };
+
+    worksheet.addRow([]);
+    const header = worksheet.addRow(['No.', 'Code', 'Store', 'Campaign']);
+    header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    header.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    codes.forEach((codeRow, index) => {
+      const row = worksheet.addRow([
+        index + 1,
+        codeRow.code || '',
+        storeLabel || '-',
+        campaignLabel || '-'
+      ]);
+      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(2).font = { bold: true, size: 16 };
+      row.getCell(2).alignment = { horizontal: 'center' };
+    });
+
+    worksheet.columns = [
+      { key: 'no', width: 8 },
+      { key: 'code', width: 22 },
+      { key: 'store', width: 34 },
+      { key: 'campaign', width: 34 }
+    ];
+
+    worksheet.eachRow((row, rowNumber) => {
+      row.height = rowNumber <= 3 ? 24 : 28;
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+        };
+        cell.alignment = { ...(cell.alignment || {}), vertical: 'middle', wrapText: true };
+      });
+    });
+
+    const generatedDate = new Date(exportPayload.generatedAt || Date.now());
+    const datePart = generatedDate.toISOString().slice(0, 10);
+    const filename = sanitizeDownloadName(`promotion-codes-${exportPayload.storeCode || 'all'}-${datePart}`) + '.xlsx';
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await workbook.xlsx.write(res);
+    return res.end();
+  } catch (err) {
+    console.error('promotionAdmin.exportNewCodesExcel error', err);
+    req.flash('danger', 'ส่งออก Excel ไม่สำเร็จ');
     return res.redirect('/promotion/admin/codes');
   }
 };

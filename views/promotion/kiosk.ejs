@@ -12,7 +12,7 @@
   .promo-kiosk-page {
     min-height: 100vh;
     background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
-    padding: 32px 0 48px;
+    padding: 14px 0 28px;
   }
 
   .promo-kiosk-shell {
@@ -22,7 +22,7 @@
 
   .promo-kiosk-top {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
   }
 
   .promo-kiosk-badge {
@@ -35,7 +35,7 @@
     color: #2563eb;
     font-weight: 700;
     font-size: 0.98rem;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .promo-kiosk-title {
@@ -45,6 +45,7 @@
     letter-spacing: -0.03em;
     color: #0f172a;
     margin-bottom: 12px;
+    display: none;
   }
 
   .promo-kiosk-highlight {
@@ -57,10 +58,11 @@
     font-size: 1.08rem;
     color: #64748b;
     line-height: 1.7;
+    display: none;
   }
 
   .promo-kiosk-store-chip-row {
-    margin-top: 14px;
+    margin-top: 6px;
     display: flex;
     justify-content: center;
   }
@@ -98,26 +100,54 @@
   .promo-kiosk-card-body {
     position: relative;
     z-index: 1;
-    padding: 32px;
+    padding: clamp(18px, 2.2vw, 26px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 2vw, 24px);
+  }
+
+  #messageBox {
+    order: 1;
+  }
+
+  #messageBox:empty {
+    display: none;
+  }
+
+  .promo-kiosk-note-row {
+    order: 2;
+    display: none;
+  }
+
+  #stage-enter,
+  #stage-validated,
+  #stage-result {
+    order: 10;
+  }
+
+  #stage-enter > .promo-stage-box,
+  #stage-validated > .promo-stage-box,
+  #stage-result > .promo-stage-box {
+    height: 100%;
   }
 
   .promo-stage-box {
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 24px;
-    padding: 28px;
+    padding: clamp(20px, 2.2vw, 26px);
     box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
   }
 
   .promo-stage-head {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
   }
 
   .promo-stage-icon {
     width: 88px;
     height: 88px;
-    margin: 0 auto 14px;
+    margin: 0 auto 10px;
     border-radius: 26px;
     display: flex;
     align-items: center;
@@ -413,19 +443,72 @@
   }
 
   .promo-kiosk-note-row {
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    margin-top: 24px;
+    margin-top: 0;
+  }
+
+  .promo-kiosk-howto {
+    order: 20;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    border-radius: 24px;
+    padding: 24px;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .promo-kiosk-howto-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1d4ed8;
+    font-size: 1.18rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .promo-kiosk-howto-list {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .promo-kiosk-howto-list li {
+    display: flex;
+    gap: 12px;
+    font-size: 1.02rem;
+    line-height: 1.5;
+  }
+
+  .promo-kiosk-howto-step {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
   }
 
   .promo-kiosk-showcase {
-    margin: 0 0 22px;
+    margin: 0;
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 20px;
     background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
     padding: 16px;
+    order: 30;
   }
 
   .promo-kiosk-showcase-title {
@@ -454,18 +537,22 @@
   }
 
   .promo-kiosk-showcase-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
     background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
     color: #fff;
     border-radius: 999px;
-    padding: 5px 10px;
+    padding: 5px 9px;
     font-size: 0.75rem;
     font-weight: 800;
     line-height: 1;
+    margin-bottom: 6px;
     box-shadow: 0 8px 16px rgba(239, 68, 68, 0.24);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .promo-kiosk-showcase-badge.is-discount {
@@ -500,7 +587,31 @@
     border-radius: 10px;
     display: block;
     background: #f1f5f9;
+  }
+
+  .promo-prize-image-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 10px;
     margin-bottom: 8px;
+    cursor: zoom-in;
+    overflow: hidden;
+  }
+
+  .promo-prize-image-btn:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.5);
+    outline-offset: 3px;
+  }
+
+  .promo-prize-image-btn:hover .promo-kiosk-showcase-image {
+    transform: scale(1.03);
+  }
+
+  .promo-prize-image-btn .promo-kiosk-showcase-image {
+    transition: transform 0.18s ease;
   }
 
   .promo-kiosk-showcase-noimage {
@@ -600,6 +711,40 @@
       font-size: 1.35rem;
     }
   }
+
+  @media (min-width: 992px) {
+    .promo-kiosk-card-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+      gap: clamp(16px, 2vw, 24px);
+      align-items: stretch;
+    }
+
+    #stage-enter,
+    #stage-validated,
+    #stage-result {
+      grid-column: 1;
+      order: 10;
+    }
+
+    .promo-kiosk-howto {
+      grid-column: 2;
+      order: 20;
+    }
+
+    .promo-kiosk-showcase {
+      grid-column: 1 / -1;
+    }
+
+    #messageBox,
+    .promo-kiosk-note-row {
+      grid-column: 1 / -1;
+    }
+
+    .promo-kiosk-showcase-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
   .spin-box {
   height: 120px;
   display: flex;
@@ -658,6 +803,7 @@
 .promo-kiosk-page.is-result-mode #messageBox,
 .promo-kiosk-page.is-result-mode .promo-kiosk-note-row,
 .promo-kiosk-page.is-result-mode .promo-kiosk-showcase,
+.promo-kiosk-page.is-result-mode .promo-kiosk-howto,
 .promo-kiosk-page.is-result-mode #stage-enter,
 .promo-kiosk-page.is-result-mode #stage-validated {
   display: none !important;
@@ -669,6 +815,81 @@
 
 body.promo-spin-open {
   overflow: hidden;
+}
+
+.promo-prize-modal[hidden] {
+  display: none !important;
+}
+
+.promo-prize-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.promo-prize-modal-panel {
+  width: min(100%, 980px);
+  max-height: min(88vh, 800px);
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-prize-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.promo-prize-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.promo-prize-modal-close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.promo-prize-modal-close:hover {
+  background: #dbeafe;
+}
+
+.promo-prize-modal-body {
+  padding: 18px;
+  background: #f8fafc;
+  min-height: 0;
+}
+
+.promo-prize-modal-image {
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  display: block;
+  border-radius: 16px;
+  background: #fff;
 }
 </style>
 
@@ -726,7 +947,15 @@ body.promo-spin-open {
                       <span class="promo-kiosk-showcase-badge <%= prize.badge_class || '' %>"><%= prize.badge_text %></span>
                     <% } %>
                     <% if (prize.image_url) { %>
-                      <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-kiosk-showcase-image">
+                      <button
+                        type="button"
+                        class="promo-prize-image-btn"
+                        data-prize-image="<%= prize.image_url %>"
+                        data-prize-name="<%= prize.name || 'Prize image' %>"
+                        aria-label="ดูภาพรางวัล <%= prize.name || '' %>"
+                      >
+                        <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-kiosk-showcase-image">
+                      </button>
                     <% } else { %>
                       <div class="promo-kiosk-showcase-noimage">🎁</div>
                     <% } %>
@@ -819,9 +1048,43 @@ body.promo-spin-open {
             </div>
           </div>
 
+          <div class="promo-kiosk-howto">
+            <div class="promo-kiosk-howto-title">
+              <i class="bi bi-info-circle"></i>
+              <span>วิธีการเล่น</span>
+            </div>
+            <ul class="promo-kiosk-howto-list">
+              <li>
+                <span class="promo-kiosk-howto-step">1</span>
+                <span>กรอกรหัสโปรโมชั่นบนหน้าจอ แล้วแตะปุ่มตรวจสอบรหัส</span>
+              </li>
+              <li>
+                <span class="promo-kiosk-howto-step">2</span>
+                <span>เมื่อระบบยืนยันแคมเปญแล้ว แตะปุ่มจับรางวัล</span>
+              </li>
+              <li>
+                <span class="promo-kiosk-howto-step">3</span>
+                <span>ดูผลรางวัลทันที และกรอกข้อมูลเพื่อยืนยันการรับสิทธิ์</span>
+              </li>
+            </ul>
+          </div>
+
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+<div id="prizeImageModal" class="promo-prize-modal" hidden>
+  <div class="promo-prize-modal-panel" role="dialog" aria-modal="true" aria-labelledby="prizeImageModalTitle">
+    <div class="promo-prize-modal-head">
+      <h3 id="prizeImageModalTitle" class="promo-prize-modal-title">ภาพรางวัล</h3>
+      <button type="button" class="promo-prize-modal-close" id="prizeImageModalClose" aria-label="ปิด">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="promo-prize-modal-body">
+      <img id="prizeImageModalImg" class="promo-prize-modal-image" src="" alt="">
     </div>
   </div>
 </div>
@@ -858,9 +1121,48 @@ body.promo-spin-open {
   const declineBtn = el('declineBtn');
   const spinModal = el('spinModal');
   const spinWheel = el('spinWheel');
+  const prizeImageModal = el('prizeImageModal');
+  const prizeImageModalImg = el('prizeImageModalImg');
+  const prizeImageModalTitle = el('prizeImageModalTitle');
+  const prizeImageModalClose = el('prizeImageModalClose');
 
   let currentDrawToken = null;
   let autoResetTimer = null;
+
+  function closePrizeImageModal() {
+    if (!prizeImageModal || !prizeImageModalImg) return;
+    prizeImageModal.hidden = true;
+    prizeImageModalImg.src = '';
+    prizeImageModalImg.alt = '';
+    document.body.classList.remove('promo-spin-open');
+  }
+
+  document.querySelectorAll('[data-prize-image]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (!prizeImageModal || !prizeImageModalImg || !prizeImageModalTitle) return;
+      const src = button.getAttribute('data-prize-image');
+      const name = button.getAttribute('data-prize-name') || 'ภาพรางวัล';
+      if (!src) return;
+      prizeImageModalImg.src = src;
+      prizeImageModalImg.alt = name;
+      prizeImageModalTitle.textContent = name;
+      prizeImageModal.hidden = false;
+      document.body.classList.add('promo-spin-open');
+      if (prizeImageModalClose) prizeImageModalClose.focus();
+    });
+  });
+
+  if (prizeImageModalClose) prizeImageModalClose.addEventListener('click', closePrizeImageModal);
+  if (prizeImageModal) {
+    prizeImageModal.addEventListener('click', event => {
+      if (event.target === prizeImageModal) closePrizeImageModal();
+    });
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && prizeImageModal && !prizeImageModal.hidden) {
+      closePrizeImageModal();
+    }
+  });
 
   function showMessage(text, type = 'info') {
     if (!msgBox) return;

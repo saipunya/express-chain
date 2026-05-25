@@ -10,42 +10,64 @@
 %>
 
 <style>
+  html,
+  body {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+
   .promo-play-section {
     background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+    height: 100svh;
     min-height: 100vh;
-    padding: 48px 0 64px;
+    padding: clamp(10px, 2.4vh, 24px) 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  .promo-play-section > .container {
+    height: 100%;
+    min-height: 0;
+    display: flex;
   }
 
   .promo-play-shell {
-    max-width: 760px;
+    max-width: 1080px;
     margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .promo-play-hero {
     text-align: center;
-    margin-bottom: 22px;
+    margin-bottom: clamp(8px, 1.8vh, 16px);
+    flex: 0 0 auto;
   }
 
   .promo-play-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 7px 13px;
     border-radius: 999px;
     background: #eff6ff;
     color: #2563eb;
     font-weight: 700;
-    font-size: 0.95rem;
-    margin-bottom: 16px;
+    font-size: 0.88rem;
+    margin-bottom: clamp(6px, 1.2vh, 12px);
   }
 
   .promo-play-title {
-    font-size: 2.4rem;
+    font-size: clamp(1.45rem, 4.2vh, 2.15rem);
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.03em;
     color: #0f172a;
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
 
   .promo-play-highlight {
@@ -61,7 +83,7 @@
   }
 
   .promo-store-chip-row {
-    margin-top: 16px;
+    margin-top: clamp(6px, 1.3vh, 12px);
     display: flex;
     justify-content: center;
   }
@@ -73,20 +95,22 @@
     background: #e0f2fe;
     color: #0c4a6e;
     border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.92rem;
+    padding: 6px 12px;
+    font-size: 0.86rem;
     font-weight: 700;
   }
 
   .promo-showcase-wrap {
-    margin-bottom: 20px;
+    min-height: 0;
+    margin: clamp(10px, 1.8vh, 16px) 0 0;
+    order: 20;
   }
 
   .promo-showcase-title {
     font-size: 1.05rem;
     font-weight: 800;
     color: #1e293b;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -95,32 +119,37 @@
   .promo-showcase-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
+    gap: 8px;
+    min-height: 0;
   }
 
   .promo-showcase-item {
     background: #fff;
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 14px;
-    padding: 10px;
+    padding: 8px;
     box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
     position: relative;
     overflow: hidden;
   }
 
   .promo-showcase-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
     background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
     color: #fff;
     border-radius: 999px;
-    padding: 5px 10px;
+    padding: 5px 9px;
     font-size: 0.75rem;
     font-weight: 800;
     line-height: 1;
+    margin-bottom: 6px;
     box-shadow: 0 8px 16px rgba(239, 68, 68, 0.24);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .promo-showcase-badge.is-discount {
@@ -150,17 +179,41 @@
 
   .promo-showcase-image {
     width: 100%;
-    height: 110px;
+    height: clamp(64px, 10vh, 92px);
     object-fit: cover;
     border-radius: 10px;
     background: #f1f5f9;
     display: block;
-    margin-bottom: 8px;
+  }
+
+  .promo-prize-image-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: zoom-in;
+    overflow: hidden;
+  }
+
+  .promo-prize-image-btn:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.5);
+    outline-offset: 3px;
+  }
+
+  .promo-prize-image-btn:hover .promo-showcase-image {
+    transform: scale(1.03);
+  }
+
+  .promo-prize-image-btn .promo-showcase-image {
+    transition: transform 0.18s ease;
   }
 
   .promo-showcase-noimage {
     width: 100%;
-    height: 110px;
+    height: clamp(64px, 10vh, 92px);
     border-radius: 10px;
     background: #eff6ff;
     color: #2563eb;
@@ -168,11 +221,11 @@
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .promo-showcase-name {
-    font-size: 0.95rem;
+    font-size: 0.86rem;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.35;
@@ -180,8 +233,8 @@
   }
 
   .promo-showcase-stock {
-    margin-top: 6px;
-    font-size: 0.8rem;
+    margin-top: 4px;
+    font-size: 0.74rem;
     color: #64748b;
   }
 
@@ -192,6 +245,15 @@
     box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
     overflow: hidden;
     position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    order: 1;
+  }
+
+  .promo-play-card:not(.has-prizes) {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
   }
 
   .promo-play-card::before {
@@ -207,23 +269,28 @@
   .promo-play-card-body {
     position: relative;
     z-index: 1;
-    padding: 32px;
+    padding: clamp(14px, 2.8vh, 24px);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .promo-play-head {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: clamp(10px, 1.8vh, 16px);
   }
 
   .promo-play-icon {
-    width: 82px;
-    height: 82px;
-    margin: 0 auto 16px;
-    border-radius: 24px;
+    width: clamp(48px, 8vh, 68px);
+    height: clamp(48px, 8vh, 68px);
+    margin: 0 auto clamp(8px, 1.3vh, 12px);
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.1rem;
+    font-size: clamp(1.45rem, 3.8vh, 1.9rem);
     color: #fff;
     background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
     box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
@@ -231,7 +298,7 @@
 
   .promo-play-subtitle {
     color: #64748b;
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin-bottom: 0;
   }
 
@@ -239,12 +306,13 @@
     background: linear-gradient(180deg, #f8fbff 0%, #f8fafc 100%);
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 18px;
-    padding: 16px 18px;
-    margin-bottom: 22px;
+    padding: 10px 14px;
+    margin-bottom: clamp(10px, 1.8vh, 16px);
+    font-size: 0.9rem;
   }
 
   .promo-info-row + .promo-info-row {
-    margin-top: 8px;
+    margin-top: 5px;
   }
 
   .promo-info-label {
@@ -257,20 +325,70 @@
     color: #059669;
   }
 
+  .promo-howto-card {
+    order: 15;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    border-radius: 20px;
+    padding: 16px;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .promo-howto-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1d4ed8;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  .promo-howto-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .promo-howto-list li {
+    display: flex;
+    gap: 10px;
+    line-height: 1.45;
+    font-size: 0.92rem;
+  }
+
+  .promo-howto-step {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.82rem;
+  }
+
   .promo-label {
     font-weight: 700;
     color: #0f172a;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
   .promo-code-input {
-    min-height: 72px;
-    border-radius: 18px;
+    min-height: clamp(52px, 8vh, 64px);
+    border-radius: 16px;
     border: 2px solid #dbeafe;
     background: #fff;
     box-shadow: 0 10px 24px rgba(37, 99, 235, 0.06);
     text-align: center;
-    font-size: 1.45rem;
+    font-size: clamp(1.1rem, 3vh, 1.34rem);
     font-weight: 700;
     letter-spacing: 0.14em;
     color: #0f172a;
@@ -283,18 +401,18 @@
   }
 
   .promo-helper {
-    margin-top: 10px;
+    margin-top: 6px;
     color: #64748b;
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     text-align: center;
   }
 
   .promo-submit-btn {
-    min-height: 58px;
+    min-height: clamp(48px, 7vh, 54px);
     border: none;
     border-radius: 16px;
     font-weight: 800;
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
     color: #fff;
     box-shadow: 0 16px 32px rgba(37, 99, 235, 0.22);
@@ -325,18 +443,18 @@
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    margin-top: 18px;
+    margin-top: clamp(8px, 1.5vh, 14px);
   }
 
   .promo-note-chip {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 14px;
+    padding: 7px 12px;
     border-radius: 999px;
     background: #eff6ff;
     color: #1d4ed8;
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     font-weight: 600;
   }
 
@@ -350,21 +468,129 @@
 
   @media (max-width: 767.98px) {
     .promo-play-section {
-      padding: 28px 0 40px;
+      padding: 10px 0;
     }
 
     .promo-play-title {
-      font-size: 2rem;
+      font-size: clamp(1.28rem, 4.6vh, 1.75rem);
     }
 
     .promo-play-card-body {
-      padding: 22px 16px;
+      padding: 14px;
     }
 
     .promo-code-input {
-      min-height: 64px;
-      font-size: 1.2rem;
+      min-height: 52px;
+      font-size: 1.05rem;
       letter-spacing: 0.1em;
+    }
+
+    .promo-showcase-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 992px) {
+    .promo-play-card .promo-play-card-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+      grid-auto-rows: min-content;
+      column-gap: clamp(18px, 2.4vw, 30px);
+      row-gap: clamp(10px, 1.4vh, 14px);
+      align-content: start;
+    }
+
+    .promo-play-card .promo-play-card-body > :not(.promo-showcase-wrap):not(.promo-howto-card) {
+      grid-column: 1;
+    }
+
+    .promo-play-card .promo-howto-card {
+      grid-column: 2;
+      grid-row: 1 / span 5;
+      align-self: stretch;
+      order: 0;
+    }
+
+    .promo-play-card.has-prizes .promo-showcase-wrap {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      margin-top: 0;
+      order: 20;
+    }
+
+    .promo-play-card.has-prizes .promo-showcase-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-height: 100%;
+      overflow: hidden;
+    }
+  }
+
+  @media (max-width: 991.98px), (max-height: 720px) {
+    html,
+    body {
+      height: auto;
+      overflow-y: auto;
+    }
+
+    .promo-play-section {
+      height: auto;
+      min-height: 100svh;
+      overflow: visible;
+      align-items: flex-start;
+    }
+
+    .promo-play-section > .container,
+    .promo-play-shell,
+    .promo-play-card,
+    .promo-play-card-body {
+      height: auto;
+      overflow: visible;
+    }
+
+    .promo-play-card {
+      flex: 0 0 auto;
+    }
+  }
+
+  .promo-play-head h2 {
+    font-size: clamp(1.08rem, 3vh, 1.45rem) !important;
+  }
+
+  .promo-play-card-body form .mb-3 {
+    margin-bottom: 0.65rem !important;
+  }
+
+  .promo-play-card-body form .mt-4 {
+    margin-top: clamp(10px, 1.8vh, 16px) !important;
+  }
+
+  .promo-play-links {
+    flex: 0 0 auto;
+    margin-top: clamp(8px, 1.6vh, 14px) !important;
+    white-space: normal;
+  }
+
+  @media (max-height: 700px) {
+    .promo-play-badge,
+    .promo-info-card,
+    .promo-note-row {
+      display: none;
+    }
+  }
+
+  @media (max-height: 620px) {
+    .promo-play-hero {
+      display: none;
+    }
+
+    .promo-play-icon {
+      display: none;
+    }
+  }
+
+  @media (max-width: 575.98px), (max-height: 720px) {
+    .promo-play-links {
+      display: none;
     }
   }
   .spin-box {
@@ -424,6 +650,81 @@
 body.promo-spin-open {
   overflow: hidden;
 }
+
+.promo-prize-modal[hidden] {
+  display: none !important;
+}
+
+.promo-prize-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.promo-prize-modal-panel {
+  width: min(100%, 920px);
+  max-height: min(88vh, 760px);
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.34);
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-prize-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.promo-prize-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.promo-prize-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.promo-prize-modal-close:hover {
+  background: #dbeafe;
+}
+
+.promo-prize-modal-body {
+  padding: 16px;
+  background: #f8fafc;
+  min-height: 0;
+}
+
+.promo-prize-modal-image {
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  display: block;
+  border-radius: 16px;
+  background: #fff;
+}
 </style>
 
 <div class="promo-play-section">
@@ -438,10 +739,7 @@ body.promo-spin-open {
         <h1 class="promo-play-title">
           กรอกรหัสเพื่อ<span class="promo-play-highlight">ลุ้นรับรางวัลทันที</span>
         </h1>
-        <p class="promo-play-desc">
-          รับรหัสจากเจ้าหน้าที่ แล้วกรอกในช่องด้านล่างเพื่อเข้าสู่การสุ่มรางวัล
-          ใช้งานง่าย รวดเร็ว และทราบผลได้ทันที
-        </p>
+        
         <% if (storeSafe) { %>
           <div class="promo-store-chip-row">
             <span class="promo-store-chip">
@@ -452,7 +750,7 @@ body.promo-spin-open {
         <% } %>
       </div>
 
-      <div class="promo-play-card">
+      <div class="promo-play-card <%= storeSafe && featuredPrizesSafe.length ? 'has-prizes' : '' %>">
         <div class="promo-play-card-body">
 
           <div class="promo-play-head">
@@ -500,6 +798,27 @@ body.promo-spin-open {
 	            </div>
 	          <% } %>
 
+            <div class="promo-howto-card">
+              <div class="promo-howto-title">
+                <i class="bi bi-info-circle"></i>
+                <span>วิธีการเล่น</span>
+              </div>
+              <ul class="promo-howto-list">
+                <li>
+                  <span class="promo-howto-step">1</span>
+                  <span>รับรหัสโปรโมชั่นจากเจ้าหน้าที่หรือใบเสร็จของสาขา</span>
+                </li>
+                <li>
+                  <span class="promo-howto-step">2</span>
+                  <span>กรอกรหัสให้ถูกต้อง แล้วกดตรวจสอบเพื่อลุ้นรางวัล</span>
+                </li>
+                <li>
+                  <span class="promo-howto-step">3</span>
+                  <span>รอระบบสุ่มรางวัล และดูผลลัพธ์ได้ทันทีบนหน้าจอ</span>
+                </li>
+              </ul>
+            </div>
+
             <% if (storeSafe && featuredPrizesSafe.length) { %>
               <div class="promo-showcase-wrap">
                 <div class="promo-showcase-title">
@@ -513,7 +832,15 @@ body.promo-spin-open {
                         <span class="promo-showcase-badge <%= prize.badge_class || '' %>"><%= prize.badge_text %></span>
                       <% } %>
                       <% if (prize.image_url) { %>
-                        <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-showcase-image">
+                        <button
+                          type="button"
+                          class="promo-prize-image-btn"
+                          data-prize-image="<%= prize.image_url %>"
+                          data-prize-name="<%= prize.name || 'Prize image' %>"
+                          aria-label="ดูภาพรางวัล <%= prize.name || '' %>"
+                        >
+                          <img src="<%= prize.image_url %>" alt="<%= prize.name || 'Prize image' %>" class="promo-showcase-image">
+                        </button>
                       <% } else { %>
                         <div class="promo-showcase-noimage">🎁</div>
                       <% } %>
@@ -568,7 +895,7 @@ body.promo-spin-open {
         </div>
       </div>
 
-      <div class="text-center mt-4">
+      <div class="text-center mt-4 promo-play-links">
         <a href="/promotion" class="promo-back-link">
           <i class="bi bi-chevron-left"></i>
           <span>กลับหน้าโปรโมชั่น</span>
@@ -590,6 +917,19 @@ body.promo-spin-open {
     </div>
   </div>
 </div>
+<div id="prizeImageModal" class="promo-prize-modal" hidden>
+  <div class="promo-prize-modal-panel" role="dialog" aria-modal="true" aria-labelledby="prizeImageModalTitle">
+    <div class="promo-prize-modal-head">
+      <h3 id="prizeImageModalTitle" class="promo-prize-modal-title">ภาพรางวัล</h3>
+      <button type="button" class="promo-prize-modal-close" id="prizeImageModalClose" aria-label="ปิด">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="promo-prize-modal-body">
+      <img id="prizeImageModalImg" class="promo-prize-modal-image" src="" alt="">
+    </div>
+  </div>
+</div>
 <div id="spinModal" class="promo-spin-modal" hidden>
   <div class="promo-spin-panel">
     <div class="spin-box mb-3">
@@ -602,6 +942,43 @@ body.promo-spin-open {
 </div>
 <script>
 const STORE_CODE = <%- JSON.stringify(storeCodeSafe || null) %>;
+
+	  (function () {
+	    const modal = document.getElementById('prizeImageModal');
+	    const modalImg = document.getElementById('prizeImageModalImg');
+	    const modalTitle = document.getElementById('prizeImageModalTitle');
+	    const closeBtn = document.getElementById('prizeImageModalClose');
+	    if (!modal || !modalImg || !modalTitle || !closeBtn) return;
+
+	    function closePrizeImageModal() {
+	      modal.hidden = true;
+	      modalImg.src = '';
+	      modalImg.alt = '';
+	      document.body.classList.remove('promo-spin-open');
+	    }
+
+	    document.querySelectorAll('[data-prize-image]').forEach(function (button) {
+	      button.addEventListener('click', function () {
+	        const src = button.getAttribute('data-prize-image');
+	        const name = button.getAttribute('data-prize-name') || 'ภาพรางวัล';
+	        if (!src) return;
+	        modalImg.src = src;
+	        modalImg.alt = name;
+	        modalTitle.textContent = name;
+	        modal.hidden = false;
+	        document.body.classList.add('promo-spin-open');
+	        closeBtn.focus();
+	      });
+	    });
+
+	    closeBtn.addEventListener('click', closePrizeImageModal);
+	    modal.addEventListener('click', function (event) {
+	      if (event.target === modal) closePrizeImageModal();
+	    });
+	    document.addEventListener('keydown', function (event) {
+	      if (event.key === 'Escape' && !modal.hidden) closePrizeImageModal();
+	    });
+	  })();
 
 	  (function () {
 	    var forms = document.querySelectorAll('.needs-validation');

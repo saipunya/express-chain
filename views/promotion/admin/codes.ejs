@@ -325,9 +325,14 @@
           <div class="pad-card-title"><i class="bi bi-fire me-2 text-danger"></i>โค้ดที่เพิ่งสร้าง</div>
           <div class="pad-card-subtitle"><%= newCodes.length %> codes created</div>
         </div>
-        <button id="copyCodesBtn" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-clipboard me-1"></i>Copy All
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="/promotion/admin/codes/export-new" class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+          </a>
+          <button id="copyCodesBtn" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-clipboard me-1"></i>Copy All
+          </button>
+        </div>
       </div>
       <div class="table-responsive">
         <table class="table pad-tbl mb-0">

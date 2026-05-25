@@ -56,6 +56,7 @@ router.post('/admin/prizes/:id/status', promotionAdminController.updatePrizeStat
 router.post('/admin/prizes/:id/reconcile', promotionAdminController.reconcilePrizeInventory);
 router.post('/admin/prizes/:id/delete', promotionAdminController.deletePrize);
 router.get('/admin/codes', promotionAdminController.codes);
+router.get('/admin/codes/export-new', promotionAdminController.exportNewCodesExcel);
 router.post('/admin/codes/generate', promotionAdminController.generateCodes);
 router.post('/admin/codes/clear', promotionAdminController.clearCodes);
 router.post('/admin/codes/reset', promotionAdminController.resetCodes);

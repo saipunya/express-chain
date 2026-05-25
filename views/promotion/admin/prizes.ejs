@@ -140,7 +140,7 @@
             <label class="form-label">ประเภท</label>
             <select class="form-select" name="type" data-prize-type required>
               <option value="free_product">free_product</option>
-              <option value="discount">discount</option>
+              <option value="discount">สินค้าราคาพิเศษ</option>
               <option value="coupon">coupon</option>
               <option value="credit">credit</option>
               <option value="other">other (ไม่ได้รางวัล)</option>
@@ -156,12 +156,12 @@
                   <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" placeholder="เช่น 590">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label mb-1">ส่วนลด (%)</label>
-                  <input type="number" class="form-control" name="discount_percent" min="1" max="100" placeholder="เช่น 10">
+                  <label class="form-label mb-1">ราคาลด (บาท)</label>
+                  <input type="number" class="form-control" name="special_price_amount" min="0" max="1000000000" placeholder="เช่น 490">
                 </div>
                 <div class="col-md-4">
-                  <div class="text-muted small">ต้องระบุเมื่อเลือกประเภท discount</div>
-                  <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาที่ต้องจ่าย: -</div>
+                  <div class="text-muted small">กรอกเป็นราคาขายพิเศษ ไม่ใช่เปอร์เซ็นต์ส่วนลด</div>
+                  <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาพิเศษ: -</div>
                 </div>
               </div>
             </div>
@@ -273,8 +273,13 @@
                 const hasFullPrice = Number.isFinite(fullPrice) && fullPrice > 0;
                 let payablePrice = null;
                 if (hasFullPrice && p.type === 'discount') {
+                  const specialPrice = Number(meta.special_price_amount || 0);
                   const dp = Number(meta.discount_percent || 0);
-                  if (dp > 0 && dp <= 100) payablePrice = Math.max(fullPrice - (fullPrice * dp / 100), 0);
+                  if (Number.isFinite(specialPrice) && specialPrice >= 0 && meta.special_price_amount !== undefined) {
+                    payablePrice = Math.min(specialPrice, fullPrice);
+                  } else if (dp > 0 && dp <= 100) {
+                    payablePrice = Math.max(fullPrice - (fullPrice * dp / 100), 0);
+                  }
                 }
                 if (hasFullPrice && p.type === 'coupon' && meta.coupon_kind === 'cash') {
                   const cash = Number(meta.coupon_cash_amount || 0);
@@ -305,8 +310,10 @@
                   <% } %>
                 </td>
                 <td>
-                  <span class="text-muted"><%= p.type || '-' %></span>
-                  <% if (p.type === 'discount' && Number.isInteger(Number(meta.discount_percent))) { %>
+                  <span class="text-muted"><%= p.type === 'discount' ? 'สินค้าราคาพิเศษ' : (p.type || '-') %></span>
+                  <% if (p.type === 'discount' && meta.special_price_amount !== undefined) { %>
+                    <div class="small text-primary">สินค้าราคาพิเศษ <%= Number(meta.special_price_amount || 0).toLocaleString('th-TH') %> บาท</div>
+                  <% } else if (p.type === 'discount' && Number.isInteger(Number(meta.discount_percent))) { %>
                     <div class="small text-primary">ลด <%= Number(meta.discount_percent) %>%</div>
                   <% } %>
                   <% if (p.type === 'coupon' && meta.coupon_kind === 'cash') { %>
@@ -319,7 +326,7 @@
                     <div class="small text-muted">ราคาเต็ม <%= Number(fullPrice).toLocaleString('th-TH') %> บาท</div>
                   <% } %>
                   <% if (payablePrice !== null) { %>
-                    <div class="small fw-bold text-success">ต้องจ่าย <%= Number(payablePrice).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) %> บาท</div>
+                    <div class="small fw-bold text-success">ราคาลด <%= Number(payablePrice).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) %> บาท</div>
                   <% } %>
                 </td>
 
@@ -424,6 +431,14 @@
       const editStock = Number(inventory.initialQty ?? p.initial_qty ?? 0);
       const editConsumed = Number(inventory.consumedQty ?? Math.max(editStock - editRemaining - editReserved, 0));
       const editMinStock = Number(inventory.minInitialQty ?? (editConsumed + editReserved));
+      const editMeta = p.metadata_obj || {};
+      const editFullPrice = Number(editMeta.full_price_amount || 0);
+      const editDiscountPercent = Number(editMeta.discount_percent || 0);
+      const editSpecialPrice = editMeta.special_price_amount !== undefined
+        ? Number(editMeta.special_price_amount || 0)
+        : (editFullPrice > 0 && editDiscountPercent > 0 && editDiscountPercent <= 100
+          ? Math.max(editFullPrice - (editFullPrice * editDiscountPercent / 100), 0)
+          : '');
     %>
     <div class="modal fade" id="editPrizeModal-<%= p.id %>" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -463,7 +478,7 @@
                   <label class="form-label">ประเภท</label>
                   <select class="form-select" name="type" data-prize-type required>
                     <option value="free_product" <%= p.type === 'free_product' ? 'selected' : '' %>>free_product</option>
-                    <option value="discount" <%= p.type === 'discount' ? 'selected' : '' %>>discount</option>
+                    <option value="discount" <%= p.type === 'discount' ? 'selected' : '' %>>สินค้าราคาพิเศษ</option>
                     <option value="coupon" <%= p.type === 'coupon' ? 'selected' : '' %>>coupon</option>
                     <option value="credit" <%= p.type === 'credit' ? 'selected' : '' %>>credit</option>
                     <option value="other" <%= p.type === 'other' ? 'selected' : '' %>>other (ไม่ได้รางวัล)</option>
@@ -478,12 +493,19 @@
                         <input type="number" class="form-control" name="full_price_amount" min="1" max="1000000000" value="<%= Number((p.metadata_obj && p.metadata_obj.full_price_amount) || '') || '' %>">
                       </div>
                       <div class="col-md-4">
-                        <label class="form-label mb-1">ส่วนลด (%)</label>
-                        <input type="number" class="form-control" name="discount_percent" min="1" max="100" value="<%= Number((p.metadata_obj && p.metadata_obj.discount_percent) || '') || '' %>">
+                        <label class="form-label mb-1">ราคาลด (บาท)</label>
+                        <input
+                          type="number"
+                          class="form-control"
+                          name="special_price_amount"
+                          min="0"
+                          max="1000000000"
+                          value="<%= editSpecialPrice %>"
+                        >
                       </div>
                       <div class="col-md-4">
-                        <div class="text-muted small">ต้องระบุเมื่อเลือกประเภท discount</div>
-                        <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาที่ต้องจ่าย: -</div>
+                        <div class="text-muted small">กรอกเป็นราคาขายพิเศษ ไม่ใช่เปอร์เซ็นต์ส่วนลด</div>
+                        <div class="small mt-1 prize-pay-preview" data-pay-preview="discount">ราคาพิเศษ: -</div>
                       </div>
                     </div>
                   </div>
@@ -731,7 +753,7 @@
         coupon: root.querySelector('[data-type-section="coupon"]')
       };
 
-      const discountInput = root.querySelector('input[name="discount_percent"]');
+      const specialPriceInput = root.querySelector('input[name="special_price_amount"]');
       const fullPriceInputs = Array.from(root.querySelectorAll('input[name="full_price_amount"]'));
       const couponKind = root.querySelector('[data-coupon-kind]');
       const couponCashWrap = root.querySelector('[data-coupon-section="cash"]');
@@ -747,7 +769,7 @@
 
       if (sections.discount) sections.discount.style.display = isDiscount ? '' : 'none';
       if (sections.coupon) sections.coupon.style.display = isCoupon ? '' : 'none';
-      if (discountInput) discountInput.required = isDiscount;
+      if (specialPriceInput) specialPriceInput.required = isDiscount;
 
       const enabledIndex = isDiscount ? 0 : (isCoupon ? 1 : -1);
       const sharedFullPriceValue = fullPriceInputs
@@ -763,7 +785,7 @@
       const fullPriceInput = fullPriceInputs.find((input) => !input.disabled) || null;
       if (couponKind) couponKind.required = isCoupon;
 
-      if (!isDiscount && discountInput) discountInput.value = '';
+      if (!isDiscount && specialPriceInput) specialPriceInput.value = '';
       if (!(isDiscount || isCoupon) && fullPriceInput) fullPriceInput.value = '';
       if (!isCoupon && couponKind) couponKind.value = '';
 
@@ -780,18 +802,19 @@
       if (!showDiscount && couponDiscountInput) couponDiscountInput.value = '';
 
       const fullPrice = Number((fullPriceInput && fullPriceInput.value) || 0);
-      const discountPercent = Number((discountInput && discountInput.value) || 0);
+      const specialPrice = Number((specialPriceInput && specialPriceInput.value) || 0);
       const couponCashAmount = Number((couponCashInput && couponCashInput.value) || 0);
       const couponDiscountPercent = Number((couponDiscountInput && couponDiscountInput.value) || 0);
 
       const formatMoney = (v) => Number(v).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
       if (discountPayPreview) {
-        if (isDiscount && fullPrice > 0 && discountPercent > 0 && discountPercent <= 100) {
-          const payable = Math.max(fullPrice - (fullPrice * discountPercent / 100), 0);
-          discountPayPreview.textContent = `ราคาที่ต้องจ่าย: ${formatMoney(payable)} บาท`;
+        if (isDiscount && fullPrice > 0 && specialPrice >= 0 && specialPrice <= fullPrice && specialPriceInput && specialPriceInput.value !== '') {
+          discountPayPreview.textContent = `ราคาพิเศษ: ${formatMoney(specialPrice)} บาท`;
+        } else if (isDiscount && fullPrice > 0 && specialPrice > fullPrice) {
+          discountPayPreview.textContent = 'ราคาลดต้องไม่มากกว่าราคาเต็ม';
         } else {
-          discountPayPreview.textContent = 'ราคาที่ต้องจ่าย: -';
+          discountPayPreview.textContent = 'ราคาพิเศษ: -';
         }
       }
 
@@ -812,7 +835,7 @@
       const typeSelect = form.querySelector('[data-prize-type]');
       const couponKind = form.querySelector('[data-coupon-kind]');
       const fullPriceInputs = Array.from(form.querySelectorAll('input[name="full_price_amount"]'));
-      const discountInput = form.querySelector('input[name="discount_percent"]');
+      const specialPriceInput = form.querySelector('input[name="special_price_amount"]');
       const couponCashInput = form.querySelector('input[name="coupon_cash_amount"]');
       const couponDiscountInput = form.querySelector('input[name="coupon_discount_percent"]');
       if (typeSelect) typeSelect.addEventListener('change', () => syncPricingFields(form));
@@ -820,7 +843,7 @@
       fullPriceInputs.forEach((fullPriceInput) => {
         fullPriceInput.addEventListener('input', () => syncPricingFields(form));
       });
-      if (discountInput) discountInput.addEventListener('input', () => syncPricingFields(form));
+      if (specialPriceInput) specialPriceInput.addEventListener('input', () => syncPricingFields(form));
       if (couponCashInput) couponCashInput.addEventListener('input', () => syncPricingFields(form));
       if (couponDiscountInput) couponDiscountInput.addEventListener('input', () => syncPricingFields(form));
       syncPricingFields(form);

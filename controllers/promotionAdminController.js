@@ -227,6 +227,7 @@ function buildPrizeMetadata(existingRaw, imageUrl, pricingDetails) {
   delete metadataObj.coupon_cash_amount;
   delete metadataObj.coupon_discount_percent;
   delete metadataObj.full_price_amount;
+  delete metadataObj.special_price_amount;
 
   if (imageUrl) metadataObj.image_url = imageUrl;
   else delete metadataObj.image_url;
@@ -246,6 +247,9 @@ function buildPrizeMetadata(existingRaw, imageUrl, pricingDetails) {
   if (pricingDetails && Number.isInteger(pricingDetails.full_price_amount)) {
     metadataObj.full_price_amount = pricingDetails.full_price_amount;
   }
+  if (pricingDetails && Number.isInteger(pricingDetails.special_price_amount)) {
+    metadataObj.special_price_amount = pricingDetails.special_price_amount;
+  }
 
   return Object.keys(metadataObj).length > 0 ? JSON.stringify(metadataObj) : null;
 }
@@ -255,13 +259,16 @@ function parsePrizePricingDetails(type, body) {
 
   if (type === 'discount') {
     if (!Number.isInteger(fullPriceAmount) || fullPriceAmount < 1 || fullPriceAmount > 1000000000) {
-      return { ok: false, message: 'ประเภท discount ต้องระบุราคาเต็ม 1 - 1,000,000,000 บาท' };
+      return { ok: false, message: 'สินค้าราคาพิเศษต้องระบุราคาเต็ม 1 - 1,000,000,000 บาท' };
     }
-    const discountPercent = Number.parseInt(body.discount_percent, 10);
-    if (!Number.isInteger(discountPercent) || discountPercent < 1 || discountPercent > 100) {
-      return { ok: false, message: 'ประเภท discount ต้องระบุเปอร์เซ็นต์ส่วนลด 1-100%' };
+    const specialPriceAmount = Number.parseInt(body.special_price_amount, 10);
+    if (!Number.isInteger(specialPriceAmount) || specialPriceAmount < 0 || specialPriceAmount > 1000000000) {
+      return { ok: false, message: 'สินค้าราคาพิเศษต้องระบุราคาลด 0 - 1,000,000,000 บาท' };
     }
-    return { ok: true, value: { full_price_amount: fullPriceAmount, discount_percent: discountPercent } };
+    if (specialPriceAmount > fullPriceAmount) {
+      return { ok: false, message: 'ราคาลดต้องไม่มากกว่าราคาเต็ม' };
+    }
+    return { ok: true, value: { full_price_amount: fullPriceAmount, special_price_amount: specialPriceAmount } };
   }
 
   if (type === 'coupon') {

@@ -126,6 +126,13 @@ function parsePositiveIntValue(value) {
   return parsed;
 }
 
+function parseNonNegativeIntValue(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
 function formatCurrencyValue(value) {
   const safeValue = Number(value || 0);
   if (!Number.isFinite(safeValue)) return '0';
@@ -138,6 +145,10 @@ function derivePrizeBadge(prize, metadataObj) {
 
   if (type === 'free_product') return { text: 'ฟรี', className: 'is-free' };
   if (type === 'discount') {
+    const specialPrice = parseNonNegativeIntValue(metadataObj && metadataObj.special_price_amount);
+    if (specialPrice !== null) {
+      return { text: `พิเศษ ฿${formatCurrencyValue(specialPrice)}`, className: 'is-discount' };
+    }
     const metadataPercent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
     if (metadataPercent && metadataPercent <= 100) {
       return { text: `ลด ${metadataPercent}%`, className: 'is-discount' };
@@ -169,6 +180,8 @@ function derivePrizeBenefitText(prize, metadataObj) {
 
   if (type === 'free_product') return 'ฟรีสินค้า';
   if (type === 'discount') {
+    const specialPrice = parseNonNegativeIntValue(metadataObj && metadataObj.special_price_amount);
+    if (specialPrice !== null) return `สินค้าราคาพิเศษ ${formatCurrencyValue(specialPrice)} บาท`;
     const metadataPercent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
     if (metadataPercent && metadataPercent <= 100) return `ส่วนลด ${metadataPercent}%`;
     const percent = extractDiscountPercent(`${prize && prize.name ? prize.name : ''} ${prize && prize.description ? prize.description : ''}`);
@@ -196,6 +209,10 @@ function derivePrizePriceSummary(prize, metadataObj) {
   if (!fullPrice) return { full_price_amount: null, payable_amount: null };
 
   if (type === 'discount') {
+    const specialPrice = parseNonNegativeIntValue(metadataObj && metadataObj.special_price_amount);
+    if (specialPrice !== null) {
+      return { full_price_amount: fullPrice, payable_amount: Math.min(specialPrice, fullPrice) };
+    }
     const percent = parsePositiveIntValue(metadataObj && metadataObj.discount_percent);
     if (percent && percent <= 100) {
       const payable = Math.max(fullPrice - ((fullPrice * percent) / 100), 0);

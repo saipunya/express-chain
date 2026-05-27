@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/random-names.css">
+  </head>
+  <body>
+    <main class="random-page">
+      <div class="container py-4 py-lg-5">
+        <div class="random-shell mx-auto">
+          <div class="random-toolbar">
+            <div>
+              <h1 class="random-title">ระบบสุ่มรายชื่อ</h1>
+              <p class="random-subtitle mb-0">เลือกแหล่งรายชื่อแล้วกดปุ่มเพื่อเริ่มหรือหยุดสุ่ม</p>
+            </div>
+
+            <div class="random-source">
+              <label for="sourceSelect" class="form-label">Source รายชื่อ</label>
+              <select id="sourceSelect" class="form-select" data-default-source="<%= defaultSource %>">
+                <% sources.forEach(source => { %>
+                  <option value="<%= source.value %>" <%= source.value === defaultSource ? 'selected' : '' %>><%= source.label %></option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+
+          <section class="random-display" aria-live="polite">
+            <div class="random-display-label" id="statusText">พร้อมสุ่ม</div>
+            <div class="random-display-name" id="activeName">-</div>
+            <button type="button" class="btn random-action-btn" id="toggleRandomBtn" disabled>
+              <i class="bi bi-play-fill"></i>
+              <span>เริ่มสุ่ม</span>
+            </button>
+          </section>
+
+          <div class="random-empty alert alert-warning d-none" id="emptyState" role="alert">
+            ไม่มีรายชื่อใน source นี้
+          </div>
+
+          <section class="random-grid" id="namesGrid" aria-label="รายชื่อทั้งหมด"></section>
+        </div>
+      </div>
+    </main>
+
+    <div class="winner-modal" id="winnerModal" hidden>
+      <div class="winner-modal-panel" role="dialog" aria-modal="true" aria-labelledby="winnerModalTitle">
+        <div class="winner-modal-label" id="winnerModalTitle">ผู้ได้รับรางวัล</div>
+        <div class="winner-modal-name" id="winnerModalName">-</div>
+        <button type="button" class="btn winner-modal-close" id="winnerModalClose">
+          ปิด
+        </button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="/js/random-names.js"></script>
+  </body>
+</html>

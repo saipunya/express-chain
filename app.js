@@ -160,6 +160,7 @@ const cooperativesAssetsRoutes = require('./routes/cooperativesAssetsRoutes'); /
 const allCoopRoutes = require('./routes/allCoopRoutes');
 const promotionRoutes = require('./routes/promotionRoutes'); // เพิ่ม route promotion
 const registerRoutes = require('./routes/registerRoutes'); // เพิ่ม route register
+const randomNamesRoutes = require('./routes/randomNames');
 // Public routes that don't require authentication
 const publicRoutes = [
   '/chamra/process',
@@ -188,6 +189,7 @@ app.use('/cooperatives-assets', cooperativesAssetsRoutes); // ใช้งาน
 app.use('/allCoop', allCoopRoutes); // ใช้งานเส้นทาง allCoop (profile by c_code)
 app.use('/promotion', promotionRoutes); // ใช้งานเส้นทาง promotion
 app.use('/register', registerRoutes); // ใช้งานเส้นทาง register
+app.use('/random-names', randomNamesRoutes);
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {

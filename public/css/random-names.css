@@ -48,6 +48,56 @@ body {
   width: min(100%, 280px);
 }
 
+.random-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.random-import-btn,
+.random-back-btn,
+.random-cancel-btn {
+  min-height: 38px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.random-import-btn,
+.random-back-btn {
+  border: 1px solid var(--rn-primary);
+  color: var(--rn-primary-dark);
+  background: #fff;
+}
+
+.random-import-btn:hover,
+.random-import-btn:focus,
+.random-back-btn:hover,
+.random-back-btn:focus {
+  border-color: var(--rn-primary-dark);
+  color: #fff;
+  background: var(--rn-primary-dark);
+}
+
+.random-cancel-btn {
+  border: 1px solid var(--rn-border);
+  color: var(--rn-muted);
+  background: #fff;
+}
+
+.random-cancel-btn:hover,
+.random-cancel-btn:focus {
+  border-color: var(--rn-muted);
+  color: var(--rn-text);
+}
+
+.random-import-status,
+.random-import-panel .alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+}
+
 .random-source .form-label {
   color: var(--rn-muted);
   font-weight: 700;
@@ -211,6 +261,43 @@ body {
   color: #fff;
 }
 
+.random-import-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.random-import-panel {
+  padding: clamp(18px, 4vw, 28px);
+  background: var(--rn-surface);
+  border: 1px solid var(--rn-border);
+  border-radius: 8px;
+  box-shadow: 0 16px 34px rgba(23, 32, 42, 0.08);
+}
+
+.random-import-form {
+  display: grid;
+  gap: 18px;
+}
+
+.random-import-form .form-label {
+  color: var(--rn-muted);
+  font-weight: 800;
+}
+
+.random-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.random-submit-btn {
+  width: auto;
+}
+
 @keyframes winnerPop {
   from {
     opacity: 0;
@@ -229,6 +316,20 @@ body {
   }
 
   .random-source {
+    width: 100%;
+  }
+
+  .random-tools,
+  .random-import-header,
+  .random-import-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .random-import-btn,
+  .random-back-btn,
+  .random-cancel-btn,
+  .random-submit-btn {
     width: 100%;
   }
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/random-names.css">
+  </head>
+  <body>
+    <main class="random-page">
+      <div class="container py-4 py-lg-5">
+        <div class="random-shell mx-auto">
+          <div class="random-import-header">
+            <div>
+              <h1 class="random-title">นำเข้ารายชื่อนักเรียน</h1>
+              <p class="random-subtitle mb-0">อัปโหลดไฟล์ Word เพื่อแยกรายชื่อเป็นรายชั้นและรวมทั้งหมด</p>
+            </div>
+
+            <a href="/random-names" class="btn random-back-btn">
+              <i class="bi bi-arrow-left"></i>
+              <span>กลับหน้าสุ่ม</span>
+            </a>
+          </div>
+
+          <section class="random-import-panel">
+            <% if (error) { %>
+              <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span><%= error %></span>
+              </div>
+            <% } %>
+
+            <% if (currentFileExists) { %>
+              <div class="alert alert-info" role="status">
+                <i class="bi bi-file-earmark-word-fill"></i>
+                <span>มีไฟล์รายชื่อที่นำเข้าไว้แล้ว การอัปโหลดใหม่จะแทนที่ไฟล์เดิม</span>
+              </div>
+            <% } %>
+
+            <form action="/random-names/import" method="post" enctype="multipart/form-data" class="random-import-form">
+              <div>
+                <label for="docxFile" class="form-label">ไฟล์ Word (.docx)</label>
+                <input id="docxFile" type="file" name="docxFile" class="form-control form-control-lg" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+              </div>
+
+              <div class="random-import-actions">
+                <button type="submit" class="btn random-action-btn random-submit-btn">
+                  <i class="bi bi-cloud-arrow-up-fill"></i>
+                  <span>นำเข้าไฟล์</span>
+                </button>
+                <a href="/random-names" class="btn random-cancel-btn">ยกเลิก</a>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

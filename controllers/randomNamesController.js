@@ -3,6 +3,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const DEFAULT_DOCX_PATH = 'c:\\Users\\Admins\\Downloads\\รายชื่อนักเรียน มัธยม.2569.docx';
+const UPLOADED_DOCX_PATH = path.join(process.cwd(), 'uploads', 'random-names', 'student-names.docx');
 
 const fallbackSources = {
   staff: {
@@ -215,7 +216,8 @@ function parseStudentSourcesFromDocumentXml(documentXml) {
 }
 
 function loadStudentSourcesFromDocx() {
-  const docxPath = process.env.RANDOM_NAMES_DOCX_PATH || DEFAULT_DOCX_PATH;
+  const docxPath = process.env.RANDOM_NAMES_DOCX_PATH ||
+    (fs.existsSync(UPLOADED_DOCX_PATH) ? UPLOADED_DOCX_PATH : DEFAULT_DOCX_PATH);
   const absoluteDocxPath = path.resolve(docxPath);
 
   if (!fs.existsSync(absoluteDocxPath)) {
@@ -239,12 +241,38 @@ function loadStudentSourcesFromDocx() {
   return sourceCache;
 }
 
+function getPopulatedSourcesFromDocxBuffer(docxBuffer) {
+  const documentXml = readZipEntry(docxBuffer, 'word/document.xml').toString('utf8');
+  const parsedSources = parseStudentSourcesFromDocumentXml(documentXml);
+
+  return Object.fromEntries(
+    Object.entries(parsedSources).filter(([, source]) => source.names.length)
+  );
+}
+
+function withAllSource(sources) {
+  const sourceEntries = Object.entries(sources || {});
+  const allNames = sourceEntries.flatMap(([, source]) => source.names || []);
+
+  if (!allNames.length) {
+    return sources;
+  }
+
+  return {
+    all: {
+      label: 'รวมทั้งหมด',
+      names: allNames
+    },
+    ...sources
+  };
+}
+
 function getSourcesObject() {
   try {
-    return loadStudentSourcesFromDocx() || fallbackSources;
+    return withAllSource(loadStudentSourcesFromDocx() || fallbackSources);
   } catch (error) {
     console.warn('randomNames DOCX import warning:', error && error.message);
-    return fallbackSources;
+    return withAllSource(fallbackSources);
   }
 }
 
@@ -261,7 +289,8 @@ exports.index = (req, res) => {
   res.render('random-names/index', {
     title: 'ระบบสุ่มรายชื่อ',
     sources,
-    defaultSource: sources[0] ? sources[0].value : 'staff'
+    defaultSource: sources[0] ? sources[0].value : 'staff',
+    importStatus: req.query.imported === '1' ? 'นำเข้าไฟล์ Word สำเร็จ' : ''
   });
 };
 
@@ -278,4 +307,50 @@ exports.names = (req, res) => {
     label: source.label,
     names: source.names
   });
+};
+
+exports.importPage = (req, res) => {
+  const currentFileExists = fs.existsSync(UPLOADED_DOCX_PATH);
+
+  res.render('random-names/import', {
+    title: 'นำเข้ารายชื่อนักเรียน',
+    error: '',
+    currentFileExists
+  });
+};
+
+exports.importDocx = (req, res) => {
+  if (!req.file || !req.file.buffer) {
+    return res.status(400).render('random-names/import', {
+      title: 'นำเข้ารายชื่อนักเรียน',
+      error: 'กรุณาเลือกไฟล์ Word (.docx)',
+      currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
+    });
+  }
+
+  try {
+    const populatedSources = getPopulatedSourcesFromDocxBuffer(req.file.buffer);
+
+    if (!Object.keys(populatedSources).length) {
+      return res.status(400).render('random-names/import', {
+        title: 'นำเข้ารายชื่อนักเรียน',
+        error: 'ไม่พบรายชื่อนักเรียนในไฟล์นี้ กรุณาตรวจสอบรูปแบบตารางรายชื่อ',
+        currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
+      });
+    }
+
+    fs.mkdirSync(path.dirname(UPLOADED_DOCX_PATH), { recursive: true });
+    fs.writeFileSync(UPLOADED_DOCX_PATH, req.file.buffer);
+    sourceCache = populatedSources;
+    sourceCacheMtime = fs.statSync(UPLOADED_DOCX_PATH).mtimeMs;
+
+    res.redirect('/random-names?imported=1');
+  } catch (error) {
+    console.warn('randomNames DOCX upload warning:', error && error.message);
+    res.status(400).render('random-names/import', {
+      title: 'นำเข้ารายชื่อนักเรียน',
+      error: 'อ่านไฟล์ Word ไม่สำเร็จ กรุณาใช้ไฟล์ .docx ที่ถูกต้อง',
+      currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
+    });
+  }
 };

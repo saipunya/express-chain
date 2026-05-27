@@ -290,6 +290,7 @@ const uploadDirs = [
   'uploads/turnover',
   'uploads/vong', // added for vong files
   'uploads/vong_business',
+  'uploads/random-names',
 ];
 
 uploadDirs.forEach(dir => {

@@ -18,15 +18,29 @@
               <p class="random-subtitle mb-0">เลือกแหล่งรายชื่อแล้วกดปุ่มเพื่อเริ่มหรือหยุดสุ่ม</p>
             </div>
 
-            <div class="random-source">
-              <label for="sourceSelect" class="form-label">Source รายชื่อ</label>
-              <select id="sourceSelect" class="form-select" data-default-source="<%= defaultSource %>">
-                <% sources.forEach(source => { %>
-                  <option value="<%= source.value %>" <%= source.value === defaultSource ? 'selected' : '' %>><%= source.label %></option>
-                <% }) %>
-              </select>
+            <div class="random-tools">
+              <a href="/random-names/import" class="btn random-import-btn">
+                <i class="bi bi-upload"></i>
+                <span>นำเข้า Word</span>
+              </a>
+
+              <div class="random-source">
+                <label for="sourceSelect" class="form-label">Source รายชื่อ</label>
+                <select id="sourceSelect" class="form-select" data-default-source="<%= defaultSource %>">
+                  <% sources.forEach(source => { %>
+                    <option value="<%= source.value %>" <%= source.value === defaultSource ? 'selected' : '' %>><%= source.label %></option>
+                  <% }) %>
+                </select>
+              </div>
             </div>
           </div>
+
+          <% if (importStatus) { %>
+            <div class="alert alert-success random-import-status" role="status">
+              <i class="bi bi-check-circle-fill"></i>
+              <span><%= importStatus %></span>
+            </div>
+          <% } %>
 
           <section class="random-display" aria-live="polite">
             <div class="random-display-label" id="statusText">พร้อมสุ่ม</div>

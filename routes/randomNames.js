@@ -80,7 +80,8 @@ function uploadMusic(req, res, next) {
   });
 }
 
-router.get('/', randomNamesController.index);
+router.get('/', randomNamesController.landing);
+router.get('/play', randomNamesController.index);
 router.get('/import', randomNamesController.importPage);
 router.post('/import', uploadDocx, randomNamesController.importDocx);
 router.post('/import/music', uploadMusic, randomNamesController.importMusic);

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/random-names.css">
+  </head>
+  <body>
+    <main class="random-landing">
+      <div class="random-landing-media" aria-hidden="true"></div>
+      <div class="random-landing-shade" aria-hidden="true"></div>
+
+      <section class="random-landing-content">
+        <div class="random-landing-kicker">
+          <i class="bi bi-stars"></i>
+          <span>ระบบสุ่มรางวัล</span>
+        </div>
+
+        <h1 class="random-landing-title">สุ่มรางวัลวันสหกรณ์นักเรียน</h1>
+        <p class="random-landing-copy">พร้อมลุ้นรางวัลแบบสนุก มีเสียงประกอบ พลุฉลอง และรายชื่อแยกตามระดับชั้น</p>
+
+        <div class="random-landing-stats" aria-label="สถานะข้อมูล">
+          <span><strong><%= totalNames %></strong> รายชื่อ</span>
+          <span><strong><%= sourceCount %></strong> ระดับชั้น</span>
+        </div>
+
+        <div class="random-landing-actions">
+          <a href="/random-names/play" class="btn random-landing-primary">
+            <i class="bi bi-play-fill"></i>
+            <span>เข้าสู่ระบบสุ่ม</span>
+          </a>
+          <a href="/random-names/import" class="btn random-landing-secondary">
+            <i class="bi bi-upload"></i>
+            <span>นำเข้าข้อมูล</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

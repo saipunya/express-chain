@@ -330,6 +330,17 @@ exports.index = (req, res) => {
   });
 };
 
+exports.landing = (req, res) => {
+  const sources = getSources();
+  const totalNames = getSourcesObject().all ? getSourcesObject().all.names.length : 0;
+
+  res.render('random-names/landing', {
+    title: 'สุ่มรางวัลวันสหกรณ์นักเรียน',
+    sourceCount: sources.filter((source) => source.value !== 'all' && source.value !== 'empty').length,
+    totalNames
+  });
+};
+
 exports.names = (req, res) => {
   const sources = getSourcesObject();
   const sourceKeys = Object.keys(sources);
@@ -370,7 +381,7 @@ exports.importDocx = (req, res) => {
     sourceCache = populatedSources;
     sourceCacheMtime = fs.statSync(UPLOADED_DOCX_PATH).mtimeMs;
 
-    res.redirect('/random-names?imported=1');
+    res.redirect('/random-names/play?imported=1');
   } catch (error) {
     console.warn('randomNames DOCX upload warning:', error && error.message);
     res.status(400).render('random-names/import', getImportViewData({
@@ -397,7 +408,7 @@ exports.importMusic = (req, res) => {
       fs.writeFileSync(path.join(UPLOAD_DIR, fileName), file.buffer);
     });
 
-    res.redirect('/random-names?music=1');
+    res.redirect('/random-names/play?music=1');
   } catch (error) {
     console.warn('randomNames music upload warning:', error && error.message);
     res.status(400).render('random-names/import', getImportViewData({

@@ -4,6 +4,8 @@ const zlib = require('zlib');
 
 const DEFAULT_DOCX_PATH = 'c:\\Users\\Admins\\Downloads\\รายชื่อนักเรียน มัธยม.2569.docx';
 const UPLOADED_DOCX_PATH = path.join(process.cwd(), 'uploads', 'random-names', 'student-names.docx');
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'random-names');
+const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.webm']);
 
 const fallbackSources = {
   staff: {
@@ -31,6 +33,35 @@ const fallbackSources = {
 
 let sourceCache = null;
 let sourceCacheMtime = 0;
+
+function getRandomMusicFiles() {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    return [];
+  }
+
+  return fs.readdirSync(UPLOAD_DIR)
+    .filter((name) => name.startsWith('random-music') && AUDIO_EXTENSIONS.has(path.extname(name).toLowerCase()))
+    .sort();
+}
+
+function getRandomMusicUrls() {
+  return getRandomMusicFiles().map((fileName) => {
+    const stat = fs.statSync(path.join(UPLOAD_DIR, fileName));
+    return `/uploads/random-names/${fileName}?v=${Math.floor(stat.mtimeMs)}`;
+  });
+}
+
+function getImportViewData(overrides = {}) {
+  return {
+    title: 'นำเข้ารายชื่อนักเรียน',
+    error: '',
+    musicError: '',
+    currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH),
+    currentMusicExists: getRandomMusicFiles().length > 0,
+    musicCount: getRandomMusicFiles().length,
+    ...overrides
+  };
+}
 
 function decodeXml(value) {
   return String(value || '')
@@ -70,6 +101,15 @@ function getCellText(xml) {
   }
 
   return paragraphs.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function formatStudentName(name, grade) {
+  const cleanName = String(name || '')
+    .replace(/^(เด็กหญิง|เด็กชาย|ด\.ญ\.|ด\.ช\.)\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return cleanName ? `${cleanName} (M${grade})` : '';
 }
 
 function readZipEntry(buffer, entryName) {
@@ -205,7 +245,7 @@ function parseStudentSourcesFromDocumentXml(documentXml) {
       if (cells.length < 3) continue;
       if (!/^\d+$/.test(cells[0]) || !/^\d+$/.test(cells[1])) continue;
 
-      const name = cells.slice(2).join(' ').replace(/\s+/g, ' ').trim();
+      const name = formatStudentName(cells.slice(2).join(' '), currentGrade);
       if (name) {
         sources[sourceKey].names.push(name);
       }
@@ -267,6 +307,17 @@ function withAllSource(sources) {
   };
 }
 
+function shuffleNames(names) {
+  const shuffled = [...(names || [])];
+
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
+
 function getSourcesObject() {
   try {
     return withAllSource(loadStudentSourcesFromDocx() || fallbackSources);
@@ -290,7 +341,9 @@ exports.index = (req, res) => {
     title: 'ระบบสุ่มรายชื่อ',
     sources,
     defaultSource: sources[0] ? sources[0].value : 'staff',
-    importStatus: req.query.imported === '1' ? 'นำเข้าไฟล์ Word สำเร็จ' : ''
+    importStatus: req.query.imported === '1' ? 'นำเข้าไฟล์ Word สำเร็จ' : '',
+    musicStatus: req.query.music === '1' ? 'อัปโหลดเพลงสุ่มสำเร็จ' : '',
+    randomMusicUrls: getRandomMusicUrls()
   });
 };
 
@@ -305,38 +358,28 @@ exports.names = (req, res) => {
     ok: true,
     source: sourceKey,
     label: source.label,
-    names: source.names
+    names: shuffleNames(source.names)
   });
 };
 
 exports.importPage = (req, res) => {
-  const currentFileExists = fs.existsSync(UPLOADED_DOCX_PATH);
-
-  res.render('random-names/import', {
-    title: 'นำเข้ารายชื่อนักเรียน',
-    error: '',
-    currentFileExists
-  });
+  res.render('random-names/import', getImportViewData());
 };
 
 exports.importDocx = (req, res) => {
   if (!req.file || !req.file.buffer) {
-    return res.status(400).render('random-names/import', {
-      title: 'นำเข้ารายชื่อนักเรียน',
-      error: 'กรุณาเลือกไฟล์ Word (.docx)',
-      currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
-    });
+    return res.status(400).render('random-names/import', getImportViewData({
+      error: 'กรุณาเลือกไฟล์ Word (.docx)'
+    }));
   }
 
   try {
     const populatedSources = getPopulatedSourcesFromDocxBuffer(req.file.buffer);
 
     if (!Object.keys(populatedSources).length) {
-      return res.status(400).render('random-names/import', {
-        title: 'นำเข้ารายชื่อนักเรียน',
-        error: 'ไม่พบรายชื่อนักเรียนในไฟล์นี้ กรุณาตรวจสอบรูปแบบตารางรายชื่อ',
-        currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
-      });
+      return res.status(400).render('random-names/import', getImportViewData({
+        error: 'ไม่พบรายชื่อนักเรียนในไฟล์นี้ กรุณาตรวจสอบรูปแบบตารางรายชื่อ'
+      }));
     }
 
     fs.mkdirSync(path.dirname(UPLOADED_DOCX_PATH), { recursive: true });
@@ -347,10 +390,35 @@ exports.importDocx = (req, res) => {
     res.redirect('/random-names?imported=1');
   } catch (error) {
     console.warn('randomNames DOCX upload warning:', error && error.message);
-    res.status(400).render('random-names/import', {
-      title: 'นำเข้ารายชื่อนักเรียน',
-      error: 'อ่านไฟล์ Word ไม่สำเร็จ กรุณาใช้ไฟล์ .docx ที่ถูกต้อง',
-      currentFileExists: fs.existsSync(UPLOADED_DOCX_PATH)
+    res.status(400).render('random-names/import', getImportViewData({
+      error: 'อ่านไฟล์ Word ไม่สำเร็จ กรุณาใช้ไฟล์ .docx ที่ถูกต้อง'
+    }));
+  }
+};
+
+exports.importMusic = (req, res) => {
+  const files = Array.isArray(req.files) ? req.files : [];
+  if (!files.length) {
+    return res.status(400).render('random-names/import', getImportViewData({
+      musicError: 'กรุณาเลือกไฟล์เสียง'
+    }));
+  }
+
+  try {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+    files.forEach((file, index) => {
+      const extension = path.extname(file.originalname || '').toLowerCase();
+      const safeExtension = AUDIO_EXTENSIONS.has(extension) ? extension : '.mp3';
+      const fileName = `random-music-${Date.now()}-${index}${safeExtension}`;
+      fs.writeFileSync(path.join(UPLOAD_DIR, fileName), file.buffer);
     });
+
+    res.redirect('/random-names?music=1');
+  } catch (error) {
+    console.warn('randomNames music upload warning:', error && error.message);
+    res.status(400).render('random-names/import', getImportViewData({
+      musicError: 'อัปโหลดไฟล์เสียงไม่สำเร็จ กรุณาลองอีกครั้ง'
+    }));
   }
 };

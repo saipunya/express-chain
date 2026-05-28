@@ -8,8 +8,12 @@
   const winnerModal = document.getElementById('winnerModal');
   const winnerModalName = document.getElementById('winnerModalName');
   const winnerModalClose = document.getElementById('winnerModalClose');
+  const randomRunningStage = document.getElementById('randomRunningStage');
+  const randomRunningName = document.getElementById('randomRunningName');
+  const winnerConfetti = document.getElementById('winnerConfetti');
+  const randomMusicUrlsElement = document.getElementById('randomMusicUrls');
 
-  if (!sourceSelect || !namesGrid || !activeName || !statusText || !toggleBtn || !emptyState || !winnerModal || !winnerModalName || !winnerModalClose) {
+  if (!sourceSelect || !namesGrid || !activeName || !statusText || !toggleBtn || !emptyState || !winnerModal || !winnerModalName || !winnerModalClose || !randomRunningStage || !randomRunningName || !winnerConfetti) {
     return;
   }
 
@@ -17,6 +21,52 @@
   let timerId = null;
   let activeIndex = -1;
   let isRunning = false;
+  let confettiAnimationId = null;
+  let confettiTimeoutId = null;
+  let randomMusic = null;
+  let winnerMusic = null;
+  let randomMusicUrls = [];
+  let remainingRandomMusicUrls = [];
+  let currentRandomMusicUrl = '';
+  const randomMusicQueueKey = 'randomNamesRemainingMusicUrls';
+
+  try {
+    randomMusicUrls = randomMusicUrlsElement ? JSON.parse(randomMusicUrlsElement.textContent || '[]') : [];
+  } catch (error) {
+    randomMusicUrls = [];
+  }
+
+  try {
+    const savedMusicUrls = JSON.parse(window.localStorage.getItem(randomMusicQueueKey) || '[]');
+    if (Array.isArray(savedMusicUrls)) {
+      remainingRandomMusicUrls = savedMusicUrls.filter(function (url) {
+        return randomMusicUrls.includes(url);
+      });
+    }
+  } catch (error) {
+    remainingRandomMusicUrls = [];
+  }
+
+  function saveRemainingRandomMusicUrls() {
+    try {
+      window.localStorage.setItem(randomMusicQueueKey, JSON.stringify(remainingRandomMusicUrls));
+    } catch (error) {}
+  }
+
+  function getNextRandomMusicUrl() {
+    if (!randomMusicUrls.length) {
+      return '';
+    }
+
+    if (!remainingRandomMusicUrls.length) {
+      remainingRandomMusicUrls = [...randomMusicUrls];
+    }
+
+    const nextIndex = Math.floor(Math.random() * remainingRandomMusicUrls.length);
+    const nextUrl = remainingRandomMusicUrls.splice(nextIndex, 1)[0];
+    saveRemainingRandomMusicUrls();
+    return nextUrl;
+  }
 
   function setButtonLabel(label, iconClass) {
     const icon = toggleBtn.querySelector('i');
@@ -33,20 +83,406 @@
     isRunning = false;
   }
 
+  function stopRandomMusic() {
+    if (!randomMusic) return;
+
+    const music = randomMusic;
+    randomMusic = null;
+
+    if (music.type === 'audio') {
+      music.element.pause();
+      music.element.currentTime = 0;
+      return;
+    }
+
+    if (music.intervalId) {
+      clearInterval(music.intervalId);
+    }
+
+    try {
+      const now = music.audioContext.currentTime;
+      music.masterGain.gain.cancelScheduledValues(now);
+      music.masterGain.gain.setValueAtTime(Math.max(music.masterGain.gain.value, 0.0001), now);
+      music.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    } catch (error) {}
+
+    window.setTimeout(function () {
+      music.audioContext.close().catch(function () {});
+    }, 220);
+  }
+
+  function stopWinnerMusic() {
+    if (!winnerMusic) return;
+
+    const music = winnerMusic;
+    winnerMusic = null;
+
+    if (music.type === 'audio') {
+      music.element.pause();
+      music.element.currentTime = 0;
+      return;
+    }
+
+    if (music.intervalId) {
+      clearInterval(music.intervalId);
+    }
+
+    try {
+      const now = music.audioContext.currentTime;
+      music.masterGain.gain.cancelScheduledValues(now);
+      music.masterGain.gain.setValueAtTime(Math.max(music.masterGain.gain.value, 0.0001), now);
+      music.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    } catch (error) {}
+
+    window.setTimeout(function () {
+      music.audioContext.close().catch(function () {});
+    }, 280);
+  }
+
+  function playRandomMusicNote(music) {
+    const notes = [261.63, 329.63, 392, 523.25, 392, 329.63, 293.66, 349.23];
+    const frequency = notes[music.step % notes.length];
+    const now = music.audioContext.currentTime;
+    const oscillator = music.audioContext.createOscillator();
+    const noteGain = music.audioContext.createGain();
+    const filter = music.audioContext.createBiquadFilter();
+
+    oscillator.type = music.step % 3 === 0 ? 'triangle' : 'sine';
+    oscillator.frequency.setValueAtTime(frequency, now);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1300, now);
+    noteGain.gain.setValueAtTime(0.0001, now);
+    noteGain.gain.exponentialRampToValueAtTime(0.5, now + 0.018);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+    oscillator.connect(filter);
+    filter.connect(noteGain);
+    noteGain.connect(music.masterGain);
+    oscillator.start(now);
+    oscillator.stop(now + 0.22);
+    music.step += 1;
+  }
+
+  function startRandomMusic() {
+    currentRandomMusicUrl = getNextRandomMusicUrl();
+
+    if (currentRandomMusicUrl && !randomMusic) {
+      const audio = new Audio(currentRandomMusicUrl);
+      audio.preload = 'auto';
+      audio.loop = true;
+      audio.volume = 0.75;
+      randomMusic = {
+        type: 'audio',
+        element: audio
+      };
+
+      audio.play().catch(function () {
+        randomMusic = null;
+        startGeneratedRandomMusic();
+      });
+      return;
+    }
+
+    startGeneratedRandomMusic();
+  }
+
+  function startGeneratedRandomMusic() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext || randomMusic) return;
+
+    let audioContext;
+    try {
+      audioContext = new AudioContext();
+    } catch (error) {
+      return;
+    }
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(function () {});
+    }
+
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.08);
+    masterGain.connect(audioContext.destination);
+
+    randomMusic = {
+      type: 'generated',
+      audioContext,
+      masterGain,
+      intervalId: null,
+      step: 0
+    };
+
+    playRandomMusicNote(randomMusic);
+    randomMusic.intervalId = window.setInterval(function () {
+      if (randomMusic) {
+        playRandomMusicNote(randomMusic);
+      }
+    }, 155);
+  }
+
+  function playWinnerMusicNote(music) {
+    const notes = [392, 493.88, 587.33, 659.25, 587.33, 493.88];
+    const frequency = notes[music.step % notes.length];
+    const now = music.audioContext.currentTime;
+    const oscillator = music.audioContext.createOscillator();
+    const noteGain = music.audioContext.createGain();
+    const filter = music.audioContext.createBiquadFilter();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, now);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(950, now);
+    noteGain.gain.setValueAtTime(0.0001, now);
+    noteGain.gain.exponentialRampToValueAtTime(0.36, now + 0.04);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+
+    oscillator.connect(filter);
+    filter.connect(noteGain);
+    noteGain.connect(music.masterGain);
+    oscillator.start(now);
+    oscillator.stop(now + 0.78);
+    music.step += 1;
+  }
+
+  function startGeneratedWinnerMusic() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext || winnerMusic) return;
+
+    let audioContext;
+    try {
+      audioContext = new AudioContext();
+    } catch (error) {
+      return;
+    }
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(function () {});
+    }
+
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.11, audioContext.currentTime + 0.12);
+    masterGain.connect(audioContext.destination);
+
+    winnerMusic = {
+      type: 'generated',
+      audioContext,
+      masterGain,
+      intervalId: null,
+      step: 0
+    };
+
+    playWinnerMusicNote(winnerMusic);
+    winnerMusic.intervalId = window.setInterval(function () {
+      if (winnerMusic) {
+        playWinnerMusicNote(winnerMusic);
+      }
+    }, 520);
+  }
+
+  function startWinnerMusic() {
+    stopWinnerMusic();
+
+    if (currentRandomMusicUrl) {
+      const audio = new Audio(currentRandomMusicUrl);
+      audio.preload = 'auto';
+      audio.loop = true;
+      audio.volume = 0.35;
+      winnerMusic = {
+        type: 'audio',
+        element: audio
+      };
+
+      audio.play().catch(function () {
+        winnerMusic = null;
+        startGeneratedWinnerMusic();
+      });
+      return;
+    }
+
+    startGeneratedWinnerMusic();
+  }
+
   function hideWinnerModal() {
     winnerModal.hidden = true;
     winnerModalName.textContent = '-';
+    stopWinnerMusic();
+    stopConfetti();
+  }
+
+  function stopConfetti() {
+    if (confettiAnimationId) {
+      cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = null;
+    }
+
+    if (confettiTimeoutId) {
+      clearTimeout(confettiTimeoutId);
+      confettiTimeoutId = null;
+    }
+
+    winnerConfetti.hidden = true;
+  }
+
+  function playWinnerSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    let audioContext;
+    try {
+      audioContext = new AudioContext();
+    } catch (error) {
+      return;
+    }
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(function () {});
+    }
+
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.46, audioContext.currentTime + 0.03);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 1.6);
+    masterGain.connect(audioContext.destination);
+
+    [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach(function (frequency, index) {
+      const oscillator = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+      const startAt = audioContext.currentTime + (index * 0.12);
+
+      oscillator.type = index % 2 ? 'sine' : 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      noteGain.gain.setValueAtTime(0.0001, startAt);
+      noteGain.gain.exponentialRampToValueAtTime(1, startAt + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.42);
+
+      oscillator.connect(noteGain);
+      noteGain.connect(masterGain);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + 0.48);
+    });
+
+    [1046.5, 1318.51, 1567.98].forEach(function (frequency, index) {
+      const oscillator = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+      const startAt = audioContext.currentTime + 0.86 + (index * 0.04);
+
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      noteGain.gain.setValueAtTime(0.0001, startAt);
+      noteGain.gain.exponentialRampToValueAtTime(0.32, startAt + 0.015);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.22);
+
+      oscillator.connect(noteGain);
+      noteGain.connect(masterGain);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + 0.26);
+    });
+
+    window.setTimeout(function () {
+      audioContext.close().catch(function () {});
+    }, 1900);
+  }
+
+  function launchConfetti() {
+    const context = winnerConfetti.getContext('2d');
+    if (!context) return;
+
+    stopConfetti();
+    winnerConfetti.hidden = false;
+    winnerConfetti.width = window.innerWidth;
+    winnerConfetti.height = window.innerHeight;
+
+    const colors = ['#f2a20c', '#0f8b5f', '#38bdf8', '#f43f5e', '#a855f7', '#ffffff', '#fde047'];
+    const bursts = [
+      { x: winnerConfetti.width * 0.2, y: winnerConfetti.height * 0.28 },
+      { x: winnerConfetti.width * 0.5, y: winnerConfetti.height * 0.22 },
+      { x: winnerConfetti.width * 0.8, y: winnerConfetti.height * 0.3 },
+      { x: winnerConfetti.width * 0.5, y: winnerConfetti.height * 0.5 }
+    ];
+    const particles = Array.from({ length: 320 }, function (_, index) {
+      const burst = bursts[index % bursts.length];
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4 + Math.random() * 12;
+
+      return {
+        x: burst.x,
+        y: burst.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 5,
+        size: 6 + Math.random() * 10,
+        rotation: Math.random() * Math.PI,
+        rotationSpeed: -0.24 + Math.random() * 0.48,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1
+      };
+    });
+
+    function draw() {
+      context.clearRect(0, 0, winnerConfetti.width, winnerConfetti.height);
+
+      particles.forEach(function (particle) {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.22;
+        particle.vx *= 0.992;
+        particle.rotation += particle.rotationSpeed;
+        particle.alpha -= 0.006;
+
+        context.save();
+        context.globalAlpha = Math.max(particle.alpha, 0);
+        context.translate(particle.x, particle.y);
+        context.rotate(particle.rotation);
+        context.fillStyle = particle.color;
+        if (particle.size > 12) {
+          context.beginPath();
+          context.arc(0, 0, particle.size * 0.45, 0, Math.PI * 2);
+          context.fill();
+        } else {
+          context.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size * 0.58);
+        }
+        context.restore();
+      });
+
+      if (particles.some(function (particle) { return particle.alpha > 0; })) {
+        confettiAnimationId = requestAnimationFrame(draw);
+      } else {
+        stopConfetti();
+      }
+    }
+
+    draw();
+    confettiTimeoutId = window.setTimeout(stopConfetti, 4600);
+  }
+
+  function showRunningStage() {
+    document.body.classList.add('random-is-running');
+    randomRunningStage.hidden = false;
+  }
+
+  function hideRunningStage() {
+    document.body.classList.remove('random-is-running');
+    randomRunningStage.hidden = true;
+    randomRunningName.textContent = '-';
   }
 
   function showWinnerModal(name) {
     winnerModalName.textContent = name || '-';
     winnerModal.hidden = false;
     winnerModalClose.focus();
+    launchConfetti();
+    startWinnerMusic();
+    playWinnerSound();
   }
 
   function resetSelection() {
     clearTimer();
+    stopRandomMusic();
     hideWinnerModal();
+    stopConfetti();
+    hideRunningStage();
     activeIndex = -1;
     activeName.textContent = '-';
     statusText.textContent = 'พร้อมสุ่ม';
@@ -68,6 +504,7 @@
 
     activeCard.classList.add('active');
     activeName.textContent = names[nextIndex] || '-';
+    randomRunningName.textContent = names[nextIndex] || '-';
   }
 
   function renderNames(nextNames) {
@@ -120,6 +557,7 @@
       }
 
       statusText.textContent = 'พร้อมสุ่ม';
+      activeName.textContent = 'รายชื่อทั้งหมด ' + names.length + ' คน';
       toggleBtn.disabled = false;
     } catch (error) {
       console.error(error);
@@ -136,6 +574,8 @@
     if (isRunning || timerId || !names.length) return;
 
     hideWinnerModal();
+    startRandomMusic();
+    showRunningStage();
     namesGrid.querySelectorAll('.name-card').forEach(function (card) {
       card.classList.remove('winner');
     });
@@ -155,6 +595,8 @@
     if (!isRunning) return;
 
     clearTimer();
+    stopRandomMusic();
+    hideRunningStage();
     if (activeIndex < 0 && names.length) {
       setActiveIndex(Math.floor(Math.random() * names.length));
     }

@@ -203,6 +203,59 @@ body {
   box-shadow: 0 16px 34px rgba(242, 162, 12, 0.22);
 }
 
+.random-running-stage[hidden] {
+  display: none !important;
+}
+
+.random-running-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+  transform: translateY(clamp(44px, 8vh, 92px));
+}
+
+.random-running-label {
+  margin-bottom: 12px;
+  padding: 7px 14px;
+  color: #fff;
+  background: rgba(11, 111, 77, 0.82);
+  border-radius: 999px;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 900;
+  box-shadow: 0 12px 26px rgba(23, 32, 42, 0.18);
+}
+
+.random-running-name {
+  max-width: min(92vw, 980px);
+  padding: clamp(18px, 4vw, 38px) clamp(22px, 6vw, 58px);
+  text-align: center;
+  color: var(--rn-text);
+  background: rgba(255, 255, 255, 0.92);
+  border: 4px solid var(--rn-primary);
+  border-radius: 8px;
+  box-shadow: 0 34px 90px rgba(23, 32, 42, 0.32);
+  font-size: clamp(3.2rem, 10vw, 8rem);
+  font-weight: 900;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.random-is-running .random-grid {
+  filter: blur(3px);
+  opacity: 0.34;
+  transition: filter 0.16s ease, opacity 0.16s ease;
+}
+
+.random-is-running .random-display {
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .winner-modal[hidden] {
   display: none !important;
 }
@@ -221,16 +274,78 @@ body {
 
 .winner-modal-panel {
   width: min(100%, 780px);
+  position: relative;
   padding: clamp(28px, 7vw, 64px);
   text-align: center;
   background: #fff;
   border: 4px solid var(--rn-winner);
   border-radius: 8px;
   box-shadow: 0 34px 90px rgba(0, 0, 0, 0.32);
-  animation: winnerPop 0.24s ease-out;
+  overflow: hidden;
+  animation: winnerPop 0.24s ease-out, winnerGlow 1.2s ease-in-out infinite alternate;
+}
+
+.winner-modal-panel::before,
+.winner-modal-panel::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  background:
+    radial-gradient(circle, rgba(242, 162, 12, 0.34) 0 12%, transparent 13%),
+    radial-gradient(circle, rgba(15, 139, 95, 0.24) 0 11%, transparent 12%),
+    radial-gradient(circle, rgba(56, 189, 248, 0.28) 0 9%, transparent 10%);
+  background-position: 0 0, 42px 34px, 86px 18px;
+  background-size: 78px 78px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.winner-modal-panel::before {
+  top: -54px;
+  left: -42px;
+  animation: prizeSpark 1.6s linear infinite;
+}
+
+.winner-modal-panel::after {
+  right: -48px;
+  bottom: -56px;
+  animation: prizeSpark 1.8s linear infinite reverse;
+}
+
+.winner-celebration-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(72px, 13vw, 112px);
+  height: clamp(72px, 13vw, 112px);
+  margin-bottom: 10px;
+  color: #fff;
+  background: var(--rn-winner);
+  border: 5px solid #ffe08a;
+  border-radius: 999px;
+  box-shadow: 0 18px 34px rgba(242, 162, 12, 0.32);
+  animation: trophyBounce 0.9s ease-out both;
+}
+
+.winner-celebration-badge i {
+  font-size: clamp(2.6rem, 8vw, 4.8rem);
+}
+
+.winner-celebration-text {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 6px;
+  color: var(--rn-winner);
+  font-size: clamp(1.1rem, 3vw, 1.8rem);
+  font-weight: 900;
 }
 
 .winner-modal-label {
+  position: relative;
+  z-index: 1;
   margin-bottom: 14px;
   color: var(--rn-primary-dark);
   font-size: clamp(1.2rem, 3vw, 2rem);
@@ -238,6 +353,8 @@ body {
 }
 
 .winner-modal-name {
+  position: relative;
+  z-index: 1;
   margin-bottom: 26px;
   color: var(--rn-text);
   font-size: clamp(2.8rem, 9vw, 6.5rem);
@@ -247,6 +364,8 @@ body {
 }
 
 .winner-modal-close {
+  position: relative;
+  z-index: 1;
   min-width: 120px;
   min-height: 44px;
   border-radius: 8px;
@@ -259,6 +378,19 @@ body {
 .winner-modal-close:focus {
   background: var(--rn-primary-dark);
   color: #fff;
+}
+
+.winner-confetti[hidden] {
+  display: none !important;
+}
+
+.winner-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
 }
 
 .random-import-header {
@@ -275,6 +407,10 @@ body {
   border: 1px solid var(--rn-border);
   border-radius: 8px;
   box-shadow: 0 16px 34px rgba(23, 32, 42, 0.08);
+}
+
+.random-music-panel {
+  margin-top: 16px;
 }
 
 .random-import-form {
@@ -306,6 +442,39 @@ body {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes winnerGlow {
+  from {
+    box-shadow: 0 34px 90px rgba(0, 0, 0, 0.32), 0 0 0 rgba(242, 162, 12, 0);
+  }
+  to {
+    box-shadow: 0 34px 90px rgba(0, 0, 0, 0.32), 0 0 38px rgba(242, 162, 12, 0.48);
+  }
+}
+
+@keyframes prizeSpark {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.08);
+  }
+}
+
+@keyframes trophyBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.72) rotate(-8deg);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.08) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
   }
 }
 

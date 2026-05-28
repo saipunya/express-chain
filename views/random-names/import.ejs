@@ -54,6 +54,37 @@
               </div>
             </form>
           </section>
+
+          <section class="random-import-panel random-music-panel">
+            <% if (musicError) { %>
+              <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span><%= musicError %></span>
+              </div>
+            <% } %>
+
+            <% if (currentMusicExists) { %>
+              <div class="alert alert-success" role="status">
+                <i class="bi bi-music-note-beamed"></i>
+                <span>มีเพลงประกอบการสุ่มแล้ว <%= musicCount %> เพลง อัปโหลดใหม่จะเพิ่มเข้าในคลังเพลง</span>
+              </div>
+            <% } %>
+
+            <form action="/random-names/import/music" method="post" enctype="multipart/form-data" class="random-import-form">
+              <div>
+                <label for="musicFiles" class="form-label">เพลงประกอบตอนสุ่ม</label>
+                <input id="musicFiles" type="file" name="musicFiles" class="form-control form-control-lg" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.webm" multiple required>
+              </div>
+
+              <div class="random-import-actions">
+                <button type="submit" class="btn random-action-btn random-submit-btn">
+                  <i class="bi bi-music-note-beamed"></i>
+                  <span>อัปโหลดเพลง</span>
+                </button>
+                <a href="/random-names" class="btn random-cancel-btn">กลับหน้าสุ่ม</a>
+              </div>
+            </form>
+          </section>
         </div>
       </div>
     </main>

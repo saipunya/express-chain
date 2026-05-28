@@ -8,25 +8,8 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'random-names');
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.webm']);
 
 const fallbackSources = {
-  staff: {
-    label: 'พนักงาน',
-    names: [
-      'อารีย์',
-      'กิตติ',
-      'สุภาพร',
-      'ณัฐวุฒิ',
-      'ปรียา',
-      'ศิริชัย',
-      'มนัสนันท์',
-      'ธนพล',
-      'วราภรณ์',
-      'ชลธิชา',
-      'พงศกร',
-      'นภัสสร'
-    ]
-  },
   empty: {
-    label: 'ชุดว่าง',
+    label: 'ยังไม่มีรายชื่อ',
     names: []
   }
 };
@@ -340,7 +323,7 @@ exports.index = (req, res) => {
   res.render('random-names/index', {
     title: 'ระบบสุ่มรายชื่อ',
     sources,
-    defaultSource: sources[0] ? sources[0].value : 'staff',
+    defaultSource: sources[0] ? sources[0].value : 'empty',
     importStatus: req.query.imported === '1' ? 'นำเข้าไฟล์ Word สำเร็จ' : '',
     musicStatus: req.query.music === '1' ? 'อัปโหลดเพลงสุ่มสำเร็จ' : '',
     randomMusicUrls: getRandomMusicUrls()

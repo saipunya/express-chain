@@ -238,24 +238,21 @@
       <span>จำนวนผู้โดยสาร <strong><%= item.passenger_count != null ? item.passenger_count : '-' %></strong> คน</span>
     </div>
 
-    <% const hasEstimatedCosts = item.transport_type === 'official_vehicle' || Number(item.estimated_allowance) > 0 || Number(item.estimated_lodging) > 0 || Number(item.estimated_fuel) > 0; %>
-    <% if (hasEstimatedCosts) { %>
-      <div class="section-title">ประมาณการค่าใช้จ่าย</div>
-      <table class="field-table">
-        <tr>
-          <td class="label">ค่าเบี้ยเลี้ยง (บาท)</td>
-          <td><strong><%= item.estimated_allowance ?? '-' %></strong></td>
-        </tr>
-        <tr>
-          <td class="label">ค่าที่พัก (บาท)</td>
-          <td><strong><%= item.estimated_lodging ?? '-' %></strong></td>
-        </tr>
-        <tr>
-          <td class="label">ค่าพาหนะ/น้ำมันเชื้อเพลิง (บาท)</td>
-          <td><strong><%= item.estimated_fuel ?? '-' %></strong></td>
-        </tr>
-      </table>
-    <% } %>
+    <div class="section-title">ประมาณการค่าใช้จ่าย</div>
+    <table class="field-table">
+      <tr>
+        <td class="label">เบี้ยเลี้ยง</td>
+        <td><strong><%= item.estimated_allowance ?? '-' %></strong> บาท</td>
+      </tr>
+      <tr>
+        <td class="label">ค่าที่พัก</td>
+        <td><strong><%= item.estimated_lodging ?? '-' %></strong> บาท</td>
+      </tr>
+      <tr>
+        <td class="label">ค่าน้ำมันเชื้อเพลิง/ค่าพาหนะ</td>
+        <td><strong><%= item.estimated_fuel ?? '-' %></strong> บาท</td>
+      </tr>
+    </table>
 
     <div style="margin-top: 32px; display: flex; flex-direction: column; align-items: flex-end;">
       <div style="min-width: 320px; text-align: center;">

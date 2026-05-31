@@ -5,6 +5,8 @@ const bigmeetUpload = require('../middleware/bigmeetUpload');
 
 // List
 router.get('/', bigmeetController.list);
+router.get('/summary', bigmeetController.summaryByFiscalYear);
+router.get('/summary/detail', bigmeetController.summaryDetail);
 
 // API endpoints for AJAX
 router.get('/api/list', bigmeetController.apiList);

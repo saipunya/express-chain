@@ -223,10 +223,173 @@ function fyRangeToIso(fyBE) {
   const endCEYear = fy - 543;
 
   return {
-    start: `${startCEYear}-09-01`,
-    end: `${endCEYear}-08-31`,
+    start: `${startCEYear}-10-01`,
+    end: `${endCEYear}-09-30`,
     fy,
   };
+}
+
+function fyAccountingEndRangeToIso(fyBE) {
+  const fy = parseInt(fyBE, 10);
+  if (!fy || Number.isNaN(fy)) return null;
+
+  const startCEYear = fy - 544;
+  const endCEYear = fy - 543;
+
+  return {
+    start: `${startCEYear}-05-31`,
+    end: `${endCEYear}-04-30`,
+    fy,
+  };
+}
+
+function isoFromMonthDayInAccountingRange(monthDay, range) {
+  const md = normalizeText(monthDay);
+  if (!/^\d{2}-\d{2}$/.test(md) || !range) return null;
+  const startMonthDay = range.start.slice(5);
+  const endMonthDay = range.end.slice(5);
+  const startYear = range.start.slice(0, 4);
+  const endYear = range.end.slice(0, 4);
+
+  if (md >= startMonthDay) return `${startYear}-${md}`;
+  if (md <= endMonthDay) return `${endYear}-${md}`;
+  return null;
+}
+
+function getCoopSummaryType(item = {}) {
+  if (item.coop_group === 'กลุ่มเกษตรกร') return 'farmer';
+  if (item.coop_group === 'สหกรณ์' && item.in_out_group === 'ใน') return 'agri';
+  return 'non_agri';
+}
+
+function incrementSummaryType(summary, coopType, suffix) {
+  if (coopType === 'agri') summary[`agri${suffix}`] += 1;
+  if (coopType === 'non_agri') summary[`nonAgri${suffix}`] += 1;
+  if (coopType === 'farmer') summary[`farmer${suffix}`] += 1;
+}
+
+const summaryTypeLabels = {
+  agri: 'สหกรณ์ในภาค',
+  non_agri: 'สหกรณ์นอกภาค',
+  farmer: 'กลุ่มเกษตรกร',
+};
+
+function formatThaiDate(value) {
+  if (!value) return '-';
+  const d = value instanceof Date ? new Date(value) : new Date(String(value).includes('T') ? String(value) : `${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+async function buildFiscalYearMeetingSummary(fy) {
+  const range = fyRangeToIso(fy);
+  const accountingRange = fyAccountingEndRangeToIso(fy);
+  if (!range || !accountingRange) return null;
+
+  const [activeCoops] = await db.query(`
+    SELECT c.c_code, c.c_name, TRIM(c.end_date) AS end_date, TRIM(c.end_day) AS end_day,
+           REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
+           c.coop_group
+    FROM active_coop c
+    WHERE c.c_status = 'ดำเนินการ'
+    ORDER BY c.c_code ASC
+  `);
+
+  const [meetingRows] = await db.query(`
+    SELECT b.*, c.c_name, TRIM(c.end_day) AS end_day,
+           REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
+           c.coop_group
+    FROM bigmeet b
+    LEFT JOIN active_coop c ON b.big_code = c.c_code
+    WHERE (
+      b.big_date BETWEEN ? AND ?
+      OR (
+        b.big_meeting_status = 'not_met'
+        AND b.big_deadline_date BETWEEN ? AND ?
+      )
+    )
+    ORDER BY b.big_date DESC, b.big_id DESC
+  `, [range.start, range.end, range.start, range.end]);
+
+  const summary = {
+    fiscalYear: range.fy,
+    range: { start: range.start, end: range.end },
+    accountingRange: { start: accountingRange.start, end: accountingRange.end },
+    totalCoopsInList: 0,
+    agriTotal: 0,
+    nonAgriTotal: 0,
+    farmerTotal: 0,
+    metInFiscalYear: 0,
+    notMetInFiscalYear: 0,
+    agriMet: 0,
+    agriNotMet: 0,
+    nonAgriMet: 0,
+    nonAgriNotMet: 0,
+    farmerMet: 0,
+    farmerNotMet: 0,
+  };
+
+  const requiredByCode = new Map();
+  activeCoops.forEach((coop) => {
+    const monthDay = deriveMonthDayFromCoop(coop);
+    const fiscalEndDate = isoFromMonthDayInAccountingRange(monthDay, accountingRange);
+    if (!fiscalEndDate) return;
+
+    const coopType = getCoopSummaryType(coop);
+    requiredByCode.set(normalizeText(coop.c_code), {
+      ...coop,
+      fiscalEndDate,
+      fiscalEndDateText: formatThaiDate(fiscalEndDate),
+      coopType,
+      typeLabel: summaryTypeLabels[coopType] || coopType,
+    });
+    summary.totalCoopsInList += 1;
+    incrementSummaryType(summary, coopType, 'Total');
+  });
+
+  const latestMeetingByCode = new Map();
+  meetingRows.forEach((item) => {
+    const code = normalizeText(item.big_code);
+    if (!requiredByCode.has(code)) return;
+    if (String(item.big_meeting_status || '') === 'not_met') return;
+    if (!latestMeetingByCode.has(code)) latestMeetingByCode.set(code, item);
+  });
+
+  latestMeetingByCode.forEach((item, code) => {
+    const required = requiredByCode.get(code);
+    summary.metInFiscalYear += 1;
+    incrementSummaryType(summary, required.coopType, 'Met');
+  });
+
+  requiredByCode.forEach((required, code) => {
+    if (latestMeetingByCode.has(code)) return;
+    summary.notMetInFiscalYear += 1;
+    incrementSummaryType(summary, required.coopType, 'NotMet');
+  });
+
+  const items = Array.from(requiredByCode.entries()).map(([code, required]) => {
+    const meeting = latestMeetingByCode.get(code) || null;
+    return {
+      ...required,
+      big_code: code,
+      isMet: Boolean(meeting),
+      meetingDate: meeting ? normalizeDateOnly(meeting.big_date) : null,
+      meetingDateText: meeting ? formatThaiDate(meeting.big_date) : '-',
+      meetingStatus: meeting ? meeting.big_meeting_status : 'not_met',
+      reason: meeting ? meeting.big_reason : null,
+      note: meeting ? meeting.big_note : null,
+      saveBy: meeting ? meeting.big_saveby : null,
+    };
+  });
+
+  items.sort((a, b) => {
+    if (a.isMet !== b.isMet) return a.isMet ? -1 : 1;
+    const dateA = a.meetingDate ? new Date(`${a.meetingDate}T00:00:00`).getTime() : 0;
+    const dateB = b.meetingDate ? new Date(`${b.meetingDate}T00:00:00`).getTime() : 0;
+    if (dateA !== dateB) return dateB - dateA;
+    return String(a.c_name || '').localeCompare(String(b.c_name || ''), 'th');
+  });
+
+  return { summary, items };
 }
 
 function detectMeetingDate(row) {
@@ -515,77 +678,53 @@ module.exports = {
   async summaryByFiscalYear(req, res) {
     try {
       const { fy } = req.query;
-      const range = fyRangeToIso(fy);
-      if (!range) {
+      const result = await buildFiscalYearMeetingSummary(fy);
+      if (!result) {
         return res.status(400).json({ success: false, error: 'Invalid fiscal year (fy)' });
       }
 
-      const [itemsWithTypes] = await db.query(`
-        SELECT b.*, ${budgetYearSqlExpr('b')} AS big_budget_year, c.c_name, TRIM(c.end_day) AS end_day,
-               REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
-               c.coop_group
-        FROM bigmeet b
-        LEFT JOIN active_coop c ON b.big_code = c.c_code
-        ORDER BY b.big_id DESC
-      `);
-
-      const summary = {
-        fiscalYear: range.fy,
-        range: { start: range.start, end: range.end },
-        totalCoopsInList: 0,
-        metInFiscalYear: 0,
-        notMetInFiscalYear: 0,
-        agriMet: 0,
-        agriNotMet: 0,
-        nonAgriMet: 0,
-        nonAgriNotMet: 0,
-        farmerMet: 0,
-        farmerNotMet: 0,
-      };
-
-      itemsWithTypes.forEach((item) => {
-        const sameFiscalYear = String(item.big_budget_year || '') === String(range.fy);
-        const isMet = String(item.big_meeting_status || '') !== 'not_met';
-
-        if (!sameFiscalYear) return;
-
-        summary.totalCoopsInList += 1;
-
-        let coopType;
-        if (item.coop_group === 'กลุ่มเกษตรกร') {
-          coopType = 'farmer';
-        } else if (item.coop_group === 'สหกรณ์') {
-          if (item.in_out_group === 'ใน') {
-            coopType = 'agri';
-          } else if (item.in_out_group === 'นอก') {
-            coopType = 'non_agri';
-          } else {
-            coopType = 'non_agri';
-          }
-        } else {
-          coopType = 'non_agri';
-        }
-
-        if (sameFiscalYear && isMet) {
-          summary.metInFiscalYear += 1;
-          if (coopType === 'agri') summary.agriMet += 1;
-          if (coopType === 'non_agri') summary.nonAgriMet += 1;
-          if (coopType === 'farmer') summary.farmerMet += 1;
-        } else if (sameFiscalYear) {
-          summary.notMetInFiscalYear += 1;
-          if (coopType === 'agri') summary.agriNotMet += 1;
-          if (coopType === 'non_agri') summary.nonAgriNotMet += 1;
-          if (coopType === 'farmer') summary.farmerNotMet += 1;
-        }
-      });
-
       return res.json({
         success: true,
-        data: summary,
+        data: result.summary,
       });
     } catch (err) {
       console.error('bigmeet:summaryByFiscalYear', err);
       res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async summaryDetail(req, res) {
+    try {
+      const fy = req.query.fy || getCurrentBudgetYear();
+      const type = normalizeText(req.query.type);
+      const status = normalizeText(req.query.status);
+      const validTypes = ['agri', 'non_agri', 'farmer'];
+      const validStatuses = ['met', 'not_met'];
+
+      const result = await buildFiscalYearMeetingSummary(fy);
+      if (!result || !validTypes.includes(type) || !validStatuses.includes(status)) {
+        return res.status(400).render('error_page', { message: 'Invalid summary detail filter' });
+      }
+
+      const items = result.items.filter((item) => {
+        const matchesType = item.coopType === type;
+        const matchesStatus = status === 'met' ? item.isMet : !item.isMet;
+        return matchesType && matchesStatus;
+      });
+
+      return res.render('bigmeet/summary-detail', {
+        title: 'รายละเอียดภาพรวมประชุมใหญ่',
+        fiscalYear: result.summary.fiscalYear,
+        summary: result.summary,
+        items,
+        type,
+        status,
+        typeLabel: summaryTypeLabels[type],
+        statusLabel: status === 'met' ? 'มีการประชุมแล้ว' : 'ยังไม่พบผลประชุม',
+      });
+    } catch (err) {
+      console.error('bigmeet:summaryDetail', err);
+      res.status(500).render('error_page', { message: 'Internal server error' });
     }
   },
 

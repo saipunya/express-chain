@@ -36,19 +36,125 @@
   const currentBuddhistYear = toBuddhistYear(item && item.big_endyear);
 %>
 
-<div class="container-fluid mt-4">
+<style>
+  .bigmeet-form-page {
+    color: #172033;
+  }
+
+  .bigmeet-form-card {
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .1);
+  }
+
+  .bigmeet-form-header {
+    background: linear-gradient(135deg, #0f766e 0%, #166534 60%, #365314 100%);
+    color: #fff;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .bigmeet-form-title {
+    font-size: clamp(1.2rem, 2vw, 1.65rem);
+    letter-spacing: 0;
+  }
+
+  .bigmeet-form-subtitle {
+    color: rgba(255, 255, 255, .76);
+  }
+
+  .bigmeet-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+  }
+
+  .bigmeet-section + .bigmeet-section {
+    margin-top: 1rem;
+  }
+
+  .bigmeet-section-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    color: #0f766e;
+    font-weight: 800;
+  }
+
+  .bigmeet-section-title .bi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  .bigmeet-form-page .form-control,
+  .bigmeet-form-page .form-select {
+    min-height: 42px;
+    border-radius: 8px;
+    border-color: #dbe4ef;
+  }
+
+  .bigmeet-form-page textarea.form-control {
+    min-height: 96px;
+  }
+
+  .bigmeet-readonly {
+    background: #f8fafc;
+  }
+
+  .bigmeet-footer-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 1.25rem -1.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, .94);
+    border-top: 1px solid #e2e8f0;
+    backdrop-filter: blur(10px);
+  }
+
+  .bigmeet-action {
+    border-radius: 8px;
+    font-weight: 700;
+    min-height: 40px;
+  }
+
+  @media (max-width: 767.98px) {
+    .bigmeet-form-header,
+    .bigmeet-form-card .card-body {
+      padding: 1rem;
+    }
+
+    .bigmeet-footer-actions {
+      margin-left: -1rem;
+      margin-right: -1rem;
+      margin-bottom: -1rem;
+    }
+  }
+</style>
+
+<div class="container-fluid mt-4 bigmeet-form-page">
   <div class="row">
     <div class="col-12">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">
-            <i class="fas fa-users me-2"></i><%= (item && item.big_id) ? 'แก้ไขทะเบียนประชุมใหญ่' : 'บันทึกทะเบียนประชุมใหญ่' %>
-          </h5>
+      <div class="card bigmeet-form-card">
+        <div class="bigmeet-form-header">
+          <div class="small text-uppercase fw-bold mb-1 bigmeet-form-subtitle">Big Meeting Registry</div>
+          <h1 class="mb-1 fw-bold bigmeet-form-title">
+            <i class="bi bi-people-fill me-2"></i><%= (item && item.big_id) ? 'แก้ไขทะเบียนประชุมใหญ่' : 'บันทึกทะเบียนประชุมใหญ่' %>
+          </h1>
+          <div class="small bigmeet-form-subtitle">บันทึกข้อมูลสำคัญให้ครบถ้วน ระบบจะช่วยคำนวณวันสิ้นปีบัญชีและกำหนด 150 วันอัตโนมัติ</div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
           <% if (Array.isArray(errors) && errors.length) { %>
             <div class="alert alert-danger" role="alert">
-              <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>กรุณาตรวจสอบข้อมูล:</h6>
+              <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>กรุณาตรวจสอบข้อมูล:</h6>
               <ul class="mb-0">
                 <% errors.forEach(err => { %><li><%= err %></li><% }) %>
               </ul>
@@ -56,6 +162,8 @@
           <% } %>
 
           <form action="<%= (item && item.big_id) ? '/bigmeet/update/' + item.big_id : '/bigmeet' %>" method="post" id="bigmeetForm">
+            <section class="bigmeet-section">
+              <div class="bigmeet-section-title"><i class="bi bi-building"></i><span>ข้อมูลหน่วยงาน</span></div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -79,7 +187,10 @@
             </div>
 
             <input type="hidden" id="big_code" name="big_code" value="<%= (item && item.big_code) || '' %>">
+            </section>
 
+            <section class="bigmeet-section">
+              <div class="bigmeet-section-title"><i class="bi bi-journal-check"></i><span>รอบบัญชีและประเภท</span></div>
             <div class="row">
               <div class="col-md-4">
                 <div class="mb-3">
@@ -104,7 +215,7 @@
               <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label">ปีงบประมาณ</label>
-                  <input type="text" class="form-control" value="<%= currentBudgetYear %>" readonly>
+                  <input type="text" class="form-control bigmeet-readonly" value="<%= currentBudgetYear %>" readonly>
                 </div>
               </div>
             </div>
@@ -113,17 +224,20 @@
               <div class="col-md-4">
                 <div class="mb-3">
                   <label for="big_fiscal_end_date" class="form-label">วันสิ้นปีบัญชี</label>
-                  <input type="date" class="form-control" id="big_fiscal_end_date" name="big_fiscal_end_date" value="<%= toInputDate(item && item.big_fiscal_end_date) %>" readonly>
+                  <input type="date" class="form-control bigmeet-readonly" id="big_fiscal_end_date" name="big_fiscal_end_date" value="<%= toInputDate(item && item.big_fiscal_end_date) %>" readonly>
                   <div class="form-text">ระบบคำนวณจาก `active_coop.end_date` ตามปีปัจจุบันอัตโนมัติ</div>
                 </div>
               </div>
             </div>
+            </section>
 
+            <section class="bigmeet-section">
+              <div class="bigmeet-section-title"><i class="bi bi-calendar2-check"></i><span>สถานะการประชุม</span></div>
             <div class="row">
               <div class="col-md-4">
                 <div class="mb-3">
                   <label for="big_deadline_date" class="form-label">กำหนดวันสุดท้ายของการประชุมใหญ่ 150 วัน</label>
-                  <input type="date" class="form-control" id="big_deadline_date" name="big_deadline_date" value="<%= toInputDate(item && item.big_deadline_date) %>" readonly>
+                  <input type="date" class="form-control bigmeet-readonly" id="big_deadline_date" name="big_deadline_date" value="<%= toInputDate(item && item.big_deadline_date) %>" readonly>
                 </div>
               </div>
               <div class="col-md-4">
@@ -147,7 +261,10 @@
                 </div>
               </div>
             </div>
+            </section>
 
+            <section class="bigmeet-section">
+              <div class="bigmeet-section-title"><i class="bi bi-chat-left-text"></i><span>หมายเหตุ</span></div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
@@ -162,17 +279,18 @@
                 </div>
               </div>
             </div>
+            </section>
 
             <input type="hidden" name="big_saveby" value="<%= locals.user ? (locals.user.username || locals.user.name) : '' %>">
             <% const now = new Date(); const todayLocal = [now.getFullYear(), ('0' + (now.getMonth() + 1)).slice(-2), ('0' + now.getDate()).slice(-2)].join('-'); %>
             <input type="hidden" name="big_savedate" value="<%= todayLocal %>">
 
-            <div class="d-flex justify-content-between mt-4">
-              <a href="/bigmeet" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>กลับ
+            <div class="d-flex justify-content-between gap-2 bigmeet-footer-actions">
+              <a href="/bigmeet" class="btn btn-outline-secondary bigmeet-action">
+                <i class="bi bi-arrow-left me-2"></i>กลับ
               </a>
-              <button type="submit" class="btn btn-primary" id="submitBtn">
-                <i class="fas fa-save me-2"></i>บันทึกข้อมูล
+              <button type="submit" class="btn btn-success bigmeet-action" id="submitBtn">
+                <i class="bi bi-save me-2"></i>บันทึกข้อมูล
               </button>
             </div>
           </form>
@@ -326,7 +444,7 @@ form.addEventListener('submit', async function(e) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังบันทึก...';
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>กำลังบันทึก...';
 
   try {
     const formData = new FormData(form);
@@ -364,7 +482,7 @@ form.addEventListener('submit', async function(e) {
     alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>บันทึกข้อมูล';
+    submitBtn.innerHTML = '<i class="bi bi-save me-2"></i>บันทึกข้อมูล';
   }
 });
 

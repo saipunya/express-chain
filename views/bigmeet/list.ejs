@@ -89,47 +89,245 @@
   const typeLabel = (value) => typeLabels[value] || value || '-';
 %>
 
-<div class="container-fluid mt-4">
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
+<style>
+  .bigmeet-page {
+    color: #172033;
+  }
+
+  .bigmeet-hero {
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f766e 0%, #166534 55%, #365314 100%);
+    box-shadow: 0 18px 42px rgba(15, 118, 110, .18);
+  }
+
+  .bigmeet-hero .card-header,
+  .bigmeet-hero .card-body {
+    background: transparent;
+    color: #fff;
+  }
+
+  .bigmeet-title {
+    font-size: clamp(1.25rem, 2vw, 1.85rem);
+    letter-spacing: 0;
+  }
+
+  .bigmeet-hero-subtitle {
+    color: rgba(255, 255, 255, .78);
+  }
+
+  .bigmeet-action {
+    border-radius: 8px;
+    font-weight: 700;
+    min-height: 38px;
+  }
+
+  .bigmeet-panel {
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .13);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  }
+
+  .bigmeet-panel .form-text,
+  .bigmeet-panel .text-muted,
+  .bigmeet-panel label {
+    color: rgba(255, 255, 255, .78) !important;
+  }
+
+  .bigmeet-panel .form-control,
+  .bigmeet-panel .form-select {
+    border: 0;
+    border-radius: 8px;
+    min-height: 42px;
+  }
+
+  .bigmeet-stat {
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .16);
+    padding: 1rem;
+    min-height: 104px;
+  }
+
+  .bigmeet-stat-label {
+    color: rgba(255, 255, 255, .72);
+    font-size: .85rem;
+  }
+
+  .bigmeet-stat-value {
+    color: #fff;
+    font-size: clamp(1.45rem, 3vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .bigmeet-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+  }
+
+  .bigmeet-breakdown-item {
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .12);
+    padding: .7rem;
+  }
+
+  .bigmeet-breakdown-title {
+    color: rgba(255, 255, 255, .82);
+    font-weight: 700;
+    font-size: .82rem;
+  }
+
+  .bigmeet-breakdown-count {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .bigmeet-breakdown-meta {
+    color: rgba(255, 255, 255, .7);
+    font-size: .78rem;
+  }
+
+  .bigmeet-breakdown-actions {
+    display: flex;
+    gap: .4rem;
+    margin-top: .6rem;
+  }
+
+  .bigmeet-breakdown-link {
+    flex: 1;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .92);
+    color: #14532d;
+    font-size: .78rem;
+    font-weight: 800;
+    padding: .38rem .45rem;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .bigmeet-breakdown-link:hover {
+    background: #fff;
+    color: #047857;
+  }
+
+  .bigmeet-filter-card,
+  .bigmeet-table-card {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .08);
+  }
+
+  .bigmeet-filter-card .input-group-text,
+  .bigmeet-filter-card .form-control,
+  .bigmeet-filter-card .form-select {
+    border-radius: 8px;
+    min-height: 42px;
+  }
+
+  .bigmeet-table {
+    --bs-table-hover-bg: #f0fdfa;
+  }
+
+  .bigmeet-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: .82rem;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .bigmeet-table tbody td {
+    border-color: #eef2f7;
+  }
+
+  .bigmeet-code-chip,
+  .bigmeet-index-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    font-weight: 700;
+  }
+
+  .bigmeet-index-chip {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bigmeet-code-chip {
+    padding: .2rem .55rem;
+    font-size: .78rem;
+  }
+
+  .bigmeet-note {
+    max-width: 260px;
+    color: #64748b;
+  }
+
+  @media (max-width: 767.98px) {
+    .bigmeet-hero .card-header {
+      padding: 1rem;
+    }
+
+    .bigmeet-stat {
+      min-height: 86px;
+    }
+
+    .bigmeet-breakdown {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="container-fluid mt-4 bigmeet-page">
+  <div class="card shadow-sm mb-4 bigmeet-hero">
+    <div class="card-header border-0 p-4">
       <div class="row align-items-center">
         <div class="col-md-7">
-          <h5 class="m-0 fw-bold text-primary">
-            <i class="fas fa-users me-2"></i>ทะเบียนคุมประชุมใหญ่
-          </h5>
-          <div class="text-muted small mt-1">ระบบจัดเก็บการประชุมใหญ่ของสหกรณ์และกลุ่มเกษตรกร</div>
+          <div class="small text-uppercase fw-bold mb-1 bigmeet-hero-subtitle">Big Meeting Registry</div>
+          <h1 class="m-0 fw-bold bigmeet-title">
+            <i class="bi bi-people-fill me-2"></i>ทะเบียนคุมประชุมใหญ่
+          </h1>
+          <div class="small mt-2 bigmeet-hero-subtitle">ติดตามสถานะการประชุมใหญ่ของสหกรณ์และกลุ่มเกษตรกรแบบอ่านง่ายในหน้าเดียว</div>
         </div>
         <div class="col-md-5 text-md-end mt-3 mt-md-0">
-          <a href="/dashboard" class="btn btn-secondary btn-sm me-2">
-            <i class="fas fa-arrow-left me-1"></i>กลับหน้าหลัก
+          <a href="/dashboard" class="btn btn-light btn-sm me-2 bigmeet-action">
+            <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
           </a>
-          <a href="/bigmeet/new" class="btn btn-success btn-sm">
-            <i class="fas fa-plus me-1"></i>เพิ่มข้อมูล
+          <a href="/bigmeet/new" class="btn btn-warning btn-sm bigmeet-action">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มข้อมูล
           </a>
         </div>
       </div>
     </div>
-    <div class="card-body">
+    <div class="card-body px-4 pb-4 pt-0">
       <% if (message) { %>
-        <div class="alert alert-info mb-3">
-          <i class="fas fa-info-circle me-2"></i><%= message %>
+        <div class="alert alert-light mb-3">
+          <i class="bi bi-info-circle me-2"></i><%= message %>
         </div>
       <% } %>
 
       <div class="row g-3">
         <div class="col-12 col-xl-5">
-          <div class="border rounded-3 p-3 bg-light h-100">
+          <div class="p-3 bigmeet-panel">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="mb-0 text-primary"><i class="fas fa-file-excel me-2"></i>นำเข้าจาก Excel</h6>
-              <span class="badge bg-primary">รองรับ .xls / .xlsx</span>
+              <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-spreadsheet me-2"></i>นำเข้าจาก Excel</h6>
+              <span class="badge text-bg-light">.xls / .xlsx</span>
             </div>
             <form action="/bigmeet/import" method="post" enctype="multipart/form-data" class="row g-2">
               <div class="col-12">
                 <input type="file" name="file" class="form-control" accept=".xls,.xlsx" required>
               </div>
               <div class="col-12">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-upload me-1"></i>นำเข้าข้อมูล
+                <button type="submit" class="btn btn-light fw-bold bigmeet-action">
+                  <i class="bi bi-upload me-1"></i>นำเข้าข้อมูล
                 </button>
               </div>
             </form>
@@ -140,31 +338,83 @@
         </div>
 
         <div class="col-12 col-xl-7">
-          <div class="border rounded-3 p-3 bg-light h-100">
+          <div class="p-3 bigmeet-panel">
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+              <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard2-data me-2"></i>ภาพรวมปีงบประมาณ</h6>
+              <select id="fySelect" class="form-select form-select-sm" style="max-width: 130px;" aria-label="เลือกปีงบประมาณ"></select>
+            </div>
             <div class="row text-center g-2">
               <div class="col-12 col-md-4">
-                <div class="text-muted small">จำนวนทั้งหมด</div>
-                <div class="fw-bold" id="sumTotal">-</div>
+                <div class="bigmeet-stat">
+                  <div class="bigmeet-stat-label">ต้องประชุม</div>
+                  <div class="bigmeet-stat-value" id="sumTotal">-</div>
+                </div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">ประชุมแล้ว</div>
-                <div class="fw-bold text-success" id="sumMet">-</div>
+                <div class="bigmeet-stat">
+                  <div class="bigmeet-stat-label">บันทึกประชุมแล้ว</div>
+                  <div class="bigmeet-stat-value" id="sumMet">-</div>
+                </div>
               </div>
               <div class="col-12 col-md-4">
-                <div class="text-muted small">ยังไม่ได้ประชุม</div>
-                <div class="fw-bold text-danger" id="sumNotMet">-</div>
+                <div class="bigmeet-stat">
+                  <div class="bigmeet-stat-label">ยังไม่พบผลประชุม</div>
+                  <div class="bigmeet-stat-value" id="sumNotMet">-</div>
+                </div>
               </div>
             </div>
-            <div class="text-center small text-muted mt-2" id="sumRange">-</div>
+            <div class="text-center small mt-3 bigmeet-hero-subtitle" id="sumRange">-</div>
+            <div class="bigmeet-breakdown mt-3" aria-label="แยกตามประเภทสถาบัน">
+              <div class="bigmeet-breakdown-item">
+                <div class="bigmeet-breakdown-title">สหกรณ์ในภาค</div>
+                <div class="bigmeet-breakdown-count" id="sumAgriTotal">-</div>
+                <div class="bigmeet-breakdown-meta"><span id="sumAgriMet">-</span> แล้ว / <span id="sumAgriNotMet">-</span> ยังไม่พบผล</div>
+                <div class="bigmeet-breakdown-actions">
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="agri" data-summary-status="met" href="/bigmeet/summary/detail?type=agri&status=met">ประชุมแล้ว</a>
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="agri" data-summary-status="not_met" href="/bigmeet/summary/detail?type=agri&status=not_met">ยังไม่ประชุม</a>
+                </div>
+              </div>
+              <div class="bigmeet-breakdown-item">
+                <div class="bigmeet-breakdown-title">สหกรณ์นอกภาค</div>
+                <div class="bigmeet-breakdown-count" id="sumNonAgriTotal">-</div>
+                <div class="bigmeet-breakdown-meta"><span id="sumNonAgriMet">-</span> แล้ว / <span id="sumNonAgriNotMet">-</span> ยังไม่พบผล</div>
+                <div class="bigmeet-breakdown-actions">
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="non_agri" data-summary-status="met" href="/bigmeet/summary/detail?type=non_agri&status=met">ประชุมแล้ว</a>
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="non_agri" data-summary-status="not_met" href="/bigmeet/summary/detail?type=non_agri&status=not_met">ยังไม่ประชุม</a>
+                </div>
+              </div>
+              <div class="bigmeet-breakdown-item">
+                <div class="bigmeet-breakdown-title">กลุ่มเกษตรกร</div>
+                <div class="bigmeet-breakdown-count" id="sumFarmerTotal">-</div>
+                <div class="bigmeet-breakdown-meta"><span id="sumFarmerMet">-</span> แล้ว / <span id="sumFarmerNotMet">-</span> ยังไม่พบผล</div>
+                <div class="bigmeet-breakdown-actions">
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="farmer" data-summary-status="met" href="/bigmeet/summary/detail?type=farmer&status=met">ประชุมแล้ว</a>
+                  <a class="bigmeet-breakdown-link" data-summary-link data-summary-type="farmer" data-summary-status="not_met" href="/bigmeet/summary/detail?type=farmer&status=not_met">ยังไม่ประชุม</a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
 
-        <div class="col-12">
+  <div class="card mb-4 bigmeet-filter-card">
+    <div class="card-body p-3 p-md-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+          <h2 class="h6 fw-bold mb-1">ค้นหาและกรองข้อมูล</h2>
+          <div class="small text-muted">เลือกเงื่อนไขแล้วระบบจะแสดงผลทันที</div>
+        </div>
+        <button id="clearFilters" class="btn btn-outline-secondary btn-sm bigmeet-action">
+          <i class="bi bi-x-lg me-1"></i>ล้างตัวกรอง
+        </button>
+      </div>
           <div class="row g-3 align-items-end">
             <div class="col-12 col-md-4">
               <label class="form-label small text-muted mb-1">ค้นหา</label>
               <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อสหกรณ์ หรือรหัส...">
               </div>
             </div>
@@ -192,14 +442,7 @@
                 <option value="not_met">ยังไม่ได้ประชุม</option>
               </select>
             </div>
-            <div class="col-12 col-md-2">
-              <button id="clearFilters" class="btn btn-outline-secondary w-100">
-                <i class="fas fa-times me-1"></i>ล้างตัวกรอง
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -209,10 +452,10 @@
     </div>
   </div>
 
-  <div class="card shadow-sm">
+  <div class="card bigmeet-table-card">
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle mb-0" width="100%" cellspacing="0">
+        <table class="table table-hover align-middle mb-0 bigmeet-table" width="100%" cellspacing="0">
           <thead class="table-light">
             <tr>
               <th class="text-center" style="width: 60px;">#</th>
@@ -376,10 +619,18 @@
       const matchesType = !typeFilter || String(item.big_type || '') === typeFilter;
       const matchesStatus = !statusFilter || String(item.big_meeting_status || '') === statusFilter;
       return matchesSearch && matchesYear && matchesType && matchesStatus;
-    });
+    }).sort(compareMeetingDateDesc);
 
     currentPage = 1;
     renderTable();
+  }
+
+  function compareMeetingDateDesc(a, b) {
+    const dateA = a.big_date ? new Date(a.big_date).getTime() : 0;
+    const dateB = b.big_date ? new Date(b.big_date).getTime() : 0;
+
+    if (dateA !== dateB) return dateB - dateA;
+    return Number(b.big_id || 0) - Number(a.big_id || 0);
   }
 
   function formatLocalDate(dateValue) {
@@ -393,6 +644,28 @@
     if (value === 'นอก') return 'นอกภาคเกษตร';
     if (value === 'กลุ่มเกษตรกร') return 'กลุ่มเกษตรกร';
     return value || '-';
+  }
+
+  function formatAccountingMonthDay(item) {
+    const monthDay = normalizeMonthDay(item.end_day || item.end_date);
+    if (!monthDay) return '-';
+
+    const monthNames = {
+      '01': 'มกราคม',
+      '02': 'กุมภาพันธ์',
+      '03': 'มีนาคม',
+      '04': 'เมษายน',
+      '05': 'พฤษภาคม',
+      '06': 'มิถุนายน',
+      '07': 'กรกฎาคม',
+      '08': 'สิงหาคม',
+      '09': 'กันยายน',
+      '10': 'ตุลาคม',
+      '11': 'พฤศจิกายน',
+      '12': 'ธันวาคม'
+    };
+    const [month, day] = monthDay.split('-');
+    return `${parseInt(day, 10)} ${monthNames[month] || month}`;
   }
 
   function formatStatusBadge(status) {
@@ -422,7 +695,7 @@
         <tr>
           <td colspan="${colSpan}" class="text-center py-5">
             <div class="text-muted">
-              <i class="fas fa-search fa-3x mb-3"></i>
+              <i class="bi bi-search display-5 d-block mb-3"></i>
               <div class="h5">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>
               <div>ลองปรับตัวกรองหรือคำค้นหา</div>
             </div>
@@ -436,7 +709,7 @@
     tbody.innerHTML = pageItems.map((item, index) => {
       const globalIndex = startIndex + index + 1;
       const name = escapeHtml(item.c_name || item.big_code || '-');
-      const code = escapeHtml(item.big_code || '-');
+      const accountingMonthDay = escapeHtml(formatAccountingMonthDay(item));
       const typeText = escapeHtml(formatType(item.big_type));
       const fiscalEndDate = formatLocalDate(getFiscalEndDate(item));
       const deadlineDate = formatLocalDate(getDeadlineDate(item));
@@ -444,10 +717,10 @@
 
       return `
         <tr data-id="${item.big_id}">
-          <td class="text-center"><span class="badge bg-primary rounded-pill">${globalIndex}</span></td>
+          <td class="text-center"><span class="bigmeet-index-chip">${globalIndex}</span></td>
           <td>
             <div class="fw-bold">${name}</div>
-            <small class="text-muted">รหัส: ${code}</small>
+            <span class="bigmeet-code-chip mt-1">ปีบัญชี: ${accountingMonthDay}</span>
           </td>
           <td class="text-center">${typeText}</td>
           <td class="text-center">${escapeHtml(normalizeYear(item.big_budget_year || item.big_endyear) || '-')}</td>
@@ -458,16 +731,16 @@
             <div>${meetingDate}</div>
             <small class="text-muted">${item.big_saveby ? escapeHtml(item.big_saveby) : ''}</small>
           </td>
-          <td>${formatNote(item)}</td>
+          <td><div class="bigmeet-note text-truncate-2">${formatNote(item)}</div></td>
           ${canEdit ? `
             <td class="text-center">
-              <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm" title="แก้ไข">
-                <i class="fas fa-edit"></i>
+              <a href="/bigmeet/edit/${item.big_id}" class="btn btn-outline-warning btn-sm bigmeet-action" title="แก้ไข">
+                <i class="bi bi-pencil-square"></i>
               </a>
             </td>
             <td class="text-center">
-              <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete(${item.big_id})" title="ลบ">
-                <i class="fas fa-trash"></i>
+              <button class="btn btn-outline-danger btn-sm bigmeet-action" onclick="confirmDelete(${item.big_id})" title="ลบ">
+                <i class="bi bi-trash"></i>
               </button>
             </td>
           ` : ''}
@@ -604,14 +877,26 @@
 
     const now = new Date();
     const nowBE = now.getFullYear() + 543;
-    const guessFY = (now.getMonth() + 1) >= 9 ? nowBE + 1 : nowBE;
+    const guessFY = (now.getMonth() + 1) >= 10 ? nowBE + 1 : nowBE;
     const fys = [guessFY - 1, guessFY, guessFY + 1].filter((v, i, a) => a.indexOf(v) === i);
 
     fySelect.innerHTML = fys.map(fy => `<option value="${fy}">${fy}</option>`).join('');
     fySelect.value = String(guessFY);
+    updateSummaryLinks(fySelect.value);
 
-    fySelect.addEventListener('change', () => loadFiscalYearSummary(fySelect.value));
+    fySelect.addEventListener('change', () => {
+      updateSummaryLinks(fySelect.value);
+      loadFiscalYearSummary(fySelect.value);
+    });
     loadFiscalYearSummary(fySelect.value);
+  }
+
+  function updateSummaryLinks(fy) {
+    document.querySelectorAll('[data-summary-link]').forEach((link) => {
+      const type = link.dataset.summaryType;
+      const status = link.dataset.summaryStatus;
+      link.href = `/bigmeet/summary/detail?fy=${encodeURIComponent(fy)}&type=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}`;
+    });
   }
 
   async function loadFiscalYearSummary(fy) {
@@ -624,6 +909,15 @@
       document.getElementById('sumTotal').textContent = d.totalCoopsInList;
       document.getElementById('sumMet').textContent = d.metInFiscalYear;
       document.getElementById('sumNotMet').textContent = d.notMetInFiscalYear;
+      document.getElementById('sumAgriTotal').textContent = d.agriTotal;
+      document.getElementById('sumAgriMet').textContent = d.agriMet;
+      document.getElementById('sumAgriNotMet').textContent = d.agriNotMet;
+      document.getElementById('sumNonAgriTotal').textContent = d.nonAgriTotal;
+      document.getElementById('sumNonAgriMet').textContent = d.nonAgriMet;
+      document.getElementById('sumNonAgriNotMet').textContent = d.nonAgriNotMet;
+      document.getElementById('sumFarmerTotal').textContent = d.farmerTotal;
+      document.getElementById('sumFarmerMet').textContent = d.farmerMet;
+      document.getElementById('sumFarmerNotMet').textContent = d.farmerNotMet;
 
       const fmt = (iso) => {
         if (!iso) return '-';
@@ -631,7 +925,7 @@
         return isNaN(dt.getTime()) ? iso : dt.toLocaleDateString('th-TH');
       };
       const rangeText = d.range
-        ? `ช่วงวันที่: ${fmt(d.range.start)} - ${fmt(d.range.end)}`
+        ? `ผลประชุม: ${fmt(d.range.start)} - ${fmt(d.range.end)}${d.accountingRange ? ` | ปีบัญชีที่ต้องประชุม: ${fmt(d.accountingRange.start)} - ${fmt(d.accountingRange.end)}` : ''}`
         : '-';
       document.getElementById('sumRange').textContent = rangeText;
     } catch (e) {
@@ -639,6 +933,10 @@
       document.getElementById('sumTotal').textContent = allItems.length;
       document.getElementById('sumMet').textContent = '-';
       document.getElementById('sumNotMet').textContent = '-';
+      ['sumAgriTotal', 'sumAgriMet', 'sumAgriNotMet', 'sumNonAgriTotal', 'sumNonAgriMet', 'sumNonAgriNotMet', 'sumFarmerTotal', 'sumFarmerMet', 'sumFarmerNotMet'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '-';
+      });
       document.getElementById('sumRange').textContent = 'โหลดสรุปไม่สำเร็จ';
     }
   }

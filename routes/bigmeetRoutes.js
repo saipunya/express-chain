@@ -7,6 +7,8 @@ const bigmeetUpload = require('../middleware/bigmeetUpload');
 router.get('/', bigmeetController.list);
 router.get('/summary', bigmeetController.summaryByFiscalYear);
 router.get('/summary/detail', bigmeetController.summaryDetail);
+router.get('/accounting-year-counts/detail', bigmeetController.accountingYearCountDetail);
+router.get('/accounting-year-counts', bigmeetController.accountingYearCounts);
 
 // API endpoints for AJAX
 router.get('/api/list', bigmeetController.apiList);

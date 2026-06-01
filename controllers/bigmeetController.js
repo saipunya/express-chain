@@ -237,8 +237,8 @@ function fyAccountingEndRangeToIso(fyBE) {
   const endCEYear = fy - 543;
 
   return {
-    start: `${startCEYear}-05-31`,
-    end: `${endCEYear}-04-30`,
+    start: `${startCEYear}-04-30`,
+    end: `${endCEYear}-03-31`,
     fy,
   };
 }
@@ -278,6 +278,72 @@ function formatThaiDate(value) {
   if (!value) return '-';
   const d = value instanceof Date ? new Date(value) : new Date(String(value).includes('T') ? String(value) : `${value}T00:00:00`);
   return Number.isNaN(d.getTime()) ? '-' : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatThaiMonthDay(monthDay) {
+  const md = normalizeText(monthDay);
+  if (!/^\d{2}-\d{2}$/.test(md)) return '-';
+  const monthNames = {
+    '01': 'มกราคม',
+    '02': 'กุมภาพันธ์',
+    '03': 'มีนาคม',
+    '04': 'เมษายน',
+    '05': 'พฤษภาคม',
+    '06': 'มิถุนายน',
+    '07': 'กรกฎาคม',
+    '08': 'สิงหาคม',
+    '09': 'กันยายน',
+    '10': 'ตุลาคม',
+    '11': 'พฤศจิกายน',
+    '12': 'ธันวาคม',
+  };
+  const [month, day] = md.split('-');
+  return `${parseInt(day, 10)} ${monthNames[month] || month}`;
+}
+
+async function buildAccountingYearCounts() {
+  const [activeCoops] = await db.query(`
+    SELECT c.c_code, c.c_name, TRIM(c.end_date) AS end_date, TRIM(c.end_day) AS end_day,
+           REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
+           c.coop_group
+    FROM active_coop c
+    WHERE c.c_status = 'ดำเนินการ'
+    ORDER BY c.c_code ASC
+  `);
+
+  const grouped = new Map();
+  activeCoops.forEach((coop) => {
+    const monthDay = deriveMonthDayFromCoop(coop);
+    if (!monthDay) return;
+
+    if (!grouped.has(monthDay)) {
+      grouped.set(monthDay, {
+        monthDay,
+        label: formatThaiMonthDay(monthDay),
+        total: 0,
+        agriTotal: 0,
+        nonAgriTotal: 0,
+        farmerTotal: 0,
+        items: [],
+      });
+    }
+
+    const row = grouped.get(monthDay);
+    const coopType = getCoopSummaryType(coop);
+    row.total += 1;
+    incrementSummaryType(row, coopType, 'Total');
+    row.items.push({
+      c_code: normalizeText(coop.c_code),
+      c_name: normalizeText(coop.c_name),
+      coopType,
+      typeLabel: summaryTypeLabels[coopType] || coopType,
+    });
+  });
+
+  return Array.from(grouped.values()).map((row) => ({
+    ...row,
+    items: row.items.sort((a, b) => String(a.c_name || '').localeCompare(String(b.c_name || ''), 'th')),
+  })).sort((a, b) => a.monthDay.localeCompare(b.monthDay));
 }
 
 async function buildFiscalYearMeetingSummary(fy) {
@@ -689,6 +755,62 @@ module.exports = {
       });
     } catch (err) {
       console.error('bigmeet:summaryByFiscalYear', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async accountingYearCounts(req, res) {
+    try {
+      const rows = await buildAccountingYearCounts();
+      return res.json({
+        success: true,
+        data: rows.map(({ items, ...row }) => row),
+        total: rows.reduce((sum, row) => sum + Number(row.total || 0), 0),
+      });
+    } catch (err) {
+      console.error('bigmeet:accountingYearCounts', err);
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  },
+
+  async accountingYearCountDetail(req, res) {
+    try {
+      const monthDay = normalizeText(req.query.monthDay);
+      const type = normalizeText(req.query.type || 'all');
+      const validTypes = ['all', 'agri', 'non_agri', 'farmer'];
+
+      if (!/^\d{2}-\d{2}$/.test(monthDay) || !validTypes.includes(type)) {
+        return res.status(400).json({ success: false, error: 'Invalid accounting year filter' });
+      }
+
+      const rows = await buildAccountingYearCounts();
+      const row = rows.find((item) => item.monthDay === monthDay);
+      if (!row) {
+        return res.json({
+          success: true,
+          data: {
+            monthDay,
+            label: formatThaiMonthDay(monthDay),
+            type,
+            typeLabel: type === 'all' ? 'ทั้งหมด' : summaryTypeLabels[type],
+            items: [],
+          },
+        });
+      }
+
+      const items = type === 'all' ? row.items : row.items.filter((item) => item.coopType === type);
+      return res.json({
+        success: true,
+        data: {
+          monthDay: row.monthDay,
+          label: row.label,
+          type,
+          typeLabel: type === 'all' ? 'ทั้งหมด' : summaryTypeLabels[type],
+          items,
+        },
+      });
+    } catch (err) {
+      console.error('bigmeet:accountingYearCountDetail', err);
       res.status(500).json({ success: false, error: 'Internal server error' });
     }
   },

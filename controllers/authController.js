@@ -3,6 +3,11 @@ const authModel = require('../models/userModel');
 const onlineModel = require('../models/onlineModel');
 const { isInstitutionUser } = require('../middlewares/authMiddleware');
 
+function getLandingPath(user) {
+  const mClass = String(user?.mClass || user?.m_class || '').trim().toLowerCase();
+  return ['c', 'g'].includes(mClass) ? '/homecoop' : '/home/';
+}
+
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -31,6 +36,7 @@ exports.login = async (req, res) => {
       level: user.m_type,
       group: user.m_group,
       mClass: user.m_class,
+      m_class: user.m_class,
       m_img: user.m_img
     };
 
@@ -53,12 +59,12 @@ exports.login = async (req, res) => {
     // Redirect to originally requested page if available and safe
     let redirectTo = req.session.returnTo;
     delete req.session.returnTo; // one-time use
-    const defaultDashboard = isInstitutionUser(req.session.user) ? '/dashboard2' : '/dashboard';
+    const defaultLanding = getLandingPath(req.session.user);
     if (typeof redirectTo !== 'string' || !redirectTo.startsWith('/') || redirectTo.startsWith('/auth')) {
-      redirectTo = defaultDashboard;
+      redirectTo = defaultLanding;
     }
     if (isInstitutionUser(req.session.user) && redirectTo !== '/dashboard2' && !redirectTo.startsWith('/dashboard2/')) {
-      redirectTo = defaultDashboard;
+      redirectTo = defaultLanding;
     }
     return res.redirect(redirectTo);
   } catch (error) {

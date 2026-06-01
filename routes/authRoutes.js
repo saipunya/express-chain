@@ -4,6 +4,11 @@ const authController = require('../controllers/authController');
 const onlineModel = require('../models/onlineModel');
 const { isInstitutionUser, noCache } = require('../middlewares/authMiddleware');
 
+function getLandingPath(user) {
+  const mClass = String(user?.mClass || user?.m_class || '').trim().toLowerCase();
+  return ['c', 'g'].includes(mClass) ? '/homecoop' : '/home/';
+}
+
 router.get('/register', (req, res) => res.render('register'));
 router.post('/register', authController.register);
 
@@ -15,12 +20,12 @@ router.get('/login', noCache, (req, res) => {
   }
   // If user already logged in, redirect immediately
   if (req.session.user) {
-    const defaultDashboard = isInstitutionUser(req.session.user) ? '/dashboard2' : '/dashboard';
+    const defaultLanding = getLandingPath(req.session.user);
     const redirectTo = (typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/') && !req.session.returnTo.startsWith('/auth'))
       ? req.session.returnTo
-      : defaultDashboard;
+      : defaultLanding;
     delete req.session.returnTo;
-    return res.redirect(isInstitutionUser(req.session.user) ? defaultDashboard : redirectTo);
+    return res.redirect(isInstitutionUser(req.session.user) ? defaultLanding : redirectTo);
   }
   const { registered } = req.query || {};
   const registeredMessage = registered ? 'สมัครสมาชิกสำเร็จ กำลังรอการอนุมัติจากผู้ดูแลระบบ' : null;

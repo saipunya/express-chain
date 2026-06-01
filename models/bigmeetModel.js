@@ -82,7 +82,15 @@ module.exports = {
     if (!Array.isArray(codes) || codes.length === 0) return [];
     const placeholders = codes.map(() => '?').join(',');
     const [rows] = await db.query(
-      `SELECT big_code, big_date FROM ${table} WHERE big_code IN (${placeholders})` ,
+      `SELECT
+         big_code,
+         big_date,
+         big_meeting_status,
+         big_fiscal_end_date,
+         big_deadline_date,
+         big_endyear
+       FROM ${table}
+       WHERE big_code IN (${placeholders})` ,
       codes
     );
     return rows;

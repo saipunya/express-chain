@@ -1,0 +1,207 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - img "CoopChain" [ref=e6]
+          - generic [ref=e7]:
+            - paragraph [ref=e8]: CoopChain
+            - generic [ref=e9]: Chaiyaphum Office
+        - navigation "เมนูหลัก" [ref=e10]:
+          - link " แดชบอร์ด" [ref=e11] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e12]: 
+            - generic [ref=e13]: แดชบอร์ด
+          - link " สมัครสมาชิก" [ref=e14] [cursor=pointer]:
+            - /url: /register
+            - generic [ref=e15]: 
+            - generic [ref=e16]: สมัครสมาชิก
+          - link " ห้องประชุม" [ref=e17] [cursor=pointer]:
+            - /url: /meetingroom
+            - generic [ref=e18]: 
+            - generic [ref=e19]: ห้องประชุม
+          - link " เว็บไซต์สาธารณะ" [ref=e20] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e21]: 
+            - generic [ref=e22]: เว็บไซต์สาธารณะ
+        - generic [ref=e23]:
+          - generic [ref=e24]: System Status
+          - generic [ref=e25]:
+            - generic [ref=e26]: พร้อมใช้งาน
+            - generic [ref=e27]: Online
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: CoopChain Workspace
+            - heading "ระบบสารสนเทศและเครือข่ายสหกรณ์" [level=1] [ref=e32]
+          - generic [ref=e33]:
+            - generic [ref=e34]:
+              - generic [ref=e35]: 
+              - searchbox "ค้นหาเมนูหรือบริการ" [ref=e36]
+            - generic [ref=e37]:
+              - generic [ref=e38]: 
+              - generic [ref=e39]: 111 สถาบัน
+            - generic [ref=e40]: CC
+        - generic [ref=e41]:
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]:
+                - generic [ref=e46]: 
+                - text: CoopChain Dashboard
+              - heading "ศูนย์กลางงานบริการ ข้อมูล และการติดตามกำหนดสำคัญของสหกรณ์" [level=2] [ref=e47]
+              - paragraph [ref=e48]: เข้าสู่ระบบเพื่อใช้งานเมนูตามสิทธิ์ ตรวจสอบสถานะการประชุมใหญ่ และติดตามกำหนดปิดบัญชีในหน้าเดียว
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - generic [ref=e51]: ภาพรวมภารกิจวันนี้
+                - generic [ref=e52]: 3 รายการ
+              - generic "ภาพรวมภารกิจวันนี้" [ref=e53]
+              - generic [ref=e56]:
+                - generic [ref=e57]: ประชุมใหญ่ 3
+                - generic [ref=e58]: ปิดบัญชี 0
+                - generic [ref=e59]: ดำเนินการ 111
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]:
+                - generic [ref=e66]: 
+                - generic [ref=e67]: Secure login
+              - heading "เข้าสู่ระบบ" [level=2] [ref=e68]
+              - paragraph [ref=e69]: ลงชื่อเข้าใช้เพื่อเข้าสู่หน้าหลักตามสิทธิ์ของบัญชี
+            - generic [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]: ชื่อผู้ใช้
+                - textbox "ชื่อผู้ใช้" [active] [ref=e73]
+              - generic [ref=e74]:
+                - generic [ref=e75]: รหัสผ่าน
+                - textbox "รหัสผ่าน" [ref=e76]
+              - generic [ref=e77]:
+                - checkbox "จดจำฉัน" [ref=e78]
+                - generic [ref=e79]: จดจำฉัน
+              - button " เข้าสู่ระบบ" [ref=e80] [cursor=pointer]:
+                - generic [ref=e81]: 
+                - text: เข้าสู่ระบบ
+        - generic [ref=e82]:
+          - generic [ref=e85]:
+            - generic [ref=e86]:
+              - generic [ref=e87]: ประชุมใหญ่เดือนนี้
+              - generic [ref=e88]: "3"
+            - generic [ref=e90]: 
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: ปิดบัญชี 30 วัน
+              - generic [ref=e96]: "0"
+            - generic [ref=e98]: 
+          - link " จองห้องประชุม Meeting room" [ref=e100] [cursor=pointer]:
+            - /url: /meetingroom
+            - generic [ref=e101]: 
+            - generic [ref=e102]:
+              - generic [ref=e103]: จองห้องประชุม
+              - text: Meeting room
+          - link " สมัครสมาชิก New account" [ref=e105] [cursor=pointer]:
+            - /url: /register
+            - generic [ref=e106]: 
+            - generic [ref=e107]:
+              - generic [ref=e108]: สมัครสมาชิก
+              - text: New account
+        - region "สรุปจำนวนสถาบันที่ดำเนินการ" [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - heading "สรุปจำนวนสถาบันที่ดำเนินการ" [level=2] [ref=e112]
+              - generic [ref=e113]: คลิกการ์ดเพื่อดูรายชื่อสถาบันและปีบัญชี
+            - generic [ref=e114]: 111 แห่ง
+          - generic [ref=e115]:
+            - button "สหกรณ์ภาคการเกษตร 50 ดูรายชื่อ  " [ref=e117] [cursor=pointer]:
+              - generic [ref=e118]:
+                - generic [ref=e119]:
+                  - generic [ref=e120]: สหกรณ์ภาคการเกษตร
+                  - generic [ref=e121]: "50"
+                  - generic [ref=e122]:
+                    - generic [ref=e123]: ดูรายชื่อ
+                    - generic [ref=e124]: 
+                - generic [ref=e126]: 
+            - button "สหกรณ์นอกภาค 16 ดูรายชื่อ  " [ref=e128] [cursor=pointer]:
+              - generic [ref=e129]:
+                - generic [ref=e130]:
+                  - generic [ref=e131]: สหกรณ์นอกภาค
+                  - generic [ref=e132]: "16"
+                  - generic [ref=e133]:
+                    - generic [ref=e134]: ดูรายชื่อ
+                    - generic [ref=e135]: 
+                - generic [ref=e137]: 
+            - button "กลุ่มเกษตรกร 45 ดูรายชื่อ  " [ref=e139] [cursor=pointer]:
+              - generic [ref=e140]:
+                - generic [ref=e141]:
+                  - generic [ref=e142]: กลุ่มเกษตรกร
+                  - generic [ref=e143]: "45"
+                  - generic [ref=e144]:
+                    - generic [ref=e145]: ดูรายชื่อ
+                    - generic [ref=e146]: 
+                - generic [ref=e148]: 
+        - generic [ref=e150]:
+          - generic [ref=e152]:
+            - generic [ref=e153]:
+              - heading " ประชุมใหญ่ภายในเดือนนี้" [level=2] [ref=e154]:
+                - generic [ref=e155]: 
+                - text: ประชุมใหญ่ภายในเดือนนี้
+              - generic [ref=e156]: 3 แห่ง
+            - generic [ref=e157]:
+              - generic [ref=e158]: กำหนดประชุมใหญ่ภายในเดือน มิถุนายน 2569 อ้างอิงจากวันสิ้นปีบัญชี + 150 วัน
+              - generic [ref=e159]:
+                - generic [ref=e160]: group3
+                - table [ref=e162]:
+                  - rowgroup [ref=e163]:
+                    - row "สถาบัน สิ้นปีบัญชี ครบกำหนด สถานะ" [ref=e164]:
+                      - columnheader "สถาบัน" [ref=e165]
+                      - columnheader "สิ้นปีบัญชี" [ref=e166]
+                      - columnheader "ครบกำหนด" [ref=e167]
+                      - columnheader "สถานะ" [ref=e168]
+                  - rowgroup [ref=e169]:
+                    - row "สหกรณ์เครดิตยูเนี่ยนหนองบัวแดง 31 มกราคม 2569 30 มิถุนายน 2569 รอดำเนินการ" [ref=e170]:
+                      - cell "สหกรณ์เครดิตยูเนี่ยนหนองบัวแดง" [ref=e171]
+                      - cell "31 มกราคม 2569" [ref=e172]
+                      - cell "30 มิถุนายน 2569" [ref=e173]
+                      - cell "รอดำเนินการ" [ref=e174]:
+                        - generic [ref=e175]: รอดำเนินการ
+              - generic [ref=e176]:
+                - generic [ref=e177]: group4
+                - table [ref=e179]:
+                  - rowgroup [ref=e180]:
+                    - row "สถาบัน สิ้นปีบัญชี ครบกำหนด สถานะ" [ref=e181]:
+                      - columnheader "สถาบัน" [ref=e182]
+                      - columnheader "สิ้นปีบัญชี" [ref=e183]
+                      - columnheader "ครบกำหนด" [ref=e184]
+                      - columnheader "สถานะ" [ref=e185]
+                  - rowgroup [ref=e186]:
+                    - row "สหกรณ์การเกษตรไก่เนื้อชัยภูมิ 31 มกราคม 2569 30 มิถุนายน 2569 รอดำเนินการ" [ref=e187]:
+                      - cell "สหกรณ์การเกษตรไก่เนื้อชัยภูมิ" [ref=e188]
+                      - cell "31 มกราคม 2569" [ref=e189]
+                      - cell "30 มิถุนายน 2569" [ref=e190]
+                      - cell "รอดำเนินการ" [ref=e191]:
+                        - generic [ref=e192]: รอดำเนินการ
+              - generic [ref=e193]:
+                - generic [ref=e194]: group5
+                - table [ref=e196]:
+                  - rowgroup [ref=e197]:
+                    - row "สถาบัน สิ้นปีบัญชี ครบกำหนด สถานะ" [ref=e198]:
+                      - columnheader "สถาบัน" [ref=e199]
+                      - columnheader "สิ้นปีบัญชี" [ref=e200]
+                      - columnheader "ครบกำหนด" [ref=e201]
+                      - columnheader "สถานะ" [ref=e202]
+                  - rowgroup [ref=e203]:
+                    - row "สหกรณ์การเกษตรโครงการทุ่งลุยลาย 31 มกราคม 2569 30 มิถุนายน 2569 รอดำเนินการ" [ref=e204]:
+                      - cell "สหกรณ์การเกษตรโครงการทุ่งลุยลาย" [ref=e205]
+                      - cell "31 มกราคม 2569" [ref=e206]
+                      - cell "30 มิถุนายน 2569" [ref=e207]
+                      - cell "รอดำเนินการ" [ref=e208]:
+                        - generic [ref=e209]: รอดำเนินการ
+          - generic [ref=e211]:
+            - generic [ref=e212]:
+              - heading " ปิดบัญชีภายใน 30 วัน" [level=2] [ref=e213]:
+                - generic [ref=e214]: 
+                - text: ปิดบัญชีภายใน 30 วัน
+              - generic [ref=e215]: 0 แห่ง
+            - generic [ref=e216]:
+              - generic [ref=e217]: รายการครบกำหนดปิดบัญชีในช่วง 30 วันข้างหน้า โดยนับจากวันสิ้นปีบัญชี + 30 วัน
+              - generic [ref=e218]: ไม่มีรายการครบกำหนดปิดบัญชีใน 30 วันข้างหน้า
+  - contentinfo [ref=e219]:
+    - generic [ref=e220]: © 2025 สำนักงานสหกรณ์จังหวัดชัยภูมิ | พัฒนาโดย นายสุเมธ ชูรัตน์ นักวิชาการสหกรณ์ชำนาญการ
+  - text:  

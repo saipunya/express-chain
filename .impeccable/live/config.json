@@ -1,0 +1,10 @@
+{
+  "files": [
+    "views/partials/footer.ejs",
+    "views/partials/footer2.ejs",
+    "views/promotion/footer.ejs"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

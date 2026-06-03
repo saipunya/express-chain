@@ -57,6 +57,87 @@ function formatThaiDate(date) {
   });
 }
 
+function formatAccountingYearLabel(row) {
+  const monthDay = toMonthDay(row?.end_day);
+  if (monthDay) {
+    const [month, day] = monthDay.split('-').map(Number);
+    const date = new Date(Date.UTC(2024, month - 1, day));
+    return date.toLocaleDateString('th-TH', {
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Bangkok'
+    });
+  }
+
+  const dateMs = parseDateToUtcMs(row?.end_date_fmt);
+  if (dateMs !== null) {
+    return formatThaiDate(new Date(dateMs));
+  }
+
+  return '-';
+}
+
+function getInstitutionCategory(row) {
+  const coopGroup = String(row?.coop_group || '').trim();
+  const inOutGroup = String(row?.in_out_group || '').trim();
+
+  if (coopGroup.includes('กลุ่มเกษตรกร')) return 'farmer';
+  if (coopGroup.includes('สหกรณ์') && !inOutGroup.includes('นอก')) return 'agri';
+  return 'non_agri';
+}
+
+function buildInstitutionSummary(rows = []) {
+  const summary = {
+    agri: {
+      key: 'agri',
+      label: 'สหกรณ์ภาคการเกษตร',
+      shortLabel: 'ภาคการเกษตร',
+      icon: 'bi-flower1',
+      tone: 'green',
+      count: 0,
+      rows: []
+    },
+    non_agri: {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาค',
+      shortLabel: 'นอกภาค',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      count: 0,
+      rows: []
+    },
+    farmer: {
+      key: 'farmer',
+      label: 'กลุ่มเกษตรกร',
+      shortLabel: 'กลุ่มเกษตรกร',
+      icon: 'bi-people',
+      tone: 'amber',
+      count: 0,
+      rows: []
+    }
+  };
+
+  rows.forEach((row) => {
+    const key = getInstitutionCategory(row);
+    const item = {
+      c_code: row.c_code || '',
+      c_name: row.c_name || '-',
+      c_group: row.c_group || '-',
+      coop_group: row.coop_group || '-',
+      in_out_group: row.in_out_group || '-',
+      accountingYearLabel: formatAccountingYearLabel(row)
+    };
+    summary[key].rows.push(item);
+  });
+
+  Object.values(summary).forEach((group) => {
+    group.rows.sort((a, b) => (a.c_name || '').localeCompare(b.c_name || '', 'th-TH'));
+    group.count = group.rows.length;
+  });
+
+  return summary;
+}
+
 function parseDateToUtcMs(value) {
   if (!value) return null;
   if (typeof value === 'string') {
@@ -201,10 +282,14 @@ async function showMain(req, res) {
   }
 
   try {
-    const deadlineData = await getMainDeadlineData();
+    const [deadlineData, institutionRows] = await Promise.all([
+      getMainDeadlineData(),
+      activeCoopModel.getActiveInstitutionSummaryRows()
+    ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
+      institutionSummary: buildInstitutionSummary(institutionRows),
       ...deadlineData
     });
   } catch (error) {
@@ -215,7 +300,8 @@ async function showMain(req, res) {
       bigmeetThisMonthGroups: [],
       closingWithin30Groups: [],
       bigmeetMonthLabel: '',
-      closingWindowLabel: '30 วันข้างหน้า'
+      closingWindowLabel: '30 วันข้างหน้า',
+      institutionSummary: buildInstitutionSummary([])
     });
   }
 }

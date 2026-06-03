@@ -128,6 +128,30 @@ exports.getActiveFarmerGroupCoops = async () => {
   return rows;
 };
 
+exports.getActiveInstitutionSummaryRows = async () => {
+  const [rows] = await pool.query(`
+    SELECT
+      c_code,
+      c_name,
+      c_group,
+      coop_group,
+      in_out_group,
+      end_day,
+      DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date_fmt
+    FROM active_coop
+    WHERE c_status = 'ดำเนินการ'
+    ORDER BY
+      CASE
+        WHEN coop_group = 'สหกรณ์' AND in_out_group NOT LIKE '%นอก%' THEN 1
+        WHEN coop_group = 'สหกรณ์' THEN 2
+        WHEN coop_group = 'กลุ่มเกษตรกร' THEN 3
+        ELSE 4
+      END,
+      c_name ASC
+  `);
+  return rows;
+};
+
 exports.getClosedCoops = async () => {
   const [rows] = await pool.query(
     "SELECT * FROM active_coop WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY coop_group DESC , c_name ASC"

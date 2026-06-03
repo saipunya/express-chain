@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-02T00:00:00+07:00",
+  "title": "Design System: CoopChain",
+  "extensions": {
+    "colorMeta": {
+      "primary-green": {
+        "role": "primary",
+        "displayName": "Cooperative Green",
+        "canonical": "#169b62",
+        "tonalRamp": ["#052016", "#073522", "#0b4f33", "#107346", "#169b62", "#45bd86", "#8bd9b3", "#dff6eb"]
+      },
+      "service-teal": {
+        "role": "secondary",
+        "displayName": "Service Teal",
+        "canonical": "#168c96",
+        "tonalRamp": ["#042126", "#073840", "#0b535c", "#10737d", "#168c96", "#48b1ba", "#91d4da", "#e0f7f9"]
+      },
+      "action-blue": {
+        "role": "secondary",
+        "displayName": "Action Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["#0b1b42", "#112c6d", "#17419e", "#1d55cf", "#2563eb", "#6b95f4", "#acc6fb", "#e7efff"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Deadline Amber",
+        "canonical": "#f0a020",
+        "tonalRamp": ["#321d04", "#573507", "#84540b", "#b97910", "#f0a020", "#f5bf60", "#f9d99b", "#fff4dc"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink Slate",
+        "canonical": "#0f172a",
+        "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#cbd5e1", "#f8fafc"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#0f172a", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f8fafc", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headings and major dashboard statements."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and major sections."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cards, modals, tables, and nav labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Operational copy, form help, and table cells."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, chips, metadata, and compact labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-low",
+        "value": "0 10px 25px rgba(20, 32, 51, .06)",
+        "purpose": "Default dashboard cards and calm panels."
+      },
+      {
+        "name": "card-raised",
+        "value": "0 18px 45px rgba(20, 32, 51, .08)",
+        "purpose": "Important panels and hover states."
+      },
+      {
+        "name": "modal-high",
+        "value": "0 1.4rem 4rem rgba(20, 32, 51, .2)",
+        "purpose": "Dialogs and overlays above the app shell."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease",
+        "purpose": "Hover and focus transitions."
+      },
+      {
+        "name": "state-standard",
+        "value": "200ms ease",
+        "purpose": "Card lift, button feedback, and panel state changes."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "bootstrap-sm",
+        "value": "576px"
+      },
+      {
+        "name": "bootstrap-md",
+        "value": "768px"
+      },
+      {
+        "name": "bootstrap-lg",
+        "value": "992px"
+      },
+      {
+        "name": "bootstrap-xl",
+        "value": "1200px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button for standard CoopChain workflows.",
+      "html": "<button class=\"ds-btn-primary\"><span>เข้าสู่ระบบ</span></button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 12px 20px; border: 0; border-radius: 8px; background: linear-gradient(135deg, #168c96, #169b62); color: #fff; font-family: Sarabun, system-ui, sans-serif; font-weight: 700; box-shadow: 0 10px 20px rgba(22,155,98,.22); transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease; } .ds-btn-primary:hover { transform: translateY(-1px); filter: brightness(.97); box-shadow: 0 14px 28px rgba(22,155,98,.26); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(22,155,98,.28); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action button for links, filters, and non-primary commands.",
+      "html": "<button class=\"ds-btn-secondary\">ดูรายละเอียด</button>",
+      "css": ".ds-btn-secondary { min-height: 44px; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #2563eb; font-family: Sarabun, system-ui, sans-serif; font-weight: 700; transition: background 150ms ease, border-color 150ms ease, transform 150ms ease; } .ds-btn-secondary:hover { background: #eff6ff; border-color: #bfdbfe; transform: translateY(-1px); } .ds-btn-secondary:focus-visible { outline: 3px solid rgba(37,99,235,.22); outline-offset: 2px; }"
+    },
+    {
+      "name": "Operational Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Standard white panel for dashboards, summaries, and forms.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-title\">ประชุมใหญ่เดือนนี้</div><div class=\"ds-card-value\">3</div><div class=\"ds-card-note\">รายการที่ต้องติดตาม</div></article>",
+      "css": ".ds-card { background: #fff; color: #0f172a; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(20,32,51,.06); font-family: Sarabun, system-ui, sans-serif; transition: transform 150ms ease, box-shadow 150ms ease; } .ds-card:hover { transform: translateY(-1px); box-shadow: 0 18px 45px rgba(20,32,51,.08); } .ds-card-title { color: #64748b; font-size: .875rem; font-weight: 700; } .ds-card-value { margin-top: 6px; font-size: 2rem; font-weight: 800; line-height: 1; } .ds-card-note { margin-top: 8px; color: #64748b; font-size: .82rem; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Default text field with clear label and green focus treatment.",
+      "html": "<label class=\"ds-field\"><span>ชื่อผู้ใช้</span><input type=\"text\" placeholder=\"กรอกชื่อผู้ใช้\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #0f172a; font-family: Sarabun, system-ui, sans-serif; font-weight: 700; } .ds-field input { min-height: 48px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #0f172a; font: inherit; font-weight: 400; } .ds-field input::placeholder { color: #64748b; } .ds-field input:focus { border-color: rgba(22,155,98,.55); box-shadow: 0 0 0 .22rem rgba(22,155,98,.13); outline: 0; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "chip-success",
+      "description": "Compact status badge with semantic color and text.",
+      "html": "<span class=\"ds-chip-success\">ดำเนินการ</span>",
+      "css": ".ds-chip-success { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #ecfdf5; color: #059669; border: 1px solid #bbf7d0; font-family: Sarabun, system-ui, sans-serif; font-size: .82rem; font-weight: 700; } .ds-chip-success::before { content: ''; width: 7px; height: 7px; border-radius: 999px; background: #169b62; }"
+    },
+    {
+      "name": "Dark Sidebar Nav",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Dashboard shell navigation for dense operational screens.",
+      "html": "<nav class=\"ds-sidebar\"><a class=\"ds-nav-link ds-active\" href=\"#\">แดชบอร์ด</a><a class=\"ds-nav-link\" href=\"#\">ห้องประชุม</a></nav>",
+      "css": ".ds-sidebar { display: grid; gap: 6px; width: 240px; padding: 16px; border-radius: 8px; background: linear-gradient(180deg,#17263b,#0f1a29); font-family: Sarabun, system-ui, sans-serif; } .ds-nav-link { color: #bdcad8; text-decoration: none; border-radius: 8px; padding: 12px 14px; font-weight: 700; transition: background 150ms ease, color 150ms ease, transform 150ms ease; } .ds-nav-link:hover, .ds-nav-link.ds-active { color: #fff; background: rgba(255,255,255,.11); transform: translateX(2px); } .ds-nav-link:focus-visible { outline: 3px solid rgba(126,212,173,.3); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Trusted Cooperative Workspace",
+    "overview": "CoopChain is a dependable public-service workspace for Chaiyaphum cooperative operations. The design uses Sarabun, green and teal accents, white cards, cool backgrounds, familiar Bootstrap controls, and clear table-first layouts.",
+    "keyCharacteristics": [
+      "Task-first product UI with familiar Bootstrap affordances.",
+      "Green and teal as the official service identity.",
+      "White cards on cool light backgrounds.",
+      "Thai-first Sarabun typography.",
+      "Mobile-readable layouts with desktop density."
+    ],
+    "rules": [
+      {
+        "name": "The Official Accent Rule",
+        "body": "Green or teal should carry the primary action on CoopChain operational screens.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Use Sarabun everywhere unless rendering codes, IDs, or technical values.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border First Rule",
+        "body": "Use borders and tonal backgrounds for structure before adding large shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Cooperative Green for primary actions and official identity cues.",
+      "Do keep table text and dashboard counts readable.",
+      "Do preserve familiar Bootstrap affordances.",
+      "Do test mobile layouts for horizontal overflow."
+    ],
+    "donts": [
+      "Don't make CoopChain feel like a loud marketing page.",
+      "Don't over-decorate dashboards with visual spectacle.",
+      "Don't use heavy animation.",
+      "Don't use low-contrast gray text on light backgrounds.",
+      "Don't use playful color palettes that weaken public-office trust."
+    ]
+  }
+}

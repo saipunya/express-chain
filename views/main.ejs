@@ -21,79 +21,537 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css" />
   </head>
-  <body class="d-flex flex-column min-vh-100 flex-grow-1">
-    <main class="container py-4 flex-grow-1">
+  <body class="main-dashboard-body d-flex flex-column min-vh-100 flex-grow-1">
+    <main class="container-fluid main-dashboard-wrap py-3 py-lg-4 flex-grow-1">
 
 <style>
-  .main-landing {
-    min-height: calc(100vh - 220px);
+  :root {
+    --main-ink: #172033;
+    --main-muted: #667085;
+    --main-line: #e4e9f2;
+    --main-soft: #f6f8fc;
+    --main-panel: #ffffff;
+    --main-navy: #142033;
+    --main-green: #107f50;
+    --main-teal: #147b83;
+    --main-blue: #2f6fdd;
+    --main-amber: #f0a020;
+    --main-red: #d94b4b;
+    --main-shadow: 0 14px 32px rgba(20, 32, 51, .08);
+    --main-shadow-soft: 0 8px 18px rgba(20, 32, 51, .055);
   }
 
-  .main-brand-panel {
+  .main-dashboard-body {
     background:
-      linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(14, 116, 144, 0.88)),
-      url('/icon/seal.svg') center 2rem / 15rem no-repeat;
-    color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
+      linear-gradient(180deg, #f6f8fc 0, #edf2f8 34rem, #eef2f7 100%);
+    color: var(--main-ink);
+    font-family: 'Sarabun', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
-  .main-brand-panel__inner {
-    min-height: 28rem;
+  .main-dashboard-wrap {
+    max-width: 1520px;
+  }
+
+  .main-dashboard-shell {
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+    gap: 1.15rem;
+    min-height: calc(100vh - 2rem);
+  }
+
+  .main-sidebar {
+    background: linear-gradient(180deg, #17263b 0%, #111d2e 58%, #0f1a29 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 18px 36px rgba(20, 32, 51, .16);
+    color: #dce6ef;
+    padding: 1.05rem;
+    position: sticky;
+    top: 1rem;
+    height: calc(100vh - 2rem);
+    min-height: 42rem;
+  }
+
+  .main-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem .35rem 1.15rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+  }
+
+  .main-brand img {
+    width: 2.85rem;
+    height: 2.85rem;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #fff;
+    padding: .35rem;
+    box-shadow: 0 .75rem 1.4rem rgba(0, 0, 0, .16);
+  }
+
+  .main-brand-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .main-brand-subtitle {
+    color: #a9b7c8;
+    font-size: .78rem;
+  }
+
+  .main-nav {
+    display: grid;
+    gap: .35rem;
+    margin: 1.25rem 0;
+  }
+
+  .main-nav-link {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    border-radius: 8px;
+    color: #bdcad8;
+    padding: .75rem .8rem;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease, transform .15s ease;
+  }
+
+  .main-nav-link:hover,
+  .main-nav-link.active {
+    background: rgba(255, 255, 255, .11);
+    color: #fff;
+    transform: translateX(2px);
+  }
+
+  .main-nav-link i {
+    width: 1.5rem;
+    text-align: center;
+    color: #7ed4ad;
+  }
+
+  .main-sidebar-foot {
+    margin-top: auto;
+    padding: .95rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .09);
+    border: 1px solid rgba(255, 255, 255, .08);
+  }
+
+  .main-content {
+    min-width: 0;
+  }
+
+  .main-topbar,
+  .main-panel,
+  .main-stat,
+  .main-login-card,
+  .main-hero,
+  .main-deadline-card {
+    background: var(--main-panel);
+    border: 1px solid var(--main-line);
+    border-radius: 8px;
+    box-shadow: var(--main-shadow-soft);
+  }
+
+  .main-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .95rem 1.05rem;
+    margin-bottom: 1.15rem;
+    backdrop-filter: blur(12px);
+  }
+
+  .main-avatar {
+    width: 2.55rem;
+    height: 2.55rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e7f8ef, #eef7ff);
+    color: var(--main-green);
+    font-weight: 700;
+  }
+
+  .main-hero {
+    position: relative;
+    min-height: 31.2rem;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    padding: clamp(1.5rem, 4vw, 3rem);
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(4, 47, 46, 0.45));
+    justify-content: space-between;
+    padding: clamp(1.35rem, 3vw, 2.1rem);
+    color: #fff;
+    overflow: hidden;
+    box-shadow: var(--main-shadow);
+    background:
+      linear-gradient(90deg, rgba(12, 24, 39, .9) 0%, rgba(14, 53, 62, .7) 45%, rgba(15, 105, 78, .24) 100%),
+      url('/images/coopchain-network-hero.png') center / cover no-repeat;
   }
 
-  .main-login-card,
-  .main-link-card {
+  .main-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(5, 18, 32, .2));
+    pointer-events: none;
+  }
+
+  .main-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .main-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    width: max-content;
     border-radius: 8px;
+    background: rgba(255, 255, 255, .2);
+    border: 1px solid rgba(255, 255, 255, .22);
+    padding: .45rem .7rem;
+    color: #fff;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+
+  .main-hero h2 {
+    max-width: 43rem;
+    margin: 1rem 0 .75rem;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.18;
+  }
+
+  .main-hero p {
+    max-width: 38rem;
+    color: rgba(255, 255, 255, .86);
+  }
+
+  .main-hero-summary {
+    display: grid;
+    gap: .55rem;
+    max-width: 36rem;
+    padding: .85rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .16);
+  }
+
+  .main-hero-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .85rem;
+    color: rgba(255, 255, 255, .9);
+    font-size: .9rem;
+  }
+
+  .main-hero-summary-row strong {
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .main-login-card {
+    height: 100%;
+    box-shadow: var(--main-shadow);
+  }
+
+  .main-login-card .form-control {
+    border-radius: 8px;
+    border-color: var(--main-line);
+    background: #fbfcfe;
+    min-height: 3rem;
+  }
+
+  .main-login-card .form-control:focus {
+    border-color: rgba(22, 155, 98, .55);
+    box-shadow: 0 0 0 .22rem rgba(22, 155, 98, .13);
+  }
+
+  .main-login-card .btn {
+    border-radius: 8px;
+    min-height: 3.05rem;
+    border: 0;
+    background: linear-gradient(135deg, #147b83, #107f50);
+    box-shadow: 0 .7rem 1.2rem rgba(22, 155, 98, .22);
+  }
+
+  .main-login-card .btn:hover {
+    filter: brightness(.97);
+    transform: translateY(-1px);
+  }
+
+  .main-stat {
+    position: relative;
+    overflow: hidden;
+    padding: 1rem;
+    height: 100%;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  .main-stat:hover {
+    box-shadow: var(--main-shadow);
+    transform: translateY(-1px);
+  }
+
+  .main-stat-icon {
+    width: 2.65rem;
+    height: 2.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.15rem;
+  }
+
+  .main-stat-icon.green { background: #e9f7ef; color: var(--main-green); }
+  .main-stat-icon.amber { background: #fff4dc; color: #b86f00; }
+  .main-stat-icon.teal { background: #e5f6f8; color: var(--main-teal); }
+  .main-stat-icon.blue { background: #eef5ff; color: var(--main-blue); }
+  .main-stat-icon.red { background: #fdecec; color: var(--main-red); }
+
+  .main-institution-section {
+    margin-top: 1.15rem;
+  }
+
+  .main-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .85rem;
+  }
+
+  .main-section-title h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .main-institution-card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    padding: 1.05rem;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--main-line);
+    border-radius: 8px;
+    box-shadow: var(--main-shadow-soft);
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+
+  .main-institution-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: .22rem;
+    background: var(--card-accent, var(--main-green));
+  }
+
+  .main-institution-card:hover {
+    border-color: #a5dfe4;
+    box-shadow: var(--main-shadow);
+    transform: translateY(-1px);
+  }
+
+  .main-institution-card:focus-visible {
+    outline: 3px solid rgba(34, 160, 107, .3);
+    outline-offset: 2px;
+  }
+
+  .main-institution-label {
+    color: var(--main-muted);
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .main-institution-count {
+    color: var(--main-ink);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .main-institution-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--card-accent, var(--main-green));
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .main-institution-card[data-institution-type="agri"] { --card-accent: var(--main-green); }
+  .main-institution-card[data-institution-type="non_agri"] { --card-accent: var(--main-teal); }
+  .main-institution-card[data-institution-type="farmer"] { --card-accent: var(--main-amber); }
+
+  .main-institution-chart-card {
+    height: 100%;
+    min-height: 19rem;
+    padding: 1.05rem;
+    background: #fff;
+    border: 1px solid var(--main-line);
+    border-radius: 8px;
+    box-shadow: var(--main-shadow-soft);
+  }
+
+  .main-chart-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .9rem;
+  }
+
+  .main-chart-title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: 0;
+    color: var(--main-ink);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .main-chart-title i {
+    color: var(--main-green);
+  }
+
+  .main-chart-canvas-wrap {
+    position: relative;
+    min-height: 13.5rem;
+  }
+
+  .main-chart-canvas-wrap canvas {
+    width: 100% !important;
+  }
+
+  .main-chart-fallback {
+    display: grid;
+    gap: .55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .main-chart-fallback[hidden] {
+    display: none;
+  }
+
+  .main-chart-fallback li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .62rem .75rem;
+    border: 1px solid #edf1f6;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--main-ink);
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  .main-chart-fallback span {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+  }
+
+  .main-chart-dot {
+    width: .65rem;
+    height: .65rem;
+    border-radius: 999px;
+    background: var(--dot-color, var(--main-green));
+    flex: 0 0 auto;
+  }
+
+  .main-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border: 1px solid var(--main-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--main-muted);
+    padding: .35rem .55rem;
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .main-institution-modal-table {
+    font-size: .92rem;
+  }
+
+  .main-institution-modal-table th {
+    background: #f8fafc;
+    color: var(--main-muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .main-institution-modal-table td {
+    vertical-align: middle;
+  }
+
+  .main-institution-name {
+    min-width: 14rem;
+    color: var(--main-ink);
+    font-weight: 700;
   }
 
   .main-system-link {
     display: flex;
     align-items: center;
     gap: .75rem;
-    padding: .85rem 1rem;
-    border: 1px solid #e5e7eb;
+    padding: .8rem .9rem;
+    border: 1px solid var(--main-line);
     border-radius: 8px;
     text-decoration: none;
-    color: #0f172a;
+    color: var(--main-ink);
     background: #fff;
+    box-shadow: var(--main-shadow-soft);
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   }
 
   .main-system-link:hover {
-    color: #047857;
-    border-color: #86efac;
-    box-shadow: 0 .5rem 1.25rem rgba(15, 23, 42, .08);
+    color: var(--main-teal);
+    border-color: #a5dfe4;
+    box-shadow: 0 .55rem 1.2rem rgba(31, 42, 55, .08);
     transform: translateY(-1px);
   }
 
   .main-system-link i {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.1rem;
+    height: 2.1rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    background: #ecfdf5;
-    color: #059669;
+    background: #eef5ff;
+    color: var(--main-blue);
     flex: 0 0 auto;
   }
 
   .main-deadline-section {
-    margin-top: 1.5rem;
+    margin-top: 1.15rem;
   }
 
   .main-deadline-card {
-    border: 0;
-    border-radius: 8px;
-    box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .08);
     height: 100%;
     overflow: hidden;
+    box-shadow: var(--main-shadow-soft);
   }
 
   .main-deadline-head {
@@ -101,9 +559,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.25rem;
-    background: #f8fafc;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(180deg, #fff, #fbfcfe);
+    border-bottom: 1px solid var(--main-line);
   }
 
   .main-deadline-title {
@@ -113,18 +571,18 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--main-ink);
   }
 
   .main-deadline-title i {
-    width: 2rem;
-    height: 2rem;
+    width: 2.1rem;
+    height: 2.1rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    background: #ecfdf5;
-    color: #059669;
+    background: #e9f7ef;
+    color: var(--main-green);
   }
 
   .main-deadline-count {
@@ -133,31 +591,35 @@
   }
 
   .main-deadline-body {
-    padding: 1rem 1.25rem 1.25rem;
+    padding: 1rem 1.1rem 1.1rem;
+    background: #fff;
   }
 
   .main-deadline-group + .main-deadline-group {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid #eef2f7;
+    border-top: 1px solid #edf1f6;
   }
 
   .main-deadline-group-name {
     font-size: .9rem;
     font-weight: 700;
-    color: #047857;
+    color: var(--main-teal);
     margin-bottom: .65rem;
   }
 
   .main-deadline-table {
     margin-bottom: 0;
-    font-size: .92rem;
+    font-size: .9rem;
+    border-color: #edf1f6;
   }
 
   .main-deadline-table th {
-    color: #64748b;
+    color: var(--main-muted);
     font-weight: 700;
     white-space: nowrap;
+    background: #f8fafc;
+    border-bottom: 0;
   }
 
   .main-deadline-table td {
@@ -167,16 +629,137 @@
   .main-deadline-name {
     min-width: 12rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--main-ink);
   }
 
   .main-empty {
     border: 1px dashed #cbd5e1;
     border-radius: 8px;
-    color: #64748b;
+    color: var(--main-muted);
     padding: 1rem;
     text-align: center;
     background: #f8fafc;
+  }
+
+  .main-modal-content {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 1.4rem 4rem rgba(20, 32, 51, .2);
+  }
+
+  .main-modal-header {
+    background: linear-gradient(180deg, #fff, #f9fbfd);
+    border-bottom-color: var(--main-line);
+  }
+
+  .main-table-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    letter-spacing: 0;
+  }
+
+  .main-dashboard-body #a2hs-banner {
+    left: auto !important;
+    right: 1rem;
+    transform: none !important;
+    max-width: 25rem;
+  }
+
+  @media (max-width: 1199.98px) {
+    .main-dashboard-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .main-sidebar {
+      position: static;
+      height: auto;
+      min-height: 0;
+    }
+
+    .main-nav {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .main-sidebar-foot {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .main-dashboard-wrap {
+      padding-left: .75rem;
+      padding-right: .75rem;
+    }
+
+    .main-topbar {
+      align-items: center;
+      flex-direction: row;
+    }
+
+    .main-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .45rem;
+      margin: .9rem 0 0;
+    }
+
+    .main-nav-link {
+      padding: .65rem .7rem;
+    }
+
+    .main-hero {
+      min-height: 31rem;
+      background:
+        linear-gradient(180deg, rgba(12, 24, 39, .9) 0%, rgba(14, 53, 62, .74) 58%, rgba(15, 105, 78, .42) 100%),
+        url('/images/coopchain-network-hero.png') center / cover no-repeat;
+    }
+
+    .main-hero h2 {
+      font-size: 1.45rem;
+      line-height: 1.28;
+    }
+
+    .main-hero p {
+      font-size: 1rem;
+    }
+
+    .main-institution-chart-card {
+      min-height: 18rem;
+    }
+
+    .main-chart-head {
+      align-items: stretch;
+      flex-direction: column;
+      gap: .55rem;
+    }
+
+    .main-chart-canvas-wrap {
+      min-height: 12.5rem;
+    }
+
+    .main-dashboard-body #a2hs-banner {
+      left: 50% !important;
+      right: auto;
+      transform: translateX(-50%) !important;
+      max-width: 420px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .main-nav-link,
+    .main-login-card .btn,
+    .main-stat,
+    .main-institution-card,
+    .main-system-link {
+      transition: none;
+    }
+
+    .main-nav-link:hover,
+    .main-nav-link.active,
+    .main-login-card .btn:hover,
+    .main-stat:hover,
+    .main-institution-card:hover,
+    .main-system-link:hover {
+      transform: none;
+    }
   }
 </style>
 
@@ -187,73 +770,252 @@
   const _closingWindowLabel = (typeof closingWindowLabel !== 'undefined' && closingWindowLabel) ? closingWindowLabel : '30 วันข้างหน้า';
   const _bigmeetCount = _bigmeetThisMonthGroups.reduce((sum, group) => sum + ((group.rows || []).length), 0);
   const _closingCount = _closingWithin30Groups.reduce((sum, group) => sum + ((group.rows || []).length), 0);
+  const _institutionSummary = (typeof institutionSummary !== 'undefined' && institutionSummary) ? institutionSummary : {
+    agri: { key: 'agri', label: 'สหกรณ์ภาคการเกษตร', shortLabel: 'ภาคการเกษตร', icon: 'bi-flower1', tone: 'green', count: 0, rows: [] },
+    non_agri: { key: 'non_agri', label: 'สหกรณ์นอกภาค', shortLabel: 'นอกภาค', icon: 'bi-buildings', tone: 'teal', count: 0, rows: [] },
+    farmer: { key: 'farmer', label: 'กลุ่มเกษตรกร', shortLabel: 'กลุ่มเกษตรกร', icon: 'bi-people', tone: 'amber', count: 0, rows: [] }
+  };
+  const _institutionSummaryList = ['agri', 'non_agri', 'farmer'].map((key) => _institutionSummary[key]).filter(Boolean);
+  const _institutionTotal = _institutionSummaryList.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const _institutionChartData = _institutionSummaryList.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: Number(item.count || 0),
+    color: item.key === 'non_agri' ? '#147b83' : item.key === 'farmer' ? '#f0a020' : '#107f50'
+  }));
 %>
 
-<section class="main-landing">
-  <div class="row g-4 align-items-stretch">
-    <div class="col-lg-7">
-      <div class="main-brand-panel h-100 shadow-sm">
-        <div class="main-brand-panel__inner">
-          <div class="mb-3">
-            <span class="badge text-bg-light text-success px-3 py-2">CoopChain</span>
+<div class="main-dashboard-shell">
+  <aside class="main-sidebar d-flex flex-column">
+    <div class="main-brand">
+      <img src="/icon/seal.svg" alt="CoopChain">
+      <div>
+        <p class="main-brand-title">CoopChain</p>
+        <div class="main-brand-subtitle">Chaiyaphum Office</div>
+      </div>
+    </div>
+
+    <nav class="main-nav" aria-label="เมนูหลัก">
+      <a href="/main" class="main-nav-link active">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a href="/register" class="main-nav-link">
+        <i class="bi bi-person-plus"></i>
+        <span>สมัครสมาชิก</span>
+      </a>
+      <a href="/meetingroom" class="main-nav-link">
+        <i class="bi bi-calendar-week"></i>
+        <span>ห้องประชุม</span>
+      </a>
+      <a href="/" class="main-nav-link">
+        <i class="bi bi-globe2"></i>
+        <span>เว็บไซต์สาธารณะ</span>
+      </a>
+    </nav>
+
+    <div class="main-sidebar-foot">
+      <div class="small text-uppercase fw-semibold text-white-50 mb-2">System Status</div>
+      <div class="d-flex align-items-center justify-content-between gap-3">
+        <span class="fw-semibold text-white">พร้อมใช้งาน</span>
+        <span class="badge text-bg-success">Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <section class="main-content">
+    <div class="main-topbar">
+      <div>
+        <div class="text-muted small">CoopChain Workspace</div>
+        <h1 class="h4 fw-bold mb-0">ระบบสารสนเทศและเครือข่ายสหกรณ์</h1>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="main-pill d-none d-lg-inline-flex">
+          <i class="bi bi-check-circle-fill text-success"></i>
+          <span><%= _institutionTotal %> สถาบัน</span>
+        </span>
+        <div class="main-avatar">CC</div>
+      </div>
+    </div>
+
+    <div class="row g-3 align-items-stretch">
+      <div class="col-xl-4 order-1 order-xl-2">
+        <div class="card main-login-card border-0 shadow-sm h-100">
+          <div class="card-body p-4 d-flex flex-column">
+            <div class="mb-4">
+              <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div class="main-stat-icon green"><i class="bi bi-shield-lock"></i></div>
+                <span class="badge text-bg-light text-success">Secure login</span>
+              </div>
+              <h2 class="h4 fw-bold mb-2">เข้าสู่ระบบ</h2>
+              <p class="text-muted mb-0">ลงชื่อเข้าใช้เพื่อเข้าสู่หน้าหลักตามสิทธิ์ของบัญชี</p>
+            </div>
+
+            <form action="/auth/login" method="POST" class="mb-4">
+              <div class="mb-3">
+                <label for="username" class="form-label">ชื่อผู้ใช้</label>
+                <input type="text" name="username" id="username" class="form-control form-control-lg" autocomplete="username" required autofocus>
+                <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <input type="password" name="password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
+                <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+              </div>
+
+              <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">จดจำฉัน</label>
+              </div>
+
+              <button type="submit" class="btn btn-success btn-lg w-100">
+                <i class="bi bi-box-arrow-in-right me-1"></i>เข้าสู่ระบบ
+              </button>
+            </form>
+
           </div>
-          <h1 class="display-6 fw-bold mb-3 text-white">ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดชัยภูมิ</h1>
-          <p class="lead mb-0 text-white-50">ศูนย์รวมข้อมูล งานบริการ และเมนูสำหรับเจ้าหน้าที่ สหกรณ์ และกลุ่มเกษตรกร</p>
+        </div>
+      </div>
+
+      <div class="col-xl-8 order-2 order-xl-1">
+        <div class="main-hero">
+          <div>
+            <span class="main-hero-kicker"><i class="bi bi-shield-check"></i> CoopChain Login</span>
+            <h2 class="display-6 mb-0">ระบบกลางสำหรับเข้าสู่งานบริการและข้อมูลสหกรณ์</h2>
+            <p class="lead mb-0 mt-3">เข้าสู่ระบบเพื่อใช้งานเมนูตามสิทธิ์ ส่วนข้อมูลสถาบันด้านล่างแสดงเฉพาะรายการที่เปิดเผยได้</p>
+          </div>
+          <div class="main-hero-summary mt-4" aria-label="ข้อมูลประกอบการเข้าสู่ระบบ">
+            <div class="main-hero-summary-row">
+              <span>รายการประชุมใหญ่ภายในเดือนนี้</span>
+              <strong><%= _bigmeetCount %> แห่ง</strong>
+            </div>
+            <div class="main-hero-summary-row">
+              <span>รายการครบกำหนดปิดบัญชีในช่วง <%= _closingWindowLabel %></span>
+              <strong><%= _closingCount %> แห่ง</strong>
+            </div>
+            <div class="main-hero-summary-row">
+              <span>ข้อมูลสถาบันที่แสดงแบบจำกัด</span>
+              <strong><%= _institutionTotal %> แห่ง</strong>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-lg-5">
-      <div class="card main-login-card border-0 shadow-sm h-100">
-        <div class="card-body p-4 p-xl-5 d-flex flex-column">
-          <div class="mb-4">
-            <h2 class="h4 fw-bold mb-2">เข้าสู่ระบบ</h2>
-            <p class="text-muted mb-0">ลงชื่อเข้าใช้เพื่อเข้าสู่หน้าหลักตามสิทธิ์ของบัญชี</p>
-          </div>
-
-          <form action="/auth/login" method="POST" class="mb-4" novalidate>
-            <div class="mb-3">
-              <label for="username" class="form-label">ชื่อผู้ใช้</label>
-              <input type="text" name="username" id="username" class="form-control form-control-lg" autocomplete="username" required autofocus>
+    <div class="row g-3 mt-1">
+      <div class="col-md-6 col-xl-3">
+        <div class="main-stat">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="text-muted small">ประชุมใหญ่เดือนนี้</div>
+              <div class="h3 fw-bold mb-0"><%= _bigmeetCount %></div>
             </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label">รหัสผ่าน</label>
-              <input type="password" name="password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
-            </div>
-
-            <div class="form-check mb-4">
-              <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-              <label class="form-check-label" for="rememberMe">จดจำฉัน</label>
-            </div>
-
-            <button type="submit" class="btn btn-success btn-lg w-100">
-              <i class="bi bi-box-arrow-in-right me-1"></i>เข้าสู่ระบบ
-            </button>
-          </form>
-
-          <div class="mt-auto">
-            <div class="small text-uppercase text-muted fw-semibold mb-2">เมนูลัด</div>
-            <div class="d-grid gap-2">
-              <a href="/register" class="main-system-link">
-                <i class="bi bi-person-plus"></i>
-                <span>สมัครสมาชิก</span>
-              </a>
-              <a href="/" class="main-system-link">
-                <i class="bi bi-house-door"></i>
-                <span>หน้าเว็บไซต์ข้อมูลสาธารณะ</span>
-              </a>
-              <a href="/meetingroom" class="main-system-link">
-                <i class="bi bi-calendar-week"></i>
-                <span>ห้องประชุม</span>
-              </a>
-            </div>
+            <div class="main-stat-icon green"><i class="bi bi-people"></i></div>
           </div>
         </div>
       </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="main-stat">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="text-muted small">ปิดบัญชี 30 วัน</div>
+              <div class="h3 fw-bold mb-0"><%= _closingCount %></div>
+            </div>
+            <div class="main-stat-icon amber"><i class="bi bi-journal-check"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <a href="/meetingroom" class="main-system-link h-100">
+          <i class="bi bi-calendar2-check"></i>
+          <span>
+            <span class="d-block fw-semibold">จองห้องประชุม</span>
+            <span class="small text-muted">Meeting room</span>
+          </span>
+        </a>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <a href="/register" class="main-system-link h-100">
+          <i class="bi bi-person-plus"></i>
+          <span>
+            <span class="d-block fw-semibold">สมัครสมาชิก</span>
+            <span class="small text-muted">New account</span>
+          </span>
+        </a>
+      </div>
     </div>
-  </div>
-</section>
+
+    <section class="main-institution-section" aria-labelledby="institutionSummaryTitle">
+      <div class="main-section-title">
+        <div>
+          <h2 id="institutionSummaryTitle">สรุปจำนวนสถาบันที่ดำเนินการ</h2>
+          <div class="text-muted small">คลิกการ์ดเพื่อดูชื่อ สังกัด และปีบัญชีที่เปิดเผยได้</div>
+        </div>
+        <span class="badge text-bg-success"><%= _institutionTotal %> แห่ง</span>
+      </div>
+
+      <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-xl-5">
+          <div class="main-institution-chart-card">
+            <div class="main-chart-head">
+              <div>
+                <h3 class="main-chart-title">
+                  <i class="bi bi-bar-chart-line"></i>
+                  กราฟจำนวนสถาบัน
+                </h3>
+                <div class="text-muted small mt-1">แสดงเฉพาะจำนวนรวมตามประเภทสถาบัน</div>
+              </div>
+              <span class="main-pill">
+                <i class="bi bi-database-check text-success"></i>
+                <span><%= _institutionTotal %> แห่ง</span>
+              </span>
+            </div>
+
+            <div class="main-chart-canvas-wrap">
+              <canvas id="institutionSummaryChart" aria-label="กราฟจำนวนสถาบันตามประเภท" role="img"></canvas>
+              <ul class="main-chart-fallback" id="institutionSummaryChartFallback" hidden>
+                <% _institutionChartData.forEach(function(item) { %>
+                  <li>
+                    <span><span class="main-chart-dot" style="--dot-color: <%= item.color %>"></span><%= item.label %></span>
+                    <strong><%= item.count %> แห่ง</strong>
+                  </li>
+                <% }); %>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-7">
+          <div class="row g-3 h-100">
+            <% _institutionSummaryList.forEach(function(item) { %>
+              <div class="col-md-4">
+                <button
+                  type="button"
+                  class="main-institution-card"
+                  data-institution-type="<%= item.key %>"
+                  data-bs-toggle="modal"
+                  data-bs-target="#institutionSummaryModal">
+                  <div class="d-flex align-items-start justify-content-between gap-3">
+                    <div>
+                      <div class="main-institution-label"><%= item.label %></div>
+                      <div class="main-institution-count mt-2"><%= item.count || 0 %></div>
+                      <div class="main-institution-hint mt-2">
+                        <span>ดูรายชื่อ</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                      </div>
+                    </div>
+                    <div class="main-stat-icon <%= item.tone %>">
+                      <i class="bi <%= item.icon %>"></i>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </section>
 
 <section class="main-deadline-section">
   <div class="row g-4 align-items-stretch">
@@ -360,5 +1122,199 @@
     </div>
   </div>
 </section>
+  </section>
+</div>
+
+<div class="modal fade" id="institutionSummaryModal" tabindex="-1" aria-labelledby="institutionSummaryModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content main-modal-content">
+      <div class="modal-header main-modal-header">
+        <div>
+          <h3 class="modal-title h5 fw-bold" id="institutionSummaryModalTitle">รายชื่อสถาบัน</h3>
+          <div class="small text-muted" id="institutionSummaryModalSubtitle">-</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 main-institution-modal-table">
+            <thead>
+              <tr>
+                <th style="width: 7rem;">รหัส</th>
+                <th>สถาบัน</th>
+                <th style="width: 9rem;">กลุ่มส่งเสริม</th>
+                <th style="width: 11rem;">ปีบัญชี</th>
+              </tr>
+            </thead>
+            <tbody id="institutionSummaryModalRows">
+              <tr>
+                <td colspan="4" class="text-center text-muted py-4">เลือกรายการเพื่อดูข้อมูล</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var institutionSummary = <%- JSON.stringify(_institutionSummary).replace(/</g, '\\u003c') %>;
+    var institutionChartData = <%- JSON.stringify(_institutionChartData).replace(/</g, '\\u003c') %>;
+    var modalEl = document.getElementById('institutionSummaryModal');
+    var titleEl = document.getElementById('institutionSummaryModalTitle');
+    var subtitleEl = document.getElementById('institutionSummaryModalSubtitle');
+    var rowsEl = document.getElementById('institutionSummaryModalRows');
+    var chartCanvas = document.getElementById('institutionSummaryChart');
+    var chartFallback = document.getElementById('institutionSummaryChartFallback');
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    if (!modalEl || !titleEl || !subtitleEl || !rowsEl) return;
+
+    modalEl.addEventListener('show.bs.modal', function(event) {
+      var trigger = event.relatedTarget;
+      var type = trigger ? trigger.getAttribute('data-institution-type') : '';
+      var data = institutionSummary[type] || { label: 'รายชื่อสถาบัน', rows: [], count: 0 };
+      var rows = Array.isArray(data.rows) ? data.rows : [];
+
+      titleEl.textContent = data.label || 'รายชื่อสถาบัน';
+      subtitleEl.textContent = 'จำนวน ' + rows.length + ' แห่ง';
+
+      if (!rows.length) {
+        rowsEl.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">ไม่มีข้อมูลสถาบันในประเภทนี้</td></tr>';
+        return;
+      }
+
+      rowsEl.innerHTML = rows.map(function(row) {
+        return [
+          '<tr>',
+            '<td><span class="badge text-bg-light text-secondary main-table-code">' + escapeHtml(row.c_code || '-') + '</span></td>',
+            '<td class="main-institution-name">' + escapeHtml(row.c_name || '-') + '</td>',
+            '<td>' + escapeHtml(row.c_group || '-') + '</td>',
+            '<td><span class="badge text-bg-success">' + escapeHtml(row.accountingYearLabel || '-') + '</span></td>',
+          '</tr>'
+        ].join('');
+      }).join('');
+    });
+
+    window.addEventListener('load', function() {
+      if (!chartCanvas || !chartFallback) return;
+
+      var chartRows = Array.isArray(institutionChartData) ? institutionChartData : [];
+      var hasVisibleData = chartRows.some(function(item) {
+        return Number(item.count || 0) > 0;
+      });
+
+      function showFallback() {
+        chartCanvas.hidden = true;
+        chartFallback.hidden = false;
+      }
+
+      if (!hasVisibleData || typeof Chart === 'undefined') {
+        showFallback();
+        return;
+      }
+
+      try {
+        var plugins = [];
+        if (typeof ChartDataLabels !== 'undefined') {
+          Chart.register(ChartDataLabels);
+          plugins.push(ChartDataLabels);
+        }
+
+        Chart.defaults.font.family = 'Sarabun, system-ui, -apple-system, Segoe UI, sans-serif';
+        Chart.defaults.color = '#172033';
+
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var values = chartRows.map(function(item) { return Number(item.count || 0); });
+        var maxValue = Math.max.apply(null, values);
+
+        new Chart(chartCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: chartRows.map(function(item) { return item.label; }),
+            datasets: [{
+              label: 'จำนวนสถาบัน',
+              data: values,
+              backgroundColor: chartRows.map(function(item) { return item.color; }),
+              borderWidth: 0,
+              borderRadius: 8,
+              borderSkipped: false,
+              barThickness: 26,
+              maxBarThickness: 32
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: reduceMotion ? 0 : 320,
+              easing: 'easeOutQuart'
+            },
+            layout: {
+              padding: { top: 4, right: 26, bottom: 0, left: 0 }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return 'จำนวน ' + Number(context.parsed.x || 0).toLocaleString('th-TH') + ' แห่ง';
+                  }
+                }
+              },
+              datalabels: {
+                anchor: 'end',
+                align: 'right',
+                clamp: true,
+                color: '#172033',
+                font: { weight: '700', size: 12 },
+                formatter: function(value) {
+                  return Number(value || 0).toLocaleString('th-TH');
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                suggestedMax: Math.max(maxValue + 5, Math.ceil(maxValue * 1.16)),
+                grid: { color: '#edf1f6' },
+                border: { display: false },
+                ticks: {
+                  precision: 0,
+                  color: '#667085',
+                  callback: function(value) {
+                    return Number(value).toLocaleString('th-TH');
+                  }
+                }
+              },
+              y: {
+                grid: { display: false },
+                border: { display: false },
+                ticks: {
+                  color: '#172033',
+                  font: { weight: '700', size: 12 }
+                }
+              }
+            }
+          },
+          plugins: plugins
+        });
+      } catch (error) {
+        showFallback();
+      }
+    });
+  })();
+</script>
 
 <%- include('partials/footer') %>

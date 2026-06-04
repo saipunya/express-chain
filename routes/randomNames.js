@@ -80,11 +80,44 @@ function uploadMusic(req, res, next) {
   });
 }
 
+function requireRandomNamesAdmin(req, res, next) {
+  if (req.session && req.session.randomNamesAdminAuthed) {
+    return next();
+  }
+
+  res.redirect('/random-names/admin/login');
+}
+
+function requireRandomNamesAccess(req, res, next) {
+  if (req.session && (req.session.randomNamesAccessAuthed || req.session.randomNamesAdminAuthed)) {
+    return next();
+  }
+
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({
+      ok: false,
+      message: 'กรุณาเข้าสู่ระบบก่อนใช้งาน'
+    });
+  }
+
+  res.redirect('/random-names/login');
+}
+
 router.get('/', randomNamesController.landing);
-router.get('/play', randomNamesController.index);
-router.get('/import', randomNamesController.importPage);
-router.post('/import', uploadDocx, randomNamesController.importDocx);
-router.post('/import/music', uploadMusic, randomNamesController.importMusic);
-router.get('/api/names', randomNamesController.names);
+router.get('/login', randomNamesController.loginPage);
+router.post('/login', randomNamesController.login);
+router.post('/logout', randomNamesController.logout);
+router.get('/play', requireRandomNamesAccess, randomNamesController.index);
+router.get('/import', requireRandomNamesAccess, randomNamesController.importPage);
+router.get('/admin/login', randomNamesController.adminLoginPage);
+router.post('/admin/login', randomNamesController.adminLogin);
+router.post('/admin/logout', randomNamesController.adminLogout);
+router.get('/admin/winners', requireRandomNamesAdmin, randomNamesController.adminWinners);
+router.post('/admin/winners/:id', requireRandomNamesAdmin, randomNamesController.updateWinner);
+router.post('/admin/winners/:id/delete', requireRandomNamesAdmin, randomNamesController.deleteWinner);
+router.post('/import', requireRandomNamesAccess, uploadDocx, randomNamesController.importDocx);
+router.post('/import/music', requireRandomNamesAccess, uploadMusic, randomNamesController.importMusic);
+router.get('/api/names', requireRandomNamesAccess, randomNamesController.names);
+router.post('/api/winners', requireRandomNamesAccess, randomNamesController.saveWinner);
 
 module.exports = router;

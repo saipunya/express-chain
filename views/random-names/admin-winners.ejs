@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/random-names.css">
+  </head>
+  <body>
+    <main class="random-page">
+      <div class="container py-4 py-lg-5">
+        <div class="random-shell mx-auto">
+          <div class="random-import-header">
+            <div>
+              <h1 class="random-title">จัดการผู้ได้รับรางวัล</h1>
+              <p class="random-subtitle mb-0">แก้ไขหรือลบรายชื่อที่บันทึกไว้ เพื่อให้ระบบสุ่มใช้ข้อมูลล่าสุด</p>
+            </div>
+
+            <div class="random-admin-actions">
+              <a href="/random-names/play" class="btn random-back-btn">
+                <i class="bi bi-arrow-left"></i>
+                <span>กลับหน้าสุ่ม</span>
+              </a>
+              <a href="/random-names/import" class="btn random-import-btn">
+                <i class="bi bi-upload"></i>
+                <span>นำเข้าข้อมูล</span>
+              </a>
+              <form action="/random-names/admin/logout" method="post" class="random-admin-logout-form">
+                <button type="submit" class="btn random-cancel-btn">
+                  <i class="bi bi-lock-fill"></i>
+                  <span>ออกจากระบบ</span>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <% if (success) { %>
+            <div class="alert alert-success random-import-status" role="status">
+              <i class="bi bi-check-circle-fill"></i>
+              <span><%= success %></span>
+            </div>
+          <% } %>
+
+          <% if (error) { %>
+            <div class="alert alert-danger random-import-status" role="alert">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span><%= error %></span>
+            </div>
+          <% } %>
+
+          <section class="random-admin-panel">
+            <div class="random-admin-panel-head">
+              <div>
+                <div class="random-admin-title">รายการที่บันทึกแล้ว</div>
+                <div class="random-admin-subtitle"><%= winners.length %> รายการ</div>
+              </div>
+            </div>
+
+            <% if (!winners.length) { %>
+              <div class="random-admin-empty">
+                <i class="bi bi-inbox-fill"></i>
+                <span>ยังไม่มีรายชื่อผู้ได้รับรางวัลที่บันทึกไว้</span>
+              </div>
+            <% } else { %>
+              <div class="random-winners-list">
+                <% winners.forEach((winner) => { %>
+                  <article class="random-winner-row">
+                    <div class="random-winner-meta">
+                      <div class="random-winner-number">#<%= winner.displayNumber %></div>
+                      <div>
+                        <div class="random-winner-date"><%= winner.savedAtLabel %></div>
+                        <div class="random-winner-source">Source: <%= winner.source || '-' %></div>
+                      </div>
+                    </div>
+
+                    <form action="/random-names/admin/winners/<%= encodeURIComponent(winner.id) %>" method="post" class="random-winner-edit-form">
+                      <div>
+                        <label for="winner-name-<%= winner.id %>" class="form-label">ชื่อผู้ได้รับรางวัล</label>
+                        <input id="winner-name-<%= winner.id %>" type="text" name="name" class="form-control" value="<%= winner.name %>" required>
+                      </div>
+                      <div>
+                        <label for="winner-source-<%= winner.id %>" class="form-label">Source</label>
+                        <input id="winner-source-<%= winner.id %>" type="text" name="source" class="form-control" value="<%= winner.source || '' %>">
+                      </div>
+                      <button type="submit" class="btn random-save-inline-btn">
+                        <i class="bi bi-save-fill"></i>
+                        <span>บันทึก</span>
+                      </button>
+                    </form>
+
+                    <form action="/random-names/admin/winners/<%= encodeURIComponent(winner.id) %>/delete" method="post" class="random-winner-delete-form" onsubmit="return confirm('ยืนยันลบรายชื่อนี้ออกจากรายการผู้ได้รับรางวัล?');">
+                      <button type="submit" class="btn random-delete-inline-btn">
+                        <i class="bi bi-trash3-fill"></i>
+                        <span>ลบ</span>
+                      </button>
+                    </form>
+                  </article>
+                <% }) %>
+              </div>
+            <% } %>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

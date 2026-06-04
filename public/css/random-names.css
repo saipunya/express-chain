@@ -194,6 +194,25 @@ body {
   font-weight: 600;
 }
 
+.random-winner-summary {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  padding: 6px 10px;
+  color: var(--rn-primary-dark);
+  background: var(--rn-primary-soft);
+  border: 1px solid rgba(15, 139, 95, 0.18);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.random-winner-summary span {
+  margin: 0 4px;
+  color: var(--rn-text);
+  font-weight: 900;
+}
+
 .random-source {
   width: min(100%, 280px);
 }
@@ -202,6 +221,18 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 12px;
+}
+
+.random-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.random-admin-logout-form {
+  margin: 0;
 }
 
 .random-import-btn,
@@ -324,6 +355,17 @@ body {
   transform: translateY(-1px);
 }
 
+.random-action-btn.is-stop {
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.28);
+}
+
+.random-action-btn.is-stop:hover,
+.random-action-btn.is-stop:focus {
+  background: linear-gradient(180deg, #dc2626, #991b1b);
+  color: #fff;
+}
+
 .random-action-btn:disabled {
   background: #b7c3bd;
   box-shadow: none;
@@ -331,6 +373,11 @@ body {
 
 .random-empty {
   border-radius: 8px;
+}
+
+.random-save-status {
+  border-radius: 8px;
+  font-weight: 800;
 }
 
 .random-grid {
@@ -486,7 +533,7 @@ body {
   justify-content: center;
   padding: 24px;
   pointer-events: none;
-  transform: translateY(clamp(44px, 8vh, 92px));
+  transform: translateY(clamp(96px, 15vh, 170px));
 }
 
 .random-running-label {
@@ -634,15 +681,51 @@ body {
   overflow-wrap: anywhere;
 }
 
-.winner-modal-close {
+.winner-modal-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.winner-modal-close,
+.winner-save-btn {
   position: relative;
   z-index: 1;
   min-width: 120px;
   min-height: 44px;
   border-radius: 8px;
+  font-weight: 800;
+}
+
+.winner-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 230px;
+  background: linear-gradient(180deg, #12a06d, var(--rn-primary-dark));
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(15, 139, 95, 0.24);
+}
+
+.winner-save-btn:hover,
+.winner-save-btn:focus {
+  background: linear-gradient(180deg, #118f63, #075f42);
+  color: #fff;
+}
+
+.winner-save-btn:disabled {
+  background: #a9b7b0;
+  box-shadow: none;
+  color: #fff;
+}
+
+.winner-modal-close {
   background: var(--rn-primary);
   color: #fff;
-  font-weight: 800;
 }
 
 .winner-modal-close:hover,
@@ -707,6 +790,199 @@ body {
 
 .random-submit-btn {
   width: auto;
+}
+
+.random-auth-panel {
+  width: min(100%, 460px);
+  padding: clamp(22px, 5vw, 34px);
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(15, 139, 95, 0.05), rgba(255, 255, 255, 0) 42%),
+    var(--rn-surface);
+  border: 1px solid var(--rn-border);
+  border-radius: 8px;
+  box-shadow: var(--rn-shadow-md);
+}
+
+.random-auth-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 14px;
+  color: #fff;
+  background: var(--rn-primary);
+  border-radius: 999px;
+  box-shadow: 0 14px 28px rgba(15, 139, 95, 0.24);
+}
+
+.random-auth-icon i {
+  font-size: 2rem;
+}
+
+.random-auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.random-auth-form .form-label {
+  color: var(--rn-muted);
+  font-weight: 800;
+}
+
+.random-auth-form .form-control {
+  border-color: var(--rn-border);
+  border-radius: 8px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.random-admin-panel {
+  padding: clamp(16px, 3vw, 24px);
+  background: var(--rn-surface);
+  border: 1px solid var(--rn-border);
+  border-radius: 8px;
+  box-shadow: var(--rn-shadow-md);
+}
+
+.random-admin-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(102, 112, 133, 0.16);
+}
+
+.random-admin-title {
+  color: var(--rn-text);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.random-admin-subtitle,
+.random-winner-date,
+.random-winner-source {
+  color: var(--rn-muted);
+  font-weight: 700;
+}
+
+.random-admin-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 180px;
+  color: var(--rn-muted);
+  background: #f8fbf9;
+  border: 1px dashed var(--rn-border);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.random-winners-list {
+  display: grid;
+  gap: 12px;
+}
+
+.random-winner-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.7fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 14px;
+  background:
+    linear-gradient(90deg, rgba(15, 139, 95, 0.05), rgba(37, 99, 235, 0.02)),
+    #fff;
+  border: 1px solid rgba(220, 230, 223, 0.92);
+  border-radius: 8px;
+}
+
+.random-winner-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.random-winner-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 34px;
+  color: var(--rn-primary-dark);
+  background: var(--rn-primary-soft);
+  border: 1px solid rgba(15, 139, 95, 0.18);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.random-winner-date,
+.random-winner-source {
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.random-winner-edit-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(130px, 0.7fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.random-winner-edit-form .form-label {
+  color: var(--rn-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.random-winner-edit-form .form-control {
+  border-color: var(--rn-border);
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.random-save-inline-btn,
+.random-delete-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  border-radius: 8px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.random-save-inline-btn {
+  color: #fff;
+  background: var(--rn-primary);
+  border: 1px solid var(--rn-primary);
+}
+
+.random-save-inline-btn:hover,
+.random-save-inline-btn:focus {
+  color: #fff;
+  background: var(--rn-primary-dark);
+  border-color: var(--rn-primary-dark);
+}
+
+.random-delete-inline-btn {
+  color: #fff;
+  background: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.random-delete-inline-btn:hover,
+.random-delete-inline-btn:focus {
+  color: #fff;
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 @keyframes winnerPop {
@@ -790,15 +1066,28 @@ body {
 
   .random-tools,
   .random-import-header,
-  .random-import-actions {
+  .random-import-actions,
+  .random-admin-actions,
+  .random-winner-row,
+  .random-winner-edit-form {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .random-winner-row,
+  .random-winner-edit-form {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .random-import-btn,
   .random-back-btn,
   .random-cancel-btn,
-  .random-submit-btn {
+  .random-submit-btn,
+  .winner-save-btn,
+  .winner-modal-close,
+  .random-save-inline-btn,
+  .random-delete-inline-btn {
     width: 100%;
   }
 

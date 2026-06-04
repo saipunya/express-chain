@@ -5,7 +5,9 @@ const zlib = require('zlib');
 const DEFAULT_DOCX_PATH = 'c:\\Users\\Admins\\Downloads\\รายชื่อนักเรียน มัธยม.2569.docx';
 const UPLOADED_DOCX_PATH = path.join(process.cwd(), 'uploads', 'random-names', 'student-names.docx');
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'random-names');
+const WINNERS_PATH = path.join(UPLOAD_DIR, 'winners.json');
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.webm']);
+const RANDOM_NAMES_PASSWORD = '1234';
 
 const fallbackSources = {
   empty: {
@@ -44,6 +46,76 @@ function getImportViewData(overrides = {}) {
     musicCount: getRandomMusicFiles().length,
     ...overrides
   };
+}
+
+function normalizeWinnerName(name) {
+  return String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function createWinnerId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function readSavedWinners(options = {}) {
+  if (!fs.existsSync(WINNERS_PATH)) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(WINNERS_PATH, 'utf8'));
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    let changed = false;
+    const winners = parsed.filter((winner) => winner && winner.name).map((winner) => {
+      if (winner.id) {
+        return winner;
+      }
+
+      changed = true;
+      return {
+        ...winner,
+        id: createWinnerId()
+      };
+    });
+
+    if (changed && options.persistMissingIds) {
+      writeSavedWinners(winners);
+    }
+
+    return winners;
+  } catch (error) {
+    console.warn('randomNames winners read warning:', error && error.message);
+    return [];
+  }
+}
+
+function writeSavedWinners(winners) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.writeFileSync(WINNERS_PATH, `${JSON.stringify(winners, null, 2)}\n`);
+}
+
+function getSavedWinnerNameSet() {
+  return new Set(readSavedWinners().map((winner) => normalizeWinnerName(winner.name)).filter(Boolean));
+}
+
+function filterUnsavedNames(names) {
+  const savedWinnerNames = getSavedWinnerNameSet();
+  return (names || []).filter((name) => !savedWinnerNames.has(normalizeWinnerName(name)));
+}
+
+function redirectAfterSessionSave(req, res, targetPath) {
+  if (!req.session || typeof req.session.save !== 'function') {
+    return res.redirect(targetPath);
+  }
+
+  req.session.save((error) => {
+    if (error) {
+      console.warn('randomNames session save warning:', error && error.message);
+    }
+    res.redirect(targetPath);
+  });
 }
 
 function decodeXml(value) {
@@ -319,6 +391,7 @@ function getSources() {
 
 exports.index = (req, res) => {
   const sources = getSources();
+  const savedWinnerCount = readSavedWinners().length;
 
   res.render('random-names/index', {
     title: 'ระบบสุ่มรายชื่อ',
@@ -326,6 +399,7 @@ exports.index = (req, res) => {
     defaultSource: sources[0] ? sources[0].value : 'empty',
     importStatus: req.query.imported === '1' ? 'นำเข้าไฟล์ Word สำเร็จ' : '',
     musicStatus: req.query.music === '1' ? 'อัปโหลดเพลงสุ่มสำเร็จ' : '',
+    savedWinnerCount,
     randomMusicUrls: getRandomMusicUrls()
   });
 };
@@ -341,23 +415,196 @@ exports.landing = (req, res) => {
   });
 };
 
+exports.loginPage = (req, res) => {
+  if (req.session && req.session.randomNamesAccessAuthed) {
+    return res.redirect('/random-names/play');
+  }
+
+  res.render('random-names/login', {
+    title: 'เข้าสู่ระบบสุ่มรายชื่อ',
+    error: req.query.error === '1' ? 'รหัสผ่านไม่ถูกต้อง' : ''
+  });
+};
+
+exports.login = (req, res) => {
+  const password = String(req.body && req.body.password ? req.body.password : '');
+
+  if (password !== RANDOM_NAMES_PASSWORD) {
+    return res.redirect('/random-names/login?error=1');
+  }
+
+  req.session.randomNamesAccessAuthed = true;
+  req.session.randomNamesAdminAuthed = true;
+  redirectAfterSessionSave(req, res, '/random-names/play');
+};
+
+exports.logout = (req, res) => {
+  if (req.session) {
+    req.session.randomNamesAccessAuthed = false;
+    req.session.randomNamesAdminAuthed = false;
+  }
+
+  redirectAfterSessionSave(req, res, '/random-names');
+};
+
 exports.names = (req, res) => {
   const sources = getSourcesObject();
   const sourceKeys = Object.keys(sources);
   const requestedSource = String(req.query.source || sourceKeys[0] || 'staff');
   const sourceKey = sources[requestedSource] ? requestedSource : sourceKeys[0];
   const source = sources[sourceKey] || { label: 'ไม่มีรายชื่อ', names: [] };
+  const availableNames = filterUnsavedNames(source.names);
 
   res.json({
     ok: true,
     source: sourceKey,
     label: source.label,
-    names: shuffleNames(source.names)
+    totalNames: source.names.length,
+    savedWinnerCount: readSavedWinners().length,
+    availableNames: availableNames.length,
+    names: shuffleNames(availableNames)
+  });
+};
+
+exports.saveWinner = (req, res) => {
+  const name = String(req.body && req.body.name ? req.body.name : '').replace(/\s+/g, ' ').trim();
+  const source = String(req.body && req.body.source ? req.body.source : '').trim();
+
+  if (!name) {
+    return res.status(400).json({
+      ok: false,
+      message: 'ไม่พบชื่อผู้ได้รับรางวัล'
+    });
+  }
+
+  const normalizedName = normalizeWinnerName(name);
+  const winners = readSavedWinners();
+  const existingWinner = winners.find((winner) => normalizeWinnerName(winner.name) === normalizedName);
+
+  if (existingWinner) {
+    return res.json({
+      ok: true,
+      alreadySaved: true,
+      winner: existingWinner,
+      savedWinnerCount: winners.length,
+      message: 'บันทึกผู้ได้รับรางวัลนี้ไว้แล้ว'
+    });
+  }
+
+  const winner = {
+    id: createWinnerId(),
+    name,
+    source,
+    savedAt: new Date().toISOString()
+  };
+
+  winners.push(winner);
+  writeSavedWinners(winners);
+
+  res.json({
+    ok: true,
+    alreadySaved: false,
+    winner,
+    savedWinnerCount: winners.length,
+    message: 'บันทึกผู้ได้รับรางวัลสำเร็จ'
   });
 };
 
 exports.importPage = (req, res) => {
   res.render('random-names/import', getImportViewData());
+};
+
+exports.adminLoginPage = (req, res) => {
+  if (req.session && req.session.randomNamesAdminAuthed) {
+    return res.redirect('/random-names/admin/winners');
+  }
+
+  res.render('random-names/admin-login', {
+    title: 'เข้าสู่หน้าจัดการรางวัล',
+    error: req.query.error === '1' ? 'รหัสผ่านไม่ถูกต้อง' : ''
+  });
+};
+
+exports.adminLogin = (req, res) => {
+  const password = String(req.body && req.body.password ? req.body.password : '');
+
+  if (password !== RANDOM_NAMES_PASSWORD) {
+    return res.redirect('/random-names/admin/login?error=1');
+  }
+
+  req.session.randomNamesAccessAuthed = true;
+  req.session.randomNamesAdminAuthed = true;
+  redirectAfterSessionSave(req, res, '/random-names/admin/winners');
+};
+
+exports.adminLogout = (req, res) => {
+  if (req.session) {
+    req.session.randomNamesAccessAuthed = false;
+    req.session.randomNamesAdminAuthed = false;
+  }
+
+  redirectAfterSessionSave(req, res, '/random-names');
+};
+
+exports.adminWinners = (req, res) => {
+  const winners = readSavedWinners({ persistMissingIds: true })
+    .map((winner, index) => ({
+      ...winner,
+      displayNumber: index + 1,
+      savedAtLabel: winner.savedAt ? new Date(winner.savedAt).toLocaleString('th-TH', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'Asia/Bangkok'
+      }) : '-'
+    }))
+    .reverse();
+
+  res.render('random-names/admin-winners', {
+    title: 'จัดการรายชื่อผู้ได้รับรางวัล',
+    winners,
+    success: req.query.updated === '1' ? 'แก้ไขรายชื่อผู้ได้รับรางวัลสำเร็จ' :
+      req.query.deleted === '1' ? 'ลบรายชื่อผู้ได้รับรางวัลสำเร็จ' : '',
+    error: req.query.error === 'not-found' ? 'ไม่พบรายการผู้ได้รับรางวัลที่ต้องการแก้ไขหรือลบ' : ''
+  });
+};
+
+exports.updateWinner = (req, res) => {
+  const winnerId = String(req.params.id || '').trim();
+  const name = String(req.body && req.body.name ? req.body.name : '').replace(/\s+/g, ' ').trim();
+  const source = String(req.body && req.body.source ? req.body.source : '').trim();
+
+  if (!winnerId || !name) {
+    return res.redirect('/random-names/admin/winners?error=not-found');
+  }
+
+  const winners = readSavedWinners({ persistMissingIds: true });
+  const winnerIndex = winners.findIndex((winner) => winner.id === winnerId);
+
+  if (winnerIndex < 0) {
+    return res.redirect('/random-names/admin/winners?error=not-found');
+  }
+
+  winners[winnerIndex] = {
+    ...winners[winnerIndex],
+    name,
+    source
+  };
+  writeSavedWinners(winners);
+
+  res.redirect('/random-names/admin/winners?updated=1');
+};
+
+exports.deleteWinner = (req, res) => {
+  const winnerId = String(req.params.id || '').trim();
+  const winners = readSavedWinners({ persistMissingIds: true });
+  const nextWinners = winners.filter((winner) => winner.id !== winnerId);
+
+  if (nextWinners.length === winners.length) {
+    return res.redirect('/random-names/admin/winners?error=not-found');
+  }
+
+  writeSavedWinners(nextWinners);
+  res.redirect('/random-names/admin/winners?deleted=1');
 };
 
 exports.importDocx = (req, res) => {

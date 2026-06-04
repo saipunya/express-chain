@@ -16,6 +16,9 @@
             <div>
               <h1 class="random-title">ระบบสุ่มรายชื่อ</h1>
               <p class="random-subtitle mb-0">เลือกแหล่งรายชื่อแล้วกดปุ่มเพื่อเริ่มหรือหยุดสุ่ม</p>
+              <div class="random-winner-summary" id="winnerSummary">
+                บันทึกผู้ได้รับรางวัลแล้ว <span id="winnerCount"><%= savedWinnerCount || 0 %></span> คน
+              </div>
             </div>
 
             <div class="random-tools">
@@ -28,6 +31,18 @@
                 <i class="bi bi-upload"></i>
                 <span>นำเข้า Word</span>
               </a>
+
+              <a href="/random-names/admin/winners" class="btn random-import-btn">
+                <i class="bi bi-award-fill"></i>
+                <span>จัดการรางวัล</span>
+              </a>
+
+              <form action="/random-names/logout" method="post" class="random-admin-logout-form">
+                <button type="submit" class="btn random-cancel-btn">
+                  <i class="bi bi-lock-fill"></i>
+                  <span>ออกจากระบบ</span>
+                </button>
+              </form>
 
               <div class="random-source">
                 <label for="sourceSelect" class="form-label">Source รายชื่อ</label>
@@ -67,6 +82,8 @@
             ไม่มีรายชื่อใน source นี้
           </div>
 
+          <div class="random-save-status alert d-none" id="winnerSaveStatus" role="status"></div>
+
           <section class="random-grid" id="namesGrid" aria-label="รายชื่อทั้งหมด"></section>
         </div>
       </div>
@@ -85,9 +102,15 @@
         <div class="winner-celebration-text">ยินดีด้วย</div>
         <div class="winner-modal-label" id="winnerModalTitle">ผู้ได้รับรางวัล</div>
         <div class="winner-modal-name" id="winnerModalName">-</div>
-        <button type="button" class="btn winner-modal-close" id="winnerModalClose">
-          ปิด
-        </button>
+        <div class="winner-modal-actions">
+          <button type="button" class="btn winner-save-btn" id="winnerSaveBtn">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>บันทึกผู้ได้รับรางวัล</span>
+          </button>
+          <button type="button" class="btn winner-modal-close" id="winnerModalClose">
+            ปิด
+          </button>
+        </div>
       </div>
     </div>
 

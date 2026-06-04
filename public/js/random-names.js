@@ -8,12 +8,15 @@
   const winnerModal = document.getElementById('winnerModal');
   const winnerModalName = document.getElementById('winnerModalName');
   const winnerModalClose = document.getElementById('winnerModalClose');
+  const winnerSaveBtn = document.getElementById('winnerSaveBtn');
+  const winnerSaveStatus = document.getElementById('winnerSaveStatus');
+  const winnerCount = document.getElementById('winnerCount');
   const randomRunningStage = document.getElementById('randomRunningStage');
   const randomRunningName = document.getElementById('randomRunningName');
   const winnerConfetti = document.getElementById('winnerConfetti');
   const randomMusicUrlsElement = document.getElementById('randomMusicUrls');
 
-  if (!sourceSelect || !namesGrid || !activeName || !statusText || !toggleBtn || !emptyState || !winnerModal || !winnerModalName || !winnerModalClose || !randomRunningStage || !randomRunningName || !winnerConfetti) {
+  if (!sourceSelect || !namesGrid || !activeName || !statusText || !toggleBtn || !emptyState || !winnerModal || !winnerModalName || !winnerModalClose || !winnerSaveBtn || !winnerSaveStatus || !randomRunningStage || !randomRunningName || !winnerConfetti) {
     return;
   }
 
@@ -28,6 +31,8 @@
   let randomMusicUrls = [];
   let remainingRandomMusicUrls = [];
   let currentRandomMusicUrl = '';
+  let currentWinnerName = '';
+  let currentWinnerSaved = false;
   const randomMusicQueueKey = 'randomNamesRemainingMusicUrls';
 
   try {
@@ -73,6 +78,26 @@
     const text = toggleBtn.querySelector('span');
     if (icon) icon.className = iconClass;
     if (text) text.textContent = label;
+  }
+
+  function setSaveButtonState(label, iconClass, disabled) {
+    const icon = winnerSaveBtn.querySelector('i');
+    const text = winnerSaveBtn.querySelector('span');
+    if (icon) icon.className = iconClass;
+    if (text) text.textContent = label;
+    winnerSaveBtn.disabled = Boolean(disabled);
+  }
+
+  function setWinnerSaveStatus(message, type) {
+    winnerSaveStatus.textContent = message || '';
+    winnerSaveStatus.className = 'random-save-status alert d-none';
+
+    if (!message) {
+      return;
+    }
+
+    winnerSaveStatus.classList.remove('d-none');
+    winnerSaveStatus.classList.add(type === 'danger' ? 'alert-danger' : 'alert-success');
   }
 
   function clearTimer() {
@@ -469,9 +494,12 @@
   }
 
   function showWinnerModal(name) {
+    currentWinnerName = name || '';
+    currentWinnerSaved = false;
     winnerModalName.textContent = name || '-';
+    setSaveButtonState('บันทึกผู้ได้รับรางวัล', 'bi bi-check-circle-fill', !currentWinnerName);
     winnerModal.hidden = false;
-    winnerModalClose.focus();
+    winnerSaveBtn.focus();
     launchConfetti();
     startWinnerMusic();
     playWinnerSound();
@@ -484,9 +512,13 @@
     stopConfetti();
     hideRunningStage();
     activeIndex = -1;
+    currentWinnerName = '';
+    currentWinnerSaved = false;
     activeName.textContent = '-';
     statusText.textContent = 'พร้อมสุ่ม';
+    setWinnerSaveStatus('', 'success');
     setButtonLabel('เริ่มสุ่ม', 'bi bi-play-fill');
+    toggleBtn.classList.remove('is-stop');
 
     namesGrid.querySelectorAll('.name-card').forEach(function (card) {
       card.classList.remove('active', 'winner');
@@ -548,9 +580,14 @@
 
       renderNames(names);
 
+      if (winnerCount && typeof data.savedWinnerCount === 'number') {
+        winnerCount.textContent = String(data.savedWinnerCount);
+      }
+
       if (!names.length) {
         emptyState.classList.remove('d-none');
-        statusText.textContent = 'ไม่มีรายชื่อ';
+        emptyState.textContent = data.totalNames > 0 ? 'รายชื่อใน source นี้ได้รับรางวัลครบแล้ว' : 'ไม่มีรายชื่อใน source นี้';
+        statusText.textContent = data.totalNames > 0 ? 'สุ่มครบแล้ว' : 'ไม่มีรายชื่อ';
         activeName.textContent = '-';
         toggleBtn.disabled = true;
         return;
@@ -582,7 +619,8 @@
 
     isRunning = true;
     statusText.textContent = 'กำลังสุ่ม...';
-    setButtonLabel('หยุดสุ่ม', 'bi bi-stop-fill');
+    toggleBtn.classList.add('is-stop');
+    setButtonLabel('หยุด', 'bi bi-stop-fill');
     setActiveIndex(Math.floor(Math.random() * names.length));
 
     timerId = setInterval(function () {
@@ -607,8 +645,66 @@
     }
 
     statusText.textContent = 'ผู้โชคดี';
+    toggleBtn.classList.remove('is-stop');
     setButtonLabel('เริ่มสุ่ม', 'bi bi-play-fill');
     showWinnerModal(names[activeIndex]);
+  }
+
+  async function saveWinner() {
+    if (!currentWinnerName || currentWinnerSaved) {
+      return;
+    }
+
+    setSaveButtonState('กำลังบันทึก...', 'bi bi-hourglass-split', true);
+    setWinnerSaveStatus('', 'success');
+
+    try {
+      const response = await fetch('/random-names/api/winners', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: currentWinnerName,
+          source: sourceSelect.value
+        })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || 'บันทึกไม่สำเร็จ');
+      }
+
+      currentWinnerSaved = true;
+      if (winnerCount && typeof data.savedWinnerCount === 'number') {
+        winnerCount.textContent = String(data.savedWinnerCount);
+      }
+
+      names = names.filter(function (name) {
+        return name !== currentWinnerName;
+      });
+      renderNames(names);
+      activeIndex = -1;
+
+      if (!names.length) {
+        toggleBtn.disabled = true;
+        activeName.textContent = '-';
+        statusText.textContent = 'สุ่มครบแล้ว';
+        emptyState.textContent = 'รายชื่อใน source นี้ได้รับรางวัลครบแล้ว';
+        emptyState.classList.remove('d-none');
+      } else {
+        activeName.textContent = 'เหลือรายชื่อให้สุ่ม ' + names.length + ' คน';
+        statusText.textContent = 'บันทึกแล้ว';
+        toggleBtn.disabled = false;
+      }
+
+      setSaveButtonState(data.alreadySaved ? 'บันทึกไว้แล้ว' : 'บันทึกแล้ว', 'bi bi-check2-circle', true);
+      setWinnerSaveStatus(data.message || 'บันทึกผู้ได้รับรางวัลสำเร็จ', 'success');
+    } catch (error) {
+      setSaveButtonState('ลองบันทึกอีกครั้ง', 'bi bi-arrow-clockwise', false);
+      setWinnerSaveStatus(error.message || 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง', 'danger');
+    }
   }
 
   toggleBtn.addEventListener('click', function () {
@@ -625,6 +721,7 @@
   });
 
   winnerModalClose.addEventListener('click', hideWinnerModal);
+  winnerSaveBtn.addEventListener('click', saveWinner);
   winnerModal.addEventListener('click', function (event) {
     if (event.target === winnerModal) {
       hideWinnerModal();

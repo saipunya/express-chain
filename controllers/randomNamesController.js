@@ -385,7 +385,7 @@ function getSourcesObject() {
 function getSources() {
   return Object.entries(getSourcesObject()).map(([value, source]) => ({
     value,
-    label: `${source.label} (${source.names.length} คน)`
+    label: source.label
   }));
 }
 

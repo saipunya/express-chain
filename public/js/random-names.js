@@ -10,7 +10,6 @@
   const winnerModalClose = document.getElementById('winnerModalClose');
   const winnerSaveBtn = document.getElementById('winnerSaveBtn');
   const winnerSaveStatus = document.getElementById('winnerSaveStatus');
-  const winnerCount = document.getElementById('winnerCount');
   const randomRunningStage = document.getElementById('randomRunningStage');
   const randomRunningName = document.getElementById('randomRunningName');
   const winnerConfetti = document.getElementById('winnerConfetti');
@@ -580,10 +579,6 @@
 
       renderNames(names);
 
-      if (winnerCount && typeof data.savedWinnerCount === 'number') {
-        winnerCount.textContent = String(data.savedWinnerCount);
-      }
-
       if (!names.length) {
         emptyState.classList.remove('d-none');
         emptyState.textContent = data.totalNames > 0 ? 'รายชื่อใน source นี้ได้รับรางวัลครบแล้ว' : 'ไม่มีรายชื่อใน source นี้';
@@ -594,7 +589,7 @@
       }
 
       statusText.textContent = 'พร้อมสุ่ม';
-      activeName.textContent = 'รายชื่อทั้งหมด ' + names.length + ' คน';
+      activeName.textContent = 'พร้อมสุ่มรายชื่อ';
       toggleBtn.disabled = false;
     } catch (error) {
       console.error(error);
@@ -677,9 +672,6 @@
       }
 
       currentWinnerSaved = true;
-      if (winnerCount && typeof data.savedWinnerCount === 'number') {
-        winnerCount.textContent = String(data.savedWinnerCount);
-      }
 
       names = names.filter(function (name) {
         return name !== currentWinnerName;
@@ -694,7 +686,7 @@
         emptyState.textContent = 'รายชื่อใน source นี้ได้รับรางวัลครบแล้ว';
         emptyState.classList.remove('d-none');
       } else {
-        activeName.textContent = 'เหลือรายชื่อให้สุ่ม ' + names.length + ' คน';
+        activeName.textContent = 'พร้อมสุ่มรายชื่อที่เหลือ';
         statusText.textContent = 'บันทึกแล้ว';
         toggleBtn.disabled = false;
       }

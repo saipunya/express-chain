@@ -177,14 +177,14 @@
         </div>
 
 
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
-          <h4 class="mb-0"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>เมนูใช้งาน</h4>
+      <div class="card border-0 shadow-sm mb-4 dashboard-menu-panel">
+        <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between gap-2">
+          <h4 class="h5 mb-0"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>เมนูใช้งาน</h4>
           <span class="text-muted small">เลือกเมนูเพื่อเข้าถึงงานที่ต้องการ</span>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body p-3">
           <div class="menu-section-title">ข้อมูลและรายงาน</div>
-          <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="reports">
+          <div class="row g-2 mb-2 dashboard-menu-grid" data-dashboard-group="reports">
             <div class="col-md-4">
               <a href="/allCoop" class="menu-link">
                 <div class="menu-card">
@@ -361,7 +361,7 @@
           </div>
 
           <div class="menu-section-title">โครงการและกิจกรรม</div>
-          <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="projects">
+          <div class="row g-2 mb-2 dashboard-menu-grid" data-dashboard-group="projects">
             <div class="col-md-4">
               <a href="/plan" class="menu-link">
                 <div class="menu-card">
@@ -450,7 +450,7 @@
 
           <% if (user) { %>
             <div class="menu-section-title">งานไปราชการและยานพาหนะ</div>
-            <div class="row g-3 mb-2 dashboard-menu-grid" data-dashboard-group="travel-workflow">
+            <div class="row g-2 mb-2 dashboard-menu-grid" data-dashboard-group="travel-workflow">
               <div class="col-md-4">
                 <a href="/official-travel" class="menu-link">
                   <div class="menu-card menu-card-highlight">
@@ -532,7 +532,7 @@
 
           <% if (user && user.mClass === 'admin') { %>
             <div class="menu-section-title">สำหรับผู้ดูแลระบบ</div>
-            <div class="row g-3 dashboard-menu-grid" data-dashboard-group="admin">
+            <div class="row g-2 dashboard-menu-grid" data-dashboard-group="admin">
               <div class="col-md-4">
                 <a href="/member" class="menu-link">
                   <div class="menu-card">
@@ -606,33 +606,7 @@
       </div>
 
         <div class="row g-3 align-items-stretch">
-          <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
-              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
-                <h3 class="h6 fw-bold mb-0"><i class="bi bi-calendar-week me-1 text-primary"></i>ห้องประชุมวันนี้</h3>
-                <span class="badge text-bg-light"><%= _meetingroomTodayDate || '-' %></span>
-              </div>
-              <div class="card-body">
-                <% if (_meetingsToday.length) { %>
-                  <div class="dashboard-home-list">
-                    <% _meetingsToday.slice(0, 4).forEach(function(m) { %>
-                      <div class="dashboard-home-list-item">
-                        <div class="fw-semibold"><%= m.mee_subject || '-' %></div>
-                        <div class="small text-muted">
-                          <i class="bi bi-clock me-1"></i><%= m.mee_start_time || '-' %> - <%= m.mee_end_time || '-' %>
-                          <span class="ms-2"><i class="bi bi-person me-1"></i><%= m.mee_respon || '-' %></span>
-                        </div>
-                      </div>
-                    <% }); %>
-                  </div>
-                <% } else { %>
-                  <div class="dashboard-home-empty">วันนี้ยังไม่มีรายการใช้ห้องประชุม</div>
-                <% } %>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-7">
+          <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100 dashboard-home-card">
               <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
                 <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-lines-fill me-1 text-success"></i>สมาชิก ปี <%= _latestYear %></h3>
@@ -682,6 +656,70 @@
                     <div class="dashboard-home-empty">ยังไม่มีข้อมูลกลุ่มส่งเสริม</div>
                   <% } %>
                 </div>
+              </div>
+            </div>
+          </div>
+           <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-cash-stack me-1 text-primary"></i>สรุปปริมาณธุรกิจ</h3>
+                <a href="/turnover" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-cash-stack me-1"></i>รายละเอียดปริมาณธุรกิจ
+            </a>
+              </div>
+              <div class="card-body">
+                <% if (_currentTurnover) { %>
+                  <div class="turnover-dashboard-hero mb-3">
+                    <div>
+                      <div class="small text-muted">ปีล่าสุด</div>
+                      <div class="h4 fw-bold mb-0"><%= (_currentTurnover.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></div>
+                    </div>
+                    <div class="text-end">
+                      <div class="small text-muted">รวมปริมาณธุรกิจ</div>
+                      <div class="h5 fw-bold text-primary mb-0"><%= _formatMoney(_currentTurnover.total) %></div>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <div class="member-mini-box">
+                        <div class="small text-muted">เดือนที่มีข้อมูล</div>
+                        <strong><%= _currentTurnover.months.toLocaleString('th-TH') %></strong>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="member-mini-box">
+                        <div class="small text-muted">เทียบเป้าหมาย</div>
+                        <strong class="<%= _turnoverPercent >= 100 ? 'text-success' : _turnoverPercent >= 80 ? 'text-warning' : 'text-danger' %>">
+                          <%= _turnoverTarget ? `${_turnoverPercent.toFixed(1)}%` : '-' %>
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0 dashboard-turnover-table">
+                      <thead>
+                        <tr>
+                          <th>ปีงบประมาณ</th>
+                          <th class="text-end">เดือน</th>
+                          <th class="text-end">รวม</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% _turnoverRows.slice(0, 5).forEach(function(row) { %>
+                          <tr>
+                            <td><%= (row.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></td>
+                            <td class="text-end"><%= row.months.toLocaleString('th-TH') %></td>
+                            <td class="text-end fw-semibold"><%= _formatMoney(row.total) %></td>
+                          </tr>
+                        <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } else { %>
+                  <div class="dashboard-home-empty">ยังไม่มีข้อมูลปริมาณธุรกิจ</div>
+                <% } %>
               </div>
             </div>
           </div>
@@ -767,14 +805,11 @@
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
           <div>
             <div class="menu-section-title mb-1">Operations</div>
-            <h2 id="operationsDashboardTitle" class="h4 fw-bold mb-0">ปฏิทินงานและสรุปปริมาณธุรกิจ</h2>
+            <h2 id="operationsDashboardTitle" class="h4 fw-bold mb-0">ปฏิทินงาน</h2>
           </div>
           <div class="d-flex flex-wrap gap-2">
             <a href="/gitgum/calendar" class="btn btn-outline-success btn-sm">
               <i class="bi bi-calendar3 me-1"></i>ปฏิทินเต็ม
-            </a>
-            <a href="/turnover" class="btn btn-outline-primary btn-sm">
-              <i class="bi bi-cash-stack me-1"></i>รายละเอียดปริมาณธุรกิจ
             </a>
           </div>
         </div>
@@ -817,68 +852,7 @@
             </div>
           </div>
 
-          <div class="col-12 col-xl-8">
-            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
-              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
-                <h3 class="h6 fw-bold mb-0"><i class="bi bi-cash-stack me-1 text-primary"></i>สรุปปริมาณธุรกิจ</h3>
-                <span class="badge text-bg-light">ปีงบประมาณ</span>
-              </div>
-              <div class="card-body">
-                <% if (_currentTurnover) { %>
-                  <div class="turnover-dashboard-hero mb-3">
-                    <div>
-                      <div class="small text-muted">ปีล่าสุด</div>
-                      <div class="h4 fw-bold mb-0"><%= (_currentTurnover.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></div>
-                    </div>
-                    <div class="text-end">
-                      <div class="small text-muted">รวมปริมาณธุรกิจ</div>
-                      <div class="h5 fw-bold text-primary mb-0"><%= _formatMoney(_currentTurnover.total) %></div>
-                    </div>
-                  </div>
-
-                  <div class="row g-2 mb-3">
-                    <div class="col-6">
-                      <div class="member-mini-box">
-                        <div class="small text-muted">เดือนที่มีข้อมูล</div>
-                        <strong><%= _currentTurnover.months.toLocaleString('th-TH') %></strong>
-                      </div>
-                    </div>
-                    <div class="col-6">
-                      <div class="member-mini-box">
-                        <div class="small text-muted">เทียบเป้าหมาย</div>
-                        <strong class="<%= _turnoverPercent >= 100 ? 'text-success' : _turnoverPercent >= 80 ? 'text-warning' : 'text-danger' %>">
-                          <%= _turnoverTarget ? `${_turnoverPercent.toFixed(1)}%` : '-' %>
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0 dashboard-turnover-table">
-                      <thead>
-                        <tr>
-                          <th>ปีงบประมาณ</th>
-                          <th class="text-end">เดือน</th>
-                          <th class="text-end">รวม</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% _turnoverRows.slice(0, 5).forEach(function(row) { %>
-                          <tr>
-                            <td><%= (row.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></td>
-                            <td class="text-end"><%= row.months.toLocaleString('th-TH') %></td>
-                            <td class="text-end fw-semibold"><%= _formatMoney(row.total) %></td>
-                          </tr>
-                        <% }); %>
-                      </tbody>
-                    </table>
-                  </div>
-                <% } else { %>
-                  <div class="dashboard-home-empty">ยังไม่มีข้อมูลปริมาณธุรกิจ</div>
-                <% } %>
-              </div>
-            </div>
-          </div>
+         
         </div>
       </section>
 
@@ -1009,6 +983,85 @@
       letter-spacing:.08em;
       color:#6c757d;
       margin-bottom:.5rem;
+    }
+
+    .dashboard-menu-panel .card-header {
+      min-height: 48px;
+    }
+
+    .dashboard-menu-panel .menu-section-title {
+      align-items: center;
+      display: flex;
+      gap: .5rem;
+      margin: .35rem 0 .45rem;
+    }
+
+    .dashboard-menu-panel .menu-section-title::after {
+      background: #e9ecef;
+      content: "";
+      flex: 1 1 auto;
+      height: 1px;
+    }
+
+    .dashboard-menu-panel .dashboard-menu-grid > [class*="col-"] {
+      flex: 0 0 auto;
+      width: 50%;
+    }
+
+    .dashboard-menu-panel .menu-card {
+      background: #fff;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      box-shadow: none;
+      gap: 8px;
+      min-height: 42px;
+      padding: 7px 9px;
+    }
+
+    .dashboard-menu-panel .menu-card:hover {
+      background: #f8fbff;
+      border-color: #b6d4fe;
+      transform: translateY(-1px);
+    }
+
+    .dashboard-menu-panel .menu-card-highlight {
+      background: #f8fbff;
+      border-color: #cfe2ff;
+    }
+
+    .dashboard-menu-panel .menu-icon {
+      background: transparent;
+      border-radius: 0;
+      color: #0d6efd;
+      font-size: .95rem;
+      height: 22px;
+      width: 22px;
+    }
+
+    .dashboard-menu-panel .menu-title {
+      color: #1f2937;
+      display: block;
+      font-size: .88rem;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-menu-panel .menu-desc {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .dashboard-menu-panel .dashboard-menu-grid > [class*="col-"] {
+        width: 33.3333%;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .dashboard-menu-panel .dashboard-menu-grid > [class*="col-"] {
+        width: 25%;
+      }
     }
 
     .dashboard-toggle-wrap {
@@ -1315,20 +1368,26 @@
       .mini-stat {padding:12px 14px;}
       .profile-avatar {width:72px; height:72px;}
 
+      .dashboard-menu-panel .card-header {
+        align-items: flex-start !important;
+        flex-direction: column;
+      }
+
       .dashboard-menu-grid:not(.is-expanded) > [class*="col-"]:nth-child(n+7) {
         display: none;
       }
 
-      .menu-card {
-        padding: 12px 14px;
-        border-radius: 12px;
+      .dashboard-menu-panel .menu-card {
+        min-height: 44px;
+        padding: 8px;
       }
 
-      .menu-title {
-        font-size: .95rem;
+      .dashboard-menu-panel .menu-icon {
+        height: 22px;
+        width: 22px;
       }
 
-      .menu-desc {
+      .dashboard-menu-panel .menu-title {
         font-size: .8rem;
       }
 

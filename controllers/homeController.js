@@ -10,7 +10,6 @@ const meetingRoomModel = require('../models/meetingRoomModel');
 const coopModel = require('../models/coopModel');
 const ruleModel = require('../models/ruleModel');
 const officialTravelRequestModel = require('../models/officialTravelRequestModel');
-const onlineModel = require('../models/onlineModel');
 const rabiabModel = require('../models/rabiabModel');
 const businessModel = require('../models/businessModel');
 const Project = require('../models/projectModel');
@@ -98,7 +97,7 @@ const homeController = {
       const coopStats = await coopModel.getCoopStats();
       const closingCount = await coopModel.getClosingStats();
       const closingByGroup = await coopModel.getClosingStatsByGroup(); // NEW
-      
+
       // ข้อมูลกราฟ
       const coopGroupChart = await coopModel.getByCoopGroup();
       const cGroupChart = await coopModel.getByGroup();
@@ -175,10 +174,6 @@ const homeController = {
       // `);
       // console.log('[homeController] in_out_group distribution:', inOutDist);
 
-      // ข้อมูลการใช้ออนไลน์
-      const onlineUsers = await onlineModel.getOnlineUsers();
-      const onlineCount = await onlineModel.getOnlineCount();
-      
       const stats = {
         coop: coopStats.find(item => item.coop_group === 'สหกรณ์')?.count || 0,
         farmer: coopStats.find(item => item.coop_group === 'กลุ่มเกษตรกร')?.count || 0,
@@ -214,10 +209,10 @@ const homeController = {
       const gradeCounts = latestStrengthYear ? await strengthModel.getGradeCounts(latestStrengthYear).catch(() => []) : [];
       const gradeSet = new Set();
       const strengthData = {};
-      gradeCounts.forEach(r => { 
-        gradeSet.add(r.st_grade); 
-        if (!strengthData[r.coop_group]) strengthData[r.coop_group] = {}; 
-        strengthData[r.coop_group][r.st_grade] = r.total; 
+      gradeCounts.forEach(r => {
+        gradeSet.add(r.st_grade);
+        if (!strengthData[r.coop_group]) strengthData[r.coop_group] = {};
+        strengthData[r.coop_group][r.st_grade] = r.total;
       });
       const strengthGrades = Array.from(gradeSet).sort();
       const strengthYear = latestStrengthYear || '-';
@@ -464,14 +459,14 @@ const homeController = {
 
       // Get latest year member summary from addmem table
       const [latestYearRows] = await db.query(`
-        SELECT DISTINCT addmem_year 
-        FROM addmem 
-        ORDER BY addmem_year DESC 
+        SELECT DISTINCT addmem_year
+        FROM addmem
+        ORDER BY addmem_year DESC
         LIMIT 1
       `);
-      
+
       const latestYear = latestYearRows && latestYearRows[0] ? latestYearRows[0].addmem_year : new Date().getFullYear();
-      
+
       const [memberSummaryRows] = await db.query(`
         SELECT
           SUM(
@@ -525,7 +520,7 @@ const homeController = {
         WHERE ac.c_status = 'ดำเนินการ'
           AND a.addmem_year = ?
       `, [latestYear]);
-      
+
       const memberSummaryRaw = memberSummaryRows && memberSummaryRows[0] ? memberSummaryRows[0] : {
         coop_agri_saman: 0,
         coop_agri_somtob: 0,
@@ -543,8 +538,8 @@ const homeController = {
         farmer_group_saman: Number(memberSummaryRaw.farmer_group_saman || 0),
         farmer_group_somtob: Number(memberSummaryRaw.farmer_group_somtob || 0)
       };
-      res.render('home', { 
-        finances, 
+      res.render('dashboard', {
+        finances,
         ruleFiles,
         rabiabFiles,
         businessFiles,
@@ -554,8 +549,6 @@ const homeController = {
         lastRq2,
         lastCommands,
         stats,
-        onlineUsers,
-        onlineCount,
         coopGroupChart, // ส่งไปที่ view
         cGroupChart,    // ส่งไปที่ view
         activity,
@@ -603,8 +596,8 @@ exports.home = async (req, res) => {
     const endDate = '2026-09-30';
     const summaryData = await Chamra.getProcessesInDateRange(startDate, endDate);
     const formattedData = summaryData.map(item => ({ ...item, step: showStepServer(item.step) }));
-    res.render('home', { 
-      finances: await Finance.getAll(), 
+    res.render('dashboard', {
+      finances: await Finance.getAll(),
       ruleFiles: await ruleModel.getLastUploads(),
       rabiabFiles: await rabiabModel.getLastUploads(),
       businessFiles: await businessModel.getLastUploads(10),
@@ -620,8 +613,6 @@ exports.home = async (req, res) => {
         closingCoop: (await coopModel.getClosingStatsByGroup()).coop,          // NEW
         closingFarmer: (await coopModel.getClosingStatsByGroup()).farmer       // NEW
       },
-      onlineUsers: await onlineModel.getOnlineUsers(),
-      onlineCount: await onlineModel.getOnlineCount(),
       coopGroupChart: await coopModel.getByCoopGroup(), // ส่งไปที่ view
       cGroupChart: await coopModel.getByGroup(),    // ส่งไปที่ view
       activity: (await gitgumModel.findAll() || []).map(r => ({
@@ -644,7 +635,7 @@ exports.home = async (req, res) => {
       strengthTypeRows: [],
       strengthTypeYear: '',
       gradeSummary: [],          // NEW: same as strengthList
-      summaryYear: '', 
+      summaryYear: '',
       homeProcesses: await Chamra.getRecentProcesses(8),
       chamraAllProcesses: await Chamra.getAllProcess(), // NEW: all rows for chart
       closingByGroup: await coopModel.getClosingStatsByGroup(),   // NEW expose raw
@@ -677,13 +668,13 @@ exports.home = async (req, res) => {
       latestYear: new Date().getFullYear(),
       turnoverFiscalSummary: await turnoverModel.getSummaryByFiscalYear(),
       title: 'ระบบสารสนเทศและเครือข่ายสหกรณ์ในจังหวัดภูมิ',
-      summaryData: formattedData, 
-      startDate, 
+      summaryData: formattedData,
+      startDate,
       endDate
     });
   } catch (error) {
     console.error('Error in home controller:', error);
-    res.render('home', { ...res.locals, summaryData: [] }); // Fallback to empty data
+    res.render('dashboard', { ...res.locals, summaryData: [] }); // Fallback to empty data
   }
 };
 
@@ -792,7 +783,7 @@ exports.showDashboard = async (req, res) => {
       GROUP BY coop_group, c_type
     `);
 
-    res.render('home', {
+    res.render('dashboard', {
       statusStats,
       groupStats,
       typeStats,

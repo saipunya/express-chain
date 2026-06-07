@@ -2,14 +2,15 @@
 
 const express = require('express');
 const router = express.Router();
-const homeController = require('../controllers/homeController');
 const activeCoopModel = require('../models/activeCoopModel');
 const bigmeetModel = require('../models/bigmeetModel');
+const onlineModel = require('../models/onlineModel');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
+  const group = String(user?.group || user?.m_group || '').trim().toLowerCase();
   const mClass = String(user?.mClass || user?.m_class || '').trim().toLowerCase();
-  return ['c', 'g'].includes(mClass) ? '/homecoop' : '/home/';
+  return ['coop', 'group'].includes(group) || ['c', 'g'].includes(mClass) ? '/dashboard2' : '/dashboard';
 }
 
 function getBangkokParts(value = new Date()) {
@@ -277,19 +278,23 @@ async function getMainDeadlineData() {
 }
 
 async function showMain(req, res) {
-  if (req.session.user) {
+  if (req.session.user && req.path !== '/main') {
     return res.redirect(getLandingPath(req.session.user));
   }
 
   try {
-    const [deadlineData, institutionRows] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount] = await Promise.all([
       getMainDeadlineData(),
-      activeCoopModel.getActiveInstitutionSummaryRows()
+      activeCoopModel.getActiveInstitutionSummaryRows(),
+      onlineModel.getOnlineUsers(),
+      onlineModel.getOnlineCount()
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
       institutionSummary: buildInstitutionSummary(institutionRows),
+      onlineUsers,
+      onlineCount,
       ...deadlineData
     });
   } catch (error) {
@@ -301,7 +306,9 @@ async function showMain(req, res) {
       closingWithin30Groups: [],
       bigmeetMonthLabel: '',
       closingWindowLabel: '30 วันข้างหน้า',
-      institutionSummary: buildInstitutionSummary([])
+      institutionSummary: buildInstitutionSummary([]),
+      onlineUsers: [],
+      onlineCount: 0
     });
   }
 }
@@ -309,7 +316,7 @@ async function showMain(req, res) {
 // Define routes
 router.get('/', noCache, showMain);
 router.get('/main', noCache, showMain);
-router.get('/home', requireLogin, homeController.index);
+router.get('/home', requireLogin, (req, res) => res.redirect('/dashboard'));
 router.get('/homecoop', requireLogin, (req, res) => {
   res.render('homecoop', {
     title: 'หน้าหลักสมาชิกสถาบัน',

@@ -12,7 +12,9 @@ exports.noCache = (req, res, next) => {
 };
 
 function isInstitutionUser(user) {
-    return ['coop', 'group'].includes(String(user?.group || user?.m_group || '').trim());
+    const group = String(user?.group || user?.m_group || '').trim().toLowerCase();
+    const mClass = String(user?.mClass || user?.m_class || '').trim().toLowerCase();
+    return ['coop', 'group'].includes(group) || ['c', 'g'].includes(mClass);
 }
 
 const INSTITUTION_BLOCKED_PREFIXES = [

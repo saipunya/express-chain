@@ -1,4 +1,41 @@
 <%- include('partials/header.ejs') %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" />
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
+<%
+  const _stats = (typeof stats !== 'undefined' && stats) ? stats : {};
+  const _coopTypeSummary = (typeof coopTypeSummary !== 'undefined' && coopTypeSummary) ? coopTypeSummary : {};
+  const _coopGroupStats = (typeof coopGroupStats !== 'undefined' && Array.isArray(coopGroupStats)) ? coopGroupStats : [];
+  const _meetingsToday = (typeof meetingsToday !== 'undefined' && Array.isArray(meetingsToday)) ? meetingsToday : [];
+  const _meetingroomTodayDate = (typeof meetingroomTodayDate !== 'undefined' && meetingroomTodayDate) ? meetingroomTodayDate : '';
+  const _lastProjects = (typeof lastProjects !== 'undefined' && Array.isArray(lastProjects)) ? lastProjects : [];
+  const _lastCommands = (typeof lastCommands !== 'undefined' && Array.isArray(lastCommands)) ? lastCommands : [];
+  const _activity = (typeof activity !== 'undefined' && Array.isArray(activity)) ? activity : [];
+  const _turnoverFiscalSummary = (typeof turnoverFiscalSummary !== 'undefined' && Array.isArray(turnoverFiscalSummary)) ? turnoverFiscalSummary : [];
+  const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
+  const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
+  const _memberTotals = {
+    coopSaman: Number((_memberSummary.coop_agri_saman || 0) + (_memberSummary.coop_non_agri_saman || 0)),
+    coopSomtob: Number((_memberSummary.coop_agri_somtob || 0) + (_memberSummary.coop_non_agri_somtob || 0)),
+    farmerSaman: Number(_memberSummary.farmer_group_saman || 0),
+    farmerSomtob: Number(_memberSummary.farmer_group_somtob || 0)
+  };
+  const _turnoverRows = _turnoverFiscalSummary
+    .map((row) => ({
+      budYear: Number(row.tur_budyear || 0),
+      months: Number(row.months_with_data || 0),
+      total: Number(row.total_amount || 0),
+      latestMonth: row.latest_month || '',
+      latestYear: row.latest_year || ''
+    }))
+    .filter((row) => row.budYear)
+    .sort((a, b) => b.budYear - a.budYear);
+  const _currentTurnover = _turnoverRows[0] || null;
+  const _previousTurnover = _currentTurnover ? _turnoverRows.find((row) => row.budYear === _currentTurnover.budYear - 1) : null;
+  const _turnoverTarget = _previousTurnover ? _previousTurnover.total * 1.03 : 0;
+  const _turnoverPercent = _currentTurnover && _turnoverTarget > 0 ? (_currentTurnover.total / _turnoverTarget) * 100 : 0;
+  const _formatMoney = (value) => Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+%>
 
   <!-- Modern Dashboard -->
   <div class="container-fluid py-4 dashboard-wrapper">
@@ -94,9 +131,52 @@
           </div>
         </div>
       </div>
-    
 
-     
+      <section class="dashboard-home-section mb-4" aria-labelledby="homeDashboardTitle">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+          <div>
+            <div class="menu-section-title mb-1">Home Snapshot</div>
+            <h2 id="homeDashboardTitle" class="h4 fw-bold mb-0">ภาพรวมข้อมูลจากหน้าแรกเดิม</h2>
+          </div>
+          <a href="/main" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-arrow-up-right me-1"></i>ดูหน้า main
+          </a>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <div class="home-insight-card">
+              <div class="home-insight-icon text-success bg-success-subtle"><i class="bi bi-building"></i></div>
+              <div>
+                <div class="home-insight-label">สหกรณ์ดำเนินการ</div>
+                <div class="home-insight-value text-success"><%= Number(_stats.coop || 0).toLocaleString() %></div>
+                <div class="small text-muted">ภาคเกษตร <%= Number(_coopTypeSummary.coop_agri || 0).toLocaleString() %> / นอกภาค <%= Number(_coopTypeSummary.coop_non_agri || 0).toLocaleString() %></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="home-insight-card">
+              <div class="home-insight-icon text-info bg-info-subtle"><i class="bi bi-people"></i></div>
+              <div>
+                <div class="home-insight-label">กลุ่มเกษตรกร</div>
+                <div class="home-insight-value text-info"><%= Number(_stats.farmer || 0).toLocaleString() %></div>
+                <div class="small text-muted">จากฐานข้อมูล active_coop</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="home-insight-card">
+              <div class="home-insight-icon text-warning bg-warning-subtle"><i class="bi bi-cash-coin"></i></div>
+              <div>
+                <div class="home-insight-label">ชำระบัญชี</div>
+                <div class="home-insight-value text-warning"><%= Number(_stats.closing || 0).toLocaleString() %></div>
+                <div class="small text-muted">สหกรณ์ <%= Number(_stats.closingCoop || 0).toLocaleString() %> / กลุ่ม <%= Number(_stats.closingFarmer || 0).toLocaleString() %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
           <h4 class="mb-0"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>เมนูใช้งาน</h4>
@@ -394,7 +474,7 @@
                 </a>
               </div>
               <!-- if hiring show display-->
-          
+
               <div class="col-md-4">
                 <a href="/driver-trip/queue" class="menu-link">
                   <div class="menu-card menu-card-highlight">
@@ -406,7 +486,7 @@
                   </div>
                 </a>
               </div>
-          
+
               <% if (user.mClass === 'admin' || user.mClass === 'pbt') { %>
                 <div class="col-md-4">
                   <a href="/vehicle-approval/pending" class="menu-link">
@@ -519,13 +599,345 @@
                   </div>
                 </a>
               </div>
-           
+
             </div>
           <% } %>
         </div>
       </div>
 
-     
+        <div class="row g-3 align-items-stretch">
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-calendar-week me-1 text-primary"></i>ห้องประชุมวันนี้</h3>
+                <span class="badge text-bg-light"><%= _meetingroomTodayDate || '-' %></span>
+              </div>
+              <div class="card-body">
+                <% if (_meetingsToday.length) { %>
+                  <div class="dashboard-home-list">
+                    <% _meetingsToday.slice(0, 4).forEach(function(m) { %>
+                      <div class="dashboard-home-list-item">
+                        <div class="fw-semibold"><%= m.mee_subject || '-' %></div>
+                        <div class="small text-muted">
+                          <i class="bi bi-clock me-1"></i><%= m.mee_start_time || '-' %> - <%= m.mee_end_time || '-' %>
+                          <span class="ms-2"><i class="bi bi-person me-1"></i><%= m.mee_respon || '-' %></span>
+                        </div>
+                      </div>
+                    <% }); %>
+                  </div>
+                <% } else { %>
+                  <div class="dashboard-home-empty">วันนี้ยังไม่มีรายการใช้ห้องประชุม</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-lines-fill me-1 text-success"></i>สมาชิก ปี <%= _latestYear %></h3>
+                <a href="/addmem/list" class="btn btn-sm btn-outline-success">ดูทั้งหมด</a>
+              </div>
+              <div class="card-body">
+                <div class="row g-2">
+                  <div class="col-6 col-md-3">
+                    <div class="member-mini-box">
+                      <div class="small text-muted">สหกรณ์สามัญ</div>
+                      <strong><%= _memberTotals.coopSaman.toLocaleString() %></strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="member-mini-box">
+                      <div class="small text-muted">สหกรณ์สมทบ</div>
+                      <strong><%= _memberTotals.coopSomtob.toLocaleString() %></strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="member-mini-box">
+                      <div class="small text-muted">กลุ่มสามัญ</div>
+                      <strong><%= _memberTotals.farmerSaman.toLocaleString() %></strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="member-mini-box">
+                      <div class="small text-muted">กลุ่มสมทบ</div>
+                      <strong><%= _memberTotals.farmerSomtob.toLocaleString() %></strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <div class="small fw-semibold text-muted mb-2">จำนวนตามกลุ่มส่งเสริม</div>
+                  <% if (_coopGroupStats.length) { %>
+                    <div class="coop-group-strip">
+                      <% _coopGroupStats.slice(0, 8).forEach(function(group) { %>
+                        <span class="badge rounded-pill text-bg-light border">
+                          <%= group.c_group || '-' %>:
+                          <span class="text-success"><%= Number(group.coop || 0).toLocaleString() %></span> /
+                          <span class="text-info"><%= Number(group.farmer || 0).toLocaleString() %></span>
+                        </span>
+                      <% }); %>
+                    </div>
+                  <% } else { %>
+                    <div class="dashboard-home-empty">ยังไม่มีข้อมูลกลุ่มส่งเสริม</div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-folder2-open me-1 text-primary"></i>โครงการล่าสุด</h3>
+                <a href="/project" class="btn btn-sm btn-outline-primary">จัดการ</a>
+              </div>
+              <div class="card-body">
+                <% if (_lastProjects.length) { %>
+                  <div class="dashboard-home-list">
+                    <% _lastProjects.slice(0, 5).forEach(function(project) { %>
+                      <div class="dashboard-home-list-item">
+                        <div class="fw-semibold"><%= project.pro_story || project.pro_name || '-' %></div>
+                        <div class="small text-muted"><%= project.pro_year || '' %></div>
+                      </div>
+                    <% }); %>
+                  </div>
+                <% } else { %>
+                  <div class="dashboard-home-empty">ยังไม่มีโครงการล่าสุด</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-journal-check me-1 text-primary"></i>คำสั่งล่าสุด</h3>
+                <a href="/command" class="btn btn-sm btn-outline-primary">จัดการ</a>
+              </div>
+              <div class="card-body">
+                <% if (_lastCommands.length) { %>
+                  <div class="dashboard-home-list">
+                    <% _lastCommands.slice(0, 5).forEach(function(command) { %>
+                      <%
+                        const commandDateValue = command.com_date || command.command_date || null;
+                        let commandDateText = '';
+                        if (commandDateValue) {
+                          const commandDate = new Date(commandDateValue);
+                          commandDateText = Number.isNaN(commandDate.getTime())
+                            ? String(commandDateValue).slice(0, 10)
+                            : commandDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                        }
+                      %>
+                      <div class="dashboard-home-list-item">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                          <div class="min-w-0">
+                            <div class="fw-semibold"><%= command.com_story || '-' %></div>
+                            <div class="small text-muted">
+                              <% if (command.com_no) { %>
+                                <span class="badge text-bg-light border me-1">เลขที่ <%= command.com_no %></span>
+                              <% } %>
+                              <% if (commandDateText) { %>
+                                <span><i class="bi bi-calendar3 me-1"></i><%= commandDateText %></span>
+                              <% } %>
+                              <% if (command.com_from) { %>
+                                <span class="ms-2"><i class="bi bi-building me-1"></i><%= command.com_from %></span>
+                              <% } %>
+                            </div>
+                          </div>
+                          <% if (command.com_filename && command.command_id) { %>
+                            <a href="/command/download/<%= command.command_id %>" class="btn btn-sm btn-outline-primary flex-shrink-0" target="_blank" title="ดาวน์โหลดคำสั่ง">
+                              <i class="bi bi-file-earmark-arrow-down"></i>
+                            </a>
+                          <% } %>
+                        </div>
+                      </div>
+                    <% }); %>
+                  </div>
+                <% } else { %>
+                  <div class="dashboard-home-empty">ยังไม่มีคำสั่งล่าสุด</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-operations-section mb-4" aria-labelledby="operationsDashboardTitle">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+          <div>
+            <div class="menu-section-title mb-1">Operations</div>
+            <h2 id="operationsDashboardTitle" class="h4 fw-bold mb-0">ปฏิทินงานและสรุปปริมาณธุรกิจ</h2>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="/gitgum/calendar" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-calendar3 me-1"></i>ปฏิทินเต็ม
+            </a>
+            <a href="/turnover" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-cash-stack me-1"></i>รายละเอียดปริมาณธุรกิจ
+            </a>
+          </div>
+        </div>
+
+        <div class="row g-3 align-items-stretch">
+          <div class="col-12">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <div>
+                  <h3 class="h5 fw-bold mb-1"><i class="bi bi-calendar3 me-1 text-success"></i>ปฏิทินงาน</h3>
+                  <div class="small text-muted">คลิกกิจกรรมในปฏิทินเพื่อดูรายละเอียด</div>
+                </div>
+                <span class="badge text-bg-success"><%= _activity.length.toLocaleString('th-TH') %> รายการ</span>
+              </div>
+              <div class="card-body">
+                <div id="dashboardActivitiesCalendar" class="dashboard-calendar" aria-label="ปฏิทินงาน"></div>
+                <div id="dashboardActivitiesCalendarFallback" class="dashboard-home-list mt-2">
+                  <% if (_activity.length) { %>
+                    <% _activity.slice(0, 6).forEach(function(item, activityIndex) { %>
+                      <%
+                        const actDate = item.date_act ? new Date(item.date_act) : null;
+                        const actDateText = actDate && !Number.isNaN(actDate.getTime())
+                          ? actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
+                          : String(item.date_act || '-').slice(0, 10);
+                      %>
+                      <button type="button" class="dashboard-home-list-item dashboard-activity-fallback-item text-start w-100" data-activity-index="<%= activityIndex %>">
+                        <div class="fw-semibold"><%= item.activity || '-' %></div>
+                        <div class="small text-muted">
+                          <i class="bi bi-calendar-event me-1"></i><%= actDateText %>
+                          <% if (item.act_time) { %><span class="ms-2"><i class="bi bi-clock me-1"></i><%= item.act_time %></span><% } %>
+                          <% if (item.place) { %><span class="ms-2"><i class="bi bi-geo-alt me-1"></i><%= item.place %></span><% } %>
+                        </div>
+                      </button>
+                    <% }); %>
+                  <% } else { %>
+                    <div class="dashboard-home-empty">ยังไม่มีข้อมูลปฏิทินงาน</div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm h-100 dashboard-home-card">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <h3 class="h6 fw-bold mb-0"><i class="bi bi-cash-stack me-1 text-primary"></i>สรุปปริมาณธุรกิจ</h3>
+                <span class="badge text-bg-light">ปีงบประมาณ</span>
+              </div>
+              <div class="card-body">
+                <% if (_currentTurnover) { %>
+                  <div class="turnover-dashboard-hero mb-3">
+                    <div>
+                      <div class="small text-muted">ปีล่าสุด</div>
+                      <div class="h4 fw-bold mb-0"><%= (_currentTurnover.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></div>
+                    </div>
+                    <div class="text-end">
+                      <div class="small text-muted">รวมปริมาณธุรกิจ</div>
+                      <div class="h5 fw-bold text-primary mb-0"><%= _formatMoney(_currentTurnover.total) %></div>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <div class="member-mini-box">
+                        <div class="small text-muted">เดือนที่มีข้อมูล</div>
+                        <strong><%= _currentTurnover.months.toLocaleString('th-TH') %></strong>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="member-mini-box">
+                        <div class="small text-muted">เทียบเป้าหมาย</div>
+                        <strong class="<%= _turnoverPercent >= 100 ? 'text-success' : _turnoverPercent >= 80 ? 'text-warning' : 'text-danger' %>">
+                          <%= _turnoverTarget ? `${_turnoverPercent.toFixed(1)}%` : '-' %>
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0 dashboard-turnover-table">
+                      <thead>
+                        <tr>
+                          <th>ปีงบประมาณ</th>
+                          <th class="text-end">เดือน</th>
+                          <th class="text-end">รวม</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% _turnoverRows.slice(0, 5).forEach(function(row) { %>
+                          <tr>
+                            <td><%= (row.budYear + 543).toLocaleString('th-TH', { useGrouping: false }) %></td>
+                            <td class="text-end"><%= row.months.toLocaleString('th-TH') %></td>
+                            <td class="text-end fw-semibold"><%= _formatMoney(row.total) %></td>
+                          </tr>
+                        <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } else { %>
+                  <div class="dashboard-home-empty">ยังไม่มีข้อมูลปริมาณธุรกิจ</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="modal fade" id="dashboardActivityModal" tabindex="-1" aria-labelledby="dashboardActivityModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content dashboard-activity-modal">
+            <div class="modal-header border-0">
+              <div>
+                <div class="small text-success fw-semibold mb-1">รายละเอียดกิจกรรม</div>
+                <h3 class="modal-title h5 fw-bold" id="dashboardActivityModalTitle">-</h3>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body pt-0">
+              <div class="activity-detail-grid">
+                <div class="activity-detail-item">
+                  <i class="bi bi-calendar-event text-success"></i>
+                  <div>
+                    <div class="activity-detail-label">วันที่</div>
+                    <div class="activity-detail-value" id="dashboardActivityDate">-</div>
+                  </div>
+                </div>
+                <div class="activity-detail-item">
+                  <i class="bi bi-clock text-primary"></i>
+                  <div>
+                    <div class="activity-detail-label">เวลา</div>
+                    <div class="activity-detail-value" id="dashboardActivityTime">-</div>
+                  </div>
+                </div>
+                <div class="activity-detail-item">
+                  <i class="bi bi-geo-alt text-danger"></i>
+                  <div>
+                    <div class="activity-detail-label">สถานที่</div>
+                    <div class="activity-detail-value" id="dashboardActivityPlace">-</div>
+                  </div>
+                </div>
+                <div class="activity-detail-item">
+                  <i class="bi bi-people text-info"></i>
+                  <div>
+                    <div class="activity-detail-label">ผู้รับผิดชอบ/ผู้ร่วมงาน</div>
+                    <div class="activity-detail-value" id="dashboardActivityPeople">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+              <a href="/gitgum/calendar" class="btn btn-success">
+                <i class="bi bi-calendar3 me-1"></i>เปิดปฏิทินเต็ม
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
 
     </div>
   </div>
@@ -546,10 +958,10 @@
     .mini-stat .icon {width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; border-radius:12px;}
     .mini-stat .value {font-size:1.25rem; font-weight:600; line-height:1;}
     .mini-stat .label {font-size:.75rem; text-transform:uppercase; letter-spacing:.5px; color:#6c757d;}
-    .bg-gradient-primary-soft {background:linear-gradient(135deg,#dbeafe,#bfdbfe);} 
-    .bg-gradient-success-soft {background:linear-gradient(135deg,#dcfce7,#bbf7d0);} 
-    .bg-gradient-info-soft {background:linear-gradient(135deg,#e0f2fe,#bae6fd);} 
-    .bg-gradient-warning-soft {background:linear-gradient(135deg,#fef9c3,#fde68a);} 
+    .bg-gradient-primary-soft {background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+    .bg-gradient-success-soft {background:linear-gradient(135deg,#dcfce7,#bbf7d0);}
+    .bg-gradient-info-soft {background:linear-gradient(135deg,#e0f2fe,#bae6fd);}
+    .bg-gradient-warning-soft {background:linear-gradient(135deg,#fef9c3,#fde68a);}
 
     /* Feature Cards */
     .menu-link {text-decoration:none;}
@@ -616,15 +1028,287 @@
       transform: rotate(180deg);
     }
 
+    .dashboard-home-section {
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: 0 12px 28px rgba(31, 41, 55, .06);
+    }
+
+    .home-insight-card {
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      min-height: 7rem;
+      padding: 1rem;
+      border: 1px solid #e9eef5;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .04);
+    }
+
+    .home-insight-icon {
+      width: 3rem;
+      height: 3rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      font-size: 1.3rem;
+    }
+
+    .home-insight-label {
+      color: #6c757d;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .home-insight-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1.05;
+    }
+
+    .dashboard-home-card {
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .dashboard-home-list {
+      display: grid;
+      gap: .65rem;
+    }
+
+    .dashboard-home-list-item {
+      padding: .72rem .8rem;
+      border: 1px solid #edf1f6;
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    .dashboard-activity-fallback-item {
+      color: inherit;
+      cursor: pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+
+    .dashboard-activity-fallback-item:hover,
+    .dashboard-activity-fallback-item:focus-visible {
+      border-color: #b7e4c7;
+      box-shadow: 0 6px 16px rgba(25, 135, 84, .1);
+      transform: translateY(-1px);
+    }
+
+    .dashboard-home-empty {
+      padding: 1rem;
+      border: 1px dashed #ccd6e2;
+      border-radius: 10px;
+      color: #6c757d;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .member-mini-box {
+      height: 100%;
+      padding: .85rem;
+      border: 1px solid #edf1f6;
+      border-radius: 10px;
+      background: #fbfcfe;
+    }
+
+    .member-mini-box strong {
+      display: block;
+      color: #198754;
+      font-size: 1.2rem;
+      line-height: 1.1;
+    }
+
+    .coop-group-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+    }
+
+    .dashboard-operations-section {
+      background: rgba(255, 255, 255, .62);
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: 0 12px 28px rgba(31, 41, 55, .06);
+    }
+
+    .dashboard-calendar {
+      min-height: 38rem;
+      padding: .35rem;
+      border: 1px solid #edf1f6;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+    }
+
+    .dashboard-calendar .fc {
+      font-family: 'Sarabun', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .dashboard-calendar .fc-toolbar {
+      gap: .75rem;
+      flex-wrap: wrap;
+      padding: .35rem .25rem 1rem;
+    }
+
+    .dashboard-calendar .fc-toolbar-title {
+      color: #212529;
+      font-size: 1.28rem;
+      font-weight: 700;
+    }
+
+    .dashboard-calendar .fc-button {
+      border-radius: 8px !important;
+      border: 1px solid #d7e7dc !important;
+      background: #fff !important;
+      color: #198754 !important;
+      box-shadow: none !important;
+      font-size: .82rem !important;
+      font-weight: 600 !important;
+      padding: .35rem .65rem !important;
+    }
+
+    .dashboard-calendar .fc-button:hover,
+    .dashboard-calendar .fc-button-primary:not(:disabled).fc-button-active {
+      background: #e9f7ef !important;
+      color: #146c43 !important;
+    }
+
+    .dashboard-calendar .fc-scrollgrid,
+    .dashboard-calendar .fc-theme-standard td,
+    .dashboard-calendar .fc-theme-standard th {
+      border-color: #edf1f6;
+    }
+
+    .dashboard-calendar .fc-scrollgrid {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(237, 241, 246, .7);
+    }
+
+    .dashboard-calendar .fc-col-header-cell {
+      padding: .55rem 0;
+      background: #f6fbf8;
+    }
+
+    .dashboard-calendar .fc-col-header-cell-cushion {
+      color: #146c43;
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .dashboard-calendar .fc-daygrid-day-number {
+      color: #495057;
+      font-size: .86rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .dashboard-calendar .fc-daygrid-day-frame {
+      padding: .2rem;
+      min-height: 6.25rem;
+    }
+
+    .dashboard-calendar .fc-day-today {
+      background: #f0fbf5 !important;
+    }
+
+    .dashboard-calendar .fc-event {
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+      padding: .16rem .32rem;
+      font-size: .76rem;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(25, 135, 84, .14);
+      cursor: pointer;
+    }
+
+    .dashboard-calendar .fc-event:hover {
+      filter: brightness(.98);
+      transform: translateY(-1px);
+    }
+
+    .dashboard-activity-modal {
+      border: 0;
+      border-radius: 16px;
+      box-shadow: 0 1.5rem 4rem rgba(33, 37, 41, .22);
+    }
+
+    .activity-detail-grid {
+      display: grid;
+      gap: .75rem;
+    }
+
+    .activity-detail-item {
+      display: flex;
+      gap: .8rem;
+      padding: .85rem;
+      border: 1px solid #edf1f6;
+      border-radius: 12px;
+      background: #fbfcfe;
+    }
+
+    .activity-detail-item i {
+      width: 2rem;
+      height: 2rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .06);
+    }
+
+    .activity-detail-label {
+      color: #6c757d;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .activity-detail-value {
+      color: #212529;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .turnover-dashboard-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid #e6edf5;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .dashboard-turnover-table th {
+      color: #6c757d;
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      background: #f8fafc;
+    }
+
     /* Activities */
     .activity-item {font-size:.9rem; transition:.25s;}
-    .activity-item:hover {background:rgba(0,0,0,.02);} 
+    .activity-item:hover {background:rgba(0,0,0,.02);}
 
     /* Scroll enhancements */
-    ::-webkit-scrollbar {width:10px;} 
-    ::-webkit-scrollbar-track {background:#eef1f5;} 
-    ::-webkit-scrollbar-thumb {background:#c2cbd6; border-radius:6px;} 
-    ::-webkit-scrollbar-thumb:hover {background:#a8b3c2;} 
+    ::-webkit-scrollbar {width:10px;}
+    ::-webkit-scrollbar-track {background:#eef1f5;}
+    ::-webkit-scrollbar-thumb {background:#c2cbd6; border-radius:6px;}
+    ::-webkit-scrollbar-thumb:hover {background:#a8b3c2;}
 
     @media (max-width: 575.98px){
       .feature-card {padding:26px 16px;}
@@ -647,8 +1331,112 @@
       .menu-desc {
         font-size: .8rem;
       }
+
+      .dashboard-calendar {
+        min-height: 30rem;
+        padding: .1rem;
+      }
+
+      .dashboard-calendar .fc-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .dashboard-calendar .fc-toolbar-title {
+        font-size: 1rem;
+      }
+
+      .dashboard-calendar .fc-daygrid-day-frame {
+        min-height: 4.8rem;
+      }
     }
   </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('dashboardActivitiesCalendar');
+      const fallbackEl = document.getElementById('dashboardActivitiesCalendarFallback');
+      if (!calendarEl) return;
+
+      const activities = <%- JSON.stringify(_activity || []).replace(/</g, '\\u003c') %>;
+
+      function formatThaiDate(value) {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+        return date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || '-';
+      }
+
+      function openActivityModal(item) {
+        const modalEl = document.getElementById('dashboardActivityModal');
+        if (!modalEl) return;
+        setText('dashboardActivityModalTitle', item.activity || '-');
+        setText('dashboardActivityDate', formatThaiDate(item.date_act));
+        setText('dashboardActivityTime', item.act_time || '-');
+        setText('dashboardActivityPlace', item.place || '-');
+        setText('dashboardActivityPeople', item.co_person || '-');
+
+        if (window.bootstrap && window.bootstrap.Modal) {
+          window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+      }
+
+      document.querySelectorAll('.dashboard-activity-fallback-item').forEach(function(button) {
+        button.addEventListener('click', function() {
+          const index = Number(button.getAttribute('data-activity-index'));
+          openActivityModal(activities[index] || {});
+        });
+      });
+
+      if (typeof FullCalendar === 'undefined') {
+        if (fallbackEl) fallbackEl.classList.remove('d-none');
+        return;
+      }
+
+      const events = (activities || [])
+        .filter(function(item) { return item && item.date_act; })
+        .map(function(item, index) {
+          return {
+            id: String(index + 1),
+            title: item.activity || '-',
+            start: item.date_act,
+            allDay: true,
+            extendedProps: { item: item }
+          };
+        });
+
+      try {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          locale: 'th',
+          height: 'auto',
+          fixedWeekCount: false,
+          showNonCurrentDates: false,
+          dayMaxEventRows: 2,
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+          },
+          buttonText: { today: 'วันนี้' },
+          events: events,
+          eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            openActivityModal(info.event.extendedProps.item || {});
+          }
+        });
+        calendar.render();
+        if (fallbackEl && events.length) fallbackEl.classList.add('d-none');
+      } catch (error) {
+        if (fallbackEl) fallbackEl.classList.remove('d-none');
+      }
+    });
+  </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {

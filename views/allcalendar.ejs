@@ -1,130 +1,689 @@
 <%- include('partials/header') %>
-<style>
-.fc .fc-toolbar-title {
-    font-size: 1rem; font-weight: 400;}
-</style>
 
-<!-- FullCalendar CSS (loaded here since header is fixed) -->
+<%
+  const calendarEvents = Array.isArray(events) ? events : [];
+  const eventStats = calendarEvents.reduce((summary, event) => {
+    const sourceType = event && event.extendedProps ? event.extendedProps.sourceType : 'gitgum';
+    summary.total += 1;
+    if (sourceType === 'travel_request') summary.travel += 1;
+    else if (sourceType === 'meetingroom') summary.meeting += 1;
+    else summary.office += 1;
+    return summary;
+  }, { total: 0, office: 0, travel: 0, meeting: 0 });
+%>
+
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
 
-<div class="container-fluid px-2 px-md-4">
-  <div class="d-flex flex-wrap align-items-center justify-content-between my-3 gap-2">
-    <h3 class="m-0">📆 ปฏิทินกิจกรรม</h3>
-    <div class="d-flex gap-2">
-        <!-- ต้องเป็นสมาชิก -->
-        
-        <% if (user) { %>
-            <a href="/gitgum/add" class="btn btn-success"><i class="bi bi-plus-circle"></i> เพิ่มกิจกรรม</a>
-        <% } %>
-    </div>
-  </div>
+<style>
+  :root {
+    --calendar-ink: #253047;
+    --calendar-muted: #667085;
+    --calendar-line: #d9e2ec;
+    --calendar-bg: #f4f7fb;
+    --calendar-panel: #ffffff;
+    --calendar-office: #2563eb;
+    --calendar-travel: #0f766e;
+    --calendar-meeting: #b45309;
+  }
 
-  <div id="calendar" class="bg-white rounded shadow-sm p-2" style="min-height: 70vh;"></div>
+  body {
+    background: var(--calendar-bg);
+  }
+
+  .calendar-page {
+    color: var(--calendar-ink);
+    padding-bottom: 32px;
+  }
+
+  .calendar-hero {
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.11), rgba(15, 118, 110, 0.12)),
+      var(--calendar-panel);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 8px;
+    box-shadow: 0 14px 32px rgba(31, 41, 55, 0.08);
+    padding: 20px;
+  }
+
+  .calendar-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .calendar-subtitle {
+    color: var(--calendar-muted);
+    font-size: 0.95rem;
+    margin: 6px 0 0;
+  }
+
+  .calendar-actions .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    min-height: 40px;
+  }
+
+  .calendar-stat-card,
+  .calendar-shell {
+    background: var(--calendar-panel);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
+  }
+
+  .calendar-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 86px;
+    padding: 16px;
+  }
+
+  .calendar-stat-icon {
+    align-items: center;
+    border-radius: 8px;
+    color: #fff;
+    display: inline-flex;
+    flex: 0 0 42px;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+  }
+
+  .calendar-stat-icon.total { background: #475467; }
+  .calendar-stat-icon.office { background: var(--calendar-office); }
+  .calendar-stat-icon.travel { background: var(--calendar-travel); }
+  .calendar-stat-icon.meeting { background: var(--calendar-meeting); }
+
+  .calendar-stat-label {
+    color: var(--calendar-muted);
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+  }
+
+  .calendar-stat-value {
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .calendar-shell {
+    overflow: hidden;
+  }
+
+  .calendar-shell-header {
+    align-items: center;
+    border-bottom: 1px solid var(--calendar-line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 16px 18px;
+  }
+
+  .calendar-shell-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .calendar-legend-item {
+    align-items: center;
+    color: var(--calendar-muted);
+    display: inline-flex;
+    font-size: 0.86rem;
+    gap: 6px;
+  }
+
+  .calendar-dot {
+    border-radius: 999px;
+    display: inline-block;
+    height: 10px;
+    width: 10px;
+  }
+
+  .calendar-dot.office { background: var(--calendar-office); }
+  .calendar-dot.travel { background: var(--calendar-travel); }
+  .calendar-dot.meeting { background: var(--calendar-meeting); }
+
+  #calendar {
+    min-height: 74vh;
+    padding: 14px;
+  }
+
+  .fc {
+    color: var(--calendar-ink);
+  }
+
+  .fc .fc-toolbar {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fc .fc-toolbar-title {
+    color: var(--calendar-ink);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .fc .fc-button {
+    background: #fff;
+    border: 1px solid var(--calendar-line);
+    border-radius: 8px;
+    color: var(--calendar-ink);
+    font-weight: 600;
+    padding: 0.42rem 0.72rem;
+  }
+
+  .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active,
+  .fc .fc-button-primary:hover {
+    background: #253047;
+    border-color: #253047;
+    color: #fff;
+  }
+
+  .fc .fc-scrollgrid,
+  .fc-theme-standard td,
+  .fc-theme-standard th {
+    border-color: var(--calendar-line);
+  }
+
+  .fc .fc-col-header-cell {
+    background: #f8fafc;
+    padding: 7px 0;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    color: #344054;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .fc .fc-daygrid-day-number {
+    color: var(--calendar-ink);
+    font-weight: 600;
+    padding: 7px 8px;
+    text-decoration: none;
+  }
+
+  .fc .fc-day-today {
+    background: #fff7ed;
+  }
+
+  .fc .fc-daygrid-day-frame {
+    min-height: 108px;
+  }
+
+  .fc .fc-event {
+    border: 0;
+    border-radius: 6px;
+    box-shadow: 0 2px 7px rgba(31, 41, 55, 0.12);
+    cursor: pointer;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    padding: 3px 6px;
+  }
+
+  .fc .fc-event-title {
+    font-weight: 600;
+  }
+
+  .fc .calendar-event--gitgum {
+    background: var(--calendar-office);
+    color: #fff;
+  }
+
+  .fc .calendar-event--travel {
+    background: var(--calendar-travel);
+    color: #fff;
+  }
+
+  .fc .calendar-event--meeting {
+    background: var(--calendar-meeting);
+    color: #fff;
+  }
+
+  .fc .fc-list {
+    border-color: var(--calendar-line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .fc .fc-list-event {
+    cursor: pointer;
+  }
+
+  .calendar-empty {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: var(--calendar-muted);
+    margin: 0 14px 14px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .event-modal .modal-content {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+    overflow: hidden;
+  }
+
+  .event-modal .modal-header {
+    background: #253047;
+    color: #fff;
+    padding: 18px 20px;
+  }
+
+  .event-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.85;
+  }
+
+  .event-modal-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .event-source-badge {
+    align-items: center;
+    background: #eef4ff;
+    border: 1px solid #c7d7fe;
+    border-radius: 999px;
+    color: #1d4ed8;
+    display: inline-flex;
+    font-size: 0.84rem;
+    font-weight: 700;
+    gap: 6px;
+    padding: 5px 10px;
+  }
+
+  .event-detail-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .event-detail-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    min-height: 72px;
+    padding: 12px;
+  }
+
+  .event-detail-item.full {
+    grid-column: 1 / -1;
+  }
+
+  .event-detail-label {
+    align-items: center;
+    color: var(--calendar-muted);
+    display: flex;
+    font-size: 0.8rem;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .event-detail-value {
+    color: var(--calendar-ink);
+    font-size: 0.94rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .event-modal .modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  @media (max-width: 768px) {
+    .calendar-page {
+      padding-bottom: 18px;
+    }
+
+    .calendar-hero {
+      padding: 16px;
+    }
+
+    .calendar-title {
+      font-size: 1.22rem;
+    }
+
+    .calendar-actions {
+      width: 100%;
+    }
+
+    .calendar-actions .btn {
+      flex: 1 1 auto;
+    }
+
+    .calendar-shell-header {
+      padding: 14px;
+    }
+
+    #calendar {
+      min-height: 68vh;
+      padding: 10px;
+    }
+
+    .fc .fc-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .fc .fc-toolbar-chunk {
+      display: flex;
+      justify-content: center;
+    }
+
+    .fc .fc-toolbar-title {
+      font-size: 1.05rem;
+      text-align: center;
+    }
+
+    .event-detail-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="calendar-page">
+  <div class="container-fluid px-2 px-md-4 py-3">
+    <section class="calendar-hero mb-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <h3 class="calendar-title">ปฏิทินกิจกรรม</h3>
+          <p class="calendar-subtitle">รวมกิจกรรมสำนักงาน การจองห้องประชุม และคำขอไปราชการในมุมมองเดียว</p>
+        </div>
+        <div class="calendar-actions d-flex flex-wrap gap-2">
+          <% if (user) { %>
+            <a href="/gitgum/add" class="btn btn-success">
+              <i class="bi bi-plus-circle me-1"></i> เพิ่มกิจกรรม
+            </a>
+          <% } %>
+          <a href="/gitgum/list" class="btn btn-outline-dark">
+            <i class="bi bi-list-ul me-1"></i> รายการกิจกรรม
+          </a>
+          <a href="/gitgum/mobile" class="btn btn-outline-primary">
+            <i class="bi bi-phone me-1"></i> มุมมองมือถือ
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-xl-3">
+        <div class="calendar-stat-card">
+          <span class="calendar-stat-icon total"><i class="bi bi-calendar2-week"></i></span>
+          <div>
+            <div class="calendar-stat-label">กิจกรรมทั้งหมด</div>
+            <div class="calendar-stat-value"><%= eventStats.total.toLocaleString('th-TH') %></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="calendar-stat-card">
+          <span class="calendar-stat-icon office"><i class="bi bi-building"></i></span>
+          <div>
+            <div class="calendar-stat-label">กิจกรรมสำนักงาน</div>
+            <div class="calendar-stat-value"><%= eventStats.office.toLocaleString('th-TH') %></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="calendar-stat-card">
+          <span class="calendar-stat-icon travel"><i class="bi bi-briefcase"></i></span>
+          <div>
+            <div class="calendar-stat-label">คำขอไปราชการ</div>
+            <div class="calendar-stat-value"><%= eventStats.travel.toLocaleString('th-TH') %></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="calendar-stat-card">
+          <span class="calendar-stat-icon meeting"><i class="bi bi-door-open"></i></span>
+          <div>
+            <div class="calendar-stat-label">จองห้องประชุม</div>
+            <div class="calendar-stat-value"><%= eventStats.meeting.toLocaleString('th-TH') %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="calendar-shell">
+      <div class="calendar-shell-header">
+        <div>
+          <h4 class="calendar-shell-title">ตารางกิจกรรม</h4>
+          <div class="text-muted small">คลิกที่กิจกรรมเพื่อดูรายละเอียด</div>
+        </div>
+        <div class="calendar-legend">
+          <span class="calendar-legend-item"><span class="calendar-dot office"></span> กิจกรรมสำนักงาน</span>
+          <span class="calendar-legend-item"><span class="calendar-dot travel"></span> ไปราชการ</span>
+          <span class="calendar-legend-item"><span class="calendar-dot meeting"></span> ห้องประชุม</span>
+        </div>
+      </div>
+      <div id="calendar"></div>
+      <% if (!calendarEvents.length) { %>
+        <div class="calendar-empty">
+          ยังไม่มีกิจกรรมในช่วงวันที่ที่แสดง
+        </div>
+      <% } %>
+    </section>
+  </div>
 </div>
 
-<!-- Modal แสดงรายละเอียดกิจกรรม -->
-<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade event-modal" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="eventTitle">รายละเอียดกิจกรรม</h5>
+        <h5 class="event-modal-title" id="eventTitle">รายละเอียดกิจกรรม</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="mb-2"><i class="bi bi-bookmark-star me-2"></i><span id="eventSource"></span></div>
-        <div class="mb-2"><i class="bi bi-upc-scan me-2"></i><span id="eventRequestNumber"></span></div>
-        <div class="mb-2"><i class="bi bi-calendar-event me-2"></i><span id="eventDate"></span></div>
-        <div class="mb-2"><i class="bi bi-clock me-2"></i><span id="eventTime"></span></div>
-        <div class="mb-2"><i class="bi bi-truck me-2"></i><span id="eventVehicle"></span></div>
-        <div class="mb-2"><i class="bi bi-person-badge me-2"></i><span id="eventDriver"></span></div>
-        <div class="mb-2"><i class="bi bi-signpost-2 me-2"></i><span id="eventTransportType"></span></div>
-        <div class="mb-2"><i class="bi bi-patch-check me-2"></i><span id="eventApprovalStatus"></span></div>
-        <div class="mb-2"><i class="bi bi-geo-alt me-2"></i><span id="eventPlace"></span></div>
-        <div class="mb-2"><i class="bi bi-people me-2"></i><span id="eventRespon"></span></div>
-        <div class="mb-2"><i class="bi bi-arrow-right-circle me-2"></i><span id="eventGoto"></span></div>
-        <div class="mb-2"><i class="bi bi-diagram-3 me-2"></i><span id="eventGroup"></span></div>
-        <div class="mb-0"><i class="bi bi-card-text me-2"></i><span id="eventMaihed"></span></div>
+      <div class="modal-body p-3 p-md-4">
+        <div class="mb-3">
+          <span class="event-source-badge"><i class="bi bi-bookmark-star"></i><span id="eventSource">กิจกรรม</span></span>
+        </div>
+        <div class="event-detail-grid">
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-calendar-event"></i> วันที่</div>
+            <div class="event-detail-value" id="eventDate">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-clock"></i> เวลา</div>
+            <div class="event-detail-value" id="eventTime">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-upc-scan"></i> เลขที่คำขอ</div>
+            <div class="event-detail-value" id="eventRequestNumber">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-patch-check"></i> สถานะ</div>
+            <div class="event-detail-value" id="eventApprovalStatus">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-geo-alt"></i> สถานที่</div>
+            <div class="event-detail-value" id="eventPlace">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-people"></i> ผู้รับผิดชอบ</div>
+            <div class="event-detail-value" id="eventRespon">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-arrow-right-circle"></i> ผู้เข้าร่วม/เดินทาง</div>
+            <div class="event-detail-value" id="eventGoto">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-diagram-3"></i> กลุ่มงาน</div>
+            <div class="event-detail-value" id="eventGroup">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-signpost-2"></i> วิธีเดินทาง</div>
+            <div class="event-detail-value" id="eventTransportType">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-truck"></i> รถ/ทะเบียน</div>
+            <div class="event-detail-value" id="eventVehicle">-</div>
+          </div>
+          <div class="event-detail-item">
+            <div class="event-detail-label"><i class="bi bi-person-badge"></i> พนักงานขับรถ</div>
+            <div class="event-detail-value" id="eventDriver">-</div>
+          </div>
+          <div class="event-detail-item full">
+            <div class="event-detail-label"><i class="bi bi-card-text"></i> หมายเหตุ</div>
+            <div class="event-detail-value" id="eventMaihed">-</div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
-        <a id="eventViewBtn" href="#" class="btn btn-outline-primary"><i class="bi bi-eye"></i> ดูรายละเอียด</a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+        <a id="eventViewBtn" href="#" class="btn btn-primary">
+          <i class="bi bi-eye me-1"></i> ดูรายละเอียด
+        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- FullCalendar JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const events = <%- JSON.stringify(events || []) %>;
+    const rawEvents = <%- JSON.stringify(calendarEvents) %>;
+    let currentIsMobile = window.matchMedia('(max-width: 768px)').matches;
+
+    const sourceClassMap = {
+      travel_request: 'calendar-event--travel',
+      meetingroom: 'calendar-event--meeting',
+      gitgum: 'calendar-event--gitgum'
+    };
+
+    const events = rawEvents.map(function(event) {
+      const props = event.extendedProps || {};
+      const sourceType = props.sourceType || 'gitgum';
+      const className = sourceClassMap[sourceType] || sourceClassMap.gitgum;
+      return Object.assign({}, event, {
+        classNames: Array.from(new Set([].concat(event.classNames || [], className)))
+      });
+    });
+
+    const setText = function(id, value) {
+      document.getElementById(id).textContent = value || '-';
+    };
+
+    const formatDate = function(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const formatTime = function(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    };
+
+    const openEventModal = function(event) {
+      const props = event.extendedProps || {};
+      const start = event.start ? new Date(event.start) : null;
+      const end = event.end ? new Date(event.end) : null;
+      const startLabel = props.dateLabel || formatDate(start);
+      const endLabel = end && !props.dateLabel
+        ? formatDate(new Date(end.getTime() - 24 * 60 * 60 * 1000))
+        : null;
+      const dateLabel = endLabel && endLabel !== startLabel ? `${startLabel} ถึง ${endLabel}` : startLabel;
+
+      setText('eventTitle', event.title || 'รายละเอียดกิจกรรม');
+      setText('eventSource', props.sourceLabel || 'กิจกรรม');
+      setText('eventRequestNumber', props.requestNumber || props.vehicleRequestNo);
+      setText('eventDate', dateLabel);
+      setText('eventTime', props.timeLabel || formatTime(start));
+      setText('eventApprovalStatus', props.approvalStatus);
+      setText('eventPlace', props.place);
+      setText('eventRespon', props.respon);
+      setText('eventGoto', props.goto);
+      setText('eventGroup', props.group);
+      setText('eventTransportType', props.transportType);
+      setText('eventVehicle', props.vehiclePlate);
+      setText('eventDriver', props.driverName);
+      setText('eventMaihed', props.maihed);
+
+      const viewBtn = document.getElementById('eventViewBtn');
+      if (props.detailUrl) {
+        viewBtn.href = props.detailUrl;
+        viewBtn.classList.remove('d-none');
+      } else {
+        viewBtn.href = '#';
+        viewBtn.classList.add('d-none');
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+      modal.show();
+    };
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
       locale: 'th',
       timeZone: 'Asia/Bangkok',
-      initialView: isMobile ? 'listWeek' : 'dayGridMonth',
-      headerToolbar: isMobile
+      initialView: currentIsMobile ? 'listWeek' : 'dayGridMonth',
+      headerToolbar: currentIsMobile
         ? { left: 'prev,next today', center: 'title', right: '' }
         : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+      buttonText: {
+        today: 'วันนี้',
+        month: 'เดือน',
+        week: 'สัปดาห์',
+        day: 'วัน',
+        list: 'รายการ'
+      },
       height: 'auto',
       stickyHeaderDates: true,
       nowIndicator: true,
-      weekNumbers: false,
       navLinks: true,
-      dayMaxEvents: true,
+      dayMaxEvents: 4,
+      eventDisplay: 'block',
       eventTimeFormat: { hour: '2-digit', minute: '2-digit', meridiem: false },
       events,
+      eventDidMount: function(info) {
+        const props = info.event.extendedProps || {};
+        info.el.setAttribute('title', [props.sourceLabel, info.event.title].filter(Boolean).join(' - '));
+      },
       eventClick: function(info) {
         info.jsEvent.preventDefault();
-        const e = info.event;
-        const p = e.extendedProps || {};
-        // เติมข้อมูลลงใน Modal
-        document.getElementById('eventTitle').textContent = e.title || 'รายละเอียดกิจกรรม';
-        const start = e.start ? new Date(e.start) : null;
-        const end = e.end ? new Date(e.end) : null;
-        const thDate = start ? start.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
-        const thEndDate = end ? new Date(end.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
-        const dateLabel = p.dateLabel || (thEndDate && start ? `${thDate} ถึง ${thEndDate}` : thDate);
-        const thTime = start ? start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-';
-        document.getElementById('eventSource').textContent = p.sourceLabel || 'กิจกรรม';
-        document.getElementById('eventRequestNumber').textContent = p.requestNumber || p.vehicleRequestNo || '-';
-        document.getElementById('eventDate').textContent = dateLabel;
-        document.getElementById('eventTime').textContent = p.timeLabel || thTime;
-        document.getElementById('eventVehicle').textContent = p.vehiclePlate || '-';
-        document.getElementById('eventDriver').textContent = p.driverName || '-';
-        document.getElementById('eventTransportType').textContent = p.transportType || '-';
-        document.getElementById('eventApprovalStatus').textContent = p.approvalStatus || '-';
-        document.getElementById('eventPlace').textContent = p.place || '-';
-        document.getElementById('eventRespon').textContent = p.respon || '-';
-        document.getElementById('eventGoto').textContent = p.goto || '-';
-        document.getElementById('eventGroup').textContent = p.group || '-';
-        document.getElementById('eventMaihed').textContent = p.maihed || '-';
-        const viewBtn = document.getElementById('eventViewBtn');
-        if (p.detailUrl) {
-          viewBtn.href = p.detailUrl;
-          viewBtn.classList.remove('d-none');
-        } else {
-          viewBtn.href = '#';
-          viewBtn.classList.add('d-none');
-        }
-        const modal = new bootstrap.Modal(document.getElementById('eventModal'));
-        modal.show();
+        openEventModal(info.event);
       }
     });
 
     calendar.render();
 
-    // Optional: เปลี่ยน layout เมื่อขนาดจอเปลี่ยน
     window.addEventListener('resize', function() {
-      const nowMobile = window.matchMedia('(max-width: 768px)').matches;
-      const currentView = calendar.view.type;
-      const target = nowMobile ? 'listWeek' : 'dayGridMonth';
-      if (currentView !== target) {
-        calendar.changeView(target);
-      }
+      const nextIsMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (nextIsMobile === currentIsMobile) return;
+      currentIsMobile = nextIsMobile;
+      calendar.setOption('headerToolbar', currentIsMobile
+        ? { left: 'prev,next today', center: 'title', right: '' }
+        : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' });
+      calendar.changeView(currentIsMobile ? 'listWeek' : 'dayGridMonth');
     });
   });
 </script>

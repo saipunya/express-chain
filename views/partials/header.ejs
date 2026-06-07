@@ -26,7 +26,7 @@
   <body class="d-flex flex-column min-vh-100 flex-grow-1">
     <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-success shadow-sm sticky-top">
       <div class="container">
-        <a class="navbar-brand fw-semibold" href="/">
+        <a class="navbar-brand fw-semibold" href="/main">
           <span class="navbar-brand-full">🏛️ CoopChain</span>
           <span class="navbar-brand-short">🏛️ Coop</span>
         </a>
@@ -36,7 +36,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <% const isInstitutionUser = user && ['coop', 'group'].includes(String(user.group || user.m_group || '').trim()); %>
-            <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1" aria-hidden="true"></i>หน้าแรก</a></li>
+            <li class="nav-item"><a class="nav-link" href="/main"><i class="bi bi-house-door me-1" aria-hidden="true"></i>หน้าแรก</a></li>
             <li class="nav-item"><a class="nav-link" target="_blank" href="https://script.google.com/macros/s/AKfycbytn87Ymp2pyc3TyHX8wxVo3QOL112nylTvhWIwC6ShdQY73uZ8GDPtyMuUVqMlhE38/exec">
               <!-- add icon person -->
               <i class="bi bi-person-lines-fill me-1" aria-hidden="true"></i>ระบบลาออนไลน์

@@ -47,7 +47,7 @@ exports.home = async (req, res) => {
 		console.error('[memberCoopController.home] projects error:', e);
 	}
 
-	res.render('home', { summaryByYear, top, meetingsToday, meetingroomTodayDate, lastProjects });
+	res.redirect('/main');
 };
 
 exports.list = (req, res) => {

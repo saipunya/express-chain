@@ -4,8 +4,9 @@ const onlineModel = require('../models/onlineModel');
 const { isInstitutionUser } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
+  const group = String(user?.group || user?.m_group || '').trim().toLowerCase();
   const mClass = String(user?.mClass || user?.m_class || '').trim().toLowerCase();
-  return ['c', 'g'].includes(mClass) ? '/homecoop' : '/home/';
+  return ['coop', 'group'].includes(group) || ['c', 'g'].includes(mClass) ? '/dashboard2' : '/dashboard';
 }
 
 exports.login = async (req, res) => {

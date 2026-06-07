@@ -5,6 +5,19 @@ exports.getAll = async () => {
   return rows;
 };
 
+exports.getMainDownloads = async (limit = 8) => {
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 8, 24));
+  const [rows] = await db.query(
+    `SELECT down_id, down_subject, down_group, down_type, down_for, down_file, down_link, down_savedate
+     FROM download
+     WHERE down_for IN ('all', 'coop')
+     ORDER BY down_savedate DESC, down_id DESC
+     LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+};
+
 exports.getById = async (id) => {
   const [rows] = await db.query('SELECT * FROM download WHERE down_id = ?', [id]);
   return rows[0];

@@ -5,6 +5,9 @@ const router = express.Router();
 const activeCoopModel = require('../models/activeCoopModel');
 const bigmeetModel = require('../models/bigmeetModel');
 const onlineModel = require('../models/onlineModel');
+const turnoverModel = require('../models/turnoverModel');
+const strengthModel = require('../models/strengthModel');
+const downModel = require('../models/downModel');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
@@ -47,6 +50,34 @@ function addDaysUtc(ymd, days) {
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() + Number(days || 0));
   return date;
+}
+
+function buildFiscalYearRange(fiscalYear) {
+  const year = Number(fiscalYear || 0);
+  if (!year) return null;
+  return {
+    start: `${year - 544}-10-01`,
+    end: `${year - 543}-09-30`
+  };
+}
+
+function buildAccountingEndRange(fiscalYear) {
+  const year = Number(fiscalYear || 0);
+  if (!year) return null;
+  return {
+    start: `${year - 544}-04-30`,
+    end: `${year - 543}-03-31`
+  };
+}
+
+function getAccountingEndYmdForFiscalYear(monthDay, fiscalYear) {
+  const range = buildAccountingEndRange(fiscalYear);
+  if (!range || !/^\d{2}-\d{2}$/.test(String(monthDay || ''))) return null;
+  const startMonthDay = range.start.slice(5);
+  const endMonthDay = range.end.slice(5);
+  if (monthDay >= startMonthDay) return `${range.start.slice(0, 4)}-${monthDay}`;
+  if (monthDay <= endMonthDay) return `${range.end.slice(0, 4)}-${monthDay}`;
+  return null;
 }
 
 function formatThaiDate(date) {
@@ -139,6 +170,310 @@ function buildInstitutionSummary(rows = []) {
   return summary;
 }
 
+function buildMainDownloads(rows = []) {
+  return (rows || []).map((row) => {
+    const hasFile = Boolean(row.down_file && row.down_file !== '-');
+    const hasLink = Boolean(row.down_link && row.down_link !== '-');
+    const savedMs = parseDateToUtcMs(row.down_savedate);
+    return {
+      down_id: row.down_id,
+      down_subject: row.down_subject || '-',
+      down_group: row.down_group || '',
+      down_type: row.down_type || '',
+      down_for: row.down_for || '',
+      down_file: row.down_file || '',
+      down_link: row.down_link || '',
+      hasFile,
+      hasLink,
+      downloadUrl: hasFile ? `/down/download/${row.down_id}` : hasLink ? row.down_link : '',
+      savedDateThai: savedMs !== null ? formatThaiDate(new Date(savedMs)) : ''
+    };
+  });
+}
+
+function formatTurnoverMonth(value) {
+  const thaiMonths = {
+    1: 'มกราคม',
+    2: 'กุมภาพันธ์',
+    3: 'มีนาคม',
+    4: 'เมษายน',
+    5: 'พฤษภาคม',
+    6: 'มิถุนายน',
+    7: 'กรกฎาคม',
+    8: 'สิงหาคม',
+    9: 'กันยายน',
+    10: 'ตุลาคม',
+    11: 'พฤศจิกายน',
+    12: 'ธันวาคม'
+  };
+  const trimmed = String(value || '').trim();
+  const monthNumber = Number(trimmed);
+  return thaiMonths[monthNumber] || trimmed;
+}
+
+function buildTurnoverCategorySummary(rows = []) {
+  const categories = {
+    agri: {
+      key: 'agri',
+      label: 'สหกรณ์ภาคการเกษตร',
+      shortLabel: 'ภาคการเกษตร',
+      icon: 'bi-flower1',
+      tone: 'green',
+      totalAmount: 0,
+      institutionCount: 0,
+      monthsWithData: 0,
+      latestMonth: '',
+      latestYear: ''
+    },
+    non_agri: {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาคการเกษตร',
+      shortLabel: 'นอกภาคการเกษตร',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      totalAmount: 0,
+      institutionCount: 0,
+      monthsWithData: 0,
+      latestMonth: '',
+      latestYear: ''
+    },
+    farmer: {
+      key: 'farmer',
+      label: 'กลุ่มเกษตรกร',
+      shortLabel: 'กลุ่มเกษตรกร',
+      icon: 'bi-people',
+      tone: 'amber',
+      totalAmount: 0,
+      institutionCount: 0,
+      monthsWithData: 0,
+      latestMonth: '',
+      latestYear: ''
+    }
+  };
+
+  const validRows = (rows || [])
+    .map((row) => ({
+      budYear: Number(row.tur_budyear || 0),
+      categoryKey: categories[row.category_key] ? row.category_key : 'non_agri',
+      totalAmount: Number(row.total_amount || 0),
+      institutionCount: Number(row.institution_count || 0),
+      monthsWithData: Number(row.months_with_data || 0),
+      latestMonth: formatTurnoverMonth(row.latest_month),
+      latestYear: row.latest_year || ''
+    }))
+    .filter((row) => row.budYear);
+
+  const latestBudYear = validRows.reduce((latest, row) => Math.max(latest, row.budYear), 0);
+
+  validRows
+    .filter((row) => row.budYear === latestBudYear)
+    .forEach((row) => {
+      const target = categories[row.categoryKey];
+      target.totalAmount = row.totalAmount;
+      target.institutionCount = row.institutionCount;
+      target.monthsWithData = row.monthsWithData;
+      target.latestMonth = row.latestMonth;
+      target.latestYear = row.latestYear;
+    });
+
+  const list = ['agri', 'non_agri', 'farmer'].map((key) => categories[key]);
+  const totalAmount = list.reduce((sum, item) => sum + item.totalAmount, 0);
+
+  return {
+    latestBudYear,
+    latestBudYearThai: latestBudYear ? latestBudYear + 543 : '',
+    totalAmount,
+    list
+  };
+}
+
+function buildStrengthGradeSummary(rows = [], year = 2568) {
+  const categories = {
+    'สหกรณ์ภาคการเกษตร': {
+      key: 'agri',
+      label: 'สหกรณ์ภาคการเกษตร',
+      shortLabel: 'ภาคการเกษตร',
+      icon: 'bi-flower1',
+      tone: 'green',
+      total: 0,
+      grade1: 0,
+      grade2: 0,
+      grade3: 0
+    },
+    'สหกรณ์นอกภาคการเกษตร': {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาค',
+      shortLabel: 'นอกภาค',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      total: 0,
+      grade1: 0,
+      grade2: 0,
+      grade3: 0
+    },
+    'สหกรณ์นอกภาค': {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาค',
+      shortLabel: 'นอกภาค',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      total: 0,
+      grade1: 0,
+      grade2: 0,
+      grade3: 0
+    },
+    'กลุ่มเกษตรกร': {
+      key: 'farmer',
+      label: 'กลุ่มเกษตรกร',
+      shortLabel: 'กลุ่มเกษตรกร',
+      icon: 'bi-people',
+      tone: 'amber',
+      total: 0,
+      grade1: 0,
+      grade2: 0,
+      grade3: 0
+    }
+  };
+
+  const summaryByKey = {
+    agri: { ...categories['สหกรณ์ภาคการเกษตร'] },
+    non_agri: { ...categories['สหกรณ์นอกภาค'] },
+    farmer: { ...categories['กลุ่มเกษตรกร'] }
+  };
+
+  (rows || []).forEach((row) => {
+    const template = categories[String(row.group_name || '').trim()];
+    if (!template) return;
+    const target = summaryByKey[template.key];
+    target.total = Number(row.total_count || 0);
+    target.grade1 = Number(row.grade_1_count || 0);
+    target.grade2 = Number(row.grade_2_count || 0);
+    target.grade3 = Number(row.grade_3_count || 0);
+  });
+
+  const list = ['agri', 'non_agri', 'farmer'].map((key) => {
+    const item = summaryByKey[key];
+    return {
+      ...item,
+      grade1Percent: item.total > 0 ? (item.grade1 / item.total) * 100 : 0
+    };
+  });
+
+  return {
+    year,
+    list,
+    totals: list.reduce((acc, item) => {
+      acc.total += item.total;
+      acc.grade1 += item.grade1;
+      acc.grade2 += item.grade2;
+      acc.grade3 += item.grade3;
+      return acc;
+    }, { total: 0, grade1: 0, grade2: 0, grade3: 0 })
+  };
+}
+
+function buildClosingCurrentMonthSummary(rows = [], monthLabel = '') {
+  const summaryByKey = {
+    agri: {
+      key: 'agri',
+      label: 'สหกรณ์ภาคการเกษตร',
+      shortLabel: 'ภาคการเกษตร',
+      icon: 'bi-flower1',
+      tone: 'green',
+      count: 0,
+      rows: []
+    },
+    non_agri: {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาค',
+      shortLabel: 'นอกภาค',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      count: 0,
+      rows: []
+    },
+    farmer: {
+      key: 'farmer',
+      label: 'กลุ่มเกษตรกร',
+      shortLabel: 'กลุ่มเกษตรกร',
+      icon: 'bi-people',
+      tone: 'amber',
+      count: 0,
+      rows: []
+    }
+  };
+
+  (rows || []).forEach((row) => {
+    const categoryKey = getInstitutionCategory(row);
+    const target = summaryByKey[categoryKey] || summaryByKey.non_agri;
+    target.count += 1;
+    target.rows.push(row);
+  });
+
+  const list = ['agri', 'non_agri', 'farmer'].map((key) => {
+    const item = summaryByKey[key];
+    item.rows.sort((a, b) => a.closingDeadlineMs - b.closingDeadlineMs);
+    return item;
+  });
+
+  return {
+    monthLabel,
+    total: list.reduce((sum, item) => sum + item.count, 0),
+    list
+  };
+}
+
+function buildOverdueMeetingSummary(rows = [], fiscalYear = 2569) {
+  const summaryByKey = {
+    agri: {
+      key: 'agri',
+      label: 'สหกรณ์ภาคการเกษตร',
+      shortLabel: 'ภาคการเกษตร',
+      icon: 'bi-flower1',
+      tone: 'green',
+      count: 0,
+      rows: []
+    },
+    non_agri: {
+      key: 'non_agri',
+      label: 'สหกรณ์นอกภาค',
+      shortLabel: 'นอกภาค',
+      icon: 'bi-buildings',
+      tone: 'teal',
+      count: 0,
+      rows: []
+    },
+    farmer: {
+      key: 'farmer',
+      label: 'กลุ่มเกษตรกร',
+      shortLabel: 'กลุ่มเกษตรกร',
+      icon: 'bi-people',
+      tone: 'amber',
+      count: 0,
+      rows: []
+    }
+  };
+
+  (rows || []).forEach((row) => {
+    const categoryKey = getInstitutionCategory(row);
+    const target = summaryByKey[categoryKey] || summaryByKey.non_agri;
+    target.count += 1;
+    target.rows.push(row);
+  });
+
+  const list = ['agri', 'non_agri', 'farmer'].map((key) => {
+    const item = summaryByKey[key];
+    item.rows.sort((a, b) => a.meetingDeadlineMs - b.meetingDeadlineMs);
+    return item;
+  });
+
+  return {
+    fiscalYear,
+    total: list.reduce((sum, item) => sum + item.count, 0),
+    list
+  };
+}
+
 function parseDateToUtcMs(value) {
   if (!value) return null;
   if (typeof value === 'string') {
@@ -161,11 +496,9 @@ function normalizeDateKey(value) {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-function getDeadlineYearForEndDay(monthDay, currentYear) {
+function getDeadlineYearForEndDay(monthDay, currentYear, currentMonthDay) {
   if (!monthDay) return currentYear;
-  const month = Number(monthDay.split('-')[0]);
-  if (Number.isNaN(month)) return currentYear;
-  return month >= 4 ? currentYear - 1 : currentYear;
+  return monthDay <= currentMonthDay ? currentYear : currentYear - 1;
 }
 
 function groupByCoopGroup(rows) {
@@ -186,6 +519,7 @@ function groupByCoopGroup(rows) {
 
 async function getMainDeadlineData() {
   const baseRows = await activeCoopModel.getMeetingDeadlineBase();
+  const overdueFiscalYear = 2569;
   const now = new Date();
   const bangkokParts = getBangkokParts(now);
   const currentYear = Number(bangkokParts.year);
@@ -196,6 +530,7 @@ async function getMainDeadlineData() {
   );
   const inThirtyDaysMs = todayStartMs + (30 * 24 * 60 * 60 * 1000);
   const thisMonthKey = `${bangkokParts.year}-${bangkokParts.month}`;
+  const currentMonthDay = `${bangkokParts.month}-${bangkokParts.day}`;
   const monthLabel = now.toLocaleDateString('th-TH', {
     month: 'long',
     year: 'numeric',
@@ -206,7 +541,7 @@ async function getMainDeadlineData() {
     .map((row) => {
       const monthDay = toMonthDay(row.end_day);
       if (!monthDay) return null;
-      const endDateYear = getDeadlineYearForEndDay(monthDay, currentYear);
+      const endDateYear = getDeadlineYearForEndDay(monthDay, currentYear, currentMonthDay);
       const endDateYmd = `${endDateYear}-${monthDay}`;
       const endDateObj = addDaysUtc(endDateYmd, 0);
       const meetingDeadlineObj = addDaysUtc(endDateYmd, 150);
@@ -218,6 +553,7 @@ async function getMainDeadlineData() {
         c_name: row.c_name,
         c_group: row.c_group,
         coop_group: row.coop_group,
+        in_out_group: row.in_out_group,
         endDateYmd,
         endDateThai: formatThaiDate(endDateObj),
         endDateMs: endDateObj.getTime(),
@@ -225,14 +561,47 @@ async function getMainDeadlineData() {
         meetingDeadlineThai: formatThaiDate(meetingDeadlineObj),
         meetingDeadlineMs: meetingDeadlineObj.getTime(),
         meetingMonthKey,
+        closingDeadlineYmd: closingDeadlineObj.toISOString().slice(0, 10),
+        closingMonthKey: closingDeadlineObj.toISOString().slice(0, 7),
         closingDeadlineThai: formatThaiDate(closingDeadlineObj),
         closingDeadlineMs: closingDeadlineObj.getTime()
       };
     })
     .filter(Boolean);
 
+  const overdueFiscalRange = buildFiscalYearRange(overdueFiscalYear);
+  const overdueMeetingCandidates = (baseRows || [])
+    .map((row) => {
+      const monthDay = toMonthDay(row.end_day);
+      const endDateYmd = getAccountingEndYmdForFiscalYear(monthDay, overdueFiscalYear);
+      if (!endDateYmd || !overdueFiscalRange) return null;
+      const endDateObj = addDaysUtc(endDateYmd, 0);
+      const meetingDeadlineObj = addDaysUtc(endDateYmd, 150);
+      const meetingDeadlineYmd = meetingDeadlineObj.toISOString().slice(0, 10);
+      if (meetingDeadlineYmd < overdueFiscalRange.start || meetingDeadlineYmd > overdueFiscalRange.end) return null;
+      if (meetingDeadlineObj.getTime() >= todayStartMs) return null;
+      return {
+        c_code: row.c_code,
+        c_name: row.c_name,
+        c_group: row.c_group,
+        coop_group: row.coop_group,
+        in_out_group: row.in_out_group,
+        endDateYmd,
+        endDateThai: formatThaiDate(endDateObj),
+        endDateMs: endDateObj.getTime(),
+        meetingDeadlineYmd,
+        meetingDeadlineThai: formatThaiDate(meetingDeadlineObj),
+        meetingDeadlineMs: meetingDeadlineObj.getTime()
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.meetingDeadlineMs - b.meetingDeadlineMs);
+
   const bigmeetTargetRows = rowsWithDeadlines.filter((row) => row.meetingMonthKey === thisMonthKey);
-  const meetingCodes = bigmeetTargetRows.map((row) => row.c_code).filter(Boolean);
+  const meetingCodes = Array.from(new Set([
+    ...bigmeetTargetRows.map((row) => row.c_code).filter(Boolean),
+    ...overdueMeetingCandidates.map((row) => row.c_code).filter(Boolean)
+  ]));
   const bigmeetRows = await bigmeetModel.findByCodes(meetingCodes);
   const bigmeetMap = bigmeetRows.reduce((acc, row) => {
     const key = row.big_code || '';
@@ -264,14 +633,28 @@ async function getMainDeadlineData() {
       };
     })
     .sort((a, b) => a.meetingDeadlineMs - b.meetingDeadlineMs);
+  const overdueMeetingRows = overdueMeetingCandidates
+    .filter((row) => {
+      const inWindow = (bigmeetMap[row.c_code] || [])
+        .filter((item) =>
+          item.fiscalEndDate === row.endDateYmd ||
+          item.deadlineDate === row.meetingDeadlineYmd ||
+          (item.dateMs !== null && item.dateMs >= row.endDateMs && item.dateMs <= row.meetingDeadlineMs)
+        );
+      return !inWindow.some((item) => item.dateMs !== null && item.status !== 'not_met');
+    });
 
   const closingWithin30Rows = rowsWithDeadlines
     .filter((row) => row.closingDeadlineMs >= todayStartMs && row.closingDeadlineMs <= inThirtyDaysMs)
     .sort((a, b) => a.closingDeadlineMs - b.closingDeadlineMs);
+  const closingCurrentMonthRows = closingWithin30Rows
+    .filter((row) => row.closingMonthKey === thisMonthKey);
 
   return {
     bigmeetThisMonthGroups: groupByCoopGroup(bigmeetThisMonthRows),
+    overdueMeetingSummary: buildOverdueMeetingSummary(overdueMeetingRows, overdueFiscalYear),
     closingWithin30Groups: groupByCoopGroup(closingWithin30Rows),
+    closingCurrentMonthSummary: buildClosingCurrentMonthSummary(closingCurrentMonthRows, monthLabel),
     bigmeetMonthLabel: monthLabel,
     closingWindowLabel: '30 วันข้างหน้า'
   };
@@ -283,16 +666,24 @@ async function showMain(req, res) {
   }
 
   try {
-    const [deadlineData, institutionRows, onlineUsers, onlineCount] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads] = await Promise.all([
       getMainDeadlineData(),
       activeCoopModel.getActiveInstitutionSummaryRows(),
       onlineModel.getOnlineUsers(),
-      onlineModel.getOnlineCount()
+      onlineModel.getOnlineCount(),
+      turnoverModel.getCategorySummaryByFiscalYear(),
+      bigmeetModel.getLatestFiscalYearCategorySummary(),
+      strengthModel.getGradeSummaryByInOutGroup(2568),
+      downModel.getMainDownloads(8)
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
       institutionSummary: buildInstitutionSummary(institutionRows),
+      turnoverCategorySummary: buildTurnoverCategorySummary(turnoverCategoryRows),
+      bigmeetFiscalSummary,
+      strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, 2568),
+      mainDownloads: buildMainDownloads(mainDownloads),
       onlineUsers,
       onlineCount,
       ...deadlineData
@@ -303,10 +694,16 @@ async function showMain(req, res) {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
       bigmeetThisMonthGroups: [],
+      overdueMeetingSummary: buildOverdueMeetingSummary([], 2569),
       closingWithin30Groups: [],
+      closingCurrentMonthSummary: buildClosingCurrentMonthSummary([], ''),
       bigmeetMonthLabel: '',
       closingWindowLabel: '30 วันข้างหน้า',
       institutionSummary: buildInstitutionSummary([]),
+      turnoverCategorySummary: buildTurnoverCategorySummary([]),
+      bigmeetFiscalSummary: { fiscalYear: 0, fiscalYearThai: '', categories: [] },
+      strengthGradeSummary: buildStrengthGradeSummary([], 2568),
+      mainDownloads: [],
       onlineUsers: [],
       onlineCount: 0
     });

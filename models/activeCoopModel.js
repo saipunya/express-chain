@@ -199,7 +199,7 @@ exports.getAllGroupedByEndDate = async () => {
 
 exports.getMeetingDeadlineBase = async () => {
   const [rows] = await pool.query(`
-    SELECT c_code, c_name, c_group, coop_group, end_day
+    SELECT c_code, c_name, c_group, coop_group, in_out_group, end_day
     FROM active_coop
     WHERE end_day IS NOT NULL
       AND end_day <> ''

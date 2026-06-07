@@ -76,6 +76,79 @@ function budgetYearSqlExpr(alias = 'b') {
   END`;
 }
 
+function normalizeText(value) {
+  if (value === undefined || value === null) return '';
+  return String(value).trim();
+}
+
+function deriveMonthDayFromCoop(coop = {}) {
+  const endDay = normalizeText(coop.end_day);
+  if (/^\d{2}-\d{2}$/.test(endDay)) return endDay;
+
+  const thaiMonthToMm = {
+    มกราคม: '01',
+    กุมภาพันธ์: '02',
+    มีนาคม: '03',
+    เมษายน: '04',
+    พฤษภาคม: '05',
+    มิถุนายน: '06',
+    กรกฎาคม: '07',
+    สิงหาคม: '08',
+    กันยายน: '09',
+    ตุลาคม: '10',
+    พฤศจิกายน: '11',
+    ธันวาคม: '12'
+  };
+  const endDate = normalizeText(coop.end_date).replace(/\s+/g, '');
+  const match = endDate.match(/^(\d{1,2})([^\d]+)$/);
+  if (!match) return null;
+  const day = String(match[1]).padStart(2, '0');
+  const month = thaiMonthToMm[match[2]];
+  return month ? `${month}-${day}` : null;
+}
+
+function fiscalYearRangeToIso(fiscalYear) {
+  const fy = Number(fiscalYear || 0);
+  if (!fy) return null;
+  return {
+    start: `${fy - 544}-10-01`,
+    end: `${fy - 543}-09-30`
+  };
+}
+
+function accountingEndRangeToIso(fiscalYear) {
+  const fy = Number(fiscalYear || 0);
+  if (!fy) return null;
+  return {
+    start: `${fy - 544}-04-30`,
+    end: `${fy - 543}-03-31`
+  };
+}
+
+function getCurrentBudgetYear(date = new Date()) {
+  const month = date.getMonth() + 1;
+  const ceYear = date.getFullYear();
+  return month >= 10 ? ceYear + 544 : ceYear + 543;
+}
+
+function isoFromMonthDayInRange(monthDay, range) {
+  const md = normalizeText(monthDay);
+  if (!/^\d{2}-\d{2}$/.test(md) || !range) return null;
+  const startMonthDay = range.start.slice(5);
+  const endMonthDay = range.end.slice(5);
+  if (md >= startMonthDay) return `${range.start.slice(0, 4)}-${md}`;
+  if (md <= endMonthDay) return `${range.end.slice(0, 4)}-${md}`;
+  return null;
+}
+
+function getInstitutionCategory(row = {}) {
+  const coopGroup = normalizeText(row.coop_group);
+  const inOutGroup = normalizeText(row.in_out_group).replace(/\u00a0/g, ' ');
+  if (coopGroup === 'กลุ่มเกษตรกร') return 'farmer';
+  if (coopGroup === 'สหกรณ์' && !inOutGroup.includes('นอก')) return 'agri';
+  return 'non_agri';
+}
+
 module.exports = {
   async findByCodes(codes = []) {
     await ensureSchema();
@@ -95,6 +168,129 @@ module.exports = {
     );
     return rows;
   },
+
+  async getLatestFiscalYearCategorySummary() {
+    await ensureSchema();
+    const currentBudgetYear = getCurrentBudgetYear();
+    const [yearRows] = await db.query(`
+      SELECT MAX(budget_year) AS latest_budget_year
+      FROM (
+        SELECT ${budgetYearSqlExpr('b')} AS budget_year
+        FROM ${table} b
+      ) budget_source
+      WHERE budget_year IS NOT NULL
+        AND budget_year <= ?
+    `, [currentBudgetYear]);
+
+    const latestBudgetYear = Number(yearRows?.[0]?.latest_budget_year || 0);
+    const fiscalRange = fiscalYearRangeToIso(latestBudgetYear);
+    const accountingRange = accountingEndRangeToIso(latestBudgetYear);
+    if (!latestBudgetYear || !fiscalRange || !accountingRange) {
+      return { fiscalYear: 0, categories: [] };
+    }
+
+    const [activeRows] = await db.query(`
+      SELECT
+        c.c_code,
+        c.c_name,
+        TRIM(c.end_date) AS end_date,
+        TRIM(c.end_day) AS end_day,
+        REPLACE(TRIM(COALESCE(c.in_out_group, '')), CHAR(160), '') AS in_out_group,
+        c.coop_group
+      FROM active_coop c
+      WHERE c.c_status = 'ดำเนินการ'
+      ORDER BY c.c_code ASC
+    `);
+
+    const [meetingRows] = await db.query(`
+      SELECT
+        b.big_code,
+        b.big_date,
+        b.big_meeting_status,
+        b.big_deadline_date,
+        b.big_id
+      FROM ${table} b
+      WHERE (
+        b.big_date BETWEEN ? AND ?
+        OR (
+          b.big_meeting_status = 'not_met'
+          AND b.big_deadline_date BETWEEN ? AND ?
+        )
+      )
+      ORDER BY b.big_date DESC, b.big_id DESC
+    `, [fiscalRange.start, fiscalRange.end, fiscalRange.start, fiscalRange.end]);
+
+    const categoryMap = {
+      agri: {
+        key: 'agri',
+        label: 'สหกรณ์ภาคการเกษตร',
+        shortLabel: 'ภาคการเกษตร',
+        icon: 'bi-flower1',
+        tone: 'green',
+        total: 0,
+        met: 0,
+        notMet: 0
+      },
+      non_agri: {
+        key: 'non_agri',
+        label: 'สหกรณ์นอกภาค',
+        shortLabel: 'นอกภาค',
+        icon: 'bi-buildings',
+        tone: 'teal',
+        total: 0,
+        met: 0,
+        notMet: 0
+      },
+      farmer: {
+        key: 'farmer',
+        label: 'กลุ่มเกษตรกร',
+        shortLabel: 'กลุ่มเกษตรกร',
+        icon: 'bi-people',
+        tone: 'amber',
+        total: 0,
+        met: 0,
+        notMet: 0
+      }
+    };
+
+    const requiredByCode = new Map();
+    (activeRows || []).forEach((row) => {
+      const fiscalEndDate = isoFromMonthDayInRange(deriveMonthDayFromCoop(row), accountingRange);
+      if (!fiscalEndDate) return;
+      const key = normalizeText(row.c_code);
+      const categoryKey = getInstitutionCategory(row);
+      requiredByCode.set(key, { categoryKey });
+      categoryMap[categoryKey].total += 1;
+    });
+
+    const metByCode = new Set();
+    (meetingRows || []).forEach((row) => {
+      const code = normalizeText(row.big_code);
+      if (!requiredByCode.has(code) || metByCode.has(code)) return;
+      if (normalizeText(row.big_meeting_status) === 'not_met') return;
+      metByCode.add(code);
+    });
+
+    requiredByCode.forEach((row, code) => {
+      const target = categoryMap[row.categoryKey];
+      if (metByCode.has(code)) target.met += 1;
+      else target.notMet += 1;
+    });
+
+    return {
+      fiscalYear: latestBudgetYear,
+      fiscalYearThai: latestBudgetYear,
+      fiscalRange,
+      categories: ['agri', 'non_agri', 'farmer'].map((key) => {
+        const item = categoryMap[key];
+        return {
+          ...item,
+          percent: item.total > 0 ? (item.met / item.total) * 100 : 0
+        };
+      })
+    };
+  },
+
   async findAll() {
     await ensureSchema();
     const [rows] = await db.query(`

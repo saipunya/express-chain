@@ -259,7 +259,9 @@ function withPrizeImage(prize) {
 async function renderPlayPage(res, options = {}) {
   const store = options.store || null;
   const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
-  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 6) : [];
+  const featuredPrizesRaw = store
+    ? await promotionModel.getShowcasePrizesByStore(store.id, 6)
+    : await promotionModel.getShowcasePrizes(6);
   const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
 
   return res.render('promotion/play', {
@@ -276,7 +278,9 @@ async function renderPlayPage(res, options = {}) {
 async function renderKioskPage(res, options = {}) {
   const store = options.store || null;
   const storeCode = store && store.store_code ? String(store.store_code).toUpperCase() : null;
-  const featuredPrizesRaw = store ? await promotionModel.getShowcasePrizesByStore(store.id, 6) : [];
+  const featuredPrizesRaw = store
+    ? await promotionModel.getShowcasePrizesByStore(store.id, 6)
+    : await promotionModel.getShowcasePrizes(6);
   const featuredPrizes = Array.isArray(featuredPrizesRaw) ? featuredPrizesRaw.map(withPrizeImage) : [];
 
   return res.render('promotion/kiosk', {

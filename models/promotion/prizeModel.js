@@ -107,6 +107,31 @@ async function getShowcasePrizesByStore(storeId, limit = 6) {
   return rows;
 }
 
+/**
+ * Get active showcase prizes across stores (for generic play/kiosk welcome page)
+ * - excludes type='other'
+ * - includes active campaign in valid date range
+ */
+async function getShowcasePrizes(limit = 6) {
+  const safeLimit = Number.isInteger(Number(limit)) ? Math.max(1, Math.min(30, Number(limit))) : 6;
+  const [rows] = await db.query(
+    `SELECT p.*, c.name AS campaign_name, s.name AS store_name, s.store_code
+     FROM promotion_prizes p
+     INNER JOIN promotion_campaigns c ON c.id = p.campaign_id
+     LEFT JOIN stores s ON s.id = p.store_id
+     WHERE p.active = 1
+       AND p.type <> 'other'
+       AND c.active = 1
+       AND (c.start_at IS NULL OR c.start_at <= NOW())
+       AND (c.end_at IS NULL OR c.end_at >= NOW())
+       AND COALESCE(p.remaining_qty, 0) > 0
+     ORDER BY p.weight ASC, p.id ASC
+     LIMIT ?`,
+    [safeLimit]
+  );
+  return rows;
+}
+
 async function getPrizeById(prizeId) {
   const [rows] = await db.query(
     `SELECT p.*, c.name AS campaign_name
@@ -339,6 +364,7 @@ module.exports = {
   getAvailablePrizesByCampaign,
   getPrizesList,
   getShowcasePrizesByStore,
+  getShowcasePrizes,
   getPrizeById,
   updatePrizeById,
   updatePrizeWithStockById,

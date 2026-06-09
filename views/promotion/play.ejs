@@ -753,7 +753,7 @@ body.promo-spin-open {
         <% } %>
       </div>
 
-      <div class="promo-play-card <%= storeSafe && featuredPrizesSafe.length ? 'has-prizes' : '' %>">
+      <div class="promo-play-card <%= featuredPrizesSafe.length ? 'has-prizes' : '' %>">
         <div class="promo-play-card-body">
 
           <div class="promo-play-head">
@@ -822,11 +822,11 @@ body.promo-spin-open {
               </ul>
             </div>
 
-            <% if (storeSafe && featuredPrizesSafe.length) { %>
+            <% if (featuredPrizesSafe.length) { %>
               <div class="promo-showcase-wrap">
                 <div class="promo-showcase-title">
                   <i class="bi bi-stars"></i>
-                  ของรางวัลเด่นของสาขานี้
+                  <%= storeSafe ? 'ของรางวัลเด่นของสาขานี้' : 'ของรางวัลเด่นที่ร่วมรายการ' %>
                 </div>
                 <div class="promo-showcase-grid">
                   <% featuredPrizesSafe.forEach(prize => { %>
@@ -848,6 +848,14 @@ body.promo-spin-open {
                         <div class="promo-showcase-noimage">🎁</div>
                       <% } %>
                       <div class="promo-showcase-name"><%= prize.name || '-' %></div>
+                      <% if (!storeSafe && (prize.store_name || prize.store_code)) { %>
+                        <div class="promo-showcase-stock">
+                          สาขา <%= prize.store_name || prize.store_code %>
+                          <% if (prize.store_code) { %>
+                            (<%= String(prize.store_code).toUpperCase() %>)
+                          <% } %>
+                        </div>
+                      <% } %>
                       <div class="promo-showcase-stock">คงเหลือประมาณ <%= Number(prize.remaining_qty || 0) %> ชิ้น</div>
                     </div>
                   <% }) %>

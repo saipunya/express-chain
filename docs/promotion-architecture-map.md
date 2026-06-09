@@ -556,3 +556,20 @@ promotion_admin_users
   - ปัจจุบันยังเป็น mapping ตาม `type` + parsing `%` แบบง่ายจากข้อความ
 - Next Step:
   - เพิ่มฟิลด์ `badge_text` แบบ custom ใน metadata สำหรับปรับข้อความได้ละเอียดต่อรางวัล
+
+### 2026-06-09 00:00 (ICT) - Show featured prizes on generic play/kiosk pages
+- Goal: ให้ `/promotion/play` และ `/promotion/kiosk` แสดงของรางวัลเด่นได้ แม้ไม่ได้เข้าผ่าน URL สาขา
+- Changes:
+  - เพิ่ม `getShowcasePrizes` สำหรับดึงรางวัล active จากทุกสาขาในแคมเปญที่ยังใช้งานได้
+  - ปรับ `renderPlayPage` และ `renderKioskPage` ให้ใช้รายการรางวัลรวมเมื่อไม่มี `store`
+  - ปรับ view ให้ showcase แสดงจาก `featuredPrizes` เสมอ และแสดงชื่อสาขาบนการ์ดเมื่อเป็นหน้ารวม
+- Files Touched:
+  - `models/promotion/prizeModel.js`
+  - `models/promotionModel.js`
+  - `controllers/promotionController.js`
+  - `views/promotion/play.ejs`
+  - `views/promotion/kiosk.ejs`
+  - `docs/promotion-architecture-map.md`
+- Behavior Impact:
+  - หน้ารวม play/kiosk เห็นรายการของรางวัลเด่นได้ทันที
+  - หน้าสาขายังคงแสดงเฉพาะของรางวัลของสาขานั้นเหมือนเดิม

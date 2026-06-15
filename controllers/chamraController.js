@@ -874,4 +874,13 @@ chamraController.getChamraSummary = async (req, res) => {
   }
 };
 
+chamraController.meetingIndex = async (req, res) => {
+  try {
+    res.render('chamra/meeting/index');
+  } catch (error) {
+    console.error('Error loading meeting index:', error);
+    res.status(500).send('Error loading meetings');
+  } 
+};
+
 module.exports = chamraController;

@@ -35,6 +35,7 @@
   </div>
 
   <% 
+    const canDeleteFinance = user && ['admin', 'kts'].includes(user.mClass);
     const grouped = {};
     fileAll.forEach(file => {
       const name = file.c_name || 'ไม่ระบุชื่อสถาบัน';
@@ -90,7 +91,7 @@
                     <th style="width:40%">งวด (วันที่ - ปี)</th>
                     <th style="width:20%" class="text-center">ปี</th>
                     <th style="width:20%" class="text-center">ดาวน์โหลด</th>
-                    <% if(user && user.mClass=='admin'){ %>
+                    <% if(canDeleteFinance){ %>
                     <th style="width:10%" class="text-center">ลบ</th>
                     <% } %>
                   </tr>
@@ -107,7 +108,7 @@
                         <a href="/finance/download/<%= file.id %>" class="btn btn-outline-primary btn-sm" target="_blank" title="ดาวน์โหลด"><i class="bi bi-download"></i></a>
                       <% } %>
                     </td>
-                    <% if(user && user.mClass=='admin'){ %>
+                    <% if(canDeleteFinance){ %>
                     <td class="text-center">
                       <button class="btn btn-outline-danger btn-sm delete-btn" data-id="<%= file.id %>" data-name="<%= file.c_name %>" data-year="<%= file.end_year %>" title="ลบไฟล์">
                         <i class="bi bi-trash"></i>

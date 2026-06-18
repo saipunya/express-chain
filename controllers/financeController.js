@@ -72,6 +72,11 @@ const getCoopsByGroup = async (req, res) => {
 
 const deleteFinance = async (req, res) => {
   try {
+    const mClass = req.session.user?.mClass;
+    if (!['admin', 'kts'].includes(mClass)) {
+      return res.status(403).send('Forbidden');
+    }
+
     const id = req.params.id;
     const filename = await financeModel.getFilenameById(id);
     if (filename) {

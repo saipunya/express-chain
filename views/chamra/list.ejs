@@ -296,11 +296,55 @@
           <a href="/chamra/process" class="btn btn-outline-info rounded-pill px-3">
             <i class="bi bi-diagram-3 me-1"></i>กระบวนการ
           </a>
+            <a href="/chamra/show_all" class="btn btn-outline-danger rounded-pill px-3">
+            <!-- insert icon document -->
+
+              <i class="bi btn-info me-1"></i>ประชุมชำระบัญชี
+          </a>
           <button id="exportChamraBtn" class="btn btn-outline-success rounded-pill px-3">
             <i class="bi bi-download me-1"></i>Export
           </button>
         </div>
       </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="table-responsive p-2">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th scope="col">ตัวชี้วัด</th>
+                  <th scope="col">เป้าหมาย</th>
+                  <th scope="col">ผลดำเนินการ</th>
+                  <th scope="col">ร้อยละ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="">
+                  <td scope="row">1.สหกรณ์และกลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี สามารถยกระดับให้สูงขึ้น ร้อยละ 100</td>
+                  <td>30 แห่ง</td>
+                  <td>9 แห่ง (ส=6,ก=3)</td>
+                  <td>30%</td>
+                </tr>
+                <tr class="">
+                  <td scope="row">2.สหกรณ์และกลุ่มเกษตรกรที่อยู่ระหว่างชำระบัญชี ถอนชื่อได้ไม่น้อยกว่าร้อยละ 25 <span class="text-danger">(ไม่รวมสหกรณ์/กลุ่มเกษตร *คดี* (6.25 แห่ง))</span></td>
+                  <td>7 แห่ง</td>
+                  <td>1 แห่ง</td>
+                  <td>14.28%</td>
+                </tr>
+                <tr>
+                  <td>3.สหกรณ์/กลุ่มเกษตรกรที่อยู่ระหว่างขั้นที่ 6 ดำเนินคดี ให้มีความเคลื่อนไหว</td>
+                  <td>5 แห่ง</td>
+                  <td>5 แห่ง</td>
+                  <td>100%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+        </div>
+      </div>
+
       <div class="row g-4 mb-4">
         <div class="col-md-6">
           <div class="card border-0 shadow-sm h-100 hover-card">
@@ -412,6 +456,10 @@
           </div>
         </div>
       </div>
+
+      
+
+
       <!-- Card สำหรับแสดงสถาบันที่ถอนชื่อ (step >= 9) -->
       <div class="row g-4 mb-4">
         <div class="col-12">
@@ -508,14 +556,14 @@
                 </div>
                 <button type="button" class="btn btn-outline-warning btn-sm rounded-pill ms-3"
                   id="toggleOctoberMovementBtn"
-                  aria-expanded="false"
+                  aria-expanded="true"
                   aria-controls="octoberMovementSection">
-                  <i class="bi bi-eye me-1"></i>
-                  <span>แสดงข้อมูล</span>
+                  <i class="bi bi-eye-slash me-1"></i>
+                  <span>ซ่อนข้อมูล</span>
                 </button>
               </div>
 
-              <div id="octoberMovementSection" class="d-none mt-3">
+              <div id="octoberMovementSection" class="mt-3">
                 <% if (octoberMovement && octoberMovement.length > 0) { %>
                   <div class="row g-3">
                     <% octoberMovement.forEach((item) => { %>
@@ -558,213 +606,6 @@
                 <% } %>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- Search Section -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center mb-3">
-            <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
-              <i class="bi bi-search text-primary fs-5"></i>
-            </div>
-            <h5 class="mb-0 fw-semibold">ค้นหาข้อมูล</h5>
-          </div>
-          <form id="searchForm" class="row g-3 align-items-center" method="get" action="">
-            <div class="col-md-8">
-              <div class="search-input-wrapper">
-                <span class="search-icon"><i class="bi bi-search"></i></span>
-                <input type="search" class="form-control form-control-lg" id="searchInput" name="q"
-                  value="<%= typeof q !== 'undefined' ? q : '' %>" placeholder="ระบุชื่อสถาบันที่ต้องการค้นหา" />
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary px-4">
-                  <i class="bi bi-search me-1"></i>ค้นหา
-                </button>
-                <a href="" id="resetSearch" class="btn btn-outline-secondary">
-                  <i class="bi bi-x-circle me-1"></i>ล้าง
-                </a>
-              </div>
-            </div>
-            <div class="col-12">
-              <small id="searchSummary" class="text-muted"></small>
-            </div>
-          </form>
-        </div>
-      </div>
-
-
-
-      <div class="card border-0 shadow-sm mb-5">
-        <div class="card-body p-0">
-          <div class="d-flex align-items-center p-4 border-bottom">
-            <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
-              <i class="bi bi-table text-primary fs-5"></i>
-            </div>
-            <h5 class="mb-0 fw-semibold">รายการข้อมูลชำระบัญชี</h5>
-          </div>
-          <div class="table-responsive">
-            <table class="table chamra-table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="fw-medium text-muted">#</th>
-                  <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
-                    <th class="fw-medium text-muted">รหัส</th>
-                    <% } %>
-                      <th class="fw-medium text-muted">ชื่อ</th>
-                      <th class="fw-medium text-muted">ผู้ชำระบัญชี</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% const isValidProcessDate=(v)=> {
-                  if(!v) return false; if(v === '0000-00-00') return false; if(/^1899-11-30/.test(v)) return false;
-                  const d = new Date(v); if(isNaN(d.getTime())) return false; if(d.getFullYear() < 1950) return false;
-                    return true; }; %>
-                    <% data.forEach((c, index)=> {
-                      const processDates = [ c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5, c.pr_s6, c.pr_s7, c.pr_s8,
-                      c.pr_s9, c.pr_s10 ];
-                      let latestStepNumber = 0; let latestStepDate = '';
-                      for (let i = processDates.length - 1; i >= 0; i--) {
-                      if (isValidProcessDate(processDates[i])) { latestStepNumber = i + 1; latestStepDate =
-                      safeDate(processDates[i]); break; }
-                      }
-                      const totalSteps = 10; const percent = Math.round((latestStepNumber / totalSteps) * 100);
-                      let latestBadgeHtml = '<span class="text-muted small">ไม่มีข้อมูลขั้นตอน</span>';
-                      if(latestStepNumber > 0){
-                      latestBadgeHtml = `\n <span class="badge latest-step-badge text-dark">📈 ขั้นที่
-                        ${latestStepNumber} : ${formatThaiDate(latestStepDate)}</span>`;
-                      }
-                      function showStep(label, value) { if (!isValidProcessDate(value)) return `${label}: -`; return
-                      `${label}: ${formatThaiDate(safeDate(value))}`; }
-                      const stepLines = processDates.map((d,i)=>showStep('S'+(i+1), d));
-                      let progressAttr = percent < 30 ? 'data-low' : (percent < 70 ? 'data-mid' : 'data-high' );
-                      
-                      // ดึงข้อมูลสมาชิกสำหรับแสดงรูปภาพ
-                      // แยกหลายคนที่คั่นด้วย / และ , และทำความสะอาดชื่อ
-                      const persons = c.de_person ? c.de_person.split('/') : [];
-                      const foundMembers = [];
-                      
-                      persons.forEach(person => {
-                        // แยกตามเครื่องหมาย , อีกครั้ง
-                        const subPersons = person.split(',');
-                        subPersons.forEach(subPerson => {
-                          let cleanPersonName = subPerson.trim();
-                          // ลบเลขลำดับที่ขึ้นต้นด้วย 1. 2. 3. เป็นต้น
-                          cleanPersonName = cleanPersonName.replace(/^\d+\.\s*/, '');
-                          // ลบเลขลำดับที่อยู่หน้าชื่อโดยไม่มีจุด (เช่น "1นาย...")
-                          cleanPersonName = cleanPersonName.replace(/^\d+\s*/, '');
-                          // ทำความสะอาดช่องว่างให้เป็นช่องว่างเดียว
-                          cleanPersonName = cleanPersonName.replace(/\s+/g, ' ').trim();
-                          
-                          if (cleanPersonName && typeof members !== 'undefined' && members) {
-                            const member = members[cleanPersonName];
-                            if (member) {
-                              foundMembers.push({
-                                ...member,
-                                cleanName: cleanPersonName
-                              });
-                            }
-                          }
-                        });
-                      });
-                      
-                      // Debug logging
-                      
-                      %>
-                        <tr data-latest-step="<%= latestStepNumber %>"
-                          data-search="<%= [ (c.c_name||''), (c.active_name||c.ac_name||c.coop_name||c.a_name||'') ].join(' ').toLowerCase() %>">
-                          <td class="text-muted small">
-                            <%= index + 1 %>
-                          </td>
-                          <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
-                            <td><span class="badge bg-secondary-subtle text-dark border" style="font-size:.7rem;">#<%=
-                                  c.c_code %></span></td>
-                            <% } %>
-                              <td>
-                                <div class="d-flex align-items-start gap-3">
-                                  <div class="p-2 bg-light rounded-circle">
-                                    <i class="bi bi-building text-muted"></i>
-                                  </div>
-                                  <div class="flex-grow-1">
-                                    <div class="fw-semibold mb-2">
-                                      <%= c.c_name %>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-2 mb-2">
-                                      <% if(c.c_status==='ถอนชื่อ' ){ %>
-                                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1">
-                                          <i class="bi bi-check-circle me-1"></i>ถอนชื่อแล้ว
-                                        </span>
-                                        <% } else { %>
-                                          <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">
-                                            <i class="bi bi-clock me-1"></i>กำลังชำระบัญชี
-                                          </span>
-                                          <% } %>
-                                    </div>
-                                    <div class="mb-2"><%- latestBadgeHtml %></div>
-                                    <div class="progress step-progress mb-2" <%=progressAttr %> title="Progress <%=
-                                        percent %>%">
-                                        <div class="progress-bar" role="progressbar" data-percent="<%= percent %>"
-                                          aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                      <small class="text-muted">Progress: ขั้นที่ <%= latestStepNumber %>/<%= totalSteps
-                                            %> (<%= percent %>%)</small>
-                                      <a href="/chamra/detail/<%= c.c_code %>"
-                                        class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                                        <i class="bi bi-eye me-1"></i>รายละเอียด
-                                      </a>
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <div class="d-flex align-items-center gap-3">
-                                  <% if (foundMembers.length > 0) { %>
-                                    <!-- แสดงรูปภาพสมาชิกที่พบ -->
-                                    <div class="d-flex">
-                                      <% foundMembers.forEach((member, idx) => { %>
-                                        <div class="position-relative"<% if (idx > 0) { %> style="margin-left: -10px;"<% } %>>
-                                          <% if (member.m_img) { %>
-                                            <img src="<%= member.m_img %>" alt="<%= member.cleanName %>" 
-                                                 class="rounded-circle border border-white" 
-                                                 style="width: 35px; height: 35px; object-fit: cover;"
-                                                 title="<%= member.cleanName %>"
-                                                 onerror="this.src='/images/default-avatar.png'">
-                                          <% } else { %>
-                                            <div class="p-1 bg-light rounded-circle border border-white" 
-                                                 style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
-                                                 title="<%= member.cleanName %>">
-                                              <i class="bi bi-person text-muted" style="font-size: 14px;"></i>
-                                            </div>
-                                          <% } %>
-                                        </div>
-                                      <% }) %>
-                                    </div>
-                                  <% } else { %>
-                                    <!-- ไม่พบข้อมูลสมาชิก -->
-                                    <div class="p-2 bg-light rounded-circle">
-                                      <i class="bi bi-person text-muted"></i>
-                                    </div>
-                                  <% } %>
-                                  <div class="flex-grow-1">
-                                    <div class="fw-medium text-dark">
-                                      <%= c.de_person %>
-                                    </div>
-                                    <% if (foundMembers.length > 0) { %>
-                                      <div class="text-muted small">
-                                        พบข้อมูล <%= foundMembers.length %> คน
-                                      </div>
-                                    <% } %>
-                                  </div>
-                                </div>
-                              </td>
-
-                        </tr>
-                        <% }) %>
-              </tbody>
-            </table>
           </div>
         </div>
       </div>

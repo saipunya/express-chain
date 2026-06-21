@@ -120,6 +120,18 @@ const Chamra = {
     return rows;
   },
 
+  async getPoblemsByYear(year) {
+    const [rows] = await db.query(
+      `SELECT p.*, ac.c_name
+         FROM chamra_poblem p
+         LEFT JOIN active_coop ac ON ac.c_code = p.po_code
+         WHERE p.po_year = ?
+         ORDER BY p.po_code, CAST(p.po_meeting AS UNSIGNED) DESC, p.po_meeting DESC`,
+      [year]
+    );
+    return rows;
+  },
+
   // Process
   async getAllProcess() {
     const [rows] = await db.query(

@@ -7,6 +7,10 @@ router.use(noCache);
 
 // List
 router.get('/', chamraController.list);
+router.get('/show-all', chamraController.showAll);
+router.get('/show-all/export/pdf', chamraController.exportShowAllPdf);
+router.get('/show_all', chamraController.showAll);
+router.get('/show_all/export/pdf', chamraController.exportShowAllPdf);
 
 // Add
 router.get('/add', chamraController.addForm);
@@ -35,7 +39,7 @@ router.get('/poblem/available-coop', chamraController.getAvailableCoop);
 // Route for summary table
 router.get('/summary', requireLogin, chamraController.getChamraSummary);
 
-router.get('/meeting/index', chamraController.meetingIndex);
+router.get('/meeting/index', (req, res) => res.redirect('/chamra'));
 
 // ---- chamra_process routes ----
 // Route for process page - PUBLIC ACCESS (no auth required)

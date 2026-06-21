@@ -118,6 +118,126 @@ function formatThaiDate(value) {
   }).format(date);
 }
 
+function normalizeChamraName(name) {
+  return String(name || '')
+    .replace(/\s+/g, '')
+    .replace(/[()（）\-–—]/g, '')
+    .replace(/จำกัด$/g, '')
+    .trim();
+}
+
+function canonicalChamraTargetName(name) {
+  const clean = String(name || '').trim();
+  if (clean.startsWith('สหกรณ์') && !clean.endsWith('จำกัด')) return `${clean} จำกัด`;
+  return clean;
+}
+
+function formatChamraInstitutionName(name) {
+  const clean = String(name || '-').trim();
+  if (clean.startsWith('สหกรณ์') && !clean.endsWith('จำกัด')) return `${clean} จำกัด`;
+  return clean || '-';
+}
+
+function getChamraTargetKey(name) {
+  return normalizeChamraName(canonicalChamraTargetName(name));
+}
+
+const chamraWithdrawalTargets = [
+  'สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ',
+  'สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส',
+  'กลุ่มเกษตรกรทำไร่บ้านชวน',
+  'กลุ่มเกษตรกรทำนาวังชมภู',
+  'กลุ่มเกษตรกรทำนาบ้านแท่น',
+  'กลุ่มเกษตรกรทำนาท่าใหญ่',
+  'กลุ่มเกษตรกรเลี้ยงสัตว์หนองตูม'
+];
+
+const chamraCaseMovementTargets = [
+  'สหกรณ์ผู้เลี้ยงสุกรภักดีบูรพา',
+  'สหกรณ์ปศุสัตว์ชัยภูมิ',
+  'สหกรณ์การเกษตรเนินสง่า',
+  'สหกรณ์การเกษตรปฏิรูปที่ดินบ้านเป้าหนองโพนงาม',
+  'กลุ่มเกษตรกรเลี้ยงสัตว์หนองบัวบาน'
+];
+
+function buildShowAllSections(rows = []) {
+  const rowsByName = (Array.isArray(rows) ? rows : []).reduce((acc, item) => {
+    acc[normalizeChamraName(item.c_name)] = item;
+    return acc;
+  }, {});
+
+  const rowsFromTargets = (targets) => targets
+    .map((name) => rowsByName[getChamraTargetKey(name)])
+    .filter(Boolean);
+
+  const group1Rows = rowsFromTargets(chamraWithdrawalTargets);
+  const group3Rows = rowsFromTargets(chamraCaseMovementTargets);
+  const groupedCodes = new Set([...group1Rows, ...group3Rows].map((item) => item.c_code || item.de_code));
+  const group2Rows = (Array.isArray(rows) ? rows : [])
+    .filter((item) => !groupedCodes.has(item.c_code || item.de_code))
+    .sort((a, b) => {
+      const aName = a.c_name || '';
+      const bName = b.c_name || '';
+      const aRank = aName.startsWith('สหกรณ์') ? 0 : (aName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
+      const bRank = bName.startsWith('สหกรณ์') ? 0 : (bName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
+      if (aRank !== bRank) return aRank - bRank;
+      return aName.localeCompare(bName, 'th');
+    });
+
+  return [
+    { id: 'group-withdrawal', title: 'กลุ่มที่ 1 เป้าหมายถอนชื่อ', rows: group1Rows },
+    { id: 'group-upgrade', title: 'กลุ่มที่ 2 ยกระดับ 1 ขั้น', rows: group2Rows },
+    { id: 'group-case', title: 'กลุ่มที่ 3 ขั้น 6 คดี ต้องเคลื่อนไหว', rows: group3Rows }
+  ];
+}
+
+function getLatestProblemByCode(problemRows = []) {
+  return (Array.isArray(problemRows) ? problemRows : []).reduce((acc, item) => {
+    const code = item.po_code;
+    if (!code || acc[code]) return acc;
+    acc[code] = item;
+    return acc;
+  }, {});
+}
+
+function getLatestProblemListByCode(problemRows = []) {
+  return Object.entries(getLatestProblemByCode(problemRows)).reduce((acc, [code, problem]) => {
+    acc[code] = [problem];
+    return acc;
+  }, {});
+}
+
+function getLatestStepNumber(record) {
+  for (let i = 10; i >= 1; i -= 1) {
+    if (isValidProcessDate(record && record[`pr_s${i}`])) return i;
+  }
+  return 0;
+}
+
+function getLatestStepDate(record) {
+  const step = getLatestStepNumber(record);
+  return step ? record[`pr_s${step}`] : null;
+}
+
+function filterShowAllSections(sections, query) {
+  const keyword = String(query || '').trim().toLowerCase();
+  if (!keyword) return sections;
+  return sections.map((section) => ({
+    ...section,
+    rows: section.rows.filter((item) => {
+      const latestStep = getLatestStepNumber(item);
+      const code = item.c_code || item.de_code || '';
+      return [
+        section.title,
+        item.c_name || '',
+        item.de_person || '',
+        code,
+        latestStep ? `ขั้นที่ ${latestStep}` : 'ยังไม่มีขั้นตอน'
+      ].join(' ').toLowerCase().includes(keyword);
+    })
+  }));
+}
+
 // แสดงทั้งหมด
 chamraController.list = async (req, res) => {
   const data = await Chamra.getAll();
@@ -223,6 +343,176 @@ chamraController.list = async (req, res) => {
   }
 
   res.render('chamra/list', { data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
+};
+
+chamraController.showAll = async (req, res) => {
+  try {
+    const data = await Chamra.getAll();
+    const problemYear = 2569;
+    const problemRows = await Chamra.getPoblemsByYear(problemYear);
+    const problemsByCode = getLatestProblemListByCode(problemRows);
+
+    res.render('chamra/show_all', {
+      data,
+      problemYear,
+      problemsByCode,
+      q: req.query.q || ''
+    });
+  } catch (error) {
+    console.error('Error rendering chamra show_all:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดหน้าค้นหา Chamra');
+  }
+};
+
+chamraController.exportShowAllPdf = async (req, res) => {
+  try {
+    const problemYear = 2569;
+    const data = await Chamra.getAll();
+    const problemRows = await Chamra.getPoblemsByYear(problemYear);
+    const latestProblemByCode = getLatestProblemByCode(problemRows);
+    const sections = filterShowAllSections(buildShowAllSections(data), req.query.q);
+    const printedByRaw = await getUserDisplayName(req);
+    const printedBy = printedByRaw || 'ผู้ใช้งานทั่วไป';
+    const generatedAt = new Date();
+
+    const fonts = {
+      THSarabunNew: {
+        normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
+        bold: path.join(__dirname, '../fonts/THSarabunNew-Bold.ttf'),
+        italics: path.join(__dirname, '../fonts/THSarabunNew-Italic.ttf'),
+        bolditalics: path.join(__dirname, '../fonts/THSarabunNew-BoldItalic.ttf')
+      }
+    };
+    const printer = new PdfPrinter(fonts);
+    const formatDateTime = (value) => new Intl.DateTimeFormat('th-TH', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Bangkok'
+    }).format(value);
+
+    const sectionStacks = sections.map((section) => {
+      const items = section.rows.map((item, index) => {
+        const code = item.c_code || item.de_code || '';
+        const latestStep = getLatestStepNumber(item);
+        const latestDate = getLatestStepDate(item);
+        const problem = latestProblemByCode[code];
+
+        return {
+          unbreakable: true,
+          margin: [0, 0, 0, 8],
+          table: {
+            widths: ['*'],
+            body: [
+              [
+                {
+                  fillColor: '#e8f6f4',
+                  stack: [
+                    { text: `${index + 1}. ${formatChamraInstitutionName(item.c_name)}`, bold: true, fontSize: 14 },
+                    { text: `รหัส: ${code || '-'} | ผู้ชำระบัญชี: ${item.de_person || '-'}`, fontSize: 12, color: '#444' }
+                  ],
+                  margin: [6, 4, 6, 4]
+                }
+              ],
+              [
+                {
+                  stack: [
+                    { text: 'ขั้นล่าสุด', style: 'fieldLabel' },
+                    { text: latestStep ? `ขั้นที่ ${latestStep} ${showStepServer(latestStep).replace(/^ขั้นที่ \d+:\s*/, '')}` : '-', margin: [0, 0, 0, 2] },
+                    { text: 'วันที่ล่าสุด', style: 'fieldLabel' },
+                    { text: formatThaiDate(latestDate), margin: [0, 0, 0, 5] },
+                    { text: `ข้อมูล ปี ${problemYear} (ล่าสุด)`, style: 'fieldLabel' },
+                    problem
+                      ? {
+                          stack: [
+                            { text: `ประชุมครั้งที่ ${problem.po_meeting || '-'}/${problem.po_year || problemYear}` },
+                            { text: problem.po_detail || '-', margin: [0, 2, 0, 2] },
+                            { text: problem.po_problem || '-', color: '#8a1f11' }
+                          ]
+                        }
+                      : { text: `ไม่พบข้อมูลปี ${problemYear}`, color: '#777', italics: true }
+                  ],
+                  margin: [6, 5, 6, 6]
+                }
+              ]
+            ]
+          },
+          layout: {
+            hLineWidth: () => 0.4,
+            vLineWidth: () => 0.4,
+            hLineColor: () => '#c7d6d4',
+            vLineColor: () => '#c7d6d4'
+          }
+        };
+      });
+
+      return [
+        { text: `${section.title} (${section.rows.length} รายการ)`, style: 'sectionTitle' },
+        section.rows.length
+          ? { stack: items, margin: [0, 0, 0, 8] }
+          : { text: 'ไม่พบข้อมูลในกลุ่มนี้', color: '#666', italics: true, margin: [0, 0, 0, 10] }
+      ];
+    }).flat();
+
+    const totalRows = sections.reduce((sum, section) => sum + section.rows.length, 0);
+    const totalWithProblem = sections.reduce((sum, section) => {
+      return sum + section.rows.filter((item) => latestProblemByCode[item.c_code || item.de_code]).length;
+    }, 0);
+
+    const docDefinition = {
+      info: {
+        title: `Chamra show_all data ${problemYear}`,
+        author: 'Express Chain',
+        subject: 'Chamra show_all PDF export'
+      },
+      pageOrientation: 'portrait',
+      pageMargins: [34, 54, 34, 44],
+      header: (currentPage, pageCount) => ({
+        margin: [30, 16, 30, 0],
+        columns: [
+          { text: 'สรุปรายงานผลการชำระบัญชีล่าสุด', bold: true, fontSize: 16 },
+          { text: `หน้า ${currentPage}/${pageCount}`, alignment: 'right', fontSize: 11 }
+        ]
+      }),
+      footer: () => ({
+        margin: [30, 0, 30, 14],
+        columns: [
+          { text: `พิมพ์โดย: ${printedBy}`, fontSize: 10 },
+          { text: `วันที่ส่งออก: ${formatDateTime(generatedAt)}`, alignment: 'right', fontSize: 10 }
+        ]
+      }),
+      defaultStyle: { font: 'THSarabunNew', fontSize: 13 },
+      styles: {
+        title: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 4] },
+        subtitle: { fontSize: 13, alignment: 'center', color: '#555', margin: [0, 0, 0, 10] },
+        summary: { fontSize: 13, margin: [0, 0, 0, 8] },
+        sectionTitle: { fontSize: 15, bold: true, color: '#0d9488', margin: [0, 6, 0, 4] },
+        fieldLabel: { bold: true, color: '#0f766e', margin: [0, 0, 0, 1] },
+        tableHeader: { bold: true, color: '#fff' }
+      },
+      content: [
+        { text: `ข้อมูล ปี ${problemYear} ล่าสุดจากผลการชำระบัญชี`, style: 'title' },
+        { text: req.query.q ? `คำค้น: ${req.query.q}` : 'แสดงข้อมูลทุกกลุ่มตามหน้า show_all', style: 'subtitle' },
+        {
+          text: `รวม ${totalRows} รายการ | พบข้อมูลปี ${problemYear} จำนวน ${totalWithProblem} รายการ | ไม่มีข้อมูลปี ${problemYear} จำนวน ${totalRows - totalWithProblem} รายการ`,
+          style: 'summary'
+        },
+        ...sectionStacks
+      ]
+    };
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="chamra-show-all-problem-${problemYear}.pdf"`);
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    pdfDoc.pipe(res);
+    pdfDoc.end();
+  } catch (error) {
+    console.error('Export show_all PDF error:', error);
+    res.status(500).send('เกิดข้อผิดพลาดในการส่งออก PDF');
+  }
 };
 
 chamraController.listPob = async (req, res) => {

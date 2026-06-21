@@ -1,0 +1,623 @@
+<%- include('../partials/header.ejs') %>
+
+<%
+  const rows = Array.isArray(data) ? data : [];
+  const targetProblemYear = problemYear || 2569;
+  const problemLookup = problemsByCode || {};
+
+  function parseDateSafe(raw) {
+    if (raw == null) return null;
+    if (raw instanceof Date && !isNaN(raw)) {
+      const y = raw.getFullYear();
+      const m = raw.getMonth() + 1;
+      const d = raw.getDate();
+      if (y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+      return { y, m, d };
+    }
+    let s = String(raw).trim();
+    if (!s || s === '0000-00-00' || s === '0000-00-00 00:00:00' || /^1899-11-30/.test(s) || s === 'Invalid date') return null;
+    s = s.replace('T', ' ').replace(/\//g, '-');
+    const datePart = s.split(' ')[0];
+    const seg = datePart.split('-');
+    if (seg.length < 3) return null;
+    const y = Number(seg[0]);
+    const m = Number(seg[1]);
+    const d = Number(seg[2]);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+    if (y < 1950 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+    return { y, m, d };
+  }
+
+  function formatThaiDate(value) {
+    const p = parseDateSafe(value);
+    if (!p) return '-';
+    const months = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    return p.d + ' ' + months[p.m] + ' ' + (p.y + 543);
+  }
+
+  function isValidDate(value) {
+    return !!parseDateSafe(value);
+  }
+
+  function showStep(step) {
+    const n = Number(step);
+    switch (n) {
+      case 1: return 'ประกาศผู้ชำระบัญชี';
+      case 2: return 'รับมอบทรัพย์สิน';
+      case 3: return 'ส่งงบ ม.80';
+      case 4: return 'ผู้สอบบัญชีรับรองงบการเงิน';
+      case 5: return 'ประชุมใหญ่อนุมัติงบ ม.80';
+      case 6: return 'จัดการทรัพย์สิน / หนี้สิน';
+      case 7: return 'ส่งรายงานย่อ / รายงานชำระบัญชี';
+      case 8: return 'ผู้สอบบัญชีรับรองรายงานย่อ / รายงานชำระบัญชี';
+      case 9: return 'ถอนชื่อออกจากทะเบียน';
+      case 10: return 'ส่งมอบเอกสารหลักฐาน';
+      default: return n ? ('S' + n) : '-';
+    }
+  }
+
+  function latestStepFor(item) {
+    for (let i = 10; i >= 1; i -= 1) {
+      if (isValidDate(item['pr_s' + i])) return i;
+    }
+    return 0;
+  }
+
+  function buildSteps(item) {
+    const steps = [];
+    for (let i = 1; i <= 10; i += 1) {
+      const raw = item['pr_s' + i];
+      steps.push({
+        step: i,
+        title: showStep(i),
+        date: formatThaiDate(raw),
+        done: isValidDate(raw)
+      });
+    }
+    return steps;
+  }
+
+  function normalizeName(name) {
+    return String(name || '')
+      .replace(/\s+/g, '')
+      .replace(/[()（）\-–—]/g, '')
+      .replace(/จำกัด$/g, '')
+      .trim();
+  }
+
+  function canonicalTargetName(name) {
+    const clean = String(name || '').trim();
+    if (clean.startsWith('สหกรณ์') && !clean.endsWith('จำกัด')) return clean + ' จำกัด';
+    return clean;
+  }
+
+  function targetKey(name) {
+    return normalizeName(canonicalTargetName(name));
+  }
+
+  const withdrawalTargets = [
+    'สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ',
+    'สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส',
+    'กลุ่มเกษตรกรทำไร่บ้านชวน',
+    'กลุ่มเกษตรกรทำนาวังชมภู',
+    'กลุ่มเกษตรกรทำนาบ้านแท่น',
+    'กลุ่มเกษตรกรทำนาท่าใหญ่',
+    'กลุ่มเกษตรกรเลี้ยงสัตว์หนองตูม'
+  ];
+
+  const caseMovementTargets = [
+    'สหกรณ์ผู้เลี้ยงสุกรภักดีบูรพา',
+    'สหกรณ์ปศุสัตว์ชัยภูมิ',
+    'สหกรณ์การเกษตรเนินสง่า',
+    'สหกรณ์การเกษตรปฏิรูปที่ดินบ้านเป้าหนองโพนงาม',
+    'กลุ่มเกษตรกรเลี้ยงสัตว์หนองบัวบาน'
+  ];
+
+  const rowsByName = rows.reduce((acc, item) => {
+    acc[normalizeName(item.c_name)] = item;
+    return acc;
+  }, {});
+
+  function rowsFromTargets(targets) {
+    return targets
+      .map((name) => rowsByName[targetKey(name)])
+      .filter(Boolean);
+  }
+
+  const group1Rows = rowsFromTargets(withdrawalTargets);
+  const group3Rows = rowsFromTargets(caseMovementTargets);
+  const groupedCodes = new Set([...group1Rows, ...group3Rows].map((item) => item.c_code || item.de_code));
+  const group2Rows = rows
+    .filter((item) => !groupedCodes.has(item.c_code || item.de_code))
+    .sort((a, b) => {
+      const aName = a.c_name || '';
+      const bName = b.c_name || '';
+      const aRank = aName.startsWith('สหกรณ์') ? 0 : (aName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
+      const bRank = bName.startsWith('สหกรณ์') ? 0 : (bName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
+      if (aRank !== bRank) return aRank - bRank;
+      return aName.localeCompare(bName, 'th');
+    });
+
+  const groupedSections = [
+    { id: 'group-withdrawal', title: 'กลุ่มที่ 1 เป้าหมายถอนชื่อ', description: 'รายการเป้าหมายถอนชื่อ เรียงตามรายชื่อที่กำหนด', icon: 'bi-check2-circle', color: 'success', rows: group1Rows },
+    { id: 'group-upgrade', title: 'กลุ่มที่ 2 ยกระดับ 1 ขั้น', description: 'รายการที่เหลือจากกลุ่มที่ 1 และ 3 โดยเรียงสหกรณ์ก่อนกลุ่มเกษตรกร', icon: 'bi-arrow-up-circle', color: 'primary', rows: group2Rows },
+    { id: 'group-case', title: 'กลุ่มที่ 3 ขั้น 6 คดี ต้องเคลื่อนไหว', description: 'รายการขั้น 6 คดีที่ต้องมีความเคลื่อนไหว เรียงตามรายชื่อที่กำหนด', icon: 'bi-exclamation-triangle', color: 'warning', rows: group3Rows }
+  ];
+
+  const totalGroupedRows = groupedSections.reduce((sum, section) => sum + section.rows.length, 0);
+
+  function toAttrJson(value) {
+    return JSON.stringify(value).replace(/'/g, '&#39;');
+  }
+%>
+
+<style>
+  .chamra-search-page {
+    background: #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .search-toolbar,
+  .result-list {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+  .search-input-wrap {
+    position: relative;
+  }
+  .search-input-wrap i {
+    color: #6b7280;
+    left: .9rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .search-input-wrap .form-control {
+    padding-left: 2.5rem;
+  }
+  .section-header {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .section-icon,
+  .institution-icon {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+  }
+  .section-icon {
+    height: 38px;
+    width: 38px;
+  }
+  .institution-icon {
+    background: #eef6ff;
+    color: #0d6efd;
+    height: 42px;
+    width: 42px;
+  }
+  .result-item {
+    border-bottom: 1px solid #eef0f3;
+    transition: background .15s ease;
+  }
+  .result-item:last-child {
+    border-bottom: 0;
+  }
+  .result-item:hover {
+    background: #f9fbff;
+  }
+  .step-chip {
+    border-radius: 999px;
+    font-weight: 700;
+    min-width: 92px;
+  }
+  .process-row,
+  .problem-row {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: .75rem;
+  }
+  .process-row + .process-row,
+  .problem-row + .problem-row {
+    margin-top: .5rem;
+  }
+  .process-row.is-done {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+  .process-row.is-pending,
+  .problem-row {
+    background: #f8fafc;
+  }
+  .empty-state {
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+  }
+  @media (max-width: 767.98px) {
+    .step-chip {
+      min-width: 0;
+    }
+  }
+</style>
+
+<div class="chamra-search-page py-4">
+  <div class="container">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+      <div>
+        <h1 class="h4 fw-bold mb-1">ค้นหา Chamra</h1>
+        <div class="text-muted">รายการสถาบัน ผู้ชำระบัญชี ขั้นตอนปัจจุบัน และปัญหาปี <%= targetProblemYear %></div>
+      </div>
+      <a href="/chamra" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
+      </a>
+    </div>
+
+    <div class="search-toolbar p-3 mb-3">
+      <form id="chamraSearchForm" class="row g-2 align-items-center" method="get" action="/chamra/show-all">
+        <div class="col-lg-8">
+          <div class="search-input-wrap">
+            <i class="bi bi-search"></i>
+            <input
+              type="search"
+              class="form-control form-control-lg"
+              id="chamraSearchInput"
+              name="q"
+              value="<%= q || '' %>"
+              placeholder="ค้นหาชื่อสถาบัน ผู้ชำระบัญชี หรือขั้นปัจจุบัน">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-search me-1"></i>ค้นหา
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="clearSearchBtn">
+              <i class="bi bi-x-circle me-1"></i>ล้าง
+            </button>
+            <a href="/chamra/show-all/export/pdf<%= q ? ('?q=' + encodeURIComponent(q)) : '' %>" class="btn btn-outline-danger btn-lg" id="exportPdfBtn" target="_blank" rel="noopener">
+              <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
+          </div>
+        </div>
+      </form>
+      <div class="small text-muted mt-2" id="searchSummary">ทั้งหมด <%= totalGroupedRows %> รายการ</div>
+    </div>
+
+    <% if (!totalGroupedRows) { %>
+      <div class="empty-state text-center text-muted bg-white p-4">
+        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+        ไม่พบข้อมูล Chamra
+      </div>
+    <% } %>
+
+    <% function renderItem(item, index, section) {
+      const latestStep = latestStepFor(item);
+      const latestDate = latestStep ? formatThaiDate(item['pr_s' + latestStep]) : '-';
+      const steps = buildSteps(item);
+      const code = item.c_code || item.de_code || '-';
+      const itemProblems = problemLookup[code] || [];
+      const problemItems = itemProblems.map((problem) => ({
+        meeting: problem.po_meeting || '-',
+        detail: problem.po_detail || '-',
+        problem: problem.po_problem || '-'
+      }));
+      const searchText = [
+        section.title,
+        item.c_name || '',
+        item.de_person || '',
+        code,
+        latestStep ? ('ขั้นที่ ' + latestStep) : 'ยังไม่มีขั้นตอน'
+      ].join(' ').toLowerCase();
+    %>
+      <div
+        class="result-item p-3 chamra-result-row"
+        data-section-id="<%= section.id %>"
+        data-search="<%= searchText %>"
+        data-name="<%= item.c_name || '-' %>"
+        data-code="<%= code %>"
+        data-person="<%= item.de_person || '-' %>"
+        data-latest-step="<%= latestStep %>"
+        data-latest-date="<%= latestDate %>"
+        data-steps='<%- toAttrJson(steps) %>'
+        data-problems='<%- toAttrJson(problemItems) %>'>
+        <div class="d-flex align-items-start gap-3">
+          <span class="institution-icon">
+            <i class="bi bi-building"></i>
+          </span>
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+              <div>
+                <div class="fw-bold fs-6"><%= item.c_name || '-' %></div>
+                <div class="small text-muted">รหัส: <%= code %></div>
+              </div>
+              <% if (latestStep) { %>
+                <span class="badge bg-primary step-chip">ขั้นที่ <%= latestStep %></span>
+              <% } else { %>
+                <span class="badge bg-secondary step-chip">ยังไม่มีขั้นตอน</span>
+              <% } %>
+            </div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-md-5">
+                <div class="small text-muted">ผู้ชำระบัญชี</div>
+                <div class="fw-semibold"><%= item.de_person || '-' %></div>
+              </div>
+              <div class="col-md-4">
+                <div class="small text-muted">ขั้นปัจจุบัน</div>
+                <div class="fw-semibold">
+                  <% if (latestStep) { %>
+                    ขั้นที่ <%= latestStep %> - <%= showStep(latestStep) %>
+                  <% } else { %>
+                    ยังไม่ระบุ
+                  <% } %>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="small text-muted">วันที่ล่าสุด</div>
+                <div class="fw-semibold"><%= latestDate %></div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+              <div class="progress flex-grow-1" style="height: 8px; min-width: 160px;">
+                <div
+                  class="progress-bar <%= latestStep >= 9 ? 'bg-success' : 'bg-primary' %>"
+                  role="progressbar"
+                  style="width: <%= Math.round((latestStep / 10) * 100) %>%"
+                  aria-valuenow="<%= latestStep %>"
+                  aria-valuemin="0"
+                  aria-valuemax="10"></div>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-outline-primary btn-sm show-step-modal">
+                  <i class="bi bi-list-check me-1"></i>ขั้นดำเนินการ
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm show-problem-modal">
+                  <i class="bi bi-exclamation-circle me-1"></i>ข้อมูล ปี <%= targetProblemYear %>
+                  <% if (itemProblems.length) { %>
+                    <span class="badge text-bg-danger ms-1"><%= itemProblems.length %></span>
+                  <% } %>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <% groupedSections.forEach((section) => { %>
+      <section class="result-list overflow-hidden mb-4 chamra-section" id="<%= section.id %>">
+        <div class="section-header p-3">
+          <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-start gap-3">
+              <span class="section-icon bg-<%= section.color %>-subtle text-<%= section.color %>">
+                <i class="bi <%= section.icon %>"></i>
+              </span>
+              <div>
+                <h2 class="h5 fw-bold mb-1"><%= section.title %></h2>
+                <div class="small text-muted"><%= section.description %></div>
+              </div>
+            </div>
+            <span class="badge bg-light text-dark border section-count" data-section-count="<%= section.id %>">
+              <%= section.rows.length %> รายการ
+            </span>
+          </div>
+        </div>
+        <div class="section-body">
+          <% if (section.rows.length) { %>
+            <% section.rows.forEach((item, index) => renderItem(item, index, section)); %>
+          <% } else { %>
+            <div class="empty-state text-center text-muted m-3 p-4 section-empty">
+              <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+              ไม่พบข้อมูลในกลุ่มนี้
+            </div>
+          <% } %>
+        </div>
+      </section>
+    <% }) %>
+  </div>
+</div>
+
+<div class="modal fade" id="chamraStepModal" tabindex="-1" aria-labelledby="chamraStepModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title h5 mb-1" id="chamraStepModalLabel">รายละเอียดขั้นตอน</h2>
+          <div class="small text-muted" id="chamraStepModalSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="small text-muted">ผู้ชำระบัญชี</div>
+            <div class="fw-semibold" id="modalPerson">-</div>
+          </div>
+          <div class="col-md-6">
+            <div class="small text-muted">ขั้นปัจจุบัน</div>
+            <div class="fw-semibold" id="modalLatest">-</div>
+          </div>
+        </div>
+        <div id="modalStepList"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="chamraProblemModal" tabindex="-1" aria-labelledby="chamraProblemModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title h5 mb-1" id="chamraProblemModalLabel">รายการปัญหา ปี <%= targetProblemYear %></h2>
+          <div class="small text-muted" id="chamraProblemModalSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div id="modalProblemList"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('chamraSearchInput');
+    const summary = document.getElementById('searchSummary');
+    const rows = Array.from(document.querySelectorAll('.chamra-result-row'));
+    const sections = Array.from(document.querySelectorAll('.chamra-section'));
+    const form = document.getElementById('chamraSearchForm');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    const escapeHtml = (value) => String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+    const applyFilter = () => {
+      const query = (input?.value || '').trim().toLowerCase();
+      let visible = 0;
+      rows.forEach((row) => {
+        const text = row.dataset.search || '';
+        const matched = !query || text.includes(query);
+        row.classList.toggle('d-none', !matched);
+        if (matched) visible += 1;
+      });
+
+      sections.forEach((section) => {
+        const sectionRows = Array.from(section.querySelectorAll('.chamra-result-row'));
+        const visibleRows = sectionRows.filter((row) => !row.classList.contains('d-none')).length;
+        section.classList.toggle('d-none', visibleRows === 0 && query);
+        const count = section.querySelector('.section-count');
+        if (count) count.textContent = `${visibleRows} รายการ`;
+      });
+
+      if (summary) {
+        summary.textContent = query ? `ผลการค้นหา "${query}" พบ ${visible} รายการ` : `ทั้งหมด ${rows.length} รายการ`;
+      }
+      if (exportPdfBtn) {
+        exportPdfBtn.href = query ? `/chamra/show-all/export/pdf?q=${encodeURIComponent(query)}` : '/chamra/show-all/export/pdf';
+      }
+    };
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const query = (input?.value || '').trim();
+      const nextUrl = query ? `${location.pathname}?q=${encodeURIComponent(query)}` : location.pathname;
+      history.replaceState(null, '', nextUrl);
+      applyFilter();
+    });
+    input?.addEventListener('input', applyFilter);
+    document.getElementById('clearSearchBtn')?.addEventListener('click', () => {
+      if (input) input.value = '';
+      history.replaceState(null, '', location.pathname);
+      applyFilter();
+      input?.focus();
+    });
+    applyFilter();
+
+    const stepModalEl = document.getElementById('chamraStepModal');
+    const problemModalEl = document.getElementById('chamraProblemModal');
+    const stepModal = stepModalEl && window.bootstrap ? new bootstrap.Modal(stepModalEl) : null;
+    const problemModal = problemModalEl && window.bootstrap ? new bootstrap.Modal(problemModalEl) : null;
+
+    document.addEventListener('click', (event) => {
+      const stepButton = event.target.closest('.show-step-modal');
+      if (stepButton && stepModal) {
+        const row = stepButton.closest('.chamra-result-row');
+        let steps = [];
+        try {
+          steps = JSON.parse(row.dataset.steps || '[]');
+        } catch (error) {
+          steps = [];
+        }
+
+        document.getElementById('chamraStepModalLabel').textContent = row.dataset.name || 'รายละเอียดขั้นตอน';
+        document.getElementById('chamraStepModalSub').textContent = `รหัส: ${row.dataset.code || '-'}`;
+        document.getElementById('modalPerson').textContent = row.dataset.person || '-';
+        document.getElementById('modalLatest').textContent = Number(row.dataset.latestStep || 0)
+          ? `ขั้นที่ ${row.dataset.latestStep} (${row.dataset.latestDate || '-'})`
+          : 'ยังไม่ระบุ';
+
+        const stepList = document.getElementById('modalStepList');
+        stepList.innerHTML = steps.map((item) => {
+          const statusClass = item.done ? 'is-done' : 'is-pending';
+          const icon = item.done ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted';
+          const badge = item.done ? 'bg-success' : 'bg-secondary';
+          return `
+            <div class="process-row ${statusClass}">
+              <div class="d-flex align-items-start gap-3">
+                <i class="bi ${icon} fs-5 mt-1"></i>
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="fw-semibold">ขั้นที่ ${escapeHtml(item.step)} - ${escapeHtml(item.title)}</div>
+                    <span class="badge ${badge}">${item.done ? 'ดำเนินการแล้ว' : 'ยังไม่ระบุ'}</span>
+                  </div>
+                  <div class="small text-muted mt-1">วันที่: ${escapeHtml(item.date || '-')}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="text-muted">ไม่มีข้อมูลขั้นตอน</div>';
+
+        stepModal.show();
+        return;
+      }
+
+      const problemButton = event.target.closest('.show-problem-modal');
+      if (problemButton && problemModal) {
+        const row = problemButton.closest('.chamra-result-row');
+        let problems = [];
+        try {
+          problems = JSON.parse(row.dataset.problems || '[]');
+        } catch (error) {
+          problems = [];
+        }
+
+        document.getElementById('chamraProblemModalLabel').textContent = `รายการปัญหา ปี <%= targetProblemYear %>`;
+        document.getElementById('chamraProblemModalSub').textContent = `${row.dataset.name || '-'} | รหัส: ${row.dataset.code || '-'}`;
+
+        const problemList = document.getElementById('modalProblemList');
+        if (!problems.length) {
+          problemList.innerHTML = `
+            <div class="empty-state text-center text-muted p-4">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              ไม่พบรายการปัญหาปี <%= targetProblemYear %>
+            </div>
+          `;
+        } else {
+          problemList.innerHTML = problems.map((item) => `
+            <div class="problem-row">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                <div class="fw-semibold">ประชุมครั้งที่ ${escapeHtml(item.meeting)}/<%= targetProblemYear %></div>
+                <span class="badge text-bg-danger">Problem</span>
+              </div>
+              <div class="mb-2">
+                <div class="small text-muted">รายละเอียด</div>
+                <div>${escapeHtml(item.detail || '-')}</div>
+              </div>
+              <div>
+                <div class="small text-muted">ปัญหาที่พบ</div>
+                <div>${escapeHtml(item.problem || '-')}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        problemModal.show();
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer.ejs') %>

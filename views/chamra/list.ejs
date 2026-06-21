@@ -238,6 +238,43 @@
         transform: scale(1.05);
       }
 
+      .auditor-gallery .auditor-thumb {
+        border: 0;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 18px -4px rgba(31, 45, 61, .12);
+        overflow: hidden;
+        padding: 0;
+        width: 100%;
+        text-align: left;
+      }
+
+      .auditor-gallery .auditor-thumb img {
+        aspect-ratio: 4 / 3;
+        display: block;
+        object-fit: cover;
+        width: 100%;
+      }
+
+      .auditor-gallery .auditor-thumb:focus-visible {
+        outline: 3px solid rgba(13, 110, 253, .35);
+        outline-offset: 3px;
+      }
+
+      .auditor-preview-modal .modal-content {
+        background: #0b1220;
+      }
+
+      .auditor-preview-modal .modal-body {
+        min-height: 0;
+      }
+
+      .auditor-preview-modal img {
+        max-height: calc(100vh - 112px);
+        object-fit: contain;
+        width: 100%;
+      }
+
       /* Responsive tweaks */
       @media (max-width: 768px) {
         .table-responsive {
@@ -609,6 +646,40 @@
           </div>
         </div>
       </div>
+
+      <div class="row g-4 mb-4 auditor-gallery">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3">
+                  <i class="bi bi-images text-primary fs-5"></i>
+                </div>
+                <h5 class="mb-0 fw-semibold">ผู้สอบบัญชี (auditor)</h5>
+              </div>
+              <div class="row g-3">
+                <% const auditorImages = [
+                  { src: '/images/chamra/auditor_01.png', title: 'ผู้สอบบัญชี 1' },
+                  { src: '/images/chamra/auditor_02.png', title: 'ผู้สอบบัญชี 2' },
+                  { src: '/images/chamra/auditor_03.png', title: 'ผู้สอบบัญชี 3' },
+                  { src: '/images/chamra/auditor_04.png', title: 'ผู้สอบบัญชี 4' }
+                ]; %>
+                <% auditorImages.forEach((image) => { %>
+                  <div class="col-6 col-md-3">
+                    <button type="button"
+                      class="auditor-thumb hover-card"
+                      data-auditor-image="<%= image.src %>"
+                      data-auditor-title="<%= image.title %>"
+                      aria-label="ดูภาพใหญ่ <%= image.title %>">
+                      <img src="<%= image.src %>" alt="<%= image.title %>" loading="lazy">
+                    </button>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal fade" id="stepsModal" tabindex="-1" aria-labelledby="stepsModalLabel" aria-hidden="true">
@@ -621,6 +692,20 @@
           <div class="modal-body" id="stepsModalBody"></div>
           <div class="modal-footer py-2">
             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ปิด</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade auditor-preview-modal" id="auditorImageModal" tabindex="-1" aria-labelledby="auditorImageModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-header border-0 text-white">
+            <h5 class="modal-title" id="auditorImageModalLabel">ผู้สอบบัญชี (auditor)</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+          </div>
+          <div class="modal-body d-flex align-items-center justify-content-center p-2 p-md-4">
+            <img id="auditorImagePreview" src="" alt="">
           </div>
         </div>
       </div>
@@ -670,6 +755,18 @@
         document.getElementById('stepsModalLabel').textContent = `รายละเอียดขั้นตอน - ${btn.dataset.code} (${btn.dataset.name})`;
         const modal = new bootstrap.Modal(document.getElementById('stepsModal'));
         modal.show();
+      });
+
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.auditor-thumb');
+        if (!btn) return;
+        const image = document.getElementById('auditorImagePreview');
+        const label = document.getElementById('auditorImageModalLabel');
+        const title = btn.dataset.auditorTitle || 'ผู้สอบบัญชี (auditor)';
+        image.src = btn.dataset.auditorImage || '';
+        image.alt = title;
+        label.textContent = title;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('auditorImageModal')).show();
       });
 
       document.getElementById('exportChamraBtn')?.addEventListener('click', async () => {

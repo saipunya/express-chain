@@ -245,7 +245,7 @@
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
       <div>
         <h1 class="h4 fw-bold mb-1">ค้นหา Chamra</h1>
-        <div class="text-muted">รายการสถาบัน ผู้ชำระบัญชี ขั้นตอนปัจจุบัน และปัญหาปี <%= targetProblemYear %></div>
+        <div class="text-muted">รายการสถาบัน ผู้ชำระบัญชี ขั้นตอนปัจจุบัน และปัญหา 2 ครั้งล่าสุด ปีงบประมาณ พ.ศ. <%= targetProblemYear %></div>
       </div>
       <a href="/chamra" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
@@ -373,7 +373,7 @@
                   <i class="bi bi-list-check me-1"></i>ขั้นดำเนินการ
                 </button>
                 <button type="button" class="btn btn-outline-danger btn-sm show-problem-modal">
-                  <i class="bi bi-exclamation-circle me-1"></i>ข้อมูล ปี <%= targetProblemYear %>
+                  <i class="bi bi-exclamation-circle me-1"></i>2 ครั้งล่าสุด ปี <%= targetProblemYear %>
                   <% if (itemProblems.length) { %>
                     <span class="badge text-bg-danger ms-1"><%= itemProblems.length %></span>
                   <% } %>
@@ -453,7 +453,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h2 class="modal-title h5 mb-1" id="chamraProblemModalLabel">รายการปัญหา ปี <%= targetProblemYear %></h2>
+          <h2 class="modal-title h5 mb-1" id="chamraProblemModalLabel">รายการปัญหา 2 ครั้งล่าสุด ปีงบประมาณ พ.ศ. <%= targetProblemYear %></h2>
           <div class="small text-muted" id="chamraProblemModalSub"></div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
@@ -584,7 +584,7 @@
           problems = [];
         }
 
-        document.getElementById('chamraProblemModalLabel').textContent = `รายการปัญหา ปี <%= targetProblemYear %>`;
+        document.getElementById('chamraProblemModalLabel').textContent = `รายการปัญหา 2 ครั้งล่าสุด ปีงบประมาณ พ.ศ. <%= targetProblemYear %>`;
         document.getElementById('chamraProblemModalSub').textContent = `${row.dataset.name || '-'} | รหัส: ${row.dataset.code || '-'}`;
 
         const problemList = document.getElementById('modalProblemList');
@@ -592,7 +592,7 @@
           problemList.innerHTML = `
             <div class="empty-state text-center text-muted p-4">
               <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-              ไม่พบรายการปัญหาปี <%= targetProblemYear %>
+              ไม่พบรายการปัญหาปีงบประมาณ พ.ศ. <%= targetProblemYear %>
             </div>
           `;
         } else {

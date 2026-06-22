@@ -200,9 +200,12 @@ function getLatestProblemByCode(problemRows = []) {
   }, {});
 }
 
-function getLatestProblemListByCode(problemRows = []) {
-  return Object.entries(getLatestProblemByCode(problemRows)).reduce((acc, [code, problem]) => {
-    acc[code] = [problem];
+function getLatestProblemListByCode(problemRows = [], limit = 2) {
+  return (Array.isArray(problemRows) ? problemRows : []).reduce((acc, item) => {
+    const code = item.po_code;
+    if (!code) return acc;
+    if (!acc[code]) acc[code] = [];
+    if (acc[code].length < limit) acc[code].push(item);
     return acc;
   }, {});
 }

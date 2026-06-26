@@ -105,14 +105,18 @@
   }
 
   .availability-assignment {
+    background: #fff;
     border: 1px solid #f1d0d4;
     border-radius: 8px;
     color: #212529;
+    cursor: pointer;
     display: grid;
     gap: .1rem;
     margin-top: .25rem;
     padding: .45rem;
     text-decoration: none;
+    text-align: left;
+    width: 100%;
   }
 
   .availability-assignment:hover {
@@ -123,6 +127,42 @@
   .availability-muted {
     color: #667085;
     font-size: .78rem;
+  }
+
+  .availability-detail-grid {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .availability-detail-item {
+    border: 1px solid #edf1f6;
+    border-radius: 8px;
+    background: #fbfcfe;
+    padding: .75rem;
+  }
+
+  .availability-detail-item.full {
+    grid-column: 1 / -1;
+  }
+
+  .availability-detail-label {
+    color: #667085;
+    font-size: .78rem;
+    font-weight: 800;
+    margin-bottom: .2rem;
+  }
+
+  .availability-detail-value {
+    color: #212529;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 575.98px) {
+    .availability-detail-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
@@ -153,7 +193,7 @@
     <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-2">
       <div>
         <h5 class="mb-1 fw-bold">ตารางสถานะรถ</h5>
-        <div class="small text-muted">แถวคือวันที่ คอลัมน์คือทะเบียนรถ คลิกเลขคำขอเพื่อดูรายละเอียด</div>
+        <div class="small text-muted">แถวคือวันที่ คอลัมน์คือทะเบียนรถ คลิกรายการเพื่อดูรายละเอียด</div>
       </div>
       <div class="d-flex flex-wrap gap-3 small fw-semibold text-muted">
         <span><span class="availability-pill available mb-0">ว่าง</span></span>
@@ -186,12 +226,27 @@
                     <% } else { %>
                       <span class="availability-pill busy">ไม่ว่าง</span>
                       <% (cell.assignments || []).forEach((assignment) => { %>
-                        <a href="/vehicle-request/<%= assignment.vehicleRequestId %>" class="availability-assignment">
+                        <button
+                          type="button"
+                          class="availability-assignment"
+                          data-bs-toggle="modal"
+                          data-bs-target="#vehicleAssignmentModal"
+                          data-request-url="/vehicle-request/<%= assignment.vehicleRequestId %>"
+                          data-request-no="<%= assignment.vehicleRequestNo || '-' %>"
+                          data-plate-no="<%= cell.plateNo || '-' %>"
+                          data-vehicle-name="<%= cell.vehicleName || '-' %>"
+                          data-destination="<%= assignment.destination || '-' %>"
+                          data-driver-name="<%= assignment.driverName || '-' %>"
+                          data-trip-date="<%= formatThaiDate(row.dateKey) %>"
+                          data-trip-time="<%= (formatThaiTime(assignment.tripStartAt) || '-') + ' - ' + (formatThaiTime(assignment.tripEndAt) || '-') %>"
+                          data-trip-start="<%= formatThaiDate(assignment.tripStartAt) %> <%= formatThaiTime(assignment.tripStartAt) || '' %>"
+                          data-trip-end="<%= formatThaiDate(assignment.tripEndAt) %> <%= formatThaiTime(assignment.tripEndAt) || '' %>"
+                          data-status="<%= assignment.status || '-' %>">
                           <span class="fw-bold"><%= assignment.vehicleRequestNo || '-' %></span>
                           <span><%= assignment.destination || '-' %></span>
                           <span class="availability-muted">คนขับ: <%= assignment.driverName || '-' %></span>
                           <span class="availability-muted"><%= formatThaiTime(assignment.tripStartAt) || '-' %> - <%= formatThaiTime(assignment.tripEndAt) || '-' %></span>
-                        </a>
+                        </button>
                       <% }); %>
                     <% } %>
                   </td>
@@ -206,5 +261,99 @@
     <% } %>
   </div>
 </div>
+
+<div class="modal fade" id="vehicleAssignmentModal" tabindex="-1" aria-labelledby="vehicleAssignmentModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <div>
+          <div class="small text-muted fw-semibold mb-1">รายละเอียดการใช้รถยนต์ราชการ</div>
+          <h5 class="modal-title fw-bold mb-0" id="vehicleAssignmentModalTitle">-</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div class="availability-detail-grid">
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">วันที่ในตาราง</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="tripDate">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">เวลา</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="tripTime">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">ทะเบียนรถ</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="plateNo">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">ชื่อรถ</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="vehicleName">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">คนขับ</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="driverName">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">สถานะ</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="status">-</div>
+          </div>
+          <div class="availability-detail-item full">
+            <div class="availability-detail-label">สถานที่ / ปลายทาง</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="destination">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">เริ่มใช้งาน</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="tripStart">-</div>
+          </div>
+          <div class="availability-detail-item">
+            <div class="availability-detail-label">สิ้นสุดใช้งาน</div>
+            <div class="availability-detail-value" data-vehicle-modal-field="tripEnd">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-primary" id="vehicleAssignmentViewLink">
+          <i class="bi bi-eye me-1"></i>เปิดหน้าคำขอ
+        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('vehicleAssignmentModal');
+    if (!modal) return;
+
+    function setField(name, value) {
+      var el = modal.querySelector('[data-vehicle-modal-field="' + name + '"]');
+      if (el) el.textContent = value || '-';
+    }
+
+    modal.addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget;
+      if (!button) return;
+
+      var requestNo = button.getAttribute('data-request-no') || '-';
+      var title = modal.querySelector('#vehicleAssignmentModalTitle');
+      if (title) title.textContent = requestNo;
+
+      setField('tripDate', button.getAttribute('data-trip-date'));
+      setField('tripTime', button.getAttribute('data-trip-time'));
+      setField('plateNo', button.getAttribute('data-plate-no'));
+      setField('vehicleName', button.getAttribute('data-vehicle-name'));
+      setField('driverName', button.getAttribute('data-driver-name'));
+      setField('status', button.getAttribute('data-status'));
+      setField('destination', button.getAttribute('data-destination'));
+      setField('tripStart', button.getAttribute('data-trip-start'));
+      setField('tripEnd', button.getAttribute('data-trip-end'));
+
+      var viewLink = document.getElementById('vehicleAssignmentViewLink');
+      if (viewLink) viewLink.href = button.getAttribute('data-request-url') || '#';
+    });
+  });
+</script>
 
 <%- include('partials/footer') %>

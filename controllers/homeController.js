@@ -20,7 +20,7 @@ const articleModel = require('../models/articleModel'); // เพิ่มบร
 const Chamra = require('../models/chamraModel');
 const strengthModel = require('../models/strengthModel'); // NEW strength summary
 const coopProfileModel = require('../models/coopProfileModel'); // NEW: for homepage mini list
-const gitgumModel = require('../models/gitgumModel'); // NEW: for calendar activities
+const mergedActivityService = require('../services/mergedActivityService');
 const bigmeetModel = require('../models/bigmeetModel');
 const turnoverModel = require('../models/turnoverModel');
 
@@ -61,6 +61,12 @@ function getBangkokDateKey(value = new Date()) {
     return null;
   }
   return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function addDays(value, days) {
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+  date.setDate(date.getDate() + Number(days || 0));
+  return date;
 }
 
 const homeController = {
@@ -182,15 +188,25 @@ const homeController = {
         closingFarmer: closingByGroup.farmer       // NEW
       };
 
-      // ดึงข้อมูล activity จาก gitgumModel แทน activityModel
-      const gitgumsRaw = await gitgumModel.findAll();
-      const activity = (gitgumsRaw || []).map(r => ({
-        date_act: r.git_date,
-        act_time: r.git_time,
-        activity: r.git_act,
-        place: r.git_place,
-        co_person: r.git_respon
-      }));
+      const calendarStartDate = mergedActivityService.toYMD(addDays(new Date(), -90));
+      const calendarEndDate = mergedActivityService.toYMD(addDays(new Date(), 90));
+      const calendarEvents = await mergedActivityService.getMergedCalendarEvents({
+        startDate: calendarStartDate,
+        endDate: calendarEndDate
+      });
+      const activity = (calendarEvents || []).map(event => {
+        const props = event.extendedProps || {};
+        return {
+          date_act: event.start,
+          end_act: event.end || null,
+          date_label: props.dateLabel || null,
+          act_time: props.timeLabel || '',
+          activity: event.title,
+          place: props.place,
+          co_person: props.respon || props.goto,
+          detailUrl: props.detailUrl || null
+        };
+      });
       const lastArticles = await articleModel.getLast(4);
       const turnoverFiscalSummary = await turnoverModel.getSummaryByFiscalYear();
       const homeProcesses = await Chamra.getRecentProcesses(8);
@@ -552,6 +568,7 @@ const homeController = {
         coopGroupChart, // ส่งไปที่ view
         cGroupChart,    // ส่งไปที่ view
         activity,
+        calendarEvents,
         lastArticles,    // ส่งไปที่ view
         closedCoops,     // ส่ง closed coops to view
         coopGroupStats,   // ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view
@@ -596,6 +613,23 @@ exports.home = async (req, res) => {
     const endDate = '2026-09-30';
     const summaryData = await Chamra.getProcessesInDateRange(startDate, endDate);
     const formattedData = summaryData.map(item => ({ ...item, step: showStepServer(item.step) }));
+    const calendarEvents = await mergedActivityService.getMergedCalendarEvents({
+      startDate: mergedActivityService.toYMD(addDays(new Date(), -90)),
+      endDate: mergedActivityService.toYMD(addDays(new Date(), 90))
+    });
+    const activity = (calendarEvents || []).map(event => {
+      const props = event.extendedProps || {};
+      return {
+        date_act: event.start,
+        end_act: event.end || null,
+        date_label: props.dateLabel || null,
+        act_time: props.timeLabel || '',
+        activity: event.title,
+        place: props.place,
+        co_person: props.respon || props.goto,
+        detailUrl: props.detailUrl || null
+      };
+    });
     res.render('dashboard', {
       finances: await Finance.getAll(),
       ruleFiles: await ruleModel.getLastUploads(),
@@ -615,13 +649,8 @@ exports.home = async (req, res) => {
       },
       coopGroupChart: await coopModel.getByCoopGroup(), // ส่งไปที่ view
       cGroupChart: await coopModel.getByGroup(),    // ส่งไปที่ view
-      activity: (await gitgumModel.findAll() || []).map(r => ({
-        date_act: r.git_date,
-        act_time: r.git_time,
-        activity: r.git_act,
-        place: r.git_place,
-        co_person: r.git_respon
-      })),
+      activity,
+      calendarEvents,
       lastArticles: await articleModel.getLast(4),
       closedCoops: await activeCoopModel.getClosedCoops(),     // ส่ง closed coops to view
       coopGroupStats: await activeCoopModel.getGroupStats(),   // ส่งข้อมูลสถิติกลุ่มสหกรณ์ไปที่ view

@@ -11,6 +11,24 @@
   const _lastProjects = (typeof lastProjects !== 'undefined' && Array.isArray(lastProjects)) ? lastProjects : [];
   const _lastCommands = (typeof lastCommands !== 'undefined' && Array.isArray(lastCommands)) ? lastCommands : [];
   const _activity = (typeof activity !== 'undefined' && Array.isArray(activity)) ? activity : [];
+  const _calendarEvents = (typeof calendarEvents !== 'undefined' && Array.isArray(calendarEvents)) ? calendarEvents : [];
+  const _calendarItems = _calendarEvents.length ? _calendarEvents : _activity.map((item, index) => ({
+    id: `activity-${index + 1}`,
+    title: item.activity || '-',
+    start: item.date_act,
+    end: item.end_act || undefined,
+    allDay: true,
+    extendedProps: {
+      sourceType: 'gitgum',
+      sourceLabel: 'กิจกรรมสำนักงาน',
+      dateLabel: item.date_label || null,
+      timeLabel: item.act_time || null,
+      place: item.place || null,
+      respon: item.co_person || null,
+      goto: item.co_person || null,
+      detailUrl: item.detailUrl || null
+    }
+  }));
   const _turnoverFiscalSummary = (typeof turnoverFiscalSummary !== 'undefined' && Array.isArray(turnoverFiscalSummary)) ? turnoverFiscalSummary : [];
   const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
   const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
@@ -822,25 +840,28 @@
                   <h3 class="h5 fw-bold mb-1"><i class="bi bi-calendar3 me-1 text-success"></i>ปฏิทินงาน</h3>
                   <div class="small text-muted">คลิกกิจกรรมในปฏิทินเพื่อดูรายละเอียด</div>
                 </div>
-                <span class="badge text-bg-success"><%= _activity.length.toLocaleString('th-TH') %> รายการ</span>
+                <span class="badge text-bg-success"><%= _calendarItems.length.toLocaleString('th-TH') %> รายการ</span>
               </div>
               <div class="card-body">
                 <div id="dashboardActivitiesCalendar" class="dashboard-calendar" aria-label="ปฏิทินงาน"></div>
                 <div id="dashboardActivitiesCalendarFallback" class="dashboard-home-list mt-2">
-                  <% if (_activity.length) { %>
-                    <% _activity.slice(0, 6).forEach(function(item, activityIndex) { %>
+                  <% if (_calendarItems.length) { %>
+                    <% _calendarItems.slice(0, 6).forEach(function(item, activityIndex) { %>
                       <%
-                        const actDate = item.date_act ? new Date(item.date_act) : null;
-                        const actDateText = actDate && !Number.isNaN(actDate.getTime())
+                        const itemProps = item.extendedProps || {};
+                        const actDate = item.start ? new Date(item.start) : null;
+                        const actDateText = itemProps.dateLabel
+                          ? itemProps.dateLabel
+                          : actDate && !Number.isNaN(actDate.getTime())
                           ? actDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
-                          : String(item.date_act || '-').slice(0, 10);
+                          : String(item.start || '-').slice(0, 10);
                       %>
                       <button type="button" class="dashboard-home-list-item dashboard-activity-fallback-item text-start w-100" data-activity-index="<%= activityIndex %>">
-                        <div class="fw-semibold"><%= item.activity || '-' %></div>
+                        <div class="fw-semibold"><%= item.title || '-' %></div>
                         <div class="small text-muted">
                           <i class="bi bi-calendar-event me-1"></i><%= actDateText %>
-                          <% if (item.act_time) { %><span class="ms-2"><i class="bi bi-clock me-1"></i><%= item.act_time %></span><% } %>
-                          <% if (item.place) { %><span class="ms-2"><i class="bi bi-geo-alt me-1"></i><%= item.place %></span><% } %>
+                          <% if (itemProps.timeLabel) { %><span class="ms-2"><i class="bi bi-clock me-1"></i><%= itemProps.timeLabel %></span><% } %>
+                          <% if (itemProps.place) { %><span class="ms-2"><i class="bi bi-geo-alt me-1"></i><%= itemProps.place %></span><% } %>
                         </div>
                       </button>
                     <% }); %>
@@ -900,8 +921,8 @@
             </div>
             <div class="modal-footer border-0 pt-0">
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
-              <a href="/gitgum/calendar" class="btn btn-success">
-                <i class="bi bi-calendar3 me-1"></i>เปิดปฏิทินเต็ม
+              <a id="dashboardActivityDetailLink" href="/gitgum/calendar" class="btn btn-success">
+                <i class="bi bi-eye me-1"></i>ดูรายละเอียด
               </a>
             </div>
           </div>
@@ -1285,6 +1306,18 @@
       cursor: pointer;
     }
 
+    .dashboard-calendar .calendar-event--gitgum {
+      background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    }
+
+    .dashboard-calendar .calendar-event--travel {
+      background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+    }
+
+    .dashboard-calendar .calendar-event--meeting {
+      background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+    }
+
     .dashboard-calendar .fc-event:hover {
       filter: brightness(.98);
       transform: translateY(-1px);
@@ -1417,7 +1450,12 @@
       const fallbackEl = document.getElementById('dashboardActivitiesCalendarFallback');
       if (!calendarEl) return;
 
-      const activities = <%- JSON.stringify(_activity || []).replace(/</g, '\\u003c') %>;
+      const calendarItems = <%- JSON.stringify(_calendarItems || []).replace(/</g, '\\u003c') %>;
+      const sourceClassMap = {
+        travel_request: 'calendar-event--travel',
+        meetingroom: 'calendar-event--meeting',
+        gitgum: 'calendar-event--gitgum'
+      };
 
       function formatThaiDate(value) {
         if (!value) return '-';
@@ -1431,14 +1469,33 @@
         if (el) el.textContent = value || '-';
       }
 
+      function formatEventDate(item) {
+        const props = item.extendedProps || {};
+        if (props.dateLabel) return props.dateLabel;
+        const startLabel = formatThaiDate(item.start);
+        if (!item.end || item.end === item.start) return startLabel;
+        const endDate = new Date(item.end);
+        if (Number.isNaN(endDate.getTime())) return startLabel;
+        endDate.setDate(endDate.getDate() - 1);
+        const endLabel = formatThaiDate(endDate);
+        return endLabel && endLabel !== startLabel ? startLabel + ' ถึง ' + endLabel : startLabel;
+      }
+
       function openActivityModal(item) {
         const modalEl = document.getElementById('dashboardActivityModal');
         if (!modalEl) return;
-        setText('dashboardActivityModalTitle', item.activity || '-');
-        setText('dashboardActivityDate', formatThaiDate(item.date_act));
-        setText('dashboardActivityTime', item.act_time || '-');
-        setText('dashboardActivityPlace', item.place || '-');
-        setText('dashboardActivityPeople', item.co_person || '-');
+        const props = item.extendedProps || {};
+        setText('dashboardActivityModalTitle', item.title || '-');
+        setText('dashboardActivityDate', formatEventDate(item));
+        setText('dashboardActivityTime', props.timeLabel || '-');
+        setText('dashboardActivityPlace', props.place || '-');
+        setText('dashboardActivityPeople', props.goto || props.respon || '-');
+
+        const detailLink = document.getElementById('dashboardActivityDetailLink');
+        if (detailLink) {
+          detailLink.href = props.detailUrl || '/gitgum/calendar';
+          detailLink.classList.toggle('d-none', !props.detailUrl);
+        }
 
         if (window.bootstrap && window.bootstrap.Modal) {
           window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -1448,7 +1505,7 @@
       document.querySelectorAll('.dashboard-activity-fallback-item').forEach(function(button) {
         button.addEventListener('click', function() {
           const index = Number(button.getAttribute('data-activity-index'));
-          openActivityModal(activities[index] || {});
+          openActivityModal(calendarItems[index] || {});
         });
       });
 
@@ -1457,16 +1514,17 @@
         return;
       }
 
-      const events = (activities || [])
-        .filter(function(item) { return item && item.date_act; })
+      const events = (calendarItems || [])
+        .filter(function(item) { return item && item.start; })
         .map(function(item, index) {
-          return {
-            id: String(index + 1),
-            title: item.activity || '-',
-            start: item.date_act,
-            allDay: true,
-            extendedProps: { item: item }
-          };
+          const props = item.extendedProps || {};
+          const sourceType = props.sourceType || 'gitgum';
+          const className = sourceClassMap[sourceType] || sourceClassMap.gitgum;
+          return Object.assign({}, item, {
+            id: item.id || String(index + 1),
+            allDay: typeof item.allDay === 'boolean' ? item.allDay : true,
+            classNames: Array.from(new Set([].concat(item.classNames || [], className)))
+          });
         });
 
       try {
@@ -1486,7 +1544,14 @@
           events: events,
           eventClick: function(info) {
             info.jsEvent.preventDefault();
-            openActivityModal(info.event.extendedProps.item || {});
+            openActivityModal({
+              id: info.event.id,
+              title: info.event.title,
+              start: info.event.startStr,
+              end: info.event.endStr || null,
+              allDay: info.event.allDay,
+              extendedProps: info.event.extendedProps || {}
+            });
           }
         });
         calendar.render();

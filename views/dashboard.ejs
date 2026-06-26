@@ -30,6 +30,9 @@
     }
   }));
   const _vehicleUsageSummary = (typeof vehicleUsageSummary !== 'undefined' && vehicleUsageSummary) ? vehicleUsageSummary : { total: 0, byPlate: [], byDate: [] };
+  const _vehicleUsageRows = (_vehicleUsageSummary.byDate || [])
+    .flatMap((group) => (group.items || []).map((item) => ({ ...item, dateKey: group.dateKey })))
+    .slice(0, 12);
   const _turnoverFiscalSummary = (typeof turnoverFiscalSummary !== 'undefined' && Array.isArray(turnoverFiscalSummary)) ? turnoverFiscalSummary : [];
   const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
   const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
@@ -595,57 +598,72 @@
                 <div class="card-body">
                   <% if ((_vehicleUsageSummary.byPlate || []).length || (_vehicleUsageSummary.byDate || []).length) { %>
                     <div class="row g-3">
-                      <div class="col-lg-5">
-                        <div class="vehicle-summary-panel h-100">
-                          <div class="vehicle-panel-title">ตามทะเบียนรถ</div>
-                          <div class="vehicle-plate-list">
-                            <% (_vehicleUsageSummary.byPlate || []).slice(0, 8).forEach(function(item) { %>
-                              <div class="vehicle-plate-item">
-                                <div class="min-w-0">
-                                  <div class="vehicle-plate-no"><%= item.plateNo || '-' %></div>
-                                  <div class="vehicle-muted">
-                                    <% if ((item.drivers || []).length) { %>
-                                      คนขับ: <%= item.drivers.join(', ') %>
-                                    <% } else { %>
-                                      ยังไม่มีข้อมูลคนขับ
-                                    <% } %>
-                                  </div>
-                                  <div class="vehicle-muted">ใช้งานล่าสุด: <%= _formatThaiDate(item.lastUsageAt) %></div>
-                                </div>
-                                <span class="vehicle-count"><%= Number(item.total || 0).toLocaleString('th-TH') %></span>
-                              </div>
-                            <% }); %>
+                      <div class="col-xl-4">
+                        <div class="vehicle-table-panel h-100">
+                          <div class="vehicle-panel-title">สรุปตามทะเบียน</div>
+                          <div class="table-responsive">
+                            <table class="table table-sm vehicle-summary-table align-middle mb-0">
+                              <thead>
+                                <tr>
+                                  <th>ทะเบียน</th>
+                                  <th class="text-end">ครั้ง</th>
+                                  <th>ล่าสุด</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% (_vehicleUsageSummary.byPlate || []).forEach(function(item) { %>
+                                  <tr>
+                                    <td>
+                                      <div class="vehicle-plate-no"><%= item.plateNo || '-' %></div>
+                                      <div class="vehicle-muted"><%= (item.drivers || []).join(', ') || 'ไม่มีข้อมูลคนขับ' %></div>
+                                    </td>
+                                    <td class="text-end fw-bold"><%= Number(item.total || 0).toLocaleString('th-TH') %></td>
+                                    <td class="text-nowrap"><%= _formatThaiDate(item.lastUsageAt) %></td>
+                                  </tr>
+                                <% }); %>
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
-                      <div class="col-lg-7">
-                        <div class="vehicle-summary-panel h-100">
-                          <div class="vehicle-panel-title">ตามวันที่ใช้งาน</div>
-                          <div class="vehicle-date-list">
-                            <% (_vehicleUsageSummary.byDate || []).forEach(function(group) { %>
-                              <div class="vehicle-date-group">
-                                <div class="vehicle-date-heading">
-                                  <div>
-                                    <div class="fw-bold"><%= _formatThaiDate(group.dateKey) %></div>
-                                    <div class="vehicle-muted">ทะเบียน: <%= (group.plates || []).join(', ') || '-' %></div>
-                                  </div>
-                                  <span class="vehicle-date-count"><%= Number(group.total || 0).toLocaleString('th-TH') %> งาน</span>
-                                </div>
-                                <div class="vehicle-date-items">
-                                  <% (group.items || []).forEach(function(item) { %>
-                                    <a class="vehicle-date-item" href="/vehicle-request/<%= item.id %>">
-                                      <span class="vehicle-date-time"><%= _formatThaiTime(item.tripStartAt) || '-' %></span>
-                                      <span class="vehicle-date-main">
-                                        <span class="fw-semibold"><%= item.plateNo || '-' %></span>
-                                        <span class="text-muted">ไป <%= item.destination || '-' %></span>
-                                      </span>
-                                      <span class="vehicle-date-driver"><%= item.driverName || '-' %></span>
-                                    </a>
-                                  <% }); %>
-                                </div>
-                              </div>
-                            <% }); %>
+                      <div class="col-xl-8">
+                        <div class="vehicle-table-panel h-100">
+                          <div class="vehicle-panel-title">รายการตามวันที่ใช้งาน</div>
+                          <div class="table-responsive">
+                            <table class="table table-sm vehicle-usage-table align-middle mb-0">
+                              <thead>
+                                <tr>
+                                  <th>วันที่</th>
+                                  <th>เวลา</th>
+                                  <th>ทะเบียน</th>
+                                  <th>สถานที่</th>
+                                  <th>คนขับ</th>
+                                  <th class="text-end">ดู</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% _vehicleUsageRows.forEach(function(item) { %>
+                                  <tr>
+                                    <td class="text-nowrap"><%= _formatThaiDate(item.dateKey || item.tripStartAt) %></td>
+                                    <td class="text-nowrap"><%= _formatThaiTime(item.tripStartAt) || '-' %></td>
+                                    <td class="fw-bold text-nowrap"><%= item.plateNo || '-' %></td>
+                                    <td class="vehicle-destination"><%= item.destination || '-' %></td>
+                                    <td class="text-nowrap"><%= item.driverName || '-' %></td>
+                                    <td class="text-end">
+                                      <a href="/vehicle-request/<%= item.id %>" class="btn btn-outline-primary btn-sm vehicle-row-btn">
+                                        <i class="bi bi-eye"></i>
+                                      </a>
+                                    </td>
+                                  </tr>
+                                <% }); %>
+                              </tbody>
+                            </table>
                           </div>
+                          <% if ((_vehicleUsageSummary.total || 0) > _vehicleUsageRows.length) { %>
+                            <div class="vehicle-table-footnote">
+                              แสดงล่าสุด <%= _vehicleUsageRows.length.toLocaleString('th-TH') %> รายการ จากทั้งหมด <%= Number(_vehicleUsageSummary.total || 0).toLocaleString('th-TH') %> รายการ
+                            </div>
+                          <% } %>
                         </div>
                       </div>
                     </div>
@@ -1420,6 +1438,80 @@
       overflow-wrap: anywhere;
     }
 
+    .vehicle-table-panel {
+      border: 1px solid #edf1f6;
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .vehicle-panel-title {
+      color: #344054;
+      font-size: .88rem;
+      font-weight: 800;
+      padding: .8rem .9rem;
+      border-bottom: 1px solid #edf1f6;
+      background: #f8fafc;
+    }
+
+    .vehicle-plate-no {
+      color: #0d6efd;
+      font-size: .94rem;
+      font-weight: 800;
+    }
+
+    .vehicle-muted {
+      color: #6c757d;
+      font-size: .78rem;
+      line-height: 1.35;
+    }
+
+    .vehicle-summary-table,
+    .vehicle-usage-table {
+      font-size: .86rem;
+    }
+
+    .vehicle-summary-table thead th,
+    .vehicle-usage-table thead th {
+      background: #f8fafc;
+      color: #667085;
+      font-size: .76rem;
+      font-weight: 800;
+      padding: .55rem .75rem;
+      white-space: nowrap;
+    }
+
+    .vehicle-summary-table td,
+    .vehicle-usage-table td {
+      border-color: #edf1f6;
+      padding: .6rem .75rem;
+      vertical-align: middle;
+    }
+
+    .vehicle-destination {
+      max-width: 16rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vehicle-row-btn {
+      align-items: center;
+      display: inline-flex;
+      height: 2rem;
+      justify-content: center;
+      padding: 0;
+      width: 2rem;
+    }
+
+    .vehicle-table-footnote {
+      color: #667085;
+      font-size: .78rem;
+      padding: .65rem .9rem;
+      border-top: 1px solid #edf1f6;
+      background: #fbfcfe;
+    }
+
     .turnover-dashboard-hero {
       display: flex;
       align-items: center;
@@ -1461,6 +1553,11 @@
 
       .dashboard-menu-grid:not(.is-expanded) > [class*="col-"]:nth-child(n+7) {
         display: none;
+      }
+
+      .vehicle-usage-table,
+      .vehicle-summary-table {
+        min-width: 620px;
       }
 
       .dashboard-menu-panel .menu-card {

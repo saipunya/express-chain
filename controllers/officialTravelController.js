@@ -178,6 +178,7 @@ function buildTravelRequestPdfFormData(item, options = {}) {
     startDate: item.start_at || item.request_date,
     endDate: item.end_at || item.start_at || item.request_date,
     durationDays: calculateDisplayDurationDays(item.start_at, item.end_at, item.duration_days),
+    outOfProvince: Number(item.out_of_province) === 1,
     transport_type: item.transport_type,
     transport_other_text: item.transport_other_text,
     transportDetails: formatTransportLabel(item),

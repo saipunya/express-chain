@@ -187,6 +187,10 @@ function getDurationDays(formData) {
   return numericDays > 0 ? numericDays : 1;
 }
 
+function isOutOfProvince(formData) {
+  return formData.outOfProvince === true || Number(formData.outOfProvince ?? formData.out_of_province) === 1;
+}
+
 function normalizeCompanions(companions) {
   const rows = safeArray(companions)
     .slice(0, 7)
@@ -223,6 +227,7 @@ function normalizeFormData(formData = {}) {
     startTime: sanitizeTime(formData.startTime || formData.start_time),
     endTime: sanitizeTime(formData.endTime || formData.end_time),
     durationDays: getDurationDays(formData),
+    outOfProvince: isOutOfProvince(formData),
     transportDetails: sanitizeText(formData.transportDetails),
     estimatedAllowance: formData.estimatedAllowance ?? formData.estimated_allowance ?? null,
     estimatedLodging: formData.estimatedLodging ?? formData.estimated_lodging ?? null,
@@ -451,6 +456,13 @@ function drawPeriodAndTransport(doc, state, formData) {
     minHeight: 26
   });
 
+  drawFieldRow(doc, state, {
+    label: 'การเดินทาง',
+    value: formData.outOfProvince ? 'ออกนอกเขตจังหวัด' : 'ในเขตจังหวัด',
+    labelWidth: 84,
+    minHeight: 26
+  });
+
   // เพิ่มแถว 'เวลา' เพื่อแสดงช่วงเวลาที่ขอไปราชการ
   drawFieldRow(doc, state, {
     label: 'จำนวนผู้โดยสารรวม',
@@ -552,7 +564,8 @@ function renderBody(doc, formData, state) {
     .filter(Boolean);
   const companionsPart = companionItems.length ? `พร้อมด้วย ${companionItems.join(', ')}` : '';
   const timePart = formatTimeRange(formData.startTime, formData.endTime);
-  const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} สถานที่ ${sanitizeText(formData.destination, '')} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน เวลา ${timePart} พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
+  const provincePart = formData.outOfProvince ? 'ออกนอกเขตจังหวัด' : 'ในเขตจังหวัด';
+  const travelPart = `ไปราชการเพื่อ ${sanitizeText(formData.purpose, '')} สถานที่ ${sanitizeText(formData.destination, '')} ${provincePart} ระหว่างวันที่ ${formatDate(formData.startDate)} ถึง ${formatDate(formData.endDate)} รวม ${formData.durationDays} วัน เวลา ${timePart} พาหนะ ${sanitizeText(formData.transportDetails, '')}`;
   const mainText = normalizeInlineText([requesterPart, companionsPart, travelPart].filter(Boolean).join(' '));
   const closingText = sanitizeText(formData.closingText, '');
 

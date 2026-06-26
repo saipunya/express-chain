@@ -43,97 +43,93 @@ function mapCalendarEventsToDashboardActivity(calendarEvents) {
   });
 }
 
-async function getVehicleUsageSummary() {
-  const [rows] = await db.query(`
+async function getVehicleUsageSummary(daysAhead = 7) {
+  const availabilityStart = toBangkokDateKey(new Date());
+  const availabilityEnd = toBangkokDateKey(addDays(`${availabilityStart}T00:00:00+07:00`, daysAhead));
+  const [vehicles] = await db.query(`
+    SELECT id, plate_no, vehicle_name
+    FROM vehicle_masters
+    WHERE status = 'active'
+    ORDER BY plate_no ASC, vehicle_name ASC
+  `);
+  const [assignments] = await db.query(`
     SELECT
-      vr.id,
+      va.vehicle_id,
+      vr.id AS vehicle_request_id,
       vr.vehicle_request_no,
       vr.destination_text,
-      vr.requester_name,
-      vr.passenger_count,
       vr.trip_start_at,
       vr.trip_end_at,
-      vr.status,
-      COALESCE(va.plate_no_snapshot, vm.plate_no, '-') AS plate_no,
-      COALESCE(va.driver_name_snapshot, dm.driver_name, '-') AS driver_name
+      vr.status AS vehicle_request_status,
+      COALESCE(va.driver_name_snapshot, dm.driver_name, '-') AS driver_name,
+      va.assignment_note
     FROM vehicle_requests vr
     INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
-    LEFT JOIN vehicle_masters vm ON vm.id = va.vehicle_id
     LEFT JOIN driver_masters dm ON dm.id = va.driver_id
-    WHERE vr.status NOT IN ('cancelled', 'rejected', 'draft')
-    ORDER BY vr.trip_start_at DESC, vr.id DESC
-  `);
+    WHERE vr.status IN ('assigned', 'in_progress')
+      AND vr.trip_start_at <= ?
+      AND vr.trip_end_at >= ?
+    ORDER BY va.vehicle_id ASC, vr.trip_start_at ASC, vr.id ASC
+  `, [availabilityEnd, availabilityStart]);
 
-  const byPlateMap = new Map();
-  const byDateMap = new Map();
+  const dates = [];
+  const current = new Date(`${availabilityStart}T00:00:00+07:00`);
+  const last = new Date(`${availabilityEnd}T00:00:00+07:00`);
+  while (current <= last) {
+    dates.push(toBangkokDateKey(current));
+    current.setDate(current.getDate() + 1);
+  }
 
-  (rows || []).forEach((row) => {
-    const plateNo = row.plate_no || '-';
-    const startKey = toBangkokDateKey(row.trip_start_at);
-    const endKey = toBangkokDateKey(row.trip_end_at || row.trip_start_at);
-    const item = {
-      id: row.id,
-      vehicleRequestNo: row.vehicle_request_no,
-      plateNo,
-      driverName: row.driver_name || '-',
-      destination: row.destination_text || '-',
-      requesterName: row.requester_name || '-',
-      passengerCount: Number(row.passenger_count || 0),
-      tripStartAt: row.trip_start_at,
-      tripEndAt: row.trip_end_at,
-      startDateKey: startKey,
-      endDateKey: endKey,
-      status: row.status
+  const assignmentsByVehicle = new Map();
+  (assignments || []).forEach((assignment) => {
+    const key = String(assignment.vehicle_id);
+    if (!assignmentsByVehicle.has(key)) {
+      assignmentsByVehicle.set(key, []);
+    }
+    assignmentsByVehicle.get(key).push(assignment);
+  });
+
+  const matrix = dates.map((dateKey) => {
+    const dateStart = new Date(`${dateKey}T00:00:00+07:00`);
+    const dateEnd = new Date(`${dateKey}T23:59:59+07:00`);
+    const cells = (vehicles || []).map((vehicle) => {
+      const activeAssignments = (assignmentsByVehicle.get(String(vehicle.id)) || []).filter((assignment) => {
+        const startAt = new Date(assignment.trip_start_at);
+        const endAt = new Date(assignment.trip_end_at);
+        return startAt <= dateEnd && endAt >= dateStart;
+      });
+
+      return {
+        vehicleId: vehicle.id,
+        plateNo: vehicle.plate_no,
+        vehicleName: vehicle.vehicle_name,
+        available: activeAssignments.length === 0,
+        assignments: activeAssignments.map((assignment) => ({
+          vehicleRequestId: assignment.vehicle_request_id,
+          vehicleRequestNo: assignment.vehicle_request_no,
+          destination: assignment.destination_text || '-',
+          tripStartAt: assignment.trip_start_at,
+          tripEndAt: assignment.trip_end_at,
+          status: assignment.vehicle_request_status,
+          driverName: assignment.driver_name || '-'
+        }))
+      };
+    });
+
+    return {
+      dateKey,
+      cells
     };
-
-    if (!byPlateMap.has(plateNo)) {
-      byPlateMap.set(plateNo, {
-        plateNo,
-        total: 0,
-        drivers: new Set(),
-        lastUsageAt: null
-      });
-    }
-    const plateSummary = byPlateMap.get(plateNo);
-    plateSummary.total += 1;
-    if (item.driverName && item.driverName !== '-') {
-      plateSummary.drivers.add(item.driverName);
-    }
-    if (!plateSummary.lastUsageAt || new Date(item.tripStartAt) > new Date(plateSummary.lastUsageAt)) {
-      plateSummary.lastUsageAt = item.tripStartAt;
-    }
-
-    const dateKey = startKey || 'ไม่ระบุวันที่';
-    if (!byDateMap.has(dateKey)) {
-      byDateMap.set(dateKey, {
-        dateKey,
-        total: 0,
-        plates: new Set(),
-        items: []
-      });
-    }
-    const dateSummary = byDateMap.get(dateKey);
-    dateSummary.total += 1;
-    dateSummary.plates.add(plateNo);
-    dateSummary.items.push(item);
   });
 
   return {
-    total: rows.length,
-    byPlate: Array.from(byPlateMap.values())
-      .map((item) => ({
-        ...item,
-        drivers: Array.from(item.drivers).slice(0, 3)
-      }))
-      .sort((left, right) => right.total - left.total || String(left.plateNo).localeCompare(String(right.plateNo), 'th')),
-    byDate: Array.from(byDateMap.values())
-      .map((item) => ({
-        ...item,
-        plates: Array.from(item.plates),
-        items: item.items.slice(0, 4)
-      }))
-      .sort((left, right) => String(right.dateKey).localeCompare(String(left.dateKey)))
-      .slice(0, 8)
+    total: assignments.length,
+    vehicleCount: vehicles.length,
+    availabilityStart,
+    availabilityEnd,
+    daysAhead,
+    vehicles,
+    matrix
   };
 }
 
@@ -233,7 +229,7 @@ async function getDashboardHomeData() {
     turnoverModel.getSummaryByFiscalYear().catch(() => []),
     getVehicleUsageSummary().catch((error) => {
       console.error('[dashboardController] vehicle usage summary error:', error);
-      return { total: 0, byPlate: [], byDate: [] };
+      return { total: 0, vehicleCount: 0, availabilityStart: null, availabilityEnd: null, vehicles: [], matrix: [] };
     })
   ]);
 
@@ -313,6 +309,20 @@ exports.institutionIndex = async (req, res) => {
     title: 'แดชบอร์ดสมาชิกสถาบัน',
     user
   });
+};
+
+exports.vehicleAvailability = async (req, res) => {
+  try {
+    const vehicleUsageSummary = await getVehicleUsageSummary(30);
+    res.render('dashboard-vehicle-availability', {
+      title: 'สถานะการใช้รถยนต์ราชการ 30 วันข้างหน้า',
+      user: req.session.user,
+      vehicleUsageSummary
+    });
+  } catch (error) {
+    console.error('[dashboardController] vehicle availability page error:', error);
+    res.status(500).send('ไม่สามารถโหลดสถานะรถ 30 วันข้างหน้าได้');
+  }
 };
 
 exports.report = (req, res) => {

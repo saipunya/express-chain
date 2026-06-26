@@ -4,6 +4,7 @@ const dashboardController = require('../controllers/dashboardController');
 const { requireLogin } = require('../middlewares/authMiddleware');
 
 router.get('/', requireLogin, dashboardController.index);
+router.get('/vehicle-availability', requireLogin, dashboardController.vehicleAvailability);
 router.get('/report', requireLogin, dashboardController.report);
 
 module.exports = router;

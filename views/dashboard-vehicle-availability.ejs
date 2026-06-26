@@ -1,0 +1,210 @@
+<%- include('partials/header') %>
+<%- include('partials/travel-navbar', { currentPage: 'vehicle-availability' }) %>
+
+<%
+  const summary = (typeof vehicleUsageSummary !== 'undefined' && vehicleUsageSummary)
+    ? vehicleUsageSummary
+    : { total: 0, vehicleCount: 0, availabilityStart: null, availabilityEnd: null, vehicles: [], matrix: [] };
+  const formatThaiDate = (value) => {
+    if (!value) return '-';
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? String(value).slice(0, 10)
+      : date.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Bangkok' });
+  };
+  const formatThaiTime = (value) => {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? ''
+      : date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+  };
+%>
+
+<style>
+  .availability-page {
+    padding-bottom: 2rem;
+  }
+
+  .availability-hero {
+    border: 1px solid #dfe7e2;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(31, 41, 55, .06);
+    padding: 1rem;
+  }
+
+  .availability-table-wrap {
+    border: 1px solid #e6edf5;
+    border-radius: 8px;
+    max-height: 72vh;
+    overflow: auto;
+    background: #fff;
+  }
+
+  .availability-table {
+    font-size: .84rem;
+    min-width: 920px;
+  }
+
+  .availability-table th,
+  .availability-table td {
+    border-color: #edf1f6;
+    min-width: 10rem;
+    padding: .55rem;
+    vertical-align: top;
+  }
+
+  .availability-table thead th {
+    background: #f8fafc;
+    color: #475467;
+    font-size: .78rem;
+    font-weight: 800;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .availability-sticky-col {
+    left: 0;
+    min-width: 9rem !important;
+    position: sticky;
+    z-index: 4 !important;
+  }
+
+  .availability-table tbody .availability-sticky-col {
+    background: #fff;
+    color: #344054;
+  }
+
+  .availability-cell.is-available {
+    background: #f6fdf9;
+  }
+
+  .availability-cell.is-busy {
+    background: #fff8f8;
+  }
+
+  .availability-pill {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: .75rem;
+    font-weight: 800;
+    margin-bottom: .35rem;
+    padding: .2rem .5rem;
+  }
+
+  .availability-pill.available {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .availability-pill.busy {
+    background: #f8d7da;
+    color: #842029;
+  }
+
+  .availability-assignment {
+    border: 1px solid #f1d0d4;
+    border-radius: 8px;
+    color: #212529;
+    display: grid;
+    gap: .1rem;
+    margin-top: .25rem;
+    padding: .45rem;
+    text-decoration: none;
+  }
+
+  .availability-assignment:hover {
+    background: #fff;
+    color: #0d6efd;
+  }
+
+  .availability-muted {
+    color: #667085;
+    font-size: .78rem;
+  }
+</style>
+
+<div class="availability-page">
+  <div class="availability-hero mb-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase text-muted fw-semibold small mb-1">Vehicle Availability</div>
+        <h3 class="fw-bold mb-1">สถานะการใช้รถยนต์ราชการ 30 วันข้างหน้า</h3>
+        <div class="text-muted">
+          ช่วง <%= formatThaiDate(summary.availabilityStart) %> ถึง <%= formatThaiDate(summary.availabilityEnd) %>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge text-bg-primary"><%= Number(summary.vehicleCount || 0).toLocaleString('th-TH') %> คัน</span>
+        <span class="badge text-bg-secondary"><%= Number(summary.total || 0).toLocaleString('th-TH') %> งานที่มอบหมาย</span>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i>กลับ Dashboard
+        </a>
+        <a href="/vehicle-approval/pending" class="btn btn-primary btn-sm">
+          <i class="bi bi-check2-square me-1"></i>คิวอนุมัติ
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <h5 class="mb-1 fw-bold">ตารางสถานะรถ</h5>
+        <div class="small text-muted">แถวคือวันที่ คอลัมน์คือทะเบียนรถ คลิกเลขคำขอเพื่อดูรายละเอียด</div>
+      </div>
+      <div class="d-flex flex-wrap gap-3 small fw-semibold text-muted">
+        <span><span class="availability-pill available mb-0">ว่าง</span></span>
+        <span><span class="availability-pill busy mb-0">ไม่ว่าง</span></span>
+      </div>
+    </div>
+
+    <% if ((summary.matrix || []).length && (summary.vehicles || []).length) { %>
+      <div class="availability-table-wrap">
+        <table class="table table-bordered availability-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="availability-sticky-col">วันที่</th>
+              <% (summary.vehicles || []).forEach((vehicle) => { %>
+                <th class="text-center">
+                  <div class="fw-bold"><%= vehicle.plate_no %></div>
+                  <div class="availability-muted"><%= vehicle.vehicle_name || '-' %></div>
+                </th>
+              <% }); %>
+            </tr>
+          </thead>
+          <tbody>
+            <% (summary.matrix || []).forEach((row) => { %>
+              <tr>
+                <th class="availability-sticky-col"><%= formatThaiDate(row.dateKey) %></th>
+                <% (row.cells || []).forEach((cell) => { %>
+                  <td class="availability-cell <%= cell.available ? 'is-available' : 'is-busy' %>">
+                    <% if (cell.available) { %>
+                      <span class="availability-pill available">ว่าง</span>
+                    <% } else { %>
+                      <span class="availability-pill busy">ไม่ว่าง</span>
+                      <% (cell.assignments || []).forEach((assignment) => { %>
+                        <a href="/vehicle-request/<%= assignment.vehicleRequestId %>" class="availability-assignment">
+                          <span class="fw-bold"><%= assignment.vehicleRequestNo || '-' %></span>
+                          <span><%= assignment.destination || '-' %></span>
+                          <span class="availability-muted">คนขับ: <%= assignment.driverName || '-' %></span>
+                          <span class="availability-muted"><%= formatThaiTime(assignment.tripStartAt) || '-' %> - <%= formatThaiTime(assignment.tripEndAt) || '-' %></span>
+                        </a>
+                      <% }); %>
+                    <% } %>
+                  </td>
+                <% }); %>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="text-center py-5 text-muted">ยังไม่มีข้อมูลสถานะรถในช่วง 30 วันข้างหน้า</div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

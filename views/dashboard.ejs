@@ -29,6 +29,7 @@
       detailUrl: item.detailUrl || null
     }
   }));
+  const _vehicleUsageSummary = (typeof vehicleUsageSummary !== 'undefined' && vehicleUsageSummary) ? vehicleUsageSummary : { total: 0, byPlate: [], byDate: [] };
   const _turnoverFiscalSummary = (typeof turnoverFiscalSummary !== 'undefined' && Array.isArray(turnoverFiscalSummary)) ? turnoverFiscalSummary : [];
   const _memberSummary = (typeof memberSummary !== 'undefined' && memberSummary) ? memberSummary : {};
   const _latestYear = (typeof latestYear !== 'undefined' && latestYear) ? latestYear : '-';
@@ -53,6 +54,20 @@
   const _turnoverTarget = _previousTurnover ? _previousTurnover.total * 1.03 : 0;
   const _turnoverPercent = _currentTurnover && _turnoverTarget > 0 ? (_currentTurnover.total / _turnoverTarget) * 100 : 0;
   const _formatMoney = (value) => Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const _formatThaiDate = (value) => {
+    if (!value) return '-';
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? String(value).slice(0, 10)
+      : date.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Bangkok' });
+  };
+  const _formatThaiTime = (value) => {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? ''
+      : date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
+  };
 %>
 
   <!-- Modern Dashboard -->
@@ -562,6 +577,84 @@
                 <i class="bi bi-chevron-down me-1"></i>ดูเมนูเพิ่มเติม
               </button>
             </div>
+
+            <section class="vehicle-usage-section mb-4" aria-labelledby="vehicleUsageTitle">
+              <div class="card border-0 shadow-sm dashboard-home-card">
+                <div class="card-header bg-white border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <div>
+                    <h3 class="h5 fw-bold mb-1" id="vehicleUsageTitle"><i class="bi bi-car-front-fill me-1 text-primary"></i>สรุปการใช้รถยนต์ราชการ</h3>
+                    <div class="small text-muted">แยกตามทะเบียนรถและวันที่ใช้งาน</div>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge text-bg-primary"><%= Number(_vehicleUsageSummary.total || 0).toLocaleString('th-TH') %> รายการ</span>
+                    <a href="/vehicle-request/report" class="btn btn-outline-primary btn-sm">
+                      <i class="bi bi-table me-1"></i>รายงาน
+                    </a>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <% if ((_vehicleUsageSummary.byPlate || []).length || (_vehicleUsageSummary.byDate || []).length) { %>
+                    <div class="row g-3">
+                      <div class="col-lg-5">
+                        <div class="vehicle-summary-panel h-100">
+                          <div class="vehicle-panel-title">ตามทะเบียนรถ</div>
+                          <div class="vehicle-plate-list">
+                            <% (_vehicleUsageSummary.byPlate || []).slice(0, 8).forEach(function(item) { %>
+                              <div class="vehicle-plate-item">
+                                <div class="min-w-0">
+                                  <div class="vehicle-plate-no"><%= item.plateNo || '-' %></div>
+                                  <div class="vehicle-muted">
+                                    <% if ((item.drivers || []).length) { %>
+                                      คนขับ: <%= item.drivers.join(', ') %>
+                                    <% } else { %>
+                                      ยังไม่มีข้อมูลคนขับ
+                                    <% } %>
+                                  </div>
+                                  <div class="vehicle-muted">ใช้งานล่าสุด: <%= _formatThaiDate(item.lastUsageAt) %></div>
+                                </div>
+                                <span class="vehicle-count"><%= Number(item.total || 0).toLocaleString('th-TH') %></span>
+                              </div>
+                            <% }); %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-7">
+                        <div class="vehicle-summary-panel h-100">
+                          <div class="vehicle-panel-title">ตามวันที่ใช้งาน</div>
+                          <div class="vehicle-date-list">
+                            <% (_vehicleUsageSummary.byDate || []).forEach(function(group) { %>
+                              <div class="vehicle-date-group">
+                                <div class="vehicle-date-heading">
+                                  <div>
+                                    <div class="fw-bold"><%= _formatThaiDate(group.dateKey) %></div>
+                                    <div class="vehicle-muted">ทะเบียน: <%= (group.plates || []).join(', ') || '-' %></div>
+                                  </div>
+                                  <span class="vehicle-date-count"><%= Number(group.total || 0).toLocaleString('th-TH') %> งาน</span>
+                                </div>
+                                <div class="vehicle-date-items">
+                                  <% (group.items || []).forEach(function(item) { %>
+                                    <a class="vehicle-date-item" href="/vehicle-request/<%= item.id %>">
+                                      <span class="vehicle-date-time"><%= _formatThaiTime(item.tripStartAt) || '-' %></span>
+                                      <span class="vehicle-date-main">
+                                        <span class="fw-semibold"><%= item.plateNo || '-' %></span>
+                                        <span class="text-muted">ไป <%= item.destination || '-' %></span>
+                                      </span>
+                                      <span class="vehicle-date-driver"><%= item.driverName || '-' %></span>
+                                    </a>
+                                  <% }); %>
+                                </div>
+                              </div>
+                            <% }); %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div class="dashboard-home-empty">ยังไม่มีข้อมูลการใช้รถยนต์ราชการ</div>
+                  <% } %>
+                </div>
+              </div>
+            </section>
           <% } %>
 
           <% if (user && user.mClass === 'admin') { %>

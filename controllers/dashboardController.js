@@ -16,6 +16,17 @@ function addDays(value, days) {
   return date;
 }
 
+function toBangkokDateKey(value) {
+  if (!value) {
+    return '';
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).slice(0, 10);
+  }
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(date);
+}
+
 function mapCalendarEventsToDashboardActivity(calendarEvents) {
   return (calendarEvents || []).map((event) => {
     const props = event.extendedProps || {};
@@ -30,6 +41,100 @@ function mapCalendarEventsToDashboardActivity(calendarEvents) {
       detailUrl: props.detailUrl || null
     };
   });
+}
+
+async function getVehicleUsageSummary() {
+  const [rows] = await db.query(`
+    SELECT
+      vr.id,
+      vr.vehicle_request_no,
+      vr.destination_text,
+      vr.requester_name,
+      vr.passenger_count,
+      vr.trip_start_at,
+      vr.trip_end_at,
+      vr.status,
+      COALESCE(va.plate_no_snapshot, vm.plate_no, '-') AS plate_no,
+      COALESCE(va.driver_name_snapshot, dm.driver_name, '-') AS driver_name
+    FROM vehicle_requests vr
+    INNER JOIN vehicle_assignments va ON va.vehicle_request_id = vr.id
+    LEFT JOIN vehicle_masters vm ON vm.id = va.vehicle_id
+    LEFT JOIN driver_masters dm ON dm.id = va.driver_id
+    WHERE vr.status NOT IN ('cancelled', 'rejected', 'draft')
+    ORDER BY vr.trip_start_at DESC, vr.id DESC
+  `);
+
+  const byPlateMap = new Map();
+  const byDateMap = new Map();
+
+  (rows || []).forEach((row) => {
+    const plateNo = row.plate_no || '-';
+    const startKey = toBangkokDateKey(row.trip_start_at);
+    const endKey = toBangkokDateKey(row.trip_end_at || row.trip_start_at);
+    const item = {
+      id: row.id,
+      vehicleRequestNo: row.vehicle_request_no,
+      plateNo,
+      driverName: row.driver_name || '-',
+      destination: row.destination_text || '-',
+      requesterName: row.requester_name || '-',
+      passengerCount: Number(row.passenger_count || 0),
+      tripStartAt: row.trip_start_at,
+      tripEndAt: row.trip_end_at,
+      startDateKey: startKey,
+      endDateKey: endKey,
+      status: row.status
+    };
+
+    if (!byPlateMap.has(plateNo)) {
+      byPlateMap.set(plateNo, {
+        plateNo,
+        total: 0,
+        drivers: new Set(),
+        lastUsageAt: null
+      });
+    }
+    const plateSummary = byPlateMap.get(plateNo);
+    plateSummary.total += 1;
+    if (item.driverName && item.driverName !== '-') {
+      plateSummary.drivers.add(item.driverName);
+    }
+    if (!plateSummary.lastUsageAt || new Date(item.tripStartAt) > new Date(plateSummary.lastUsageAt)) {
+      plateSummary.lastUsageAt = item.tripStartAt;
+    }
+
+    const dateKey = startKey || 'ไม่ระบุวันที่';
+    if (!byDateMap.has(dateKey)) {
+      byDateMap.set(dateKey, {
+        dateKey,
+        total: 0,
+        plates: new Set(),
+        items: []
+      });
+    }
+    const dateSummary = byDateMap.get(dateKey);
+    dateSummary.total += 1;
+    dateSummary.plates.add(plateNo);
+    dateSummary.items.push(item);
+  });
+
+  return {
+    total: rows.length,
+    byPlate: Array.from(byPlateMap.values())
+      .map((item) => ({
+        ...item,
+        drivers: Array.from(item.drivers).slice(0, 3)
+      }))
+      .sort((left, right) => right.total - left.total || String(left.plateNo).localeCompare(String(right.plateNo), 'th')),
+    byDate: Array.from(byDateMap.values())
+      .map((item) => ({
+        ...item,
+        plates: Array.from(item.plates),
+        items: item.items.slice(0, 4)
+      }))
+      .sort((left, right) => String(right.dateKey).localeCompare(String(left.dateKey)))
+      .slice(0, 8)
+  };
 }
 
 async function getMemberSummary() {
@@ -94,7 +199,8 @@ async function getDashboardHomeData() {
     lastProjects,
     lastCommands,
     memberData,
-    turnoverFiscalSummary
+    turnoverFiscalSummary,
+    vehicleUsageSummary
   ] = await Promise.all([
     coopModel.getCoopStats(),
     coopModel.getClosingStats(),
@@ -124,7 +230,11 @@ async function getDashboardHomeData() {
       latestYear: new Date().getFullYear(),
       memberSummary: {}
     })),
-    turnoverModel.getSummaryByFiscalYear().catch(() => [])
+    turnoverModel.getSummaryByFiscalYear().catch(() => []),
+    getVehicleUsageSummary().catch((error) => {
+      console.error('[dashboardController] vehicle usage summary error:', error);
+      return { total: 0, byPlate: [], byDate: [] };
+    })
   ]);
 
   const coopTypeSummary = coopTypeSummaryRows?.[0]?.[0] || {};
@@ -148,6 +258,7 @@ async function getDashboardHomeData() {
     meetingroomTodayDate: meetingsTodayResult.date || null,
     lastProjects,
     lastCommands,
+    vehicleUsageSummary,
     turnoverFiscalSummary,
     latestYear: memberData.latestYear,
     memberSummary: memberData.memberSummary

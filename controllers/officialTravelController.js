@@ -103,21 +103,19 @@ function calculateDuration(startAt, endAt) {
 }
 
 function calculateDisplayDurationDays(startAt, endAt, savedDurationDays) {
-  const numericDays = Number(savedDurationDays);
-  if (numericDays > 0) {
-    return numericDays;
-  }
-
   const start = new Date(startAt);
   const end = new Date(endAt || startAt);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return 1;
+  if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (diffDays > 0) {
+      return diffDays;
+    }
   }
 
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  return Math.max(1, diffDays);
+  const numericDays = Number(savedDurationDays);
+  return numericDays > 0 ? numericDays : 1;
 }
 
 function formatTransportLabel(item = {}) {

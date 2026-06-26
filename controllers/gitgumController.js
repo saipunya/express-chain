@@ -1,16 +1,55 @@
 const gitgumModel = require('../models/gitgumModel');
 const mergedActivityService = require('../services/mergedActivityService');
 
+function addDays(value, days) {
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+  date.setDate(date.getDate() + Number(days || 0));
+  return date;
+}
+
+function eventToListItem(event) {
+  const props = event.extendedProps || {};
+  const sourceType = props.sourceType || 'gitgum';
+  const gitgumId = sourceType === 'gitgum' && /^gitgum-\d+$/.test(String(event.id || ''))
+    ? String(event.id).replace('gitgum-', '')
+    : null;
+
+  return {
+    git_id: gitgumId,
+    git_date: event.start,
+    git_date_label: props.dateLabel || null,
+    git_time: props.timeLabel || '',
+    git_act: event.title || '-',
+    git_place: props.place || '-',
+    git_goto: props.goto || '-',
+    git_respon: props.respon || '-',
+    git_group: props.group || props.sourceLabel || '-',
+    git_maihed: props.maihed || '-',
+    git_saveby: props.sourceLabel || '-',
+    git_savedate: null,
+    sourceType,
+    sourceLabel: props.sourceLabel || 'กิจกรรม',
+    detailUrl: props.detailUrl || (gitgumId ? `/gitgum/view/${gitgumId}` : '#'),
+    editUrl: gitgumId ? `/gitgum/edit/${gitgumId}` : '',
+    deleteUrl: gitgumId ? `/gitgum/delete/${gitgumId}` : '',
+    canManage: Boolean(gitgumId)
+  };
+}
+
 // แสดงรายการ (รองรับ pagination)
 exports.list = async (req, res) => {
   const page = Math.max(parseInt(req.query.page || '1', 10), 1);
   const pageSize = Math.max(parseInt(req.query.pageSize || '10', 10), 1);
   const offset = (page - 1) * pageSize;
 
-  const [total, data] = await Promise.all([
-    gitgumModel.countAll(),
-    gitgumModel.findPage(pageSize, offset)
-  ]);
+  const today = new Date();
+  const events = await mergedActivityService.getMergedCalendarEvents({
+    startDate: mergedActivityService.toYMD(today),
+    endDate: mergedActivityService.toYMD(addDays(today, 365))
+  });
+  const allItems = events.map(eventToListItem);
+  const total = allItems.length;
+  const data = allItems.slice(offset, offset + pageSize);
 
   const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 

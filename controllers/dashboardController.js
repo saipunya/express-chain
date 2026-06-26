@@ -8,6 +8,29 @@ const meetingRoomModel = require('../models/meetingRoomModel');
 const Project = require('../models/projectModel');
 const Command = require('../models/commandModel');
 const turnoverModel = require('../models/turnoverModel');
+const mergedActivityService = require('../services/mergedActivityService');
+
+function addDays(value, days) {
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+  date.setDate(date.getDate() + Number(days || 0));
+  return date;
+}
+
+function mapCalendarEventsToDashboardActivity(calendarEvents) {
+  return (calendarEvents || []).map((event) => {
+    const props = event.extendedProps || {};
+    return {
+      date_act: event.start,
+      end_act: event.end || null,
+      date_label: props.dateLabel || null,
+      act_time: props.timeLabel || '',
+      activity: event.title,
+      place: props.place,
+      co_person: props.respon || props.goto,
+      detailUrl: props.detailUrl || null
+    };
+  });
+}
 
 async function getMemberSummary() {
   const [[latestYearRow]] = await db.query(`
@@ -138,19 +161,18 @@ exports.index = async (req, res) => {
   }
 
   try {
-    const [lastGitgums, activityRows, calendarRows, homeData] = await Promise.all([
+    const calendarStartDate = mergedActivityService.toYMD(addDays(new Date(), -90));
+    const calendarEndDate = mergedActivityService.toYMD(addDays(new Date(), 90));
+    const [lastGitgums, activityRows, calendarEvents, homeData] = await Promise.all([
       gitgumModel.getLast(5),
       activityModel.getLastActivities(10),
-      gitgumModel.findAll(),
+      mergedActivityService.getMergedCalendarEvents({
+        startDate: calendarStartDate,
+        endDate: calendarEndDate
+      }),
       getDashboardHomeData()
     ]);
-    const activity = (calendarRows || []).map((row) => ({
-      date_act: row.git_date,
-      act_time: row.git_time,
-      activity: row.git_act,
-      place: row.git_place,
-      co_person: row.git_respon
-    }));
+    const activity = mapCalendarEventsToDashboardActivity(calendarEvents);
 
     res.render('dashboard', {
       title: 'แดชบอร์ด',
@@ -158,6 +180,7 @@ exports.index = async (req, res) => {
       lastGitgums,
       activityRows,
       activity,
+      calendarEvents,
       projectCount: homeData.lastProjects.length,
       commandCount: homeData.lastCommands.length,
       memberCount: Object.values(homeData.memberSummary || {}).reduce((sum, value) => sum + Number(value || 0), 0),

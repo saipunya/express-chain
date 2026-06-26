@@ -173,20 +173,18 @@ function getPassengerCount(formData) {
 }
 
 function getDurationDays(formData) {
-  const numericDays = Number(formData.durationDays);
-  if (numericDays > 0) {
-    return numericDays;
-  }
-
   const start = new Date(formData.startDate);
   const end = new Date(formData.endDate || formData.startDate);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return 1;
+  if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+    const oneDay = 1000 * 60 * 60 * 24;
+    const diff = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / oneDay) + 1;
+    if (diff > 0) {
+      return diff;
+    }
   }
 
-  const oneDay = 1000 * 60 * 60 * 24;
-  const diff = Math.floor((end.setHours(0, 0, 0, 0) - start.setHours(0, 0, 0, 0)) / oneDay) + 1;
-  return Math.max(1, diff);
+  const numericDays = Number(formData.durationDays);
+  return numericDays > 0 ? numericDays : 1;
 }
 
 function normalizeCompanions(companions) {

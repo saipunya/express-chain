@@ -37,6 +37,6 @@ router.get('/', requireLogin, rabiabController.index);
 router.get('/upload', requireLogin, rabiabController.uploadForm);
 router.post('/upload', requireLogin, upload.single('file'), rabiabController.uploadRabiab);
 router.get('/download/:id', requireLogin, rabiabController.downloadRabiab);
-router.post('/delete/:id', requireLogin, rabiabController.deleteRabiab);
+router.post('/delete/:id', requireLevel(['admin', 'kjs']), rabiabController.deleteRabiab);
 
 module.exports = router;

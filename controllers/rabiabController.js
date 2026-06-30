@@ -16,12 +16,14 @@ exports.index = async (req, res) => {
     const totalItems = await rabiabModel.countRabiab(searchName, searchCoop);
     const totalPages = Math.ceil(totalItems / rabiabModel.ITEMS_PER_PAGE);
 
+    const canDelete = ['admin', 'kjs'].includes(req.session?.user?.mClass);
+
     if (req.query.ajax === '1') {
       return res.json({
         items: rabiabs,
         currentPage: page,
         totalPages,
-        isAdmin: req.session?.user?.mClass === 'admin',
+        isAdmin: canDelete,
         isLoggedIn: !!req.session?.user
       });
     }

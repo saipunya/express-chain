@@ -140,7 +140,7 @@
                 <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank" data-bs-toggle="tooltip" title="ดาวน์โหลด">
                   <i class="fas fa-download"></i>
                 </a>
-                <% if(user && user.mClass === 'admin') { %>
+                <% if(user && ['admin', 'kjs'].includes(user.mClass)) { %>
                   <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" onsubmit="return confirm('ต้องการลบระเบียบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
                     <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="ลบ">
                       <i class="fas fa-trash"></i>

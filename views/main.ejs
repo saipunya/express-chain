@@ -26,24 +26,25 @@
 
 <style>
   :root {
-    --main-ink: #172033;
-    --main-muted: #667085;
-    --main-line: #e4e9f2;
-    --main-soft: #f6f8fc;
+    --main-ink: #182230;
+    --main-muted: #697586;
+    --main-line: #dde5ee;
+    --main-soft: #f5f7fb;
     --main-panel: #ffffff;
-    --main-navy: #142033;
-    --main-green: #107f50;
-    --main-teal: #147b83;
-    --main-blue: #2f6fdd;
-    --main-amber: #f0a020;
-    --main-red: #d94b4b;
-    --main-shadow: 0 14px 32px rgba(20, 32, 51, .08);
-    --main-shadow-soft: 0 8px 18px rgba(20, 32, 51, .055);
+    --main-navy: #152238;
+    --main-green: #137a57;
+    --main-teal: #116c7a;
+    --main-blue: #2c6ed5;
+    --main-amber: #c98312;
+    --main-red: #c94444;
+    --main-shadow: 0 18px 44px rgba(15, 23, 42, .1);
+    --main-shadow-soft: 0 10px 24px rgba(15, 23, 42, .06);
   }
 
   .main-dashboard-body {
     background:
-      linear-gradient(180deg, #f6f8fc 0, #edf2f8 34rem, #eef2f7 100%);
+      radial-gradient(circle at 18% 0%, rgba(19, 122, 87, .11), transparent 26rem),
+      linear-gradient(180deg, #f6f8fb 0, #eef3f8 34rem, #f3f6fa 100%);
     color: var(--main-ink);
     font-family: 'Sarabun', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
@@ -54,18 +55,18 @@
 
   .main-dashboard-shell {
     display: grid;
-    grid-template-columns: 16.5rem minmax(0, 1fr);
-    gap: 1.15rem;
+    grid-template-columns: 15.25rem minmax(0, 1fr);
+    gap: 1.25rem;
     min-height: calc(100vh - 2rem);
   }
 
   .main-sidebar {
-    background: linear-gradient(180deg, #17263b 0%, #111d2e 58%, #0f1a29 100%);
+    background: #122033;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, .08);
-    box-shadow: 0 18px 36px rgba(20, 32, 51, .16);
-    color: #dce6ef;
-    padding: 1.05rem;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
+    color: #dbe5ee;
+    padding: .95rem;
     position: sticky;
     top: 1rem;
     height: calc(100vh - 2rem);
@@ -75,14 +76,14 @@
   .main-brand {
     display: flex;
     align-items: center;
-    gap: .75rem;
-    padding: .5rem .35rem 1.15rem;
+    gap: .7rem;
+    padding: .5rem .35rem 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, .12);
   }
 
   .main-brand img {
-    width: 2.85rem;
-    height: 2.85rem;
+    width: 2.55rem;
+    height: 2.55rem;
     object-fit: contain;
     border-radius: 8px;
     background: #fff;
@@ -93,7 +94,7 @@
   .main-brand-title {
     margin: 0;
     color: #fff;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.2;
   }
@@ -106,31 +107,33 @@
   .main-nav {
     display: grid;
     gap: .35rem;
-    margin: 1.25rem 0;
+    margin: 1rem 0;
   }
 
   .main-nav-link {
     display: flex;
     align-items: center;
-    gap: .75rem;
+    gap: .65rem;
     border-radius: 8px;
-    color: #bdcad8;
-    padding: .75rem .8rem;
+    color: #c4d0dc;
+    padding: .68rem .72rem;
     text-decoration: none;
+    line-height: 1.35;
     transition: background-color .15s ease, color .15s ease, transform .15s ease;
   }
 
   .main-nav-link:hover,
   .main-nav-link.active {
-    background: rgba(255, 255, 255, .11);
+    background: rgba(255, 255, 255, .1);
     color: #fff;
     transform: translateX(2px);
   }
 
   .main-nav-link i {
-    width: 1.5rem;
+    width: 1.3rem;
     text-align: center;
-    color: #7ed4ad;
+    color: #84d9b8;
+    flex: 0 0 auto;
   }
 
   .main-sidebar-foot {
@@ -162,8 +165,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: .95rem 1.05rem;
-    margin-bottom: 1.15rem;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
     backdrop-filter: blur(12px);
   }
 
@@ -181,17 +184,17 @@
 
   .main-hero {
     position: relative;
-    min-height: 31.2rem;
+    min-height: 29rem;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: clamp(1.35rem, 3vw, 2.1rem);
+    padding: clamp(1.45rem, 3vw, 2.35rem);
     color: #fff;
     overflow: hidden;
     box-shadow: var(--main-shadow);
     background:
-      linear-gradient(90deg, rgba(12, 24, 39, .9) 0%, rgba(14, 53, 62, .7) 45%, rgba(15, 105, 78, .24) 100%),
+      linear-gradient(90deg, rgba(9, 20, 34, .92) 0%, rgba(16, 54, 67, .76) 46%, rgba(19, 122, 87, .28) 100%),
       url('/images/coopchain-network-hero.png') center / cover no-repeat;
   }
 
@@ -214,7 +217,7 @@
     gap: .45rem;
     width: max-content;
     border-radius: 8px;
-    background: rgba(255, 255, 255, .2);
+    background: rgba(255, 255, 255, .16);
     border: 1px solid rgba(255, 255, 255, .22);
     padding: .45rem .7rem;
     color: #fff;
@@ -224,26 +227,27 @@
 
   .main-hero h2 {
     max-width: 43rem;
-    margin: 1rem 0 .75rem;
+    margin: 1.05rem 0 .75rem;
     color: #fff;
     font-weight: 700;
     letter-spacing: 0;
-    line-height: 1.18;
+    line-height: 1.14;
   }
 
   .main-hero p {
-    max-width: 38rem;
+    max-width: 35rem;
     color: rgba(255, 255, 255, .86);
   }
 
   .main-hero-summary {
     display: grid;
-    gap: .55rem;
-    max-width: 36rem;
-    padding: .85rem;
+    gap: .65rem;
+    max-width: 39rem;
+    padding: .9rem;
     border-radius: 8px;
-    background: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .13);
     border: 1px solid rgba(255, 255, 255, .16);
+    backdrop-filter: blur(10px);
   }
 
   .main-hero-summary-row {
@@ -263,6 +267,11 @@
   .main-login-card {
     height: 100%;
     box-shadow: var(--main-shadow);
+    overflow: hidden;
+  }
+
+  .main-login-card .card-body {
+    background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
   }
 
   .main-login-card .form-control {
@@ -293,7 +302,7 @@
   .main-stat {
     position: relative;
     overflow: hidden;
-    padding: 1rem;
+    padding: 1.05rem;
     height: 100%;
     transition: transform .15s ease, box-shadow .15s ease;
   }
@@ -538,11 +547,12 @@
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: .85rem;
+    padding: .15rem .1rem;
   }
 
   .main-section-title h2 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 700;
   }
 
@@ -642,6 +652,14 @@
     min-height: 13.5rem;
   }
 
+  .main-chart-canvas-wrap.tall {
+    min-height: 17rem;
+  }
+
+  .main-chart-canvas-wrap.compact {
+    min-height: 12rem;
+  }
+
   .main-chart-canvas-wrap canvas {
     width: 100% !important;
   }
@@ -684,6 +702,36 @@
     border-radius: 999px;
     background: var(--dot-color, var(--main-green));
     flex: 0 0 auto;
+  }
+
+  .main-chart-kpi-grid {
+    display: grid;
+    gap: .6rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: .85rem;
+  }
+
+  .main-chart-kpi {
+    border: 1px solid #edf1f6;
+    border-radius: 8px;
+    background: #f8fafc;
+    padding: .65rem;
+    min-width: 0;
+  }
+
+  .main-chart-kpi-label {
+    color: var(--main-muted);
+    font-size: .74rem;
+    line-height: 1.25;
+  }
+
+  .main-chart-kpi-value {
+    color: var(--main-ink);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-top: .25rem;
+    overflow-wrap: anywhere;
   }
 
   .main-pill {
@@ -1080,10 +1128,11 @@
       position: static;
       height: auto;
       min-height: 0;
+      padding: .9rem;
     }
 
     .main-nav {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .main-sidebar-foot {
@@ -1099,8 +1148,9 @@
     }
 
     .main-topbar {
-      align-items: center;
-      flex-direction: row;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: .75rem;
     }
 
     .main-nav {
@@ -1111,17 +1161,18 @@
 
     .main-nav-link {
       padding: .65rem .7rem;
+      font-size: .9rem;
     }
 
     .main-hero {
-      min-height: 31rem;
+      min-height: 26rem;
       background:
-        linear-gradient(180deg, rgba(12, 24, 39, .9) 0%, rgba(14, 53, 62, .74) 58%, rgba(15, 105, 78, .42) 100%),
+        linear-gradient(180deg, rgba(9, 20, 34, .92) 0%, rgba(16, 54, 67, .76) 58%, rgba(19, 122, 87, .46) 100%),
         url('/images/coopchain-network-hero.png') center / cover no-repeat;
     }
 
     .main-hero h2 {
-      font-size: 1.45rem;
+      font-size: 1.55rem;
       line-height: 1.28;
     }
 
@@ -1143,6 +1194,14 @@
       min-height: 12.5rem;
     }
 
+    .main-chart-canvas-wrap.tall {
+      min-height: 15.5rem;
+    }
+
+    .main-chart-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+
     .main-online-head,
     .main-online-summary {
       align-items: flex-start;
@@ -1151,6 +1210,12 @@
 
     .main-online-list {
       grid-template-columns: 1fr;
+    }
+
+    .main-section-title {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: .55rem;
     }
 
     .main-download-item {
@@ -1274,7 +1339,7 @@
       <img src="/icon/seal.svg" alt="CoopChain">
       <div>
         <p class="main-brand-title">CoopChain</p>
-        <div class="main-brand-subtitle">Chaiyaphum Office</div>
+        <div class="main-brand-subtitle">สำนักงานสหกรณ์จังหวัดชัยภูมิ</div>
       </div>
     </div>
 
@@ -1299,7 +1364,7 @@
     </nav>
 
     <div class="main-sidebar-foot">
-      <div class="small text-uppercase fw-semibold text-white-50 mb-2">System Status</div>
+      <div class="small fw-semibold text-white-50 mb-2">สถานะระบบ</div>
       <div class="d-flex align-items-center justify-content-between gap-3">
         <span class="fw-semibold text-white">พร้อมใช้งาน</span>
         <span class="badge text-bg-success">Online</span>
@@ -1310,7 +1375,7 @@
   <section class="main-content">
     <div class="main-topbar">
       <div>
-        <div class="text-muted small">CoopChain Workspace</div>
+        <div class="text-muted small">หน้าหลัก CoopChain</div>
         <h1 class="h4 fw-bold mb-0">ระบบสารสนเทศและเครือข่ายสหกรณ์</h1>
       </div>
       <div class="d-flex align-items-center gap-3">
@@ -1330,7 +1395,7 @@
               <div class="mb-4">
                 <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
                   <div class="main-stat-icon green"><i class="bi bi-person-check"></i></div>
-                  <span class="badge text-bg-success">Signed in</span>
+                  <span class="badge text-bg-success">เข้าสู่ระบบแล้ว</span>
                 </div>
                 <h2 class="h4 fw-bold mb-2">คุณเข้าสู่ระบบแล้ว</h2>
                 <p class="text-muted mb-0">ยังอยู่ใน session ของ <%= _displayName || 'ผู้ใช้งาน' %></p>
@@ -1360,7 +1425,7 @@
             <div class="mb-4">
               <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
                 <div class="main-stat-icon green"><i class="bi bi-shield-lock"></i></div>
-                <span class="badge text-bg-light text-success">Secure login</span>
+                <span class="badge text-bg-light text-success">ระบบปลอดภัย</span>
               </div>
               <h2 class="h4 fw-bold mb-2">เข้าสู่ระบบ</h2>
               <p class="text-muted mb-0">ลงชื่อเข้าใช้เพื่อเข้าสู่หน้าหลักตามสิทธิ์ของบัญชี</p>
@@ -1397,7 +1462,7 @@
       <div class="col-xl-8 order-2 order-xl-1">
         <div class="main-hero">
           <div>
-            <span class="main-hero-kicker"><i class="bi bi-shield-check"></i> <%= _currentUser ? 'CoopChain Main' : 'CoopChain Login' %></span>
+            <span class="main-hero-kicker"><i class="bi bi-shield-check"></i> <%= _currentUser ? 'หน้าหลัก CoopChain' : 'เข้าสู่ระบบ CoopChain' %></span>
             <h2 class="display-6 mb-0">ระบบสารสนเทศและเครือข่าย</h2>
             <p class="lead mb-0 mt-3">สหกรณ์และกลุ่มเกษตรกรในจังหวัดชัยภูมิ</p>
           </div>
@@ -1447,7 +1512,7 @@
           <i class="bi bi-calendar2-check"></i>
           <span>
             <span class="d-block fw-semibold">จองห้องประชุม</span>
-            <span class="small text-muted">Meeting room</span>
+            <span class="small text-muted">ระบบจองใช้ห้อง</span>
           </span>
         </a>
       </div>
@@ -1456,7 +1521,7 @@
           <i class="bi bi-person-plus"></i>
           <span>
             <span class="d-block fw-semibold">สมัครสมาชิก</span>
-            <span class="small text-muted">New account</span>
+            <span class="small text-muted">สร้างบัญชีใหม่</span>
           </span>
         </a>
       </div>
@@ -1472,7 +1537,7 @@
       </div>
 
       <div class="row g-3 align-items-stretch">
-        <div class="col-12 col-xl-5">
+        <div class="col-12 col-xl-4">
           <div class="main-institution-chart-card">
             <div class="main-chart-head">
               <div>
@@ -1502,10 +1567,44 @@
           </div>
         </div>
 
-        <div class="col-12 col-xl-7">
+        <div class="col-12 col-xl-4">
+          <div class="main-institution-chart-card">
+            <div class="main-chart-head">
+              <div>
+                <h3 class="main-chart-title">
+                  <i class="bi bi-pie-chart"></i>
+                  สัดส่วนตามประเภท
+                </h3>
+                <div class="text-muted small mt-1">เทียบสัดส่วนจำนวนสถาบันทั้งหมด</div>
+              </div>
+            </div>
+
+            <div class="main-chart-canvas-wrap compact">
+              <canvas id="institutionShareChart" aria-label="กราฟสัดส่วนจำนวนสถาบันตามประเภท" role="img"></canvas>
+              <ul class="main-chart-fallback" id="institutionShareChartFallback" hidden>
+                <% _institutionChartData.forEach(function(item) { %>
+                  <li>
+                    <span><span class="main-chart-dot" style="--dot-color: <%= item.color %>"></span><%= item.label %></span>
+                    <strong><%= _institutionTotal ? Math.round((Number(item.count || 0) / _institutionTotal) * 100) : 0 %>%</strong>
+                  </li>
+                <% }); %>
+              </ul>
+            </div>
+            <div class="main-chart-kpi-grid">
+              <% _institutionChartData.forEach(function(item) { %>
+                <div class="main-chart-kpi">
+                  <div class="main-chart-kpi-label"><%= item.label %></div>
+                  <div class="main-chart-kpi-value"><%= _institutionTotal ? Math.round((Number(item.count || 0) / _institutionTotal) * 100) : 0 %>%</div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
           <div class="row g-3 h-100">
             <% _institutionSummaryList.forEach(function(item) { %>
-              <div class="col-md-4">
+              <div class="col-md-4 col-xl-12">
                 <button
                   type="button"
                   class="main-institution-card"
@@ -1602,6 +1701,61 @@
       </div>
 
       <% if (_turnoverCategoryList.length && _turnoverTotalAmount > 0) { %>
+        <div class="row g-3 align-items-stretch mb-3">
+          <div class="col-lg-7">
+            <div class="main-institution-chart-card">
+              <div class="main-chart-head">
+                <div>
+                  <h3 class="main-chart-title">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    กราฟปริมาณธุรกิจตามประเภท
+                  </h3>
+                  <div class="text-muted small mt-1">เปรียบเทียบมูลค่ารวมของสหกรณ์และกลุ่มเกษตรกร</div>
+                </div>
+                <span class="main-pill">
+                  <i class="bi bi-cash-coin text-primary"></i>
+                  <span><%= _formatTurnoverAmount(_turnoverTotalAmount) %></span>
+                </span>
+              </div>
+              <div class="main-chart-canvas-wrap tall">
+                <canvas id="turnoverAmountChart" aria-label="กราฟปริมาณธุรกิจตามประเภทสถาบัน" role="img"></canvas>
+                <ul class="main-chart-fallback" id="turnoverAmountChartFallback" hidden>
+                  <% _turnoverCategoryList.forEach(function(item) { %>
+                    <li>
+                      <span><span class="main-chart-dot" style="--dot-color: <%= item.tone === 'teal' ? '#116c7a' : item.tone === 'amber' ? '#c98312' : '#137a57' %>"></span><%= item.label %></span>
+                      <strong><%= _formatTurnoverAmount(item.totalAmount) %></strong>
+                    </li>
+                  <% }); %>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="main-institution-chart-card">
+              <div class="main-chart-head">
+                <div>
+                  <h3 class="main-chart-title">
+                    <i class="bi bi-pie-chart"></i>
+                    สัดส่วนปริมาณธุรกิจ
+                  </h3>
+                  <div class="text-muted small mt-1">แสดงน้ำหนักมูลค่าธุรกิจของแต่ละประเภท</div>
+                </div>
+              </div>
+              <div class="main-chart-canvas-wrap tall">
+                <canvas id="turnoverShareChart" aria-label="กราฟสัดส่วนปริมาณธุรกิจตามประเภทสถาบัน" role="img"></canvas>
+                <ul class="main-chart-fallback" id="turnoverShareChartFallback" hidden>
+                  <% _turnoverCategoryList.forEach(function(item) { %>
+                    <li>
+                      <span><span class="main-chart-dot" style="--dot-color: <%= item.tone === 'teal' ? '#116c7a' : item.tone === 'amber' ? '#c98312' : '#137a57' %>"></span><%= item.label %></span>
+                      <strong><%= _turnoverTotalAmount ? Number((Number(item.totalAmount || 0) / _turnoverTotalAmount) * 100).toFixed(1) : '0.0' %>%</strong>
+                    </li>
+                  <% }); %>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="row g-3 align-items-stretch">
           <% _turnoverCategoryList.forEach(function(item) { %>
             <div class="col-md-4">
@@ -1939,7 +2093,7 @@
         <div class="main-online-head">
           <h2 class="main-online-title" id="mainOnlineTitle">
             <i class="bi bi-person-check"></i>
-            Members Online
+            ผู้ใช้งานออนไลน์
           </h2>
           <span class="badge text-bg-success">
             <span id="onlineCountValue" aria-live="polite"><%= _onlineCount %></span> ออนไลน์
@@ -2008,12 +2162,25 @@
   (function() {
     var institutionSummary = <%- JSON.stringify(_institutionSummary).replace(/</g, '\\u003c') %>;
     var institutionChartData = <%- JSON.stringify(_institutionChartData).replace(/</g, '\\u003c') %>;
+    var turnoverChartData = <%- JSON.stringify(_turnoverCategoryList.map((item) => ({
+      label: item.label,
+      totalAmount: Number(item.totalAmount || 0),
+      institutionCount: Number(item.institutionCount || 0),
+      color: item.tone === 'teal' ? '#116c7a' : item.tone === 'amber' ? '#c98312' : '#137a57'
+    }))).replace(/</g, '\\u003c') %>;
+    var turnoverTotalAmount = <%- JSON.stringify(_turnoverTotalAmount).replace(/</g, '\\u003c') %>;
     var modalEl = document.getElementById('institutionSummaryModal');
     var titleEl = document.getElementById('institutionSummaryModalTitle');
     var subtitleEl = document.getElementById('institutionSummaryModalSubtitle');
     var rowsEl = document.getElementById('institutionSummaryModalRows');
     var chartCanvas = document.getElementById('institutionSummaryChart');
     var chartFallback = document.getElementById('institutionSummaryChartFallback');
+    var institutionShareCanvas = document.getElementById('institutionShareChart');
+    var institutionShareFallback = document.getElementById('institutionShareChartFallback');
+    var turnoverAmountCanvas = document.getElementById('turnoverAmountChart');
+    var turnoverAmountFallback = document.getElementById('turnoverAmountChartFallback');
+    var turnoverShareCanvas = document.getElementById('turnoverShareChart');
+    var turnoverShareFallback = document.getElementById('turnoverShareChartFallback');
 
     function escapeHtml(value) {
       return String(value == null ? '' : value)
@@ -2022,6 +2189,40 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function formatNumber(value, digits) {
+      return Number(value || 0).toLocaleString('th-TH', {
+        minimumFractionDigits: digits || 0,
+        maximumFractionDigits: digits || 0
+      });
+    }
+
+    function formatMillionBaht(value) {
+      return formatNumber(Number(value || 0) / 1000000, 2) + ' ล้านบาท';
+    }
+
+    function formatCompactMillionBaht(value) {
+      return formatNumber(Number(value || 0) / 1000000) + ' ลบ.';
+    }
+
+    function makeChart(canvas, fallback, hasVisibleData, configFactory) {
+      function showFallback() {
+        if (canvas) canvas.hidden = true;
+        if (fallback) fallback.hidden = false;
+      }
+
+      if (!canvas || !fallback) return;
+      if (!hasVisibleData || typeof Chart === 'undefined') {
+        showFallback();
+        return;
+      }
+
+      try {
+        new Chart(canvas.getContext('2d'), configFactory());
+      } catch (error) {
+        showFallback();
+      }
     }
 
     if (!modalEl || !titleEl || !subtitleEl || !rowsEl) return;
@@ -2053,22 +2254,14 @@
     });
 
     window.addEventListener('load', function() {
-      if (!chartCanvas || !chartFallback) return;
-
       var chartRows = Array.isArray(institutionChartData) ? institutionChartData : [];
+      var turnoverRows = Array.isArray(turnoverChartData) ? turnoverChartData : [];
       var hasVisibleData = chartRows.some(function(item) {
         return Number(item.count || 0) > 0;
       });
-
-      function showFallback() {
-        chartCanvas.hidden = true;
-        chartFallback.hidden = false;
-      }
-
-      if (!hasVisibleData || typeof Chart === 'undefined') {
-        showFallback();
-        return;
-      }
+      var hasTurnoverData = turnoverRows.some(function(item) {
+        return Number(item.totalAmount || 0) > 0;
+      });
 
       try {
         var plugins = [];
@@ -2083,8 +2276,11 @@
         var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var values = chartRows.map(function(item) { return Number(item.count || 0); });
         var maxValue = Math.max.apply(null, values);
+        var turnoverValues = turnoverRows.map(function(item) { return Number(item.totalAmount || 0); });
+        var turnoverMaxValue = Math.max.apply(null, turnoverValues);
 
-        new Chart(chartCanvas.getContext('2d'), {
+        makeChart(chartCanvas, chartFallback, hasVisibleData, function() {
+          return {
           type: 'bar',
           data: {
             labels: chartRows.map(function(item) { return item.label; }),
@@ -2155,9 +2351,182 @@
             }
           },
           plugins: plugins
+        };
+        });
+
+        makeChart(institutionShareCanvas, institutionShareFallback, hasVisibleData, function() {
+          return {
+            type: 'doughnut',
+            data: {
+              labels: chartRows.map(function(item) { return item.label; }),
+              datasets: [{
+                data: values,
+                backgroundColor: chartRows.map(function(item) { return item.color; }),
+                borderColor: '#ffffff',
+                borderWidth: 3
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: reduceMotion ? 0 : 320,
+                easing: 'easeOutQuart'
+              },
+              cutout: '62%',
+              plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      var value = Number(context.parsed || 0);
+                      var total = values.reduce(function(sum, item) { return sum + Number(item || 0); }, 0);
+                      var percent = total > 0 ? (value / total) * 100 : 0;
+                      return context.label + ': ' + formatNumber(value) + ' แห่ง (' + percent.toFixed(1) + '%)';
+                    }
+                  }
+                },
+                datalabels: {
+                  color: '#ffffff',
+                  font: { weight: '700', size: 11 },
+                  formatter: function(value) {
+                    var total = values.reduce(function(sum, item) { return sum + Number(item || 0); }, 0);
+                    if (!total || !value) return '';
+                    return Math.round((Number(value) / total) * 100) + '%';
+                  }
+                }
+              }
+            },
+            plugins: plugins
+          };
+        });
+
+        makeChart(turnoverAmountCanvas, turnoverAmountFallback, hasTurnoverData, function() {
+          return {
+            type: 'bar',
+            data: {
+              labels: turnoverRows.map(function(item) { return item.label; }),
+              datasets: [{
+                label: 'ปริมาณธุรกิจ',
+                data: turnoverValues,
+                backgroundColor: turnoverRows.map(function(item) { return item.color; }),
+                borderWidth: 0,
+                borderRadius: 8,
+                borderSkipped: false,
+                barThickness: 28,
+                maxBarThickness: 36
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: reduceMotion ? 0 : 320,
+                easing: 'easeOutQuart'
+              },
+              layout: {
+                padding: { top: 4, right: 42, bottom: 0, left: 0 }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return formatMillionBaht(context.parsed.x || 0);
+                    }
+                  }
+                },
+                datalabels: {
+                  anchor: 'end',
+                  align: 'right',
+                  clamp: true,
+                  color: '#172033',
+                  font: { weight: '700', size: 12 },
+                  formatter: function(value) {
+                    return formatCompactMillionBaht(value);
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  suggestedMax: Math.max(turnoverMaxValue * 1.18, turnoverMaxValue + 1),
+                  grid: { color: '#edf1f6' },
+                  border: { display: false },
+                  ticks: {
+                    color: '#667085',
+                    callback: function(value) {
+                      return formatNumber(Number(value || 0) / 1000000) + ' ลบ.';
+                    }
+                  }
+                },
+                y: {
+                  grid: { display: false },
+                  border: { display: false },
+                  ticks: {
+                    color: '#172033',
+                    font: { weight: '700', size: 12 }
+                  }
+                }
+              }
+            },
+            plugins: plugins
+          };
+        });
+
+        makeChart(turnoverShareCanvas, turnoverShareFallback, hasTurnoverData, function() {
+          return {
+            type: 'doughnut',
+            data: {
+              labels: turnoverRows.map(function(item) { return item.label; }),
+              datasets: [{
+                data: turnoverValues,
+                backgroundColor: turnoverRows.map(function(item) { return item.color; }),
+                borderColor: '#ffffff',
+                borderWidth: 3
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: reduceMotion ? 0 : 320,
+                easing: 'easeOutQuart'
+              },
+              cutout: '62%',
+              plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      var value = Number(context.parsed || 0);
+                      var percent = Number(turnoverTotalAmount || 0) > 0 ? (value / Number(turnoverTotalAmount || 0)) * 100 : 0;
+                      return context.label + ': ' + formatMillionBaht(value) + ' (' + percent.toFixed(1) + '%)';
+                    }
+                  }
+                },
+                datalabels: {
+                  color: '#ffffff',
+                  font: { weight: '700', size: 11 },
+                  formatter: function(value) {
+                    var total = Number(turnoverTotalAmount || 0);
+                    if (!total || !value) return '';
+                    return ((Number(value) / total) * 100).toFixed(1) + '%';
+                  }
+                }
+              }
+            },
+            plugins: plugins
+          };
         });
       } catch (error) {
-        showFallback();
+        [chartCanvas, institutionShareCanvas, turnoverAmountCanvas, turnoverShareCanvas].forEach(function(canvas) {
+          if (canvas) canvas.hidden = true;
+        });
+        [chartFallback, institutionShareFallback, turnoverAmountFallback, turnoverShareFallback].forEach(function(fallback) {
+          if (fallback) fallback.hidden = false;
+        });
       }
     });
   })();

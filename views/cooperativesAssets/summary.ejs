@@ -91,6 +91,50 @@
   </div>
 
   <% if (groupSummaries && groupSummaries.length > 0) { %>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-0 pb-0">
+            <h5 class="mb-1"><i class="bi bi-pie-chart me-2 text-success"></i>สัดส่วนสถานะอุปกรณ์</h5>
+            <small class="text-muted">เปรียบเทียบรายการที่ใช้งานได้และใช้งานไม่ได้</small>
+          </div>
+          <div class="card-body">
+            <div class="assets-chart assets-chart-sm">
+              <canvas id="assetStatusChart" aria-label="กราฟสัดส่วนสถานะอุปกรณ์" role="img"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-0 pb-0">
+            <h5 class="mb-1"><i class="bi bi-bar-chart me-2 text-primary"></i>จำนวนอุปกรณ์ตามกลุ่ม</h5>
+            <small class="text-muted">แยกจำนวนรายการตามกลุ่มส่งเสริมสหกรณ์</small>
+          </div>
+          <div class="card-body">
+            <div class="assets-chart">
+              <canvas id="assetGroupCountChart" aria-label="กราฟจำนวนอุปกรณ์ตามกลุ่ม" role="img"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 pb-0">
+            <h5 class="mb-1"><i class="bi bi-currency-exchange me-2 text-success"></i>มูลค่าอุปกรณ์ตามกลุ่ม</h5>
+            <small class="text-muted">เรียงตามมูลค่ารวมจากมากไปน้อย</small>
+          </div>
+          <div class="card-body">
+            <div class="assets-chart assets-chart-lg">
+              <canvas id="assetGroupValueChart" aria-label="กราฟมูลค่าอุปกรณ์ตามกลุ่ม" role="img"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (groupSummaries && groupSummaries.length > 0) { %>
     <% groupSummaries.forEach(group => { %>
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -157,5 +201,173 @@
     </div>
   <% } %>
 </div>
+
+<style>
+  .assets-chart {
+    position: relative;
+    min-height: 320px;
+  }
+
+  .assets-chart-sm {
+    min-height: 280px;
+  }
+
+  .assets-chart-lg {
+    min-height: 360px;
+  }
+
+  @media (max-width: 767.98px) {
+    .assets-chart,
+    .assets-chart-sm,
+    .assets-chart-lg {
+      min-height: 300px;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const groupSummaries = <%- JSON.stringify(groupSummaries || []).replace(/</g, '\\u003c') %>;
+    const overall = <%- JSON.stringify(overall || {}).replace(/</g, '\\u003c') %>;
+
+    function formatNumber(value) {
+      return Number(value || 0).toLocaleString('th-TH');
+    }
+
+    function formatBaht(value) {
+      return `${formatNumber(value)} บาท`;
+    }
+
+    function makeChart(canvasId, configFactory) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || typeof Chart === 'undefined') return;
+      new Chart(canvas.getContext('2d'), configFactory());
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!groupSummaries.length) return;
+
+      const sortedByValue = [...groupSummaries].sort(function(a, b) {
+        return Number(b.total_value || 0) - Number(a.total_value || 0);
+      });
+
+      makeChart('assetStatusChart', function() {
+        return {
+          type: 'doughnut',
+          data: {
+            labels: ['ใช้งานได้', 'ใช้งานไม่ได้', 'ไม่ระบุสถานะ'],
+            datasets: [{
+              data: [
+                Number(overall.working_count || 0),
+                Number(overall.not_working_count || 0),
+                Math.max(Number(overall.total_count || 0) - Number(overall.working_count || 0) - Number(overall.not_working_count || 0), 0)
+              ],
+              backgroundColor: ['#198754', '#dc3545', '#adb5bd'],
+              borderColor: '#ffffff',
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.label}: ${formatNumber(context.parsed)} รายการ`;
+                  }
+                }
+              }
+            },
+            cutout: '62%'
+          }
+        };
+      });
+
+      makeChart('assetGroupCountChart', function() {
+        return {
+          type: 'bar',
+          data: {
+            labels: groupSummaries.map(function(item) { return item.c_group || 'ไม่ระบุ'; }),
+            datasets: [
+              {
+                label: 'ใช้งานได้',
+                data: groupSummaries.map(function(item) { return Number(item.working_count || 0); }),
+                backgroundColor: '#198754',
+                borderRadius: 6
+              },
+              {
+                label: 'ใช้งานไม่ได้',
+                data: groupSummaries.map(function(item) { return Number(item.not_working_count || 0); }),
+                backgroundColor: '#dc3545',
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, ticks: { maxRotation: 0, autoSkip: false } },
+              y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+            },
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.dataset.label}: ${formatNumber(context.parsed.y)} รายการ`;
+                  }
+                }
+              }
+            }
+          }
+        };
+      });
+
+      makeChart('assetGroupValueChart', function() {
+        return {
+          type: 'bar',
+          data: {
+            labels: sortedByValue.map(function(item) { return item.c_group || 'ไม่ระบุ'; }),
+            datasets: [{
+              label: 'มูลค่ารวม',
+              data: sortedByValue.map(function(item) { return Number(item.total_value || 0); }),
+              backgroundColor: '#0d6efd',
+              borderRadius: 6,
+              maxBarThickness: 44
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return formatNumber(value);
+                  }
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return formatBaht(context.parsed.x);
+                  }
+                }
+              }
+            }
+          }
+        };
+      });
+    });
+  })();
+</script>
 
 <%- include('../partials/footer') %>

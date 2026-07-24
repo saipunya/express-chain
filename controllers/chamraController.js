@@ -678,6 +678,97 @@ chamraController.createPob = async (req, res) => {
   }
 };
 
+chamraController.editPoblemForm = async (req, res) => {
+  const { po_id } = req.params;
+
+  try {
+    const poblem = await Chamra.getPoblemById(po_id);
+    if (!poblem) {
+      return res.status(404).send('ไม่พบข้อมูลปัญหาที่ต้องการแก้ไข');
+    }
+
+    const [coopList] = await db.query(
+      'SELECT c_code, c_name FROM active_coop ORDER BY c_name'
+    );
+    return res.render('chamra/poblem/edit', {
+      poblem,
+      coopList,
+      error: null
+    });
+  } catch (error) {
+    console.error('Error loading Chamra Poblem edit form:', error);
+    return res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+  }
+};
+
+chamraController.updatePoblem = async (req, res) => {
+  const { po_id } = req.params;
+  const {
+    po_code,
+    po_year,
+    po_meeting,
+    po_detail,
+    po_problem
+  } = req.body;
+
+  if (!po_code || !po_year || !po_meeting || !po_detail || !po_problem) {
+    return res.status(400).send('กรุณากรอกข้อมูลให้ครบถ้วน');
+  }
+
+  try {
+    const existing = await Chamra.getPoblemById(po_id);
+    if (!existing) {
+      return res.status(404).send('ไม่พบข้อมูลปัญหาที่ต้องการแก้ไข');
+    }
+
+    const [duplicates] = await db.query(
+      `SELECT po_id
+         FROM chamra_poblem
+         WHERE po_code = ? AND po_year = ? AND po_meeting = ? AND po_id <> ?
+         LIMIT 1`,
+      [po_code, po_year, po_meeting, po_id]
+    );
+
+    if (duplicates.length > 0) {
+      const [coopList] = await db.query(
+        'SELECT c_code, c_name FROM active_coop ORDER BY c_name'
+      );
+      return res.status(409).render('chamra/poblem/edit', {
+        poblem: {
+          ...existing,
+          po_code,
+          po_year,
+          po_meeting,
+          po_detail,
+          po_problem
+        },
+        coopList,
+        error: 'มีข้อมูลของสถาบัน ปี และครั้งที่ประชุมนี้อยู่แล้ว'
+      });
+    }
+
+    const savedBy =
+      (req.user && (req.user.fullname || req.user.username)) ||
+      existing.po_saveby ||
+      'system';
+
+    await Chamra.updatePoblem(po_id, {
+      po_code,
+      po_year,
+      po_meeting,
+      po_detail,
+      po_problem,
+      po_saveby: savedBy,
+      po_savedate: new Date()
+    });
+
+    return res.redirect('/chamra/poblem');
+  } catch (error) {
+    console.error('Error updating Chamra Poblem:', error);
+    return res.status(500).send('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
+  }
+};
+
 chamraController.checkPoblemExist = async (req, res) => {
   const { po_code, po_year, po_meeting } = req.query;
   if (!po_code || !po_year || !po_meeting) return res.json({ exist: false });

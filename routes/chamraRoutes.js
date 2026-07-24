@@ -30,6 +30,10 @@ router.post('/poblem/add', chamraController.createPob);
 // show poblem
 router.get('/poblem/', chamraController.listPob)
 
+// edit poblem
+router.get('/poblem/edit/:po_id', chamraController.editPoblemForm);
+router.post('/poblem/edit/:po_id', chamraController.updatePoblem);
+
 // check poblem exist
 router.get('/poblem/check-exist', chamraController.checkPoblemExist);
 

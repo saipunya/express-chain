@@ -1,0 +1,89 @@
+<%- include('../../partials/header.ejs') %>
+
+<div class="container mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+          <h2 class="h4 mb-0">แก้ไขข้อมูลปัญหา Chamra</h2>
+        </div>
+
+        <div class="card-body p-4">
+          <% if (error) { %>
+            <div class="alert alert-danger" role="alert"><%= error %></div>
+          <% } %>
+
+          <form method="POST" action="/chamra/poblem/edit/<%= poblem.po_id %>">
+            <div class="mb-3">
+              <label for="po_code" class="form-label fw-bold">ชื่อสถาบัน</label>
+              <select name="po_code" id="po_code" class="form-select" required>
+                <option value="">โปรดเลือกสถาบัน</option>
+                <% coopList.forEach(coop => { %>
+                  <option
+                    value="<%= coop.c_code %>"
+                    <%= String(coop.c_code) === String(poblem.po_code) ? 'selected' : '' %>>
+                    <%= coop.c_name %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="po_year" class="form-label fw-bold">ปี</label>
+                <input
+                  type="number"
+                  name="po_year"
+                  id="po_year"
+                  class="form-control"
+                  min="2500"
+                  max="2700"
+                  value="<%= poblem.po_year %>"
+                  required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="po_meeting" class="form-label fw-bold">ครั้งที่ประชุม</label>
+                <input
+                  type="number"
+                  name="po_meeting"
+                  id="po_meeting"
+                  class="form-control"
+                  min="1"
+                  value="<%= poblem.po_meeting %>"
+                  required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="po_detail" class="form-label fw-bold">รายละเอียด</label>
+              <textarea
+                name="po_detail"
+                id="po_detail"
+                class="form-control"
+                rows="5"
+                required><%= poblem.po_detail || '' %></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="po_problem" class="form-label fw-bold">ปัญหา</label>
+              <textarea
+                name="po_problem"
+                id="po_problem"
+                class="form-control"
+                rows="5"
+                required><%= poblem.po_problem || '' %></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between gap-2 mt-4">
+              <a href="/chamra/poblem" class="btn btn-outline-secondary">ยกเลิก</a>
+              <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../../partials/footer.ejs') %>

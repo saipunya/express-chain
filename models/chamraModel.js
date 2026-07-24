@@ -120,6 +120,40 @@ const Chamra = {
     return rows;
   },
 
+  async getPoblemById(id) {
+    const [rows] = await db.query(
+      `SELECT p.*, ac.c_name
+         FROM chamra_poblem p
+         LEFT JOIN active_coop ac ON ac.c_code = p.po_code
+         WHERE p.po_id = ?
+         LIMIT 1`,
+      [id]
+    );
+    return rows[0] || null;
+  },
+
+  async updatePoblem(id, data) {
+    const fields = [
+      'po_code',
+      'po_year',
+      'po_meeting',
+      'po_detail',
+      'po_problem',
+      'po_saveby',
+      'po_savedate'
+    ];
+    const keys = fields.filter(key => Object.prototype.hasOwnProperty.call(data, key));
+    if (!id || keys.length === 0) return false;
+
+    const sets = keys.map(key => `${key} = ?`).join(', ');
+    const values = keys.map(key => data[key]);
+    const [result] = await db.query(
+      `UPDATE chamra_poblem SET ${sets} WHERE po_id = ?`,
+      [...values, id]
+    );
+    return result.affectedRows > 0;
+  },
+
   async getPoblemsByYear(year) {
     const [rows] = await db.query(
       `SELECT p.*, ac.c_name

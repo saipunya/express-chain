@@ -76,6 +76,13 @@ function budgetYearSqlExpr(alias = 'b') {
   END`;
 }
 
+function listBudgetYearSqlExpr(alias = 'b') {
+  return `COALESCE(
+    ${budgetYearSqlExpr(alias)},
+    NULLIF(CAST(${alias}.big_endyear AS UNSIGNED), 0)
+  )`;
+}
+
 function normalizeText(value) {
   if (value === undefined || value === null) return '';
   return String(value).trim();
@@ -296,7 +303,7 @@ module.exports = {
     const [rows] = await db.query(`
       SELECT
         b.*,
-        ${budgetYearSqlExpr('b')} AS big_budget_year,
+        ${listBudgetYearSqlExpr('b')} AS big_budget_year,
         c.c_name,
         TRIM(c.end_date) AS end_date,
         TRIM(c.end_day) AS end_day,
@@ -313,12 +320,26 @@ module.exports = {
     return rows;
   },
 
+  async findBudgetYears() {
+    await ensureSchema();
+    const [rows] = await db.query(`
+      SELECT DISTINCT budget_year
+      FROM (
+        SELECT ${listBudgetYearSqlExpr('b')} AS budget_year
+        FROM bigmeet b
+      ) budget_years
+      WHERE budget_year IS NOT NULL
+      ORDER BY budget_year DESC
+    `);
+    return rows.map((row) => row.budget_year);
+  },
+
   async findPage(limit = 10, offset = 0, filters = {}) {
     await ensureSchema();
     let query = `
       SELECT
         b.*,
-        ${budgetYearSqlExpr('b')} AS big_budget_year,
+        ${listBudgetYearSqlExpr('b')} AS big_budget_year,
         c.c_name,
         TRIM(c.end_date) AS end_date,
         TRIM(c.end_day) AS end_day,
@@ -353,11 +374,17 @@ module.exports = {
     }
 
     if (filters.budgetYear) {
-      query += ` AND ${budgetYearSqlExpr('b')} = ?`;
+      query += ` AND ${listBudgetYearSqlExpr('b')} = ?`;
       params.push(filters.budgetYear);
     }
 
-    query += ` ORDER BY b.big_id DESC LIMIT ? OFFSET ?`;
+    query += `
+      ORDER BY
+        (b.big_date IS NULL) ASC,
+        b.big_date DESC,
+        b.big_id DESC
+      LIMIT ? OFFSET ?
+    `;
     params.push(Number(limit), Number(offset));
 
     const [rows] = await db.query(query, params);
@@ -390,7 +417,7 @@ module.exports = {
     }
 
     if (filters.budgetYear) {
-      query += ` AND ${budgetYearSqlExpr('b')} = ?`;
+      query += ` AND ${listBudgetYearSqlExpr('b')} = ?`;
       params.push(filters.budgetYear);
     }
 

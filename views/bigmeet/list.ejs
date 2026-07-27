@@ -589,13 +589,18 @@
   const canEdit = <%= canEditServer ? 'true' : 'false' %>;
   let currentPage = 1;
   const itemsPerPage = 10;
-  let allItems = <%- JSON.stringify(items || []) %>;
-  let filteredItems = [...allItems];
+  const budgetYears = <%- JSON.stringify(budgetYears || []) %>;
+  let allItems = [];
+  let filteredItems = [];
+  let totalPages = 0;
+  let totalItems = 0;
+  let latestListRequest = 0;
+  let searchTimer = null;
 
   document.addEventListener('DOMContentLoaded', function() {
     populateYearFilter();
     setupEventListeners();
-    filterAndRender();
+    loadItems();
     initFiscalYearSummary();
     initAccountingYearToggle();
     loadAccountingYearCounts();
@@ -681,7 +686,7 @@
   }
 
   function populateYearFilter() {
-    const years = [...new Set(allItems.map(item => normalizeYear(item.big_budget_year || item.big_endyear)).filter(Boolean))]
+    const years = [...new Set(budgetYears.map(normalizeYear).filter(Boolean))]
       .sort()
       .reverse();
     const yearFilter = document.getElementById('yearFilter');
@@ -694,7 +699,10 @@
   }
 
   function setupEventListeners() {
-    document.getElementById('searchInput').addEventListener('input', filterAndRender);
+    document.getElementById('searchInput').addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(filterAndRender, 250);
+    });
     document.getElementById('yearFilter').addEventListener('change', filterAndRender);
     document.getElementById('typeFilter').addEventListener('change', filterAndRender);
     document.getElementById('statusFilter').addEventListener('change', filterAndRender);
@@ -709,31 +717,56 @@
   }
 
   function filterAndRender() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const yearFilter = document.getElementById('yearFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-
-    filteredItems = allItems.filter(item => {
-      const name = String(item.c_name || '').toLowerCase();
-      const code = String(item.big_code || '').toLowerCase();
-      const matchesSearch = !searchTerm || name.includes(searchTerm) || code.includes(searchTerm);
-      const matchesYear = !yearFilter || normalizeYear(item.big_budget_year || item.big_endyear) === yearFilter;
-      const matchesType = !typeFilter || String(item.big_type || '') === typeFilter;
-      const matchesStatus = !statusFilter || String(item.big_meeting_status || '') === statusFilter;
-      return matchesSearch && matchesYear && matchesType && matchesStatus;
-    }).sort(compareMeetingDateDesc);
-
     currentPage = 1;
-    renderTable();
+    loadItems();
   }
 
-  function compareMeetingDateDesc(a, b) {
-    const dateA = a.big_date ? new Date(a.big_date).getTime() : 0;
-    const dateB = b.big_date ? new Date(b.big_date).getTime() : 0;
+  async function loadItems() {
+    const requestId = ++latestListRequest;
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(itemsPerPage)
+    });
+    const search = document.getElementById('searchInput').value.trim();
+    const budgetYear = document.getElementById('yearFilter').value;
+    const type = document.getElementById('typeFilter').value;
+    const meetingStatus = document.getElementById('statusFilter').value;
 
-    if (dateA !== dateB) return dateB - dateA;
-    return Number(b.big_id || 0) - Number(a.big_id || 0);
+    if (search) params.set('search', search);
+    if (budgetYear) params.set('budgetYear', budgetYear);
+    if (type) params.set('type', type);
+    if (meetingStatus) params.set('meetingStatus', meetingStatus);
+
+    showLoading(true);
+    try {
+      const response = await fetch(`/bigmeet/api/list?${params.toString()}`);
+      if (!response.ok) throw new Error('Unable to load bigmeet data');
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Unable to load bigmeet data');
+      if (requestId !== latestListRequest) return;
+
+      allItems = Array.isArray(result.data) ? result.data : [];
+      filteredItems = allItems;
+      totalPages = Number(result.pagination && result.pagination.totalPages) || 0;
+      totalItems = Number(result.pagination && result.pagination.totalItems) || 0;
+
+      if (totalPages > 0 && currentPage > totalPages) {
+        currentPage = totalPages;
+        return loadItems();
+      }
+      renderTable();
+    } catch (error) {
+      if (requestId !== latestListRequest) return;
+      console.error('Load bigmeet data error:', error);
+      allItems = [];
+      filteredItems = [];
+      totalPages = 0;
+      totalItems = 0;
+      renderTable();
+      showToast('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่', 'error');
+    } finally {
+      if (requestId === latestListRequest) showLoading(false);
+    }
   }
 
   function formatLocalDate(dateValue) {
@@ -789,8 +822,7 @@
   function renderTable() {
     const tbody = document.getElementById('dataTable');
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const pageItems = filteredItems.slice(startIndex, endIndex);
+    const pageItems = filteredItems;
     const colSpan = canEdit ? 11 : 9;
 
     if (pageItems.length === 0) {
@@ -855,7 +887,6 @@
   }
 
   function renderPagination() {
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const pagination = document.getElementById('pagination');
 
     if (totalPages <= 1) {
@@ -892,10 +923,9 @@
   }
 
   function changePage(page) {
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     if (page < 1 || page > totalPages) return;
     currentPage = page;
-    renderTable();
+    loadItems();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -914,9 +944,8 @@
       });
 
       if (response.ok) {
-        allItems = allItems.filter(item => item.big_id !== id);
-        filteredItems = filteredItems.filter(item => item.big_id !== id);
-        renderTable();
+        if (filteredItems.length === 1 && currentPage > 1) currentPage -= 1;
+        await loadItems();
         showToast('ลบข้อมูลสำเร็จ');
       } else {
         throw new Error('Delete failed');
@@ -1055,7 +1084,7 @@
       document.getElementById('sumRange').textContent = rangeText;
     } catch (e) {
       console.error('loadFiscalYearSummary:', e);
-      document.getElementById('sumTotal').textContent = allItems.length;
+      document.getElementById('sumTotal').textContent = totalItems;
       document.getElementById('sumMet').textContent = '-';
       document.getElementById('sumNotMet').textContent = '-';
       ['sumAgriTotal', 'sumAgriMet', 'sumAgriNotMet', 'sumNonAgriTotal', 'sumNonAgriMet', 'sumNonAgriNotMet', 'sumFarmerTotal', 'sumFarmerMet', 'sumFarmerNotMet'].forEach((id) => {

@@ -480,10 +480,10 @@ function getUploadMessage(req) {
 module.exports = {
   async list(req, res) {
     try {
-      const items = await Bigmeet.findAll();
+      const budgetYears = await Bigmeet.findBudgetYears();
 
       res.render('bigmeet/list', {
-        items,
+        budgetYears,
         pagination: null,
         filters: {},
         message: getUploadMessage(req),

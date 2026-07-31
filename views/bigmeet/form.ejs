@@ -467,12 +467,12 @@ form.addEventListener('submit', async function(e) {
         const result = await response.json();
         if (result.success) {
           alert(result.message);
-          window.location.href = '/bigmeet';
+          window.location.replace(`/bigmeet?updated=${Date.now()}`);
         } else {
           alert(result.error || 'เกิดข้อผิดพลาด');
         }
       } else {
-        window.location.href = '/bigmeet';
+        window.location.replace(`/bigmeet?updated=${Date.now()}`);
       }
     } else {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');

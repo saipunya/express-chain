@@ -3,6 +3,15 @@ const router = express.Router();
 const bigmeetController = require('../controllers/bigmeetController');
 const bigmeetUpload = require('../middleware/bigmeetUpload');
 
+// Bigmeet pages and APIs contain frequently updated operational data.
+// Do not let browsers, proxies, or the PWA service worker reuse stale responses.
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // List
 router.get('/', bigmeetController.list);
 router.get('/summary', bigmeetController.summaryByFiscalYear);

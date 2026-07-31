@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coopchain-pwa-v2';
+const CACHE_NAME = 'coopchain-pwa-v3';
 const urlsToCache = [
   '/',
   '/css/style.css',
@@ -32,6 +32,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const request = event.request;
+  const requestUrl = new URL(request.url);
+
+  // Bigmeet data changes immediately after create/update/delete operations.
+  // Always use the network so cached API JSON cannot hide the latest values.
+  if (requestUrl.origin === self.location.origin &&
+      (requestUrl.pathname === '/bigmeet' || requestUrl.pathname.startsWith('/bigmeet/'))) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   const isDocument = request.mode === 'navigate' || (request.destination === 'document');
 
   if (isDocument) {

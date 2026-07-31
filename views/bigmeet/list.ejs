@@ -612,6 +612,14 @@
     }
   });
 
+  window.addEventListener('pageshow', function(event) {
+    if (!event.persisted) return;
+    loadItems();
+    const fy = document.getElementById('fySelect')?.value;
+    if (fy) loadFiscalYearSummary(fy);
+    loadAccountingYearCounts();
+  });
+
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -721,6 +729,17 @@
     loadItems();
   }
 
+  function fetchFresh(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    return fetch(`${url}${separator}_=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+  }
+
   async function loadItems() {
     const requestId = ++latestListRequest;
     const params = new URLSearchParams({
@@ -739,7 +758,7 @@
 
     showLoading(true);
     try {
-      const response = await fetch(`/bigmeet/api/list?${params.toString()}`);
+      const response = await fetchFresh(`/bigmeet/api/list?${params.toString()}`);
       if (!response.ok) throw new Error('Unable to load bigmeet data');
       const result = await response.json();
       if (!result.success) throw new Error(result.error || 'Unable to load bigmeet data');
@@ -945,7 +964,12 @@
 
       if (response.ok) {
         if (filteredItems.length === 1 && currentPage > 1) currentPage -= 1;
-        await loadItems();
+        const fy = document.getElementById('fySelect')?.value;
+        await Promise.all([
+          loadItems(),
+          fy ? loadFiscalYearSummary(fy) : Promise.resolve(),
+          loadAccountingYearCounts()
+        ]);
         showToast('ลบข้อมูลสำเร็จ');
       } else {
         throw new Error('Delete failed');
@@ -1055,7 +1079,7 @@
 
   async function loadFiscalYearSummary(fy) {
     try {
-      const res = await fetch(`/bigmeet/summary?fy=${encodeURIComponent(fy)}`);
+      const res = await fetchFresh(`/bigmeet/summary?fy=${encodeURIComponent(fy)}`);
       const json = await res.json();
       if (!json || !json.success) throw new Error(json && json.error ? json.error : 'Failed');
 
@@ -1101,7 +1125,7 @@
     if (!tbody || !totalBadge) return;
 
     try {
-      const res = await fetch('/bigmeet/accounting-year-counts');
+      const res = await fetchFresh('/bigmeet/accounting-year-counts');
       const json = await res.json();
       if (!json || !json.success) throw new Error(json && json.error ? json.error : 'Failed');
 
@@ -1172,7 +1196,7 @@
 
     try {
       const url = `/bigmeet/accounting-year-counts/detail?monthDay=${encodeURIComponent(monthDay)}&type=${encodeURIComponent(type)}`;
-      const res = await fetch(url);
+      const res = await fetchFresh(url);
       const json = await res.json();
       if (!json || !json.success) throw new Error(json && json.error ? json.error : 'Failed');
 

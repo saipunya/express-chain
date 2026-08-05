@@ -1254,6 +1254,382 @@
       transform: none;
     }
   }
+
+  /* Refined landing-page layout: quieter surfaces, clearer hierarchy. */
+  .main-dashboard-body {
+    background:
+      radial-gradient(circle at 8% -8%, rgba(16, 127, 80, .12), transparent 28rem),
+      radial-gradient(circle at 92% 8%, rgba(44, 110, 213, .08), transparent 30rem),
+      #f4f7f8;
+  }
+
+  .main-dashboard-wrap {
+    max-width: 1440px;
+    padding-top: 1.25rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+
+  .main-dashboard-shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .main-sidebar {
+    align-items: center;
+    background: rgba(16, 32, 48, .97);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(16, 32, 48, .14);
+    flex-direction: row !important;
+    gap: 1.25rem;
+    height: auto;
+    min-height: 0;
+    padding: .7rem .8rem;
+    position: sticky;
+    top: .75rem;
+    z-index: 1020;
+  }
+
+  .main-brand {
+    border: 0;
+    flex: 0 0 auto;
+    padding: .2rem .45rem .2rem .2rem;
+  }
+
+  .main-brand img {
+    border-radius: 12px;
+    height: 2.7rem;
+    width: 2.7rem;
+  }
+
+  .main-brand-subtitle {
+    font-size: .72rem;
+  }
+
+  .main-nav {
+    display: flex;
+    flex: 1 1 auto;
+    gap: .3rem;
+    justify-content: center;
+    margin: 0;
+  }
+
+  .main-nav-link {
+    border-radius: 11px;
+    font-size: .88rem;
+    gap: .5rem;
+    padding: .6rem .75rem;
+  }
+
+  .main-nav-link:hover,
+  .main-nav-link.active {
+    background: rgba(255, 255, 255, .12);
+    transform: none;
+  }
+
+  .main-sidebar-foot {
+    align-items: center;
+    background: rgba(255, 255, 255, .08);
+    border-radius: 11px;
+    display: flex;
+    flex: 0 0 auto;
+    gap: .75rem;
+    margin: 0;
+    padding: .55rem .7rem;
+  }
+
+  .main-sidebar-foot > .small {
+    display: none;
+  }
+
+  .main-sidebar-foot .d-flex {
+    gap: .6rem !important;
+  }
+
+  .main-sidebar-foot .fw-semibold {
+    font-size: .8rem;
+  }
+
+  .main-content {
+    padding-top: 1.2rem;
+  }
+
+  .main-topbar {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 1.1rem;
+    padding: .35rem .25rem;
+  }
+
+  .main-topbar h1 {
+    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+    letter-spacing: -.02em;
+  }
+
+  .main-avatar {
+    border: 1px solid #d9ece4;
+    border-radius: 12px;
+    height: 2.65rem;
+    width: 2.65rem;
+  }
+
+  .main-topbar .main-pill {
+    background: rgba(255, 255, 255, .78);
+  }
+
+  .main-topbar,
+  .main-panel,
+  .main-stat,
+  .main-login-card,
+  .main-hero,
+  .main-deadline-card,
+  .main-turnover-card,
+  .main-bigmeet-card,
+  .main-strength-card,
+  .main-closing-card,
+  .main-overdue-card,
+  .main-institution-card,
+  .main-institution-chart-card,
+  .main-system-link,
+  .main-download-item,
+  .main-online-card {
+    border-radius: 16px;
+  }
+
+  .main-hero {
+    min-height: 30rem;
+    padding: clamp(1.65rem, 3vw, 2.6rem);
+  }
+
+  .main-hero::before {
+    background: radial-gradient(circle, rgba(255, 255, 255, .14), transparent 64%);
+    border-radius: 50%;
+    content: "";
+    height: 24rem;
+    position: absolute;
+    right: -8rem;
+    top: -9rem;
+    width: 24rem;
+  }
+
+  .main-hero-kicker,
+  .main-hero-summary {
+    border-radius: 12px;
+  }
+
+  .main-hero h2 {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    letter-spacing: -.025em;
+  }
+
+  .main-hero-summary {
+    max-width: 42rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .main-login-card {
+    border: 1px solid rgba(221, 229, 238, .85) !important;
+    box-shadow: 0 16px 38px rgba(15, 23, 42, .09) !important;
+  }
+
+  .main-login-card .card-body {
+    padding: clamp(1.35rem, 2.5vw, 2rem) !important;
+  }
+
+  .main-login-card .form-label {
+    color: #344054;
+    font-size: .9rem;
+    font-weight: 600;
+  }
+
+  .main-login-card .form-control {
+    background: #fff;
+    border-radius: 12px;
+  }
+
+  .main-login-card .btn {
+    border-radius: 12px;
+  }
+
+  .main-stat,
+  .main-system-link {
+    min-height: 5.5rem;
+    padding: 1rem 1.05rem;
+  }
+
+  .main-stat-icon,
+  .main-system-link i,
+  .main-deadline-title i,
+  .main-online-title i,
+  .main-download-icon {
+    border-radius: 12px;
+  }
+
+  .main-institution-section,
+  .main-deadline-section {
+    background: rgba(255, 255, 255, .62);
+    border: 1px solid rgba(221, 229, 238, .85);
+    border-radius: 20px;
+    margin-top: 1.25rem;
+    padding: clamp(1rem, 2vw, 1.35rem);
+  }
+
+  .main-section-title {
+    margin-bottom: 1rem;
+    padding: 0 .15rem;
+  }
+
+  .main-section-title h2 {
+    font-size: 1.15rem;
+    letter-spacing: -.01em;
+  }
+
+  .main-section-title .badge,
+  .main-deadline-head .badge,
+  .main-online-head .badge {
+    border-radius: 999px;
+    padding: .45rem .7rem;
+  }
+
+  .main-turnover-card,
+  .main-bigmeet-card,
+  .main-strength-card,
+  .main-closing-card,
+  .main-overdue-card,
+  .main-institution-card,
+  .main-institution-chart-card {
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+  }
+
+  .main-turnover-card::before,
+  .main-institution-card::before {
+    border-radius: 16px 16px 0 0;
+  }
+
+  .main-deadline-card {
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+  }
+
+  .main-deadline-head,
+  .main-online-head {
+    padding: 1rem 1.15rem;
+  }
+
+  .main-deadline-body {
+    max-height: 38rem;
+    overflow: auto;
+    padding: 1rem 1.15rem 1.15rem;
+    scrollbar-color: #c5d3df transparent;
+    scrollbar-width: thin;
+  }
+
+  .main-deadline-table tbody tr:hover td {
+    background: #f7faf9;
+  }
+
+  .main-download-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .main-download-item {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
+    min-height: 5.15rem;
+  }
+
+  .main-online-summary {
+    border-radius: 14px;
+  }
+
+  .main-modal-content {
+    border-radius: 18px;
+  }
+
+  @media (max-width: 1199.98px) {
+    .main-sidebar {
+      align-items: stretch;
+      flex-direction: column !important;
+      gap: .4rem;
+      position: static;
+    }
+
+    .main-brand {
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      padding: .25rem .25rem .7rem;
+    }
+
+    .main-nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: 100%;
+    }
+
+    .main-sidebar-foot {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .main-dashboard-wrap {
+      padding-top: .65rem !important;
+    }
+
+    .main-sidebar {
+      border-radius: 16px;
+      padding: .65rem;
+    }
+
+    .main-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: .35rem;
+    }
+
+    .main-nav-link {
+      font-size: .84rem;
+    }
+
+    .main-content {
+      padding-top: .8rem;
+    }
+
+    .main-topbar {
+      align-items: center;
+      flex-direction: row;
+    }
+
+    .main-topbar .text-muted.small {
+      display: none;
+    }
+
+    .main-topbar h1 {
+      font-size: 1.2rem;
+    }
+
+    .main-hero {
+      min-height: 25rem;
+    }
+
+    .main-hero-summary-row {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .main-institution-section,
+    .main-deadline-section {
+      border-radius: 16px;
+      padding: .85rem;
+    }
+
+    .main-download-list {
+      grid-template-columns: 1fr;
+    }
+
+    .main-deadline-body {
+      max-height: 32rem;
+    }
+  }
 </style>
 
 <%
@@ -1354,11 +1730,11 @@
       </a>
       <a href="/network" class="main-nav-link">
         <i class="bi bi-calendar-week"></i>
-        <span>เครือข่ายสหกรณ์ออมทรัพย์</span>
+        <span>เครือข่ายออมทรัพย์</span>
       </a>
       <a href="/chamra" class="main-nav-link">
         <i class="bi bi-circle-fill"></i>
-        <span>ชำระบัญชีสหกรณ์และกลุ่มเกษตรกร</span>
+        <span>งานชำระบัญชี</span>
       </a>
 
     </nav>
@@ -1390,7 +1766,7 @@
     <div class="row g-3 align-items-stretch">
       <div class="col-xl-4 order-1 order-xl-2">
         <div class="card main-login-card border-0 shadow-sm h-100">
-          <div class="card-body p-4 d-flex flex-column">
+          <div class="card-body p-4 d-flex flex-column <%= _currentUser ? '' : 'justify-content-center' %>">
             <% if (_currentUser) { %>
               <div class="mb-4">
                 <div class="d-flex align-items-center justify-content-between gap-3 mb-3">

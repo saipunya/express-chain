@@ -28,66 +28,50 @@
   <div class="gitgum-hero shadow-sm mb-4">
     <div class="row align-items-center g-3">
       <div class="col-lg-8">
-        <div class="d-flex align-items-center gap-3 mb-2">
-          <div class="gitgum-hero-icon">
-            <i class="bi bi-calendar2-week"></i>
-          </div>
-          <div>
-            <p class="text-uppercase text-muted fw-semibold small mb-1 letter-spacing-1">กิจกรรมทั้งหมด</p>
-            <h3 class="mb-0 fw-bold text-dark">รายการกิจกรรม</h3>
-          </div>
+        <div class="gitgum-page-kicker mb-3">
+          <i class="bi bi-calendar2-check"></i>
+          ปฏิทินงาน CoopChain
         </div>
-        <p class="text-muted mb-0">จัดการและติดตามกิจกรรมทั้งหมดได้จากหน้านี้ พร้อมดูรายละเอียดแต่ละรายการได้อย่างรวดเร็ว</p>
+        <h1 class="gitgum-page-title mb-2">ปฏิทินงานและกิจกรรม</h1>
+        <p class="gitgum-page-subtitle mb-0">ติดตามกำหนดการ สถานที่ และผู้รับผิดชอบของแต่ละกิจกรรมได้ในมุมมองเดียว</p>
       </div>
       <div class="col-lg-4">
         <div class="d-flex flex-wrap justify-content-lg-end gap-2">
           <% if(user){ %>
-            <a href="/gitgum/add" class="btn btn-success btn-lg shadow-sm">
+            <a href="/gitgum/add" class="btn btn-success gitgum-primary-action">
               <i class="bi bi-plus-circle me-1"></i> เพิ่มรายการ
             </a>
           <% } %>
-          <a href="/dashboard/" class="btn btn-outline-primary btn-lg shadow-sm">
-            <i class="bi bi-house me-1"></i> กลับไปที่แดชบอร์ด
+          <a href="/gitgum/calendar" class="btn btn-light gitgum-secondary-action">
+            <i class="bi bi-calendar3 me-1"></i> มุมมองปฏิทิน
+          </a>
+          <a href="/dashboard/" class="btn btn-light gitgum-secondary-action">
+            <i class="bi bi-grid me-1"></i> แดชบอร์ด
           </a>
         </div>
       </div>
     </div>
 
-    <div class="row g-3 mt-3">
-      <div class="col-sm-6 col-xl-3">
-        <div class="gitgum-stat-card">
-          <span class="gitgum-stat-icon bg-primary-subtle text-primary"><i class="bi bi-collection"></i></span>
-          <div>
-            <div class="text-muted small">ทั้งหมด</div>
-            <div class="fw-bold fs-5"><%= totalRecords %></div>
-          </div>
+    <div class="gitgum-summary-strip mt-4" aria-label="สรุปรายการกิจกรรม">
+      <div class="gitgum-summary-item">
+        <span class="gitgum-summary-icon"><i class="bi bi-collection"></i></span>
+        <div>
+          <div class="gitgum-summary-label">กิจกรรมทั้งหมด</div>
+          <div class="gitgum-summary-value"><%= totalRecords.toLocaleString('th-TH') %> รายการ</div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="gitgum-stat-card">
-          <span class="gitgum-stat-icon bg-success-subtle text-success"><i class="bi bi-files"></i></span>
-          <div>
-            <div class="text-muted small">ต่อหน้า</div>
-            <div class="fw-bold fs-5"><%= pageSize %></div>
-          </div>
+      <div class="gitgum-summary-item">
+        <span class="gitgum-summary-icon"><i class="bi bi-eye"></i></span>
+        <div>
+          <div class="gitgum-summary-label">กำลังแสดง</div>
+          <div class="gitgum-summary-value"><%= data.length.toLocaleString('th-TH') %> รายการ</div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="gitgum-stat-card">
-          <span class="gitgum-stat-icon bg-warning-subtle text-warning"><i class="bi bi-layers"></i></span>
-          <div>
-            <div class="text-muted small">หน้าปัจจุบัน</div>
-            <div class="fw-bold fs-5"><%= currentPage %> / <%= totalPages %></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="gitgum-stat-card">
-          <span class="gitgum-stat-icon bg-info-subtle text-info"><i class="bi bi-clock-history"></i></span>
-          <div>
-            <div class="text-muted small">สถานะ</div>
-            <div class="fw-bold fs-5">พร้อมใช้งาน</div>
-          </div>
+      <div class="gitgum-summary-item">
+        <span class="gitgum-summary-icon"><i class="bi bi-layers"></i></span>
+        <div>
+          <div class="gitgum-summary-label">หน้าปัจจุบัน</div>
+          <div class="gitgum-summary-value"><%= currentPage.toLocaleString('th-TH') %> จาก <%= totalPages.toLocaleString('th-TH') %></div>
         </div>
       </div>
     </div>
@@ -96,8 +80,8 @@
   <div class="card shadow-sm border-0 gitgum-list-shell">
     <div class="card-header bg-white border-0 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
       <div>
-        <h5 class="mb-1 fw-bold">รายการกิจกรรมแบบ 2 แถว</h5>
-        <div class="text-muted small">วันที่/เวลา และ กิจกรรม/สถานที่ จะถูกจัดให้อยู่เป็นกลุ่มในแต่ละรายการ</div>
+        <h2 class="h5 mb-1 fw-bold">กำหนดการที่กำลังจะมาถึง</h2>
+        <div class="text-muted small">เรียงตามวันจัดกิจกรรม พร้อมข้อมูลสถานที่และผู้รับผิดชอบ</div>
       </div>
       <div class="text-muted small">
         <i class="bi bi-info-circle me-1"></i> แสดงผล <%= data.length %> รายการบนหน้านี้
@@ -112,38 +96,38 @@
               <div class="row g-0 align-items-stretch">
                 <div class="col-lg-9">
                   <div class="gitgum-list-content">
-                    <div class="gitgum-list-row">
-                      <div class="gitgum-field">
-                        <span class="gitgum-field-label"><i class="bi bi-calendar-event me-1"></i> วันที่</span>
-                        <div class="gitgum-field-value text-dark"><%= gitgum.git_date_label || formatThaiDate(gitgum.git_date) %></div>
-                      </div>
-                      <div class="gitgum-field">
-                        <span class="gitgum-field-label"><i class="bi bi-clock me-1"></i> เวลา</span>
-                        <div class="gitgum-field-value">
-                          <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><%= gitgum.git_time || '-' %></span>
+                    <div class="gitgum-schedule-layout">
+                      <div class="gitgum-date-card">
+                        <span class="gitgum-date-icon"><i class="bi bi-calendar-event"></i></span>
+                        <div>
+                          <div class="gitgum-date-label">วันที่จัดกิจกรรม</div>
+                          <div class="gitgum-date-value"><%= gitgum.git_date_label || formatThaiDate(gitgum.git_date) %></div>
+                          <div class="gitgum-time-value"><i class="bi bi-clock me-1"></i><%= gitgum.git_time || 'ไม่ระบุเวลา' %></div>
                         </div>
                       </div>
-                    </div>
 
-                    <div class="gitgum-list-row gitgum-list-row-secondary">
-                      <div class="gitgum-field">
-                        <span class="gitgum-field-label"><i class="bi bi-stars me-1"></i> กิจกรรม</span>
-                        <div class="gitgum-field-value text-primary fw-semibold text-truncate-2"><%= gitgum.git_act || '-' %></div>
-                      </div>
-                      <div class="gitgum-field">
-                        <span class="gitgum-field-label"><i class="bi bi-geo-alt-fill me-1"></i> สถานที่</span>
-                        <div class="gitgum-field-value text-muted text-truncate-2"><%= gitgum.git_place || '-' %></div>
-                      </div>
-                      <div class="gitgum-field">
-                        <span class="gitgum-field-label"><i class="bi bi-person-badge me-1"></i> ผู้รับผิดชอบ</span>
-                        <div class="gitgum-field-value text-muted text-truncate-2"><%= gitgum.git_goto || '-' %></div>
-                      </div>
-                      <% if (gitgum.sourceLabel) { %>
-                        <div class="gitgum-field">
-                          <span class="gitgum-field-label"><i class="bi bi-bookmark-star me-1"></i> แหล่งข้อมูล</span>
-                          <div class="gitgum-field-value text-muted text-truncate-2"><%= gitgum.sourceLabel %></div>
+                      <div class="gitgum-activity-content">
+                        <% if (gitgum.sourceLabel) { %>
+                          <span class="gitgum-source-badge"><i class="bi bi-bookmark me-1"></i><%= gitgum.sourceLabel %></span>
+                        <% } %>
+                        <h3 class="gitgum-activity-title"><%= gitgum.git_act || '-' %></h3>
+                        <div class="gitgum-meta-grid">
+                          <div class="gitgum-meta-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <div><span>สถานที่</span><strong><%= gitgum.git_place || '-' %></strong></div>
+                          </div>
+                          <div class="gitgum-meta-item">
+                            <i class="bi bi-person-badge"></i>
+                            <div><span>ผู้รับผิดชอบ</span><strong><%= gitgum.git_respon || gitgum.git_goto || '-' %></strong></div>
+                          </div>
+                          <% if (gitgum.git_goto && gitgum.git_goto !== '-') { %>
+                            <div class="gitgum-meta-item">
+                              <i class="bi bi-people"></i>
+                              <div><span>ผู้เกี่ยวข้อง</span><strong><%= gitgum.git_goto %></strong></div>
+                            </div>
+                          <% } %>
                         </div>
-                      <% } %>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -151,8 +135,8 @@
                 <% if(user){ %>
                 <div class="col-lg-3">
                   <div class="gitgum-actions-panel h-100">
-                    <div class="text-muted small fw-semibold mb-2">จัดการรายการ</div>
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="gitgum-action-label mb-2">จัดการรายการ</div>
+                    <div class="d-flex flex-wrap gap-2 gitgum-action-buttons">
                       <button type="button"
                         class="btn btn-soft-primary btn-sm"
                         data-bs-toggle="modal"
@@ -171,14 +155,14 @@
                         data-gitgum-view-url="<%= gitgum.detailUrl || '#' %>"
                         data-gitgum-edit-url="<%= gitgum.editUrl || '' %>"
                         data-gitgum-delete-url="<%= gitgum.deleteUrl || '' %>">
-                        <i class="bi bi-eye me-1"></i> View
+                        <i class="bi bi-eye me-1"></i> ดูรายละเอียด
                       </button>
                       <% if (gitgum.canManage) { %>
                         <a href="<%= gitgum.editUrl %>" class="btn btn-soft-warning btn-sm">
-                          <i class="bi bi-pencil-square me-1"></i> Edit
+                          <i class="bi bi-pencil-square me-1"></i> แก้ไข
                         </a>
                         <a href="<%= gitgum.deleteUrl %>" class="btn btn-soft-danger btn-sm" onclick="return confirm('ลบข้อมูล?')">
-                          <i class="bi bi-trash me-1"></i> Delete
+                          <i class="bi bi-trash me-1"></i> ลบ
                         </a>
                       <% } %>
                     </div>
@@ -329,6 +313,423 @@
     </div>
   </div>
 </div>
+
+<style>
+  :root {
+    --gitgum-ink: #17212f;
+    --gitgum-muted: #667085;
+    --gitgum-line: #dfe7ee;
+    --gitgum-soft: #f5f8f8;
+    --gitgum-navy: #132638;
+    --gitgum-green: #14845f;
+    --gitgum-teal: #167981;
+    --gitgum-shadow: 0 14px 36px rgba(15, 31, 47, .08);
+    --gitgum-shadow-soft: 0 7px 20px rgba(15, 31, 47, .045);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 8% 3%, rgba(20, 132, 95, .09), transparent 28rem),
+      radial-gradient(circle at 94% 12%, rgba(53, 111, 196, .06), transparent 30rem),
+      #f4f7f8;
+    color: var(--gitgum-ink);
+  }
+
+  .gitgum-page {
+    max-width: 1320px;
+  }
+
+  .gitgum-hero {
+    background:
+      radial-gradient(circle at 86% 12%, rgba(60, 210, 162, .18), transparent 18rem),
+      linear-gradient(135deg, #122538 0%, #164b49 100%);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 20px;
+    box-shadow: 0 20px 46px rgba(15, 31, 47, .16) !important;
+    color: #fff;
+    overflow: hidden;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    position: relative;
+  }
+
+  .gitgum-hero::after {
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 50%;
+    content: "";
+    height: 17rem;
+    position: absolute;
+    right: -7rem;
+    top: -9rem;
+    width: 17rem;
+  }
+
+  .gitgum-hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .gitgum-page-kicker {
+    align-items: center;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    color: #bfe9d9;
+    display: inline-flex;
+    font-size: .8rem;
+    font-weight: 700;
+    gap: .45rem;
+    padding: .38rem .7rem;
+  }
+
+  .gitgum-page-title {
+    color: #fff;
+    font-size: clamp(1.7rem, 3vw, 2.45rem);
+    font-weight: 700;
+    letter-spacing: -.025em;
+  }
+
+  .gitgum-page-subtitle {
+    color: rgba(255, 255, 255, .76);
+    font-size: .98rem;
+    max-width: 44rem;
+  }
+
+  .gitgum-primary-action,
+  .gitgum-secondary-action {
+    border-radius: 11px;
+    font-size: .9rem;
+    font-weight: 600;
+    min-height: 2.75rem;
+    padding: .58rem .8rem;
+  }
+
+  .gitgum-primary-action {
+    background: #1ba477;
+    border-color: #1ba477;
+    box-shadow: 0 8px 20px rgba(27, 164, 119, .22);
+  }
+
+  .gitgum-secondary-action {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .18);
+    color: #fff;
+  }
+
+  .gitgum-secondary-action:hover {
+    background: #fff;
+    border-color: #fff;
+    color: var(--gitgum-navy);
+  }
+
+  .gitgum-summary-strip {
+    background: rgba(255, 255, 255, .09);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 50rem;
+    padding: .55rem;
+  }
+
+  .gitgum-summary-item {
+    align-items: center;
+    display: flex;
+    gap: .65rem;
+    min-width: 0;
+    padding: .45rem .65rem;
+  }
+
+  .gitgum-summary-item + .gitgum-summary-item {
+    border-left: 1px solid rgba(255, 255, 255, .13);
+  }
+
+  .gitgum-summary-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, .1);
+    border-radius: 10px;
+    color: #aee8d2;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 2.2rem;
+    justify-content: center;
+    width: 2.2rem;
+  }
+
+  .gitgum-summary-label {
+    color: rgba(255, 255, 255, .62);
+    font-size: .72rem;
+  }
+
+  .gitgum-summary-value {
+    color: #fff;
+    font-size: .93rem;
+    font-weight: 700;
+  }
+
+  .gitgum-list-shell {
+    background: rgba(255, 255, 255, .76);
+    border: 1px solid var(--gitgum-line) !important;
+    border-radius: 18px;
+    box-shadow: none !important;
+  }
+
+  .gitgum-list-shell > .card-header {
+    background: rgba(255, 255, 255, .88) !important;
+    border-bottom: 1px solid #e9eef2 !important;
+    padding: 1rem 1.15rem !important;
+  }
+
+  .gitgum-list-item {
+    border: 1px solid var(--gitgum-line);
+    border-radius: 15px;
+    box-shadow: var(--gitgum-shadow-soft) !important;
+    position: relative;
+  }
+
+  .gitgum-list-item::before {
+    background: linear-gradient(180deg, var(--gitgum-green), var(--gitgum-teal));
+    border-radius: 15px 0 0 15px;
+    content: "";
+    inset: 0 auto 0 0;
+    position: absolute;
+    width: .28rem;
+  }
+
+  .gitgum-list-item:hover {
+    border-color: #b5d8cc;
+    box-shadow: var(--gitgum-shadow) !important;
+    transform: translateY(-1px);
+  }
+
+  .gitgum-list-content {
+    padding: 1.05rem 1.15rem 1.05rem 1.35rem;
+  }
+
+  .gitgum-schedule-layout {
+    align-items: stretch;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(12rem, .72fr) minmax(0, 1.8fr);
+  }
+
+  .gitgum-date-card {
+    align-items: flex-start;
+    background: #f3f8f6;
+    border: 1px solid #e0ebe7;
+    border-radius: 12px;
+    display: flex;
+    gap: .7rem;
+    padding: .8rem;
+  }
+
+  .gitgum-date-icon {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dce8e3;
+    border-radius: 10px;
+    color: var(--gitgum-green);
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 2.25rem;
+    justify-content: center;
+    width: 2.25rem;
+  }
+
+  .gitgum-date-label,
+  .gitgum-meta-item span {
+    color: var(--gitgum-muted);
+    display: block;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  .gitgum-date-value {
+    color: var(--gitgum-ink);
+    font-size: .94rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .gitgum-time-value {
+    color: var(--gitgum-green);
+    font-size: .78rem;
+    font-weight: 600;
+    margin-top: .32rem;
+  }
+
+  .gitgum-activity-content {
+    min-width: 0;
+  }
+
+  .gitgum-source-badge {
+    align-items: center;
+    background: #eef5fb;
+    border-radius: 999px;
+    color: #356895;
+    display: inline-flex;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .28rem .55rem;
+  }
+
+  .gitgum-activity-title {
+    color: var(--gitgum-ink);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: .5rem 0 .65rem;
+  }
+
+  .gitgum-meta-grid {
+    display: grid;
+    gap: .55rem .8rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gitgum-meta-item {
+    align-items: flex-start;
+    color: var(--gitgum-green);
+    display: flex;
+    gap: .45rem;
+    min-width: 0;
+  }
+
+  .gitgum-meta-item i {
+    flex: 0 0 auto;
+    margin-top: .12rem;
+  }
+
+  .gitgum-meta-item strong {
+    color: #344054;
+    display: -webkit-box;
+    font-size: .8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .gitgum-actions-panel {
+    background: #f8fafb;
+    border-left: 1px solid var(--gitgum-line);
+    padding: 1rem;
+  }
+
+  .gitgum-action-label {
+    color: var(--gitgum-muted);
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .gitgum-actions-panel .btn {
+    border-radius: 9px;
+    font-size: .78rem;
+    font-weight: 600;
+  }
+
+  .gitgum-list-shell + .d-flex .page-link {
+    border-radius: 9px;
+    font-size: .88rem;
+    margin: 0 .12rem;
+  }
+
+  #gitgumDetailModal .modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  #gitgumDetailModal .rounded-4 {
+    border-radius: 12px !important;
+  }
+
+  @media (max-width: 991.98px) {
+    .gitgum-schedule-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .gitgum-actions-panel {
+      border-left: 0;
+      border-top: 1px solid var(--gitgum-line);
+    }
+
+    .gitgum-action-buttons {
+      align-items: stretch;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .gitgum-page {
+      padding-left: .25rem;
+      padding-right: .25rem;
+      padding-top: .75rem !important;
+    }
+
+    .gitgum-hero,
+    .gitgum-list-shell {
+      border-radius: 15px;
+    }
+
+    .gitgum-hero .col-lg-4 .d-flex {
+      justify-content: flex-start !important;
+    }
+
+    .gitgum-primary-action,
+    .gitgum-secondary-action {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    .gitgum-summary-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .gitgum-summary-item + .gitgum-summary-item {
+      border-left: 0;
+      border-top: 1px solid rgba(255, 255, 255, .13);
+    }
+
+    .gitgum-list-shell > .card-header {
+      align-items: flex-start !important;
+      flex-direction: column;
+    }
+
+    .gitgum-list-shell > .card-body {
+      padding: .75rem !important;
+    }
+
+    .gitgum-list-content {
+      padding: .85rem .85rem .85rem 1rem;
+    }
+
+    .gitgum-meta-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .gitgum-actions-panel {
+      padding: .8rem 1rem;
+    }
+
+    .gitgum-action-buttons .btn {
+      flex: 1 1 auto;
+    }
+
+    .pagination-lg .page-link {
+      font-size: .8rem;
+      padding: .55rem .7rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gitgum-list-item {
+      transition: none;
+    }
+
+    .gitgum-list-item:hover {
+      transform: none;
+    }
+  }
+</style>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {

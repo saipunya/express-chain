@@ -80,10 +80,13 @@
         <div class="col-lg-8">
           <div class="card border-0 shadow-lg glass-card h-100">
             <div class="card-body p-4 p-lg-5 d-flex flex-column justify-content-center">
+              <div class="dashboard-welcome-kicker mb-3">
+                <i class="bi bi-stars"></i> ศูนย์จัดการ CoopChain
+              </div>
               <h1 class="display-6 fw-bold text-gradient mb-3">
-                <i class="bi bi-speedometer2 me-2"></i> แดชบอร์ด
+                แดชบอร์ดการทำงาน
               </h1>
-              <p class="text-muted mb-4">ศูนย์รวมเมนูการทำงานและข้อมูลล่าสุด เพื่อการเข้าถึงฟีเจอร์อย่างรวดเร็ว</p>
+              <p class="text-muted mb-4">เข้าถึงงานประจำ ติดตามกำหนดการ และดูข้อมูลสำคัญได้จากหน้าเดียว</p>
 
               <!-- Quick Action Buttons (Role Based) -->
               <div class="d-flex flex-wrap gap-2">
@@ -112,7 +115,7 @@
           <div class="card border-0 shadow-lg profile-card h-100 position-relative overflow-hidden">
             <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
               <div class="position-relative d-inline-block mb-3">
-                <img src="<%= user.m_img %>" alt="Profile" class="rounded-circle shadow profile-avatar avatar-lg">
+                <img src="<%= user.m_img || '/icon/seal.svg' %>" alt="Profile" class="rounded-circle shadow profile-avatar avatar-lg">
                 <span class="status-badge bg-success" title="online"></span>
               </div>
               <h4 class="fw-bold mb-1 text-dark"><i class="bi bi-person-badge me-1 text-primary"></i><%= user.fullname %></h4>
@@ -130,7 +133,7 @@
        <section class="dashboard-operations-section mb-4" aria-labelledby="operationsDashboardTitle">
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
           <div>
-            <div class="menu-section-title mb-1">Operations</div>
+            <div class="menu-section-title mb-1">งานและกำหนดการ</div>
             <h2 id="operationsDashboardTitle" class="h4 fw-bold mb-0">ปฏิทินงาน</h2>
           </div>
           <div class="d-flex flex-wrap gap-2">
@@ -186,11 +189,11 @@
       <section class="dashboard-home-section mb-4" aria-labelledby="homeDashboardTitle">
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
           <div>
-            <div class="menu-section-title mb-1">Home Snapshot</div>
-            <h2 id="homeDashboardTitle" class="h4 fw-bold mb-0">ภาพรวมข้อมูลจากหน้าแรกเดิม</h2>
+            <div class="menu-section-title mb-1">ภาพรวมระบบ</div>
+            <h2 id="homeDashboardTitle" class="h4 fw-bold mb-0">ข้อมูลสำคัญและเมนูใช้งาน</h2>
           </div>
           <a href="/main" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-box-arrow-up-right me-1"></i>ดูหน้า main
+            <i class="bi bi-box-arrow-up-right me-1"></i>ดูหน้าแรก
           </a>
         </div>
 
@@ -1715,6 +1718,423 @@
 
       .dashboard-calendar .fc-daygrid-day-frame {
         min-height: 4.8rem;
+      }
+    }
+
+    /* Dashboard visual system: calm surfaces and clear information hierarchy. */
+    :root {
+      --dashboard-ink: #17212f;
+      --dashboard-muted: #667085;
+      --dashboard-line: #dfe7ee;
+      --dashboard-soft: #f5f8f8;
+      --dashboard-navy: #132638;
+      --dashboard-green: #14845f;
+      --dashboard-teal: #167981;
+      --dashboard-blue: #356fc4;
+      --dashboard-shadow: 0 16px 38px rgba(15, 31, 47, .08);
+      --dashboard-shadow-soft: 0 7px 20px rgba(15, 31, 47, .045);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 8% 4%, rgba(20, 132, 95, .1), transparent 28rem),
+        radial-gradient(circle at 94% 12%, rgba(53, 111, 196, .07), transparent 30rem),
+        #f4f7f8;
+      color: var(--dashboard-ink);
+    }
+
+    .dashboard-wrapper {
+      background: transparent;
+      min-height: 0;
+      padding-bottom: 2.5rem !important;
+      padding-top: 1.25rem !important;
+    }
+
+    .dashboard-wrapper > .container {
+      max-width: 1320px;
+      padding-inline: 0;
+    }
+
+    .glass-card,
+    .profile-card,
+    .dashboard-home-section,
+    .dashboard-operations-section,
+    .dashboard-menu-panel,
+    .dashboard-home-card,
+    .home-insight-card,
+    .menu-card,
+    .member-mini-box,
+    .turnover-dashboard-hero {
+      border-radius: 16px;
+    }
+
+    .glass-card {
+      background:
+        radial-gradient(circle at 88% 12%, rgba(65, 211, 165, .19), transparent 18rem),
+        linear-gradient(135deg, #122538 0%, #164b49 100%);
+      border: 1px solid rgba(255, 255, 255, .08) !important;
+      box-shadow: 0 20px 48px rgba(15, 31, 47, .17) !important;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .glass-card::after {
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 50%;
+      content: "";
+      height: 15rem;
+      position: absolute;
+      right: -6rem;
+      top: -7rem;
+      width: 15rem;
+    }
+
+    .glass-card .card-body {
+      position: relative;
+      z-index: 1;
+    }
+
+    .dashboard-welcome-kicker {
+      align-items: center;
+      background: rgba(255, 255, 255, .1);
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 999px;
+      color: #bfe9d9;
+      display: inline-flex;
+      font-size: .82rem;
+      font-weight: 700;
+      gap: .45rem;
+      padding: .38rem .7rem;
+      width: max-content;
+    }
+
+    .text-gradient {
+      background: none;
+      color: #fff;
+      letter-spacing: -.025em;
+    }
+
+    .glass-card .text-muted {
+      color: rgba(255, 255, 255, .76) !important;
+      font-size: 1rem;
+      max-width: 42rem;
+    }
+
+    .glass-card .btn-action {
+      background: rgba(255, 255, 255, .09);
+      border-color: rgba(255, 255, 255, .2);
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 600;
+      padding: .48rem .72rem;
+    }
+
+    .glass-card .btn-action:hover {
+      background: #fff;
+      border-color: #fff;
+      color: var(--dashboard-navy);
+    }
+
+    .glass-card .btn-action.text-dark {
+      color: #fff !important;
+    }
+
+    .glass-card .btn-action.text-dark:hover {
+      color: var(--dashboard-navy) !important;
+    }
+
+    .profile-card {
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid rgba(223, 231, 238, .88) !important;
+      box-shadow: var(--dashboard-shadow) !important;
+    }
+
+    .profile-card::before {
+      background: linear-gradient(90deg, var(--dashboard-green), var(--dashboard-teal));
+      content: "";
+      height: .28rem;
+      inset: 0 0 auto;
+      position: absolute;
+    }
+
+    .profile-avatar {
+      background: #fff;
+      border: 4px solid #fff;
+      height: 82px;
+      width: 82px;
+    }
+
+    .status-badge {
+      box-shadow: 0 0 0 3px rgba(25, 135, 84, .12);
+    }
+
+    .profile-card .btn {
+      border-radius: 10px;
+    }
+
+    .dashboard-operations-section,
+    .dashboard-home-section {
+      background: rgba(255, 255, 255, .66);
+      border: 1px solid rgba(223, 231, 238, .86);
+      box-shadow: none;
+      padding: clamp(1rem, 2vw, 1.35rem);
+    }
+
+    .dashboard-operations-section h2,
+    .dashboard-home-section > .d-flex h2 {
+      color: var(--dashboard-ink);
+      font-size: 1.22rem;
+      letter-spacing: -.01em;
+    }
+
+    .menu-section-title {
+      color: var(--dashboard-green);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+    }
+
+    .dashboard-home-card,
+    .dashboard-menu-panel {
+      border: 1px solid var(--dashboard-line) !important;
+      box-shadow: var(--dashboard-shadow-soft) !important;
+      overflow: hidden;
+    }
+
+    .dashboard-home-card .card-header,
+    .dashboard-menu-panel .card-header {
+      background: #fff !important;
+      border-bottom: 1px solid #edf1f4 !important;
+      min-height: 58px;
+      padding: .85rem 1rem;
+    }
+
+    .dashboard-home-card .card-body {
+      padding: 1rem;
+    }
+
+    .home-insight-card {
+      border: 1px solid var(--dashboard-line);
+      box-shadow: var(--dashboard-shadow-soft);
+      min-height: 7.25rem;
+      padding: 1rem 1.05rem;
+    }
+
+    .home-insight-card:hover {
+      border-color: #b9d9cf;
+    }
+
+    .home-insight-icon {
+      border-radius: 13px;
+      height: 3.15rem;
+      width: 3.15rem;
+    }
+
+    .home-insight-label {
+      color: var(--dashboard-muted);
+    }
+
+    .home-insight-value {
+      color: var(--dashboard-ink) !important;
+      font-size: 1.9rem;
+    }
+
+    .dashboard-menu-panel > .card-body {
+      padding: 1rem !important;
+    }
+
+    .dashboard-menu-panel .menu-section-title {
+      color: #526173;
+      font-size: .74rem;
+      font-weight: 700;
+      margin: .65rem 0 .7rem;
+    }
+
+    .dashboard-menu-panel .menu-section-title:first-child {
+      margin-top: 0;
+    }
+
+    .dashboard-menu-panel .menu-section-title::after {
+      background: #dfe7ee;
+    }
+
+    .dashboard-menu-panel .menu-card {
+      border: 1px solid #e3e9ef;
+      border-radius: 12px;
+      gap: .65rem;
+      min-height: 4rem;
+      padding: .68rem .75rem;
+    }
+
+    .dashboard-menu-panel .menu-card:hover {
+      background: #f7fbf9;
+      border-color: #a9d4c5;
+      box-shadow: 0 8px 18px rgba(20, 132, 95, .07);
+      transform: translateY(-1px);
+    }
+
+    .dashboard-menu-panel .menu-card-highlight {
+      background: linear-gradient(180deg, #fff 0%, #f2f9f7 100%);
+      border-color: #c8e1d8;
+    }
+
+    .dashboard-menu-panel .menu-icon {
+      background: #eef7f3;
+      border-radius: 9px;
+      color: var(--dashboard-green);
+      font-size: 1rem;
+      height: 2.15rem;
+      width: 2.15rem;
+    }
+
+    .dashboard-menu-panel .menu-icon-travel {
+      background: #edf4fc;
+      color: var(--dashboard-blue);
+    }
+
+    .dashboard-menu-panel .menu-title {
+      color: var(--dashboard-ink);
+      display: -webkit-box;
+      font-size: .86rem;
+      line-height: 1.3;
+      overflow: hidden;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .dashboard-calendar {
+      background: #fff;
+      border: 0;
+      border-radius: 12px;
+      min-height: 30rem;
+      padding: .25rem;
+    }
+
+    .dashboard-calendar .fc-toolbar {
+      padding: .15rem .1rem .85rem;
+    }
+
+    .dashboard-calendar .fc-toolbar-title {
+      color: var(--dashboard-ink);
+      font-size: 1.12rem;
+    }
+
+    .dashboard-calendar .fc-button {
+      border-color: #d7e5df !important;
+      border-radius: 9px !important;
+      color: var(--dashboard-green) !important;
+    }
+
+    .dashboard-calendar .fc-event {
+      background: linear-gradient(135deg, var(--dashboard-green), #1ba47a);
+      box-shadow: none;
+    }
+
+    .dashboard-home-list-item,
+    .member-mini-box,
+    .turnover-dashboard-hero,
+    .dashboard-home-empty {
+      border-radius: 11px;
+    }
+
+    .dashboard-home-list-item {
+      background: #f9fbfc;
+      border-color: #e6ebf0;
+    }
+
+    .member-mini-box {
+      background: #f8fbfa;
+      border-color: #e2ebe7;
+    }
+
+    .member-mini-box strong {
+      color: var(--dashboard-green);
+    }
+
+    .turnover-dashboard-hero {
+      background: linear-gradient(135deg, #f4faf7 0%, #f1f6fc 100%);
+      border-color: #dce8e3;
+    }
+
+    .vehicle-status-table-wrap,
+    .dashboard-activity-modal {
+      border-radius: 14px;
+    }
+
+    .btn-sm,
+    .dashboard-toggle-btn {
+      border-radius: 9px;
+    }
+
+    @media (max-width: 991.98px) {
+      .glass-card .card-body {
+        padding: 2rem !important;
+      }
+
+      .dashboard-calendar {
+        min-height: 27rem;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .dashboard-wrapper {
+        padding-top: .75rem !important;
+      }
+
+      .dashboard-wrapper > .container {
+        padding-inline: .1rem;
+      }
+
+      .glass-card,
+      .profile-card,
+      .dashboard-home-section,
+      .dashboard-operations-section {
+        border-radius: 15px;
+      }
+
+      .glass-card .card-body {
+        padding: 1.35rem !important;
+      }
+
+      .glass-card h1 {
+        font-size: 1.75rem;
+      }
+
+      .glass-card .text-muted {
+        font-size: .92rem;
+      }
+
+      .profile-card .card-body {
+        padding: 1.35rem !important;
+      }
+
+      .dashboard-operations-section,
+      .dashboard-home-section {
+        padding: .85rem;
+      }
+
+      .home-insight-card {
+        min-height: 6.25rem;
+      }
+
+      .dashboard-menu-panel .menu-card {
+        min-height: 3.35rem;
+        padding: .55rem;
+      }
+
+      .dashboard-menu-panel .menu-icon {
+        height: 1.9rem;
+        width: 1.9rem;
+      }
+
+      .dashboard-calendar {
+        min-height: 25rem;
+      }
+
+      .dashboard-calendar .fc-daygrid-day-frame {
+        min-height: 4.15rem;
       }
     }
   </style>

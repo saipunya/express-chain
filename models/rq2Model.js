@@ -5,7 +5,7 @@ const Rq2 = {
     let where = '';
     const params = [];
     if (search) { where = 'WHERE rq_name LIKE ?'; params.push(`%${search}%`); }
-    const [rows] = await db.query(`SELECT * FROM tbl_rq2 ${where} ORDER BY rq_year DESC, rq_id DESC` , params);
+    const [rows] = await db.query(`SELECT * FROM tbl_rq2 ${where} ORDER BY rq_id DESC` , params);
     return rows;
   },
 
@@ -18,7 +18,7 @@ const Rq2 = {
     const [countRows] = await db.query(`SELECT COUNT(*) AS total FROM tbl_rq2 ${where}`, params);
     const total = countRows[0]?.total || 0;
     const [rows] = await db.query(
-      `SELECT * FROM tbl_rq2 ${where} ORDER BY rq_year DESC, rq_id DESC LIMIT ?, ?`,
+      `SELECT * FROM tbl_rq2 ${where} ORDER BY rq_id DESC LIMIT ?, ?`,
       [...params, offset, pageSize]
     );
     return { rows, total };

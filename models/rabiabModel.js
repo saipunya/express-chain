@@ -19,49 +19,60 @@ exports.insertRabiab = async (data) => {
   return result.insertId;
 };
 
-// 3ระ3บ3้งหมดแบบแบ่งหน้า
-exports.getAllRabiab = async (page = 1, searchName = '', searchCoop = '') => {
-  const offset = (page - 1) * ITEMS_PER_PAGE;
-  let whereClause = "WHERE tbl_rabiab.ra_status = 'active'";
-  const params = [];
+const buildSearchFilter = (search = '') => {
+  const keyword = String(search).trim();
+  if (!keyword) {
+    return { clause: '', params: [] };
+  }
 
-  if (searchName) {
-    whereClause += " AND tbl_rabiab.ra_name LIKE ?";
-    params.push(`%${searchName}%`);
-  }
-  if (searchCoop) {
-    whereClause += " AND active_coop.c_name LIKE ?";
-    params.push(`%${searchCoop}%`);
-  }
+  const searchableColumns = [
+    'tbl_rabiab.ra_code',
+    'tbl_rabiab.ra_name',
+    'tbl_rabiab.ra_year',
+    'tbl_rabiab.ra_approvedate',
+    'tbl_rabiab.ra_filename',
+    'tbl_rabiab.ra_saveby',
+    'tbl_rabiab.ra_savedate',
+    'active_coop.c_name',
+    'active_coop.c_group'
+  ];
+  const pattern = `%${keyword}%`;
+
+  return {
+    clause: ` AND (${searchableColumns.map(column => `CAST(${column} AS CHAR) LIKE ?`).join(' OR ')})`,
+    params: searchableColumns.map(() => pattern)
+  };
+};
+
+// ดึงรายการทั้งหมด โดยไม่จำกัดจำนวนแถวเมื่อเป็นผลการค้นหา
+exports.getAllRabiab = async (page = 1, search = '') => {
+  const offset = (page - 1) * ITEMS_PER_PAGE;
+  const searchFilter = buildSearchFilter(search);
+  const whereClause = `WHERE tbl_rabiab.ra_status = 'active'${searchFilter.clause}`;
+  const paginationClause = String(search).trim() ? '' : 'LIMIT ? OFFSET ?';
+  const params = String(search).trim()
+    ? searchFilter.params
+    : [...searchFilter.params, ITEMS_PER_PAGE, offset];
 
   const [rows] = await db.query(`
     SELECT * FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
     ${whereClause}
     ORDER BY tbl_rabiab.ra_id DESC
-    LIMIT ? OFFSET ?
-  `, [...params, ITEMS_PER_PAGE, offset]);
+    ${paginationClause}
+  `, params);
 
   return rows;
 };
 
 // 3จำนวนระ3บ3้งหมด
-exports.countRabiab = async (searchName = '', searchCoop = '') => {
-  let whereClause = "WHERE tbl_rabiab.ra_status = 'active'";
-  const params = [];
-
-  if (searchName) {
-    whereClause += " AND tbl_rabiab.ra_name LIKE ?";
-    params.push(`%${searchName}%`);
-  }
-  if (searchCoop) {
-    whereClause += " AND active_coop.c_name LIKE ?";
-    params.push(`%${searchCoop}%`);
-  }
+exports.countRabiab = async (search = '') => {
+  const searchFilter = buildSearchFilter(search);
+  const whereClause = `WHERE tbl_rabiab.ra_status = 'active'${searchFilter.clause}`;
 
   const [rows] = await db.query(`
     SELECT COUNT(*) as total FROM tbl_rabiab LEFT JOIN active_coop ON tbl_rabiab.ra_code = active_coop.c_code
     ${whereClause}
-  `, params);
+  `, searchFilter.params);
 
   return rows[0].total;
 };

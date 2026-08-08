@@ -50,18 +50,11 @@
   <!-- Search / Filter Card -->
   <div class="glass-card p-3 p-md-4 mb-4 search-wrapper">
     <form class="row g-3 align-items-end" method="GET" action="">
-      <div class="col-md-4">
-        <label for="searchName" class="form-label small text-uppercase fw-semibold text-secondary">ชื่อระเบียบ</label>
+      <div class="col-md-8">
+        <label for="search" class="form-label small text-uppercase fw-semibold text-secondary">ค้นหาข้อมูลทั้งหมด</label>
         <div class="input-group">
-          <span class="input-group-text bg-white border-0"><i class="fas fa-file-alt text-primary"></i></span>
-          <input type="text" id="searchName" name="searchName" class="form-control shadow-sm" placeholder="พิมพ์ชื่อระเบียบ..." value="<%= searchName || '' %>">
-        </div>
-      </div>
-      <div class="col-md-4">
-        <label for="searchCoop" class="form-label small text-uppercase fw-semibold text-secondary">ชื่อสหกรณ์</label>
-        <div class="input-group">
-          <span class="input-group-text bg-white border-0"><i class="fas fa-warehouse text-primary"></i></span>
-            <input type="text" id="searchCoop" name="searchCoop" class="form-control shadow-sm" placeholder="พิมพ์ชื่อสหกรณ์..." value="<%= searchCoop || '' %>">
+          <span class="input-group-text bg-white border-0"><i class="fas fa-search text-primary"></i></span>
+          <input type="search" id="search" name="search" class="form-control shadow-sm" placeholder="ชื่อระเบียบ สหกรณ์ รหัส ปี วันที่ กลุ่ม หรือผู้บันทึก..." value="<%= search || '' %>">
         </div>
       </div>
       <div class="col-md-4 d-flex gap-2">
@@ -71,12 +64,11 @@
         <a class="btn btn-outline-secondary" style="border-radius:14px;" href="/rabiab"><i class="fas fa-undo"></i></a>
       </div>
 
-      <% if (searchName || searchCoop) { %>
+      <% if (search) { %>
         <div class="col-12">
           <div class="d-flex flex-wrap align-items-center small">
             <span class="me-2 text-secondary">ตัวกรอง:</span>
-            <% if (searchName) { %><span class="search-pill"><i class="fas fa-file-alt me-1"></i><%= searchName %></span><% } %>
-            <% if (searchCoop) { %><span class="search-pill"><i class="fas fa-warehouse me-1"></i><%= searchCoop %></span><% } %>
+            <span class="search-pill"><i class="fas fa-search me-1"></i><%= search %></span>
             <a href="/rabiab" class="ms-auto small text-decoration-none text-danger"><i class="fas fa-times-circle"></i> ล้างตัวกรอง</a>
           </div>
         </div>
@@ -86,9 +78,10 @@
 
   <div class="d-flex justify-content-between align-items-center mb-2">
     <div class="result-meta">
-      แสดง <strong><%= rabiabs.length %></strong> รายการ ในหน้านี้
-      <% if (searchName || searchCoop) { %>
-        (ผลการค้นหา)
+      <% if (search) { %>
+        พบและแสดงผลทั้งหมด <strong><%= totalItems %></strong> รายการ
+      <% } else { %>
+        แสดง <strong><%= rabiabs.length %></strong> จากทั้งหมด <strong><%= totalItems %></strong> รายการ
       <% } %>
     </div>
   </div>
@@ -138,12 +131,12 @@
             <td class="text-center action-group">
               <div class="d-inline-flex gap-2">
                 <a href="/rabiab/download/<%= rabiab.ra_id %>" class="btn btn-sm btn-outline-primary" target="_blank" data-bs-toggle="tooltip" title="ดาวน์โหลด">
-                  <i class="fas fa-download"></i>
+                  <i class="fas fa-download me-1"></i> ดาวน์โหลด
                 </a>
                 <% if(user && ['admin', 'kjs'].includes(user.mClass)) { %>
                   <form method="POST" action="/rabiab/delete/<%= rabiab.ra_id %>" class="d-inline" onsubmit="return confirm('ต้องการลบระเบียบนี้ ? ไฟล์จะถูกลบออกจากระบบด้วย')">
                     <button type="submit" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="ลบ">
-                      <i class="fas fa-trash"></i>
+                      <i class="fas fa-trash me-1"></i> ลบ
                     </button>
                   </form>
                 <% } %>
@@ -168,7 +161,7 @@
       <ul class="pagination justify-content-center flex-wrap">
         <% for (let i = 1; i <= totalPages; i++) { %>
           <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-            <a class="page-link" href="?page=<%= i %><%= searchName ? '&searchName=' + encodeURIComponent(searchName) : '' %><%= searchCoop ? '&searchCoop=' + encodeURIComponent(searchCoop) : '' %>"><%= i %></a>
+            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
           </li>
         <% } %>
       </ul>
@@ -184,7 +177,6 @@
     }
   });
 </script>
-<script src="/js/rabiab-search.js"></script>
 <script>
 // Embed mode for homepage preview
 (function(){
@@ -228,4 +220,3 @@
 })();
 </script>
 <%- include('../partials/footer') %>
-

@@ -7,14 +7,13 @@ const fontkit = require('@pdf-lib/fontkit');
 // แสดงหน้ารายการระ3บ
 exports.index = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const searchName = req.query.searchName || '';
-    const searchCoop = req.query.searchCoop || '';
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const search = String(req.query.search || '').trim();
 
-    // Use DB-level search and pagination (separate fields)
-    const rabiabs = await rabiabModel.getAllRabiab(page, searchName, searchCoop);
-    const totalItems = await rabiabModel.countRabiab(searchName, searchCoop);
-    const totalPages = Math.ceil(totalItems / rabiabModel.ITEMS_PER_PAGE);
+    // ผลการค้นหาแสดงทั้งหมดในหน้าเดียว ส่วนรายการปกติยังคงแบ่งหน้า
+    const rabiabs = await rabiabModel.getAllRabiab(page, search);
+    const totalItems = await rabiabModel.countRabiab(search);
+    const totalPages = search ? (totalItems > 0 ? 1 : 0) : Math.ceil(totalItems / rabiabModel.ITEMS_PER_PAGE);
 
     const canDelete = ['admin', 'kjs'].includes(req.session?.user?.mClass);
 
@@ -23,6 +22,7 @@ exports.index = async (req, res) => {
         items: rabiabs,
         currentPage: page,
         totalPages,
+        totalItems,
         isAdmin: canDelete,
         isLoggedIn: !!req.session?.user
       });
@@ -32,8 +32,8 @@ exports.index = async (req, res) => {
       rabiabs,
       currentPage: page,
       totalPages,
-      searchName,
-      searchCoop,
+      totalItems,
+      search,
       user: req.session.user
     });
   } catch (error) {

@@ -94,7 +94,11 @@ exports.profile = async (req, res, next) => {
     data.turnoverMonthly = turnoverMonthly;
     data.turnoverYearly = turnoverYearly;
 
-    res.render('allCoop/profile', { data });
+    res.render('allCoop/profile', {
+      title: `ข้อมูลสถาบัน ${data.coop.c_name}`,
+      data,
+      embedded: req.query.embed === '1'
+    });
   } catch (e) {
     console.error('profile error', e);
     

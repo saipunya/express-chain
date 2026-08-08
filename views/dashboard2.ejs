@@ -1,5 +1,42 @@
 <%- include('partials/header.ejs') %>
 
+<style>
+  .institution-profile-frame-wrap {
+    padding: 1rem;
+    background: #f3f6fb;
+  }
+
+  #institutionProfileFrame {
+    border-radius: 1rem;
+    background: #f8fbff;
+  }
+
+  @media (max-width: 575.98px) {
+    .institution-profile-card {
+      border-radius: 1rem;
+    }
+
+    .institution-profile-card > .card-header {
+      padding: 1rem !important;
+    }
+
+    .institution-profile-card > .card-header .btn {
+      width: 100%;
+      padding-block: .55rem;
+    }
+
+    .institution-profile-frame-wrap {
+      padding: .5rem;
+      background: #eef3f8;
+    }
+
+    #institutionProfileFrame {
+      min-height: 640px !important;
+      border-radius: .85rem;
+    }
+  }
+</style>
+
 <div class="container py-4">
   <div class="row g-4 align-items-stretch mb-4">
     <div class="col-lg-8">
@@ -73,6 +110,47 @@
       </div>
     </div>
   </div>
+
+  <% const institutionCode = user ? (user.username || user.m_user || '') : ''; %>
+  <% if (institutionCode) { %>
+    <section class="card border-0 shadow-sm mt-4 overflow-hidden institution-profile-card" aria-labelledby="institution-profile-title">
+      <div class="card-header bg-white border-0 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <h2 id="institution-profile-title" class="h5 mb-1">
+            <i class="bi bi-building me-2 text-primary"></i>ข้อมูลสถาบันของฉัน
+          </h2>
+          <div class="text-muted small">ข้อมูลจากโปรไฟล์สถาบันรหัส <%= institutionCode %></div>
+        </div>
+        <a href="/allCoop/profile/<%= encodeURIComponent(institutionCode) %>" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-box-arrow-up-right me-1"></i>เปิดหน้าเต็ม
+        </a>
+      </div>
+      <div class="card-body p-0 institution-profile-frame-wrap">
+        <iframe
+          id="institutionProfileFrame"
+          src="/allCoop/profile/<%= encodeURIComponent(institutionCode) %>?embed=1"
+          title="ข้อมูลสถาบันของฉัน"
+          class="d-block w-100 border-0"
+          style="min-height: 720px;"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+  <% } else { %>
+    <div class="alert alert-warning mt-4 mb-0">
+      <i class="bi bi-exclamation-triangle me-2"></i>ไม่พบรหัสสถาบันในบัญชีผู้ใช้ จึงไม่สามารถแสดงข้อมูลโปรไฟล์ได้
+    </div>
+  <% } %>
 </div>
+
+<script>
+  window.addEventListener('message', function(event) {
+    if (event.origin !== window.location.origin || event.data?.type !== 'coop-profile-resize') return;
+    const frame = document.getElementById('institutionProfileFrame');
+    const requestedHeight = Number(event.data.height);
+    if (!frame || !Number.isFinite(requestedHeight) || requestedHeight < 1) return;
+    frame.style.height = Math.ceil(requestedHeight) + 'px';
+  });
+</script>
 
 <%- include('partials/footer') %>

@@ -25,6 +25,20 @@
   };
 %>
 <style>
+  <% if (typeof embedded !== 'undefined' && embedded) { %>
+  body > nav.navbar,
+  body > footer,
+  #a2hs-banner,
+  #ios-install-banner {
+    display: none !important;
+  }
+
+  body > main.container {
+    max-width: none;
+    padding: 0 !important;
+  }
+  <% } %>
+
   .coop-profile-page{
     --cp-bg:#f6f8fb;
     --cp-text:#172033;
@@ -40,6 +54,13 @@
     min-height:100vh;
     padding-block:1rem;
   }
+
+  <% if (typeof embedded !== 'undefined' && embedded) { %>
+  .coop-profile-page {
+    min-height: 0;
+    padding-block: 0;
+  }
+  <% } %>
 
   .coop-profile-page .container.py-4{
     max-width:1180px;
@@ -347,6 +368,147 @@
     }
 
   }
+
+  <% if (typeof embedded !== 'undefined' && embedded) { %>
+  @media (max-width: 575.98px) {
+    body {
+      background: #f8fbff;
+    }
+
+    .coop-profile-page > .container.py-4 {
+      padding: 1rem !important;
+    }
+
+    .coop-profile-page .profile-header-card,
+    .coop-profile-page .section-nav,
+    .coop-profile-page .section-block .card,
+    .coop-profile-page .quick-stats .card {
+      border-radius: 1rem !important;
+    }
+
+    .coop-profile-page .profile-header-card .card-body,
+    .coop-profile-page .quick-stats .card-body {
+      padding: 1rem 1.1rem !important;
+    }
+
+    .coop-profile-page .quick-stats {
+      --bs-gutter-x: 0;
+      --bs-gutter-y: .85rem;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .coop-profile-page .quick-stats > [class*="col-"] {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .coop-profile-page .section-block .card-header {
+      padding: 1rem 1.15rem !important;
+    }
+
+    .coop-profile-page .section-block .card-body {
+      padding: .75rem !important;
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody tr {
+      border: 1px solid var(--cp-line);
+      padding: .8rem .9rem !important;
+      background: #fff !important;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, .05);
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody tr:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Mobile table: วางหัวข้อและค่าในแถวเดียว ลดความสูงของแต่ละรายการ */
+    .coop-profile-page .section-block .responsive-table tbody td[data-label] {
+      display: grid !important;
+      grid-template-columns: minmax(5.5rem, 32%) minmax(0, 1fr);
+      align-items: center;
+      gap: .65rem;
+      min-height: 2.35rem;
+      padding: .42rem 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody td[data-label]::before {
+      margin: 0;
+      color: #64748b;
+      font-size: .76rem;
+      line-height: 1.35;
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody td[data-label="สถาบัน"] {
+      align-items: start;
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody td.small-hide {
+      display: none !important;
+    }
+
+    .coop-profile-page .section-block .responsive-table tbody td.row-actions .btn {
+      justify-self: start;
+      width: auto;
+      min-width: 7rem;
+      margin-top: 0;
+    }
+
+    #strength-section .card-body {
+      background: #f8fafc;
+    }
+
+    #strength-section .responsive-table tbody tr {
+      display: grid !important;
+      grid-template-columns: .8fr 1fr 1fr;
+      gap: .7rem;
+      padding: 1rem !important;
+    }
+
+    #strength-section .responsive-table tbody td[data-label] {
+      display: grid !important;
+      grid-template-columns: 1fr;
+      align-content: start;
+      gap: .2rem;
+      min-height: 0;
+      padding: 0 !important;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="สถาบัน"] {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      padding-bottom: .75rem !important;
+      border-bottom: 1px solid var(--cp-line) !important;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="ปี"] {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="รวม"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="ระดับ"] {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="รวม"] {
+      color: #0f766e;
+      font-weight: 800;
+    }
+
+    #strength-section .responsive-table tbody td[data-label="ระดับ"] .badge {
+      justify-self: start;
+      padding: .45rem .7rem !important;
+    }
+  }
+  <% } %>
 </style>
   <div class="coop-profile-page">
     <div class="container py-4">
@@ -1062,15 +1224,17 @@
         </div>
       </section>
     <% } %>
-    <% const sessionName = (user && (user.username || user.m_user)) ? (user.username || user.m_user) : null; %>
-    <% if (!sessionName || sessionName !== String(data.coop.c_code)) { %>
-      <div class="mt-2">
-        <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
-      </div>
-    <% }else{ %>
-      <div class="mt-2">
-        <a href="/dashboard2" class="btn btn-outline-secondary btn-sm"><i class="bi bi-person-circle"></i> กลับหน้า dashboard</a>
-      </div>
+    <% if (!(typeof embedded !== 'undefined' && embedded)) { %>
+      <% const sessionName = (user && (user.username || user.m_user)) ? (user.username || user.m_user) : null; %>
+      <% if (!sessionName || sessionName !== String(data.coop.c_code)) { %>
+        <div class="mt-2">
+          <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
+        </div>
+      <% }else{ %>
+        <div class="mt-2">
+          <a href="/dashboard2" class="btn btn-outline-secondary btn-sm"><i class="bi bi-person-circle"></i> กลับหน้า dashboard</a>
+        </div>
+      <% } %>
     <% } %>
   </div>
 </div>
@@ -1205,4 +1369,22 @@
       }
     });
   });
+
+  <% if (typeof embedded !== 'undefined' && embedded) { %>
+  // แจ้งความสูงให้ dashboard ปรับ iframe ตามเนื้อหาจริง
+  (function notifyDashboardHeight(){
+    const sendHeight = function(){
+      const height = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+      window.parent.postMessage({ type: 'coop-profile-resize', height: height }, window.location.origin);
+    };
+    window.addEventListener('load', sendHeight);
+    if (window.ResizeObserver) {
+      new ResizeObserver(sendHeight).observe(document.body);
+    }
+    sendHeight();
+  })();
+  <% } %>
 </script>

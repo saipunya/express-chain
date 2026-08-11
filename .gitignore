@@ -33,6 +33,8 @@ tmp/
 
 # Database dump
 *.sql
+!sql/migrations/
+!sql/migrations/*.sql
 
 # Build artifacts
 dist/

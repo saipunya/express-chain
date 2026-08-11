@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>แบบสำรวจความต้องการด้านเทคโนโลยีของสหกรณ์</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/survey.css">
+</head>
+<body class="survey-page">
+  <% const vals = (name) => Array.isArray(old[name]) ? old[name] : (old[name] ? [old[name]] : []); %>
+  <header class="survey-hero">
+    <div class="survey-shell">
+      <nav class="survey-nav">
+        <a href="/survey" class="survey-brand">CoopTech Survey</a>
+        <a href="/survey/results" class="survey-nav-link">ดูผลสำรวจ</a>
+      </nav>
+      <span class="survey-kicker">สำนักงานสหกรณ์จังหวัด</span>
+      <h1>ร่วมออกแบบเทคโนโลยี<br>ที่ตอบโจทย์สหกรณ์จริง</h1>
+      <p>คำตอบของท่านจะช่วยจัดลำดับระบบ การอบรม และการสนับสนุนที่ควรพัฒนาในระดับจังหวัด ใช้เวลาประมาณ 10–15 นาที</p>
+      <div class="survey-privacy">เก็บข้อมูลในระดับสหกรณ์ และไม่ขอข้อมูลส่วนบุคคลของสมาชิก</div>
+    </div>
+  </header>
+
+  <main class="survey-shell survey-main">
+    <% if (error) { %><div class="survey-alert" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/survey" class="survey-form">
+      <section class="survey-card">
+        <div class="survey-section-head"><span>01</span><div><h2>ข้อมูลสหกรณ์</h2><p>ข้อมูลพื้นฐานสำหรับวิเคราะห์ความต้องการตามประเภทและขนาด</p></div></div>
+        <label for="coop_name">ชื่อสหกรณ์หรือกลุ่มเกษตรกร <em>*</em></label>
+        <input type="text" id="coop_name" name="coop_name" value="<%= old.coop_name || '' %>" maxlength="255" autocomplete="organization" placeholder="กรอกชื่อสหกรณ์หรือกลุ่มเกษตรกร" required>
+        <div class="survey-grid-2">
+          <div><label for="coop_type">ประเภท <em>*</em></label><%- include('_select', { name: 'coop_type', items: options.coopTypes, value: old.coop_type || '', required: true }) %></div>
+          <div><label for="member_range">จำนวนสมาชิกโดยประมาณ</label><%- include('_select', { name: 'member_range', items: options.memberRanges, value: old.member_range || '', required: false }) %></div>
+          <div><label for="staff_range">จำนวนเจ้าหน้าที่</label><%- include('_select', { name: 'staff_range', items: options.staffRanges, value: old.staff_range || '', required: false }) %></div>
+          <div><label for="respondent_role">บทบาทของผู้ตอบ</label><%- include('_select', { name: 'respondent_role', items: options.respondentRoles, value: old.respondent_role || '', required: false }) %></div>
+        </div>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>02</span><div><h2>การใช้เทคโนโลยีในปัจจุบัน</h2><p>สำรวจเครื่องมือ ระดับการใช้งาน และวิธีจัดเก็บข้อมูล</p></div></div>
+        <label>เทคโนโลยี/ซอฟต์แวร์ที่ใช้อยู่</label>
+        <%- include('_checks', { name: 'current_tools', items: options.currentTools, selectedValues: vals('current_tools') }) %>
+        <label>ระดับการใช้เทคโนโลยีโดยรวม <em>*</em></label>
+        <div class="survey-scale" role="radiogroup" aria-label="ระดับการใช้เทคโนโลยี">
+          <% [1,2,3,4,5].forEach((level) => { %><label><input type="radio" name="tech_level" value="<%= level %>" <%= String(old.tech_level || '') === String(level) ? 'checked' : '' %> required><span><%= level %></span></label><% }) %>
+        </div>
+        <div class="survey-scale-label"><span>เริ่มต้น</span><span>ก้าวหน้า</span></div>
+        <label>วิธีจัดเก็บข้อมูลในปัจจุบัน</label>
+        <%- include('_checks', { name: 'data_storage', items: options.dataStorage, selectedValues: vals('data_storage') }) %>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>03</span><div><h2>ปัญหาในการดำเนินงาน</h2><p>งานที่ใช้เวลามาก ทำซ้ำ หรือเป็นอุปสรรคต่อการทำงาน</p></div></div>
+        <label>งานที่ใช้เวลามากหรือทำซ้ำบ่อย</label><%- include('_checks', { name: 'time_consuming_jobs', items: options.timeJobs, selectedValues: vals('time_consuming_jobs') }) %>
+        <label>ปัญหาที่พบในปัจจุบัน</label><%- include('_checks', { name: 'current_problems', items: options.problems, selectedValues: vals('current_problems') }) %>
+        <label for="most_time_job">งานเดียวที่ใช้เวลามากที่สุด</label><input id="most_time_job" name="most_time_job" maxlength="2000" value="<%= old.most_time_job || '' %>">
+        <label for="most_time_job_detail">ขั้นตอนหรือปัญหาปัจจุบันเป็นอย่างไร</label><textarea id="most_time_job_detail" name="most_time_job_detail" rows="4" maxlength="5000"><%= old.most_time_job_detail || '' %></textarea>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>04</span><div><h2>ความต้องการด้านระบบ</h2><p>เลือกงานและความสามารถที่ควรนำเทคโนโลยีมาช่วย</p></div></div>
+        <label>งานที่ควรปรับปรุงด้วยเทคโนโลยี</label><%- include('_checks', { name: 'desired_technology_jobs', items: options.technologyJobs, selectedValues: vals('desired_technology_jobs') }) %>
+        <label>ความสามารถของระบบที่ต้องการ</label><%- include('_checks', { name: 'desired_system_features', items: options.systemFeatures, selectedValues: vals('desired_system_features') }) %>
+      </section>
+
+      <section class="survey-card survey-card-ai">
+        <div class="survey-section-head"><span>05</span><div><h2>ความต้องการด้าน AI</h2><p>AI เป็นทางเลือกเสริม คำตอบนี้ไม่มีผลต่อการรับบริการ</p></div></div>
+        <label for="ai_interest">ระดับความสนใจ AI <em>*</em></label><%- include('_select', { name: 'ai_interest', items: options.aiInterests, value: old.ai_interest || '', required: true }) %>
+        <label>งานที่อยากให้ AI ช่วย</label><%- include('_checks', { name: 'desired_ai_jobs', items: options.aiJobs, selectedValues: vals('desired_ai_jobs') }) %>
+        <label for="ai_priority">งาน AI ที่สำคัญที่สุด</label><textarea id="ai_priority" name="ai_priority" rows="3" maxlength="2000"><%= old.ai_priority || '' %></textarea>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>06</span><div><h2>ข้อมูลร่วมกับสำนักงานสหกรณ์จังหวัด</h2><p>สำรวจความสมัครใจ ประเภทข้อมูล และข้อกังวล</p></div></div>
+        <label for="shared_system_opinion">ความคิดเห็นต่อระบบข้อมูลร่วม</label><%- include('_select', { name: 'shared_system_opinion', items: options.sharedOpinions, value: old.shared_system_opinion || '', required: false }) %>
+        <label>ข้อมูลที่สามารถใช้ร่วมกันได้</label><%- include('_checks', { name: 'shareable_data', items: options.shareableData, selectedValues: vals('shareable_data') }) %>
+        <label>ข้อกังวลเกี่ยวกับระบบข้อมูลร่วม</label><%- include('_checks', { name: 'shared_system_concerns', items: options.sharedConcerns, selectedValues: vals('shared_system_concerns') }) %>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>07</span><div><h2>ความพร้อมทางดิจิทัล</h2><p>อุปกรณ์ อินเทอร์เน็ต ทักษะ และความพร้อมทดลองระบบ</p></div></div>
+        <div class="survey-grid-2">
+          <div><label for="computer_readiness">ความพร้อมด้านอุปกรณ์</label><%- include('_select', { name: 'computer_readiness', items: options.computerReadiness, value: old.computer_readiness || '', required: false }) %></div>
+          <div><label for="internet_readiness">คุณภาพอินเทอร์เน็ต</label><%- include('_select', { name: 'internet_readiness', items: options.internetReadiness, value: old.internet_readiness || '', required: false }) %></div>
+          <div><label for="staff_tech_skill">ทักษะดิจิทัลของเจ้าหน้าที่</label><%- include('_select', { name: 'staff_tech_skill', items: options.staffSkills, value: old.staff_tech_skill || '', required: false }) %></div>
+          <div><label for="pilot_readiness">ความพร้อมทดลองระบบใหม่ <em>*</em></label><%- include('_select', { name: 'pilot_readiness', items: options.pilotReadiness, value: old.pilot_readiness || '', required: true }) %></div>
+        </div>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>08</span><div><h2>การสนับสนุนที่ต้องการ</h2><p>หัวข้อและรูปแบบที่เหมาะกับเจ้าหน้าที่สหกรณ์</p></div></div>
+        <label>หัวข้อการอบรม/สนับสนุน</label><%- include('_checks', { name: 'support_needs', items: options.supportNeeds, selectedValues: vals('support_needs') }) %>
+        <label>รูปแบบการสนับสนุน</label><%- include('_checks', { name: 'support_formats', items: options.supportFormats, selectedValues: vals('support_formats') }) %>
+      </section>
+
+      <section class="survey-card survey-priority">
+        <div class="survey-section-head"><span>09</span><div><h2>ระบบที่ควรพัฒนาเป็นอันดับแรก</h2><p>หากเลือกได้เพียงหนึ่งระบบ อะไรจะสร้างผลลัพธ์มากที่สุด</p></div></div>
+        <label for="first_priority_system">ระบบที่ต้องการเป็นอันดับแรก</label><textarea id="first_priority_system" name="first_priority_system" rows="3" maxlength="2000" placeholder="เช่น ระบบติดตามลูกหนี้และแจ้งเตือนการชำระ"><%= old.first_priority_system || '' %></textarea>
+        <label for="priority_reason">เหตุผล</label><textarea id="priority_reason" name="priority_reason" rows="3" maxlength="5000"><%= old.priority_reason || '' %></textarea>
+        <label for="current_time_spent">เวลาที่ใช้กับงานนี้ในปัจจุบัน</label><%- include('_select', { name: 'current_time_spent', items: options.timeSpent, value: old.current_time_spent || '', required: false }) %>
+        <label>ผลลัพธ์ที่คาดหวัง</label><%- include('_checks', { name: 'expected_outcomes', items: options.expectedOutcomes, selectedValues: vals('expected_outcomes') }) %>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-section-head"><span>10</span><div><h2>ข้อเสนอแนะเพิ่มเติม</h2><p>เล่าความต้องการที่ตัวเลือกข้างต้นยังไม่ครอบคลุม</p></div></div>
+        <label for="biggest_opportunity">งานใดจะดีขึ้นมากที่สุดหากมีเทคโนโลยีช่วย</label><textarea id="biggest_opportunity" name="biggest_opportunity" rows="3" maxlength="5000"><%= old.biggest_opportunity || '' %></textarea>
+        <label for="dream_system">ระบบในอุดมคติของสหกรณ์ควรทำอะไรได้บ้าง</label><textarea id="dream_system" name="dream_system" rows="3" maxlength="5000"><%= old.dream_system || '' %></textarea>
+        <label for="additional_suggestions">ข้อเสนอแนะอื่น ๆ</label><textarea id="additional_suggestions" name="additional_suggestions" rows="3" maxlength="5000"><%= old.additional_suggestions || '' %></textarea>
+      </section>
+
+      <div class="survey-submit">
+        <button type="submit">ส่งแบบสำรวจ</button>
+        <p>โปรดตรวจสอบข้อมูลก่อนส่ง ระบบจะบันทึกคำตอบเพื่อนำไปวิเคราะห์ภาพรวม</p>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

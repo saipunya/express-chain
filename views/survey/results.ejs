@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard ผลสำรวจเทคโนโลยีสหกรณ์</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/survey.css"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script></head>
+<body class="survey-page">
+  <header class="survey-dashboard-hero"><div class="survey-shell survey-wide"><nav class="survey-nav"><a href="/survey/results" class="survey-brand">CoopTech Dashboard</a><a href="/survey" class="survey-nav-link">เปิดแบบสำรวจ</a></nav><span class="survey-kicker">ข้อมูลเพื่อการตัดสินใจ</span><h1>ภาพรวมความต้องการเทคโนโลยีของสหกรณ์</h1><p>ตัวเลขและอันดับทั้งหมดคำนวณจากชุดข้อมูลหลังใช้ตัวกรอง</p></div></header>
+  <main class="survey-shell survey-wide survey-dashboard">
+    <form method="get" class="survey-filter-card">
+      <div><label for="coop_type">ประเภท</label><%- include('_select', { name: 'coop_type', items: options.coopTypes, value: filters.coop_type, required: false }) %></div>
+      <div><label for="tech_level">ระดับเทคโนโลยี</label><select id="tech_level" name="tech_level"><option value="">ทุกระดับ</option><% [1,2,3,4,5].forEach(x => { %><option value="<%= x %>" <%= filters.tech_level === String(x) ? 'selected' : '' %>><%= x %></option><% }) %></select></div>
+      <div><label for="ai_interest">ความสนใจ AI</label><%- include('_select', { name: 'ai_interest', items: options.aiInterests, value: filters.ai_interest, required: false }) %></div>
+      <div><label for="pilot_readiness">ความพร้อมทดลอง</label><%- include('_select', { name: 'pilot_readiness', items: options.pilotReadiness, value: filters.pilot_readiness, required: false }) %></div>
+      <div><label for="c_group">อำเภอ/พื้นที่</label><%- include('_select', { name: 'c_group', items: dimensions.groups, value: filters.c_group, required: false }) %></div>
+      <div><label for="c_status">สถานะสหกรณ์</label><%- include('_select', { name: 'c_status', items: dimensions.statuses, value: filters.c_status, required: false }) %></div>
+      <div><label for="c_person">เจ้าหน้าที่ผู้รับผิดชอบ</label><%- include('_select', { name: 'c_person', items: dimensions.officers, value: filters.c_person, required: false }) %></div>
+      <div><label for="date_from">ตั้งแต่วันที่</label><input type="date" id="date_from" name="date_from" value="<%= filters.date_from %>"></div>
+      <div><label for="date_to">ถึงวันที่</label><input type="date" id="date_to" name="date_to" value="<%= filters.date_to %>"></div>
+      <div class="survey-filter-actions"><button type="submit">ใช้ตัวกรอง</button><a href="/survey/results">ล้างค่า</a></div>
+    </form>
+
+    <section class="survey-metrics">
+      <article><span>คำตอบทั้งหมด</span><strong><%= summary.total.toLocaleString('th-TH') %></strong><small>รายการ</small></article>
+      <article><span>สหกรณ์ที่ตอบ</span><strong><%= summary.uniqueCoops.toLocaleString('th-TH') %></strong><small>แห่ง</small></article>
+      <article><span>สนใจใช้ AI</span><strong><%= summary.aiInterestedPercent %>%</strong><small>สนใจ / สนใจมาก</small></article>
+      <article><span>พร้อมทดลองระบบ</span><strong><%= summary.pilotReadyPercent %>%</strong><small>พร้อม / พร้อมมาก</small></article>
+    </section>
+
+    <section class="survey-chart-grid">
+      <article class="survey-chart-card"><h2>ประเภทสหกรณ์</h2><div class="survey-chart-box"><canvas id="coopTypeChart"></canvas></div></article>
+      <article class="survey-chart-card"><h2>ระดับการใช้เทคโนโลยี</h2><div class="survey-chart-box"><canvas id="techChart"></canvas></div></article>
+      <article class="survey-chart-card"><h2>ความพร้อมทดลองระบบใหม่</h2><div class="survey-chart-box"><canvas id="readinessChart"></canvas></div></article>
+    </section>
+
+    <section class="survey-ranking-grid">
+      <%- include('_ranking', { title: 'ปัญหาในการดำเนินงาน Top 10', items: summary.currentProblems, total: summary.total }) %>
+      <%- include('_ranking', { title: 'งานที่ใช้เวลามาก Top 10', items: summary.timeJobs, total: summary.total }) %>
+      <%- include('_ranking', { title: 'ระบบที่ต้องการ Top 10', items: summary.desiredSystems, total: summary.total }) %>
+      <%- include('_ranking', { title: 'AI Use Cases Top 10', items: summary.desiredAiJobs, total: summary.total }) %>
+      <%- include('_ranking', { title: 'การสนับสนุนที่ต้องการ', items: summary.supportNeeds, total: summary.total }) %>
+    </section>
+
+    <section class="survey-table-card"><div class="survey-table-head"><div><h2>คำตอบล่าสุด</h2><p>แสดง 50 รายการล่าสุดตามเงื่อนไขที่เลือก</p></div><a href="/survey">+ เพิ่มคำตอบ</a></div><div class="survey-table-wrap"><table><thead><tr><th>วันที่</th><th>สหกรณ์</th><th>ประเภท</th><th>ระดับเทคโนโลยี</th><th>AI</th><th>ความพร้อม</th><th>ระบบอันดับแรก</th></tr></thead><tbody><% if (!rows.length) { %><tr><td colspan="7" class="survey-muted">ยังไม่มีข้อมูลตามเงื่อนไข</td></tr><% } %><% rows.slice(0, 50).forEach(row => { %><tr><td><%= new Date(row.submitted_at).toLocaleDateString('th-TH', { dateStyle: 'medium' }) %></td><td><strong><%= row.coop_name %></strong><small><%= row.c_group || '' %></small></td><td><%= row.coop_type || '-' %></td><td><%= row.tech_level || '-' %></td><td><%= row.ai_interest || '-' %></td><td><%= row.pilot_readiness || '-' %></td><td><%= row.first_priority_system || '-' %></td></tr><% }) %></tbody></table></div></section>
+  </main>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof Chart === 'undefined') return;
+      const data = <%- JSON.stringify({ coopTypes: summary.coopTypes, techLevels: summary.techLevels, readiness: summary.digitalReadiness }).replace(/</g, '\\u003c') %>;
+      const colors = ['#0d7c66','#e3a92b','#335c81','#d56b4c','#7f6aad','#43a08b','#b65d79','#6d7b72','#9d7652'];
+      const draw = (id, rows, type = 'bar') => new Chart(document.getElementById(id), { type, data: { labels: rows.map(x => x.label), datasets: [{ data: rows.map(x => x.count), backgroundColor: colors, borderWidth: 0, borderRadius: 7 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut' } }, scales: type === 'doughnut' ? {} : { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } } });
+      draw('coopTypeChart', data.coopTypes, 'doughnut'); draw('techChart', data.techLevels); draw('readinessChart', data.readiness, 'bar');
+    });
+  </script>
+</body></html>

@@ -1,0 +1,6 @@
+<select id="<%= name %>" name="<%= name %>" <%= required ? 'required' : '' %>>
+  <option value="">-- เลือก --</option>
+  <% items.forEach((item) => { %>
+    <option value="<%= item %>" <%= value === item ? 'selected' : '' %>><%= item %></option>
+  <% }) %>
+</select>

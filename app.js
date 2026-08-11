@@ -190,6 +190,22 @@ app.use('/allCoop', allCoopRoutes); // ใช้งานเส้นทาง a
 app.use('/promotion', promotionRoutes); // ใช้งานเส้นทาง promotion
 app.use('/register', registerRoutes); // ใช้งานเส้นทาง register
 app.use('/random-names', randomNamesRoutes);
+
+// Central error handler: keep operational details in server logs without
+// exposing database or environment information to survey respondents.
+app.use((err, req, res, next) => {
+  console.error(`[${req._rid || 'no-request-id'}]`, err && (err.stack || err));
+  if (res.headersSent) return next(err);
+
+  if (req.path === '/survey' || req.path.startsWith('/survey/')) {
+    return res.status(500).send('ระบบไม่สามารถดำเนินการได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง');
+  }
+
+  return res.status(500).render('error_page', {
+    message: 'ระบบเกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+  });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('error_page', {

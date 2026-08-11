@@ -1,0 +1,8 @@
+<div class="survey-check-grid">
+  <% items.forEach((item) => { %>
+    <label class="survey-choice">
+      <input type="checkbox" name="<%= name %>" value="<%= item %>" <%= selectedValues.includes(item) ? 'checked' : '' %>>
+      <span><%= item %></span>
+    </label>
+  <% }) %>
+</div>

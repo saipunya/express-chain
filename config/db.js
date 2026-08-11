@@ -29,7 +29,7 @@ db.on('error', (err) => {
   console.error('Database connection error:', err); // Log connection errors
 });
 
-(async () => {
+if (process.env.DB_SKIP_STARTUP_CHECK !== '1') (async () => {
   try {
     const conn = await db.getConnection();
     console.log('✅ Database connected successfully');
@@ -50,4 +50,3 @@ process.on('SIGINT', async () => {
 });
 
 module.exports = db;
-

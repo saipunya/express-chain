@@ -1,0 +1,9 @@
+<%- include('partials/auth-head') %>
+<section class="auth-brand"><span class="debt-brand-mark"><i class="bi bi-bank2"></i></span><div><strong>Cooperative Debt Platform</strong><small>ระบบบริหารจัดการและติดตามหนี้สหกรณ์</small></div></section>
+<section class="landing-intro"><span class="section-kicker">SELECT YOUR ACCESS</span><h1>เลือกประเภทผู้ใช้งาน</h1><p>หนี้ กพส. และหนี้สมาชิกเป็นคนละโมดูล โดยใช้สิทธิ์เข้าถึงแยกจากกัน</p></section>
+<div class="access-grid">
+  <a class="access-card staff" href="<%= staffLoggedIn ? '/debt/dashboard' : '/debt/login' %>"><i class="bi bi-building-lock"></i><div><span>สำหรับเจ้าหน้าที่</span><h2>สำนักงานจังหวัด / สหกรณ์</h2><p>บริหารจัดการ กพส. ภาพรวมจังหวัด และลูกหนี้สมาชิกเฉพาะสหกรณ์ที่รับผิดชอบ</p><strong><%= staffLoggedIn ? 'เข้าสู่ระบบงาน' : 'เข้าสู่ระบบเจ้าหน้าที่' %> <i class="bi bi-arrow-right"></i></strong></div></a>
+  <a class="access-card member" href="<%= memberLoggedIn ? '/debt/member/overview' : '/debt/member/login' %>"><i class="bi bi-person-badge"></i><div><span>สำหรับสมาชิกสหกรณ์</span><h2>ข้อมูลหนี้ของฉัน</h2><p>ตรวจสอบยอดหนี้ สัญญา ประวัติชำระ และกำหนดชำระของตนเองเท่านั้น</p><strong><%= memberLoggedIn ? 'เปิดข้อมูลของฉัน' : 'เข้าสู่ระบบสมาชิก' %> <i class="bi bi-arrow-right"></i></strong></div></a>
+</div>
+<p class="auth-security"><i class="bi bi-shield-lock"></i> ระบบแยก session และสิทธิ์ของเจ้าหน้าที่ออกจากสมาชิก</p>
+<%- include('partials/auth-foot') %>

@@ -1,0 +1,118 @@
+<%- include('partials/head') %>
+<%
+  const urgentCdf = Number(summary.cdf.red_contracts || 0);
+  const urgentMember = Number(summary.memberDebt.urgent_no_recent_followup || 0);
+  const urgentTotal = urgentCdf + urgentMember;
+%>
+
+<section class="debt-attention-card card border-0 mb-4">
+  <div class="card-body p-0">
+    <div class="row g-0 align-items-stretch">
+      <div class="col-xl-7 d-flex align-items-center gap-3 p-4">
+        <span class="attention-icon flex-shrink-0"><i class="bi bi-exclamation-lg"></i></span>
+        <div>
+          <span class="section-kicker text-danger">สิ่งที่ต้องให้ความสนใจวันนี้</span>
+          <h2 class="attention-title mb-1"><strong><%= debtNumber(urgentTotal) %></strong> รายการต้องดำเนินการ</h2>
+          <p class="text-secondary small mb-0">เรียงจากลูกหนี้สมาชิกที่ยังขาดการติดตาม และสัญญา กพส. ที่เกินกำหนด</p>
+        </div>
+      </div>
+      <div class="col-xl-5 attention-actions">
+        <a href="/debt/cdf?risk=RED" class="attention-stat">
+          <span>หนี้ กพส.</span><strong><%= debtNumber(urgentCdf) %></strong><small>สัญญาเร่งด่วน</small>
+        </a>
+        <a href="/debt/member-debt?risk=RED" class="attention-stat">
+          <span>หนี้สมาชิก</span><strong><%= debtNumber(urgentMember) %></strong><small>รายการต้องติดตาม</small>
+        </a>
+        <a href="/debt/tasks" class="attention-cta">เปิดคิวงานทั้งหมด <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-heading dashboard-heading">
+  <div>
+    <span class="section-kicker">สถานการณ์สองโมดูล</span>
+    <h2>ภาพรวมที่ควรรู้</h2>
+    <p>หนี้ กพส. และหนี้สมาชิกเป็นข้อมูลคนละส่วน แสดงแยกกันอย่างชัดเจน</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-xl-6">
+    <section class="debt-module-card cdf card h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <span class="module-icon"><i class="bi bi-building"></i></span>
+          <div>
+            <small class="text-secondary">กองทุนพัฒนาสหกรณ์</small>
+            <h3 class="mb-0">หนี้ กพส.</h3>
+          </div>
+          <a href="/debt/cdf" class="module-link ms-auto">ดูรายละเอียด <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <span class="balance-label">ยอดเงินต้นคงเหลือ</span>
+        <div class="module-balance"><strong><%= debtMoney(summary.cdf.total_principal_balance) %></strong><small>บาท</small></div>
+        <div class="module-facts mt-4">
+          <div><strong><%= debtNumber(summary.cdf.borrower_cooperative_count) %></strong><span>สหกรณ์ลูกหนี้</span></div>
+          <div><strong><%= debtNumber(summary.cdf.contract_count) %></strong><span>สัญญาทั้งหมด</span></div>
+          <div class="danger"><strong><%= debtNumber(summary.cdf.red_contracts) %></strong><span>สัญญาเร่งด่วน</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="col-xl-6">
+    <section class="debt-module-card member card h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <span class="module-icon"><i class="bi bi-people"></i></span>
+          <div>
+            <small class="text-secondary">สหกรณ์ให้กู้แก่สมาชิก</small>
+            <h3 class="mb-0">หนี้สมาชิก</h3>
+          </div>
+          <a href="/debt/member-debt" class="module-link ms-auto">ดูรายละเอียด <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <span class="balance-label">ยอดหนี้คงเหลือรวม</span>
+        <div class="module-balance"><strong><%= debtMoney(summary.memberDebt.total_principal_balance) %></strong><small>บาท</small></div>
+        <div class="module-facts mt-4">
+          <div><strong><%= debtNumber(summary.memberDebt.cooperatives_with_member_debt_data) %></strong><span>สหกรณ์ส่งข้อมูล</span></div>
+          <div><strong><%= debtNumber(summary.memberDebt.borrower_members) %></strong><span>สมาชิกผู้กู้</span></div>
+          <div class="danger"><strong><%= debtNumber(summary.memberDebt.red_loans) %></strong><span>สัญญา RED</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card debt-priority-card border-0">
+  <div class="card-header bg-white d-flex align-items-center justify-content-between gap-3 p-4">
+    <div>
+      <span class="section-kicker">PRIORITY QUEUE</span>
+      <h2 class="mb-1">รายการที่ควรเปิดดูก่อน</h2>
+      <p class="text-secondary small mb-0">รายการสำคัญสูงสุดจากทั้งสองโมดูล เรียงตามความเร่งด่วน</p>
+    </div>
+    <a href="/debt/tasks" class="btn btn-outline-navy btn-sm flex-shrink-0">ดูคิวทั้งหมด</a>
+  </div>
+  <% if (!tasks.length) { %>
+    <div class="empty-state"><i class="bi bi-check2-circle"></i><p>ไม่มีงานเร่งด่วนในขณะนี้</p></div>
+  <% } else { %>
+    <div class="priority-list-v2">
+      <% tasks.slice(0, 6).forEach((item, index) => { %>
+        <a href="<%= item.domain_name === 'CDF' ? `/debt/cdf/contracts/${item.item_id}` : `/debt/member-debt/loans/${item.item_id}` %>" class="priority-row">
+          <span class="priority-number"><%= index + 1 %></span>
+          <div class="priority-identity">
+            <span class="domain-pill"><%= item.domain_name === 'CDF' ? 'กพส.' : 'สมาชิก' %></span>
+            <strong><%= item.display_name || item.c_name %></strong>
+            <small><%= item.c_name %> · <%= item.item_no %></small>
+          </div>
+          <div class="priority-status">
+            <%- include('partials/risk-badge', { risk: item.risk_color }) %>
+            <span><%= item.reason %></span>
+          </div>
+          <div class="priority-due"><span>กำหนด</span><strong><%= debtDate(item.due_date) %></strong></div>
+          <i class="bi bi-chevron-right priority-arrow"></i>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/foot') %>

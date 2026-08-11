@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | ระบบติดตามหนี้สหกรณ์</title>
+  <meta name="theme-color" content="#17365D">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/css/debt.css?v=20260809-2" rel="stylesheet">
+</head>
+<body class="debt-app-body">
+<div class="debt-shell">
+  <aside class="offcanvas-lg offcanvas-start debt-sidebar" tabindex="-1" id="debtSidebar" aria-labelledby="debtSidebarLabel">
+    <div class="offcanvas-header border-bottom border-light border-opacity-10 d-lg-none">
+      <div class="d-flex align-items-center gap-2" id="debtSidebarLabel"><span class="debt-brand-mark"><i class="bi bi-bank2"></i></span><strong>Coop Monitoring</strong></div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#debtSidebar" aria-label="ปิดเมนู"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column p-0">
+      <a class="debt-brand d-none d-lg-flex" href="/debt/dashboard">
+        <span class="debt-brand-mark"><i class="bi bi-bank2"></i></span>
+        <span><strong>Coop Monitoring</strong><small>Debt Management Platform</small></span>
+      </a>
+      <nav class="debt-nav" aria-label="เมนูระบบติดตามหนี้">
+        <span class="debt-nav-label">ภาพรวมการทำงาน</span>
+        <a class="<%= currentPath === '/dashboard' ? 'active' : '' %>" href="/debt/dashboard"><span class="nav-icon"><i class="bi bi-grid-1x2"></i></span><span>ภาพรวม</span></a>
+        <a class="<%= currentPath === '/tasks' ? 'active' : '' %>" href="/debt/tasks"><span class="nav-icon"><i class="bi bi-list-check"></i></span><span>งานที่ต้องทำ</span></a>
+        <span class="debt-nav-label mt-3">โมดูลข้อมูลหนี้</span>
+        <a class="<%= currentPath.startsWith('/cdf') ? 'active' : '' %>" href="/debt/cdf"><span class="nav-icon"><i class="bi bi-building"></i></span><span>หนี้ กพส.</span><small>สหกรณ์เป็นลูกหนี้</small></a>
+        <a class="<%= currentPath.startsWith('/member-debt') && !currentPath.includes('/imports') ? 'active' : '' %>" href="/debt/member-debt"><span class="nav-icon"><i class="bi bi-people"></i></span><span>หนี้สมาชิก</span><small>สมาชิกเป็นลูกหนี้</small></a>
+        <span class="debt-nav-label mt-3">จัดการข้อมูล</span>
+        <a class="<%= currentPath.includes('/imports') ? 'active' : '' %>" href="/debt/member-debt/imports"><span class="nav-icon"><i class="bi bi-file-earmark-arrow-up"></i></span><span>นำเข้าข้อมูล</span></a>
+      </nav>
+      <div class="debt-sidebar-user">
+        <div class="user-avatar"><i class="bi bi-person"></i></div>
+        <div class="user-meta"><small><%= debtAccess.role %></small><strong><%= user?.fullname || user?.username %></strong></div>
+        <div class="sidebar-user-actions"><a href="/main"><i class="bi bi-house-door"></i> CoopChain</a><a href="/auth/logout"><i class="bi bi-box-arrow-right"></i> ออกจากระบบ</a></div>
+      </div>
+    </div>
+  </aside>
+  <div class="debt-main">
+    <header class="debt-topbar navbar bg-white">
+      <div class="container-fluid px-0">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn debt-menu-button d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#debtSidebar" aria-controls="debtSidebar" aria-label="เปิดเมนู"><i class="bi bi-list"></i></button>
+          <div class="page-title"><span>ระบบบริหารจัดการหนี้สหกรณ์</span><h1><%= title %></h1></div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <a class="topbar-task d-none d-md-inline-flex" href="/debt/tasks"><i class="bi bi-exclamation-circle"></i> งานเร่งด่วน</a>
+          <div class="debt-asof"><i class="bi bi-calendar3"></i><span>ข้อมูล ณ วันที่</span><strong><%= new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium' }).format(new Date()) %></strong></div>
+        </div>
+      </div>
+    </header>
+    <main class="debt-content container-fluid">

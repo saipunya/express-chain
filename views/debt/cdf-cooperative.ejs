@@ -1,0 +1,11 @@
+<%- include('partials/head') %>
+<nav class="breadcrumb-line"><a href="/debt/cdf">หนี้ กพส.</a><i class="bi bi-chevron-right"></i><span><%= cooperative.c_name %></span></nav>
+<section class="profile-strip mb-4"><div><span class="code"><%= cooperative.c_code %></span><h2><%= cooperative.c_name %></h2><p><%= cooperative.c_group || '-' %> • สถานะ <%= cooperative.c_status || '-' %></p></div><div class="officer-card"><small>เจ้าหน้าที่รับผิดชอบ</small><strong><%= cooperative.c_person || '-' %></strong><span><%= cooperative.c_person2 ? `ผู้ช่วย: ${cooperative.c_person2}` : '' %></span></div></section>
+<div class="kpi-grid compact mb-4">
+  <div class="kpi-card"><span>สัญญา</span><strong><%= contracts.length %></strong></div>
+  <% ['RED','ORANGE','YELLOW','GREEN'].forEach((risk)=>{ %><a class="kpi-card risk-card <%= risk.toLowerCase() %>" href="?risk=<%= risk %>"><span><%= debtRiskThai(risk) %></span><strong><%= contracts.filter(x=>x.risk_color===risk).length %></strong></a><% }) %>
+</div>
+<section class="panel"><div class="panel-head"><h2>สัญญาเงินกู้ กพส.</h2><span class="text-muted"><%= contracts.length %> รายการ</span></div><div class="table-responsive"><table class="table debt-table"><thead><tr><th>ระดับ</th><th>เลขที่สัญญา</th><th class="text-end">วงเงิน</th><th class="text-end">คงเหลือ</th><th>กำหนดชำระ</th><th>คุณภาพข้อมูล</th><th></th></tr></thead><tbody>
+<% contracts.forEach((row)=>{ %><tr><td><%- include('partials/risk-badge',{risk:row.risk_color}) %></td><td><strong><%= row.contract_no %></strong></td><td class="text-end"><%= debtMoney(row.contract_amount) %></td><td class="text-end"><%= debtMoney(row.latest_principal_balance) %></td><td><%= debtDate(row.next_due_date || row.maturity_date) %></td><td><%= row.open_data_issues ? `${row.open_data_issues} จุดต้องตรวจ` : 'ไม่พบประเด็น' %></td><td><a class="btn btn-sm btn-light" href="/debt/cdf/contracts/<%= row.contract_id %>">รายละเอียด</a></td></tr><% }) %>
+</tbody></table></div></section>
+<%- include('partials/foot') %>

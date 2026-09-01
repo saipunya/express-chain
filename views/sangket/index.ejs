@@ -39,6 +39,7 @@
   };
   const typeLabel = (value) => (value === 'group_farmer' ? 'กลุ่มเกษตรกร' : 'สหกรณ์');
   const typeBadge = (value) => (value === 'group_farmer' ? 'secondary' : 'success');
+  const isAdmin = user && [user.mClass, user.m_class, user.level].includes('admin');
   const safeFilters = {
     search: filters.search || '',
     groupNo: filters.groupNo || '',
@@ -261,6 +262,12 @@
 
 <div class="sangket-page py-4">
   <div class="container">
+    <% if (clearResult) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        ล้างข้อมูลทะเบียนข้อสังเกตเรียบร้อยแล้ว (<%= clearResult.deletedCount %> รายการ)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+      </div>
+    <% } %>
     <div class="sangket-hero mb-4">
       <div class="sangket-hero__surface p-4 p-lg-5">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
@@ -281,6 +288,14 @@
             <a href="/sangket/create" class="btn btn-primary rounded-pill">
               <i class="bi bi-plus-circle me-1"></i> บันทึกข้อสังเกต
             </a>
+            <% if (isAdmin) { %>
+              <form method="POST" action="/sangket/clear-all" class="d-inline" onsubmit="return confirmClearSangket(this);">
+                <input type="hidden" name="confirmation" value="">
+                <button type="submit" class="btn btn-outline-danger rounded-pill">
+                  <i class="bi bi-trash3 me-1"></i> ล้างข้อมูลทั้งหมด
+                </button>
+              </form>
+            <% } %>
           </div>
         </div>
 
@@ -539,5 +554,24 @@
 
   </div>
 </div>
+
+<script>
+  function confirmClearSangket(form) {
+    const requiredText = 'ล้างข้อมูลทั้งหมด';
+    const confirmation = window.prompt(
+      `การดำเนินการนี้จะลบข้อมูลทั้งหมดในทะเบียนข้อสังเกตและไม่สามารถเรียกคืนได้\n\nพิมพ์ "${requiredText}" เพื่อยืนยัน`
+    );
+
+    if (confirmation !== requiredText) {
+      if (confirmation !== null) {
+        window.alert('ข้อความยืนยันไม่ถูกต้อง ระบบยังไม่ได้ลบข้อมูล');
+      }
+      return false;
+    }
+
+    form.elements.confirmation.value = confirmation;
+    return window.confirm('ยืนยันครั้งสุดท้ายว่าต้องการล้างข้อมูลทะเบียนข้อสังเกตทั้งหมดใช่หรือไม่?');
+  }
+</script>
 
 <%- include('../partials/footer') %>

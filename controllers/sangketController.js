@@ -217,7 +217,10 @@ const controller = {
         cooperativeTotal: coopData.total,
         groups: refs.groups,
         cooperatives: refs.cooperatives,
-        categories
+        categories,
+        clearResult: req.query.cleared === '1'
+          ? { deletedCount: Math.max(0, Number.parseInt(req.query.deleted, 10) || 0) }
+          : null
       });
     } catch (error) {
       console.error('Sangket index error:', error);
@@ -547,6 +550,20 @@ const controller = {
     } catch (error) {
       console.error('Delete sangket error:', error);
       res.status(500).send('ลบข้อมูลไม่สำเร็จ');
+    }
+  },
+
+  clearAll: async (req, res) => {
+    if (req.body.confirmation !== 'ล้างข้อมูลทั้งหมด') {
+      return res.status(400).send('คำยืนยันไม่ถูกต้อง จึงยังไม่มีการลบข้อมูล');
+    }
+
+    try {
+      const deletedCount = await Sangket.clearAllData();
+      return res.redirect(`/sangket?cleared=1&deleted=${deletedCount}`);
+    } catch (error) {
+      console.error('Clear all sangket data error:', error);
+      return res.status(500).send('ล้างข้อมูลทะเบียนข้อสังเกตไม่สำเร็จ');
     }
   },
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireLogin } = require('../middlewares/authMiddleware');
+const { requireLogin, requireLevel } = require('../middlewares/authMiddleware');
 const controller = require('../controllers/sangketController');
 
 router.use(requireLogin);
@@ -11,6 +11,8 @@ router.get('/report.xlsx', controller.exportExcel);
 router.get('/report.pdf', controller.exportPdf);
 router.get('/import', controller.importForm);
 router.post('/import', controller.upload.single('file'), controller.importExcel);
+
+router.post('/clear-all', requireLevel(['admin']), controller.clearAll);
 
 router.get('/create', controller.createForm);
 router.post('/create', controller.create);

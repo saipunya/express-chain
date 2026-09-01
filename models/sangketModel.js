@@ -889,6 +889,35 @@ async function deleteObservation(id) {
   return true;
 }
 
+async function clearAllData() {
+  await ensureSchema();
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [[countRow]] = await connection.query(
+      'SELECT COUNT(*) AS total FROM sangket_observations'
+    );
+
+    // Delete child rows first because older installations may not have
+    // foreign keys with ON DELETE CASCADE.
+    await connection.query('DELETE FROM sangket_observation_actions');
+    await connection.query('DELETE FROM sangket_observation_category_map');
+    await connection.query('DELETE FROM sangket_observations');
+    await connection.query('DELETE FROM sangket_audit_reports');
+    await connection.query('DELETE FROM sangket_cooperatives');
+
+    await connection.commit();
+    return Number(countRow.total || 0);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function getById(id) {
   await ensureSchema();
   const rows = await fetchObservationRows('WHERE o.id = ?', [id]);
@@ -1362,6 +1391,7 @@ module.exports = {
   create,
   update,
   delete: deleteObservation,
+  clearAllData,
   addAction: addObservationAction,
   deleteAction: deleteObservationAction,
   importWorkbook,

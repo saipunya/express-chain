@@ -1,0 +1,193 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">บัญชีสหกรณ์และกลุ่มเกษตรกร</h1>
+      <p class="text-muted mb-0">ชื่อผู้ใช้เป็นรหัส c-code และรหัสผ่านจะแสดงเฉพาะผู้ดูแลระบบ</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/member/institutions/export/excel" class="btn btn-outline-success" onclick="return confirm('ไฟล์นี้มีรหัสผ่านของทุกสถาบัน กรุณาเก็บรักษาอย่างปลอดภัยและส่งเฉพาะข้อมูลของสถาบันผู้รับ ยืนยันการดาวน์โหลด?');">
+        <i class="bi bi-file-earmark-excel me-1"></i>ส่งออก Excel
+      </a>
+      <a href="/member" class="btn btn-outline-secondary">
+        <i class="bi bi-people me-1"></i>บัญชีเจ้าหน้าที่
+      </a>
+      <form action="/member/institutions/generate" method="POST" onsubmit="return confirm('ยืนยันสร้างบัญชีให้สถาบันที่ยังไม่มีบัญชี? บัญชีเดิมจะไม่ถูกแก้ไข');">
+        <button type="submit" class="btn btn-success">
+          <i class="bi bi-person-plus me-1"></i>สร้างบัญชีที่ยังไม่มี
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <% if (message) { %>
+    <div class="alert alert-<%= message.type %> alert-dismissible fade show" role="alert">
+      <%= message.text %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+    </div>
+  <% } %>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <div class="text-muted small">สถาบันที่ดำเนินการ</div>
+        <div class="fs-3 fw-bold"><%= summary.institutions.toLocaleString() %></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <div class="text-muted small">มีบัญชีแล้ว</div>
+        <div class="fs-3 fw-bold text-primary"><%= summary.accounts.toLocaleString() %></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <div class="text-muted small">ดูรหัสผ่านได้</div>
+        <div class="fs-3 fw-bold text-success"><%= summary.viewablePasswords.toLocaleString() %></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <div class="text-muted small">ยังไม่มีบัญชี</div>
+        <div class="fs-3 fw-bold text-warning"><%= summary.missing.toLocaleString() %></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body border-bottom">
+      <form method="GET" action="/member/institutions" class="row g-2 align-items-end">
+        <div class="col-lg-5">
+          <label for="q" class="form-label">ค้นหา</label>
+          <input id="q" name="q" class="form-control" value="<%= filters.q %>" placeholder="รหัส ชื่อสถาบัน หรือกลุ่มส่งเสริม">
+        </div>
+        <div class="col-md-4 col-lg-3">
+          <label for="kind" class="form-label">ประเภทสถาบัน</label>
+          <select id="kind" name="kind" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <option value="สหกรณ์" <%= filters.kind === 'สหกรณ์' ? 'selected' : '' %>>สหกรณ์</option>
+            <option value="กลุ่มเกษตรกร" <%= filters.kind === 'กลุ่มเกษตรกร' ? 'selected' : '' %>>กลุ่มเกษตรกร</option>
+          </select>
+        </div>
+        <div class="col-md-4 col-lg-2">
+          <label for="account" class="form-label">สถานะบัญชี</label>
+          <select id="account" name="account" class="form-select">
+            <option value="">ทั้งหมด</option>
+            <option value="ready" <%= filters.account === 'ready' ? 'selected' : '' %>>พร้อมใช้งาน</option>
+            <option value="missing" <%= filters.account === 'missing' ? 'selected' : '' %>>ยังไม่มีบัญชี</option>
+            <option value="unknown" <%= filters.account === 'unknown' ? 'selected' : '' %>>ไม่ทราบรหัสผ่าน</option>
+          </select>
+        </div>
+        <div class="col-md-4 col-lg-2 d-grid">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i>ค้นหา</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>สถาบัน</th>
+            <th>ประเภท / กลุ่ม</th>
+            <th>ชื่อผู้ใช้ (c-code)</th>
+            <th style="min-width: 230px;">รหัสผ่าน</th>
+            <th>สถานะ</th>
+            <th class="text-end">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="6" class="text-center text-muted py-5">ไม่พบข้อมูลตามเงื่อนไข</td></tr>
+          <% } %>
+          <% rows.forEach((row) => { %>
+            <tr>
+              <td>
+                <div class="fw-semibold"><%= row.c_name %></div>
+                <div class="small text-muted"><%= row.c_code %></div>
+              </td>
+              <td>
+                <span class="badge <%= row.coop_group === 'สหกรณ์' ? 'text-bg-success' : 'text-bg-info' %>"><%= row.coop_group %></span>
+                <div class="small text-muted mt-1"><%= row.c_group || '-' %></div>
+              </td>
+              <td><code class="user-select-all"><%= row.m_user || row.c_code %></code></td>
+              <td>
+                <% if (row.plainPassword) { %>
+                  <div class="input-group input-group-sm">
+                    <input type="password" class="form-control font-monospace credential-password" value="<%= row.plainPassword %>" readonly aria-label="รหัสผ่านของ <%= row.c_name %>">
+                    <button class="btn btn-outline-secondary toggle-password" type="button" title="แสดงหรือซ่อนรหัสผ่าน" aria-label="แสดงหรือซ่อนรหัสผ่าน"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-outline-primary copy-credential" type="button" data-username="<%= row.m_user %>" data-password="<%= row.plainPassword %>" title="คัดลอกชื่อผู้ใช้และรหัสผ่าน" aria-label="คัดลอกชื่อผู้ใช้และรหัสผ่าน"><i class="bi bi-copy"></i></button>
+                  </div>
+                  <% if (row.password_updated_at) { %>
+                    <div class="small text-muted mt-1">อัปเดต <%= new Date(row.password_updated_at).toLocaleString('th-TH') %></div>
+                  <% } %>
+                <% } else if (row.credentialError) { %>
+                  <span class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>ถอดรหัสไม่ได้</span>
+                <% } else if (row.m_id) { %>
+                  <span class="text-muted small">บัญชีเดิม — ไม่ทราบรหัสผ่าน</span>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (row.m_id && row.m_status === 'active') { %>
+                  <span class="badge text-bg-success">ใช้งานได้</span>
+                <% } else if (row.m_id) { %>
+                  <span class="badge text-bg-secondary"><%= row.m_status || 'ไม่ใช้งาน' %></span>
+                <% } else { %>
+                  <span class="badge text-bg-warning">ยังไม่มีบัญชี</span>
+                <% } %>
+              </td>
+              <td class="text-end">
+                <% if (row.m_id && ['coop', 'group'].includes(String(row.m_group || ''))) { %>
+                  <form action="/member/institutions/<%= row.m_id %>/reset-password" method="POST" class="d-inline" onsubmit="return confirm('ยืนยันสร้างรหัสผ่านใหม่? รหัสผ่านเดิมจะใช้เข้าสู่ระบบไม่ได้ทันที');">
+                    <button class="btn btn-sm btn-outline-warning" type="submit"><i class="bi bi-arrow-clockwise me-1"></i>สุ่มรหัสใหม่</button>
+                  </form>
+                <% } else if (row.m_id) { %>
+                  <span class="small text-danger">ชื่อผู้ใช้ซ้ำกับบัญชีประเภทอื่น</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="alert alert-light border mt-3 small text-muted">
+    <i class="bi bi-shield-lock me-1"></i>
+    รหัสผ่านถูกเข้ารหัสก่อนจัดเก็บและเปิดดูได้เฉพาะผู้ดูแลระบบ หากเป็นบัญชีเดิมที่ระบบไม่ทราบรหัสผ่าน ให้กด “สุ่มรหัสใหม่”
+  </div>
+  <div class="alert alert-warning border mt-3 small mb-0">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    ไฟล์ Excel มีรหัสผ่านของทุกสถาบัน กรุณาแยกส่งเฉพาะแถวของสถาบันผู้รับ และไม่ส่งไฟล์รวมผ่านช่องทางสาธารณะ
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.toggle-password').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = button.closest('.input-group').querySelector('.credential-password');
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      button.querySelector('i').className = showing ? 'bi bi-eye' : 'bi bi-eye-slash';
+    });
+  });
+
+  document.querySelectorAll('.copy-credential').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const text = `User: ${button.dataset.username}\nPassword: ${button.dataset.password}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        const icon = button.querySelector('i');
+        icon.className = 'bi bi-check-lg';
+        setTimeout(() => { icon.className = 'bi bi-copy'; }, 1500);
+      } catch (_) {
+        window.prompt('คัดลอกข้อมูลบัญชี', text);
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -39,6 +39,7 @@ const INSTITUTION_BLOCKED_PREFIXES = [
     '/business',
     '/command',
     '/cooperatives-assets',
+    '/allCoop',
     '/down',
     '/finance',
     '/newstrength',
@@ -66,21 +67,50 @@ const INSTITUTION_ALLOWED_PATHS = [
 
 exports.isInstitutionUser = isInstitutionUser;
 
+exports.requireOwnInstitution = (req, res, next) => {
+    const user = req.session?.user;
+    if (!isInstitutionUser(user)) return next();
+
+    const requestedCode = String(req.params?.c_code || '').trim().toLowerCase();
+    const ownCode = String(user.username || user.m_user || '').trim().toLowerCase();
+    if (requestedCode && ownCode && requestedCode === ownCode) return next();
+
+    return res.status(403).render('error_page', {
+      message: 'บัญชีสถาบันสามารถดูได้เฉพาะข้อมูลของสถาบันตนเอง'
+    });
+};
+
 exports.redirectInstitutionUsers = (req, res, next) => {
     if (!isInstitutionUser(req.session?.user)) {
       return next();
     }
 
     const path = req.path || '';
+    const normalizedPath = path.toLowerCase();
     // Allow access to specific download or uploads paths even for institution users
-    if (INSTITUTION_ALLOWED_PATHS.some((p) => path.startsWith(p))) {
+    if (INSTITUTION_ALLOWED_PATHS.some((p) => normalizedPath.startsWith(p.toLowerCase()))) {
       return next();
     }
-    if (path === '/dashboard2' || path.startsWith('/dashboard2/')) {
+    if (normalizedPath === '/dashboard2' || normalizedPath.startsWith('/dashboard2/')) {
       return next();
     }
 
-    if (INSTITUTION_BLOCKED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+    if (normalizedPath.startsWith('/allcoop/profile/')) {
+      let requestedCode = path.slice('/allCoop/profile/'.length);
+      try {
+        requestedCode = decodeURIComponent(requestedCode);
+      } catch (_) {
+        return res.redirect('/dashboard2');
+      }
+      requestedCode = requestedCode.trim().toLowerCase();
+      const ownCode = String(req.session.user.username || req.session.user.m_user || '').trim().toLowerCase();
+      if (requestedCode === ownCode) return next();
+    }
+
+    if (INSTITUTION_BLOCKED_PREFIXES.some((prefix) => {
+      const normalizedPrefix = prefix.toLowerCase();
+      return normalizedPath === normalizedPrefix || normalizedPath.startsWith(`${normalizedPrefix}/`);
+    })) {
       return res.redirect('/dashboard2');
     }
 

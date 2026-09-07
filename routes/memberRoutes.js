@@ -1,5 +1,6 @@
 const express = require('express');
 const memberController = require('../controllers/memberController');
+const institutionAccountController = require('../controllers/institutionAccountController');
 const { isAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -7,6 +8,10 @@ const router = express.Router();
 router.use(isAdmin); // Ensure all routes are admin-only
 
 router.get('/', memberController.listMembers);
+router.get('/institutions', institutionAccountController.index);
+router.get('/institutions/export/excel', institutionAccountController.exportExcel);
+router.post('/institutions/generate', institutionAccountController.generateMissing);
+router.post('/institutions/:id/reset-password', institutionAccountController.resetPassword);
 router.get('/create', memberController.createMember);
 router.post('/create', memberController.createMember);
 router.get('/edit/:id', memberController.editMember);

@@ -23,6 +23,19 @@
     if (Number.isFinite(num) && num > 0 && num < 2400) return num + 543;
     return val || '';
   };
+  const profileRecordTotal = [
+    data && data.addmem,
+    data && data.strength,
+    data && data.rules,
+    data && data.rabiab,
+    data && data.vong,
+    data && data.finance,
+    data && data.business,
+    data && data.turnoverMonthly,
+    data && data.turnoverYearly,
+    data && data.rq2,
+    data && data.assets
+  ].reduce((sum, rows) => sum + (Array.isArray(rows) ? rows.length : 0), 0);
 %>
 <style>
   <% if (typeof embedded !== 'undefined' && embedded) { %>
@@ -509,6 +522,316 @@
     }
   }
   <% } %>
+
+  /* Profile visual refresh */
+  .coop-profile-page {
+    --cp-primary: #087f5b;
+    --cp-primary-strong: #06664a;
+    --cp-secondary: #0f766e;
+    --cp-surface: rgba(255,255,255,.94);
+    --cp-line: #dfe9e5;
+    --cp-shadow: 0 14px 38px rgba(15, 118, 110, .08);
+    background:
+      radial-gradient(circle at 8% 4%, rgba(16,185,129,.12), transparent 25rem),
+      radial-gradient(circle at 92% 13%, rgba(14,165,233,.09), transparent 24rem),
+      linear-gradient(180deg,#f8fcfa 0%,#f3f7f6 100%);
+  }
+
+  .coop-profile-page .profile-header-card {
+    position: relative;
+    isolation: isolate;
+    min-height: 190px;
+    color: #fff;
+    border: 0 !important;
+    background:
+      linear-gradient(125deg, rgba(4,86,64,.97), rgba(8,127,91,.94) 54%, rgba(13,148,136,.88)) !important;
+    box-shadow: 0 22px 52px rgba(6,102,74,.2) !important;
+  }
+
+  .coop-profile-page .profile-header-card::before,
+  .coop-profile-page .profile-header-card::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.13);
+  }
+
+  .coop-profile-page .profile-header-card::before {
+    width: 260px;
+    height: 260px;
+    right: -70px;
+    top: -155px;
+    box-shadow: 0 0 0 38px rgba(255,255,255,.035), 0 0 0 76px rgba(255,255,255,.025);
+  }
+
+  .coop-profile-page .profile-header-card::after {
+    width: 145px;
+    height: 145px;
+    right: 25%;
+    bottom: -115px;
+  }
+
+  .coop-profile-page .profile-header-card .card-body {
+    padding: 2rem 2.15rem !important;
+  }
+
+  .coop-profile-page .profile-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin-bottom: .6rem;
+    color: rgba(255,255,255,.72);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+
+  .coop-profile-page .profile-eyebrow::before {
+    content: '';
+    width: 1.8rem;
+    height: 2px;
+    border-radius: 2px;
+    background: #6ee7b7;
+  }
+
+  .coop-profile-page .profile-header-card h1 {
+    max-width: 760px;
+    margin-bottom: .65rem !important;
+    color: #fff !important;
+    font-size: clamp(1.3rem, 2.4vw, 2rem) !important;
+    letter-spacing: -.02em;
+  }
+
+  .coop-profile-page .coop-logo {
+    width: 78px !important;
+    height: 78px !important;
+    border: 1px solid rgba(255,255,255,.28);
+    color: #fff !important;
+    background: rgba(255,255,255,.14) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 12px 28px rgba(0,0,0,.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .coop-profile-page .coop-logo i { font-size: 1.75rem; }
+
+  .coop-profile-page .profile-code {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    color: rgba(255,255,255,.78);
+  }
+
+  .coop-profile-page .profile-code strong {
+    padding: .3rem .7rem;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: .55rem;
+    color: #fff !important;
+    background: rgba(0,0,0,.12);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .04em;
+  }
+
+  .coop-profile-page .profile-header-card .copy-code {
+    color: #fff;
+    border-color: rgba(255,255,255,.4);
+    background: rgba(255,255,255,.08);
+  }
+
+  .coop-profile-page .profile-header-card .copy-code:hover {
+    color: var(--cp-primary-strong);
+    border-color: #fff;
+    background: #fff;
+  }
+
+  .coop-profile-page .profile-meta {
+    max-width: 330px;
+    padding: 1rem;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 1rem;
+    background: rgba(0,0,0,.1);
+    backdrop-filter: blur(12px);
+  }
+
+  .coop-profile-page .profile-meta-label {
+    color: rgba(255,255,255,.66);
+    font-size: .74rem;
+    font-weight: 700;
+  }
+
+  .coop-profile-page .profile-record-count {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 800;
+  }
+
+  .coop-profile-page .profile-meta .badge {
+    padding: .45rem .7rem;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.12) !important;
+  }
+
+  .coop-profile-page .section-nav {
+    top: .75rem;
+    padding: .65rem;
+    background: rgba(255,255,255,.88);
+    border-color: rgba(205,220,214,.86);
+    box-shadow: 0 12px 30px rgba(15,23,42,.08);
+  }
+
+  .coop-profile-page .section-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem .75rem;
+    color: #52635d;
+    background: transparent;
+    transition: color .2s ease, background-color .2s ease, transform .2s ease;
+  }
+
+  .coop-profile-page .section-nav a:hover,
+  .coop-profile-page .section-nav a.active {
+    color: #fff;
+    background: linear-gradient(135deg,var(--cp-primary-strong),var(--cp-secondary));
+    transform: translateY(-1px);
+  }
+
+  .coop-profile-page .quick-stats .card {
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  .coop-profile-page .quick-stats .card::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 3px;
+    background: var(--stat-accent,#10b981);
+  }
+
+  .coop-profile-page .quick-stats .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(15,23,42,.1) !important;
+  }
+
+  .coop-profile-page .stat-card--blue { --stat-accent:#3b82f6; }
+  .coop-profile-page .stat-card--cyan { --stat-accent:#06b6d4; }
+  .coop-profile-page .stat-card--green { --stat-accent:#10b981; }
+  .coop-profile-page .stat-card--violet { --stat-accent:#8b5cf6; }
+
+  .coop-profile-page .quick-stats i {
+    color: var(--stat-accent,#10b981) !important;
+    background: color-mix(in srgb, var(--stat-accent,#10b981) 11%, white);
+  }
+
+  .coop-profile-page .section-block > .card,
+  .coop-profile-page .row.my-2 .card {
+    border-color: #e3ece8 !important;
+    background: var(--cp-surface);
+    transition: box-shadow .22s ease, border-color .22s ease;
+  }
+
+  .coop-profile-page .section-block > .card:hover,
+  .coop-profile-page .row.my-2 .card:hover {
+    border-color: #c8ddd5 !important;
+    box-shadow: 0 18px 42px rgba(15,118,110,.1) !important;
+  }
+
+  .coop-profile-page .section-block .card-header,
+  .coop-profile-page .row.my-2 .card-header {
+    position: relative;
+    min-height: 62px;
+    padding: 1rem 1.15rem !important;
+    background: linear-gradient(180deg,#fff,#fbfdfc) !important;
+  }
+
+  .coop-profile-page .section-block .card-header::before,
+  .coop-profile-page .row.my-2 .card-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 4px;
+    border-radius: 0 6px 6px 0;
+    background: var(--section-accent,#10b981);
+  }
+
+  #addmem-section { --section-accent:#7c3aed; }
+  #strength-section { --section-accent:#0891b2; }
+  #rules-section { --section-accent:#d97706; }
+  #rabiab-section { --section-accent:#64748b; }
+  #vong-section { --section-accent:#e11d48; }
+  #finance-section { --section-accent:#2563eb; }
+  #business-section { --section-accent:#059669; }
+  #turnover-section { --section-accent:#0f766e; }
+  #rq2-section { --section-accent:#0284c7; }
+  #assets-section { --section-accent:#475569; }
+
+  .coop-profile-page .card-header h5 > i,
+  .coop-profile-page .card-header h6 > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-right: .6rem !important;
+    border-radius: .65rem;
+    color: var(--section-accent,#087f5b) !important;
+    background: color-mix(in srgb, var(--section-accent,#087f5b) 10%, white);
+  }
+
+  .coop-profile-page .table tbody tr { transition: background-color .15s ease; }
+  .coop-profile-page .table-striped > tbody > tr:nth-of-type(odd) > * { background-color:#fbfdfc; }
+  .coop-profile-page .table-hover > tbody > tr:hover > * { background-color:#f0faf6; }
+  .coop-profile-page .table .btn { min-width: 2.15rem; }
+
+  .coop-profile-page .meeting-card { --section-accent:#4f46e5; }
+  .coop-profile-page .meeting-year {
+    border: 1px solid #e8eaf8 !important;
+    background: linear-gradient(145deg,#fff,#f7f7ff);
+  }
+
+  .coop-profile-page .meeting-year .fw-semibold { color:#4338ca; }
+
+  .coop-profile-page .profile-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: .5rem;
+  }
+
+  .coop-profile-page .profile-footer-actions .btn {
+    padding: .65rem 1rem;
+    border-color: #cbdad4;
+    background: #fff;
+  }
+
+  .coop-profile-page + .modal .modal-content {
+    border: 0;
+    border-radius: 1.25rem;
+    box-shadow: 0 28px 80px rgba(15,23,42,.24);
+  }
+
+  @media (max-width: 767.98px) {
+    .coop-profile-page .profile-header-card { min-height: 0; }
+    .coop-profile-page .profile-header-card .card-body { padding: 1.3rem !important; }
+    .coop-profile-page .profile-header-card .d-flex.align-items-center.gap-3 { align-items: center !important; }
+    .coop-profile-page .coop-logo { width: 58px !important; height: 58px !important; }
+    .coop-profile-page .coop-logo i { font-size: 1.3rem; }
+    .coop-profile-page .profile-meta { width: 100%; max-width: none; }
+    .coop-profile-page .profile-meta .d-flex { justify-content: flex-start !important; }
+    .coop-profile-page .section-nav { top: .35rem; }
+    .coop-profile-page .quick-stats > [class*="col-"] { width: 50%; }
+  }
+
+  @media (max-width: 479.98px) {
+    .coop-profile-page .quick-stats > [class*="col-"] { width: 100%; }
+    .coop-profile-page .profile-header-card .d-flex.align-items-center.gap-3 { align-items: flex-start !important; }
+    .coop-profile-page .profile-code { flex-wrap: wrap; }
+  }
 </style>
   <div class="coop-profile-page">
     <div class="container py-4">
@@ -516,22 +839,27 @@
     <% if (!data || !data.coop) { %>
       <div class="alert alert-danger shadow-sm">ไม่พบข้อมูล</div>
     <% } else { %>
-      <!-- Header Section (improved) -->
+      <!-- Profile hero -->
       <div class="profile-header-card card border-0 mb-3">
-        <div class="card-body p-3 d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+        <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between gap-4">
           <div class="d-flex align-items-center gap-3">
-            <div class="coop-logo rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center justify-content-center" style="width:64px;height:64px;font-size:1.25rem;">
+            <div class="coop-logo rounded-circle d-inline-flex align-items-center justify-content-center">
               <i class="bi bi-building"></i>
             </div>
             <div>
-              <h1 class="h5 mb-0 fw-bold"><%= data.coop.c_name %></h1>
-              <div class="text-muted small">รหัส: <strong class="text-dark"><%= data.coop.c_code %></strong>
-                <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-code" data-code="<%= data.coop.c_code %>">คัดลอก</button>
+              <div class="profile-eyebrow">Institution profile</div>
+              <h1 class="mb-0 fw-bold"><%= data.coop.c_name %></h1>
+              <div class="profile-code small"><span>รหัสสถาบัน</span> <strong><%= data.coop.c_code %></strong>
+                <button type="button" class="btn btn-sm copy-code" data-code="<%= data.coop.c_code %>"><i class="bi bi-copy me-1"></i>คัดลอก</button>
               </div>
             </div>
           </div>
-          <div class="text-md-end small">
-            <div class="d-flex align-items-center gap-2">
+          <div class="profile-meta text-md-end small">
+            <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
+              <div class="profile-meta-label text-start">ข้อมูลที่เชื่อมโยงในระบบ</div>
+              <div class="profile-record-count"><%= profileRecordTotal.toLocaleString('th-TH') %> <small class="fs-6 fw-normal">รายการ</small></div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-md-end gap-2">
               <span class="badge rounded-pill bg-info-subtle text-info-emphasis me-1"><i class="bi bi-diagram-3 me-1"></i><%= data.coop.c_group || 'ไม่ระบุ' %></span>
               <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis me-1"><i class="bi bi-layers me-1"></i><%= data.coop.coop_group || data.coop.c_type || 'ไม่ระบุ' %></span>
               <span class="badge rounded-pill <%= (data.coop.c_status||'')==='ดำเนินการ' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis' %>"><i class="bi bi-activity me-1"></i><%= data.coop.c_status || 'ไม่ระบุ' %></span>
@@ -542,21 +870,22 @@
 
       <!-- Section navigation (quick links) -->
       <div class="section-nav mb-3 d-flex flex-wrap gap-2">
-        <a href="#strength-section" class="btn btn-sm btn-light">ผลประเมินความเข้มแข็ง</a>
-        <a href="#rules-section" class="btn btn-sm btn-light">ข้อบังคับ</a>
-        <a href="#rabiab-section" class="btn btn-sm btn-light">ระเบียบ</a>
-        <a href="#finance-section" class="btn btn-sm btn-light">งบการเงิน</a>
-        <a href="#business-section" class="btn btn-sm btn-light">รายงานกิจการ</a>
-        <a href="#turnover-section" class="btn btn-sm btn-light">ปริมาณธุรกิจ</a>
-        <a href="#assets-section" class="btn btn-sm btn-light">ทรัพย์สิน</a>
-        <a href="#rq2-section" class="btn btn-sm btn-light">ข้อมูล RQ2</a>
-
+        <a href="#addmem-section" class="btn btn-sm btn-light"><i class="bi bi-people"></i>สมาชิก</a>
+        <a href="#strength-section" class="btn btn-sm btn-light"><i class="bi bi-graph-up-arrow"></i>ความเข้มแข็ง</a>
+        <a href="#rules-section" class="btn btn-sm btn-light"><i class="bi bi-journal-text"></i>ข้อบังคับ</a>
+        <a href="#rabiab-section" class="btn btn-sm btn-light"><i class="bi bi-file-earmark-text"></i>ระเบียบ</a>
+        <a href="#vong-section" class="btn btn-sm btn-light"><i class="bi bi-piggy-bank"></i>วงเงิน</a>
+        <a href="#finance-section" class="btn btn-sm btn-light"><i class="bi bi-cash-stack"></i>งบการเงิน</a>
+        <a href="#business-section" class="btn btn-sm btn-light"><i class="bi bi-briefcase"></i>รายงานกิจการ</a>
+        <a href="#turnover-section" class="btn btn-sm btn-light"><i class="bi bi-bar-chart"></i>ปริมาณธุรกิจ</a>
+        <a href="#rq2-section" class="btn btn-sm btn-light"><i class="bi bi-collection"></i>RQ2</a>
+        <a href="#assets-section" class="btn btn-sm btn-light"><i class="bi bi-gear-wide-connected"></i>ทรัพย์สิน</a>
       </div>
 
       <!-- Personnel and Fiscal Year Information Cards -->
       <div class="row g-3 mb-4 quick-stats">
         <div class="col-6 col-md-3">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card stat-card--blue border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-start gap-2">
                 <i class="bi bi-person-badge fs-5 text-primary mt-1"></i>
@@ -569,7 +898,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card stat-card--cyan border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-start gap-2">
                 <i class="bi bi-person-badge fs-5 text-info mt-1"></i>
@@ -582,7 +911,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card stat-card--green border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-start gap-2">
                 <i class="bi bi-calendar-event fs-5 text-success mt-1"></i>
@@ -601,7 +930,7 @@
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card border-0 shadow-sm h-100">
+          <div class="card stat-card--violet border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-start gap-2">
                 <i class="bi bi-check2-square fs-5 text-primary mt-1"></i>
@@ -626,7 +955,7 @@
           <section class="section-block" id="addmem-section">
             <div class="card border-0 shadow-sm mb-4">
               <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-people me-2 text-purple" style="color:#6f42c1;"></i>จำนวนสมาชิก (Addmem)</h5>
+                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-people me-2 text-purple" style="color:#6f42c1;"></i>ข้อมูลสมาชิก</h5>
                 <span class="badge rounded-pill" style="background-color:#e2d5f3; color:#6f42c1;">รวม <%= (data.addmem||[]).length %> รายการ</span>
               </div>
               <div class="card-body p-0">
@@ -704,7 +1033,7 @@
           </section>
         </div>
         <div class="col-md-6">
-          <div class="card border-0 shadow-sm mb-2">
+          <div class="card meeting-card border-0 shadow-sm mb-2">
             <div class="card-header bg-white">
               <h6 class="mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>ประวัติการประชุมใหญ่</h6>
             </div>
@@ -713,7 +1042,7 @@
                 <div class="row g-3">
                   <% data.bigmeetDatesByYear.forEach((entry) => { %>
                     <div class="col-md-6">
-                      <div class="border rounded-3 p-3 h-100">
+                      <div class="meeting-year border rounded-3 p-3 h-100">
                         <div class="fw-semibold mb-2">ปี <%= entry.year %></div>
                         <ul class="mb-0 ps-3">
                           <% entry.dates.forEach((d) => { %>
@@ -736,7 +1065,7 @@
       <section class="section-block" id="strength-section">
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-info"></i>ผลประเมินความเข้มแข็ง (Strength)</h5>
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-2 text-info"></i>ผลประเมินความเข้มแข็ง</h5>
             <span class="badge bg-info-subtle text-info-emphasis">รวม <%= (data.strength||[]).length %> แถว</span>
           </div>
           <div class="card-body p-0 mobile-scroll">
@@ -763,10 +1092,10 @@
                         <% if(!user) { %>
                           <td colspan="5" class="text-muted small">ข้อมูลไม่สามารถแสดงได้ กรุณาเข้าสู่ระบบ</td>
                         <% } else { %>
-                          <td class="small-hide" data-label="เกณฑ์ข้อที่ 1"><%= s.st_no1 || '-' %></td>
-                          <td class="small-hide" data-label="เกณฑ์ข้อที่ 2"><%= s.st_no2 || '-' %></td>
-                          <td class="small-hide" data-label="เกณฑ์ข้อที่ 3"><%= s.st_no3 || '-' %></td>
-                          <td class="small-hide" data-label="เกณฑ์ข้อที่ 4"><%= s.st_no4 || '-' %></td>
+                          <td class="small-hide" data-label="มิติที่ 1"><%= s.st_no1 || '-' %></td>
+                          <td class="small-hide" data-label="มิติที่ 2"><%= s.st_no2 || '-' %></td>
+                          <td class="small-hide" data-label="มิติที่ 3"><%= s.st_no3 || '-' %></td>
+                          <td class="small-hide" data-label="มิติที่ 4"><%= s.st_no4 || '-' %></td>
                           <td data-label="รวม"><%= (s.st_point !== null && s.st_point !== undefined && !isNaN(Number(s.st_point))) ? Number(s.st_point).toLocaleString('th-TH',{minimumFractionDigits:2}) : '-' %></td>
                         <% } %>
                         <td data-label="ระดับ">
@@ -842,7 +1171,7 @@
       <section class="section-block" id="rabiab-section">
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-file-earmark-medical me-2 text-secondary"></i>ระเบียบ (Rabiab)</h5>
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-file-earmark-medical me-2 text-secondary"></i>ระเบียบสหกรณ์</h5>
             <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.rabiab||[]).length %> รายการ</span>
           </div>
           <div class="card-body p-0">
@@ -1167,7 +1496,7 @@
       <section class="section-block" id="assets-section">
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-header bg-transparent d-flex flex-wrap align-items-center justify-content-between py-2 gap-2">
-            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i>ทรัพย์สิน/ครุภัณฑ์ (cooperatives_assets)</h5>
+            <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-gear-wide-connected me-2 text-secondary"></i>ทรัพย์สินและครุภัณฑ์</h5>
             <span class="badge bg-secondary-subtle text-secondary-emphasis">รวม <%= (data.assets||[]).length %> รายการ</span>
           </div>
           <div class="card-body p-0">
@@ -1227,18 +1556,17 @@
     <% if (!(typeof embedded !== 'undefined' && embedded)) { %>
       <% const sessionName = (user && (user.username || user.m_user)) ? (user.username || user.m_user) : null; %>
       <% if (!sessionName || sessionName !== String(data.coop.c_code)) { %>
-        <div class="mt-2">
+        <div class="profile-footer-actions mt-2">
           <a href="/allCoop/group" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> ย้อนกลับ</a>
         </div>
       <% }else{ %>
-        <div class="mt-2">
+        <div class="profile-footer-actions mt-2">
           <a href="/dashboard2" class="btn btn-outline-secondary btn-sm"><i class="bi bi-person-circle"></i> กลับหน้า dashboard</a>
         </div>
       <% } %>
     <% } %>
   </div>
 </div>
-<%- include('../partials/footer') %>
 
 <!-- Asset Detail Modal -->
 <div class="modal fade" id="assetModal" tabindex="-1" aria-hidden="true">
@@ -1357,18 +1685,44 @@
     btn.addEventListener('click', function(){
       const code = btn.getAttribute('data-code') || '';
       if (!code) return;
+      const originalContent = btn.innerHTML;
       try {
         navigator.clipboard.writeText(code);
-        btn.textContent = 'คัดลอกแล้ว';
-        setTimeout(()=> btn.textContent = 'คัดลอก', 1500);
+        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>คัดลอกแล้ว';
+        setTimeout(()=> btn.innerHTML = originalContent, 1500);
       } catch (err) {
         const input = document.createElement('input');
         input.value = code; document.body.appendChild(input); input.select(); document.execCommand('copy'); document.body.removeChild(input);
-        btn.textContent = 'คัดลอกแล้ว';
-        setTimeout(()=> btn.textContent = 'คัดลอก', 1500);
+        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>คัดลอกแล้ว';
+        setTimeout(()=> btn.innerHTML = originalContent, 1500);
       }
     });
   });
+
+  // Highlight the section currently visible while scrolling.
+  (function setupSectionNavigation(){
+    const links = Array.from(document.querySelectorAll('.section-nav a[href^="#"]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    const linksById = new Map(links.map(function(link){
+      return [link.getAttribute('href').slice(1), link];
+    }));
+    const observer = new IntersectionObserver(function(entries){
+      const visible = entries
+        .filter(function(entry){ return entry.isIntersecting; })
+        .sort(function(a,b){ return b.intersectionRatio - a.intersectionRatio; })[0];
+      if (!visible) return;
+      links.forEach(function(link){ link.classList.remove('active'); });
+      const activeLink = linksById.get(visible.target.id);
+      if (activeLink) {
+        activeLink.classList.add('active');
+        activeLink.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, { rootMargin: '-18% 0px -68% 0px', threshold: [0, .2, .6] });
+    linksById.forEach(function(_link,id){
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    });
+  })();
 
   <% if (typeof embedded !== 'undefined' && embedded) { %>
   // แจ้งความสูงให้ dashboard ปรับ iframe ตามเนื้อหาจริง
@@ -1388,3 +1742,5 @@
   })();
   <% } %>
 </script>
+
+<%- include('../partials/footer') %>

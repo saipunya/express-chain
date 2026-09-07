@@ -8,6 +8,8 @@ const onlineModel = require('../models/onlineModel');
 const turnoverModel = require('../models/turnoverModel');
 const strengthModel = require('../models/strengthModel');
 const downModel = require('../models/downModel');
+const chamraModel = require('../models/chamraModel');
+const { buildChamraSummary } = require('../services/chamraSummaryService');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
@@ -666,7 +668,7 @@ async function showMain(req, res) {
   }
 
   try {
-    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows] = await Promise.all([
       getMainDeadlineData(),
       activeCoopModel.getActiveInstitutionSummaryRows(),
       onlineModel.getOnlineUsers(),
@@ -674,7 +676,11 @@ async function showMain(req, res) {
       turnoverModel.getCategorySummaryByFiscalYear(),
       bigmeetModel.getLatestFiscalYearCategorySummary(),
       strengthModel.getGradeSummaryByInOutGroup(2568),
-      downModel.getMainDownloads(8)
+      downModel.getMainDownloads(8),
+      chamraModel.getAll().catch((error) => {
+        console.error('[homeRoutes] chamra summary error:', error);
+        return [];
+      })
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
@@ -684,6 +690,7 @@ async function showMain(req, res) {
       bigmeetFiscalSummary,
       strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, 2568),
       mainDownloads: buildMainDownloads(mainDownloads),
+      chamraSummary: buildChamraSummary(chamraRows),
       onlineUsers,
       onlineCount,
       ...deadlineData
@@ -704,6 +711,7 @@ async function showMain(req, res) {
       bigmeetFiscalSummary: { fiscalYear: 0, fiscalYearThai: '', categories: [] },
       strengthGradeSummary: buildStrengthGradeSummary([], 2568),
       mainDownloads: [],
+      chamraSummary: buildChamraSummary([]),
       onlineUsers: [],
       onlineCount: 0
     });

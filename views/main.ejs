@@ -438,6 +438,119 @@
     padding: 1rem;
   }
 
+  .main-chamra-overview,
+  .main-chamra-stage-panel,
+  .main-chamra-kpi {
+    border-radius: 16px;
+  }
+
+  .main-chamra-overview,
+  .main-chamra-kpi {
+    height: 100%;
+  }
+
+  .main-chamra-overview {
+    position: relative;
+    overflow: hidden;
+    padding: 1.2rem;
+    color: #fff;
+    background: linear-gradient(135deg, #123d35, #137a57);
+    box-shadow: 0 14px 30px rgba(19, 122, 87, .2);
+  }
+
+  .main-chamra-overview-label {
+    color: rgba(255,255,255,.72);
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .main-chamra-overview-value {
+    margin-top: .2rem;
+    color: #fff;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .main-chamra-progress-ring {
+    display: grid;
+    width: 6.2rem;
+    height: 6.2rem;
+    place-items: center;
+    border-radius: 50%;
+    background: conic-gradient(#74e0b3 var(--chamra-progress, 0%), rgba(255,255,255,.16) 0);
+  }
+
+  .main-chamra-progress-ring::before {
+    content: '';
+    grid-area: 1 / 1;
+    width: 4.75rem;
+    height: 4.75rem;
+    border-radius: 50%;
+    background: #17664f;
+  }
+
+  .main-chamra-progress-value {
+    z-index: 1;
+    grid-area: 1 / 1;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .main-chamra-kind-list {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: .6rem;
+    margin-top: 1.1rem;
+  }
+
+  .main-chamra-kind {
+    padding: .7rem;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    background: rgba(255,255,255,.09);
+  }
+
+  .main-chamra-kind span { display:block; color:rgba(255,255,255,.7); font-size:.72rem; }
+  .main-chamra-kind strong { display:block; margin-top:.2rem; color:#fff; font-size:1.15rem; }
+
+  .main-chamra-kpi {
+    padding: 1rem;
+    border: 1px solid var(--main-line);
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15,23,42,.045);
+  }
+
+  .main-chamra-kpi-label { color:var(--main-muted); font-size:.8rem; font-weight:700; }
+  .main-chamra-kpi-value { margin-top:.3rem; font-size:1.55rem; font-weight:700; line-height:1.1; }
+  .main-chamra-kpi-note { margin-top:.35rem; color:var(--main-muted); font-size:.74rem; }
+
+  .main-chamra-stage-panel {
+    padding: 1rem;
+    border: 1px solid var(--main-line);
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15,23,42,.045);
+  }
+
+  .main-chamra-stage-list { display:grid; gap:.65rem; margin-top:.85rem; }
+  .main-chamra-stage {
+    display:grid;
+    grid-template-columns:minmax(11rem,1.35fr) minmax(6rem,1fr) 3.5rem;
+    align-items:center;
+    gap:.75rem;
+  }
+  .main-chamra-stage-label { min-width:0; color:#344054; font-size:.8rem; font-weight:600; }
+  .main-chamra-stage-label strong { color:var(--main-green); }
+  .main-chamra-stage-bar { height:.52rem; overflow:hidden; border-radius:999px; background:#edf1f6; }
+  .main-chamra-stage-bar-fill { width:var(--stage-width,0%); height:100%; border-radius:inherit; background:linear-gradient(90deg,#1b8f67,#4bc394); }
+  .main-chamra-stage-count { text-align:right; color:var(--main-ink); font-size:.8rem; font-weight:700; }
+
+  @media (max-width: 575.98px) {
+    .main-chamra-stage { grid-template-columns:minmax(0,1fr) 3rem; gap:.4rem .65rem; }
+    .main-chamra-stage-bar { grid-column:1 / -1; grid-row:2; }
+    .main-chamra-stage-count { grid-column:2; grid-row:1; }
+  }
+
   .main-strength-grade-list {
     display: grid;
     gap: .55rem;
@@ -1707,6 +1820,18 @@
   };
   const _strengthGradeList = Array.isArray(_strengthGradeSummary.list) ? _strengthGradeSummary.list : [];
   const _strengthGradeTotals = _strengthGradeSummary.totals || { total: 0, grade1: 0, grade2: 0, grade3: 0 };
+  const _chamraSummary = (typeof chamraSummary !== 'undefined' && chamraSummary) ? chamraSummary : {
+    total: 0,
+    inProgress: 0,
+    withdrawn: 0,
+    noProcess: 0,
+    completionPercent: 0,
+    cooperativeCount: 0,
+    farmerGroupCount: 0,
+    latestUpdateThai: '',
+    steps: []
+  };
+  const _chamraSteps = Array.isArray(_chamraSummary.steps) ? _chamraSummary.steps : [];
 %>
 
 <div class="main-dashboard-shell">
@@ -2006,6 +2131,96 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <section class="main-institution-section" aria-labelledby="chamraSummaryTitle">
+      <div class="main-section-title">
+        <div>
+          <h2 id="chamraSummaryTitle">สรุปผลการชำระบัญชี</h2>
+          <div class="text-muted small">
+            สถานะล่าสุดของสหกรณ์และกลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี
+            <% if (_chamraSummary.latestUpdateThai) { %> · อัปเดตล่าสุด <%= _chamraSummary.latestUpdateThai %><% } %>
+          </div>
+        </div>
+        <a href="/chamra" class="btn btn-sm btn-outline-success rounded-pill px-3">
+          ดูรายละเอียด <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+
+      <% if (Number(_chamraSummary.total || 0) > 0) { %>
+        <div class="row g-3 align-items-stretch">
+          <div class="col-lg-4">
+            <div class="main-chamra-overview">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="main-chamra-overview-label">สถาบันทั้งหมด</div>
+                  <div class="main-chamra-overview-value"><%= Number(_chamraSummary.total || 0).toLocaleString('th-TH') %></div>
+                  <div class="small text-white-50 mt-2">แห่งที่อยู่ในทะเบียนชำระบัญชี</div>
+                </div>
+                <div class="main-chamra-progress-ring" style="--chamra-progress:<%= Math.max(0, Math.min(100, Number(_chamraSummary.completionPercent || 0))) %>%" aria-label="ถอนชื่อแล้ว <%= Number(_chamraSummary.completionPercent || 0).toFixed(1) %> เปอร์เซ็นต์">
+                  <span class="main-chamra-progress-value"><%= Number(_chamraSummary.completionPercent || 0).toFixed(1) %>%</span>
+                </div>
+              </div>
+              <div class="main-chamra-kind-list">
+                <div class="main-chamra-kind">
+                  <span><i class="bi bi-building me-1"></i>สหกรณ์</span>
+                  <strong><%= Number(_chamraSummary.cooperativeCount || 0).toLocaleString('th-TH') %> แห่ง</strong>
+                </div>
+                <div class="main-chamra-kind">
+                  <span><i class="bi bi-people me-1"></i>กลุ่มเกษตรกร</span>
+                  <strong><%= Number(_chamraSummary.farmerGroupCount || 0).toLocaleString('th-TH') %> แห่ง</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-8">
+            <div class="row g-3 mb-3">
+              <div class="col-4">
+                <div class="main-chamra-kpi">
+                  <div class="main-chamra-kpi-label">กำลังดำเนินการ</div>
+                  <div class="main-chamra-kpi-value text-primary"><%= Number(_chamraSummary.inProgress || 0).toLocaleString('th-TH') %></div>
+                  <div class="main-chamra-kpi-note">ขั้นที่ 1–8</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="main-chamra-kpi">
+                  <div class="main-chamra-kpi-label">ถอนชื่อแล้ว</div>
+                  <div class="main-chamra-kpi-value text-success"><%= Number(_chamraSummary.withdrawn || 0).toLocaleString('th-TH') %></div>
+                  <div class="main-chamra-kpi-note">ขั้นที่ 9–10</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="main-chamra-kpi">
+                  <div class="main-chamra-kpi-label">ยังไม่มีขั้นตอน</div>
+                  <div class="main-chamra-kpi-value text-secondary"><%= Number(_chamraSummary.noProcess || 0).toLocaleString('th-TH') %></div>
+                  <div class="main-chamra-kpi-note">รอบันทึกข้อมูล</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="main-chamra-stage-panel">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div class="fw-bold"><i class="bi bi-diagram-3 text-success me-2"></i>จำนวนตามขั้นตอนล่าสุด</div>
+                <span class="small text-muted"><%= _chamraSteps.length %> ขั้นที่มีข้อมูล</span>
+              </div>
+              <div class="main-chamra-stage-list">
+                <% _chamraSteps.forEach(function(item) { %>
+                  <div class="main-chamra-stage">
+                    <div class="main-chamra-stage-label"><strong>ขั้นที่ <%= item.step %></strong> · <%= item.label %></div>
+                    <div class="main-chamra-stage-bar" aria-hidden="true">
+                      <div class="main-chamra-stage-bar-fill" style="--stage-width:<%= Math.max(0, Math.min(100, Number(item.percent || 0))) %>%"></div>
+                    </div>
+                    <div class="main-chamra-stage-count"><%= Number(item.count || 0).toLocaleString('th-TH') %> แห่ง</div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="main-empty">ยังไม่มีข้อมูลการชำระบัญชีสำหรับแสดงผล</div>
+      <% } %>
     </section>
 
     <section class="main-institution-section" aria-labelledby="strengthGradeSummaryTitle">

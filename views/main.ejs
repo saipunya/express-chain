@@ -37,8 +37,8 @@
     --main-blue: #2c6ed5;
     --main-amber: #c98312;
     --main-red: #c94444;
-    --main-shadow: 0 18px 44px rgba(15, 23, 42, .1);
-    --main-shadow-soft: 0 10px 24px rgba(15, 23, 42, .06);
+    --main-shadow: 0 3px 12px rgba(30, 50, 42, .05);
+    --main-shadow-soft: 0 1px 3px rgba(30, 50, 42, .025);
   }
 
   .main-dashboard-body {
@@ -1368,16 +1368,14 @@
     }
   }
 
-  /* Refined landing-page layout: quieter surfaces, clearer hierarchy. */
+  /* Calm landing page: light surfaces and clear section spacing. */
   .main-dashboard-body {
-    background:
-      radial-gradient(circle at 8% -8%, rgba(16, 127, 80, .12), transparent 28rem),
-      radial-gradient(circle at 92% 8%, rgba(44, 110, 213, .08), transparent 30rem),
-      #f4f7f8;
+    background: #f6f8f7;
+    line-height: 1.65;
   }
 
   .main-dashboard-wrap {
-    max-width: 1440px;
+    max-width: 1360px;
     padding-top: 1.25rem !important;
     padding-bottom: 2.5rem !important;
   }
@@ -1389,10 +1387,11 @@
 
   .main-sidebar {
     align-items: center;
-    background: rgba(16, 32, 48, .97);
-    border: 1px solid rgba(255, 255, 255, .1);
+    background: #fff;
+    color: var(--main-ink);
+    border: 1px solid var(--main-line);
     border-radius: 18px;
-    box-shadow: 0 16px 40px rgba(16, 32, 48, .14);
+    box-shadow: var(--main-shadow-soft);
     flex-direction: row !important;
     gap: 1.25rem;
     height: auto;
@@ -1416,7 +1415,8 @@
   }
 
   .main-brand-subtitle {
-    font-size: .72rem;
+    color: var(--main-muted);
+    font-size: .8rem;
   }
 
   .main-nav {
@@ -1429,20 +1429,22 @@
 
   .main-nav-link {
     border-radius: 11px;
-    font-size: .88rem;
+    color: #52635c;
+    font-size: .9rem;
     gap: .5rem;
     padding: .6rem .75rem;
   }
 
   .main-nav-link:hover,
   .main-nav-link.active {
-    background: rgba(255, 255, 255, .12);
+    background: #edf5f0;
+    color: var(--main-green);
     transform: none;
   }
 
   .main-sidebar-foot {
     align-items: center;
-    background: rgba(255, 255, 255, .08);
+    background: #f6f8f7;
     border-radius: 11px;
     display: flex;
     flex: 0 0 auto;
@@ -1508,23 +1510,38 @@
   .main-system-link,
   .main-download-item,
   .main-online-card {
-    border-radius: 16px;
+    border-radius: 12px;
   }
 
   .main-hero {
-    min-height: 30rem;
+    min-height: 25rem;
+    background: #edf4ef;
+    color: var(--main-ink);
+    box-shadow: none;
     padding: clamp(1.65rem, 3vw, 2.6rem);
   }
 
-  .main-hero::before {
-    background: radial-gradient(circle, rgba(255, 255, 255, .14), transparent 64%);
-    border-radius: 50%;
-    content: "";
-    height: 24rem;
-    position: absolute;
-    right: -8rem;
-    top: -9rem;
-    width: 24rem;
+  .main-brand-title { color: var(--main-ink); }
+  .main-brand img { box-shadow: none; }
+  .main-nav-link i { color: var(--main-green); }
+  .main-avatar { flex-shrink: 0; background: #edf5f0; }
+
+  .main-hero::before,
+  .main-hero::after { content: none; }
+
+  .main-hero-kicker {
+    background: #fff;
+    border-color: #d8e5dc;
+    color: var(--main-green);
+    font-weight: 600;
+  }
+
+  .main-hero p { color: #52635c; line-height: 1.7; }
+  .main-hero-summary-row { color: #52635c; line-height: 1.6; }
+  .main-hero-summary-row strong { color: var(--main-ink); }
+  .main-hero-summary-row + .main-hero-summary-row {
+    border-top: 1px solid #dce7df;
+    padding-top: .65rem;
   }
 
   .main-hero-kicker,
@@ -1533,18 +1550,23 @@
   }
 
   .main-hero h2 {
-    font-size: clamp(2rem, 3.5vw, 3rem);
+    color: var(--main-ink);
+    font-size: clamp(1.65rem, 2.8vw, 2.35rem);
+    line-height: 1.45;
     letter-spacing: -.025em;
   }
 
   .main-hero-summary {
+    background: transparent;
+    border: 0;
+    backdrop-filter: none;
     max-width: 42rem;
-    padding: 1rem 1.1rem;
+    padding: 1rem 0 0;
   }
 
   .main-login-card {
     border: 1px solid rgba(221, 229, 238, .85) !important;
-    box-shadow: 0 16px 38px rgba(15, 23, 42, .09) !important;
+    box-shadow: var(--main-shadow-soft) !important;
   }
 
   .main-login-card .card-body {
@@ -1582,11 +1604,11 @@
 
   .main-institution-section,
   .main-deadline-section {
-    background: rgba(255, 255, 255, .62);
-    border: 1px solid rgba(221, 229, 238, .85);
+    background: transparent;
+    border: 0;
     border-radius: 20px;
-    margin-top: 1.25rem;
-    padding: clamp(1rem, 2vw, 1.35rem);
+    margin-top: 2rem;
+    padding: 0;
   }
 
   .main-section-title {
@@ -1613,16 +1635,16 @@
   .main-overdue-card,
   .main-institution-card,
   .main-institution-chart-card {
-    box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+    box-shadow: var(--main-shadow-soft);
   }
 
   .main-turnover-card::before,
   .main-institution-card::before {
-    border-radius: 16px 16px 0 0;
+    display: none;
   }
 
   .main-deadline-card {
-    box-shadow: 0 8px 22px rgba(15, 23, 42, .045);
+    box-shadow: var(--main-shadow-soft);
   }
 
   .main-deadline-head,
@@ -1647,7 +1669,7 @@
   }
 
   .main-download-item {
-    box-shadow: 0 6px 18px rgba(15, 23, 42, .04);
+    box-shadow: none;
     min-height: 5.15rem;
   }
 
@@ -1668,7 +1690,7 @@
     }
 
     .main-brand {
-      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      border-bottom: 1px solid var(--main-line);
       padding: .25rem .25rem .7rem;
     }
 
@@ -1689,7 +1711,7 @@
     }
 
     .main-sidebar {
-      border-radius: 16px;
+      border-radius: 12px;
       padding: .65rem;
     }
 
@@ -1699,7 +1721,7 @@
     }
 
     .main-nav-link {
-      font-size: .84rem;
+      font-size: .9rem;
     }
 
     .main-content {
@@ -1720,7 +1742,8 @@
     }
 
     .main-hero {
-      min-height: 25rem;
+      min-height: 0;
+      padding: 1.35rem;
     }
 
     .main-hero-summary-row {
@@ -1731,8 +1754,8 @@
 
     .main-institution-section,
     .main-deadline-section {
-      border-radius: 16px;
-      padding: .85rem;
+      border-radius: 12px;
+      padding: 0;
     }
 
     .main-download-list {
@@ -1743,6 +1766,40 @@
       max-height: 32rem;
     }
   }
+
+  .main-login-card .card-body,
+  .main-deadline-head,
+  .main-online-head,
+  .main-modal-header { background: #fff; }
+
+  .main-login-card .btn {
+    background: var(--main-green);
+    box-shadow: none;
+  }
+
+  .main-nav-link:focus-visible,
+  .main-system-link:focus-visible,
+  .main-download-item:focus-visible {
+    outline: 3px solid var(--main-green);
+    outline-offset: 3px;
+  }
+
+  .main-stat:hover,
+  .main-institution-card:hover,
+  .main-system-link:hover,
+  .main-download-item:hover,
+  .main-login-card .btn:hover { transform: none; }
+
+  .main-chamra-overview {
+    background: #235c49;
+    box-shadow: none;
+  }
+
+  .main-bigmeet-progress-bar,
+  .main-chamra-stage-bar-fill { background: var(--main-green); }
+
+  .main-dashboard-body .table > :not(caption) > * > * { padding: .8rem; }
+  .main-dashboard-body section[id] { scroll-margin-top: 6rem; }
 </style>
 
 <%
@@ -1845,7 +1902,7 @@
     </div>
 
     <nav class="main-nav" aria-label="เมนูหลัก">
-      <a href="/main" class="main-nav-link active">
+      <a href="/main" class="main-nav-link active" aria-current="page">
         <i class="bi bi-grid-1x2-fill"></i>
         <span>หน้าแรก</span>
       </a>
@@ -1867,7 +1924,7 @@
     <div class="main-sidebar-foot">
       <div class="small fw-semibold text-white-50 mb-2">สถานะระบบ</div>
       <div class="d-flex align-items-center justify-content-between gap-3">
-        <span class="fw-semibold text-white">พร้อมใช้งาน</span>
+        <span class="fw-semibold text-success">พร้อมใช้งาน</span>
         <span class="badge text-bg-success">Online</span>
       </div>
     </div>

@@ -7,8 +7,10 @@
   }
 
   #institutionProfileFrame {
+    height: 720px;
     border-radius: 1rem;
     background: #f8fbff;
+    overflow: hidden;
   }
 
   @media (max-width: 575.98px) {
@@ -31,7 +33,7 @@
     }
 
     #institutionProfileFrame {
-      min-height: 640px !important;
+      height: 640px;
       border-radius: .85rem;
     }
   }
@@ -131,8 +133,8 @@
           src="/allCoop/profile/<%= encodeURIComponent(institutionCode) %>?embed=1"
           title="ข้อมูลสถาบันของฉัน"
           class="d-block w-100 border-0"
-          style="min-height: 720px;"
           loading="lazy"
+          scrolling="no"
         ></iframe>
       </div>
     </section>
@@ -148,8 +150,16 @@
     if (event.origin !== window.location.origin || event.data?.type !== 'coop-profile-resize') return;
     const frame = document.getElementById('institutionProfileFrame');
     const requestedHeight = Number(event.data.height);
-    if (!frame || !Number.isFinite(requestedHeight) || requestedHeight < 1) return;
-    frame.style.height = Math.ceil(requestedHeight) + 'px';
+    if (
+      !frame ||
+      event.source !== frame.contentWindow ||
+      !Number.isFinite(requestedHeight) ||
+      requestedHeight < 1
+    ) return;
+
+    const nextHeight = Math.ceil(requestedHeight);
+    if (Math.abs(frame.getBoundingClientRect().height - nextHeight) < 1) return;
+    frame.style.height = nextHeight + 'px';
   });
 </script>
 

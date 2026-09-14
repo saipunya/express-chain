@@ -46,8 +46,22 @@
     display: none !important;
   }
 
+  html,
+  body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body {
+    display: block !important;
+  }
+
   body > main.container {
+    display: block;
+    flex: none !important;
     max-width: none;
+    min-height: 0;
     padding: 0 !important;
   }
   <% } %>
@@ -1727,18 +1741,30 @@
   <% if (typeof embedded !== 'undefined' && embedded) { %>
   // แจ้งความสูงให้ dashboard ปรับ iframe ตามเนื้อหาจริง
   (function notifyDashboardHeight(){
+    const page = document.querySelector('.coop-profile-page');
+    if (!page) return;
+
+    let animationFrameId = null;
     const sendHeight = function(){
+      animationFrameId = null;
       const height = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
+        page.scrollHeight,
+        page.offsetHeight,
+        Math.ceil(page.getBoundingClientRect().height)
       );
       window.parent.postMessage({ type: 'coop-profile-resize', height: height }, window.location.origin);
     };
-    window.addEventListener('load', sendHeight);
+
+    const scheduleHeightUpdate = function(){
+      if (animationFrameId !== null) return;
+      animationFrameId = window.requestAnimationFrame(sendHeight);
+    };
+
+    window.addEventListener('load', scheduleHeightUpdate);
     if (window.ResizeObserver) {
-      new ResizeObserver(sendHeight).observe(document.body);
+      new ResizeObserver(scheduleHeightUpdate).observe(page);
     }
-    sendHeight();
+    scheduleHeightUpdate();
   })();
   <% } %>
 </script>

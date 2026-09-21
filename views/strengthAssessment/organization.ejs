@@ -1,0 +1,21 @@
+<section class="sa-panel" id="organization-result">
+  <div class="sa-kicker">มิติที่ 3 · <%= organization.mode === 'standard' ? 'แบบมาตรฐาน' : organization.mode === 'overall' ? 'แบบภาพรวม' : 'รอยืนยันรูปแบบประเมิน' %></div>
+  <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center mb-2">
+    <h2 class="mb-0">คะแนนการจัดการองค์กรแยกองค์ประกอบ</h2>
+    <strong class="fs-4"><%= organization.total === null ? 'รอข้อมูล' : organization.total.toFixed(2) %><small class="fs-6 fw-normal"> / 20</small></strong>
+  </div>
+  <p class="sa-note">การควบคุมภายในคิดจากระดับ 0–3 ÷ 3 × น้ำหนักของด้านนั้น รวมค่าถ่วงน้ำหนักก่อนปัดเป็น 2 ตำแหน่ง คะแนนรวมจึงอาจต่างจากผลบวกคะแนนรายข้อที่ปัดแล้ว 0.01 คะแนน ช่องว่างยังไม่ใช่ 0 คะแนน</p>
+  <% if (organization.mode === 'standard') { %><p class="sa-note">เกณฑ์รายด้าน: ดีมาก &gt; 95 · ดี &gt; 80–95 · พอใช้ &gt; 60–80 · ต้องปรับปรุง ≤ 60 หรือไม่มีการควบคุมภายใน</p><% } %>
+  <div class="row g-3">
+    <% organization.rows.forEach(r => { %>
+    <div class="col-lg-6"><div class="border rounded-3 p-3 h-100">
+      <h3 class="fs-6 fw-semibold"><%= r.id %> <%= r.label %></h3>
+      <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center my-2">
+        <span><%= r.input %><% if (organization.inputMode === 'percent' && r.quality) { %> · <%= r.quality %><% } %></span>
+        <strong class="fs-4"><%= r.value === null ? '—' : r.value.toFixed(2) %><small class="fs-6 fw-normal"> / <%= r.max %></small></strong>
+      </div>
+      <div class="sa-note"><%= r.formula %><br><%= r.source %></div>
+    </div></div>
+    <% }); %>
+  </div>
+</section>

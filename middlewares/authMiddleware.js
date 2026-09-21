@@ -39,6 +39,7 @@ const INSTITUTION_BLOCKED_PREFIXES = [
     '/business',
     '/command',
     '/cooperatives-assets',
+    '/cooperative-locations',
     '/allCoop',
     '/down',
     '/finance',
@@ -87,6 +88,7 @@ exports.redirectInstitutionUsers = (req, res, next) => {
 
     const path = req.path || '';
     const normalizedPath = path.toLowerCase();
+    if (normalizedPath === '/strength/assessments/public' || normalizedPath.startsWith('/strength/assessments/public/')) return next();
     // Allow access to specific download or uploads paths even for institution users
     if (INSTITUTION_ALLOWED_PATHS.some((p) => normalizedPath.startsWith(p.toLowerCase()))) {
       return next();

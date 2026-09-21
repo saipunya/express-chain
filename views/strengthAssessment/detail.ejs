@@ -1,0 +1,13 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="/css/strength-assessment.css?v=4">
+<div class="sa">
+  <a href="<%= base %>" class="d-inline-block mb-3 sa-no-print">← รายการประเมิน</a>
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3"><div><div class="sa-kicker">ปีประเมิน 2569 · ฉบับที่ <%= item.version %></div><h1 class="mb-1"><%= item.institution_name %></h1><div class="sa-note"><%= rules.TYPES[item.institution_type] %> · <%= item.c_code %></div></div><% if (canEdit) { %><a class="btn btn-success sa-no-print" href="<%= base %>/<%= item.id %>/edit">ปรับข้อมูล / ติดตามแผน</a><% } %></div>
+  <%- include('notice', { type: item.institution_type }) %>
+  <%- include('result', { result: item.document.result, editable: false }) %>
+  <section class="sa-panel"><h2>แผนพัฒนาและความคืบหน้า</h2><% if (!(item.document.plans || []).length) { %><p class="sa-note mb-0">ยังไม่มีแผนพัฒนา ผู้บันทึกสามารถเพิ่มงานจากหน้าปรับข้อมูลได้</p><% } else { %><% item.document.plans.forEach(task => { %><div class="sa-recommendation"><span class="sa-tag mb-2"><%= ({planned:'วางแผน',working:'กำลังดำเนินการ',done:'เสร็จแล้ว'})[task.status] %></span><p class="sa-prewrap fw-semibold"><%= task.title %></p><div class="sa-note">ผู้รับผิดชอบ: <%= task.owner || 'ยังไม่ระบุ' %> · กำหนดเสร็จ: <%= task.due || 'ยังไม่ระบุ' %> (ค.ศ.)</div><% if (task.evidence) { %><p class="sa-prewrap">ผล / หลักฐาน: <%= task.evidence %></p><% } %></div><% }); %><% } %></section>
+  <details class="sa-panel"><summary>ข้อมูลและหลักฐานที่ใช้ประเมิน</summary><% rules.sections(item.institution_type).forEach(section => { %><h2 class="mt-3"><%= section.title %></h2><dl class="row"><% section.fields.filter(f => rules.active(f,item.document.answers)).forEach(field => { const value = item.document.answers[field.key]; const label = field.kind === 'select' ? field.options.find(o => o[0] === value)?.[1] : value; %><dt class="col-md-5 small py-2"><%= field.label %></dt><dd class="col-md-7 py-2 sa-prewrap"><%= label === '' || label == null ? 'ยังไม่มีข้อมูล' : label %></dd><% }); %></dl><% }); %></details>
+  <details class="sa-panel"><summary>ประวัติการบันทึก <%= item.version %> ฉบับ</summary><p class="sa-note mt-2">เก็บข้อมูลและผลคำนวณทุกฉบับแยกกัน แสดงประวัติล่าสุดไม่เกิน 30 ฉบับ</p><ul><% history.forEach(h => { %><li>ฉบับ <%= h.version %> · <%= h.actor_name %> · <%= new Date(h.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) %></li><% }); %></ul></details>
+  <div class="sa-note small">ผู้บันทึก: <%= item.owner_name %> · รุ่นเกณฑ์: <%= item.document.ruleVersion %></div>
+</div>
+<%- include('../partials/footer') %>

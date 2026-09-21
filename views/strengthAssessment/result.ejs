@@ -1,0 +1,16 @@
+<div class="sa-intro" aria-live="polite">
+  <div class="d-flex justify-content-between gap-3 flex-wrap">
+    <div><div class="sa-kicker"><%= rules.STATUS[result.status] %></div><h2 class="mt-1"><%= result.grade ? `ชั้น ${result.grade} · จำลองตามเงื่อนไขปี 2568` : 'ยังไม่สรุปชั้น' %></h2><p class="sa-note mb-0"><%= result.status === 'excluded' ? 'แยกจากสถาบันชั้น 3 เนื่องจากไม่อยู่ในขอบเขตประเมิน' : 'ตรวจคะแนนควบคู่กับเงื่อนไขพื้นฐานและเงื่อนไขสำคัญ' %></p></div>
+    <div><div class="sa-note">คะแนนรวม</div><div class="sa-total"><%= result.total == null ? '—' : result.total.toFixed(2) %><small class="fs-6 fw-normal"> / 100</small></div><% if (result.total == null && result.scores.length) { %><div class="sa-note">คะแนนเฉพาะข้อที่คำนวณได้ <%= result.subtotal.toFixed(2) %></div><% } %></div>
+  </div>
+</div>
+<% if (result.issues.length) { %><div class="alert alert-warning"><strong>ประเด็นรอตรวจสอบ</strong><ul class="mb-0 mt-2"><% result.issues.forEach(issue => { %><li><%= issue %></li><% }); %></ul></div><% } %>
+<% if (result.missing.length) { %><details class="sa-panel"><summary>ข้อมูลที่ยังขาด <%= result.missing.length %> รายการ</summary><ul class="mt-2 mb-0"><% result.missing.forEach(label => { %><li><%= label %></li><% }); %></ul></details><% } %>
+<%- include('promotion', { result, editable: typeof editable !== 'undefined' && editable }) %>
+<% if (result.dimensions.length) { %>
+<div class="sa-metrics"><% result.dimensions.forEach(d => { %><div class="sa-metric"><div class="sa-note">มิติที่ <%= d.number %></div><div class="sa-value"><%= d.value == null ? '—' : d.value.toFixed(2) %><small class="fs-6 fw-normal sa-note"> / <%= d.max %></small></div><div class="sa-bar"><span style="width:<%= d.value == null ? 0 : Math.min(100, d.value / d.max * 100) %>%"></span></div></div><% }); %></div>
+<div class="sa-panel"><h2>คะแนนรายตัวชี้วัด</h2><p class="sa-note">มิติที่ 2 <%= result.financial ? 'คำนวณจากข้อมูลทางการเงิน' : 'ใช้คะแนนต้นทาง' %> · มิติที่ 3 <%= result.organization ? 'คำนวณแยกตามองค์ประกอบการจัดการองค์กร' : 'ใช้คะแนนรวมต้นทาง' %> ดูผลรายด้านและที่มาในรายละเอียดด้านล่าง</p><div class="table-responsive"><table class="table"><thead><tr><th>ตัวชี้วัด</th><th>คะแนน / เต็ม</th><th>อ้างอิง</th></tr></thead><tbody><% result.scores.forEach(s => { %><tr><td><strong><%= s.id %></strong> <%= s.label %></td><td><%= s.value == null ? 'รอข้อมูล / ตรวจสอบ' : s.value.toFixed(2) %> / <%= s.max %></td><td class="sa-note"><%= s.source %></td></tr><% }); %></tbody></table></div></div>
+<% if (result.financial) { %><%- include('financial', { financial: result.financial }) %><% } %>
+<% if (result.organization) { %><%- include('organization', { organization: result.organization }) %><% } %>
+<div class="sa-panel"><h2>เงื่อนไขที่ใช้จำลองการจัดชั้น</h2><div class="row g-4"><% for (const level of [0,1,2]) { %><div class="col-lg-4"><h3 class="fs-6 fw-bold"><%= level ? `ชั้น ${level}` : 'เงื่อนไขพื้นฐาน' %></h3><% result.gates.filter(g => g.level === level).forEach(g => { %><div class="sa-gate"><span class="<%= g.passed === true ? 'text-success' : g.passed === false ? 'text-danger' : 'text-secondary' %>"><%= g.passed === true ? 'ผ่าน' : g.passed === false ? 'ไม่ผ่าน' : 'รอ' %></span><span><%= g.label %></span></div><% }); %></div><% } %></div></div>
+<% } %>

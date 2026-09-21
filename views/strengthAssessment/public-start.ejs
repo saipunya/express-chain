@@ -1,0 +1,14 @@
+<section class="sa-panel">
+  <h2>ประเมินด้วยตนเองได้ทันที ไม่ต้องเข้าสู่ระบบ</h2>
+  <p class="sa-note">เลือกประเภท กรอกข้อมูลทั้ง 4 มิติ แล้วดูคะแนนและคำแนะนำส่งเสริม สามารถพิมพ์ผลหรือบันทึกเป็น PDF ผ่านเบราว์เซอร์ได้</p>
+  <form method="get" action="<%= base %>/new">
+    <label for="publicType" class="form-label">ประเภทสถาบัน</label>
+    <select id="publicType" name="publicType" class="form-select mb-3" required>
+      <option value="">เลือกประเภทที่ต้องการประเมิน</option>
+      <% Object.entries(rules.TYPES).forEach(([key,label]) => { %><option value="<%= key %>" <%= publicType === key ? 'selected' : '' %>><%= label %></option><% }); %>
+    </select>
+    <label for="institutionName" class="form-label">ชื่อสถาบัน (ไม่บังคับ)</label>
+    <input id="institutionName" name="institutionName" class="form-control mb-3" value="<%= institutionName %>" maxlength="250" autocomplete="off">
+    <button class="btn btn-success">เริ่มกรอกข้อมูลประเมิน</button>
+  </form>
+</section>

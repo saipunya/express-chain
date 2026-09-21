@@ -1,0 +1,117 @@
+<%- include('../partials/header', { title }) %>
+
+<style>
+  .location-page { --location-green: #147957; --location-ink: #20312a; }
+  .location-hero {
+    background: linear-gradient(135deg, #f0f8f4 0%, #fff 72%);
+    border: 1px solid #dcebe3;
+    border-radius: 20px;
+    padding: 1.35rem;
+  }
+  .location-hero-icon {
+    align-items: center; background: #daf0e5; border-radius: 14px; color: var(--location-green);
+    display: inline-flex; font-size: 1.35rem; height: 3rem; justify-content: center; width: 3rem;
+  }
+  .location-stat { background: #fff; border: 1px solid #e2ebe6; border-radius: 14px; padding: .8rem 1rem; }
+  .location-stat strong { color: var(--location-ink); display: block; font-size: 1.35rem; }
+  .location-stat span { color: #687970; font-size: .78rem; }
+  .location-table-card { border: 1px solid #e0e9e4; border-radius: 18px; overflow: hidden; }
+  .location-table th { background: #f5f8f6; color: #506159; font-size: .8rem; white-space: nowrap; }
+  .location-table td { color: var(--location-ink); vertical-align: middle; }
+  .location-name { font-weight: 700; }
+  .location-code { color: #75837c; font-size: .75rem; }
+  .location-coordinates { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+  .location-link { text-decoration: none; white-space: nowrap; }
+  @media (max-width: 767.98px) {
+    .location-table thead { display: none; }
+    .location-table, .location-table tbody, .location-table tr, .location-table td { display: block; width: 100%; }
+    .location-table tr { border-bottom: 1px solid #e6ece8; padding: .75rem 1rem; }
+    .location-table td { border: 0; padding: .3rem 0; }
+    .location-table td[data-label]::before { color: #738078; content: attr(data-label) ': '; font-size: .75rem; font-weight: 600; }
+  }
+</style>
+
+<%
+  const categoryLabel = (item) => {
+    if (String(item.coop_group || '').includes('กลุ่มเกษตรกร')) return 'กลุ่มเกษตรกร';
+    if (String(item.in_out_group || '').includes('นอก')) return 'สหกรณ์นอกภาค';
+    return 'สหกรณ์ภาคการเกษตร';
+  };
+  const mapsUrl = (item) => item.google_maps_url || locationService.googleCoordinateUrl(item.latitude, item.longitude);
+%>
+
+<div class="location-page">
+  <section class="location-hero mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <span class="location-hero-icon"><i class="bi bi-geo-alt-fill"></i></span>
+        <div>
+          <h1 class="h3 fw-bold mb-1">จัดการพิกัดสหกรณ์</h1>
+          <p class="text-muted mb-0">ข้อมูลที่ตรวจสอบและอนุญาตแล้วจะแสดงบนแผนที่หน้า Main</p>
+        </div>
+      </div>
+      <a href="<%= base %>/new" class="btn btn-success rounded-pill px-4" data-testid="add-location">
+        <i class="bi bi-plus-lg me-1"></i> เพิ่มข้อมูลพิกัด
+      </a>
+    </div>
+    <div class="row g-2 mt-3">
+      <div class="col-4"><div class="location-stat"><strong><%= counts.total.toLocaleString('th-TH') %></strong><span>รายการทั้งหมด</span></div></div>
+      <div class="col-4"><div class="location-stat"><strong><%= counts.verified.toLocaleString('th-TH') %></strong><span>ตรวจสอบแล้ว</span></div></div>
+      <div class="col-4"><div class="location-stat"><strong><%= counts.public.toLocaleString('th-TH') %></strong><span>แสดงบน Main</span></div></div>
+    </div>
+  </section>
+
+  <% if (saved) { %>
+    <div class="alert alert-success border-0 shadow-sm" role="status"><i class="bi bi-check-circle-fill me-2"></i>บันทึกข้อมูลพิกัดเรียบร้อยแล้ว</div>
+  <% } %>
+
+  <form action="<%= base %>" method="get" class="row g-2 mb-3" role="search">
+    <div class="col-md-8 col-lg-6">
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input class="form-control" type="search" name="search" value="<%= search %>" placeholder="ค้นหาชื่อ รหัส หรืออำเภอ" aria-label="ค้นหาข้อมูลพิกัด">
+        <button class="btn btn-outline-success" type="submit">ค้นหา</button>
+      </div>
+    </div>
+    <% if (search) { %><div class="col-auto"><a href="<%= base %>" class="btn btn-link text-secondary">ล้างการค้นหา</a></div><% } %>
+  </form>
+
+  <div class="location-table-card bg-white shadow-sm">
+    <% if (!items.length) { %>
+      <div class="text-center p-5">
+        <i class="bi bi-map fs-1 text-secondary"></i>
+        <h2 class="h5 mt-3">ยังไม่มีข้อมูลพิกัด</h2>
+        <p class="text-muted mb-3"><%= search ? 'ไม่พบรายการที่ตรงกับคำค้น' : 'เริ่มเพิ่มพิกัดเพื่อแสดงสหกรณ์บนแผนที่หน้า Main' %></p>
+        <% if (!search) { %><a href="<%= base %>/new" class="btn btn-success">เพิ่มข้อมูลแรก</a><% } %>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table location-table align-middle mb-0">
+          <thead><tr><th>สหกรณ์/กลุ่มเกษตรกร</th><th>พิกัด</th><th>ลิงก์</th><th>สถานะ</th><th class="text-end">จัดการ</th></tr></thead>
+          <tbody>
+            <% items.forEach(function(item) { %>
+              <tr>
+                <td>
+                  <div class="location-name"><%= item.c_name || 'ไม่พบชื่อในทะเบียน' %></div>
+                  <div class="location-code"><%= item.c_code %> · <%= categoryLabel(item) %><%= item.district ? ` · อำเภอ${item.district}` : '' %></div>
+                </td>
+                <td data-label="พิกัด"><span class="location-coordinates"><%= Number(item.latitude).toFixed(6) %>, <%= Number(item.longitude).toFixed(6) %></span></td>
+                <td data-label="ลิงก์">
+                  <a class="location-link me-2" href="<%= mapsUrl(item) %>" target="_blank" rel="noopener noreferrer"><i class="bi bi-map"></i> Google Maps</a>
+                  <% if (item.website_url) { %><a class="location-link" href="<%= item.website_url %>" target="_blank" rel="noopener noreferrer"><i class="bi bi-globe2"></i> เว็บไซต์</a><% } %>
+                </td>
+                <td data-label="สถานะ">
+                  <span class="badge <%= Number(item.is_verified) === 1 ? 'text-bg-success' : 'text-bg-secondary' %>"><%= Number(item.is_verified) === 1 ? 'ตรวจสอบแล้ว' : 'รอตรวจสอบ' %></span>
+                  <span class="badge <%= Number(item.is_public) === 1 && Number(item.is_verified) === 1 ? 'text-bg-primary' : 'text-bg-light text-dark' %>"><%= Number(item.is_public) === 1 && Number(item.is_verified) === 1 ? 'แสดงบน Main' : 'ยังไม่เผยแพร่' %></span>
+                </td>
+                <td class="text-end"><a href="<%= base %>/<%= item.id %>/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil-square me-1"></i>แก้ไข</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

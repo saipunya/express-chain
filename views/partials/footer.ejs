@@ -165,6 +165,8 @@
       });
 
       navigator.serviceWorker.addEventListener('controllerchange', function() {
+        // Keep long assessment forms intact until the user saves or navigates.
+        if (document.querySelector('form[data-preserve-on-update]')) return;
         window.location.reload();
       });
     }

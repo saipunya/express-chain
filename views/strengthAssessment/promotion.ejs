@@ -1,0 +1,25 @@
+<% const target = result.grade === 3 ? 2 : 1; const failed = result.gates.filter(g => g.passed === false && (g.level === 0 || g.level === target)); %>
+<section class="sa-panel" id="promotion-advice">
+  <h2>ข้อที่ควรส่งเสริมและพัฒนา</h2>
+  <% if (result.status === 'excluded') { %>
+    <p class="sa-note mb-0">ไม่อยู่ในขอบเขตประเมินตามข้อมูลที่กรอก จึงยังไม่จัดทำคำแนะนำเพื่อยกระดับชั้น</p>
+  <% } else { %>
+    <% if (failed.length) { %>
+      <p class="sa-note">พบ <%= failed.length %> เงื่อนไขที่ยังไม่ผ่าน สำหรับ<%= result.grade ? `การ${result.grade === 1 ? 'รักษา' : 'ยกระดับสู่'}ชั้น ${target}` : `เป้าหมายชั้น ${target} เมื่อข้อมูลครบ` %> ตามเงื่อนไขอ้างอิงปี 2568</p>
+      <% failed.forEach(g => {
+        const scoreId = g.key.startsWith('defect') ? '4.1' : g.key.startsWith('management') ? '4.2' : g.key.startsWith('allocation') ? '1.2' : g.key.startsWith('business') ? '2' : g.key.startsWith('control') ? '3' : null;
+        const actual = g.key.startsWith('score') ? result.total : result.scores.find(s => s.id === scoreId)?.value;
+      %><div class="sa-gate"><span class="sa-tag sa-tag-warn align-self-start">ไม่ผ่าน</span><div><strong>เกณฑ์: <%= g.label %></strong><% if (actual != null) { %><div class="sa-note">ผลปัจจุบัน <%= actual.toFixed(2) %> คะแนน</div><% } %></div></div><% }); %>
+    <% } else if (result.status === 'preliminary') { %><p class="sa-note">ผ่านเงื่อนไขการจัดชั้นเป้าหมายตามข้อมูลที่กรอก ควรรักษาผลและติดตามประเด็นเพิ่มประสิทธิภาพต่อเนื่อง</p>
+    <% } else { %><p class="sa-note">ยังสรุปการผ่านเกณฑ์ไม่ได้ ให้เติมข้อมูลหรือตรวจประเด็นที่ระบุก่อน คำแนะนำต่อไปนี้อ้างอิงเฉพาะข้อมูลที่มี</p><% } %>
+    <% if (result.recommendations.length) { %>
+      <p class="sa-note mt-3">คำแนะนำเรียงจากข้อมูลที่ต้องตรวจ เงื่อนไขที่ต้องแก้ไข และการเพิ่มประสิทธิภาพ คะแนนที่ยังไม่เต็มเป็นโอกาสพัฒนา ไม่ได้หมายความว่าไม่ผ่านเงื่อนไขทุกข้อ</p>
+      <% result.recommendations.forEach((r,i) => { %><article class="sa-recommendation">
+        <span class="sa-kicker"><%= r.priority === 0 ? 'ตรวจข้อมูลก่อนสรุปผล' : r.priority <= 2 ? 'แก้เงื่อนไขที่ยังไม่ผ่าน' : 'พัฒนาและเพิ่มประสิทธิภาพ' %></span>
+        <h3 class="fs-6 fw-semibold mt-1"><%= i + 1 %>. <%= r.title %></h3><p><%= r.detail %></p>
+        <div class="sa-note">หลักฐานติดตามผล: <%= r.evidence %><br>อ้างอิง: <%= r.source %></div>
+        <% if (typeof editable !== 'undefined' && editable) { %><button type="button" class="btn btn-sm btn-outline-success mt-2" data-plan-title="<%= r.title %>: <%= r.detail %>">เพิ่มลงแผนพัฒนา</button><% } %>
+      </article><% }); %>
+    <% } else if (result.status === 'preliminary') { %><p class="mb-0">รักษาระบบงานและหลักฐานที่ดำเนินการได้ดี พร้อมประเมินซ้ำในรอบถัดไป</p><% } %>
+  <% } %>
+</section>

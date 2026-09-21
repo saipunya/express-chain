@@ -1,0 +1,21 @@
+<section class="sa-panel" id="financial-result">
+  <div class="sa-kicker">มิติที่ 2 · <%= financial.subtypeLabel %></div>
+  <h2 class="mt-1">ผลคำนวณอัตราส่วนทางการเงิน</h2>
+  <p class="sa-note">แสดงผล 4 ตำแหน่ง และใช้ค่าตัดเศษ 2 ตำแหน่งเทียบเกณฑ์ คะแนนแต่ละข้อ = ระดับที่ได้ ÷ 3 × น้ำหนัก รวมคะแนนก่อนปัดเป็น 2 ตำแหน่ง จึงอาจต่างจากผลบวกคะแนนที่แสดงรายข้อ 0.01 คะแนน</p>
+  <% if (financial.transferred) { %><p class="alert alert-info">ไม่มีลูกหนี้ระยะสั้นถึงกำหนด: ไม่คิดคะแนนข้อ 2.6 และเพิ่มน้ำหนักข้อ 2.5 เป็น 7 คะแนน</p><% } %>
+  <div class="row g-3">
+    <% financial.rows.forEach(r => { %>
+    <div class="col-lg-6"><div class="border rounded-3 p-3 h-100">
+      <h3 class="fs-6 fw-semibold"><%= r.id %> <%= r.label %></h3>
+      <div class="sa-note mb-2"><%= r.formula %></div>
+      <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center">
+        <strong class="fs-4 sa-ratio-value"><%= r.ratio ?? '—' %> <small class="fs-6 fw-normal"><%= r.unit %></small></strong>
+        <span class="sa-tag <%= r.level !== null && r.level < 2 ? 'sa-tag-warn' : '' %>"><%= r.notApplicable ? 'ไม่คิดคะแนน' : r.level === null ? 'รอข้อมูล / ตรวจสอบ' : ['0 คะแนน','ขั้นต้น','ขั้นกลาง','ขั้นสูง'][r.level] %></span>
+      </div>
+      <p class="mt-2 mb-1">ค่าเทียบเกณฑ์ <strong><%= r.compared ?? '—' %></strong> · คะแนน <strong><%= r.value === null ? '—' : r.value.toFixed(2) %></strong> / <%= r.weight ?? 'รอน้ำหนัก' %></p>
+      <div class="sa-note">ขั้นสูง <%= r.target %> · ขั้นกลาง <%= r.middle %> <%= r.unit %><br><%= r.source %></div>
+      <% if (r.note) { %><p class="small mt-2 mb-0"><%= r.note %></p><% } %>
+    </div></div>
+    <% }); %>
+  </div>
+</section>

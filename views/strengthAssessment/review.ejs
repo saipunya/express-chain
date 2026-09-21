@@ -1,0 +1,22 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="/css/strength-assessment.css?v=4">
+<div class="sa">
+  <div class="sa-kicker">ผลจากข้อมูลที่คุณกรอก · ปีประเมิน 2569</div>
+  <h1>ผลประเมินและคำแนะนำส่งเสริม</h1>
+  <p class="sa-note"><%= institution.c_name %> · <%= institution.c_code %></p>
+  <%- include('notice', { type }) %>
+  <p class="alert alert-info sa-no-print" role="status"><%= publicMode ? 'ผลจากการประเมินด้วยตนเอง ไม่บันทึกลงฐานข้อมูล สามารถแก้ข้อมูลแล้วประเมินใหม่ หรือพิมพ์ผลเก็บไว้' : 'ยังไม่ได้บันทึกผล คุณสามารถกลับไปแก้ข้อมูลแล้วประเมินใหม่ หรือบันทึกผลนี้ไว้ติดตามการพัฒนา' %></p>
+  <div class="sa-actions sa-no-print"><button form="assessment-result-actions" name="action" value="revise" class="btn btn-outline-success">กลับไปแก้ข้อมูล</button><% if (publicMode) { %><button type="button" data-print-assessment class="btn btn-success">พิมพ์ผล / บันทึก PDF</button><% } else { %><button form="assessment-result-actions" name="action" value="save" class="btn btn-success"><%= result.status === 'draft' ? 'บันทึกฉบับร่าง' : 'บันทึกผลประเมิน' %></button><% } %></div>
+  <%- include('result', { result, editable:false }) %>
+  <form id="assessment-result-actions" method="post" action="<%= base %><%= item ? `/${item.id}` : '' %>" data-preserve-on-update class="sa-panel sa-no-print">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="code" value="<%= institution.c_code %>"><input type="hidden" name="version" value="<%= submittedVersion %>">
+    <% if (publicMode) { %><input type="hidden" name="publicType" value="<%= publicType %>"><input type="hidden" name="institutionName" value="<%= institutionName %>"><% } %>
+    <% Object.entries(values).forEach(([key,value]) => { %><input type="hidden" name="<%= key %>" value="<%= value %>"><% }); %>
+    <% plans.forEach((task,i) => { Object.entries(task).forEach(([key,value]) => { %><input type="hidden" name="plan_<%= i %>_<%= key %>" value="<%= value %>"><% }); }); %>
+    <h2>ดำเนินการต่อ</h2>
+    <p class="sa-note"><%= publicMode ? 'เลือกพิมพ์ แล้วเลือกบันทึกเป็น PDF ในเบราว์เซอร์เพื่อเก็บผลและคำแนะนำ' : 'หลังบันทึก สามารถเพิ่มแผนส่งเสริม ผู้รับผิดชอบ และติดตามผลได้จากหน้าปรับข้อมูล' %></p>
+    <div class="sa-actions mb-0"><button class="btn btn-outline-success" name="action" value="revise">กลับไปแก้ข้อมูล</button><% if (publicMode) { %><button type="button" data-print-assessment class="btn btn-success">พิมพ์ผล / บันทึก PDF</button><a href="<%= base %>" class="btn btn-outline-secondary">เริ่มประเมินใหม่</a><% } else { %><button class="btn btn-success" name="action" value="save"><%= result.status === 'draft' ? 'บันทึกฉบับร่าง' : 'บันทึกผลประเมิน' %></button><% } %></div>
+  </form>
+</div>
+<% if (publicMode) { %><script src="/js/strength-assessment.js?v=5" defer></script><% } %>
+<%- include('../partials/footer') %>

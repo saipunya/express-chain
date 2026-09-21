@@ -1800,6 +1800,444 @@
 
   .main-dashboard-body .table > :not(caption) > * > * { padding: .8rem; }
   .main-dashboard-body section[id] { scroll-margin-top: 6rem; }
+
+  /* Animated feature cards adapted for the server-rendered strength summary. */
+  .main-strength-heading {
+    align-items: flex-end;
+  }
+
+  .main-strength-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+    justify-content: flex-end;
+  }
+
+  .main-strength-self-assess {
+    align-items: center;
+    background: var(--main-green);
+    border: 1px solid var(--main-green);
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: .86rem;
+    font-weight: 700;
+    gap: .45rem;
+    padding: .58rem .9rem;
+    text-decoration: none;
+    transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .main-strength-self-assess:hover {
+    background: #0f6749;
+    box-shadow: 0 10px 22px rgba(19, 122, 87, .18);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .main-strength-feature-card {
+    --feature-color: #137a57;
+    --feature-light: #dff3e9;
+    --feature-soft: #f5fbf7;
+    background: #fff;
+    border: 1px solid color-mix(in srgb, var(--feature-color) 20%, var(--main-line));
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(24, 34, 48, .04);
+    height: 23.5rem;
+    overflow: hidden;
+    padding: 1.25rem;
+    position: relative;
+    transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+  }
+
+  .main-strength-feature-card::before {
+    background: radial-gradient(circle, var(--feature-light) 0%, rgba(255, 255, 255, 0) 68%);
+    content: '';
+    height: 20rem;
+    left: 50%;
+    opacity: .8;
+    pointer-events: none;
+    position: absolute;
+    top: -3.5rem;
+    transform: translateX(-50%);
+    width: 24rem;
+  }
+
+  .main-strength-feature-card.teal {
+    --feature-color: #3478c7;
+    --feature-light: #dcecff;
+    --feature-soft: #f4f8ff;
+  }
+
+  .main-strength-feature-card.amber {
+    --feature-color: #bd7410;
+    --feature-light: #ffebc4;
+    --feature-soft: #fff9ed;
+  }
+
+  .main-strength-feature-card:hover {
+    border-color: color-mix(in srgb, var(--feature-color) 38%, var(--main-line));
+    box-shadow: 0 20px 36px rgba(24, 34, 48, .11);
+    transform: translateY(-7px);
+  }
+
+  .main-strength-feature-top {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+  }
+
+  .main-strength-feature-index {
+    color: #7a8798;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .86rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+  }
+
+  .main-strength-feature-tag {
+    background: var(--feature-soft);
+    border: 1px solid color-mix(in srgb, var(--feature-color) 18%, transparent);
+    border-radius: 999px;
+    color: var(--feature-color);
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .35rem .65rem;
+  }
+
+  .main-strength-feature-visual {
+    align-items: center;
+    display: flex;
+    height: 9.5rem;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .main-strength-feature-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, .72);
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 28px;
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--feature-color) 16%, transparent);
+    color: var(--feature-color);
+    display: inline-flex;
+    font-size: 3.25rem;
+    height: 6.5rem;
+    justify-content: center;
+    transform: translateY(0) scale(1);
+    transition: transform .3s cubic-bezier(.2, .75, .25, 1);
+    width: 6.5rem;
+  }
+
+  .main-strength-feature-card:hover .main-strength-feature-icon {
+    transform: translateY(-7px) scale(1.1);
+  }
+
+  .main-strength-feature-content {
+    background: rgba(255, 255, 255, .88);
+    border: 1px solid rgba(221, 229, 238, .9);
+    border-radius: 14px;
+    bottom: 1.15rem;
+    left: 1.15rem;
+    padding: .95rem 1rem;
+    position: absolute;
+    right: 1.15rem;
+    z-index: 2;
+  }
+
+  .main-strength-feature-title {
+    color: var(--main-ink);
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .main-strength-feature-total {
+    align-items: baseline;
+    display: flex;
+    gap: .35rem;
+    margin-top: .3rem;
+  }
+
+  .main-strength-feature-total strong {
+    color: var(--feature-color);
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  .main-strength-feature-total span {
+    color: var(--main-muted);
+    font-size: .78rem;
+  }
+
+  .main-strength-feature-card .main-strength-grade-list {
+    gap: .36rem;
+    margin-top: .75rem;
+  }
+
+  .main-strength-feature-card .main-strength-grade-row {
+    gap: .5rem;
+    grid-template-columns: 3.4rem minmax(0, 1fr) 2.7rem;
+  }
+
+  .main-strength-feature-card .main-strength-grade-label,
+  .main-strength-feature-card .main-strength-grade-value {
+    font-size: .74rem;
+  }
+
+  .main-coop-map-card {
+    background: #fff;
+    border: 1px solid var(--main-line);
+    border-radius: 20px;
+    box-shadow: var(--main-shadow-soft);
+    overflow: hidden;
+  }
+
+  .main-coop-map-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1.15rem 1.2rem 1rem;
+  }
+
+  .main-coop-map-title {
+    align-items: center;
+    display: flex;
+    gap: .65rem;
+  }
+
+  .main-coop-map-title-icon {
+    align-items: center;
+    background: #e9f7ef;
+    border-radius: 12px;
+    color: var(--main-green);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+    height: 2.65rem;
+    justify-content: center;
+    width: 2.65rem;
+  }
+
+  .main-coop-map-title h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .main-coop-map-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    justify-content: flex-end;
+  }
+
+  .main-coop-map-filter {
+    background: #f6f8f7;
+    border: 1px solid #e0e7e3;
+    border-radius: 999px;
+    color: #52635c;
+    font-size: .78rem;
+    font-weight: 700;
+    padding: .42rem .7rem;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+
+  .main-coop-map-filter:hover,
+  .main-coop-map-filter.active {
+    background: #e9f7ef;
+    border-color: #9dd3bc;
+    color: var(--main-green);
+  }
+
+  .main-coop-map-wrap {
+    background: #e8eeeb;
+    border-top: 1px solid var(--main-line);
+    height: 28rem;
+    position: relative;
+  }
+
+  .main-coop-map-canvas {
+    height: 100%;
+    width: 100%;
+  }
+
+  .main-coop-map-count {
+    align-items: center;
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid rgba(221, 229, 238, .95);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(24, 34, 48, .1);
+    display: flex;
+    gap: .5rem;
+    left: 1rem;
+    padding: .55rem .75rem;
+    pointer-events: none;
+    position: absolute;
+    top: 1rem;
+    z-index: 500;
+  }
+
+  .main-coop-map-count strong {
+    color: var(--main-green);
+    font-size: 1.05rem;
+  }
+
+  .main-coop-map-count span {
+    color: var(--main-muted);
+    font-size: .75rem;
+  }
+
+  .main-coop-map-legend {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem 1rem;
+    padding: .8rem 1.2rem;
+  }
+
+  .main-coop-map-legend span {
+    align-items: center;
+    color: var(--main-muted);
+    display: inline-flex;
+    font-size: .75rem;
+    gap: .4rem;
+  }
+
+  .main-coop-map-dot {
+    background: var(--map-dot, var(--main-green));
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--map-dot, var(--main-green));
+    display: inline-block;
+    height: .68rem;
+    width: .68rem;
+  }
+
+  .main-coop-map-popup {
+    min-width: 12rem;
+  }
+
+  .main-coop-map-popup strong,
+  .main-coop-map-popup span {
+    display: block;
+  }
+
+  .main-coop-map-popup strong {
+    color: var(--main-ink);
+    font-family: 'Sarabun', sans-serif;
+    font-size: .88rem;
+    line-height: 1.45;
+  }
+
+  .main-coop-map-popup span {
+    color: var(--main-muted);
+    font-family: 'Sarabun', sans-serif;
+    font-size: .74rem;
+    margin-top: .2rem;
+  }
+
+  .main-coop-map-popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .65rem;
+  }
+
+  .main-coop-map-popup-link {
+    align-items: center;
+    background: #eef7f2;
+    border: 1px solid #cce7da;
+    border-radius: 999px;
+    color: #0c704c !important;
+    display: inline-flex !important;
+    font-family: 'Sarabun', sans-serif;
+    font-size: .7rem;
+    font-weight: 700;
+    gap: .25rem;
+    padding: .3rem .55rem;
+    text-decoration: none;
+  }
+
+  .main-coop-map-popup-link:hover {
+    background: #daf0e5;
+    color: #07583b !important;
+  }
+
+  .main-coop-map-error {
+    align-items: center;
+    color: var(--main-muted);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    padding: 2rem;
+    position: absolute;
+    text-align: center;
+  }
+
+  .main-coop-map-wrap.map-error .main-coop-map-error { display: flex; }
+  .main-coop-map-wrap.map-error .main-coop-map-canvas { visibility: hidden; }
+
+  @media (max-width: 767.98px) {
+    .main-strength-heading {
+      align-items: flex-start;
+    }
+
+    .main-strength-actions {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .main-strength-self-assess {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .main-strength-feature-card {
+      height: 22.5rem;
+    }
+
+    .main-coop-map-head {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .main-coop-map-filters {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      margin-inline: -.15rem;
+      overflow-x: auto;
+      padding: .15rem;
+      scrollbar-width: thin;
+    }
+
+    .main-coop-map-filter {
+      flex: 0 0 auto;
+    }
+
+    .main-coop-map-wrap {
+      height: 23rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .main-strength-feature-card,
+    .main-strength-feature-icon,
+    .main-strength-self-assess {
+      transition: none;
+    }
+
+    .main-strength-feature-card:hover,
+    .main-strength-feature-card:hover .main-strength-feature-icon,
+    .main-strength-self-assess:hover {
+      transform: none;
+    }
+  }
 </style>
 
 <%
@@ -1828,6 +2266,20 @@
   };
   const _institutionSummaryList = ['agri', 'non_agri', 'farmer'].map((key) => _institutionSummary[key]).filter(Boolean);
   const _institutionTotal = _institutionSummaryList.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const _cooperativeMapLocations = (typeof cooperativeMapLocations !== 'undefined' && Array.isArray(cooperativeMapLocations))
+    ? cooperativeMapLocations.map((item) => ({
+        code: String(item.code || item.c_code || ''),
+        name: String(item.name || item.c_name || 'ไม่ระบุชื่อ'),
+        type: ['agri', 'non_agri', 'farmer'].includes(String(item.type || '')) ? String(item.type) : 'agri',
+        district: String(item.district || item.c_amp || ''),
+        latitude: Number(item.latitude),
+        longitude: Number(item.longitude),
+        websiteUrl: /^https?:\/\//i.test(String(item.websiteUrl || item.website_url || '')) ? String(item.websiteUrl || item.website_url) : '',
+        googleMapsUrl: /^https:\/\//i.test(String(item.googleMapsUrl || item.google_maps_url || '')) ? String(item.googleMapsUrl || item.google_maps_url) : ''
+      })).filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+    : [];
+  const _cooperativeMapIsDemo = typeof cooperativeMapIsDemo !== 'undefined' && cooperativeMapIsDemo === true;
+  const _cooperativeMapJson = JSON.stringify(_cooperativeMapLocations).replace(/</g, '\\u003c');
   const _onlineUsers = (typeof onlineUsers !== 'undefined' && Array.isArray(onlineUsers)) ? onlineUsers : [];
   const _onlineCount = Number((typeof onlineCount !== 'undefined' && onlineCount !== null) ? onlineCount : _onlineUsers.length);
   const _mainDownloads = (typeof mainDownloads !== 'undefined' && Array.isArray(mainDownloads)) ? mainDownloads : [];
@@ -2190,6 +2642,162 @@
       </div>
     </section>
 
+    <% if (_cooperativeMapLocations.length) { %>
+      <section class="main-institution-section" aria-labelledby="cooperativeMapTitle">
+        <div class="main-coop-map-card">
+          <div class="main-coop-map-head">
+            <div class="main-coop-map-title">
+              <span class="main-coop-map-title-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+              <div>
+                <h2 id="cooperativeMapTitle">แผนที่สหกรณ์และกลุ่มเกษตรกรในจังหวัดชัยภูมิ</h2>
+                <div class="text-muted small">
+                  เลือกประเภทแล้วกดจุดบนแผนที่เพื่อดูข้อมูล เส้นทาง และเว็บไซต์
+                  <% if (_cooperativeMapIsDemo) { %><span class="badge text-bg-warning ms-1">ข้อมูลตัวอย่าง</span><% } %>
+                </div>
+              </div>
+            </div>
+            <div class="main-coop-map-filters" role="group" aria-label="กรองประเภทสถาบัน">
+              <button type="button" class="main-coop-map-filter active" data-map-filter="all" aria-pressed="true">ทั้งหมด</button>
+              <button type="button" class="main-coop-map-filter" data-map-filter="agri" aria-pressed="false">ภาคการเกษตร</button>
+              <button type="button" class="main-coop-map-filter" data-map-filter="non_agri" aria-pressed="false">นอกภาคการเกษตร</button>
+              <button type="button" class="main-coop-map-filter" data-map-filter="farmer" aria-pressed="false">กลุ่มเกษตรกร</button>
+            </div>
+          </div>
+          <div class="main-coop-map-wrap" id="cooperativeMapWrap">
+            <div class="main-coop-map-canvas" id="cooperativeMap" role="img" aria-label="แผนที่แสดงตำแหน่งสหกรณ์และกลุ่มเกษตรกรในจังหวัดชัยภูมิ"></div>
+            <div class="main-coop-map-count" aria-live="polite">
+              <i class="bi bi-geo-alt-fill text-success" aria-hidden="true"></i>
+              <strong id="cooperativeMapCount"><%= _cooperativeMapLocations.length.toLocaleString('th-TH') %></strong>
+              <span>จุดที่แสดง</span>
+            </div>
+            <div class="main-coop-map-error">
+              <span><i class="bi bi-wifi-off d-block fs-3 mb-2" aria-hidden="true"></i>ไม่สามารถโหลดแผนที่ได้ในขณะนี้</span>
+            </div>
+          </div>
+          <div class="main-coop-map-legend" aria-label="คำอธิบายสีบนแผนที่">
+            <span><i class="main-coop-map-dot" style="--map-dot:#16845f"></i>สหกรณ์ภาคการเกษตร</span>
+            <span><i class="main-coop-map-dot" style="--map-dot:#3478c7"></i>สหกรณ์นอกภาคการเกษตร</span>
+            <span><i class="main-coop-map-dot" style="--map-dot:#bd7410"></i>กลุ่มเกษตรกร</span>
+            <span class="ms-lg-auto"><i class="bi bi-shield-check" aria-hidden="true"></i>แสดงเฉพาะพิกัดที่อนุญาตให้เผยแพร่</span>
+          </div>
+          <ul class="visually-hidden">
+            <% _cooperativeMapLocations.forEach(function(item) { %>
+              <li><%= item.name %><%= item.district ? ` อำเภอ${item.district}` : '' %></li>
+            <% }); %>
+          </ul>
+        </div>
+      </section>
+
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+      <script>
+        (function () {
+          var mapElement = document.getElementById('cooperativeMap');
+          var mapWrap = document.getElementById('cooperativeMapWrap');
+          var countElement = document.getElementById('cooperativeMapCount');
+          var locations = <%- _cooperativeMapJson %>;
+          var colors = { agri: '#16845f', non_agri: '#3478c7', farmer: '#bd7410' };
+          var typeLabels = { agri: 'สหกรณ์ภาคการเกษตร', non_agri: 'สหกรณ์นอกภาคการเกษตร', farmer: 'กลุ่มเกษตรกร' };
+          var map;
+          var markerLayer;
+          var initialized = false;
+
+          function popupContent(item) {
+            var box = document.createElement('div');
+            var name = document.createElement('strong');
+            var detail = document.createElement('span');
+            var actions = document.createElement('div');
+            box.className = 'main-coop-map-popup';
+            actions.className = 'main-coop-map-popup-actions';
+            name.textContent = item.name;
+            detail.textContent = typeLabels[item.type] + (item.district ? ' · อำเภอ' + item.district : '');
+            box.appendChild(name);
+            box.appendChild(detail);
+            var mapsLink = document.createElement('a');
+            mapsLink.className = 'main-coop-map-popup-link';
+            mapsLink.href = item.googleMapsUrl || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.latitude + ',' + item.longitude));
+            mapsLink.target = '_blank';
+            mapsLink.rel = 'noopener noreferrer';
+            mapsLink.textContent = 'เปิด Google Maps';
+            actions.appendChild(mapsLink);
+            if (item.websiteUrl) {
+              var websiteLink = document.createElement('a');
+              websiteLink.className = 'main-coop-map-popup-link';
+              websiteLink.href = item.websiteUrl;
+              websiteLink.target = '_blank';
+              websiteLink.rel = 'noopener noreferrer';
+              websiteLink.textContent = 'เยี่ยมชมเว็บไซต์';
+              actions.appendChild(websiteLink);
+            }
+            box.appendChild(actions);
+            return box;
+          }
+
+          function renderMarkers(filter) {
+            markerLayer.clearLayers();
+            var visible = locations.filter(function (item) { return filter === 'all' || item.type === filter; });
+            var bounds = [];
+            visible.forEach(function (item) {
+              var point = [item.latitude, item.longitude];
+              var marker = window.L.circleMarker(point, {
+                radius: 8,
+                color: '#ffffff',
+                className: 'main-coop-map-marker',
+                weight: 2,
+                fillColor: colors[item.type],
+                fillOpacity: .92
+              });
+              marker.bindPopup(popupContent(item));
+              marker.bindTooltip(item.name, { direction: 'top', offset: [0, -7] });
+              marker.addTo(markerLayer);
+              bounds.push(point);
+            });
+            countElement.textContent = visible.length.toLocaleString('th-TH');
+            if (bounds.length > 1) map.fitBounds(bounds, { padding: [42, 42], maxZoom: 11 });
+            if (bounds.length === 1) map.setView(bounds[0], 11);
+          }
+
+          function initializeMap() {
+            if (initialized) return;
+            initialized = true;
+            if (!window.L) {
+              mapWrap.classList.add('map-error');
+              return;
+            }
+            map = window.L.map(mapElement, { scrollWheelZoom: false }).setView([15.8068, 102.0315], 8);
+            window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 18,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            markerLayer = window.L.layerGroup().addTo(map);
+            renderMarkers('all');
+
+            document.querySelectorAll('[data-map-filter]').forEach(function (button) {
+              button.addEventListener('click', function () {
+                document.querySelectorAll('[data-map-filter]').forEach(function (item) {
+                  var active = item === button;
+                  item.classList.toggle('active', active);
+                  item.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+                renderMarkers(button.dataset.mapFilter);
+              });
+            });
+          }
+
+          if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries) {
+              if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+              observer.disconnect();
+              initializeMap();
+            }, { rootMargin: '250px' });
+            observer.observe(mapElement);
+          } else {
+            initializeMap();
+          }
+        })();
+      </script>
+    <% } %>
+
     <section class="main-institution-section" aria-labelledby="chamraSummaryTitle">
       <div class="main-section-title">
         <div>
@@ -2281,21 +2889,28 @@
     </section>
 
     <section class="main-institution-section" aria-labelledby="strengthGradeSummaryTitle">
-      <div class="main-section-title">
+      <div class="main-section-title main-strength-heading">
         <div>
           <h2 id="strengthGradeSummaryTitle">สรุปผลความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร</h2>
           <div class="text-muted small">
             ประจำปี <%= _strengthGradeSummary.year || 2568 %> แยกตามชั้นและประเภทสถาบัน
           </div>
         </div>
-        <span class="badge text-bg-info">
-          รวม <%= Number(_strengthGradeTotals.total || 0).toLocaleString('th-TH') %> แห่ง
-        </span>
+        <div class="main-strength-actions">
+          <span class="badge text-bg-light border text-dark">
+            รวม <%= Number(_strengthGradeTotals.total || 0).toLocaleString('th-TH') %> แห่ง
+          </span>
+          <a href="/strength/assessments/public" class="main-strength-self-assess">
+            <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+            <span>ประเมินด้วยตนเอง · ไม่ต้องเข้าสู่ระบบ</span>
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
       </div>
 
       <% if (_strengthGradeList.length && Number(_strengthGradeTotals.total || 0) > 0) { %>
         <div class="row g-3 align-items-stretch">
-          <% _strengthGradeList.forEach(function(item) { %>
+          <% _strengthGradeList.forEach(function(item, itemIndex) { %>
             <% const total = Number(item.total || 0); %>
             <% const gradeRows = [
               { label: 'ชั้น 1', value: Number(item.grade1 || 0), className: 'grade-1' },
@@ -2303,33 +2918,34 @@
               { label: 'ชั้น 3', value: Number(item.grade3 || 0), className: 'grade-3' }
             ]; %>
             <div class="col-md-4">
-              <div class="main-strength-card">
-                <div class="d-flex align-items-start justify-content-between gap-3">
-                  <div>
-                    <div class="main-turnover-label"><%= item.label %></div>
-                    <div class="main-turnover-value"><%= Number(total).toLocaleString('th-TH') %> แห่ง</div>
-                    <div class="text-muted small mt-1">
-                      ชั้น 1 <%= total > 0 ? Number(item.grade1Percent || 0).toFixed(1) : '0.0' %>%
-                    </div>
-                  </div>
-                  <div class="main-stat-icon <%= item.tone %>">
-                    <i class="bi <%= item.icon %>"></i>
-                  </div>
+              <article class="main-strength-feature-card <%= item.tone %>">
+                <div class="main-strength-feature-top">
+                  <span class="main-strength-feature-index"><%= String(itemIndex + 1).padStart(3, '0') %></span>
+                  <span class="main-strength-feature-tag">ชั้น 1 · <%= total > 0 ? Number(item.grade1Percent || 0).toFixed(1) : '0.0' %>%</span>
                 </div>
-
-                <div class="main-strength-grade-list">
-                  <% gradeRows.forEach(function(row) { %>
-                    <% const width = total > 0 ? Math.max(0, Math.min(100, (row.value / total) * 100)) : 0; %>
-                    <div class="main-strength-grade-row">
-                      <div class="main-strength-grade-label"><%= row.label %></div>
-                      <div class="main-strength-bar" aria-hidden="true">
-                        <div class="main-strength-bar-fill <%= row.className %>" style="--strength-width: <%= width %>%;"></div>
+                <div class="main-strength-feature-visual" aria-hidden="true">
+                  <span class="main-strength-feature-icon"><i class="bi <%= item.icon %>"></i></span>
+                </div>
+                <div class="main-strength-feature-content">
+                  <div class="main-strength-feature-title"><%= item.label %></div>
+                  <div class="main-strength-feature-total">
+                    <strong><%= Number(total).toLocaleString('th-TH') %></strong>
+                    <span>แห่ง</span>
+                  </div>
+                  <div class="main-strength-grade-list" aria-label="จำนวนสถาบันแยกตามชั้น">
+                    <% gradeRows.forEach(function(row) { %>
+                      <% const width = total > 0 ? Math.max(0, Math.min(100, (row.value / total) * 100)) : 0; %>
+                      <div class="main-strength-grade-row">
+                        <div class="main-strength-grade-label"><%= row.label %></div>
+                        <div class="main-strength-bar" aria-hidden="true">
+                          <div class="main-strength-bar-fill <%= row.className %>" style="--strength-width: <%= width %>%;"></div>
+                        </div>
+                        <div class="main-strength-grade-value"><%= row.value.toLocaleString('th-TH') %></div>
                       </div>
-                      <div class="main-strength-grade-value"><%= row.value.toLocaleString('th-TH') %></div>
-                    </div>
-                  <% }); %>
+                    <% }); %>
+                  </div>
                 </div>
-              </div>
+              </article>
             </div>
           <% }); %>
         </div>

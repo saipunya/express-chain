@@ -90,6 +90,10 @@
 
               <!-- Quick Action Buttons (Role Based) -->
               <div class="d-flex flex-wrap gap-2">
+                <a href="/strength/assessments" class="btn btn-outline-success btn-action"><i class="bi bi-clipboard-check me-1"></i> กรอกข้อมูลประเมินความเข้มแข็ง</a>
+                <% if (user && ['admin', 'pbt'].includes(String(user.mClass || user.m_class || user.level || '').trim())) { %>
+                  <a href="/cooperative-locations" class="btn btn-outline-primary btn-action"><i class="bi bi-geo-alt me-1"></i> จัดการพิกัดสหกรณ์</a>
+                <% } %>
                 <% if (user && user.mClass === 'kjs') { %>
                   <a href="/chamra/" class="btn btn-outline-danger btn-action"><i class="bi bi-info-circle me-1"></i> ชำระบัญชี</a>
                 <% } %>
@@ -702,6 +706,17 @@
                     <div>
                       <p class="menu-title">ผลจัดชั้นความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร 2569</p>
                       <p class="menu-desc">จัดการผลจัดชั้นล่าสุด</p>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-4">
+                <a href="/cooperative-locations" class="menu-link">
+                  <div class="menu-card">
+                    <div class="menu-icon"><i class="bi bi-map"></i></div>
+                    <div>
+                      <p class="menu-title">พิกัดสหกรณ์</p>
+                      <p class="menu-desc">จัดการแผนที่และเว็บไซต์</p>
                     </div>
                   </div>
                 </a>

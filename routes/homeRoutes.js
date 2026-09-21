@@ -9,6 +9,7 @@ const turnoverModel = require('../models/turnoverModel');
 const strengthModel = require('../models/strengthModel');
 const downModel = require('../models/downModel');
 const chamraModel = require('../models/chamraModel');
+const cooperativeLocationModel = require('../models/cooperativeLocationModel');
 const { buildChamraSummary } = require('../services/chamraSummaryService');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
@@ -668,7 +669,7 @@ async function showMain(req, res) {
   }
 
   try {
-    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, cooperativeMapLocations] = await Promise.all([
       getMainDeadlineData(),
       activeCoopModel.getActiveInstitutionSummaryRows(),
       onlineModel.getOnlineUsers(),
@@ -679,6 +680,10 @@ async function showMain(req, res) {
       downModel.getMainDownloads(8),
       chamraModel.getAll().catch((error) => {
         console.error('[homeRoutes] chamra summary error:', error);
+        return [];
+      }),
+      cooperativeLocationModel.getPublicMapLocations().catch((error) => {
+        console.error('[homeRoutes] cooperative map error:', error.code || error.name);
         return [];
       })
     ]);
@@ -691,6 +696,7 @@ async function showMain(req, res) {
       strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, 2568),
       mainDownloads: buildMainDownloads(mainDownloads),
       chamraSummary: buildChamraSummary(chamraRows),
+      cooperativeMapLocations,
       onlineUsers,
       onlineCount,
       ...deadlineData
@@ -712,6 +718,7 @@ async function showMain(req, res) {
       strengthGradeSummary: buildStrengthGradeSummary([], 2568),
       mainDownloads: [],
       chamraSummary: buildChamraSummary([]),
+      cooperativeMapLocations: [],
       onlineUsers: [],
       onlineCount: 0
     });

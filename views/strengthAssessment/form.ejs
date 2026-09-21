@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="/css/strength-assessment.css?v=4">
+<div class="sa">
+  <a href="<%= base %>" class="d-inline-block mb-3">← <%= publicMode ? 'เริ่มประเมินใหม่' : 'รายการประเมิน' %></a>
+  <div class="sa-kicker">ปีประเมิน 2569</div><h1><%= item ? 'ปรับข้อมูลและแผนพัฒนา' : 'เริ่มประเมินความเข้มแข็ง' %></h1>
+  <p class="sa-note">กรอกข้อมูลจริงของสถาบันทั้ง 4 มิติ แล้วกดประเมินผลเพื่อดูคะแนนและคำแนะนำส่งเสริม ช่องว่างหมายถึงยังไม่มีข้อมูล<%= publicMode ? ' · ไม่ต้องเข้าสู่ระบบ ข้อมูลที่กรอกไม่บันทึกลงฐานข้อมูล เมื่อปิดหน้าให้เริ่มกรอกใหม่' : ' และบันทึกฉบับร่างได้' %></p>
+  <%- include('notice', { type }) %>
+  <% if (Object.keys(errors).length) { %><div class="alert alert-danger" role="alert" tabindex="-1" id="form-errors"><strong>กรุณาตรวจสอบข้อมูลก่อนบันทึก</strong><ul class="mb-0 mt-2"><% Object.entries(errors).forEach(([key,message]) => { %><li><% if (type && rules.sections(type).some(s => s.fields.some(f => f.key === key))) { %><a href="#<%= key %>"><%= rules.sections(type).flatMap(s => s.fields).find(f => f.key === key).label %></a>: <% } %><%= message %></li><% }); %></ul></div><% } %>
+  <% if (!institution || !type) { %>
+    <% if (publicMode) { %><%- include('public-start') %><% } else { %>
+    <form class="sa-panel" method="get" action="<%= base %>/new"><h2>เลือกสถาบันจากทะเบียน</h2><label for="code" class="form-label">สหกรณ์ / กลุ่มเกษตรกร</label><select name="code" id="code" class="form-select mb-3" required><option value="">เลือกสถาบัน</option><% institutions.forEach(c => { %><option value="<%= c.c_code %>" <%= institution && institution.c_code === c.c_code ? 'selected' : '' %>><%= c.c_name %> · <%= c.c_code %></option><% }); %></select><button class="btn btn-success">เปิดแบบประเมิน</button></form>
+    <% } %>
+  <% } else { %>
+    <div class="sa-panel"><h2 class="mb-1"><%= institution.c_name %></h2><div class="sa-note"><%= rules.TYPES[type] %> · <%= institution.c_code %><% if (!publicMode) { %> · สถานะทะเบียน <%= institution.c_status || 'ไม่ระบุ' %><% } %></div><% if (!item) { %><a href="<%= base %>/new" class="small">เปลี่ยนสถาบัน</a><% } %></div>
+    <% if (preview) { %><p class="sa-tag sa-tag-warn">ตัวอย่างผลจากข้อมูลในแบบฟอร์ม ยังไม่ได้บันทึก</p><p id="recalculate-notice" class="alert alert-info" role="status" hidden>มีการแก้ข้อมูลหลังคำนวณ กรุณากดคำนวณอีกครั้งเพื่ออัปเดตผล</p><%- include('result', { result: preview, editable: !publicMode }) %><% } %>
+    <form method="post" action="<%= base %><%= item ? `/${item.id}` : '' %>" id="assessment-form" data-preserve-on-update>
+      <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="code" value="<%= institution.c_code %>"><input type="hidden" name="version" value="<%= submittedVersion %>">
+      <% if (publicMode) { %><input type="hidden" name="publicType" value="<%= publicType %>"><input type="hidden" name="institutionName" value="<%= institutionName %>"><% } %>
+      <nav class="sa-panel sa-form-nav" aria-label="ส่วนของแบบประเมิน"><% ['ข้อมูลพื้นฐาน','สมาชิก','การเงินและธุรกิจ','การจัดการองค์กร','การบริหารงาน'].forEach((label,i) => { %><a href="#assessment-section-<%= i %>" class="btn btn-sm btn-outline-success"><%= i + 1 %>. <%= label %></a><% }); %></nav>
+      <% rules.sections(type).forEach((section,sectionIndex) => { %>
+        <section class="sa-panel" id="assessment-section-<%= sectionIndex %>"><h2><%= section.title %></h2><p class="sa-note"><%= section.note %></p><div class="row g-3">
+        <% section.fields.forEach(field => { const value = values[field.key] ?? ''; %>
+          <div data-field-when="<%= JSON.stringify(field.when || {}) %>" class="<%= field.kind === 'text' ? 'col-12' : 'col-md-6' %>"><label for="<%= field.key %>" class="form-label"><%= field.label %></label>
+          <% if (field.kind === 'select') { %><select class="form-select <%= errors[field.key] ? 'is-invalid' : '' %>" id="<%= field.key %>" name="<%= field.key %>" aria-describedby="<%= field.key %>-note"><option value="">ยังไม่มีข้อมูล / ยังไม่ยืนยัน</option><% field.options.forEach(([key,label]) => { const registeredSubtype = rules.financialDefaults(institution,type).financialSubtype; %><option <%= field.key === 'financialSubtype' && registeredSubtype && key !== registeredSubtype ? 'disabled' : '' %> value="<%= key %>" <%= value === key ? 'selected' : '' %>><%= label %></option><% }); %></select>
+          <% } else if (field.kind === 'text') { %><textarea class="form-control <%= errors[field.key] ? 'is-invalid' : '' %>" rows="2" id="<%= field.key %>" name="<%= field.key %>" maxlength="2000" aria-describedby="<%= field.key %>-note"><%= value %></textarea>
+          <% } else { %><input class="form-control <%= errors[field.key] ? 'is-invalid' : '' %>" type="<%= field.kind %>" id="<%= field.key %>" name="<%= field.key %>" value="<%= value %>" <% if (field.kind === 'number') { %>min="<%= field.min %>" max="<%= field.max %>" step="<%= field.integer ? 1 : 0.01 %>"<% } %> aria-describedby="<%= field.key %>-note"><% } %>
+          <div class="form-text" id="<%= field.key %>-note"><%= field.note %></div><% if (errors[field.key]) { %><div class="invalid-feedback"><%= errors[field.key] %></div><% } %></div>
+        <% }); %></div><% if (section.fields.some(f => f.key === 'dimension2Mode')) { %><button name="action" value="preview" class="btn btn-outline-success mt-4">คำนวณอัตราส่วนและดูผล</button><% } %><% if (section.fields.some(f => f.key === 'dimension3Mode')) { %><button name="action" value="preview" class="btn btn-outline-success mt-4">คำนวณคะแนนมิติที่ 3</button><% } %></section>
+      <% }); %>
+      <% if (!publicMode) { %><details class="sa-panel" id="development-plan" <%= plans.length ? 'open' : '' %>><summary>แผนส่งเสริมและติดตามผล (เพิ่มเติมภายหลังได้)</summary><p class="sa-note">บันทึกได้สูงสุด 8 งาน งานที่เสร็จแล้วต้องมีหลักฐานผลสำเร็จ การทำแผนเสร็จจะไม่เปลี่ยนคะแนนประเมินอัตโนมัติ</p>
+      <div id="plan-feedback" class="sa-note" role="status"></div>
+      <% for (let i=0; i<8; i++) { const task = plans[i] || {}; %><details class="sa-plan" <%= task.title ? 'open' : '' %>><summary>งานที่ <%= i+1 %><%= task.title ? ` · ${task.title.slice(0,60)}` : ' · เพิ่มแผนพัฒนา' %></summary><div class="row g-3 mt-1">
+        <div class="col-12"><label class="form-label" for="plan_<%= i %>_title">งาน / เป้าหมายที่วัดผลได้</label><textarea class="form-control" id="plan_<%= i %>_title" name="plan_<%= i %>_title" data-plan-input rows="2" maxlength="1000"><%= task.title || '' %></textarea></div>
+        <div class="col-md-4"><label class="form-label" for="plan_<%= i %>_owner">ผู้รับผิดชอบ</label><input class="form-control" id="plan_<%= i %>_owner" name="plan_<%= i %>_owner" value="<%= task.owner || '' %>" maxlength="250"></div>
+        <div class="col-md-4"><label class="form-label" for="plan_<%= i %>_due">กำหนดเสร็จ (ค.ศ.)</label><input class="form-control" type="date" id="plan_<%= i %>_due" name="plan_<%= i %>_due" value="<%= task.due || '' %>"></div>
+        <div class="col-md-4"><label class="form-label" for="plan_<%= i %>_status">สถานะ</label><select class="form-select" id="plan_<%= i %>_status" name="plan_<%= i %>_status"><% for (const [key,label] of [['planned','วางแผน'],['working','กำลังดำเนินการ'],['done','เสร็จแล้ว']]) { %><option value="<%= key %>" <%= (task.status || 'planned') === key ? 'selected' : '' %>><%= label %></option><% } %></select></div>
+        <div class="col-12"><label class="form-label" for="plan_<%= i %>_evidence">ผลดำเนินงาน / หลักฐานผลสำเร็จ</label><textarea class="form-control" rows="2" id="plan_<%= i %>_evidence" name="plan_<%= i %>_evidence" maxlength="2000"><%= task.evidence || '' %></textarea></div>
+      </div></details><% } %></details><% } %>
+      <div class="sa-actions"><% if (!publicMode) { %><button name="action" value="save" class="btn btn-outline-success">บันทึกข้อมูลและแผน</button><% } %><button name="action" value="evaluate" class="btn btn-success">ประเมินผลและดูคำแนะนำส่งเสริม</button></div>
+    </form>
+  <% } %>
+</div>
+<script src="/js/strength-assessment.js?v=5" defer></script>
+<%- include('../partials/footer') %>

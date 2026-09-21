@@ -1,0 +1,29 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="/css/strength-assessment.css?v=4">
+<div class="sa">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div><div class="sa-kicker">ความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร</div><h1 class="mb-1">ประเมินและวางแผนพัฒนา</h1><p class="sa-note mb-0">ผู้ใช้กรอกข้อมูล ระบบคำนวณผลและเสนอแนวทางส่งเสริมตามข้อที่ต้องพัฒนา</p></div>
+    <a class="btn btn-success" href="<%= base %>/new"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เริ่มประเมิน</a>
+  </div>
+  <%- include('notice') %>
+  <div class="sa-panel row g-3 mx-0"><div class="col-md-4"><strong>1. กรอกข้อมูล</strong><p class="sa-note mb-0">เลือกสถาบันและกรอกข้อมูลจริงทั้ง 4 มิติ</p></div><div class="col-md-4"><strong>2. ดูผลและคำแนะนำ</strong><p class="sa-note mb-0">ตรวจคะแนน ข้อที่ยังไม่ผ่าน และแนวทางส่งเสริม</p></div><div class="col-md-4"><strong>3. บันทึกและติดตาม</strong><p class="sa-note mb-0">บันทึกผล แล้วจัดทำแผนพัฒนาพร้อมผู้รับผิดชอบ</p></div></div>
+  <div class="sa-panel">
+    <form method="get" action="<%= base %>" class="d-flex gap-2 mb-3">
+      <label class="visually-hidden" for="search">ค้นหาชื่อหรือรหัสสถาบัน</label>
+      <input class="form-control" id="search" name="search" value="<%= search %>" placeholder="ค้นหาชื่อหรือรหัสสถาบัน" maxlength="150">
+      <button class="btn btn-outline-success">ค้นหา</button>
+    </form>
+    <div class="d-flex justify-content-between mb-3"><span class="sa-note">พบ <%= total %> รายการ · ปีประเมิน 2569</span><a href="/strength/list">ดูผลประเมินย้อนหลัง</a></div>
+    <% if (!items.length) { %>
+      <div class="text-center py-5"><i class="bi bi-clipboard-check fs-1 text-success" aria-hidden="true"></i><h2 class="mt-3"><%= search ? 'ไม่พบรายการที่ค้นหา' : 'เริ่มจากสถาบันที่ต้องการพัฒนา' %></h2><p class="sa-note">บันทึกข้อมูลบางส่วนเป็นฉบับร่าง แล้วกลับมาเติมหลักฐานได้</p><a class="btn btn-success" href="<%= base %>/new">สร้างรายการประเมิน</a></div>
+    <% } else { %>
+      <div class="table-responsive"><table class="table align-middle"><thead><tr><th>สถาบัน</th><th>สถานะ</th><th>คะแนน</th><th>ชั้นจำลอง</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>
+      <% items.forEach(item => { const result = item.document.result; %>
+        <tr><td><strong><%= item.institution_name %></strong><div class="sa-note"><%= rules.TYPES[item.institution_type] %> · <%= item.c_code %></div></td><td><span class="sa-tag <%= result.status === 'preliminary' ? '' : 'sa-tag-warn' %>"><%= rules.STATUS[result.status] %></span></td><td><%= result.total == null ? 'ยังไม่ครบ' : result.total.toFixed(2) %></td><td><%= result.grade ? `ชั้น ${result.grade}` : '—' %></td><td><%= item.owner_name %></td><td><a class="btn btn-sm btn-outline-success" href="<%= base %>/<%= item.id %>" aria-label="ดูผล <%= item.institution_name %>">ดูผล</a></td></tr>
+      <% }); %>
+      </tbody></table></div>
+      <div class="d-flex justify-content-between align-items-center mt-3"><span class="sa-note">หน้า <%= page %> / <%= Math.max(1, Math.ceil(total / 30)) %></span><div class="d-flex gap-2"><% if (page > 1) { %><a class="btn btn-sm btn-outline-secondary" href="<%= base %>?search=<%= encodeURIComponent(search) %>&page=<%= page - 1 %>">ก่อนหน้า</a><% } %><% if (page * 30 < total) { %><a class="btn btn-sm btn-outline-secondary" href="<%= base %>?search=<%= encodeURIComponent(search) %>&page=<%= page + 1 %>">ถัดไป</a><% } %></div></div>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,182 @@
+<%- include('../partials/header', { title }) %>
+
+<style>
+  .location-form-page { --form-green: #147957; color: #20312a; }
+  .location-form-card { border: 1px solid #e0e9e4; border-radius: 20px; overflow: hidden; }
+  .location-form-head { background: linear-gradient(135deg, #edf8f2, #fff); border-bottom: 1px solid #e0e9e4; padding: 1.3rem 1.5rem; }
+  .location-form-body { padding: 1.5rem; }
+  .location-section { border-bottom: 1px solid #edf1ef; margin-bottom: 1.25rem; padding-bottom: 1.25rem; }
+  .location-section:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+  .location-section-title { font-size: 1rem; font-weight: 700; margin-bottom: .85rem; }
+  .location-help-box { background: #f6f9f7; border: 1px solid #e0e9e4; border-radius: 14px; padding: 1rem; }
+  .location-coordinate-preview { color: var(--form-green); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; }
+  .form-label { font-weight: 600; }
+  .form-text { color: #687970; }
+  @media (max-width: 575.98px) { .location-form-body, .location-form-head { padding: 1rem; } }
+</style>
+
+<%
+  const v = values || {};
+  const err = errors || {};
+  const editing = Boolean(item);
+  const selected = institutions.find((institution) => String(institution.c_code) === String(v.c_code || ''));
+  const selectedName = selected ? selected.c_name : '';
+  const searchUrl = locationService.googleSearchUrl(selectedName || 'สหกรณ์');
+%>
+
+<div class="location-form-page">
+  <div class="mb-3"><a href="<%= base %>" class="text-decoration-none text-secondary"><i class="bi bi-arrow-left me-1"></i>กลับไปรายการพิกัด</a></div>
+  <div class="location-form-card bg-white shadow-sm">
+    <div class="location-form-head d-flex align-items-center justify-content-between gap-3">
+      <div>
+        <h1 class="h3 fw-bold mb-1"><%= editing ? 'แก้ไขข้อมูลพิกัด' : 'เพิ่มข้อมูลพิกัด' %></h1>
+        <p class="text-muted mb-0">ระบุตำแหน่งและเว็บไซต์ของสหกรณ์หรือกลุ่มเกษตรกร</p>
+      </div>
+      <i class="bi bi-pin-map-fill fs-2 text-success" aria-hidden="true"></i>
+    </div>
+
+    <form class="location-form-body" action="<%= editing ? `${base}/${item.id}` : base %>" method="post" novalidate data-testid="location-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% if (Object.keys(err).length) { %>
+        <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-circle-fill me-2"></i>กรุณาตรวจสอบข้อมูลที่ระบุด้านล่าง</div>
+      <% } %>
+
+      <section class="location-section">
+        <h2 class="location-section-title">1. เลือกสหกรณ์หรือกลุ่มเกษตรกร</h2>
+        <label class="form-label" for="c_code">ชื่อสถาบัน <span class="text-danger">*</span></label>
+        <select class="form-select <%= err.c_code ? 'is-invalid' : '' %>" id="c_code" name="c_code" required>
+          <option value="">-- เลือกจากทะเบียนที่ดำเนินการ --</option>
+          <% institutions.forEach(function(institution) { %>
+            <option value="<%= institution.c_code %>" data-name="<%= institution.c_name %>" <%= String(v.c_code || '') === String(institution.c_code) ? 'selected' : '' %>><%= institution.c_name %> (<%= institution.c_code %>)</option>
+          <% }); %>
+        </select>
+        <% if (err.c_code) { %><div class="invalid-feedback"><%= err.c_code %></div><% } %>
+      </section>
+
+      <section class="location-section">
+        <h2 class="location-section-title">2. นำพิกัดจาก Google Maps มาใช้</h2>
+        <div class="location-help-box mb-3">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+            <div><strong>ค้นหาตำแหน่งบน Google Maps</strong><div class="form-text">เลือกสถาบันก่อน แล้วเปิดลิงก์ค้นหาเพื่อยืนยันจุดจริง</div></div>
+            <a id="googleSearchLink" class="btn btn-outline-success btn-sm" href="<%= searchUrl %>" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right me-1"></i>ค้นหาใน Google Maps</a>
+          </div>
+          <label class="form-label" for="coordinatePaste">วางลิงก์ Google Maps หรือพิกัด</label>
+          <div class="input-group">
+            <input class="form-control" id="coordinatePaste" type="text" placeholder="เช่น 15.8068, 102.0315 หรือ URL ที่มี @15.8068,102.0315">
+            <button class="btn btn-success" id="parseCoordinates" type="button"><i class="bi bi-magic me-1"></i>อ่านพิกัด</button>
+          </div>
+          <div class="form-text" id="coordinateMessage">รองรับพิกัดตัวเลขและลิงก์ Google Maps แบบเต็ม ลิงก์ย่อให้เปิดก่อนแล้วคัดลอกพิกัด</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="latitude">ละติจูด (Latitude) <span class="text-danger">*</span></label>
+            <input class="form-control <%= err.latitude ? 'is-invalid' : '' %>" id="latitude" name="latitude" type="number" step="any" inputmode="decimal" value="<%= v.latitude ?? '' %>" required>
+            <% if (err.latitude) { %><div class="invalid-feedback"><%= err.latitude %></div><% } %>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="longitude">ลองจิจูด (Longitude) <span class="text-danger">*</span></label>
+            <input class="form-control <%= err.longitude ? 'is-invalid' : '' %>" id="longitude" name="longitude" type="number" step="any" inputmode="decimal" value="<%= v.longitude ?? '' %>" required>
+            <% if (err.longitude) { %><div class="invalid-feedback"><%= err.longitude %></div><% } %>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="google_maps_url">ลิงก์ Google Maps</label>
+            <input class="form-control <%= err.google_maps_url ? 'is-invalid' : '' %>" id="google_maps_url" name="google_maps_url" type="url" value="<%= v.google_maps_url || '' %>" placeholder="https://www.google.com/maps/…">
+            <% if (err.google_maps_url) { %><div class="invalid-feedback"><%= err.google_maps_url %></div><% } %>
+          </div>
+        </div>
+      </section>
+
+      <section class="location-section">
+        <h2 class="location-section-title">3. ข้อมูลประกอบและเว็บไซต์</h2>
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label" for="district">อำเภอ</label>
+            <input class="form-control <%= err.district ? 'is-invalid' : '' %>" id="district" name="district" value="<%= v.district || '' %>" maxlength="100" placeholder="เช่น เมืองชัยภูมิ">
+            <% if (err.district) { %><div class="invalid-feedback"><%= err.district %></div><% } %>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label" for="website_url">เว็บไซต์ของสหกรณ์</label>
+            <input class="form-control <%= err.website_url ? 'is-invalid' : '' %>" id="website_url" name="website_url" type="text" value="<%= v.website_url || '' %>" placeholder="https://example.com หรือ example.com">
+            <% if (err.website_url) { %><div class="invalid-feedback"><%= err.website_url %></div><% } %>
+            <div class="form-text">หากมีเว็บไซต์ ผู้ใช้จะเปิดได้จากจุดบนแผนที่หน้า Main</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="address_text">ที่อยู่</label>
+            <textarea class="form-control <%= err.address_text ? 'is-invalid' : '' %>" id="address_text" name="address_text" rows="2" maxlength="500"><%= v.address_text || '' %></textarea>
+            <% if (err.address_text) { %><div class="invalid-feedback"><%= err.address_text %></div><% } %>
+          </div>
+        </div>
+      </section>
+
+      <section class="location-section">
+        <h2 class="location-section-title">4. ตรวจสอบและเผยแพร่</h2>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" id="is_verified" name="is_verified" type="checkbox" value="1" <%= v.is_verified ? 'checked' : '' %>>
+          <label class="form-check-label fw-semibold" for="is_verified">ตรวจสอบว่าพิกัดถูกต้องแล้ว</label>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input <%= err.is_public ? 'is-invalid' : '' %>" id="is_public" name="is_public" type="checkbox" value="1" <%= v.is_public ? 'checked' : '' %>>
+          <label class="form-check-label fw-semibold" for="is_public">แสดงบนแผนที่สาธารณะหน้า Main</label>
+          <% if (err.is_public) { %><div class="invalid-feedback"><%= err.is_public %></div><% } %>
+        </div>
+      </section>
+
+      <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+        <a href="<%= base %>" class="btn btn-light border px-4">ยกเลิก</a>
+        <button class="btn btn-success px-4" type="submit" data-testid="save-location"><i class="bi bi-check-lg me-1"></i>บันทึกข้อมูล</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var institution = document.getElementById('c_code');
+    var searchLink = document.getElementById('googleSearchLink');
+    var pasteInput = document.getElementById('coordinatePaste');
+    var parseButton = document.getElementById('parseCoordinates');
+    var latitude = document.getElementById('latitude');
+    var longitude = document.getElementById('longitude');
+    var mapsUrl = document.getElementById('google_maps_url');
+    var message = document.getElementById('coordinateMessage');
+
+    function updateSearchLink() {
+      var option = institution.options[institution.selectedIndex];
+      var name = option && option.dataset.name ? option.dataset.name : 'สหกรณ์';
+      searchLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ' จังหวัดชัยภูมิ');
+    }
+
+    function parseCoordinates(value) {
+      var raw = String(value || '').trim();
+      try { raw = decodeURIComponent(raw); } catch (_) {}
+      var patterns = [
+        /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
+        /[?&](?:query|q|ll|center)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
+        /^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/
+      ];
+      for (var index = 0; index < patterns.length; index += 1) {
+        var match = raw.match(patterns[index]);
+        if (match) return { latitude: Number(match[1]), longitude: Number(match[2]) };
+      }
+      return null;
+    }
+
+    institution.addEventListener('change', updateSearchLink);
+    parseButton.addEventListener('click', function () {
+      var parsed = parseCoordinates(pasteInput.value);
+      if (!parsed) {
+        message.className = 'form-text text-danger';
+        message.textContent = 'ยังอ่านพิกัดไม่ได้ หากเป็นลิงก์ย่อ ให้เปิดลิงก์แล้วคัดลอก URL แบบเต็มหรือพิกัดตัวเลข';
+        return;
+      }
+      latitude.value = parsed.latitude;
+      longitude.value = parsed.longitude;
+      if (/^https:\/\//i.test(pasteInput.value.trim())) mapsUrl.value = pasteInput.value.trim();
+      message.className = 'form-text text-success location-coordinate-preview';
+      message.textContent = 'อ่านพิกัดสำเร็จ: ' + parsed.latitude + ', ' + parsed.longitude;
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

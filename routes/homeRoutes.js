@@ -11,6 +11,7 @@ const downModel = require('../models/downModel');
 const chamraModel = require('../models/chamraModel');
 const cooperativeLocationModel = require('../models/cooperativeLocationModel');
 const { buildChamraSummary } = require('../services/chamraSummaryService');
+const { buildInstitutionDistrictSummary } = require('../services/institutionDistrictService');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
@@ -668,8 +669,22 @@ async function showMain(req, res) {
     return res.redirect(getLandingPath(req.session.user));
   }
 
+  // Keep the map available even if an unrelated dashboard summary fails.
+  const mapDataPromise = cooperativeLocationModel.getPublicMapLocations()
+    .then((locations) => ({ cooperativeMapLocations: locations, cooperativeMapUnavailable: false }))
+    .catch((error) => {
+      console.error('[homeRoutes] cooperative map error:', error.code || error.name);
+      return { cooperativeMapLocations: [], cooperativeMapUnavailable: true };
+    });
+  const districtDataPromise = activeCoopModel.getInstitutionDistrictCounts()
+    .then((rows) => ({ institutionDistrictSummary: buildInstitutionDistrictSummary(rows), institutionDistrictUnavailable: false }))
+    .catch((error) => {
+      console.error('[homeRoutes] district summary error:', error.code || error.name);
+      return { institutionDistrictSummary: buildInstitutionDistrictSummary([]), institutionDistrictUnavailable: true };
+    });
+
   try {
-    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, cooperativeMapLocations] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, mapData, districtData] = await Promise.all([
       getMainDeadlineData(),
       activeCoopModel.getActiveInstitutionSummaryRows(),
       onlineModel.getOnlineUsers(),
@@ -682,10 +697,8 @@ async function showMain(req, res) {
         console.error('[homeRoutes] chamra summary error:', error);
         return [];
       }),
-      cooperativeLocationModel.getPublicMapLocations().catch((error) => {
-        console.error('[homeRoutes] cooperative map error:', error.code || error.name);
-        return [];
-      })
+      mapDataPromise,
+      districtDataPromise
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
@@ -696,7 +709,8 @@ async function showMain(req, res) {
       strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, 2568),
       mainDownloads: buildMainDownloads(mainDownloads),
       chamraSummary: buildChamraSummary(chamraRows),
-      cooperativeMapLocations,
+      ...mapData,
+      ...districtData,
       onlineUsers,
       onlineCount,
       ...deadlineData
@@ -718,7 +732,8 @@ async function showMain(req, res) {
       strengthGradeSummary: buildStrengthGradeSummary([], 2568),
       mainDownloads: [],
       chamraSummary: buildChamraSummary([]),
-      cooperativeMapLocations: [],
+      ...await mapDataPromise,
+      ...await districtDataPromise,
       onlineUsers: [],
       onlineCount: 0
     });

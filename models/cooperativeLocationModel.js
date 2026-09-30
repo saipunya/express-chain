@@ -118,6 +118,7 @@ function createStore(pool = db) {
           ELSE 'agri'
         END AS type,
         cl.district,
+        cl.address_text AS address,
         CAST(cl.latitude AS DOUBLE) AS latitude,
         CAST(cl.longitude AS DOUBLE) AS longitude,
         cl.google_maps_url AS googleMapsUrl,

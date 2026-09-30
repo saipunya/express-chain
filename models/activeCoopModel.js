@@ -152,6 +152,33 @@ exports.getActiveInstitutionSummaryRows = async () => {
   return rows;
 };
 
+exports.getInstitutionDistrictCounts = async () => {
+  // active_coop is the counting source; its district is held in gen_organize.
+  // Collapse historical rows before joining so each registry row is counted once.
+  // Conflicting district records remain unassigned instead of choosing one arbitrarily.
+  const [rows] = await pool.query(`
+    SELECT
+      location.district,
+      SUM(CASE WHEN TRIM(ac.coop_group) = 'สหกรณ์' THEN 1 ELSE 0 END) AS cooperatives,
+      SUM(CASE WHEN TRIM(ac.coop_group) = 'กลุ่มเกษตรกร' THEN 1 ELSE 0 END) AS farmerGroups
+    FROM active_coop ac
+    LEFT JOIN (
+      SELECT c_code,
+        CASE WHEN COUNT(DISTINCT NULLIF(TRIM(c_amp), '')) = 1
+          THEN MAX(NULLIF(TRIM(c_amp), ''))
+          ELSE NULL
+        END AS district
+      FROM gen_organize
+      WHERE c_code IS NOT NULL AND TRIM(c_code) <> ''
+      GROUP BY c_code
+    ) location ON location.c_code = ac.c_code
+    WHERE ac.c_status = 'ดำเนินการ'
+      AND TRIM(ac.coop_group) IN ('สหกรณ์', 'กลุ่มเกษตรกร')
+    GROUP BY location.district
+  `);
+  return rows;
+};
+
 exports.getClosedCoops = async () => {
   const [rows] = await pool.query(
     "SELECT * FROM active_coop WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY coop_group DESC , c_name ASC"

@@ -108,3 +108,18 @@ test('movement after a prior-year withdrawal is follow-up rather than a new upgr
   assert.ok(locals.octoberMovement[0].movement_status.includes('ไม่นับผลงาน'));
   assert.ok(!locals.octoberMovement[0].movement_status.includes('ยกระดับขั้น'));
 });
+test('withdrawn registry status is counted by step 9 date, never by status alone', () => {
+  const report=buildProcessRegister([
+    {pr_id:1,pr_code:'withdrawn-current',c_status:'ถอนชื่อ',pr_s9:'2026-10-01'},
+    {pr_id:2,pr_code:'withdrawn-old',c_status:'ถอนชื่อ',pr_s9:'2026-09-30',pr_s10:'2026-10-01'},
+    {pr_id:3,pr_code:'withdrawn-undated',c_status:'ถอนชื่อ'},
+    {pr_id:null,pr_code:'withdrawn-no-process',c_status:'ถอนชื่อ'}
+  ],{},now);
+  assert.equal(report.withdrawalPerformance,1);
+  assert.equal(report.missingWithdrawalDates,2);
+  assert.equal(report.processes.length,4);
+  assert.equal(report.processes[0].withdrawal_in_year,true);
+  assert.equal(report.processes[1].withdrawal_in_year,false);
+  assert.equal(report.processes[2].withdrawal_date_missing,true);
+  assert.equal(report.processes[3].withdrawal_date_missing,true);
+});

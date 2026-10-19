@@ -71,6 +71,9 @@
       </div>
       <p class="small text-muted">ผลงานถอนชื่อนับเฉพาะวันที่ขั้น 9 ในปีที่เลือก สถาบันที่ถึงขั้น 9 ในปีเก่าจะไม่นับซ้ำ แม้ว่าทำขั้น 10 ในปีนี้</p>
     <% } %>
+    <% if (missingWithdrawalDates) { %>
+      <div class="alert alert-warning py-2" role="status">มีสถาบันสถานะทะเบียน “ถอนชื่อ” <%= missingWithdrawalDates %> แห่งในรายการนี้ ที่ยังไม่มีวันที่ขั้น 9 จึงยังไม่นับเป็นผลงานถอนชื่อ กรุณาตรวจสอบและบันทึกวันที่ขั้น 9 ตามจริง</div>
+    <% } %>
     <label for="processSearch" class="form-label">ค้นหาชื่อ รหัส หรือสถานะสถาบัน</label>
     <input id="processSearch" class="form-control" type="search" placeholder="พิมพ์เพื่อค้นหาในรายการที่เลือก">
     <div id="processCount" class="small text-muted mt-2" role="status">แสดง <%= processes.length %> จากทะเบียนทั้งหมด <%= totalRecords %> รายการ</div>
@@ -141,6 +144,7 @@
               <div class="small text-muted fw-normal"><%= p.c_name || p.pr_code %></div>
               <div class="small text-muted"><%= p.pr_code %><%= p.c_status ? ' • '+p.c_status : '' %></div>
               <span class="badge bg-<%= p.status_color %>"><%= p.process_status %></span>
+              <% if (p.withdrawal_date_missing) { %><div class="small text-danger mt-1">ยังไม่นับผลงาน: ไม่มีวันที่ขั้น 9</div><% } %>
               <% if (view === 'year' && p.prior_year_withdrawal) { %><div class="small text-muted mt-1">ถอนชื่อปีก่อน • ไม่นับผลงานปี <%= year %></div><% } %>
             </td>
             <% for (let i=1;i<=10;i++){ 

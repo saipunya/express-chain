@@ -17,6 +17,7 @@ function buildProcessRegister(rows, query = {}, now = new Date()) {
     for (let step = 1; step <= 10; step++) normalized[`pr_s${step}`] = stepDate(row[`pr_s${step}`]);
     const terminalDates = [normalized.pr_s9, normalized.pr_s10].filter(Boolean);
     terminalDates.forEach(date => recordedYears.push(currentFiscalYear(date)));
+    normalized.withdrawal_date_missing = String(row.c_status || '').trim() === 'ถอนชื่อ' && !normalized.pr_s9;
     normalized.prior_year_withdrawal = Boolean(normalized.pr_s9 && normalized.pr_s9 < period.startDate);
     normalized.withdrawal_in_year = Boolean(period.hasStarted && normalized.pr_s9 && normalized.pr_s9 >= period.startDate && normalized.pr_s9 <= period.asOfDate);
     normalized.process_status = !row.pr_id ? 'ยังไม่มีข้อมูลขั้นตอน' : normalized.pr_s10 ? 'ส่งมอบเอกสารแล้ว' : normalized.pr_s9 ? 'ถอนชื่อแล้ว • รอส่งมอบเอกสาร' : 'อยู่ระหว่างชำระบัญชี';
@@ -29,6 +30,6 @@ function buildProcessRegister(rows, query = {}, now = new Date()) {
     // Unfinished work is carried forward only to the current fiscal year.
     return year === currentYear && !row.pr_s10;
   });
-  return { ...fiscalNavigation(year, recordedYears, now), period, year, view, processes, totalRecords: entries.length, withdrawalPerformance: entries.filter(row => row.withdrawal_in_year).length, priorYearWithdrawals: processes.filter(row => row.prior_year_withdrawal).length, processReturn: processLocation({year:String(year),view}, now) };
+  return { ...fiscalNavigation(year, recordedYears, now), period, year, view, processes, totalRecords: entries.length, missingWithdrawalDates: processes.filter(row => row.withdrawal_date_missing).length, withdrawalPerformance: entries.filter(row => row.withdrawal_in_year).length, priorYearWithdrawals: processes.filter(row => row.prior_year_withdrawal).length, processReturn: processLocation({year:String(year),view}, now) };
 }
 module.exports = { buildProcessRegister, processLocation, stepDate };

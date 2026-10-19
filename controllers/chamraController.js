@@ -513,7 +513,7 @@ chamraController.listPob = async (req, res) => {
 // แสดง form เพิ่ม
 chamraController.addForm = async (req, res) => {
   const [rows] = await db.query(
-    "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก'"
+    "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก/ชำระบัญชี' ORDER BY c_name ASC"
   );
   res.render('chamra/create', { coopList: rows, user: req.session?.user || null });
 };

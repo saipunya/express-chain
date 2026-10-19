@@ -1,4 +1,5 @@
 <%- include('../../partials/header.ejs') %>
+<% const canManage = user && ['admin', 'kjs'].includes(user.mClass || user.m_class || user.level); %>
 <!-- Replaced previous large custom CSS block with Bootstrap 5.3 + minimal overrides -->
 
 <style>
@@ -34,7 +35,7 @@
 <div class="page-wrap container-fluid py-3">
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h1 class="h5 d-flex align-items-center gap-2 m-0">
-      <span>รายการ Chamra Process</span>
+      <span>ความก้าวหน้าการชำระบัญชี</span>
     </h1>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <div class="btn-group btn-group-sm" role="group">
@@ -42,9 +43,38 @@
         <button type="button" class="btn btn-dark" onclick="adjFont(1)">A+</button>
         <button type="button" class="btn btn-outline-secondary" onclick="resetFont()">รีเซ็ต</button>
       </div>
-      <a href="/chamra" class="btn btn-outline-secondary btn-sm">← กลับ</a>
+      <a href="/chamra?year=<%= year %>" class="btn btn-outline-secondary btn-sm">← กลับ</a>
     </div>
   </div>
+
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <a class="btn <%= view === 'year' && year === currentYear ? 'btn-primary' : 'btn-outline-primary' %>" href="/chamra/process?year=<%= currentYear %>">ปีงบประมาณปัจจุบัน <%= currentYear %></a>
+      <a class="btn <%= view === 'all' ? 'btn-primary' : 'btn-outline-primary' %>" href="/chamra/process?view=all">ทั้งหมดรวมถอนชื่อแล้ว</a>
+      <% if (canManage) { %><a class="btn btn-success ms-auto" href="/chamra/process/add">+ เพิ่มความก้าวหน้า</a><% } %>
+    </div>
+    <form method="get" action="/chamra/process" class="d-flex flex-wrap gap-2 align-items-end mb-2">
+      <div><%- include('../manage/year-select', { selectId:'processYear' }) %></div>
+      <button class="btn btn-outline-primary">ดูข้อมูลตามปี</button>
+      <% if (year > 2500) { %><a class="btn btn-outline-secondary" href="/chamra/process?year=<%= year - 1 %>">← ปีก่อนหน้า</a><% } %>
+    </form>
+    <% if (view === 'all') { %>
+      <p class="mb-2">ทะเบียนทั้งหมด <%= totalRecords %> รายการ รวมสถาบันที่ถอนชื่อและส่งมอบเอกสารแล้วทุกปี</p>
+    <% } else { %>
+      <p class="mb-2">ปีงบประมาณ <%= year %>: <%= period.startLabel %> – <%= period.endLabel %></p>
+      <p class="small text-muted mb-2">แสดงสถาบันที่มีวันที่ขั้น 9 หรือขั้น 10 อยู่ในปีที่เลือก<% if (year === currentYear) { %> รวมสถาบันที่ยังไม่มีวันที่ขั้น 10 แม้ว่าขั้น 9 จะเป็นปีเก่า<% } %> • วันที่ในตารางเป็นข้อมูลที่บันทึกทั้งหมดของสถาบัน</p>
+    <% } %>
+    <% if (view === 'year') { %>
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        <span class="badge bg-success">ผลงานถอนชื่อปี <%= year %>: <%= withdrawalPerformance %> แห่ง</span>
+        <span class="badge bg-secondary">ถอนชื่อก่อนปีที่เลือก: <%= priorYearWithdrawals %> แห่ง • ไม่นับเป็นผลงานถอนชื่อปีนี้</span>
+      </div>
+      <p class="small text-muted">ผลงานถอนชื่อนับเฉพาะวันที่ขั้น 9 ในปีที่เลือก สถาบันที่ถึงขั้น 9 ในปีเก่าจะไม่นับซ้ำ แม้ว่าทำขั้น 10 ในปีนี้</p>
+    <% } %>
+    <label for="processSearch" class="form-label">ค้นหาชื่อ รหัส หรือสถานะสถาบัน</label>
+    <input id="processSearch" class="form-control" type="search" placeholder="พิมพ์เพื่อค้นหาในรายการที่เลือก">
+    <div id="processCount" class="small text-muted mt-2" role="status">แสดง <%= processes.length %> จากทะเบียนทั้งหมด <%= totalRecords %> รายการ</div>
+  </div></div>
 
   <div class="d-flex gap-3 small mb-2">
     <span class="d-inline-flex align-items-center gap-1">
@@ -60,11 +90,11 @@
         <!-- freeze top row -->
       <thead class="table-dark text-center table-responsive sticky-header ">
         <tr>
-          <th>รหัส</th>
+          <th>สถาบัน / รหัส / สถานะ</th>
           <th>S1</th><th>S2</th><th>S3</th><th>S4</th><th>S5</th>
-          <th>S6</th><th>S7</th><th>S8</th><th>S9</th><th>S10</th>
+          <th>S6</th><th>S7</th><th>S8</th><th>S9 ถอนชื่อ</th><th>S10 ส่งมอบเอกสาร</th>
           <!-- show only if user is admin or kts -->
-          <% if (user && (user.mClass === 'kjs' || user.mClass === 'admin')) { %>
+          <% if (canManage) { %>
             <th>จัดการ</th>
           <% } %>
          
@@ -91,7 +121,7 @@
             const d = raw instanceof Date ? raw : new Date(raw);
             if (isNaN(d.getTime()) || d.getFullYear() < 1950) return '-';
             const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+            return new Intl.DateTimeFormat('th-TH', {day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Bangkok'}).format(d);
           };
           const formatLocalDateInput = (rv) => {
             if (!rv) return '';
@@ -106,9 +136,12 @@
           };
         %>
         <% processes.forEach(p => { %>
-          <tr>
+          <tr class="process-data-row" data-record-id="<%= p.pr_id || '' %>" data-search="<%= [p.c_name,p.pr_code,p.c_status,p.process_status].filter(Boolean).join(' ') %>">
             <td class="fw-semibold text-start">
-              <div class="small text-muted fw-normal"><%= p.c_name || '-' %></div>
+              <div class="small text-muted fw-normal"><%= p.c_name || p.pr_code %></div>
+              <div class="small text-muted"><%= p.pr_code %><%= p.c_status ? ' • '+p.c_status : '' %></div>
+              <span class="badge bg-<%= p.status_color %>"><%= p.process_status %></span>
+              <% if (view === 'year' && p.prior_year_withdrawal) { %><div class="small text-muted mt-1">ถอนชื่อปีก่อน • ไม่นับผลงานปี <%= year %></div><% } %>
             </td>
             <% for (let i=1;i<=10;i++){ 
                  const key='pr_s'+i; 
@@ -129,20 +162,25 @@
               </td>
             <% } %>
            
-            <% if (user && (user.mClass === 'kjs' || user.mClass === 'admin')) { %>
+            <% if (canManage) { %>
             <td class="text-center">
+              <% if (p.pr_id) { %>
               <div class="d-flex justify-content-center gap-1">
                 <button type="button" class="btn btn-primary btn-sm" onclick="toggleEdit('<%= p.pr_id %>')">แก้ไข</button>
                 <form class="d-inline" method="POST" action="/chamra/process/<%= p.pr_id %>/delete" onsubmit="return confirm('ยืนยันลบรายการนี้?');">
+                  <input type="hidden" name="year" value="<%= year %>"><input type="hidden" name="view" value="<%= view %>">
                   <button type="submit" class="btn btn-danger btn-sm">ลบ</button>
                 </form>
               </div>
+              <% } else { %><a class="btn btn-sm btn-outline-primary" href="/chamra/process/add?pr_code=<%= encodeURIComponent(p.pr_code) %>">เพิ่มข้อมูลขั้นตอน</a><% } %>
             </td>
             <% } %>
           </tr>
+          <% if (canManage && p.pr_id) { %>
           <tr id="edit-row-<%= p.pr_id %>" class="edit-row" style="display:none;">
             <td colspan="12">
               <form method="POST" action="/chamra/process/<%= p.pr_id %>/update" class="border rounded p-3 bg-white">
+                <input type="hidden" name="year" value="<%= year %>"><input type="hidden" name="view" value="<%= view %>">
                 <div class="dates-grid mb-2">
                   <% for (let i=1;i<=10;i++){ 
                        const key='pr_s'+i; 
@@ -161,18 +199,32 @@
               </form>
             </td>
           </tr>
+          <% } %>
         <% }) %>
+        <tr id="processEmpty" <%= processes.length ? 'hidden' : '' %>><td colspan="<%= canManage ? 12 : 11 %>" class="text-center text-muted py-4">ไม่พบสถาบันในรายการที่เลือก ลองเปลี่ยนปีหรือเปิดดูทั้งหมด</td></tr>
       </tbody>
     </table>
 
   
 
   <div class="text-center mt-3">
-    <a href="/chamra" class="btn btn-primary btn-sm">กลับไปยังหน้าหลัก</a>
+    <a href="/chamra?year=<%= year %>" class="btn btn-primary btn-sm">กลับไปยังหน้าหลัก</a>
   </div>
 </div>
 
 <script>
+(() => {
+  const search = document.getElementById('processSearch');
+  const rows = Array.from(document.querySelectorAll('.process-data-row'));
+  search.addEventListener('input', () => {
+    const query = search.value.trim().toLowerCase();
+    let count = 0;
+    document.querySelectorAll('[id^="edit-row-"]').forEach(row => row.style.display = 'none');
+    rows.forEach(row => { row.hidden = !row.dataset.search.toLowerCase().includes(query); if (!row.hidden) count++; });
+    document.getElementById('processCount').textContent = `แสดง ${count} จาก ${rows.length} รายการในกลุ่มที่เลือก`;
+    document.getElementById('processEmpty').hidden = count > 0;
+  });
+})();
 function toggleEdit(id){
   const row = document.getElementById('edit-row-'+id);
   if(row){

@@ -1,3 +1,4 @@
+const { buildProcessRegister, processLocation } = require('../services/chamraProcessService');
 const { snapshotProcesses } = require('../services/chamraSummaryService');
 const { dateKey, resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
 const ChamraManagement = require('../models/chamraManagementModel');
@@ -49,12 +50,13 @@ function buildOct1MovementSummary(rows = []) {
   return (rows || []).map((item) => {
     const oct1Step = Number(item.oct1_step || 0);
     const currentStep = Number(item.current_max_step || 0);
-    const upgraded = currentStep > oct1Step;
+    const alreadyWithdrawn = oct1Step >= 9;
+    const upgraded = !alreadyWithdrawn && currentStep > oct1Step;
     return {
       ...item,
       oct1_step_number: oct1Step,
       current_max_step_number: currentStep,
-      movement_status: upgraded ? 'ยกระดับขั้น' : 'คงระดับเดิม',
+      movement_status: alreadyWithdrawn ? 'ติดตามหลังถอนชื่อ • ไม่นับผลงานปีนี้' : upgraded ? 'ยกระดับขั้น' : 'คงระดับเดิม',
       movement_badge: upgraded ? 'bg-success' : 'bg-secondary'
     };
   });
@@ -821,10 +823,7 @@ chamraController.detail = async (req, res) => {
 };
 
 // แสดงรายการกระบวนการ
-chamraController.processList = async (req, res) => {
-  const processes = await Chamra.getAllProcess();
-  res.render('chamra/process/list', { processes });
-};
+chamraController.processList = (req, res) => chamraController.process(req, res);
 
 // แสดงฟอร์มแก้ไข (ถ้าต้องการหน้าแยก; ที่นี่ใช้ในหน้า list ก็ได้)
 chamraController.processEdit = async (req, res) => {
@@ -836,19 +835,19 @@ chamraController.processEdit = async (req, res) => {
 // อัปเดต (inline submit)
 chamraController.processUpdate = async (req, res) => {
   await Chamra.updateProcess(req.params.pr_id, req.body);
-  res.redirect('/chamra/process');
+  res.redirect(processLocation(req.body));
 };
 
 // ลบ
 chamraController.processDelete = async (req, res) => {
   await Chamra.deleteProcess(req.params.pr_id);
-  res.redirect('/chamra/process');
+  res.redirect(processLocation(req.body));
 };
 
 // ฟอร์มเพิ่มกระบวนการ
 chamraController.processCreateForm = async (req, res) => {
   const [coopList] = await db.query('SELECT c_code, c_name FROM active_coop ORDER BY c_name');
-  res.render('chamra/process/create', { coopList, error: null, old: {} });
+  res.render('chamra/process/create', { coopList, error: null, old: { pr_code: typeof req.query.pr_code === 'string' ? req.query.pr_code : '' } });
 };
 
 // บันทึกเพิ่มกระบวนการ
@@ -1222,12 +1221,12 @@ chamraController.exportDetailPdf = async (req, res) => {
  */
 chamraController.process = async (req, res) => {
   try {
-    // Fetch all chamra records with process data
-    const processes = await Chamra.getAllProcess();
+    const rows = await Chamra.getProcessRegister();
+    const register = buildProcessRegister(rows || [], req.query);
     
     res.render('chamra/process/list', {
-      processes: processes || [],
-      user: req.session.user || null,
+      ...register,
+      user: req.session?.user || null,
       title: 'กระบวนการชำระบัญชี - CoopChain'
     });
   } catch (error) {

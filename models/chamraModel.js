@@ -178,18 +178,18 @@ const Chamra = {
     return rows;
   },
 
-  // Separate register for the process page: include withdrawn institutions without
-  // changing the dataset consumed by home-page charts.
+  // Process-page register excludes institutions removed from the active register.
   async getProcessRegister() {
     const [rows] = await db.query(
       `SELECT cp.pr_id, cp.pr_code, ${PROCESS_DATE_COLUMNS}, ac.c_name, ac.c_status
        FROM chamra_process cp
        LEFT JOIN active_coop ac ON ac.c_code = cp.pr_code
+       WHERE ac.c_status IS NULL OR TRIM(ac.c_status) <> 'ถอนชื่อ'
        UNION ALL
        SELECT cp.pr_id, ac.c_code AS pr_code, ${PROCESS_DATE_COLUMNS}, ac.c_name, ac.c_status
        FROM active_coop ac
        LEFT JOIN chamra_process cp ON cp.pr_code = ac.c_code
-       WHERE ac.c_status IN ('เลิก', 'เลิก/ชำระบัญชี', 'ถอนชื่อ') AND cp.pr_id IS NULL
+       WHERE ac.c_status IN ('เลิก', 'เลิก/ชำระบัญชี') AND cp.pr_id IS NULL
        ORDER BY c_name, pr_code`
     );
     return rows;

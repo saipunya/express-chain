@@ -50,7 +50,7 @@
   <div class="card shadow-sm mb-3"><div class="card-body">
     <div class="d-flex flex-wrap gap-2 mb-3">
       <a class="btn <%= view === 'year' && year === currentYear ? 'btn-primary' : 'btn-outline-primary' %>" href="/chamra/process?year=<%= currentYear %>">ปีงบประมาณปัจจุบัน <%= currentYear %></a>
-      <a class="btn <%= view === 'all' ? 'btn-primary' : 'btn-outline-primary' %>" href="/chamra/process?view=all">ทั้งหมดรวมถอนชื่อแล้ว</a>
+      <a class="btn <%= view === 'all' ? 'btn-primary' : 'btn-outline-primary' %>" href="/chamra/process?view=all">ทั้งหมดที่ยังอยู่ในระบบ</a>
       <% if (canManage) { %><a class="btn btn-success ms-auto" href="/chamra/process/add">+ เพิ่มความก้าวหน้า</a><% } %>
     </div>
     <form method="get" action="/chamra/process" class="d-flex flex-wrap gap-2 align-items-end mb-2">
@@ -59,7 +59,7 @@
       <% if (year > 2500) { %><a class="btn btn-outline-secondary" href="/chamra/process?year=<%= year - 1 %>">← ปีก่อนหน้า</a><% } %>
     </form>
     <% if (view === 'all') { %>
-      <p class="mb-2">ทะเบียนทั้งหมด <%= totalRecords %> รายการ รวมสถาบันที่ถอนชื่อและส่งมอบเอกสารแล้วทุกปี</p>
+      <p class="mb-2">ทะเบียนทั้งหมด <%= totalRecords %> รายการ ทุกปี โดยไม่แสดงสถาบันสถานะทะเบียน “ถอนชื่อ”</p>
     <% } else { %>
       <p class="mb-2">ปีงบประมาณ <%= year %>: <%= period.startLabel %> – <%= period.endLabel %></p>
       <p class="small text-muted mb-2">แสดงสถาบันที่มีวันที่ขั้น 9 หรือขั้น 10 อยู่ในปีที่เลือก<% if (year === currentYear) { %> รวมสถาบันที่ยังไม่มีวันที่ขั้น 10 แม้ว่าขั้น 9 จะเป็นปีเก่า<% } %> • วันที่ในตารางเป็นข้อมูลที่บันทึกทั้งหมดของสถาบัน</p>
@@ -70,9 +70,6 @@
         <span class="badge bg-secondary">ถอนชื่อก่อนปีที่เลือก: <%= priorYearWithdrawals %> แห่ง • ไม่นับเป็นผลงานถอนชื่อปีนี้</span>
       </div>
       <p class="small text-muted">ผลงานถอนชื่อนับเฉพาะวันที่ขั้น 9 ในปีที่เลือก สถาบันที่ถึงขั้น 9 ในปีเก่าจะไม่นับซ้ำ แม้ว่าทำขั้น 10 ในปีนี้</p>
-    <% } %>
-    <% if (missingWithdrawalDates) { %>
-      <div class="alert alert-warning py-2" role="status">มีสถาบันสถานะทะเบียน “ถอนชื่อ” <%= missingWithdrawalDates %> แห่งในรายการนี้ ที่ยังไม่มีวันที่ขั้น 9 จึงยังไม่นับเป็นผลงานถอนชื่อ กรุณาตรวจสอบและบันทึกวันที่ขั้น 9 ตามจริง</div>
     <% } %>
     <label for="processSearch" class="form-label">ค้นหาชื่อ รหัส หรือสถานะสถาบัน</label>
     <input id="processSearch" class="form-control" type="search" placeholder="พิมพ์เพื่อค้นหาในรายการที่เลือก">
@@ -144,7 +141,6 @@
               <div class="small text-muted fw-normal"><%= p.c_name || p.pr_code %></div>
               <div class="small text-muted"><%= p.pr_code %><%= p.c_status ? ' • '+p.c_status : '' %></div>
               <span class="badge bg-<%= p.status_color %>"><%= p.process_status %></span>
-              <% if (p.withdrawal_date_missing) { %><div class="small text-danger mt-1">ยังไม่นับผลงาน: ไม่มีวันที่ขั้น 9</div><% } %>
               <% if (view === 'year' && p.prior_year_withdrawal) { %><div class="small text-muted mt-1">ถอนชื่อปีก่อน • ไม่นับผลงานปี <%= year %></div><% } %>
             </td>
             <% for (let i=1;i<=10;i++){ 

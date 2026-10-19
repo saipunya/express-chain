@@ -2,7 +2,7 @@
 
 <%
   const rows = Array.isArray(data) ? data : [];
-  const targetProblemYear = problemYear || 2569;
+  const targetProblemYear = problemYear;
   const problemLookup = problemsByCode || {};
 
   function parseDateSafe(raw) {
@@ -77,72 +77,7 @@
     return steps;
   }
 
-  function normalizeName(name) {
-    return String(name || '')
-      .replace(/\s+/g, '')
-      .replace(/[()（）\-–—]/g, '')
-      .replace(/จำกัด$/g, '')
-      .trim();
-  }
-
-  function canonicalTargetName(name) {
-    const clean = String(name || '').trim();
-    if (clean.startsWith('สหกรณ์') && !clean.endsWith('จำกัด')) return clean + ' จำกัด';
-    return clean;
-  }
-
-  function targetKey(name) {
-    return normalizeName(canonicalTargetName(name));
-  }
-
-  const withdrawalTargets = [
-    'สหกรณ์บริการและจำหน่ายสินค้าอุปโภค-บริโภคจังหวัดชัยภูมิ',
-    'สหกรณ์การเกษตรผู้ปลูกพริกจัตุรัส',
-    'กลุ่มเกษตรกรทำไร่บ้านชวน',
-    'กลุ่มเกษตรกรทำนาวังชมภู',
-    'กลุ่มเกษตรกรทำนาบ้านแท่น',
-    'กลุ่มเกษตรกรทำนาท่าใหญ่',
-    'กลุ่มเกษตรกรเลี้ยงสัตว์หนองตูม'
-  ];
-
-  const caseMovementTargets = [
-    'สหกรณ์ผู้เลี้ยงสุกรภักดีบูรพา',
-    'สหกรณ์ปศุสัตว์ชัยภูมิ',
-    'สหกรณ์การเกษตรเนินสง่า',
-    'สหกรณ์การเกษตรปฏิรูปที่ดินบ้านเป้าหนองโพนงาม',
-    'กลุ่มเกษตรกรเลี้ยงสัตว์หนองบัวบาน'
-  ];
-
-  const rowsByName = rows.reduce((acc, item) => {
-    acc[normalizeName(item.c_name)] = item;
-    return acc;
-  }, {});
-
-  function rowsFromTargets(targets) {
-    return targets
-      .map((name) => rowsByName[targetKey(name)])
-      .filter(Boolean);
-  }
-
-  const group1Rows = rowsFromTargets(withdrawalTargets);
-  const group3Rows = rowsFromTargets(caseMovementTargets);
-  const groupedCodes = new Set([...group1Rows, ...group3Rows].map((item) => item.c_code || item.de_code));
-  const group2Rows = rows
-    .filter((item) => !groupedCodes.has(item.c_code || item.de_code))
-    .sort((a, b) => {
-      const aName = a.c_name || '';
-      const bName = b.c_name || '';
-      const aRank = aName.startsWith('สหกรณ์') ? 0 : (aName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
-      const bRank = bName.startsWith('สหกรณ์') ? 0 : (bName.startsWith('กลุ่มเกษตรกร') ? 1 : 2);
-      if (aRank !== bRank) return aRank - bRank;
-      return aName.localeCompare(bName, 'th');
-    });
-
-  const groupedSections = [
-    { id: 'group-withdrawal', title: 'กลุ่มที่ 1 เป้าหมายถอนชื่อ', description: 'รายการเป้าหมายถอนชื่อ เรียงตามรายชื่อที่กำหนด', icon: 'bi-check2-circle', color: 'success', rows: group1Rows },
-    { id: 'group-upgrade', title: 'กลุ่มที่ 2 ยกระดับ 1 ขั้น', description: 'รายการที่เหลือจากกลุ่มที่ 1 และ 3 โดยเรียงสหกรณ์ก่อนกลุ่มเกษตรกร', icon: 'bi-arrow-up-circle', color: 'primary', rows: group2Rows },
-    { id: 'group-case', title: 'กลุ่มที่ 3 ขั้น 6 คดี ต้องเคลื่อนไหว', description: 'รายการขั้น 6 คดีที่ต้องมีความเคลื่อนไหว เรียงตามรายชื่อที่กำหนด', icon: 'bi-exclamation-triangle', color: 'warning', rows: group3Rows }
-  ];
+  const groupedSections = sections;
 
   const totalGroupedRows = groupedSections.reduce((sum, section) => sum + section.rows.length, 0);
 
@@ -245,16 +180,18 @@
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
       <div>
         <h1 class="h4 fw-bold mb-1">ค้นหา Chamra</h1>
-        <div class="text-muted">รายการสถาบัน ผู้ชำระบัญชี ขั้นตอนปัจจุบัน และปัญหา 2 ครั้งล่าสุด ปีงบประมาณ พ.ศ. <%= targetProblemYear %></div>
+        <div class="text-muted">รายการสถาบัน ผู้ชำระบัญชี ขั้นตอน ณ วันรายงาน และปัญหา 2 ครั้งล่าสุด ปีงบประมาณ พ.ศ. <%= targetProblemYear %></div>
       </div>
-      <a href="/chamra" class="btn btn-outline-secondary">
+      <a href="/chamra?year=<%= targetProblemYear %>" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>กลับหน้าหลัก
       </a>
     </div>
 
+    <div class="small text-muted mb-3"><%= period.startLabel %> – <%= period.endLabel %> • ข้อมูลขั้นตอน ณ <%= period.asOfLabel %></div>
     <div class="search-toolbar p-3 mb-3">
       <form id="chamraSearchForm" class="row g-2 align-items-center" method="get" action="/chamra/show-all">
-        <div class="col-lg-8">
+        <div class="col-lg-2"><%- include('manage/year-select', { selectId:'meetingFiscalYear' }) %></div>
+        <div class="col-lg-6">
           <div class="search-input-wrap">
             <i class="bi bi-search"></i>
             <input
@@ -274,7 +211,7 @@
             <button type="button" class="btn btn-outline-secondary btn-lg" id="clearSearchBtn">
               <i class="bi bi-x-circle me-1"></i>ล้าง
             </button>
-            <a href="/chamra/show-all/export/pdf<%= q ? ('?q=' + encodeURIComponent(q)) : '' %>" class="btn btn-outline-danger btn-lg" id="exportPdfBtn" target="_blank" rel="noopener">
+            <a href="/chamra/show-all/export/pdf?year=<%= targetProblemYear %><%= q ? ('&q=' + encodeURIComponent(q)) : '' %>" class="btn btn-outline-danger btn-lg" id="exportPdfBtn" target="_blank" rel="noopener">
               <i class="bi bi-file-earmark-pdf me-1"></i>PDF
             </a>
           </div>
@@ -506,21 +443,22 @@
         summary.textContent = query ? `ผลการค้นหา "${query}" พบ ${visible} รายการ` : `ทั้งหมด ${rows.length} รายการ`;
       }
       if (exportPdfBtn) {
-        exportPdfBtn.href = query ? `/chamra/show-all/export/pdf?q=${encodeURIComponent(query)}` : '/chamra/show-all/export/pdf';
+        exportPdfBtn.href = `/chamra/show-all/export/pdf?year=<%= targetProblemYear %>${query ? '&q=' + encodeURIComponent(query) : ''}`;
       }
     };
 
     form?.addEventListener('submit', (event) => {
+      if (document.getElementById('meetingFiscalYear').value !== '<%= targetProblemYear %>') return;
       event.preventDefault();
       const query = (input?.value || '').trim();
-      const nextUrl = query ? `${location.pathname}?q=${encodeURIComponent(query)}` : location.pathname;
+      const nextUrl = `${location.pathname}?year=<%= targetProblemYear %>${query ? '&q=' + encodeURIComponent(query) : ''}`;
       history.replaceState(null, '', nextUrl);
       applyFilter();
     });
     input?.addEventListener('input', applyFilter);
     document.getElementById('clearSearchBtn')?.addEventListener('click', () => {
       if (input) input.value = '';
-      history.replaceState(null, '', location.pathname);
+      history.replaceState(null, '', `${location.pathname}?year=<%= targetProblemYear %>`);
       applyFilter();
       input?.focus();
     });

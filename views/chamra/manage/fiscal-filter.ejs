@@ -1,0 +1,10 @@
+<div class="card shadow-sm mb-3"><div class="card-body">
+  <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+    <div><%- include('year-select', { selectId: 'fiscalYearFilter' }) %></div>
+    <button class="btn btn-outline-primary">แสดงข้อมูล</button>
+    <% if (period.year > 2500) { %><a class="btn btn-outline-secondary" href="?year=<%= period.year - 1 %>">← ปีก่อนหน้า</a><% } %>
+    <% if (typeof currentYear !== 'undefined' && period.year !== currentYear) { %><a class="btn btn-outline-secondary" href="?year=<%= currentYear %>">กลับปีปัจจุบัน</a><% } %>
+  </form>
+  <div class="small text-muted mt-2"><%= period.startLabel %> – <%= period.endLabel %><% if (period.hasStarted) { %> • ข้อมูลขั้นตอนถึง <%= period.asOfLabel %><% } else { %> • ปีงบประมาณนี้ยังไม่เริ่มต้น<% } %></div>
+  <% if (typeof currentYear !== 'undefined' && period.year < currentYear) { %><div class="small text-primary mt-1">กำลังดูข้อมูลย้อนหลังปีงบประมาณ <%= period.year %> โดยคำนวณจากข้อมูลที่บันทึกอยู่ในระบบ</div><% } %>
+</div></div>

@@ -28,8 +28,10 @@
 
   <div class="card shadow-sm">
     <div class="card-body">
-      <form id="chamraForm" method="POST" action="/chamra/<%= chamra.de_code %>">
-        <input type="hidden" name="_method" value="PUT">
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger" role="alert"><%= error %></div>
+      <% } %>
+      <form id="chamraForm" method="POST" action="/chamra/edit/<%= chamra.de_code %>">
         <input type="hidden" name="_dirtyFields" id="dirtyFields">
 
         <div class="row g-3">
@@ -59,18 +61,6 @@
             <input type="text" class="form-control" name="de_person" value="<%= chamra.de_person %>">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label d-block">เป้าหมาย</label>
-            <div class="row g-2">
-              <div class="col-6">
-                <input type="text" class="form-control" name="de_target1" value="<%= chamra.de_target1 %>" placeholder="เป้าหมาย 1">
-              </div>
-              <div class="col-6">
-                <input type="text" class="form-control" name="de_target2" value="<%= chamra.de_target2 %>" placeholder="เป้าหมาย 2">
-              </div>
-            </div>
-          </div>
-
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
             <textarea class="form-control" name="de_maihed" rows="4"><%= chamra.de_maihed %></textarea>
@@ -83,7 +73,7 @@
             <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
           </button>
           <button id="resetBtn" type="button" class="btn btn-outline-secondary">ล้างการแก้ไข</button>
-          <a href="/chamra/<%= chamra.de_code %>/view" class="btn btn-light">← ย้อนกลับ</a>
+          <a href="/chamra/detail/<%= chamra.de_code %>" class="btn btn-light">← ย้อนกลับ</a>
         </div>
       </form>
     </div>
@@ -148,8 +138,9 @@
     inputs.forEach(el => el.addEventListener('input', updateUI));
     updateUI();
 
+    let submitting = false;
     window.addEventListener('beforeunload', (e) => {
-      if (Object.keys(getChanged()).length > 0) {
+      if (!submitting && Object.keys(getChanged()).length > 0) {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -176,6 +167,7 @@
       dirtyFieldsInput.value = JSON.stringify(names);
 
       // loading state
+      submitting = true;
       saveBtn.disabled = true;
       spinner.classList.remove('d-none');
     });

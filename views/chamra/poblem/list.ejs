@@ -1,7 +1,8 @@
 <%- include('../../partials/header.ejs') %>
 <div class="container mt-4">
-  <h2 class="mb-4">📋 รายการปัญหา Chamra</h2>
-  <a href="/chamra/poblem/add" class="btn btn-success mb-3">➕ เพิ่มปัญหา</a>
+  <h2 class="mb-4">📋 ผลติดตามและปัญหา ปีงบประมาณ <%= year %></h2>
+  <%- include('../manage/fiscal-filter') %>
+  <a href="/chamra/poblem/add?year=<%= year %>" class="btn btn-success mb-3">➕ เพิ่มปัญหา</a>
   <table class="table table-bordered table-striped">
     <thead class="table-dark">
       <tr>
@@ -41,7 +42,7 @@
     </tbody>
   </table>
   <div class="text-center mt-3">
-    <a href="/chamra" class="btn btn-primary btn-sm">กลับไปยังหน้าหลัก</a>
+    <a href="/chamra?year=<%= year %>" class="btn btn-primary btn-sm">กลับไปยังหน้าหลัก</a>
   </div>
  
 

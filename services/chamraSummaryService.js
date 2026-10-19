@@ -93,3 +93,46 @@ function buildChamraSummary(rows = []) {
 }
 
 module.exports = { STEP_LABELS, isValidProcessDate, getLatestProcess, buildChamraSummary };
+
+// Snapshot immediately before October 1, and progress through the reporting cutoff.
+function buildMovementRow(row, startDate, endDate) {
+  const { dateKey } = require('./chamraFiscalYear');
+  let baseline = { step: 0, date: null };
+  let current = { step: 0, date: null };
+  const activities = [];
+  for (let step = 1; step <= 10; step++) {
+    const date = dateKey(row[`pr_s${step}`]);
+    if (!date || date < '1950-01-01') continue;
+    if (date < startDate) baseline = { step, date };
+    if (date <= endDate) current = { step, date };
+    if (date >= startDate && date <= endDate) activities.push({ step, date });
+  }
+  if (!activities.length) return null;
+  return {
+    institution_code: row.pr_code,
+    institution_name: row.c_name,
+    institution_status: row.c_status,
+    institution_kind: row.coop_group,
+    date: activities.map(a => a.date).sort()[0],
+    oct1_step: baseline.step,
+    oct1_date: baseline.date,
+    current_max_step: current.step,
+    current_max_date: current.date,
+    activities
+  };
+}
+module.exports.buildMovementRow = buildMovementRow;
+
+function snapshotProcesses(rows, cutoffDate) {
+  const { dateKey } = require('./chamraFiscalYear');
+  return rows.map(row => {
+    const snapshot = { ...row };
+    for (let step = 1; step <= 10; step++) {
+      const key = `pr_s${step}`;
+      const date = dateKey(row[key]);
+      snapshot[key] = date && date >= '1950-01-01' && date <= cutoffDate ? date : null;
+    }
+    return snapshot;
+  });
+}
+module.exports.snapshotProcesses = snapshotProcesses;

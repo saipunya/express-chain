@@ -1,4 +1,6 @@
 const db = require('../config/db');
+// Keep DATE columns as calendar dates regardless of the server's timezone.
+const PROCESS_DATE_COLUMNS = Array.from({ length: 10 }, (_, i) => `DATE_FORMAT(cp.pr_s${i + 1}, '%Y-%m-%d') AS pr_s${i + 1}`).join(', ');
 
 const Chamra = {
   // List with coop + detail + process progress
@@ -7,8 +9,7 @@ const Chamra = {
       `SELECT 
          ac.c_code, ac.c_name, ac.c_status,
          cd.de_code, cd.de_case, cd.de_person, cd.de_comno, cd.de_comdate, cd.de_maihed,
-         cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
-         cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
+         ${PROCESS_DATE_COLUMNS}
        FROM active_coop ac
        LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code
        LEFT JOIN chamra_process cp ON cp.pr_code = ac.c_code
@@ -24,8 +25,7 @@ const Chamra = {
       `SELECT 
          cd.*,
          ac.c_name,ac.c_group,
-         cp.pr_s1, cp.pr_s2, cp.pr_s3, cp.pr_s4, cp.pr_s5,
-         cp.pr_s6, cp.pr_s7, cp.pr_s8, cp.pr_s9, cp.pr_s10
+         ${PROCESS_DATE_COLUMNS}
        FROM chamra_detail cd
        LEFT JOIN active_coop ac ON ac.c_code = cd.de_code
        LEFT JOIN chamra_process cp ON cp.pr_code = cd.de_code
@@ -247,153 +247,21 @@ const Chamra = {
   },
 
   async getProcessesInDateRange(startDate, endDate) {
-    // Get one row per institution with activity dates, Oct 1 status, and current max step
-    const query = `
-      SELECT activity.pr_code AS institution_code, ac.c_name AS institution_name, ac.c_status AS institution_status, ac.coop_group AS institution_kind,
-             MIN(activity.activity_date) AS date,
-             (SELECT step FROM (
-               SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '2' AS step, pr_s2 AS date FROM chamra_process WHERE pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '3' AS step, pr_s3 AS date FROM chamra_process WHERE pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '4' AS step, pr_s4 AS date FROM chamra_process WHERE pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '5' AS step, pr_s5 AS date FROM chamra_process WHERE pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '6' AS step, pr_s6 AS date FROM chamra_process WHERE pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '7' AS step, pr_s7 AS date FROM chamra_process WHERE pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '8' AS step, pr_s8 AS date FROM chamra_process WHERE pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '9' AS step, pr_s9 AS date FROM chamra_process WHERE pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '10' AS step, pr_s10 AS date FROM chamra_process WHERE pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
-             ) all_steps
-             WHERE all_steps.pr_code = ac.c_code AND all_steps.date <= '2025-10-01'
-             ORDER BY CAST(all_steps.step AS UNSIGNED) DESC, all_steps.date DESC
-             LIMIT 1
-           ) AS oct1_step,
-           (SELECT date FROM (
-               SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '2' AS step, pr_s2 AS date FROM chamra_process WHERE pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '3' AS step, pr_s3 AS date FROM chamra_process WHERE pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '4' AS step, pr_s4 AS date FROM chamra_process WHERE pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '5' AS step, pr_s5 AS date FROM chamra_process WHERE pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '6' AS step, pr_s6 AS date FROM chamra_process WHERE pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '7' AS step, pr_s7 AS date FROM chamra_process WHERE pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '8' AS step, pr_s8 AS date FROM chamra_process WHERE pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '9' AS step, pr_s9 AS date FROM chamra_process WHERE pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '10' AS step, pr_s10 AS date FROM chamra_process WHERE pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
-             ) all_steps
-             WHERE all_steps.pr_code = ac.c_code AND all_steps.date <= '2025-10-01'
-             ORDER BY CAST(all_steps.step AS UNSIGNED) DESC, all_steps.date DESC
-             LIMIT 1
-           ) AS oct1_date,
-           (SELECT step FROM (
-               SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '2' AS step, pr_s2 AS date FROM chamra_process WHERE pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '3' AS step, pr_s3 AS date FROM chamra_process WHERE pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '4' AS step, pr_s4 AS date FROM chamra_process WHERE pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '5' AS step, pr_s5 AS date FROM chamra_process WHERE pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '6' AS step, pr_s6 AS date FROM chamra_process WHERE pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '7' AS step, pr_s7 AS date FROM chamra_process WHERE pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '8' AS step, pr_s8 AS date FROM chamra_process WHERE pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '9' AS step, pr_s9 AS date FROM chamra_process WHERE pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '10' AS step, pr_s10 AS date FROM chamra_process WHERE pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
-             ) all_steps
-             WHERE all_steps.pr_code = ac.c_code
-             ORDER BY CAST(all_steps.step AS UNSIGNED) DESC, all_steps.date DESC
-             LIMIT 1
-           ) AS current_max_step,
-           (SELECT date FROM (
-               SELECT pr_code, '1' AS step, pr_s1 AS date FROM chamra_process WHERE pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '2' AS step, pr_s2 AS date FROM chamra_process WHERE pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '3' AS step, pr_s3 AS date FROM chamra_process WHERE pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '4' AS step, pr_s4 AS date FROM chamra_process WHERE pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '5' AS step, pr_s5 AS date FROM chamra_process WHERE pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '6' AS step, pr_s6 AS date FROM chamra_process WHERE pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '7' AS step, pr_s7 AS date FROM chamra_process WHERE pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '8' AS step, pr_s8 AS date FROM chamra_process WHERE pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '9' AS step, pr_s9 AS date FROM chamra_process WHERE pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
-               UNION ALL
-               SELECT pr_code, '10' AS step, pr_s10 AS date FROM chamra_process WHERE pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
-             ) all_steps
-             WHERE all_steps.pr_code = ac.c_code
-             ORDER BY CAST(all_steps.step AS UNSIGNED) DESC, all_steps.date DESC
-             LIMIT 1
-           ) AS current_max_date,
-             CASE 
-               WHEN ac.c_status = 'เลิก' THEN 'เลิกกิจการ'
-               WHEN ac.c_status = 'หยุด' THEN 'หยุดชั่วคราว'
-               WHEN ac.c_status = 'ดำเนินการ' THEN 'ดำเนินการ'
-               ELSE ac.c_status
-             END as status_1oct
-      FROM active_coop ac
-      INNER JOIN (
-        SELECT DISTINCT pr_code, activity_date FROM (
-          SELECT pr_code, pr_s1 AS activity_date FROM chamra_process WHERE pr_s1 BETWEEN ? AND ? AND pr_s1 IS NOT NULL AND pr_s1 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s2 AS activity_date FROM chamra_process WHERE pr_s2 BETWEEN ? AND ? AND pr_s2 IS NOT NULL AND pr_s2 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s3 AS activity_date FROM chamra_process WHERE pr_s3 BETWEEN ? AND ? AND pr_s3 IS NOT NULL AND pr_s3 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s4 AS activity_date FROM chamra_process WHERE pr_s4 BETWEEN ? AND ? AND pr_s4 IS NOT NULL AND pr_s4 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s5 AS activity_date FROM chamra_process WHERE pr_s5 BETWEEN ? AND ? AND pr_s5 IS NOT NULL AND pr_s5 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s6 AS activity_date FROM chamra_process WHERE pr_s6 BETWEEN ? AND ? AND pr_s6 IS NOT NULL AND pr_s6 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s7 AS activity_date FROM chamra_process WHERE pr_s7 BETWEEN ? AND ? AND pr_s7 IS NOT NULL AND pr_s7 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s8 AS activity_date FROM chamra_process WHERE pr_s8 BETWEEN ? AND ? AND pr_s8 IS NOT NULL AND pr_s8 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s9 AS activity_date FROM chamra_process WHERE pr_s9 BETWEEN ? AND ? AND pr_s9 IS NOT NULL AND pr_s9 != '0000-00-00'
-          UNION ALL
-          SELECT pr_code, pr_s10 AS activity_date FROM chamra_process WHERE pr_s10 BETWEEN ? AND ? AND pr_s10 IS NOT NULL AND pr_s10 != '0000-00-00'
-        ) activities
-        WHERE activities.activity_date > '2025-09-30'
-      ) activity ON activity.pr_code = ac.c_code
-      WHERE ac.c_status = 'เลิก'
-      GROUP BY activity.pr_code, ac.c_name, ac.c_status
-      ORDER BY current_max_date ASC, ac.c_name
-    `;
-    
-    const params = [];
-    for (let i = 0; i < 10; i++) {
-      params.push(startDate, endDate);
-    }
-    
-    const [rows] = await db.query(query, params);
-    return rows;
+    const { buildMovementRow } = require('../services/chamraSummaryService');
+    const { validDate } = require('../services/chamraFiscalYear');
+    if (!validDate(startDate) || !validDate(endDate)) throw new Error('Invalid reporting dates');
+    if (endDate < startDate) return [];
+    const conditions = Array.from({ length: 10 }, (_, i) => `cp.pr_s${i + 1} BETWEEN ? AND ?`);
+    const values = conditions.flatMap(() => [startDate, endDate]);
+    const [rows] = await db.query(
+      `SELECT cp.pr_code, ${PROCESS_DATE_COLUMNS}, ac.c_name, ac.c_status, ac.coop_group
+       FROM chamra_process cp
+       INNER JOIN active_coop ac ON ac.c_code = cp.pr_code
+       WHERE ac.c_status = 'เลิก' AND (${conditions.join(' OR ')})`,
+      values
+    );
+    return rows.map(row => buildMovementRow(row, startDate, endDate)).filter(Boolean)
+      .sort((a, b) => a.current_max_date.localeCompare(b.current_max_date) || String(a.institution_name).localeCompare(String(b.institution_name), 'th'));
   }
 };
 

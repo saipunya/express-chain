@@ -6,22 +6,19 @@
         <div class="card-header bg-gradient-primary text-white py-3">
           <h2 class="mb-0 d-flex align-items-center">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            เพิ่มปัญหา Chamra
+            เพิ่มผลติดตามและปัญหา
           </h2>
         </div>
         <div class="card-body p-4">
+          <div id="exist-warning" class="alert alert-warning" role="alert" style="display:none">มีข้อมูลสถาบัน ปี และครั้งประชุมนี้แล้ว กรุณาแก้ไขรายการเดิม</div>
           <form method="POST" action="/chamra/poblem/add" id="problemForm">
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="po_year" class="form-label fw-bold">
-                  <i class="fas fa-calendar-alt me-1 text-primary"></i>ปี
+                  <i class="fas fa-calendar-alt me-1 text-primary"></i>ปีงบประมาณ พ.ศ.
                 </label>
-                <select name="po_year" id="po_year" class="form-select" required>
-                  <option value="">โปรดเลือกปี</option>
-                  <option value="<%= (new Date().getFullYear() - 1) + 543 %>"><%= (new Date().getFullYear() - 1) + 543 %></option>
-                  <option value="<%= new Date().getFullYear() + 543 %>" selected><%= new Date().getFullYear() + 543 %></option>
-                  <option value="<%= (new Date().getFullYear() + 1) + 543 %>"><%= (new Date().getFullYear() + 1) + 543 %></option>
-                </select>
+                <input type="number" name="po_year" id="po_year" class="form-control" min="2500" max="2800" value="<%= po_year %>" required>
+                <div class="form-text">เริ่ม 1 ตุลาคมปีก่อน ถึง 30 กันยายนของปีงบประมาณ</div>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="po_meeting" class="form-label fw-bold">
@@ -86,7 +83,7 @@
           
 
             <div class="d-flex justify-content-between mt-4">
-              <a href="/chamra/poblem" class="btn btn-outline-secondary btn-lg">
+              <a href="/chamra/poblem?year=<%= po_year %>" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-arrow-left me-2"></i>กลับหน้ารายการ
               </a>
               <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
@@ -104,11 +101,15 @@ function checkPoblemExist() {
   const po_code = document.getElementById('po_code').value;
   const po_year = document.getElementById('po_year').value;
   const po_meeting = document.getElementById('po_meeting').value;
+  const warning = document.getElementById('exist-warning');
+  warning.style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
   if (!po_code || !po_year || !po_meeting) return;
 
   fetch(`/chamra/poblem/check-exist?po_code=${po_code}&po_year=${po_year}&po_meeting=${po_meeting}`)
     .then(res => res.json())
     .then(data => {
+      if (po_code !== document.getElementById('po_code').value || po_year !== document.getElementById('po_year').value || po_meeting !== document.getElementById('po_meeting').value) return;
       const warn = document.getElementById('exist-warning');
       const submitBtn = document.getElementById('submitBtn');
       if (data.exist) {
@@ -141,9 +142,10 @@ function updateCoopList() {
   fetch(`/chamra/poblem/available-coop?po_year=${po_year}&po_meeting=${po_meeting}`)
     .then(res => res.json())
     .then(list => {
-      select.innerHTML = '<option value="">โปรดเลือกสถาบัน</option>';
+      if (po_year !== document.getElementById('po_year').value || po_meeting !== document.getElementById('po_meeting').value) return;
+      select.replaceChildren(new Option('โปรดเลือกสถาบัน', ''));
       list.forEach(coop => {
-        select.innerHTML += `<option value="${coop.c_code}">${coop.c_name}</option>`;
+        select.add(new Option(coop.c_name, coop.c_code));
       });
       select.disabled = false;
     })
@@ -170,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkPoblemExist();
     updateCoopList();
   });
+  if (po_year.value && po_meeting.value) updateCoopList();
 
   // Add form validation styling
   const form = document.getElementById('problemForm');

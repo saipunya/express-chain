@@ -121,7 +121,7 @@
         <div>
           <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
             <span class="badge rounded-pill bg-white text-primary border border-white">สรุปขั้นตอน</span>
-            <span class="badge rounded-pill bg-warning text-dark">ปีงบประมาณ 2569</span>
+            <span class="badge rounded-pill bg-warning text-dark">ปีงบประมาณ <%= year %></span>
           </div>
           <h5 class="mb-1 fw-bold">ตารางความเคลื่อนไหวการชำระบัญชี</h5>
         </div>
@@ -138,13 +138,15 @@
             <button type="button" class="btn btn-light" onclick="adjFont(1)">A+</button>
             <button type="button" class="btn btn-outline-light" onclick="resetFont()">รีเซ็ต</button>
           </div>
-          <a href="/chamra" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold">
+          <a href="/chamra?year=<%= year %>" class="btn btn-light btn-sm rounded-pill px-3 fw-semibold">
             <i class="bi bi-arrow-left me-1"></i> กลับ
           </a>
         </div>
       </div>
     </div>
   </div>
+
+  <%- include('manage/fiscal-filter') %>
 
   <!-- Legend -->
   <div class="d-flex gap-3 small mb-2">
@@ -157,21 +159,8 @@
   </div>
 
   <% 
-    const fiscalMonths = [
-      { label: 'ต.ค. 68', value: 9, year: 2025 },
-      { label: 'พ.ย. 68', value: 10, year: 2025 },
-      { label: 'ธ.ค. 68', value: 11, year: 2025 },
-      { label: 'ม.ค. 69', value: 0, year: 2026 },
-      { label: 'ก.พ. 69', value: 1, year: 2026 },
-      { label: 'มี.ค. 69', value: 2, year: 2026 },
-      { label: 'เม.ย. 69', value: 3, year: 2026 },
-      { label: 'พ.ค. 69', value: 4, year: 2026 },
-      { label: 'มิ.ย. 69', value: 5, year: 2026 },
-      { label: 'ก.ค. 69', value: 6, year: 2026 },
-      { label: 'ส.ค. 69', value: 7, year: 2026 },
-      { label: 'ก.ย. 69', value: 8, year: 2026 }
-    ];
-    
+    const fiscalMonths = period.months;
+
     const isEmptyDate = (v) => {
       if (!v) return true;
       if (typeof v === 'string') {
@@ -190,7 +179,7 @@
       const d = v instanceof Date ? v : new Date(v);
       if (isNaN(d.getTime()) || d.getFullYear() < 1950) return null;
       const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-      return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+      return new Intl.DateTimeFormat('th-TH', { day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Bangkok' }).format(d);
     };
   %>
 
@@ -212,44 +201,29 @@
                 <%= (item.institution_name || '-').substring(0, 35) %><%= (item.institution_name || '').length > 35 ? '...' : '' %>
               </div>
               <div class="step-info">
-                <small class="text-muted">ณ 1 ต.ค. 2568:</small><br>
-                <% if (item.oct1_step && item.oct1_step !== '0') { %>
+                <small class="text-muted">ก่อนเริ่มปี (<%= period.baselineLabel %>):</small><br>
+                <% if (item.oct1_step && Number(item.oct1_step) > 0) { %>
                   <span class="badge bg-info"><%= item.oct1_step_label || `ขั้นที่ ${item.oct1_step}` %></span><br>
                 <% } else { %>
                   <span class="badge bg-secondary">ยังไม่เริ่ม</span>
                 <% } %>
-                <small class="text-muted ms-2">ปัจจุบัน:</small><br>
-                <% if (item.current_max_step && item.current_max_step !== '0') { %>
+                <small class="text-muted ms-2">ณ <%= period.asOfLabel %>:</small><br>
+                <% if (item.current_max_step && Number(item.current_max_step) > 0) { %>
                   <span class="badge bg-success"><%= item.current_max_step_label || `ขั้นที่ ${item.current_max_step}` %></span><br>
                 <% } else { %>
                   <span class="badge bg-secondary">ยังไม่เริ่ม</span>
                 <% } %>
               </div>
             </th>
-            <% fiscalMonths.forEach(month => { 
-              let showDate = null;
-              let stepLabel = '';
-              
-              if (item.current_max_date && !isEmptyDate(item.current_max_date)) {
-                const d = new Date(item.current_max_date);
-                if (d.getMonth() === month.value && d.getFullYear() === month.year) {
-                  showDate = formatThai(item.current_max_date);
-                  stepLabel = item.current_max_step_label || `ขั้นที่ ${item.current_max_step}`;
-                }
-              }
+            <% fiscalMonths.forEach(month => {
+              const activities = (item.activities || []).filter(activity => activity.date.slice(0, 7) === month.key);
             %>
               <td>
-                <% if (showDate) { %>
-                  <span class="badge bg-success badge-date" title="<%= stepLabel %>">
-                    <%= showDate %>
-                  </span>
-                <% } else { %>
-                  <span class="badge bg-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                      <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
-                    </svg>
-                  </span>
-                <% } %>
+                <% if (activities.length) { %>
+                  <% activities.forEach(activity => { %>
+                    <span class="badge bg-success badge-date mb-1" title="<%= activity.label %>">ขั้น <%= activity.step %> • <%= formatThai(activity.date) %></span>
+                  <% }) %>
+                <% } else { %><span class="text-muted">—</span><% } %>
               </td>
             <% }) %>
           </tr>

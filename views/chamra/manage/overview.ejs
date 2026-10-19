@@ -1,0 +1,24 @@
+<% const manager = user && ['admin','kjs'].includes(user.mClass || user.m_class || user.level); %>
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
+    <% if (manager) { %><div class="ms-auto d-flex flex-wrap gap-2"><% [['indicators','ตัวชี้วัด'],['targets','เป้าหมาย'],['meetings','รายงานประชุม']].forEach(([key,label]) => { %><a class="btn btn-outline-primary" href="/chamra/manage/<%= key %>?year=<%= managementYear %>">จัดการ<%= label %></a><% }) %></div><% } %>
+  </div>
+  <h2 class="h5">ตัวชี้วัด ปีงบประมาณ <%= managementYear %></h2>
+  <div class="table-responsive"><table class="table table-striped"><thead><tr><th>ตัวชี้วัด</th><th>เป้าหมาย</th><th>ผลดำเนินการ</th><th>ร้อยละ</th></tr></thead><tbody>
+    <% if (!managementData.indicators.length) { %><tr><td colspan="4" class="text-muted">ยังไม่มีตัวชี้วัดสำหรับปีนี้</td></tr><% } %>
+    <% managementData.indicators.forEach(row => { %><tr><td><%= row.title %><% if (row.note) { %><div class="small text-muted"><%= row.note %></div><% } %></td><td><%= row.target_value %> <%= row.unit %></td><td><%= row.actual_value %> <%= row.unit %></td><td><%= Number(row.target_value) > 0 ? (Number(row.actual_value)/Number(row.target_value)*100).toFixed(2)+'%' : '—' %></td></tr><% }) %>
+  </tbody></table></div>
+  <p class="small text-muted mb-0">ผลดำเนินการตัวชี้วัดเป็นข้อมูลที่ผู้รับผิดชอบบันทึก</p>
+</div></div>
+<div class="row g-4 mb-4">
+  <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-body">
+    <h2 class="h5">เป้าหมายการชำระบัญชี ปี <%= managementYear %></h2>
+    <% if (!managementData.targets.length) { %><p class="text-muted">ยังไม่มีเป้าหมายสำหรับปีนี้</p><% } %>
+    <ul class="list-group list-group-flush"><% managementData.targets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
+  </div></div></div>
+  <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-body">
+    <h2 class="h5">รายงานการประชุม ปี <%= managementYear %></h2>
+    <% if (!managementData.meetings.length) { %><p class="text-muted">ยังไม่มีการประชุมสำหรับปีนี้</p><% } %>
+    <ul class="list-group list-group-flush"><% managementData.meetings.forEach(row => { %><li class="list-group-item px-0"><div><%= row.title %> ครั้งที่ <%= row.meeting_no %>/<%= row.fiscal_year %></div><div class="small text-muted"><%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.meeting_date)) %></div><% if (row.report_path) { %><a href="<%= row.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงาน PDF</a><% } else { %><span class="small text-muted">ยังไม่แนบรายงาน</span><% } %></li><% }) %></ul>
+  </div></div></div>
+</div>

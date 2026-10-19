@@ -307,6 +307,12 @@
     </style>
 
     <div class="container mt-4 chamra-wrapper">
+      <% if (typeof updated !== 'undefined' && updated) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          บันทึกการแก้ไขเรียบร้อยแล้ว
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+        </div>
+      <% } %>
       <div class="d-flex align-items-center mb-4 flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3">
           <div class="p-3 bg-primary bg-opacity-10 rounded-circle">
@@ -319,31 +325,39 @@
         </div>
 
         <div class="ms-auto d-flex gap-2 flex-wrap">
-          <a href="/chamra/summary" class="btn btn-outline-secondary rounded-pill px-3">
+          <a href="/chamra/summary?year=<%= managementYear %>" class="btn btn-outline-secondary rounded-pill px-3">
               <i class="bi bi-exclamation-triangle me-1"></i>สรุปความเคลื่อนไหว
             </a>
           <% if(user && (user.mClass==='admin' || user.mClass==='kjs' )) { %>
             <a href="/chamra/add" class="btn btn-primary rounded-pill px-3">
-              <i class="bi bi-plus-lg me-1"></i>เพิ่ม Chamra
+              <i class="bi bi-plus-lg me-1"></i>เพิ่มข้อมูลชำระบัญชี
             </a>
-            <a href="/chamra/poblem" class="btn btn-outline-secondary rounded-pill px-3">
-              <i class="bi bi-exclamation-triangle me-1"></i>ปัญหา
+            <a href="/chamra/poblem?year=<%= managementYear %>" class="btn btn-outline-secondary rounded-pill px-3">
+              <i class="bi bi-exclamation-triangle me-1"></i>บันทึกผลและปัญหา
             </a>
           <% } %>
           <a href="/chamra/process" class="btn btn-outline-info rounded-pill px-3">
-            <i class="bi bi-diagram-3 me-1"></i>กระบวนการ
+            <i class="bi bi-diagram-3 me-1"></i>ความก้าวหน้า 10 ขั้นตอน
           </a>
-            <a href="/chamra/show_all" class="btn btn-outline-danger rounded-pill px-3">
+            <a href="/chamra/show_all?year=<%= managementYear %>" class="btn btn-outline-danger rounded-pill px-3">
             <!-- insert icon document -->
 
               <i class="bi btn-info me-1"></i>ประชุมชำระบัญชี
           </a>
           <button id="exportChamraBtn" class="btn btn-outline-success rounded-pill px-3">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>ดาวน์โหลด PDF
           </button>
         </div>
       </div>
 
+      <%- include('manage/fiscal-filter') %>
+      <% if (managementData) { %>
+        <%- include('manage/overview') %>
+      <% } else { %>
+        <% if (user && ['admin', 'kjs'].includes(user.mClass || user.m_class || user.level)) { %>
+          <div class="alert alert-info">แบบฟอร์มใหม่พร้อมใช้งานหลังติดตั้งตารางฐานข้อมูล กรุณารัน migration 20261019_create_chamra_management.sql</div>
+        <% } %>
+      <% if (managementYear === 2569) { %>
       <div class="row g-4 mb-4">
         <div class="col-12">
           <div class="table-responsive p-2">
@@ -493,6 +507,9 @@
           </div>
         </div>
       </div>
+      <% } else { %><div class="alert alert-light border">ยังไม่มีข้อมูลตัวชี้วัด เป้าหมาย และรายงานประชุมปีงบประมาณ <%= managementYear %></div><% } %>
+      <% } %>
+
 
       
 
@@ -506,22 +523,10 @@
                 <div class="p-2 bg-success bg-opacity-10 rounded-circle me-3">
                   <i class="bi bi-check-circle text-success fs-5"></i>
                 </div>
-                <h5 class="mb-0 fw-semibold">สถาบันที่ถอนชื่อแล้ว (ขั้นที่ 9 ขึ้นไป)</h5>
+                <h5 class="mb-0 fw-semibold">สถาบันที่ถอนชื่อในปีงบประมาณ <%= managementYear %></h5>
               </div>
               <div class="row g-3" id="withdrawnInstitutions">
-                <% const withdrawnInstitutions=[]; data.forEach((c)=> {
-                  const processDates = [ c.pr_s1, c.pr_s2, c.pr_s3, c.pr_s4, c.pr_s5, c.pr_s6, c.pr_s7, c.pr_s8,
-                  c.pr_s9, c.pr_s10 ];
-                  let latestStepNumber = 0;
-                  for (let i = processDates.length - 1; i >= 0; i--) {
-                  if (function(v) {
-                  if(!v) return false; if(v === '0000-00-00') return false; if(/^1899-11-30/.test(v)) return false;
-                  const d = new Date(v); if(isNaN(d.getTime())) return false; if(d.getFullYear() < 1950) return false;
-                    return true; }(processDates[i])) { latestStepNumber=i + 1; break; } } if (latestStepNumber>= 9) {
-                    withdrawnInstitutions.push(c);
-                    }
-                    });
-                    %>
+                <% const withdrawnInstitutions = withdrawalRows; %>
                     <% if (withdrawnInstitutions.length> 0) { %>
                       <% withdrawnInstitutions.forEach((institution, index)=> { %>
                         <div class="col-md-6 col-lg-4">
@@ -555,7 +560,7 @@
                             <div class="col-12">
                               <div class="text-center py-4">
                                 <i class="bi bi-inbox fs-3 text-muted mb-2 d-block"></i>
-                                <p class="text-muted mb-0">ยังไม่มีสถาบันที่ถอนชื่อ (ขั้นที่ 9 ขึ้นไป)</p>
+                                <p class="text-muted mb-0">ยังไม่มีสถาบันที่ถอนชื่อในช่วงปีงบประมาณที่เลือก</p>
                               </div>
                             </div>
                             <% } %>
@@ -564,7 +569,7 @@
           </div>
         </div>
       </div>
-      <!-- สถาบันที่มีการเคลื่อนไหว ณ 1 ต.ค. 2568 -->
+      <!-- ความเคลื่อนไหวตามปีงบประมาณที่เลือก -->
       <div class="row g-4 mb-4">
         <div class="col-12">
           <div class="card border-0 shadow-sm">
@@ -574,7 +579,7 @@
                   <i class="bi bi-graph-up-arrow text-warning fs-5"></i>
                 </div>
                 <div class="flex-grow-1">
-                  <h5 class="mb-0 fw-semibold">สถาบันที่มีการเคลื่อนไหว ตั้งแต่วันที่ 1 ตุลาคม 2568</h5>
+                  <h5 class="mb-0 fw-semibold">สถาบันที่มีการเคลื่อนไหว ปีงบประมาณ <%= managementYear %></h5>
                   <div class="small text-muted">แสดงสถาบันที่มี process ตั้งแต่วันดังกล่าวเป็นต้นมา</div>
                   <div class="small fw-semibold text-dark mt-1">
                     สรุป: สหกรณ์ <%= octoberMovementSummary?.coop || 0 %> แห่ง และกลุ่มเกษตรกร <%= octoberMovementSummary?.farmer || 0 %> แห่ง
@@ -587,7 +592,7 @@
                       กลุ่มเกษตรกร <%= octoberMovementSummary?.farmer || 0 %> แห่ง
                     </span>
                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
-                      ถอนชื่อปีนี้ <%= withdrawnThisYearSummary?.total || 0 %> แห่ง
+                      ถอนชื่อปี <%= managementYear %> จำนวน <%= withdrawnThisYearSummary?.total || 0 %> แห่ง
                     </span>
                   </div>
                 </div>
@@ -618,15 +623,15 @@
                                 <div class="small text-muted mb-2">รหัสสถาบัน: <%= item.institution_code || '-' %></div>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
                                   <span class="badge bg-info text-dark">
-                                    ขั้น ณ 1 ต.ค. 2568: <%= item.oct1_step_number || 0 %>
+                                    ขั้นก่อนเริ่มปีงบประมาณ: <%= item.oct1_step_number || 0 %>
                                   </span>
                                   <span class="badge bg-primary">
-                                    ขั้นล่าสุด: <%= item.current_max_step_number || 0 %>
+                                    ขั้น ณ วันรายงาน: <%= item.current_max_step_number || 0 %>
                                   </span>
                                 </div>
                                 <div class="small text-muted">
-                                  <div>วันที่อ้างอิง: <%= formatThaiDate(item.oct1_date) %></div>
-                                  <div>วันที่เคลื่อนไหวล่าสุด: <%= formatThaiDate(item.current_max_date) %></div>
+                                  <div>วันที่ขั้นก่อนเริ่มปี: <%= formatThaiDate(item.oct1_date) %></div>
+                                  <div>วันที่ขั้น ณ วันรายงาน: <%= formatThaiDate(item.current_max_date) %></div>
                                 </div>
                               </div>
                             </div>
@@ -638,7 +643,7 @@
                 <% } else { %>
                   <div class="text-center py-4 text-muted">
                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                    ไม่พบสถาบันที่มีการเคลื่อนไหว ตั้งแต่วันที่ 1 ตุลาคม 2568
+                    ไม่พบสถาบันที่มีการเคลื่อนไหว ปีงบประมาณ <%= managementYear %>
                   </div>
                 <% } %>
               </div>
@@ -778,7 +783,7 @@
         const btn = document.getElementById('exportChamraBtn');
         btn.disabled = true; const original = btn.textContent; btn.textContent = 'กำลังส่งออก...';
         try {
-          const resp = await fetch('/chamra/export/pdf', { method: 'POST' });
+          const resp = await fetch('/chamra/export/pdf?year=<%= managementYear %>', { method: 'POST' });
           if (!resp.ok) throw new Error('Export failed');
           const blob = await resp.blob();
           const url = URL.createObjectURL(blob);

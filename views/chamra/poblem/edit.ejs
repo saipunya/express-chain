@@ -30,14 +30,14 @@
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="po_year" class="form-label fw-bold">ปี</label>
+                <label for="po_year" class="form-label fw-bold">ปีงบประมาณ พ.ศ.</label>
                 <input
                   type="number"
                   name="po_year"
                   id="po_year"
                   class="form-control"
                   min="2500"
-                  max="2700"
+                  max="2800"
                   value="<%= poblem.po_year %>"
                   required>
               </div>
@@ -76,7 +76,7 @@
             </div>
 
             <div class="d-flex justify-content-between gap-2 mt-4">
-              <a href="/chamra/poblem" class="btn btn-outline-secondary">ยกเลิก</a>
+              <a href="/chamra/poblem?year=<%= poblem.po_year %>" class="btn btn-outline-secondary">ยกเลิก</a>
               <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
             </div>
           </form>

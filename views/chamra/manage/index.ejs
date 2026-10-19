@@ -1,0 +1,33 @@
+<%- include('../../partials/header') %>
+<div class="container py-4">
+  <a href="/chamra?year=<%= year %>" class="btn btn-outline-secondary mb-3">← กลับภาพรวมชำระบัญชี</a>
+  <h1 class="h3">จัดการ<%= types[type].label %></h1>
+  <p class="text-muted"><%= period.startLabel %> – <%= period.endLabel %></p>
+  <nav class="nav nav-pills gap-2 my-3" aria-label="ประเภทข้อมูล"><% Object.entries(types).forEach(([key,config]) => { %><a class="nav-link <%= key === type ? 'active' : '' %>" href="/chamra/manage/<%= key %>?year=<%= year %>"><%= config.label %></a><% }) %></nav>
+  <% if (saved || deleted) { %><div class="alert alert-success" role="status"><%= deleted ? 'ลบรายการเรียบร้อยแล้ว' : 'บันทึกข้อมูลเรียบร้อยแล้ว' %></div><% } %>
+  <div class="d-flex gap-3 flex-wrap align-items-end mb-3">
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-end"><div><%- include('year-select', { selectId:'year' }) %></div><button class="btn btn-outline-primary">แสดงข้อมูล</button><% if (year > 2500) { %><a class="btn btn-outline-secondary" href="?year=<%= year - 1 %>">← ปีก่อนหน้า</a><% } %><% if (typeof currentYear !== 'undefined' && year !== currentYear) { %><a class="btn btn-outline-secondary" href="?year=<%= currentYear %>">กลับปีปัจจุบัน</a><% } %></form>
+    <a class="btn btn-primary ms-auto" href="/chamra/manage/<%= type %>/add?year=<%= year %>">+ เพิ่ม<%= types[type].label %></a>
+  </div>
+  <div class="table-responsive"><table class="table table-striped align-middle">
+    <thead><tr><th>รายการ</th><th>รายละเอียด</th><th>จัดการ</th></tr></thead>
+    <tbody>
+      <% if (!rows.length) { %><tr><td colspan="3" class="text-center text-muted py-4">ยังไม่มีข้อมูลปี <%= year %> กดปุ่มเพิ่มเพื่อเริ่มบันทึก</td></tr><% } %>
+      <% rows.forEach(row => { %>
+        <tr><td>
+          <% if (type === 'targets') { %><%= row.c_name || row.c_code %><% } else { %><%= row.title %><% } %>
+          <% if (type === 'meetings') { %><div class="small text-muted">ครั้งที่ <%= row.meeting_no %>/<%= row.fiscal_year %></div><% } %>
+        </td><td>
+          <% if (type === 'indicators') { %>เป้าหมาย <%= row.target_value %> / ผล <%= row.actual_value %> <%= row.unit %><div class="small text-muted"><%= Number(row.target_value) > 0 ? (Number(row.actual_value) / Number(row.target_value) * 100).toFixed(2) + '%' : '—' %></div><% } %>
+          <% if (type === 'targets') { %><%= targetTypes[row.target_type] %><div class="small text-muted"><%= row.responsible || 'ยังไม่ระบุผู้รับผิดชอบ' %></div><% } %>
+          <% if (type === 'meetings') { %><%= new Intl.DateTimeFormat('th-TH', { dateStyle:'medium', timeZone:'Asia/Bangkok' }).format(new Date(row.meeting_date)) %><br><% if (row.report_path) { %><a href="<%= row.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงาน PDF</a><% } else { %><span class="text-muted">ยังไม่แนบรายงาน</span><% } %><% } %>
+          <% if (row.note) { %><div class="small text-muted" style="white-space:pre-wrap"><%= row.note %></div><% } %>
+        </td><td><div class="d-flex gap-2">
+          <a href="/chamra/manage/<%= type %>/<%= row.id %>/edit" class="btn btn-sm btn-outline-primary">แก้ไข</a>
+          <form method="post" action="/chamra/manage/<%= type %>/<%= row.id %>/delete" onsubmit="return confirm('ต้องการลบรายการนี้หรือไม่?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-sm btn-outline-danger">ลบ</button></form>
+        </div></td></tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+</div>
+<%- include('../../partials/footer') %>

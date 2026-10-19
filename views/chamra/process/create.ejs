@@ -5,11 +5,11 @@
       <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
           <h5 class="mb-0 d-flex align-items-center gap-2">
-            <span class="fs-5">🧩</span> เพิ่ม Chamra Process
+            <span class="fs-5">🧩</span> เพิ่มความก้าวหน้าการชำระบัญชี
           </h5>
           <a href="/chamra/process" class="btn btn-sm btn-outline-light">← กลับ</a>
         </div>
-        <form method="POST" action="/chamra/process/add" novalidate>
+        <form method="POST" action="/chamra/process/add">
           <div class="card-body">
             <% if (error) { %>
               <div class="alert alert-danger py-2 px-3"><%= error %></div>
@@ -27,17 +27,17 @@
             <div class="border rounded p-3 mb-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <strong class="small text-uppercase text-secondary">ขั้นตอน (ถ้าไม่มี ปล่อยว่าง)</strong>
-                <button type="button" class="btn btn-xs btn-outline-secondary btn-sm" onclick="fillToday()">เติมวันนี้ที่ว่าง</button>
+
               </div>
               <div class="row g-2">
                 <% for (let i=1;i<=10;i++){ const k='pr_s'+i; %>
                   <div class="col-6 col-md-4 col-lg-3">
-                    <label class="form-label small mb-1">S<%= i %></label>
+                    <label class="form-label small mb-1"><%= i %>. <%= ['ประกาศผู้ชำระบัญชี', 'รับมอบทรัพย์สิน', 'ส่งงบ ม.80', 'ผู้สอบบัญชีรับรองงบ', 'ประชุมใหญ่อนุมัติงบ', 'จัดการทรัพย์สิน/หนี้สิน', 'ส่งรายงานการชำระบัญชี', 'ผู้สอบบัญชีรับรองรายงาน', 'ถอนชื่อออกจากทะเบียน', 'ส่งมอบเอกสารหลักฐาน'][i-1] %></label>
                     <input type="date" name="pr_s<%= i %>" class="form-control form-control-sm" value="<%= old[k] || '' %>">
                   </div>
                 <% } %>
               </div>
-              <div class="form-text mt-2">ถ้าไม่ทราบวันที่ให้เว้นว่าง ระบบจะบันทึกเป็น 0000-00-00</div>
+              <div class="form-text mt-2">ถ้าไม่ทราบวันที่ให้เว้นว่าง ระบบจะยังไม่นับว่าดำเนินการขั้นนั้นแล้ว</div>
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
@@ -53,15 +53,5 @@
     </div>
   </div>
 </div>
-<script>
-function fillToday(){
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth()+1).padStart(2,'0');
-  const d = String(today.getDate()).padStart(2,'0');
-  document.querySelectorAll('input[type="date"]').forEach(el=>{
-    if(!el.value) el.value = `${y}-${m}-${d}`;
-  });
-}
-</script>
+
 <%- include('../../partials/footer.ejs') %>

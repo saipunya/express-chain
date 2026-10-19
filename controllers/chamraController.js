@@ -1,3 +1,7 @@
+const { snapshotProcesses } = require('../services/chamraSummaryService');
+const { dateKey, resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
+const ChamraManagement = require('../models/chamraManagementModel');
+const { TARGET_TYPES } = require('../services/chamraManagementService');
 const Chamra = require('../models/chamraModel'); // unified model
 const db = require('../config/db');
 const PdfPrinter = require('pdfmake');
@@ -39,51 +43,6 @@ function isValidProcessDate(value) {
   if (/^1899-11-30/.test(value)) return false;
   const date = new Date(value);
   return !Number.isNaN(date.getTime()) && date.getFullYear() >= 1950;
-}
-
-function getBangkokDateKey(value = new Date()) {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Bangkok',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).formatToParts(date);
-  const lookup = {};
-  parts.forEach((part) => {
-    if (part.type !== 'literal') {
-      lookup[part.type] = part.value;
-    }
-  });
-  if (!lookup.year || !lookup.month || !lookup.day) return null;
-  return `${lookup.year}-${lookup.month}-${lookup.day}`;
-}
-
-function getLatestProcessDateKey(record) {
-  const processDates = [
-    record?.pr_s1, record?.pr_s2, record?.pr_s3, record?.pr_s4, record?.pr_s5,
-    record?.pr_s6, record?.pr_s7, record?.pr_s8, record?.pr_s9, record?.pr_s10
-  ];
-  for (let i = processDates.length - 1; i >= 0; i -= 1) {
-    if (isValidProcessDate(processDates[i])) {
-      return getBangkokDateKey(processDates[i]);
-    }
-  }
-  return null;
-}
-
-function getLatestProcessStepNumber(record) {
-  const processDates = [
-    record?.pr_s1, record?.pr_s2, record?.pr_s3, record?.pr_s4, record?.pr_s5,
-    record?.pr_s6, record?.pr_s7, record?.pr_s8, record?.pr_s9, record?.pr_s10
-  ];
-  for (let i = processDates.length - 1; i >= 0; i -= 1) {
-    if (isValidProcessDate(processDates[i])) {
-      return i + 1;
-    }
-  }
-  return 0;
 }
 
 function buildOct1MovementSummary(rows = []) {
@@ -191,6 +150,29 @@ function buildShowAllSections(rows = []) {
   ];
 }
 
+async function getShowAllSections(rows, year) {
+  let targets;
+  try {
+    targets = await ChamraManagement.list('targets', year);
+  } catch (err) {
+    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
+    if (year === 2569) return buildShowAllSections(rows).map((section, index) => ({ ...section, color: ['success', 'primary', 'warning'][index], icon: 'bi-building', description: 'เป้าหมายเดิมปีงบประมาณ 2569' }));
+    targets = [];
+  }
+  const byCode = new Map(rows.map(row => [String(row.c_code || row.de_code), row]));
+  const assigned = new Set(targets.map(target => String(target.c_code)));
+  const sections = [
+    ['withdrawal', 'group-withdrawal', 'กลุ่มที่ 1 เป้าหมายถอนชื่อ', 'success'],
+    ['upgrade', 'group-upgrade', 'กลุ่มที่ 2 ยกระดับขั้นตอน', 'primary'],
+    ['litigation', 'group-case', 'กลุ่มที่ 3 ติดตามความเคลื่อนไหวคดี', 'warning']
+  ].map(([type, id, title, color]) => ({
+    id, title, color, icon: 'bi-building', description: `เป้าหมายปีงบประมาณ ${year}`,
+    rows: targets.filter(target => target.target_type === type).map(target => byCode.get(String(target.c_code))).filter(Boolean)
+  }));
+  sections.push({ id: 'group-unassigned', title: 'สถาบันที่ยังไม่ได้กำหนดเป้าหมาย', color: 'secondary', icon: 'bi-building', description: `ยังไม่ได้กำหนดเป้าหมายในปีงบประมาณ ${year}`, rows: rows.filter(row => !assigned.has(String(row.c_code || row.de_code))) });
+  return sections;
+}
+
 function getLatestProblemByCode(problemRows = []) {
   return (Array.isArray(problemRows) ? problemRows : []).reduce((acc, item) => {
     const code = item.po_code;
@@ -243,6 +225,8 @@ function filterShowAllSections(sections, query) {
 
 // แสดงทั้งหมด
 chamraController.list = async (req, res) => {
+  const managementYear = resolveFiscalYear(req.query.year);
+  const period = fiscalPeriod(managementYear);
   const data = await Chamra.getAll();
   
   // ดึงข้อมูลสมาชิกจากตาราง member3 เพื่อแสดงรูปภาพ
@@ -308,17 +292,19 @@ chamraController.list = async (req, res) => {
     coop: 0,
     farmer: 0
   };
-  let withdrawnThisYearSummary = {
-    total: 0,
-    coop: 0,
-    farmer: 0
-  };
+  const withdrawalRows = data.filter(item => {
+    const date = dateKey(item.pr_s9);
+    return period.hasStarted && date && date >= period.startDate && date <= period.asOfDate;
+  });
+  const withdrawnThisYearSummary = withdrawalRows.reduce((acc, item) => {
+    acc.total += 1;
+    const kind = getInstitutionKindByCode(item.c_code || item.institution_code);
+    if (kind === 'coop') acc.coop += 1;
+    if (kind === 'farmer') acc.farmer += 1;
+    return acc;
+  }, { total: 0, coop: 0, farmer: 0 });
   try {
-    const todayKey = getBangkokDateKey();
-    const fiscalStartKey = '2025-10-01';
-    const movementRows = todayKey
-      ? await Chamra.getProcessesInDateRange(fiscalStartKey, todayKey)
-      : await Chamra.getProcessesInDateRange(fiscalStartKey, fiscalStartKey);
+    const movementRows = period.hasStarted ? await Chamra.getProcessesInDateRange(period.startDate, period.asOfDate) : [];
     octoberMovement = buildOct1MovementSummary(movementRows || []);
     octoberMovementSummary = octoberMovement.reduce((acc, item) => {
       acc.total += 1;
@@ -327,37 +313,34 @@ chamraController.list = async (req, res) => {
       if (kind === 'farmer') acc.farmer += 1;
       return acc;
     }, octoberMovementSummary);
-
-    withdrawnThisYearSummary = (Array.isArray(data) ? data : []).reduce((acc, item) => {
-      const latestStepNumber = getLatestProcessStepNumber(item);
-      if (latestStepNumber < 9) return acc;
-      const latestDateKey = getLatestProcessDateKey(item);
-      if (!latestDateKey) return acc;
-      if (latestDateKey < fiscalStartKey) return acc;
-      if (todayKey && latestDateKey > todayKey) return acc;
-      acc.total += 1;
-      const kind = getInstitutionKindByCode(item.c_code || item.institution_code);
-      if (kind === 'coop') acc.coop += 1;
-      if (kind === 'farmer') acc.farmer += 1;
-      return acc;
-    }, withdrawnThisYearSummary);
   } catch (error) {
     console.error('Error fetching October 1 movement summary:', error);
   }
 
-  res.render('chamra/list', { data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
+  let managementData = null;
+  try {
+    const [indicators, targets, meetings] = await Promise.all(['indicators', 'targets', 'meetings'].map(type => ChamraManagement.list(type, managementYear)));
+    managementData = { indicators, targets, meetings };
+  } catch (err) {
+    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
+  }
+  res.render('chamra/list', { ...fiscalNavigation(managementYear, await ChamraManagement.availableYears()), period, withdrawalRows, managementYear, managementData, managementTargetTypes: TARGET_TYPES, updated: req.query.updated === '1', data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
 };
 
 chamraController.showAll = async (req, res) => {
   try {
-    const data = await Chamra.getAll();
-    const problemYear = 2569;
+    const problemYear = resolveFiscalYear(req.query.year);
+    const period = fiscalPeriod(problemYear);
+    const data = snapshotProcesses(await Chamra.getAll(), period.asOfDate);
     const problemRows = await Chamra.getPoblemsByYear(problemYear);
     const problemsByCode = getLatestProblemListByCode(problemRows);
 
     res.render('chamra/show_all', {
       data,
       problemYear,
+      ...fiscalNavigation(problemYear, await ChamraManagement.availableYears()),
+      period,
+      sections: await getShowAllSections(data, problemYear),
       problemsByCode,
       q: req.query.q || ''
     });
@@ -369,11 +352,12 @@ chamraController.showAll = async (req, res) => {
 
 chamraController.exportShowAllPdf = async (req, res) => {
   try {
-    const problemYear = 2569;
-    const data = await Chamra.getAll();
+    const problemYear = resolveFiscalYear(req.query.year);
+    const period = fiscalPeriod(problemYear);
+    const data = snapshotProcesses(await Chamra.getAll(), period.asOfDate);
     const problemRows = await Chamra.getPoblemsByYear(problemYear);
     const latestProblemByCode = getLatestProblemByCode(problemRows);
-    const sections = filterShowAllSections(buildShowAllSections(data), req.query.q);
+    const sections = filterShowAllSections(await getShowAllSections(data, problemYear), req.query.q);
     const printedByRaw = await getUserDisplayName(req);
     const printedBy = printedByRaw || 'ผู้ใช้งานทั่วไป';
     const generatedAt = new Date();
@@ -497,8 +481,8 @@ chamraController.exportShowAllPdf = async (req, res) => {
         tableHeader: { bold: true, color: '#fff' }
       },
       content: [
-        { text: `ข้อมูล ปี ${problemYear} ล่าสุดจากผลการชำระบัญชี`, style: 'title' },
-        { text: req.query.q ? `คำค้น: ${req.query.q}` : 'แสดงข้อมูลทุกกลุ่มตามหน้า show_all', style: 'subtitle' },
+        { text: `ข้อมูลปีงบประมาณ ${problemYear} (${period.startLabel} – ${period.endLabel})`, style: 'title' },
+        { text: `ข้อมูลขั้นตอน ณ ${period.asOfLabel}${req.query.q ? ` | คำค้น: ${req.query.q}` : ''}`, style: 'subtitle' },
         {
           text: `รวม ${totalRows} รายการ | พบข้อมูลปี ${problemYear} จำนวน ${totalWithProblem} รายการ | ไม่มีข้อมูลปี ${problemYear} จำนวน ${totalRows - totalWithProblem} รายการ`,
           style: 'summary'
@@ -519,8 +503,9 @@ chamraController.exportShowAllPdf = async (req, res) => {
 };
 
 chamraController.listPob = async (req, res) => {
-  const poblems = await Chamra.getAllPob();
-  res.render('chamra/poblem/list', { poblems });
+  const year = resolveFiscalYear(req.query.year);
+  const poblems = await Chamra.getPoblemsByYear(year);
+  res.render('chamra/poblem/list', { ...fiscalNavigation(year, await ChamraManagement.availableYears()), poblems, year, period: fiscalPeriod(year) });
 };
 
 // แสดง form เพิ่ม
@@ -528,7 +513,7 @@ chamraController.addForm = async (req, res) => {
   const [rows] = await db.query(
     "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก'"
   );
-  res.render('chamra/create', { coopList: rows, user: req.user || null });
+  res.render('chamra/create', { coopList: rows, user: req.session?.user || null });
 };
 
 // แสดง form แก้ไข
@@ -552,7 +537,7 @@ chamraController.createForm = async (req, res) => {
   const [rows] = await db.query(
     "SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก'"
   );
-  res.render('chamra/create', { coopList: rows, user: req.user || null });
+  res.render('chamra/create', { coopList: rows, user: req.session?.user || null });
 };
 
 // บันทึกเพิ่ม
@@ -573,7 +558,6 @@ chamraController.create = async (req, res, next) => {
       return res.status(400).send('de_code and de_case are required');
     }
 
-    const normalizedDate = (de_savedate && /^\d{4}-\d{2}-\d{2}$/.test(de_savedate)) ? de_savedate : new Date();
 
     await Chamra.create({
       de_code,
@@ -582,8 +566,8 @@ chamraController.create = async (req, res, next) => {
       de_comdate,
       de_person,
       de_maihed,
-      de_saveby: de_saveby || (req.user && (req.user.fullname || req.user.username)) || 'system',
-      de_savedate: normalizedDate
+      de_saveby: req.session?.user?.fullname || req.session?.user?.username || 'system',
+      de_savedate: new Date()
     });
 
     return res.redirect('/chamra');
@@ -599,9 +583,18 @@ chamraController.create = async (req, res, next) => {
 // บันทึกแก้ไข
 chamraController.update = async (req, res) => {
   const c_code = req.params.c_code;
-  const { active, detail, process } = req.body;
-  await Chamra.update(c_code, { active, detail, process });
-  res.redirect('/chamra');
+  const existing = await Chamra.getByCode(c_code);
+  if (!existing) return res.status(404).send('ไม่พบข้อมูลที่ต้องการแก้ไข');
+  const fields = ['de_case', 'de_comno', 'de_comdate', 'de_person', 'de_maihed'];
+  const payload = Object.fromEntries(fields.map(key => [key, String(req.body[key] || '').trim()]));
+  if (!payload.de_case || (payload.de_comdate && !/^\d{4}-\d{2}-\d{2}$/.test(payload.de_comdate))) {
+    return res.status(400).render('chamra/edit', {
+      chamra: { ...existing, ...payload },
+      error: 'กรุณาระบุกรณีและวันที่คำสั่งให้ถูกต้อง'
+    });
+  }
+  await Chamra.update(c_code, payload);
+  res.redirect('/chamra?updated=1');
 };
 
 // ลบ
@@ -614,7 +607,8 @@ chamraController.delete = async (req, res) => {
 // แสดงฟอร์มเพิ่มปัญหา
 chamraController.createFormPob = async (req, res) => {
   // ดึงปีและครั้งประชุมจาก query (หรือกำหนดค่าตามต้องการ)
-  const { po_year, po_meeting } = req.query;
+  const po_year = resolveFiscalYear(req.query.po_year || req.query.year);
+  const po_meeting = req.query.po_meeting;
 
   // ดึงรายชื่อสถาบันทั้งหมด
   const [coopList] = await db.query('SELECT c_code, c_name FROM active_coop WHERE c_status = "เลิก"');
@@ -646,6 +640,8 @@ chamraController.createPob = async (req, res) => {
     po_savedate
   } = req.body;
 
+  if (!/^\d{4}$/.test(String(po_year || '')) || Number(po_year) < 2500 || Number(po_year) > 2800) return res.status(400).send('กรุณาระบุปีงบประมาณ พ.ศ. ระหว่าง 2500–2800');
+
   // เช็คซ้ำ
   const [rows] = await db.query(
     'SELECT COUNT(*) as total FROM chamra_poblem WHERE po_code = ? AND po_year = ? AND po_meeting = ?',
@@ -670,9 +666,9 @@ chamraController.createPob = async (req, res) => {
         (po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
 
-      [po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate]
+      [po_code, po_year, po_meeting, po_detail, po_problem, req.session?.user?.fullname || req.session?.user?.username || 'system', new Date()]
     );
-    res.redirect('/chamra/poblem');
+    res.redirect(`/chamra/poblem?year=${encodeURIComponent(po_year)}`);
   } catch (err) {
     res.status(500).send('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
   }
@@ -711,7 +707,7 @@ chamraController.updatePoblem = async (req, res) => {
     po_problem
   } = req.body;
 
-  if (!po_code || !po_year || !po_meeting || !po_detail || !po_problem) {
+  if (!po_code || !/^\d{4}$/.test(String(po_year || '')) || Number(po_year) < 2500 || Number(po_year) > 2800 || !po_meeting || !po_detail || !po_problem) {
     return res.status(400).send('กรุณากรอกข้อมูลให้ครบถ้วน');
   }
 
@@ -748,7 +744,7 @@ chamraController.updatePoblem = async (req, res) => {
     }
 
     const savedBy =
-      (req.user && (req.user.fullname || req.user.username)) ||
+      (req.session?.user && (req.session.user.fullname || req.session.user.username)) ||
       existing.po_saveby ||
       'system';
 
@@ -762,7 +758,7 @@ chamraController.updatePoblem = async (req, res) => {
       po_savedate: new Date()
     });
 
-    return res.redirect('/chamra/poblem');
+    return res.redirect(`/chamra/poblem?year=${encodeURIComponent(po_year)}`);
   } catch (error) {
     console.error('Error updating Chamra Poblem:', error);
     return res.status(500).send('เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
@@ -798,8 +794,9 @@ chamraController.getAvailableCoop = async (req, res) => {
 chamraController.deletePoblem = async (req, res) => {
   const { po_id } = req.params;
   try {
+    const existing = await Chamra.getPoblemById(po_id);
     await db.query('DELETE FROM chamra_poblem WHERE po_id = ?', [po_id]);
-    res.redirect('/chamra/poblem'); // Redirect to the problem list page after deletion
+    res.redirect(`/chamra/poblem?year=${existing?.po_year || resolveFiscalYear(req.query.year)}`); // Redirect to the problem list page after deletion
   } catch (error) {
     console.error('Error deleting Chamra Poblem:', error);
     res.status(500).send('Internal Server Error');
@@ -957,7 +954,8 @@ function showStepServer(n) {
 
 chamraController.exportChamraPdf = async (req, res) => {
   try {
-    const data = await Chamra.getAll();
+    const period = fiscalPeriod(resolveFiscalYear(req.query.year));
+    const data = snapshotProcesses(await Chamra.getAll(), period.asOfDate);
     const fonts = {
       THSarabunNew: {
         normal: path.join(__dirname, '../fonts/THSarabunNew.ttf'),
@@ -1062,7 +1060,8 @@ chamraController.exportChamraPdf = async (req, res) => {
         tableTitle: { fontSize:16, bold:true, margin:[0,6,0,6] }
       },
       content: [
-        { text: 'สรุปสถานะการชำระบัญชีสหกรณ์และกลุ่มเกษตรกร', style:'summaryTitle', margin:[0,0,0,4] },
+        { text: `สรุปสถานะการชำระบัญชี ปีงบประมาณ ${period.year}`, style:'summaryTitle', margin:[0,0,0,4] },
+        { text: `${period.startLabel} – ${period.endLabel} | ข้อมูลขั้นตอน ณ ${period.asOfLabel}`, margin:[0,0,0,8] },
         { columns:[
           { width:'50%', stack:[ { text:`จำนวนสถาบันทั้งหมด: ${data.length}`, margin:[0,0,0,4] }, { text:'สรุปขั้นล่าสุด', bold:true, margin:[0,0,0,2] }, { ul: stepSummaryList.map(s=> s.text+' แห่ง') } ] },
           { width:'50%', stack:[ { text:`วันที่สร้างรายงาน: ${formatThaiDateTime(new Date())}` }, { text:`พิมพ์โดย: ${printedBy}` }, { text: viewerIsAuthenticated? 'โหมดผู้ใช้ระบบ (ไม่มีลายน้ำ)':'โหมดผู้เยี่ยมชม (มีลายน้ำ)', italics:true, color:'#555' } ] }
@@ -1241,17 +1240,19 @@ chamraController.process = async (req, res) => {
 
 // New route for summary table of processes in date range
 chamraController.getChamraSummary = async (req, res) => {
-  const startDate = '2025-10-01'; // October 1, 2025
-  const endDate = '2026-09-30'; // September 30, 2026
+  const year = resolveFiscalYear(req.query.year);
+  const period = fiscalPeriod(year);
+  const { startDate, endDate } = period;
   try {
-    let data = await Chamra.getProcessesInDateRange(startDate, endDate);
+    let data = period.hasStarted ? await Chamra.getProcessesInDateRange(startDate, period.asOfDate) : [];
     // Format step labels for display in summary view
     data = data.map(item => ({
       ...item,
+      activities: (item.activities || []).map(activity => ({ ...activity, label: showStepServer(activity.step) })),
       oct1_step_label: item.oct1_step ? showStepServer(item.oct1_step) : null,
       current_max_step_label: item.current_max_step ? showStepServer(item.current_max_step) : null
     }));
-    res.render('chamra/summary', { data, startDate, endDate });
+    res.render('chamra/summary', { ...fiscalNavigation(year, await ChamraManagement.availableYears()), data, year, period, startDate, endDate });
   } catch (error) {
     console.error('Error fetching summary data:', error);
     res.status(500).send('Error generating summary');

@@ -1,0 +1,97 @@
+<%- include('../../partials/header') %>
+<div class="container py-4" style="max-width:900px">
+  <a class="btn btn-outline-secondary mb-3" href="/chamra/manage/<%= type %>?year=<%= record.fiscal_year %>">← กลับรายการ</a>
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-3"><%= record.id ? 'แก้ไข' : 'เพิ่ม' %><%= config.label %></h1>
+      <% if (errors.length) { %><div class="alert alert-danger" role="alert"><ul class="mb-0"><% errors.forEach(error => { %><li><%= error %></li><% }) %></ul></div><% } %>
+      <form method="post" action="/chamra/manage/<%= type %>/<%= record.id ? record.id + '/edit' : 'add' %>" <%- type === 'meetings' ? 'enctype="multipart/form-data"' : '' %>>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label class="form-label" for="fiscal_year">ปีงบประมาณ พ.ศ. <span class="text-danger">*</span></label>
+        <input id="fiscal_year" name="fiscal_year" type="number" min="2500" max="2800" class="form-control mb-3" value="<%= record.fiscal_year %>" required>
+        <p id="fiscalPeriodHint" class="small text-muted" aria-live="polite"><%= period.startLabel %> – <%= period.endLabel %></p>
+        <% if (type === 'indicators' || type === 'meetings') { %>
+          <label class="form-label" for="title"><%= type === 'indicators' ? 'ชื่อตัวชี้วัด / เกณฑ์การวัด' : 'ชื่อการประชุม' %> <span class="text-danger">*</span></label>
+          <input id="title" name="title" maxlength="500" class="form-control mb-3" value="<%= record.title || '' %>" required>
+        <% } %>
+        <% if (type === 'indicators') { %>
+          <div class="row g-3 mb-3">
+            <% [['target_value','ค่าเป้าหมาย'],['actual_value','ผลดำเนินการ']].forEach(([key,label]) => { %>
+              <div class="col-sm-4"><label class="form-label" for="<%= key %>"><%= label %> *</label><input id="<%= key %>" name="<%= key %>" type="number" min="0" max="9999999999.99" step="0.01" value="<%= record[key] ?? '' %>" class="form-control" required></div>
+            <% }) %>
+            <div class="col-sm-4"><label class="form-label" for="unit">หน่วยนับ *</label><input id="unit" name="unit" maxlength="50" value="<%= record.unit || '' %>" class="form-control" placeholder="เช่น แห่ง" required></div>
+          </div>
+          <p class="text-muted small">ร้อยละคำนวณจากผลดำเนินการ ÷ ค่าเป้าหมาย × 100 โดยอัตโนมัติ หากเป้าหมายเป็น 0 จะแสดง — ผลดำเนินการในฟอร์มนี้เป็นค่าที่ผู้บันทึกกรอก</p>
+        <% } %>
+        <% if (type === 'targets') { %>
+          <label class="form-label" for="institutionSearch">ค้นหาสถาบัน</label>
+          <input id="institutionSearch" type="search" class="form-control mb-2" placeholder="พิมพ์ชื่อหรือรหัสเพื่อกรองรายการ">
+          <label class="form-label" for="c_code">สถาบัน *</label>
+          <select id="c_code" name="c_code" class="form-select mb-3" required><option value="">เลือกสถาบัน</option><% institutions.forEach(c => { %><option value="<%= c.c_code %>" <%= record.c_code === c.c_code ? 'selected' : '' %>><%= c.c_name %> (<%= c.c_code %>)</option><% }) %></select>
+          <label class="form-label" for="target_type">ประเภทเป้าหมาย *</label>
+          <select id="target_type" name="target_type" class="form-select mb-3" required><option value="">เลือกประเภท</option><% Object.entries(targetTypes).forEach(([key,label]) => { %><option value="<%= key %>" <%= record.target_type === key ? 'selected' : '' %>><%= label %></option><% }) %></select>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6"><label class="form-label" for="due_date">วันครบกำหนด</label><input id="due_date" name="due_date" type="date" class="form-control" value="<%= record.due_date || '' %>"></div>
+            <div class="col-sm-6"><label class="form-label" for="responsible">ผู้รับผิดชอบ</label><input id="responsible" name="responsible" maxlength="150" class="form-control" value="<%= record.responsible || '' %>"></div>
+          </div>
+        <% } %>
+        <% if (type === 'meetings') { %>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6"><label class="form-label" for="meeting_no">ประชุมครั้งที่ *</label><input id="meeting_no" name="meeting_no" type="number" min="1" max="9999" value="<%= record.meeting_no || '' %>" class="form-control" required></div>
+            <div class="col-sm-6"><label class="form-label" for="meeting_date">วันที่ประชุม *</label><input id="meeting_date" name="meeting_date" type="date" value="<%= record.meeting_date || '' %>" class="form-control" required></div>
+          </div>
+          <p class="small text-muted">เมื่อเปลี่ยนวันที่ประชุม ระบบจะเลือกปีงบประมาณตามวันที่ให้ โดยเริ่มปีใหม่วันที่ 1 ตุลาคม</p>
+          <label class="form-label" for="report">แนบรายงาน PDF (ไม่เกิน 10 MB)</label>
+          <input id="report" name="report" type="file" accept="application/pdf,.pdf" class="form-control mb-2">
+          <% if (record.report_path) { %><a href="<%= record.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงานเดิม</a><% } %>
+          <p class="small text-muted">ไม่เลือกไฟล์ใหม่จะคงไฟล์เดิมไว้ หากบันทึกไม่ผ่าน กรุณาเลือกไฟล์อีกครั้ง</p>
+        <% } %>
+        <label class="form-label" for="note"><%= type === 'meetings' ? 'สรุปมติ / รายละเอียดการประชุม' : 'รายละเอียด / หมายเหตุ' %></label>
+        <textarea id="note" name="note" maxlength="10000" rows="4" class="form-control mb-4"><%= record.note || '' %></textarea>
+        <button class="btn btn-primary" type="submit">บันทึกข้อมูล</button>
+        <a class="btn btn-outline-secondary" href="/chamra/manage/<%= type %>?year=<%= record.fiscal_year %>">ยกเลิก</a>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const yearInput = document.getElementById('fiscal_year');
+  const meetingDate = document.getElementById('meeting_date');
+  const dueDate = document.getElementById('due_date');
+  const updatePeriod = () => {
+    const year = Number(yearInput.value);
+    if (!Number.isInteger(year) || year < 2500 || year > 2800) return;
+    document.getElementById('fiscalPeriodHint').textContent = `1 ตุลาคม ${year - 1} – 30 กันยายน ${year}`;
+    if (dueDate) { dueDate.min = `${year - 544}-10-01`; dueDate.max = `${year - 543}-09-30`; }
+  };
+  yearInput.addEventListener('input', updatePeriod);
+  meetingDate?.addEventListener('change', () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate.value)) return;
+    const [year, month] = meetingDate.value.split('-').map(Number);
+    yearInput.value = year + 543 + (month >= 10 ? 1 : 0);
+    updatePeriod();
+  });
+  updatePeriod();
+  const search = document.getElementById('institutionSearch');
+  const select = document.getElementById('c_code');
+  if (search) {
+    const options = Array.from(select.options).map(o => ({text:o.text, value:o.value}));
+    search.addEventListener('input', () => {
+      const selected = select.value;
+      const query = search.value.trim().toLowerCase();
+      select.replaceChildren(...options.filter(o => !o.value || o.value === selected || o.text.toLowerCase().includes(query)).map(o => new Option(o.text, o.value, false, o.value === selected)));
+    });
+  }
+  const form = document.querySelector('form[action^="/chamra/manage/"]');
+  form.addEventListener('submit', event => {
+    const file = document.getElementById('report')?.files[0];
+    if (file && file.size > 10 * 1024 * 1024) {
+      event.preventDefault(); alert('ไฟล์ต้องมีขนาดไม่เกิน 10 MB'); return;
+    }
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true; button.textContent = 'กำลังบันทึก…';
+  });
+})();
+</script>
+<%- include('../../partials/footer') %>

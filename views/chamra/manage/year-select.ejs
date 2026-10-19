@@ -1,0 +1,5 @@
+<% const options = typeof yearOptions !== 'undefined' ? yearOptions : [{year:period.year,hasData:false}]; %>
+<label for="<%= selectId %>" class="form-label">ปีงบประมาณ พ.ศ.</label>
+<select id="<%= selectId %>" class="form-select" name="year" required>
+  <% options.forEach(option => { %><option value="<%= option.year %>" <%= option.year === period.year ? 'selected' : '' %>><%= option.year %><%= typeof currentYear !== 'undefined' && option.year === currentYear ? ' (ปีปัจจุบัน)' : '' %><%= option.hasData ? ' • มีข้อมูล' : '' %></option><% }) %>
+</select>

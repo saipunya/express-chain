@@ -40,6 +40,21 @@ function loadController(model) {
 function response() {
   return { code:200, status(code) {this.code=code;return this;}, send(body) {this.body=body;return this;}, render(view,data) {this.view=view;this.data=data;return this;}, redirect(url) {this.url=url;return this;} };
 }
+test('target institution options include both liquidation statuses', async () => {
+  const filename = path.resolve(__dirname, '../models/chamraManagementModel.js');
+  const localRequire = createRequire(filename);
+  let sql;
+  const sandbox = {
+    module:{exports:{}},
+    require:name => name === '../config/db'
+      ? {query:async query => { sql = query; return [[{c_code:'001',c_name:'ทดสอบ'}]]; }}
+      : localRequire(name)
+  };
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, {filename});
+  const rows = await sandbox.module.exports.institutions();
+  assert.deepEqual(Array.from(rows), [{c_code:'001',c_name:'ทดสอบ'}]);
+  assert.match(sql, /c_status IN \('เลิก', 'เลิก\/ชำระบัญชี'\)/);
+});
 test('management rejects forged submissions and saves validated fields with session author', async () => {
   let saved;
   const controller = loadController({save:async(...args)=>{saved=args;}});

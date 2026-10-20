@@ -50,7 +50,7 @@ module.exports = {
     return db.query(`DELETE FROM ${config(type).table} WHERE id = ?`, [id]);
   },
   async institutions() {
-    const [rows] = await db.query("SELECT c_code, c_name FROM active_coop WHERE c_status = 'เลิก' ORDER BY c_name");
+    const [rows] = await db.query("SELECT c_code, c_name FROM active_coop WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY c_name");
     return rows;
   },
   async institutionExists(code) {

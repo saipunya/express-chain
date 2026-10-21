@@ -6,7 +6,12 @@ const db = require('../config/db');
 async function main() {
   const sql = fs.readFileSync(path.join(__dirname, '../sql/migrations/20261021_create_chamra_documents.sql'), 'utf8');
   await db.query(sql);
-  console.log('Chamra documents table installed.');
+  const flags = fs.readFileSync(path.join(__dirname, '../sql/migrations/20261021_add_chamra_document_flags.sql'), 'utf8');
+  for (const statement of flags.split(';').map(s => s.trim()).filter(Boolean)) {
+    try { await db.query(statement); }
+    catch (err) { if (err.code !== 'ER_DUP_FIELDNAME') throw err; }
+  }
+  console.log('Chamra documents table and display options installed.');
 }
 main().catch(err => {
   console.error('Chamra documents migration failed:', err.code || err.message);

@@ -1,6 +1,6 @@
 const { currentFiscalYear, validDate, fiscalPeriod } = require('./chamraFiscalYear');
 const TYPES = {
-  documents: { table: 'chamra_documents', label: 'เอกสารที่เกี่ยวข้อง', fields: ['fiscal_year', 'title', 'note', 'report_path', 'original_name', 'file_size'] },
+  documents: { table: 'chamra_documents', label: 'เอกสารที่เกี่ยวข้อง', fields: ['fiscal_year', 'title', 'note', 'report_path', 'original_name', 'file_size', 'is_pinned', 'is_announcement'] },
   indicators: { table: 'chamra_indicators', label: 'ตัวชี้วัด', fields: ['fiscal_year', 'title', 'target_value', 'actual_value', 'unit', 'note'] },
   targets: { table: 'chamra_targets', label: 'เป้าหมายรายสถาบัน', fields: ['fiscal_year', 'c_code', 'target_type', 'due_date', 'note'] },
   meetings: { table: 'chamra_meetings', label: 'รายงานการประชุม', fields: ['fiscal_year', 'meeting_no', 'meeting_date', 'title', 'note', 'report_path'] }
@@ -14,6 +14,12 @@ function validate(type, body) {
   const period = errors.length ? null : fiscalPeriod(Number(data.fiscal_year));
   if ('title' in data && (!data.title || data.title.length > 500)) errors.push('กรุณาระบุชื่อไม่เกิน 500 ตัวอักษร');
   if ((data.note || '').length > 10000) errors.push('รายละเอียดต้องไม่เกิน 10,000 ตัวอักษร');
+  if (type === 'documents') {
+    for (const field of ['is_pinned', 'is_announcement']) {
+      if (!['', '0', '1'].includes(data[field])) errors.push('ตัวเลือกปักหมุดหรือประกาศไม่ถูกต้อง');
+      data[field] = data[field] === '1' ? 1 : 0;
+    }
+  }
   if (type === 'indicators') {
     for (const field of ['target_value', 'actual_value']) {
       if (!/^\d{1,10}(\.\d{1,2})?$/.test(data[field])) errors.push('เป้าหมายและผลดำเนินการต้องเป็นจำนวนตั้งแต่ 0 และมีทศนิยมไม่เกิน 2 ตำแหน่ง');

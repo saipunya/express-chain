@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS chamra_documents (
  fiscal_year SMALLINT UNSIGNED NOT NULL,
  title VARCHAR(500) NOT NULL,
  note TEXT NULL,
+ is_pinned TINYINT(1) NOT NULL DEFAULT 0,
+ is_announcement TINYINT(1) NOT NULL DEFAULT 0,
  report_path VARCHAR(500) NOT NULL,
  original_name VARCHAR(255) NOT NULL,
  file_size INT UNSIGNED NOT NULL,

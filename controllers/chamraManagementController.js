@@ -84,7 +84,7 @@ exports.save = async (req, res) => {
   if (req.uploadError) errors.push(req.uploadError);
   if (type === 'targets' && data.c_code && !await Model.institutionExists(data.c_code)) errors.push('ไม่พบสถาบันที่เลือก');
   if (type === 'documents' && !req.file && !existing?.report_path) errors.push('กรุณาแนบไฟล์เอกสาร');
-  if (type === 'documents' && req.file && !validDocument(req.file)) errors.push('กรุณาเลือกไฟล์ PDF, Word หรือ Excel ที่ถูกต้อง ขนาดไม่เกิน 10 MB');
+  if (type === 'documents' && req.file && !validDocument(req.file)) errors.push('กรุณาเลือกไฟล์ PDF, Word, Excel หรือรูปภาพ JPG, JPEG, PNG ที่ถูกต้อง ขนาดไม่เกิน 10 MB');
   if (type !== 'documents' && req.file && (req.file.buffer.subarray(0, 5).toString() !== '%PDF-' || path.extname(req.file.originalname).toLowerCase() !== '.pdf')) errors.push('กรุณาเลือกไฟล์ PDF ที่ถูกต้อง');
   if (errors.length) return renderForm(req, res, { ...existing, ...data, id }, errors, 400);
   let uploadedPath;

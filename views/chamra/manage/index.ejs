@@ -16,6 +16,7 @@
       <% rows.forEach(row => { %>
         <tr><td>
           <% if (type === 'targets') { %><%= row.c_name || row.c_code %><% } else { %><%= row.title %><% } %>
+          <% if (type === 'documents') { %><% if (Number(row.is_pinned) === 1) { %><span class="badge text-bg-primary me-1"><i class="bi bi-pin-angle-fill me-1"></i>ปักหมุด</span><% } %><% if (Number(row.is_announcement) === 1) { %><span class="badge text-bg-warning me-1"><i class="bi bi-megaphone-fill me-1"></i>ประกาศ</span><% } %><% } %>
           <% if (type === 'meetings') { %><div class="small text-muted">ครั้งที่ <%= row.meeting_no %>/<%= row.fiscal_year %></div><% } %>
         </td><td>
           <% if (type === 'indicators') { %>เป้าหมาย <%= row.target_value %> / ผล <%= row.actual_value %> <%= row.unit %><div class="small text-muted"><%= Number(row.target_value) > 0 ? (Number(row.actual_value) / Number(row.target_value) * 100).toFixed(2) + '%' : '—' %></div><% } %>

@@ -205,3 +205,54 @@ test('related documents section exposes downloads publicly and upload controls o
   const managerHtml=await ejs.renderFile(filename,{...base,user:{mClass:'admin'}});
   assert.ok(managerHtml.includes('/manage/documents/add?year=2570'));
 });
+
+test('related documents accept image signatures and allow image download paths', () => {
+  const { validDocument, documentPath } = require('../services/chamraDocumentService');
+  for (const [extension, signature] of [['jpg','ffd8ff'], ['jpeg','ffd8ff'], ['png','89504e470d0a1a0a']]) {
+    assert.equal(validDocument({originalname:`photo.${extension}`,buffer:Buffer.from(signature,'hex')}),true);
+    assert.equal(validDocument({originalname:`photo.${extension.toUpperCase()}`,buffer:Buffer.from(signature,'hex')}),true);
+    assert.equal(validDocument({originalname:`photo.${extension}`,buffer:Buffer.from('%PDF-fake')}),false);
+    assert.ok(documentPath(`/storage/chamra-documents/12345678-1234-1234-1234-123456789012.${extension}`));
+  }
+  assert.equal(validDocument({originalname:'photo.png',buffer:Buffer.from('ffd8ff','hex')}),false);
+  assert.equal(validDocument({originalname:'photo.jpg',buffer:Buffer.from('89504e470d0a1a0a','hex')}),false);
+});
+
+test('document display options can be enabled together and cleared on edit', async () => {
+  const body={fiscal_year:'2570',title:'Notice',is_pinned:'1',is_announcement:'1'};
+  const enabled=validate('documents',body);
+  assert.equal(enabled.errors.length,0);
+  assert.equal(enabled.data.is_pinned,1);
+  assert.equal(enabled.data.is_announcement,1);
+  const cleared=validate('documents',{fiscal_year:'2570',title:'Notice'});
+  assert.equal(cleared.data.is_pinned,0);
+  assert.equal(cleared.data.is_announcement,0);
+  assert.ok(validate('documents',{...body,is_pinned:'forged'}).errors.length);
+  let saved;
+  const c=loadController({get:async()=>({id:1,report_path:'/existing.pdf',is_pinned:1,is_announcement:1}),save:async(...args)=>{saved=args;}});
+  await c.save({params:{type:'documents',id:'1'},body:{_csrf:'token',fiscal_year:'2570',title:'Notice'},session:{chamraToken:'token',user:{username:'admin'}}},response());
+  assert.equal(saved[2].is_pinned,0);
+  assert.equal(saved[2].is_announcement,0);
+  assert.equal(saved[2].report_path,undefined);
+});
+test('documents query keeps pinned items first and newer items first within each group', async () => {
+  const filename=path.resolve(__dirname,'../models/chamraManagementModel.js');
+  const localRequire=createRequire(filename);
+  let sql;
+  const sandbox={module:{exports:{}},require:name=>name==='../config/db'?{query:async query=>{sql=query;return [[]];}}:localRequire(name)};
+  vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});
+  await sandbox.module.exports.list('documents',2570);
+  assert.match(sql,/WHERE t.fiscal_year = \? ORDER BY t.is_pinned DESC, t.id DESC/);
+});
+test('document edit form retains flags and public list displays both badges', async () => {
+  const ejs=require('ejs');
+  const {TYPES,TARGET_TYPES}=require('../services/chamraManagementService');
+  const record={id:1,fiscal_year:2570,title:'Notice',is_pinned:1,is_announcement:1,original_name:'notice.pdf',file_size:100};
+  const form=await ejs.renderFile(path.resolve(__dirname,'../views/chamra/manage/form.ejs'),{title:'Test',user:{mClass:'admin'},period:fiscalPeriod(2570),type:'documents',config:TYPES.documents,targetTypes:TARGET_TYPES,record,errors:[],institutions:[],csrf:'token'});
+  assert.match(form,/name="is_pinned" value="1" checked/);
+  assert.match(form,/name="is_announcement" value="1" checked/);
+  const html=await ejs.renderFile(path.resolve(__dirname,'../views/chamra/manage/documents.ejs'),{managementYear:2570,user:null,documents:[record]});
+  assert.ok(html.includes('ปักหมุด</span>'));
+  assert.ok(html.includes('ประกาศ</span>'));
+  assert.ok(html.includes('/chamra/documents/1/download'));
+});

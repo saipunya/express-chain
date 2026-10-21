@@ -30,7 +30,7 @@ module.exports = {
     const { table } = config(type);
     const select = type === 'targets' ? "t.*, ac.c_name, cd.de_person AS responsible, DATE_FORMAT(t.due_date, '%Y-%m-%d') AS due_date" : type === 'meetings' ? "t.*, DATE_FORMAT(t.meeting_date, '%Y-%m-%d') AS meeting_date" : 't.*';
     const join = type === 'targets' ? 'LEFT JOIN active_coop ac ON ac.c_code = t.c_code LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code' : '';
-    const order = type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
+    const order = type === 'documents' ? 't.is_pinned DESC, t.id DESC' : type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
     const [rows] = await db.query(`SELECT ${select} FROM ${table} t ${join} WHERE t.fiscal_year = ? ORDER BY ${order}`, [year]);
     return rows;
   },

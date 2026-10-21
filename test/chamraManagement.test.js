@@ -102,7 +102,10 @@ test('management templates render forms, escaped content and empty or populated 
   const common = {...base, data:[],members:{},octoberMovement:[],octoberMovementSummary:{total:0,coop:0,farmer:0},withdrawnThisYearSummary:{total:0,coop:0,farmer:0},withdrawalRows:[],updated:false,managementYear:2570,managementTargetTypes:TARGET_TYPES};
   const empty = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementData:{indicators:[],targets:[],meetings:[]}});
   assert.ok(empty.includes('ยังไม่มีตัวชี้วัดสำหรับปีนี้'));
-  const populated = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementData:{indicators:[{title:'Test KPI',target_value:7,actual_value:5,unit:'แห่ง'}],targets:[{c_code:'001',c_name:'สถาบันถอนชื่อ',target_type:'withdrawal',responsible:'ผู้รับผิดชอบถอนชื่อ'},{c_code:'002',c_name:'สถาบันยกระดับ',target_type:'upgrade'},{c_code:'003',c_name:'สถาบันติดตามคดี',target_type:'litigation'}],meetings:[{title:'ประชุม',meeting_no:1,fiscal_year:2570,meeting_date:'2026-10-19',report_path:'/uploads/chamra-meetings/test.pdf'}]}});
+  const populated = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,auditorImage:{id:7,title:'ภาพผู้สอบบัญชีล่าสุด'},managementData:{indicators:[{title:'Test KPI',target_value:7,actual_value:5,unit:'แห่ง'}],targets:[{c_code:'001',c_name:'สถาบันถอนชื่อ',target_type:'withdrawal',responsible:'ผู้รับผิดชอบถอนชื่อ'},{c_code:'002',c_name:'สถาบันยกระดับ',target_type:'upgrade'},{c_code:'003',c_name:'สถาบันติดตามคดี',target_type:'litigation'}],meetings:[{title:'ประชุม',meeting_no:1,fiscal_year:2570,meeting_date:'2026-10-19',report_path:'/uploads/chamra-meetings/test.pdf'}]}});
+  assert.ok(populated.includes('/chamra/auditors/7/image'));
+  assert.ok(!populated.includes('/images/chamra/auditor_01.png'));
+  assert.equal((populated.match(/class="auditor-thumb hover-card"/g) || []).length,1);
   assert.ok(populated.includes('71.43%'));
   assert.ok(populated.includes('สถาบันถอนชื่อ'));
   assert.ok(populated.includes('ผู้รับผิดชอบถอนชื่อ'));
@@ -315,4 +318,30 @@ test('Thai filename survives a real multipart upload and UTF-8 download attachme
     await new Promise(resolve=>server.close(resolve));
     await fsPromises.rm(folder,{recursive:true,force:true});
   }
+});
+
+test('auditor uploads accept images only and public image route rejects non-image records', async () => {
+  let saved;
+  const c=loadController({save:async(...args)=>{saved=args;},get:async()=>({report_path:'/storage/chamra-documents/12345678-1234-1234-1234-123456789012.pdf'})},{'fs/promises':{mkdir:async()=>{},writeFile:async()=>{}}});
+  const req={params:{type:'auditors'},body:{_csrf:'token',fiscal_year:'2570',title:'ผู้สอบบัญชี'},session:{chamraToken:'token',user:{username:'admin'}},file:{originalname:'test.pdf',buffer:Buffer.from('%PDF-test')}};
+  const bad=response();
+  await c.save(req,bad);
+  assert.equal(bad.code,400);
+  assert.equal(saved,undefined);
+  req.file={originalname:'ภาพ.png',buffer:Buffer.from('89504e470d0a1a0a','hex')};
+  await c.save(req,response());
+  assert.equal(saved[0],'auditors');
+  assert.equal(saved[2].original_name,'ภาพ.png');
+  const image=response();
+  await c.auditorImage({params:{id:'1'}},image,()=>assert.fail());
+  assert.equal(image.code,404);
+});
+test('latest auditor query selects a single newest upload across fiscal years', async () => {
+  const filename=path.resolve(__dirname,'../models/chamraManagementModel.js');
+  const localRequire=createRequire(filename);
+  let sql;
+  const sandbox={module:{exports:{}},require:name=>name==='../config/db'?{query:async query=>{sql=query;return [[{id:7}]];}}:localRequire(name)};
+  vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});
+  assert.equal((await sandbox.module.exports.latestAuditor()).id,7);
+  assert.match(sql,/FROM chamra_auditor_images ORDER BY id DESC LIMIT 1/);
 });

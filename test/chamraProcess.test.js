@@ -45,7 +45,7 @@ function controller(model) {
   const sandbox={module:{exports:{}},Buffer,console,__dirname:path.dirname(filename),require:name=> {
     if(name==='../models/chamraModel') return model;
     if(name==='../config/db') return {};
-    if(name==='../models/chamraManagementModel') return {availableYears:async()=>[],list:async()=>[]};
+    if(name==='../models/chamraManagementModel') return {availableYears:async()=>[],list:async()=>[],latestAuditor:async()=>null};
     return requireHere(name);
   }};
   vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});

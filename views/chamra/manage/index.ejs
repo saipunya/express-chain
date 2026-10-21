@@ -23,6 +23,7 @@
           <% if (type === 'targets') { %><%= targetTypes[row.target_type] %><div class="small text-muted"><%= row.responsible || 'ยังไม่ระบุผู้รับผิดชอบ' %></div><% } %>
           <% if (type === 'meetings') { %><%= new Intl.DateTimeFormat('th-TH', { dateStyle:'medium', timeZone:'Asia/Bangkok' }).format(new Date(row.meeting_date)) %><br><% if (row.report_path) { %><a href="<%= row.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงาน PDF</a><% } else { %><span class="text-muted">ยังไม่แนบรายงาน</span><% } %><% } %>
           <% if (type === 'documents') { %><a href="/chamra/documents/<%= row.id %>/download" class="btn btn-sm btn-outline-primary">ดาวน์โหลด <%= row.original_name %></a><div class="small text-muted"><%= (Number(row.file_size) / 1024).toFixed(1) %> KB</div><% } %>
+          <% if (type === 'auditors') { %><a href="/chamra/auditors/<%= row.id %>/image" target="_blank" rel="noopener noreferrer">ดูภาพ <%= row.original_name %></a><% } %>
           <% if (row.note) { %><div class="small text-muted" style="white-space:pre-wrap"><%= row.note %></div><% } %>
         </td><td><div class="d-flex gap-2">
           <a href="/chamra/manage/<%= type %>/<%= row.id %>/edit" class="btn btn-sm btn-outline-primary">แก้ไข</a>

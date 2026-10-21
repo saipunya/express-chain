@@ -51,7 +51,7 @@ function loadController(model, management = {}) {
   const localRequire = createRequire(filename);
   const sandbox = {module:{exports:{}},Buffer,console,__dirname:path.dirname(filename),require: name => {
     if (name === '../models/chamraModel') return model;
-    if (name === '../models/chamraManagementModel') return {availableYears:async()=>[],...management};
+    if (name === '../models/chamraManagementModel') return {availableYears:async()=>[],latestAuditor:async()=>null,...management};
     if (name === '../config/db') return {query:async()=>[[]]};
     return localRequire(name);
   }};

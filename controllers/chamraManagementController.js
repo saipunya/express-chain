@@ -69,7 +69,7 @@ exports.editForm = async (req, res) => {
   return renderForm(req, res, record);
 };
 exports.receiveUpload = (req, res, next) => {
-  if (!['meetings', 'documents'].includes(req.params.type)) return next();
+  if (!['meetings', 'documents', 'auditors'].includes(req.params.type)) return next();
   upload(req, res, err => {
     if (err) req.uploadError = err.code === 'LIMIT_FILE_SIZE' ? 'ไฟล์ต้องมีขนาดไม่เกิน 10 MB กรุณาเลือกไฟล์ใหม่' : 'รับไฟล์ไม่สำเร็จ กรุณาเลือกเพียงหนึ่งไฟล์';
     next();
@@ -83,21 +83,22 @@ exports.save = async (req, res) => {
   const { data, errors } = validate(type, req.body);
   if (req.uploadError) errors.push(req.uploadError);
   if (type === 'targets' && data.c_code && !await Model.institutionExists(data.c_code)) errors.push('ไม่พบสถาบันที่เลือก');
-  if (type === 'documents' && !req.file && !existing?.report_path) errors.push('กรุณาแนบไฟล์เอกสาร');
-  if (type === 'documents' && req.file && !validDocument(req.file)) errors.push('กรุณาเลือกไฟล์ PDF, Word, Excel หรือรูปภาพ JPG, JPEG, PNG ที่ถูกต้อง ขนาดไม่เกิน 10 MB');
-  if (type !== 'documents' && req.file && (req.file.buffer.subarray(0, 5).toString() !== '%PDF-' || path.extname(req.file.originalname).toLowerCase() !== '.pdf')) errors.push('กรุณาเลือกไฟล์ PDF ที่ถูกต้อง');
+  if (['documents', 'auditors'].includes(type) && !req.file && !existing?.report_path) errors.push('กรุณาแนบไฟล์เอกสาร');
+  if (['documents', 'auditors'].includes(type) && req.file && !validDocument(req.file)) errors.push('กรุณาเลือกไฟล์ PDF, Word, Excel หรือรูปภาพ JPG, JPEG, PNG ที่ถูกต้อง ขนาดไม่เกิน 10 MB');
+  if (!['documents', 'auditors'].includes(type) && req.file && (req.file.buffer.subarray(0, 5).toString() !== '%PDF-' || path.extname(req.file.originalname).toLowerCase() !== '.pdf')) errors.push('กรุณาเลือกไฟล์ PDF ที่ถูกต้อง');
+  if (type === 'auditors' && req.file && !['.jpg', '.jpeg', '.png'].includes(path.extname(req.file.originalname).toLowerCase())) errors.push('ภาพผู้สอบบัญชีรองรับเฉพาะ JPG, JPEG และ PNG');
   if (errors.length) return renderForm(req, res, { ...existing, ...data, id }, errors, 400);
   let uploadedPath;
   try {
     if (req.file) {
-      const relativeFolder = type === 'documents' ? '/storage/chamra-documents' : '/uploads/chamra-meetings';
+      const relativeFolder = ['documents', 'auditors'].includes(type) ? '/storage/chamra-documents' : '/uploads/chamra-meetings';
       const folder = path.join(__dirname, '..', relativeFolder.slice(1));
       await fs.mkdir(folder, { recursive: true });
-      const filename = `${crypto.randomUUID()}${type === 'documents' ? path.extname(req.file.originalname).toLowerCase() : '.pdf'}`;
+      const filename = `${crypto.randomUUID()}${['documents', 'auditors'].includes(type) ? path.extname(req.file.originalname).toLowerCase() : '.pdf'}`;
       uploadedPath = path.join(folder, filename);
       await fs.writeFile(uploadedPath, req.file.buffer, { flag: 'wx' });
       data.report_path = `${relativeFolder}/${filename}`;
-      if (type === 'documents') {
+      if (['documents', 'auditors'].includes(type)) {
         data.original_name = path.basename(normalizeDocumentName(req.file.originalname)).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 255);
         data.file_size = req.file.buffer.length;
       }
@@ -117,7 +118,7 @@ exports.remove = async (req, res) => {
   const existing = await Model.get(req.params.type, req.params.id);
   if (!existing) return res.status(404).send('ไม่พบรายการ');
   await Model.remove(req.params.type, req.params.id);
-  if (['meetings', 'documents'].includes(req.params.type)) await removeUploadedReport(existing.report_path);
+  if (['meetings', 'documents', 'auditors'].includes(req.params.type)) await removeUploadedReport(existing.report_path);
   return res.redirect(`/chamra/manage/${req.params.type}?year=${existing.fiscal_year}&deleted=1`);
 };
 
@@ -134,6 +135,22 @@ exports.downloadDocument = async (req, res, next) => {
     if (!err) return;
     if (res.headersSent) return next(err);
     if (err.code === 'ENOENT' || err.status === 404) return res.status(404).send('ไม่พบไฟล์เอกสาร');
+    next(err);
+  });
+};
+
+exports.auditorImage = async (req, res, next) => {
+  if (!/^[1-9]\d*$/.test(req.params.id)) return res.status(404).send('ไม่พบภาพ');
+  let record;
+  try { record = await Model.get('auditors', req.params.id); }
+  catch (err) { if (err.code === 'ER_NO_SUCH_TABLE') return res.status(404).send('ไม่พบภาพ'); throw err; }
+  const file = record && documentPath(record.report_path);
+  if (!file || !['.jpg', '.jpeg', '.png'].includes(path.extname(file))) return res.status(404).send('ไม่พบภาพ');
+  res.set('X-Content-Type-Options', 'nosniff');
+  return res.sendFile(file, err => {
+    if (!err) return;
+    if (res.headersSent) return next(err);
+    if (err.code === 'ENOENT' || err.status === 404) return res.status(404).send('ไม่พบไฟล์ภาพ');
     next(err);
   });
 };

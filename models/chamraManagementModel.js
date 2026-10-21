@@ -6,6 +6,10 @@ function config(type) {
   return TYPES[type];
 }
 module.exports = {
+  async latestAuditor() {
+    const [rows] = await db.query('SELECT * FROM chamra_auditor_images ORDER BY id DESC LIMIT 1');
+    return rows[0] || null;
+  },
   async availableYears() {
     const processDates = Array.from({ length: 10 }, (_, i) => `SELECT pr_s${i + 1} AS activity_date FROM chamra_process`).join(' UNION ALL ');
     const queries = [
@@ -31,7 +35,7 @@ module.exports = {
     const { table } = config(type);
     const select = type === 'targets' ? "t.*, ac.c_name, cd.de_person AS responsible, DATE_FORMAT(t.due_date, '%Y-%m-%d') AS due_date" : type === 'meetings' ? "t.*, DATE_FORMAT(t.meeting_date, '%Y-%m-%d') AS meeting_date" : 't.*';
     const join = type === 'targets' ? 'LEFT JOIN active_coop ac ON ac.c_code = t.c_code LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code' : '';
-    const order = type === 'documents' ? 't.is_pinned DESC, t.id DESC' : type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
+    const order = type === 'auditors' ? 't.id DESC' : type === 'documents' ? 't.is_pinned DESC, t.id DESC' : type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
     const [rows] = await db.query(`SELECT ${select} FROM ${table} t ${join} WHERE t.fiscal_year = ? ORDER BY ${order}`, [year]);
     if (type === 'documents') rows.forEach(row => { row.original_name = normalizeDocumentName(row.original_name); });
     return rows;

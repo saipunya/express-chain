@@ -1,5 +1,6 @@
 const { currentFiscalYear, validDate, fiscalPeriod } = require('./chamraFiscalYear');
 const TYPES = {
+  auditors: { table: 'chamra_auditor_images', label: 'ภาพผู้สอบบัญชี', fields: ['fiscal_year', 'title', 'note', 'report_path', 'original_name', 'file_size'] },
   documents: { table: 'chamra_documents', label: 'เอกสารที่เกี่ยวข้อง', fields: ['fiscal_year', 'title', 'note', 'report_path', 'original_name', 'file_size', 'is_pinned', 'is_announcement'] },
   indicators: { table: 'chamra_indicators', label: 'ตัวชี้วัด', fields: ['fiscal_year', 'title', 'target_value', 'actual_value', 'unit', 'note'] },
   targets: { table: 'chamra_targets', label: 'เป้าหมายรายสถาบัน', fields: ['fiscal_year', 'c_code', 'target_type', 'due_date', 'note'] },

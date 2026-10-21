@@ -6,6 +6,7 @@ const { noCache, requireLogin, requireLevel } = require('../middlewares/authMidd
 router.use(noCache);
 const canManage = [requireLogin, requireLevel(['admin', 'kjs'])];
 const management = require('../controllers/chamraManagementController');
+router.get('/auditors/:id/image', management.auditorImage);
 router.get('/documents/:id/download', management.downloadDocument);
 router.get('/manage/:type', ...canManage, management.type, management.index);
 router.get('/manage/:type/add', ...canManage, management.type, management.createForm);

@@ -330,7 +330,10 @@ chamraController.list = async (req, res) => {
   let documents = null;
   try { documents = await ChamraManagement.list('documents', managementYear); }
   catch (err) { if (err.code !== 'ER_NO_SUCH_TABLE') throw err; }
-  res.render('chamra/list', { documents, ...fiscalNavigation(managementYear, await ChamraManagement.availableYears()), period, withdrawalRows, managementYear, managementData, managementTargetTypes: TARGET_TYPES, updated: req.query.updated === '1', data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
+  let auditorImage = null;
+  try { auditorImage = await ChamraManagement.latestAuditor(); }
+  catch (err) { if (err.code !== 'ER_NO_SUCH_TABLE') throw err; }
+  res.render('chamra/list', { auditorImage, documents, ...fiscalNavigation(managementYear, await ChamraManagement.availableYears()), period, withdrawalRows, managementYear, managementData, managementTargetTypes: TARGET_TYPES, updated: req.query.updated === '1', data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
 };
 
 chamraController.showAll = async (req, res) => {

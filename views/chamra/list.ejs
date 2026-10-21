@@ -667,31 +667,16 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center flex-grow-1">
                   <h5 class="mb-0 fw-semibold">ผู้สอบบัญชี (auditor)</h5>
-                  <a class="nav-link px-0" href="/file/auditors.pdf" target="_blank" rel="noopener noreferrer">
-                    เปิดเอกสาร PDF
-                  </a>
-                  <a class="btn btn-outline-primary btn-sm ms-2" href="/file/auditors.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
+                  <% if (user && ['admin', 'kjs'].includes(user.mClass || user.m_class || user.level)) { %>
+                    <a class="btn btn-primary btn-sm" href="/chamra/manage/auditors/add?year=<%= managementYear %>">อัปโหลดภาพใหม่</a>
+                  <% } %>
                 </div>
               </div>
-              <div class="row g-3">
-                <% const auditorImages = [
-                  { src: '/images/chamra/auditor_01.png', title: 'ผู้สอบบัญชี 1' },
-                  { src: '/images/chamra/auditor_02.png', title: 'ผู้สอบบัญชี 2' },
-                  { src: '/images/chamra/auditor_03.png', title: 'ผู้สอบบัญชี 3' },
-                  { src: '/images/chamra/auditor_04.png', title: 'ผู้สอบบัญชี 4' }
-                ]; %>
-                <% auditorImages.forEach((image) => { %>
-                  <div class="col-6 col-md-3">
-                    <button type="button"
-                      class="auditor-thumb hover-card"
-                      data-auditor-image="<%= image.src %>"
-                      data-auditor-title="<%= image.title %>"
-                      aria-label="ดูภาพใหญ่ <%= image.title %>">
-                      <img src="<%= image.src %>" alt="<%= image.title %>" loading="lazy">
-                    </button>
-                  </div>
-                <% }) %>
-              </div>
+              <% if (typeof auditorImage !== 'undefined' && auditorImage) { %>
+                <button type="button" class="auditor-thumb hover-card" data-auditor-image="/chamra/auditors/<%= auditorImage.id %>/image" data-auditor-title="<%= auditorImage.title %>" aria-label="ดูภาพผู้สอบบัญชีล่าสุดขนาดใหญ่">
+                  <img src="/chamra/auditors/<%= auditorImage.id %>/image" alt="<%= auditorImage.title %>" loading="lazy" style="height:auto;max-height:700px;aspect-ratio:auto;object-fit:contain">
+                </button>
+              <% } else { %><p class="text-muted mb-0">ยังไม่ได้อัปโหลดภาพผู้สอบบัญชี</p><% } %>
             </div>
           </div>
         </div>

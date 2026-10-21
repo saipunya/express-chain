@@ -5,13 +5,13 @@
     <div class="card-body p-4">
       <h1 class="h4 mb-3"><%= record.id ? 'แก้ไข' : 'เพิ่ม' %><%= config.label %></h1>
       <% if (errors.length) { %><div class="alert alert-danger" role="alert"><ul class="mb-0"><% errors.forEach(error => { %><li><%= error %></li><% }) %></ul></div><% } %>
-      <form method="post" action="/chamra/manage/<%= type %>/<%= record.id ? record.id + '/edit' : 'add' %>" <%- ['meetings', 'documents'].includes(type) ? 'enctype="multipart/form-data"' : '' %>>
+      <form method="post" action="/chamra/manage/<%= type %>/<%= record.id ? record.id + '/edit' : 'add' %>" <%- ['meetings', 'documents', 'auditors'].includes(type) ? 'enctype="multipart/form-data"' : '' %>>
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <label class="form-label" for="fiscal_year">ปีงบประมาณ พ.ศ. <span class="text-danger">*</span></label>
         <input id="fiscal_year" name="fiscal_year" type="number" min="2500" max="2800" class="form-control mb-3" value="<%= record.fiscal_year %>" required>
         <p id="fiscalPeriodHint" class="small text-muted" aria-live="polite"><%= period.startLabel %> – <%= period.endLabel %></p>
-        <% if (['indicators', 'meetings', 'documents'].includes(type)) { %>
-          <label class="form-label" for="title"><%= type === 'indicators' ? 'ชื่อตัวชี้วัด / เกณฑ์การวัด' : type === 'documents' ? 'ชื่อเอกสาร' : 'ชื่อการประชุม' %> <span class="text-danger">*</span></label>
+        <% if (['indicators', 'meetings', 'documents', 'auditors'].includes(type)) { %>
+          <label class="form-label" for="title"><%= type === 'indicators' ? 'ชื่อตัวชี้วัด / เกณฑ์การวัด' : ['documents', 'auditors'].includes(type) ? 'ชื่อเอกสาร / ภาพ' : 'ชื่อการประชุม' %> <span class="text-danger">*</span></label>
           <input id="title" name="title" maxlength="500" class="form-control mb-3" value="<%= record.title || '' %>" required>
         <% } %>
         <% if (type === 'indicators') { %>
@@ -46,17 +46,20 @@
           <% if (record.report_path) { %><a href="<%= record.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงานเดิม</a><% } %>
           <p class="small text-muted">ไม่เลือกไฟล์ใหม่จะคงไฟล์เดิมไว้ หากบันทึกไม่ผ่าน กรุณาเลือกไฟล์อีกครั้ง</p>
         <% } %>
-        <% if (type === 'documents') { %>
+        <% if (['documents', 'auditors'].includes(type)) { %>
+          <% if (type === 'documents') { %>
           <fieldset class="mb-3">
             <legend class="fs-6">ตัวเลือกการแสดงผล</legend>
             <div class="form-check"><input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned" value="1" <%= Number(record.is_pinned) === 1 ? 'checked' : '' %>><label class="form-check-label" for="is_pinned">ปักหมุด (แสดงก่อนรายการทั่วไป)</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" id="is_announcement" name="is_announcement" value="1" <%= Number(record.is_announcement) === 1 ? 'checked' : '' %>><label class="form-check-label" for="is_announcement">ประกาศ</label></div>
             <div class="form-text">เลือกได้ทั้งสองตัวเลือก ยกเลิกได้โดยนำเครื่องหมายออกแล้วบันทึก</div>
           </fieldset>
+          <% } %>
           <label class="form-label" for="report">ไฟล์เอกสาร <%= record.id ? '' : '*' %></label>
-          <input id="report" name="report" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" class="form-control mb-2" <%= record.id ? '' : 'required' %>>
-          <p class="small text-muted">รองรับ PDF, Word, Excel และรูปภาพ JPG, JPEG, PNG ขนาดไม่เกิน 10 MB ต่อไฟล์ เมื่อแก้ไขไม่เลือกไฟล์ใหม่จะใช้ไฟล์เดิม</p>
-          <% if (record.id && record.report_path) { %><a href="/chamra/documents/<%= record.id %>/download">ดาวน์โหลด <%= record.original_name || 'เอกสารเดิม' %></a><% } %>
+          <input id="report" name="report" type="file" accept="<%= type === 'auditors' ? '.jpg,.jpeg,.png' : '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png' %>" class="form-control mb-2" <%= record.id ? '' : 'required' %>>
+          <p class="small text-muted"><%= type === 'auditors' ? 'รองรับรูปภาพ JPG, JPEG, PNG' : 'รองรับ PDF, Word, Excel และรูปภาพ JPG, JPEG, PNG' %> ขนาดไม่เกิน 10 MB ต่อไฟล์ เมื่อแก้ไขไม่เลือกไฟล์ใหม่จะใช้ไฟล์เดิม</p>
+          <% if (type === 'auditors' && record.id && record.report_path) { %><a href="/chamra/auditors/<%= record.id %>/image" target="_blank" rel="noopener noreferrer">ดูภาพเดิม</a><% } %>
+          <% if (type === 'documents' && record.id && record.report_path) { %><a href="/chamra/documents/<%= record.id %>/download">ดาวน์โหลด <%= record.original_name || 'เอกสารเดิม' %></a><% } %>
         <% } %>
         <label class="form-label" for="note"><%= type === 'meetings' ? 'สรุปมติ / รายละเอียดการประชุม' : 'รายละเอียด / หมายเหตุ' %></label>
         <textarea id="note" name="note" maxlength="10000" rows="4" class="form-control mb-4"><%= record.note || '' %></textarea>

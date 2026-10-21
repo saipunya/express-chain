@@ -1,0 +1,31 @@
+<div class="card border-0 shadow-sm mb-4" id="related-documents">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h2 class="h5 mb-0">ไฟล์เอกสารที่เกี่ยวข้อง ปีงบประมาณ <%= managementYear %></h2>
+      <% if (user && ['admin', 'kjs'].includes(user.mClass || user.m_class || user.level)) { %>
+        <div class="d-flex gap-2">
+          <a class="btn btn-primary btn-sm" href="/chamra/manage/documents/add?year=<%= managementYear %>">+ อัปโหลดเอกสาร</a>
+          <a class="btn btn-outline-primary btn-sm" href="/chamra/manage/documents?year=<%= managementYear %>">จัดการเอกสาร</a>
+        </div>
+      <% } %>
+    </div>
+    <% if (documents === null) { %>
+      <p class="text-muted mb-0">ยังไม่ได้ติดตั้งระบบเอกสารที่เกี่ยวข้อง</p>
+    <% } else if (!documents.length) { %>
+      <p class="text-muted mb-0">ยังไม่มีไฟล์เอกสารสำหรับปีนี้</p>
+    <% } else { %>
+      <ul class="list-group list-group-flush">
+        <% documents.forEach(document => { %>
+          <li class="list-group-item px-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <div class="fw-semibold"><%= document.title %></div>
+              <div class="small text-muted"><%= document.original_name %> • <%= (Number(document.file_size) / 1024).toFixed(1) %> KB</div>
+              <% if (document.note) { %><div class="small" style="white-space:pre-wrap"><%= document.note %></div><% } %>
+            </div>
+            <a class="btn btn-outline-primary btn-sm" href="/chamra/documents/<%= document.id %>/download"><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+</div>

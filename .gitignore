@@ -52,3 +52,6 @@ views_cache/
 .env.test.local
 .env.production.local
 .env
+
+# Related Chamra documents (downloaded through application routes)
+storage/chamra-documents/

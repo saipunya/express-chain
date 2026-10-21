@@ -5,13 +5,13 @@
     <div class="card-body p-4">
       <h1 class="h4 mb-3"><%= record.id ? 'แก้ไข' : 'เพิ่ม' %><%= config.label %></h1>
       <% if (errors.length) { %><div class="alert alert-danger" role="alert"><ul class="mb-0"><% errors.forEach(error => { %><li><%= error %></li><% }) %></ul></div><% } %>
-      <form method="post" action="/chamra/manage/<%= type %>/<%= record.id ? record.id + '/edit' : 'add' %>" <%- type === 'meetings' ? 'enctype="multipart/form-data"' : '' %>>
+      <form method="post" action="/chamra/manage/<%= type %>/<%= record.id ? record.id + '/edit' : 'add' %>" <%- ['meetings', 'documents'].includes(type) ? 'enctype="multipart/form-data"' : '' %>>
         <input type="hidden" name="_csrf" value="<%= csrf %>">
         <label class="form-label" for="fiscal_year">ปีงบประมาณ พ.ศ. <span class="text-danger">*</span></label>
         <input id="fiscal_year" name="fiscal_year" type="number" min="2500" max="2800" class="form-control mb-3" value="<%= record.fiscal_year %>" required>
         <p id="fiscalPeriodHint" class="small text-muted" aria-live="polite"><%= period.startLabel %> – <%= period.endLabel %></p>
-        <% if (type === 'indicators' || type === 'meetings') { %>
-          <label class="form-label" for="title"><%= type === 'indicators' ? 'ชื่อตัวชี้วัด / เกณฑ์การวัด' : 'ชื่อการประชุม' %> <span class="text-danger">*</span></label>
+        <% if (['indicators', 'meetings', 'documents'].includes(type)) { %>
+          <label class="form-label" for="title"><%= type === 'indicators' ? 'ชื่อตัวชี้วัด / เกณฑ์การวัด' : type === 'documents' ? 'ชื่อเอกสาร' : 'ชื่อการประชุม' %> <span class="text-danger">*</span></label>
           <input id="title" name="title" maxlength="500" class="form-control mb-3" value="<%= record.title || '' %>" required>
         <% } %>
         <% if (type === 'indicators') { %>
@@ -27,12 +27,12 @@
           <label class="form-label" for="institutionSearch">ค้นหาสถาบัน</label>
           <input id="institutionSearch" type="search" class="form-control mb-2" placeholder="พิมพ์ชื่อหรือรหัสเพื่อกรองรายการ">
           <label class="form-label" for="c_code">สถาบัน *</label>
-          <select id="c_code" name="c_code" class="form-select mb-3" required><option value="">เลือกสถาบัน</option><% institutions.forEach(c => { %><option value="<%= c.c_code %>" <%= record.c_code === c.c_code ? 'selected' : '' %>><%= c.c_name %> (<%= c.c_code %>)</option><% }) %></select>
+          <select id="c_code" name="c_code" class="form-select mb-3" required><option value="">เลือกสถาบัน</option><% institutions.forEach(c => { %><option data-responsible="<%= c.de_person || '' %>" value="<%= c.c_code %>" <%= record.c_code === c.c_code ? 'selected' : '' %>><%= c.c_name %> (<%= c.c_code %>)</option><% }) %></select>
           <label class="form-label" for="target_type">ประเภทเป้าหมาย *</label>
           <select id="target_type" name="target_type" class="form-select mb-3" required><option value="">เลือกประเภท</option><% Object.entries(targetTypes).forEach(([key,label]) => { %><option value="<%= key %>" <%= record.target_type === key ? 'selected' : '' %>><%= label %></option><% }) %></select>
           <div class="row g-3 mb-3">
             <div class="col-sm-6"><label class="form-label" for="due_date">วันครบกำหนด</label><input id="due_date" name="due_date" type="date" class="form-control" value="<%= record.due_date || '' %>"></div>
-            <div class="col-sm-6"><label class="form-label" for="responsible">ผู้รับผิดชอบ</label><input id="responsible" name="responsible" maxlength="150" class="form-control" value="<%= record.responsible || '' %>"></div>
+            <div class="col-sm-6"><label class="form-label" for="responsible">ผู้รับผิดชอบ</label><input id="responsible" class="form-control" value="<%= (institutions.find(c => c.c_code === record.c_code) || {}).de_person || '' %>" readonly aria-describedby="responsibleHelp"><div id="responsibleHelp" class="form-text">ใช้ผู้รับผิดชอบเดิมของสถาบัน แก้ไขได้ที่หน้ารายละเอียดสถาบัน</div></div>
           </div>
         <% } %>
         <% if (type === 'meetings') { %>
@@ -45,6 +45,12 @@
           <input id="report" name="report" type="file" accept="application/pdf,.pdf" class="form-control mb-2">
           <% if (record.report_path) { %><a href="<%= record.report_path %>" target="_blank" rel="noopener noreferrer">เปิดรายงานเดิม</a><% } %>
           <p class="small text-muted">ไม่เลือกไฟล์ใหม่จะคงไฟล์เดิมไว้ หากบันทึกไม่ผ่าน กรุณาเลือกไฟล์อีกครั้ง</p>
+        <% } %>
+        <% if (type === 'documents') { %>
+          <label class="form-label" for="report">ไฟล์เอกสาร <%= record.id ? '' : '*' %></label>
+          <input id="report" name="report" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" class="form-control mb-2" <%= record.id ? '' : 'required' %>>
+          <p class="small text-muted">รองรับ PDF, Word และ Excel ขนาดไม่เกิน 10 MB ต่อไฟล์ เมื่อแก้ไขไม่เลือกไฟล์ใหม่จะใช้ไฟล์เดิม</p>
+          <% if (record.id && record.report_path) { %><a href="/chamra/documents/<%= record.id %>/download">ดาวน์โหลด <%= record.original_name || 'เอกสารเดิม' %></a><% } %>
         <% } %>
         <label class="form-label" for="note"><%= type === 'meetings' ? 'สรุปมติ / รายละเอียดการประชุม' : 'รายละเอียด / หมายเหตุ' %></label>
         <textarea id="note" name="note" maxlength="10000" rows="4" class="form-control mb-4"><%= record.note || '' %></textarea>
@@ -75,12 +81,22 @@
   updatePeriod();
   const search = document.getElementById('institutionSearch');
   const select = document.getElementById('c_code');
+  const responsible = document.getElementById('responsible');
+  const updateResponsible = () => {
+    if (responsible) responsible.value = select.selectedOptions[0]?.dataset.responsible || 'ยังไม่ระบุผู้รับผิดชอบ';
+  };
+  select?.addEventListener('change', updateResponsible);
+  if (select) updateResponsible();
   if (search) {
-    const options = Array.from(select.options).map(o => ({text:o.text, value:o.value}));
+    const options = Array.from(select.options).map(o => ({text:o.text, value:o.value, responsible:o.dataset.responsible || ''}));
     search.addEventListener('input', () => {
       const selected = select.value;
       const query = search.value.trim().toLowerCase();
-      select.replaceChildren(...options.filter(o => !o.value || o.value === selected || o.text.toLowerCase().includes(query)).map(o => new Option(o.text, o.value, false, o.value === selected)));
+      select.replaceChildren(...options.filter(o => !o.value || o.value === selected || o.text.toLowerCase().includes(query)).map(o => {
+        const option = new Option(o.text, o.value, false, o.value === selected);
+        option.dataset.responsible = o.responsible;
+        return option;
+      }));
     });
   }
   const form = document.querySelector('form[action^="/chamra/manage/"]');

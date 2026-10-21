@@ -471,33 +471,37 @@
                     <tr class="hover-row">
                       <td class="fw-medium">1</td>
                       <td>
-                        <a href="images/meeting/meeting1.pdf" target="_blank" rel="noopener noreferrer"
+                        <a href="/images/meeting/meeting1.pdf" target="_blank" rel="noopener noreferrer"
                           class="text-decoration-none">
                           <i class="bi bi-file-pdf text-danger me-2"></i>
                           ประชุมติดตามความก้าวหน้า 1/2569[26 ธันวาคม 2568]
                           <i class="bi bi-box-arrow-up-right ms-1 text-muted"></i>
                         </a>
+                        <a class="btn btn-outline-primary btn-sm ms-2" href="/images/meeting/meeting1.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
                       </td>
                     </tr>
                     <tr class="hover-row">
                       <td class="fw-medium">2</td>
                       <td class="text-muted">
                         <i class="bi bi-file-pdf text-muted me-2"></i>
-                        <a href="file/meeting22569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 2/2569 [17 มีนาคม 2569]</a>
+                        <a href="/file/meeting22569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 2/2569 [17 มีนาคม 2569]</a>
+                        <a class="btn btn-outline-primary btn-sm ms-2" href="/file/meeting22569.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
                       </td>
                     </tr>
                     <tr class="hover-row">
                       <td class="fw-medium">3</td>
                       <td class="text-muted">
                         <i class="bi bi-file-pdf text-muted me-2"></i>
-                        <a href="file/meeting32569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 3/2569 [23 มิถุนายน 2569]</a>
+                        <a href="/file/meeting32569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 3/2569 [23 มิถุนายน 2569]</a>
+                        <a class="btn btn-outline-primary btn-sm ms-2" href="/file/meeting32569.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
                       </td>
                     </tr>
                     <tr class="hover-row">
                       <td class="fw-medium">4</td>
                       <td class="text-muted">
                         <i class="bi bi-file-pdf text-muted me-2"></i>
-                        <a href="images/meeting/meeting4_2569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 4/2569 [5 สิงหาคม 2569]</a>
+                        <a href="/images/meeting/meeting4_2569.pdf" target="_blank" rel="noopener noreferrer">ประชุมติดตามความก้าวหน้า 4/2569 [5 สิงหาคม 2569]</a>
+                        <a class="btn btn-outline-primary btn-sm ms-2" href="/images/meeting/meeting4_2569.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
                       </td>
                     </tr>
                   </tbody>
@@ -652,6 +656,7 @@
         </div>
       </div>
 
+      <%- include('manage/documents', { documents: typeof documents === 'undefined' ? [] : documents }) %>
       <div class="row g-4 mb-4 auditor-gallery">
         <div class="col-12">
           <div class="card border-0 shadow-sm">
@@ -663,8 +668,9 @@
                 <div class="d-flex justify-content-between align-items-center flex-grow-1">
                   <h5 class="mb-0 fw-semibold">ผู้สอบบัญชี (auditor)</h5>
                   <a class="nav-link px-0" href="/file/auditors.pdf" target="_blank" rel="noopener noreferrer">
-                    เอกสาร pdf
+                    เปิดเอกสาร PDF
                   </a>
+                  <a class="btn btn-outline-primary btn-sm ms-2" href="/file/auditors.pdf" download><i class="bi bi-download me-1"></i>ดาวน์โหลด</a>
                 </div>
               </div>
               <div class="row g-3">

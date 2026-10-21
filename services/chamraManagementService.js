@@ -1,13 +1,14 @@
 const { currentFiscalYear, validDate, fiscalPeriod } = require('./chamraFiscalYear');
 const TYPES = {
+  documents: { table: 'chamra_documents', label: 'เอกสารที่เกี่ยวข้อง', fields: ['fiscal_year', 'title', 'note', 'report_path', 'original_name', 'file_size'] },
   indicators: { table: 'chamra_indicators', label: 'ตัวชี้วัด', fields: ['fiscal_year', 'title', 'target_value', 'actual_value', 'unit', 'note'] },
-  targets: { table: 'chamra_targets', label: 'เป้าหมายรายสถาบัน', fields: ['fiscal_year', 'c_code', 'target_type', 'due_date', 'responsible', 'note'] },
+  targets: { table: 'chamra_targets', label: 'เป้าหมายรายสถาบัน', fields: ['fiscal_year', 'c_code', 'target_type', 'due_date', 'note'] },
   meetings: { table: 'chamra_meetings', label: 'รายงานการประชุม', fields: ['fiscal_year', 'meeting_no', 'meeting_date', 'title', 'note', 'report_path'] }
 };
 const TARGET_TYPES = { withdrawal: 'ถอนชื่อออกจากทะเบียน', upgrade: 'ยกระดับขั้นตอน', litigation: 'ติดตามความเคลื่อนไหวคดี' };
 function validate(type, body) {
   if (!Object.hasOwn(TYPES, type)) throw new Error('Unknown management type');
-  const data = Object.fromEntries(TYPES[type].fields.filter(f => f !== 'report_path').map(f => [f, String(body[f] ?? '').trim()]));
+  const data = Object.fromEntries(TYPES[type].fields.filter(f => !['report_path', 'original_name', 'file_size'].includes(f)).map(f => [f, String(body[f] ?? '').trim()]));
   const errors = [];
   if (!/^\d{4}$/.test(data.fiscal_year) || Number(data.fiscal_year) < 2500 || Number(data.fiscal_year) > 2800) errors.push('กรุณาระบุปีงบประมาณ พ.ศ. ระหว่าง 2500–2800');
   const period = errors.length ? null : fiscalPeriod(Number(data.fiscal_year));
@@ -25,7 +26,6 @@ function validate(type, body) {
     if (data.due_date && !validDate(data.due_date)) errors.push('วันครบกำหนดไม่ถูกต้อง');
     if (period && validDate(data.due_date) && (data.due_date < period.startDate || data.due_date > period.endDate)) errors.push('วันครบกำหนดต้องอยู่ในปีงบประมาณที่เลือก (1 ตุลาคม–30 กันยายน)');
     data.due_date = data.due_date || null;
-    if (data.responsible.length > 150) errors.push('ผู้รับผิดชอบต้องไม่เกิน 150 ตัวอักษร');
   }
   if (type === 'meetings') {
     if (!/^\d{1,4}$/.test(data.meeting_no) || Number(data.meeting_no) < 1) errors.push('ครั้งที่ประชุมต้องเป็นจำนวนเต็ม 1–9999');

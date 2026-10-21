@@ -6,6 +6,7 @@ const { noCache, requireLogin, requireLevel } = require('../middlewares/authMidd
 router.use(noCache);
 const canManage = [requireLogin, requireLevel(['admin', 'kjs'])];
 const management = require('../controllers/chamraManagementController');
+router.get('/documents/:id/download', management.downloadDocument);
 router.get('/manage/:type', ...canManage, management.type, management.index);
 router.get('/manage/:type/add', ...canManage, management.type, management.createForm);
 router.get('/manage/:type/:id/edit', ...canManage, management.type, management.editForm);
@@ -78,6 +79,7 @@ router.post('/poblem/delete/:po_id', ...canManage, chamraController.deletePoblem
 
 // Detail (new)
 router.get('/detail/:c_code', chamraController.detail);
+router.post('/detail/:c_code/responsible', ...canManage, chamraController.updateResponsible);
 
 // Export PDF for detail (server-side pdfmake)
 router.get('/detail/:c_code/export/pdf', chamraController.exportDetailPdf);

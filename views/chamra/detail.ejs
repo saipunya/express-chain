@@ -131,7 +131,16 @@
         </tr>
         <tr>
           <th>ผู้รับผิดชอบ</th>
-          <td><%= data.de_person || '-' %></td>
+          <td>
+            <% if (typeof responsibleSaved !== 'undefined' && responsibleSaved) { %><div class="alert alert-success py-2" role="status">บันทึกผู้รับผิดชอบแล้ว</div><% } %>
+            <% if (typeof canEditResponsible !== 'undefined' && canEditResponsible) { %>
+              <form method="post" action="/chamra/detail/<%= encodeURIComponent(data.de_code) %>/responsible" class="d-flex flex-wrap gap-2">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="text" name="de_person" aria-label="ผู้รับผิดชอบ" maxlength="150" class="form-control form-control-sm w-auto flex-grow-1" value="<%= data.de_person || '' %>">
+                <button type="submit" class="btn btn-primary btn-sm">บันทึกผู้รับผิดชอบ</button>
+              </form>
+            <% } else { %><%= data.de_person || '-' %><% } %>
+          </td>
         </tr>
         <tr>
           <th>หมายเหตุ</th>

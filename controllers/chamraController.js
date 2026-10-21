@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { buildProcessRegister, processLocation } = require('../services/chamraProcessService');
 const { snapshotProcesses } = require('../services/chamraSummaryService');
 const { dateKey, resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
@@ -326,7 +327,10 @@ chamraController.list = async (req, res) => {
   } catch (err) {
     if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
   }
-  res.render('chamra/list', { ...fiscalNavigation(managementYear, await ChamraManagement.availableYears()), period, withdrawalRows, managementYear, managementData, managementTargetTypes: TARGET_TYPES, updated: req.query.updated === '1', data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
+  let documents = null;
+  try { documents = await ChamraManagement.list('documents', managementYear); }
+  catch (err) { if (err.code !== 'ER_NO_SUCH_TABLE') throw err; }
+  res.render('chamra/list', { documents, ...fiscalNavigation(managementYear, await ChamraManagement.availableYears()), period, withdrawalRows, managementYear, managementData, managementTargetTypes: TARGET_TYPES, updated: req.query.updated === '1', data, members, octoberMovement, octoberMovementSummary, withdrawnThisYearSummary });
 };
 
 chamraController.showAll = async (req, res) => {
@@ -812,14 +816,35 @@ chamraController.detail = async (req, res) => {
     const record = await Chamra.getByCode(code); // detail + process + coop
     if (!record) return res.status(404).send('ไม่พบข้อมูล');
     const poblems = await Chamra.getPoblemsByCode(code);
+    const canEditResponsible = ['admin', 'kjs'].includes(req.session?.user?.mClass || req.session?.user?.m_class || req.session?.user?.level);
+    if (canEditResponsible && !req.session.chamraToken) req.session.chamraToken = crypto.randomBytes(32).toString('hex');
     res.render('chamra/detail', {
       data: record,
+      canEditResponsible,
+      csrf: canEditResponsible ? req.session.chamraToken : '',
+      responsibleSaved: req.query.saved === '1',
       poblems
     });
   } catch (e) {
     console.error('detail error:', e);
     res.status(500).send('Internal Server Error');
   }
+};
+
+// Update only the institution's responsible person from its detail page.
+chamraController.updateResponsible = async (req, res) => {
+  const supplied = Buffer.from(String(req.body?._csrf || ''));
+  const expected = Buffer.from(req.session.chamraToken || '');
+  if (!expected.length || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
+    return res.status(403).send('แบบฟอร์มหมดอายุ กรุณาเปิดหน้ารายละเอียดใหม่');
+  }
+  const code = req.params.c_code;
+  if (!await Chamra.getByCode(code)) return res.status(404).send('ไม่พบข้อมูล');
+  if (typeof req.body.de_person !== 'string' || req.body.de_person.trim().length > 150) {
+    return res.status(400).send('กรุณาระบุผู้รับผิดชอบไม่เกิน 150 ตัวอักษร');
+  }
+  await Chamra.update(code, { de_person: req.body.de_person.trim() });
+  return res.redirect(`/chamra/detail/${encodeURIComponent(code)}?saved=1`);
 };
 
 // แสดงรายการกระบวนการ

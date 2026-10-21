@@ -15,11 +15,12 @@ test('management validates fiscal years, numeric targets and real calendar dates
   assert.throws(() => validate('__proto__', {}));
 });
 test('target validation limits types and does not accept client audit or file paths', () => {
-  const { data, errors } = validate('targets', { fiscal_year:'2570', c_code:'001', target_type:'withdrawal', due_date:'', updated_by:'forged', report_path:'/bad' });
+  const { data, errors } = validate('targets', { fiscal_year:'2570', c_code:'001', target_type:'withdrawal', due_date:'', updated_by:'forged', report_path:'/bad', responsible:'forged name' });
   assert.equal(errors.length, 0);
   assert.equal(data.due_date, null);
   assert.equal(data.updated_by, undefined);
   assert.equal(data.report_path, undefined);
+  assert.equal(data.responsible, undefined);
   assert.ok(validate('targets', {fiscal_year:'2570', c_code:'001', target_type:'other'}).errors.length);
   assert.equal(validate('meetings', {fiscal_year:'2570', title:'x', meeting_no:'1', meeting_date:'2026-10-19', report_path:'https://bad'}).data.report_path, undefined);
 });
@@ -29,10 +30,10 @@ test('default fiscal year follows Bangkok October rollover', () => {
   }
   assert.equal(typeof currentFiscalYear(), 'number');
 });
-function loadController(model) {
+function loadController(model, overrides = {}) {
   const filename = path.resolve(__dirname, '../controllers/chamraManagementController.js');
   const localRequire = createRequire(filename);
-  const sandbox = { module:{exports:{}}, Buffer, __dirname:path.dirname(filename), require:name => name === '../models/chamraManagementModel' ? {availableYears:async()=>[],...model} : localRequire(name) };
+  const sandbox = { module:{exports:{}}, Buffer, __dirname:path.dirname(filename), require:name => Object.hasOwn(overrides, name) ? overrides[name] : name === '../models/chamraManagementModel' ? {availableYears:async()=>[],...model} : localRequire(name) };
   sandbox.exports = sandbox.module.exports;
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, {filename});
   return sandbox.module.exports;
@@ -106,4 +107,101 @@ test('management templates render forms, escaped content and empty or populated 
   assert.ok(populated.includes('/uploads/chamra-meetings/test.pdf'));
   const fallback = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementYear:2569,period:fiscalPeriod(2569),managementData:null});
   assert.ok(fallback.includes('meeting4_2569.pdf'));
+});
+
+test('target lists read current institution responsible person instead of saved target name', async () => {
+  const filename = path.resolve(__dirname, '../models/chamraManagementModel.js');
+  const localRequire = createRequire(filename);
+  let sql, params;
+  const sandbox = { module:{exports:{}}, require:name => name === '../config/db'
+    ? {query:async (query, values) => {sql=query;params=values;return [[]];}}
+    : localRequire(name) };
+  vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});
+  await sandbox.module.exports.list('targets',2570);
+  assert.match(sql,/cd.de_person AS responsible/);
+  assert.match(sql,/LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code/);
+  assert.equal(params[0],2570);
+});
+test('target form displays existing responsible person and prevents typing a separate name', async () => {
+  const ejs = require('ejs');
+  const { TYPES, TARGET_TYPES } = require('../services/chamraManagementService');
+  const html = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/manage/form.ejs'), {
+    title:'Test',user:null,period:fiscalPeriod(2570),type:'targets',config:TYPES.targets,targetTypes:TARGET_TYPES,
+    record:{fiscal_year:2570,c_code:'001'},errors:[],csrf:'token',
+    institutions:[{c_code:'001',c_name:'Institution',de_person:'Current <person>'}]
+  });
+  assert.match(html,/data-responsible="Current &lt;person&gt;"/);
+  assert.match(html, /id="responsible"[^>]*readonly/);
+  assert.ok(!html.includes('name="responsible"'));
+});
+
+test('document upload validates contents, ignores submitted storage paths and manages file lifecycle', async () => {
+  const writes=[],deletes=[];
+  let saved,existing=null,fail=false;
+  const fakeFs={mkdir:async()=>{},writeFile:async(...args)=>writes.push(args),unlink:async file=>deletes.push(file)};
+  const controller=loadController({get:async()=>existing,save:async(...args)=>{if(fail)throw new Error('DB failed');saved=args;},remove:async()=>{}},{'fs/promises':fakeFs});
+  const req={params:{type:'documents'},body:{_csrf:'token',fiscal_year:'2570',title:'Document',report_path:'/forged',original_name:'forged'},session:{chamraToken:'token',user:{username:'admin'}}};
+  let res=response();
+  await controller.save(req,res);
+  assert.equal(res.code,400);
+  assert.equal(writes.length,0);
+  req.file={originalname:'test.pdf',buffer:Buffer.from('%PDF-test')};
+  res=response();
+  await controller.save(req,res);
+  assert.match(saved[2].report_path,/^\/storage\/chamra-documents\/[a-f0-9-]+\.pdf$/);
+  assert.equal(saved[2].original_name,'test.pdf');
+  assert.equal(saved[2].file_size,9);
+  assert.equal(writes.length,1);
+  const storedPath=saved[2].report_path;
+  existing={id:1,...saved[2]};req.params.id='1';delete req.file;
+  await controller.save(req,response());
+  assert.equal(writes.length,1);
+  assert.equal(saved[2].report_path,undefined);
+  req.file={originalname:'replacement.pdf',buffer:Buffer.from('%PDF-new')};
+  await controller.save(req,response());
+  assert.ok(deletes[0].endsWith(storedPath));
+  existing={id:1,...saved[2]};
+  fail=true;
+  await assert.rejects(controller.save(req,response()),/DB failed/);
+  assert.ok(deletes[1].endsWith(path.basename(writes[2][0])));
+  fail=false;
+  await controller.remove(req,response());
+  assert.ok(deletes[2].endsWith(existing.report_path));
+});
+test('document validation rejects unsupported, oversized or disguised files', () => {
+  const {validDocument,documentPath}=require('../services/chamraDocumentService');
+  assert.equal(validDocument({originalname:'file.pdf',buffer:Buffer.from('<html>')}),false);
+  assert.equal(validDocument({originalname:'file.html',buffer:Buffer.from('%PDF-')}),false);
+  assert.equal(validDocument({originalname:'file.doc',buffer:Buffer.from('d0cf11e0a1b11ae1','hex')}),true);
+  assert.equal(validDocument({originalname:'file.xlsx',buffer:Buffer.from('504b0304','hex')}),true);
+  assert.equal(validDocument({originalname:'file.pdf',buffer:Buffer.alloc(10*1024*1024+1)}),false);
+  assert.equal(documentPath('/storage/chamra-documents/../../.env'),null);
+  assert.equal(documentPath('/uploads/other.pdf'),null);
+});
+test('public document download selects a record and forces attachment with original filename', async () => {
+  let record={report_path:'/storage/chamra-documents/12345678-1234-1234-1234-123456789012.pdf',original_name:'original.pdf'};
+  const c=loadController({get:async()=>record});
+  const res=response();res.set=()=>{};
+  res.download=(file,name,callback)=>{res.file=file;res.filename=name;res.callback=callback;};
+  await c.downloadDocument({params:{id:'1'}},res,()=>{});
+  assert.ok(res.file.endsWith(record.report_path));
+  assert.equal(res.filename,'original.pdf');
+  res.callback(Object.assign(new Error('missing'),{code:'ENOENT'}));
+  assert.equal(res.code,404);
+  record={report_path:'/etc/passwd'};
+  await c.downloadDocument({params:{id:'1'}},response(),()=>assert.fail());
+  const invalid=response();
+  await c.downloadDocument({params:{id:'../1'}},invalid,()=>assert.fail());
+  assert.equal(invalid.code,404);
+});
+test('related documents section exposes downloads publicly and upload controls only to managers', async () => {
+  const ejs=require('ejs');
+  const filename=path.resolve(__dirname,'../views/chamra/manage/documents.ejs');
+  const base={managementYear:2570,documents:[{id:1,title:'<script>bad</script>',original_name:'test.pdf',file_size:1024}]};
+  const publicHtml=await ejs.renderFile(filename,{...base,user:null});
+  assert.ok(publicHtml.includes('/chamra/documents/1/download'));
+  assert.ok(!publicHtml.includes('<script>bad</script>'));
+  assert.ok(!publicHtml.includes('/manage/documents/add'));
+  const managerHtml=await ejs.renderFile(filename,{...base,user:{mClass:'admin'}});
+  assert.ok(managerHtml.includes('/manage/documents/add?year=2570'));
 });

@@ -124,3 +124,25 @@ test('withdrawn registry status is excluded in current, historical and all views
   }
   assert.equal(data.length,5);
 });
+
+test('detail responsible update changes only the name and requires a valid session token', async () => {
+  let saved;
+  const c=controller({getByCode:async()=>({de_code:'001'}),update:async(...args)=>{saved=args;}});
+  const req={params:{c_code:'001'},body:{_csrf:'token',de_person:'  Current person  ',de_case:'forged'},session:{chamraToken:'token'}};
+  const res={status(code){this.code=code;return this;},send(message){this.message=message;return this;},redirect(url){this.url=url;}};
+  await c.updateResponsible(req,res);
+  assert.equal(saved[0],'001');
+  assert.deepEqual(Object.keys(saved[1]),['de_person']);
+  assert.equal(saved[1].de_person,'Current person');
+  assert.equal(res.url,'/chamra/detail/001?saved=1');
+  saved=null;
+  req.body._csrf='invalid';
+  await c.updateResponsible(req,res);
+  assert.equal(res.code,403);
+  assert.equal(saved,null);
+  req.body._csrf='token';
+  req.body.de_person='a'.repeat(151);
+  await c.updateResponsible(req,res);
+  assert.equal(res.code,400);
+  assert.equal(saved,null);
+});

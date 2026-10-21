@@ -1,3 +1,7 @@
+<%
+  const documentNow = Date.now();
+  const newDocumentDuration = 3 * 24 * 60 * 60 * 1000;
+%>
 <div class="card border-0 shadow-sm mb-4" id="related-documents">
   <div class="card-body p-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -15,11 +19,17 @@
       <p class="text-muted mb-0">ยังไม่มีไฟล์เอกสารสำหรับปีนี้</p>
     <% } else { %>
       <ul class="list-group list-group-flush">
-        <% documents.forEach(document => { %>
+        <% documents.forEach(document => {
+          const uploadedAt = document.created_at ? new Date(document.created_at).getTime() : NaN;
+          const uploadAge = documentNow - uploadedAt;
+          const isNewDocument = Number.isFinite(uploadAge) && uploadAge >= 0 && uploadAge <= newDocumentDuration;
+        %>
           <li class="list-group-item px-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div>
               <% if (Number(document.is_pinned) === 1) { %><span class="badge text-bg-primary me-1"><i class="bi bi-pin-angle-fill me-1"></i>ปักหมุด</span><% } %><% if (Number(document.is_announcement) === 1) { %><span class="badge text-bg-warning me-1"><i class="bi bi-megaphone-fill me-1"></i>ประกาศ</span><% } %>
-              <div class="fw-semibold"><%= document.title %></div>
+              <div class="fw-semibold"><%= document.title %>
+                <% if (isNewDocument) { %><span class="badge text-bg-danger ms-1" title="อัปโหลดไม่เกิน 3 วัน" aria-label="ไฟล์ใหม่ อัปโหลดไม่เกิน 3 วัน"><i class="bi bi-stars me-1" aria-hidden="true"></i>NEW</span><% } %>
+              </div>
               <div class="small text-muted"><%= document.original_name %> • <%= (Number(document.file_size) / 1024).toFixed(1) %> KB</div>
               <% if (document.note) { %><div class="small" style="white-space:pre-wrap"><%= document.note %></div><% } %>
             </div>

@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { normalizeDocumentName } = require('../services/chamraDocumentService');
 const { TYPES } = require('../services/chamraManagementService');
 function config(type) {
   if (!Object.hasOwn(TYPES, type)) throw new Error('Unknown management type');
@@ -32,11 +33,13 @@ module.exports = {
     const join = type === 'targets' ? 'LEFT JOIN active_coop ac ON ac.c_code = t.c_code LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code' : '';
     const order = type === 'documents' ? 't.is_pinned DESC, t.id DESC' : type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
     const [rows] = await db.query(`SELECT ${select} FROM ${table} t ${join} WHERE t.fiscal_year = ? ORDER BY ${order}`, [year]);
+    if (type === 'documents') rows.forEach(row => { row.original_name = normalizeDocumentName(row.original_name); });
     return rows;
   },
   async get(type, id) {
     const dates = type === 'targets' ? ", DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date" : type === 'meetings' ? ", DATE_FORMAT(meeting_date, '%Y-%m-%d') AS meeting_date" : '';
     const [rows] = await db.query(`SELECT *${dates} FROM ${config(type).table} WHERE id = ?`, [id]);
+    if (type === 'documents' && rows[0]) rows[0].original_name = normalizeDocumentName(rows[0].original_name);
     return rows[0] || null;
   },
   async save(type, id, data, user) {

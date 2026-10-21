@@ -1,5 +1,16 @@
 const path = require('path');
 const EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+// Multipart filenames may arrive as UTF-8 bytes decoded by Busboy as Latin-1.
+// Decode only losslessly reversible UTF-8; preserve actual Unicode and Latin-1 names.
+function normalizeDocumentName(value) {
+  let name = String(value || '');
+  if (name && Array.from(name).every(char => char.codePointAt(0) <= 255)) {
+    const bytes = Buffer.from(name, 'latin1');
+    const decoded = bytes.toString('utf8');
+    if (Buffer.from(decoded, 'utf8').equals(bytes)) name = decoded;
+  }
+  return name;
+}
 function validDocument(file) {
   const ext = path.extname(file.originalname || '').toLowerCase();
   const buffer = file.buffer;
@@ -14,4 +25,4 @@ function documentPath(value) {
   return /^\/storage\/chamra-documents\/[0-9a-f-]{36}\.(pdf|doc|docx|xls|xlsx|jpg|jpeg|png)$/.test(value || '')
     ? path.join(__dirname, '..', value.slice(1)) : null;
 }
-module.exports = { validDocument, documentPath };
+module.exports = { validDocument, documentPath, normalizeDocumentName };

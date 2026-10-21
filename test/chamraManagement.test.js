@@ -102,8 +102,12 @@ test('management templates render forms, escaped content and empty or populated 
   const common = {...base, data:[],members:{},octoberMovement:[],octoberMovementSummary:{total:0,coop:0,farmer:0},withdrawnThisYearSummary:{total:0,coop:0,farmer:0},withdrawalRows:[],updated:false,managementYear:2570,managementTargetTypes:TARGET_TYPES};
   const empty = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementData:{indicators:[],targets:[],meetings:[]}});
   assert.ok(empty.includes('ยังไม่มีตัวชี้วัดสำหรับปีนี้'));
-  const populated = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementData:{indicators:[{title:'Test KPI',target_value:7,actual_value:5,unit:'แห่ง'}],targets:[{c_code:'001',c_name:'สถาบัน',target_type:'withdrawal'}],meetings:[{title:'ประชุม',meeting_no:1,fiscal_year:2570,meeting_date:'2026-10-19',report_path:'/uploads/chamra-meetings/test.pdf'}]}});
+  const populated = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementData:{indicators:[{title:'Test KPI',target_value:7,actual_value:5,unit:'แห่ง'}],targets:[{c_code:'001',c_name:'สถาบันถอนชื่อ',target_type:'withdrawal',responsible:'ผู้รับผิดชอบถอนชื่อ'},{c_code:'002',c_name:'สถาบันยกระดับ',target_type:'upgrade'},{c_code:'003',c_name:'สถาบันติดตามคดี',target_type:'litigation'}],meetings:[{title:'ประชุม',meeting_no:1,fiscal_year:2570,meeting_date:'2026-10-19',report_path:'/uploads/chamra-meetings/test.pdf'}]}});
   assert.ok(populated.includes('71.43%'));
+  assert.ok(populated.includes('สถาบันถอนชื่อ'));
+  assert.ok(populated.includes('ผู้รับผิดชอบถอนชื่อ'));
+  assert.ok(!populated.includes('สถาบันยกระดับ'));
+  assert.ok(!populated.includes('สถาบันติดตามคดี'));
   assert.ok(populated.includes('/uploads/chamra-meetings/test.pdf'));
   const fallback = await ejs.renderFile(path.resolve(__dirname,'../views/chamra/list.ejs'), {...common,managementYear:2569,period:fiscalPeriod(2569),managementData:null});
   assert.ok(fallback.includes('meeting4_2569.pdf'));
@@ -255,4 +259,60 @@ test('document edit form retains flags and public list displays both badges', as
   assert.ok(html.includes('ปักหมุด</span>'));
   assert.ok(html.includes('ประกาศ</span>'));
   assert.ok(html.includes('/chamra/documents/1/download'));
+});
+
+test('Thai filenames decode reversible multipart mojibake without damaging Unicode or Latin-1', () => {
+  const { normalizeDocumentName } = require('../services/chamraDocumentService');
+  const thai='ประกาศการชำระบัญชี ปี 2570.pdf';
+  const garbled=Buffer.from(thai,'utf8').toString('latin1');
+  assert.equal(normalizeDocumentName(garbled),thai);
+  for(const name of [thai,'café.pdf','report.pdf','เอกสาร 😀.png']) {
+    assert.equal(normalizeDocumentName(name),name);
+    assert.equal(normalizeDocumentName(normalizeDocumentName(name)),name);
+  }
+});
+test('Thai filename survives a real multipart upload and UTF-8 download attachment header', async () => {
+  const express=require('express');
+  const fsPromises=require('node:fs/promises');
+  const os=require('node:os');
+  const contentDisposition=require('content-disposition');
+  const folder=await fsPromises.mkdtemp(path.join(os.tmpdir(),'chamra-thai-'));
+  let record;
+  const c=loadController({save:async(type,id,data)=>{record={id:1,...data};},get:async()=>record},{'fs/promises':{
+    mkdir:async()=>{},
+    writeFile:async(file,buffer,options)=>fsPromises.writeFile(path.join(folder,path.basename(file)),buffer,options),
+    unlink:async(file)=>fsPromises.unlink(path.join(folder,path.basename(file)))
+  }});
+  const app=express();
+  app.use((req,res,next)=>{req.session={chamraToken:'token',user:{username:'admin'}};next();});
+  app.post('/upload/:type',c.receiveUpload,c.save);
+  app.get('/download/:id',(req,res,next)=>{
+    const download=res.download.bind(res);
+    res.download=(file,name,callback)=>download(path.join(folder,path.basename(file)),name,callback);
+    return c.downloadDocument(req,res,next);
+  });
+  const server=app.listen(0,'127.0.0.1');
+  await new Promise(resolve=>server.once('listening',resolve));
+  const base=`http://127.0.0.1:${server.address().port}`;
+  try {
+    const name='ประกาศการชำระบัญชี ปี 2570.pdf';
+    const form=new FormData();
+    form.set('_csrf','token');form.set('fiscal_year','2570');form.set('title','ประกาศ');
+    form.set('report',new Blob(['%PDF-test'],{type:'application/pdf'}),name);
+    const upload=await fetch(`${base}/upload/documents`,{method:'POST',body:form,redirect:'manual'});
+    assert.equal(upload.status,302);
+    assert.equal(record.original_name,name);
+    for (const storedName of [name,Buffer.from(name,'utf8').toString('latin1')]) {
+      record.original_name=storedName;
+      const response=await fetch(`${base}/download/1`);
+      assert.equal(response.status,200);
+      const header=response.headers.get('content-disposition');
+      assert.match(header,/filename\*=UTF-8''/i);
+      assert.equal(contentDisposition.parse(header).parameters.filename,name);
+      assert.equal(await response.text(),'%PDF-test');
+    }
+  } finally {
+    await new Promise(resolve=>server.close(resolve));
+    await fsPromises.rm(folder,{recursive:true,force:true});
+  }
 });

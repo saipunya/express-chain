@@ -1,4 +1,7 @@
-<% const manager = user && ['admin','kjs'].includes(user.mClass || user.m_class || user.level); %>
+<%
+  const manager = user && ['admin','kjs'].includes(user.mClass || user.m_class || user.level);
+  const withdrawalTargets = managementData.targets.filter(row => row.target_type === 'withdrawal');
+%>
 <div class="card shadow-sm mb-4"><div class="card-body">
   <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
     <% if (manager) { %><div class="ms-auto d-flex flex-wrap gap-2"><% [['indicators','ตัวชี้วัด'],['targets','เป้าหมาย'],['meetings','รายงานประชุม']].forEach(([key,label]) => { %><a class="btn btn-outline-primary" href="/chamra/manage/<%= key %>?year=<%= managementYear %>">จัดการ<%= label %></a><% }) %></div><% } %>
@@ -13,8 +16,8 @@
 <div class="row g-4 mb-4">
   <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-body">
     <h2 class="h5">เป้าหมายการชำระบัญชี ปี <%= managementYear %></h2>
-    <% if (!managementData.targets.length) { %><p class="text-muted">ยังไม่มีเป้าหมายสำหรับปีนี้</p><% } %>
-    <ul class="list-group list-group-flush"><% managementData.targets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
+    <% if (!withdrawalTargets.length) { %><p class="text-muted">ยังไม่มีเป้าหมายถอนชื่อสำหรับปีนี้</p><% } %>
+    <ul class="list-group list-group-flush"><% withdrawalTargets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
   </div></div></div>
   <div class="col-md-6"><div class="card shadow-sm h-100"><div class="card-body">
     <h2 class="h5">รายงานการประชุม ปี <%= managementYear %></h2>

@@ -4,7 +4,7 @@ const fs = require('fs/promises');
 const Model = require('../models/chamraManagementModel');
 const { TYPES, TARGET_TYPES, validate } = require('../services/chamraManagementService');
 const { resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
-const { validDocument, documentPath } = require('../services/chamraDocumentService');
+const { validDocument, documentPath, normalizeDocumentName } = require('../services/chamraDocumentService');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 20 } }).single('report');
 
@@ -98,7 +98,7 @@ exports.save = async (req, res) => {
       await fs.writeFile(uploadedPath, req.file.buffer, { flag: 'wx' });
       data.report_path = `${relativeFolder}/${filename}`;
       if (type === 'documents') {
-        data.original_name = path.basename(req.file.originalname).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 255);
+        data.original_name = path.basename(normalizeDocumentName(req.file.originalname)).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 255);
         data.file_size = req.file.buffer.length;
       }
     }
@@ -130,7 +130,7 @@ exports.downloadDocument = async (req, res, next) => {
   const file = record && documentPath(record.report_path);
   if (!file) return res.status(404).send('ไม่พบเอกสาร');
   res.set('X-Content-Type-Options', 'nosniff');
-  return res.download(file, record.original_name || 'document' + path.extname(file), err => {
+  return res.download(file, normalizeDocumentName(record.original_name) || 'document' + path.extname(file), err => {
     if (!err) return;
     if (res.headersSent) return next(err);
     if (err.code === 'ENOENT' || err.status === 404) return res.status(404).send('ไม่พบไฟล์เอกสาร');

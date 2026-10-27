@@ -1,0 +1,68 @@
+<%- include('../partials/header') %>
+<div class="mx-auto" style="max-width: 960px">
+  <div class="mb-4">
+    <span class="badge text-bg-success mb-2">ใช้งานได้โดยไม่ต้องเข้าสู่ระบบ</span>
+    <h1 class="h3">การคำนวณวงเงินกู้ยืมหรือค้ำประกัน</h1>
+    <p class="text-muted">กรอกข้อมูลตามงบทดลอง ณ วันสิ้นเดือนก่อนการประชุมใหญ่ หน่วย: บาท</p>
+    <p class="small text-muted">คำนวณตามไฟล์ตัวอย่าง CPMR ที่ให้ไว้ ข้อมูลที่กรอกใช้คำนวณในหน้านี้เท่านั้น ไม่มีการบันทึกข้อมูล</p>
+  </div>
+  <form id="loan-limit-form">
+    <section class="card shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3">ประเภทสหกรณ์และฐานทุน</h2>
+        <label for="coopType" class="form-label">ประเภทสหกรณ์</label>
+        <select id="coopType" name="coopType" class="form-select mb-3">
+          <option value="general">การเกษตร / ประมง / นิคม / เครดิตยูเนี่ยน / บริการ (5 เท่า)</option>
+          <option value="savings">ออมทรัพย์ (1.5 เท่า)</option>
+        </select>
+        <div class="row g-3">
+          <% [{name: 'capital', label: 'ทุนเรือนหุ้น'}, {name: 'reserve', label: 'ทุนสำรอง'}, {name: 'loss', label: 'ขาดทุนสะสม'}].forEach(field => { %>
+            <div class="col-md-4">
+              <label for="<%= field.name %>" class="form-label"><%= field.label %> (บาท)</label>
+              <input type="number" min="0" step="0.01" required inputmode="decimal" class="form-control" id="<%= field.name %>" name="<%= field.name %>" placeholder="0.00">
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+    <section class="card shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h2 class="h5">ภาระหนี้ผูกพันที่มีอยู่แล้ว</h2>
+        <p class="text-muted small">กรอก 0 หากไม่มีรายการ</p>
+        <% const debts = [
+          'จำนวนเงินที่เบิกจากวงเงินเบิกเกินบัญชี',
+          'จำนวนเงินกู้คงเหลือของทุกสัญญาที่ระบุเงื่อนไขให้สหกรณ์รับเงินกู้เพียงงวดเดียว',
+          'จำนวนเงินที่ระบุในตั๋วสัญญาใช้เงินเพื่อการค้ำประกันการกู้ยืมหรือการค้ำประกัน ซึ่งสหกรณ์เป็นผู้ออกและยังไม่ได้ชำระเงินตามที่ระบุไว้ในตั๋วสัญญาใช้เงิน',
+          'จำนวนเงินที่รับฝากจากสหกรณ์อื่น ไม่นับรวมจำนวนเงินที่ชุมนุมสหกรณ์',
+          'จำนวนเงินที่สหกรณ์ต้องรับผิดชอบในฐานะผู้ค้ำประกัน'
+        ]; %>
+        <% debts.forEach((label, index) => { %>
+          <div class="row align-items-center g-2 mb-3">
+            <label class="col-md-8 col-form-label" for="debt<%= index + 1 %>"><%= index + 1 %>. <%= label %> (บาท)</label>
+            <div class="col-md-4"><input type="number" min="0" step="0.01" required inputmode="decimal" class="form-control" id="debt<%= index + 1 %>" name="debt<%= index + 1 %>" placeholder="0.00"></div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+    <div class="d-flex gap-2 mb-4">
+      <button type="submit" class="btn btn-success">คำนวณวงเงิน</button>
+      <button type="reset" class="btn btn-outline-secondary">ล้างข้อมูล</button>
+    </div>
+  </form>
+  <noscript><p class="alert alert-warning">กรุณาเปิด JavaScript เพื่อใช้งานเครื่องคำนวณ</p></noscript>
+  <div id="loan-error" class="alert alert-danger" role="alert" hidden></div>
+  <section id="loan-result" class="card border-success" aria-live="polite" hidden>
+    <div class="card-body p-4">
+      <h2 class="h5">ผลการคำนวณ</h2>
+      <dl class="row mb-0">
+        <dt class="col-sm-8">ฐานทุน (ทุนเรือนหุ้น + ทุนสำรอง − ขาดทุนสะสม)</dt><dd class="col-sm-4" id="result-base"></dd>
+        <dt class="col-sm-8">ภาระหนี้ผูกพันรวม 5 รายการ</dt><dd class="col-sm-4" id="result-committed"></dd>
+        <dt class="col-sm-8">วงเงินตามสูตร (ฐานทุน × <span id="result-multiplier"></span> เท่า)</dt><dd class="col-sm-4 fw-bold text-success" id="result-limit"></dd>
+      </dl>
+      <p id="negative-base" class="alert alert-warning mt-3 mb-0" hidden>ฐานทุนติดลบ ตามหมายเหตุในไฟล์ตัวอย่าง ให้ดูยอดภาระหนี้ผูกพันที่มีอยู่แล้วประกอบการขอวงเงินต่อนายทะเบียนสหกรณ์</p>
+      <p class="small text-muted mt-3 mb-0">ผลนี้เป็นการคำนวณตามสูตรในไฟล์ตัวอย่าง ไม่ใช่ผลการอนุมัติวงเงินของนายทะเบียนสหกรณ์</p>
+    </div>
+  </section>
+</div>
+<script src="/js/loan-limit.js" defer></script>
+<%- include('../partials/footer') %>

@@ -14,6 +14,7 @@ module.exports = (app) => {
 
     // ถ้าเป็น homeRoutes.js ให้ใช้ '/' แทน
     if (file === 'homeRoutes.js') baseRoute = '/';
+    if (file === 'loanLimitRoutes.js') baseRoute = '/loan-limit';
     if (file === 'activeCoopRoutes.js') baseRoute = '/activeCoop';
     if (file === 'cooperativeLocationRoutes.js') baseRoute = '/cooperative-locations';
     if (file === 'vongBusinessRoutes.js') baseRoute = '/vong-business';

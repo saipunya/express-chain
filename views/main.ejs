@@ -148,20 +148,22 @@
       </a>
 
 
+    </nav></div>
+    <div class="main-header-actions">
       <% if (!_currentUser) { %>
-      <button type="button" class="main-nav-link main-login-menu" data-bs-toggle="modal" data-bs-target="#mainLoginModal">
+      <button type="button" class="btn btn-success main-login-menu" data-bs-toggle="modal" data-bs-target="#mainLoginModal">
         <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
         <span>เข้าสู่ระบบ</span>
       </button>
       <% } else { %>
-      <a href="<%= _dashboardPath %>" class="main-nav-link">
+      <a href="<%= _dashboardPath %>" class="btn btn-outline-success btn-sm">
         <i class="bi bi-speedometer2" aria-hidden="true"></i><span>ไปหน้าทำงาน</span>
       </a>
-      <a href="/auth/logout" class="main-nav-link">
+      <a href="/auth/logout" class="btn btn-outline-success btn-sm">
         <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>ออกจากระบบ</span>
       </a>
       <% } %>
-    </nav></div>
+    </div>
 
   </aside>
 

@@ -669,6 +669,16 @@ async function showMain(req, res) {
     return res.redirect(getLandingPath(req.session.user));
   }
 
+  const mainUnavailable = {};
+  const load = async (key, query, fallback) => {
+    try { return await query(); }
+    catch (error) {
+      mainUnavailable[key] = true;
+      console.error(`[homeRoutes] ${key} unavailable:`, error.code || error.name);
+      return fallback;
+    }
+  };
+  let strengthYear = 0;
   // Keep the map available even if an unrelated dashboard summary fails.
   const mapDataPromise = cooperativeLocationModel.getPublicMapLocations()
     .then((locations) => ({ cooperativeMapLocations: locations, cooperativeMapUnavailable: false }))
@@ -685,28 +695,26 @@ async function showMain(req, res) {
 
   try {
     const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, mapData, districtData] = await Promise.all([
-      getMainDeadlineData(),
-      activeCoopModel.getActiveInstitutionSummaryRows(),
-      onlineModel.getOnlineUsers(),
-      onlineModel.getOnlineCount(),
-      turnoverModel.getCategorySummaryByFiscalYear(),
-      bigmeetModel.getLatestFiscalYearCategorySummary(),
-      strengthModel.getGradeSummaryByInOutGroup(2568),
-      downModel.getMainDownloads(8),
-      chamraModel.getAll().catch((error) => {
-        console.error('[homeRoutes] chamra summary error:', error);
-        return [];
-      }),
+      load('deadlines', () => getMainDeadlineData(), {}),
+      load('institutions', () => activeCoopModel.getActiveInstitutionSummaryRows(), []),
+      load('online', () => onlineModel.getOnlineUsers(), []),
+      load('online', () => onlineModel.getOnlineCount(), 0),
+      load('turnover', () => turnoverModel.getCategorySummaryByFiscalYear(), []),
+      load('meetings', () => bigmeetModel.getLatestFiscalYearCategorySummary(), { categories: [] }),
+      load('strength', async () => { strengthYear = Number(await strengthModel.getLatestYear()) || 0; return strengthModel.getGradeSummaryByInOutGroup(strengthYear); }, []),
+      load('downloads', () => downModel.getMainDownloads(8), []),
+      load('chamra', () => chamraModel.getAll(), []),
       mapDataPromise,
       districtDataPromise
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
+      mainUnavailable,
       institutionSummary: buildInstitutionSummary(institutionRows),
       turnoverCategorySummary: buildTurnoverCategorySummary(turnoverCategoryRows),
       bigmeetFiscalSummary,
-      strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, 2568),
+      strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, strengthYear),
       mainDownloads: buildMainDownloads(mainDownloads),
       chamraSummary: buildChamraSummary(chamraRows),
       ...mapData,
@@ -720,6 +728,7 @@ async function showMain(req, res) {
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
+      mainUnavailable,
       bigmeetThisMonthGroups: [],
       overdueMeetingSummary: buildOverdueMeetingSummary([], 2569),
       closingWithin30Groups: [],

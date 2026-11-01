@@ -20,2041 +20,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@200;400;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/main.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   </head>
   <body class="main-dashboard-body d-flex flex-column min-vh-100 flex-grow-1">
     <main class="container-fluid main-dashboard-wrap py-3 py-lg-4 flex-grow-1">
 
-<style>
-  :root {
-    --main-ink: #182230;
-    --main-muted: #697586;
-    --main-line: #dde5ee;
-    --main-soft: #f5f7fb;
-    --main-panel: #ffffff;
-    --main-navy: #152238;
-    --main-green: #137a57;
-    --main-teal: #116c7a;
-    --main-blue: #2c6ed5;
-    --main-amber: #c98312;
-    --main-red: #c94444;
-    --main-shadow: 0 3px 12px rgba(30, 50, 42, .05);
-    --main-shadow-soft: 0 1px 3px rgba(30, 50, 42, .025);
-  }
 
-  .main-dashboard-body {
-    background:
-      radial-gradient(circle at 18% 0%, rgba(19, 122, 87, .11), transparent 26rem),
-      linear-gradient(180deg, #f6f8fb 0, #eef3f8 34rem, #f3f6fa 100%);
-    color: var(--main-ink);
-    font-family: 'Sarabun', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-
-  .main-dashboard-wrap {
-    max-width: 1520px;
-  }
-
-  .main-dashboard-shell {
-    display: grid;
-    grid-template-columns: 15.25rem minmax(0, 1fr);
-    gap: 1.25rem;
-    min-height: calc(100vh - 2rem);
-  }
-
-  .main-sidebar {
-    background: #122033;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, .08);
-    box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
-    color: #dbe5ee;
-    padding: .95rem;
-    position: sticky;
-    top: 1rem;
-    height: calc(100vh - 2rem);
-    min-height: 42rem;
-  }
-
-  .main-brand {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    padding: .5rem .35rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, .12);
-  }
-
-  .main-brand img {
-    width: 2.55rem;
-    height: 2.55rem;
-    object-fit: contain;
-    border-radius: 8px;
-    background: #fff;
-    padding: .35rem;
-    box-shadow: 0 .75rem 1.4rem rgba(0, 0, 0, .16);
-  }
-
-  .main-brand-title {
-    margin: 0;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .main-brand-subtitle {
-    color: #a9b7c8;
-    font-size: .78rem;
-  }
-
-  .main-nav {
-    display: grid;
-    gap: .35rem;
-    margin: 1rem 0;
-  }
-
-  .main-nav-link {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    border-radius: 8px;
-    color: #c4d0dc;
-    padding: .68rem .72rem;
-    text-decoration: none;
-    line-height: 1.35;
-    transition: background-color .15s ease, color .15s ease, transform .15s ease;
-  }
-
-  .main-nav-link:hover,
-  .main-nav-link.active {
-    background: rgba(255, 255, 255, .1);
-    color: #fff;
-    transform: translateX(2px);
-  }
-
-  .main-nav-link i {
-    width: 1.3rem;
-    text-align: center;
-    color: #84d9b8;
-    flex: 0 0 auto;
-  }
-
-  .main-sidebar-foot {
-    margin-top: auto;
-    padding: .95rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, .09);
-    border: 1px solid rgba(255, 255, 255, .08);
-  }
-
-  .main-content {
-    min-width: 0;
-  }
-
-  .main-topbar,
-  .main-panel,
-  .main-stat,
-  .main-login-card,
-  .main-hero {
-    background: var(--main-panel);
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-  }
-
-  .main-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.15rem;
-    margin-bottom: 1rem;
-    backdrop-filter: blur(12px);
-  }
-
-  .main-avatar {
-    width: 2.55rem;
-    height: 2.55rem;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #e7f8ef, #eef7ff);
-    color: var(--main-green);
-    font-weight: 700;
-  }
-
-  .main-hero {
-    position: relative;
-    min-height: 29rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: clamp(1.45rem, 3vw, 2.35rem);
-    color: #fff;
-    overflow: hidden;
-    box-shadow: var(--main-shadow);
-    background:
-      linear-gradient(90deg, rgba(9, 20, 34, .92) 0%, rgba(16, 54, 67, .76) 46%, rgba(19, 122, 87, .28) 100%),
-      url('/images/coopchain-network-hero.png') center / cover no-repeat;
-  }
-
-  .main-hero::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(5, 18, 32, .2));
-    pointer-events: none;
-  }
-
-  .main-hero > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .main-hero-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    width: max-content;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, .16);
-    border: 1px solid rgba(255, 255, 255, .22);
-    padding: .45rem .7rem;
-    color: #fff;
-    font-size: .84rem;
-    font-weight: 700;
-  }
-
-  .main-hero h2 {
-    max-width: 43rem;
-    margin: 1.05rem 0 .75rem;
-    color: #fff;
-    font-weight: 700;
-    letter-spacing: 0;
-    line-height: 1.14;
-  }
-
-  .main-hero p {
-    max-width: 35rem;
-    color: rgba(255, 255, 255, .86);
-  }
-
-  .main-login-card {
-    height: 100%;
-    box-shadow: var(--main-shadow);
-    overflow: hidden;
-  }
-
-  .main-login-card .card-body {
-    background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
-  }
-
-  .main-login-card .form-control {
-    border-radius: 8px;
-    border-color: var(--main-line);
-    background: #fbfcfe;
-    min-height: 3rem;
-  }
-
-  .main-login-card .form-control:focus {
-    border-color: rgba(22, 155, 98, .55);
-    box-shadow: 0 0 0 .22rem rgba(22, 155, 98, .13);
-  }
-
-  .main-login-card .btn {
-    border-radius: 8px;
-    min-height: 3.05rem;
-    border: 0;
-    background: linear-gradient(135deg, #147b83, #107f50);
-    box-shadow: 0 .7rem 1.2rem rgba(22, 155, 98, .22);
-  }
-
-  .main-login-card .btn:hover {
-    filter: brightness(.97);
-    transform: translateY(-1px);
-  }
-
-  .main-stat {
-    position: relative;
-    overflow: hidden;
-    padding: 1.05rem;
-    height: 100%;
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-
-  .main-stat:hover {
-    box-shadow: var(--main-shadow);
-    transform: translateY(-1px);
-  }
-
-  .main-stat-icon {
-    width: 2.65rem;
-    height: 2.65rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-size: 1.15rem;
-  }
-
-  .main-stat-icon.green { background: #e9f7ef; color: var(--main-green); }
-  .main-stat-icon.amber { background: #fff4dc; color: #b86f00; }
-  .main-stat-icon.teal { background: #e5f6f8; color: var(--main-teal); }
-  .main-stat-icon.blue { background: #eef5ff; color: var(--main-blue); }
-  .main-stat-icon.red { background: #fdecec; color: var(--main-red); }
-
-  .main-turnover-card {
-    background: var(--main-panel);
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-    height: 100%;
-    overflow: hidden;
-    padding: 1rem;
-    position: relative;
-  }
-
-  .main-turnover-card::before {
-    content: "";
-    inset: 0 0 auto;
-    height: .22rem;
-    position: absolute;
-    background: var(--turnover-accent, var(--main-green));
-  }
-
-  .main-turnover-card.green { --turnover-accent: var(--main-green); }
-  .main-turnover-card.teal { --turnover-accent: var(--main-teal); }
-  .main-turnover-card.amber { --turnover-accent: var(--main-amber); }
-
-  .main-turnover-label {
-    color: var(--main-muted);
-    font-size: .85rem;
-    font-weight: 700;
-  }
-
-  .main-turnover-value {
-    color: var(--main-ink);
-    font-size: clamp(1.25rem, 2vw, 1.75rem);
-    font-weight: 700;
-    line-height: 1.15;
-    margin-top: .45rem;
-    overflow-wrap: anywhere;
-  }
-
-  .main-turnover-meta {
-    border-top: 1px solid var(--main-line);
-    color: var(--main-muted);
-    display: flex;
-    flex-wrap: wrap;
-    font-size: .82rem;
-    gap: .45rem .85rem;
-    margin-top: .9rem;
-    padding-top: .75rem;
-  }
-
-  .main-strength-card {
-    background: var(--main-panel);
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-    height: 100%;
-    padding: 1rem;
-  }
-
-  .main-chamra-overview,
-  .main-chamra-stage-panel,
-  .main-chamra-kpi {
-    border-radius: 16px;
-  }
-
-  .main-chamra-overview,
-  .main-chamra-kpi {
-    height: 100%;
-  }
-
-  .main-chamra-overview {
-    position: relative;
-    overflow: hidden;
-    padding: 1.2rem;
-    color: #fff;
-    background: linear-gradient(135deg, #123d35, #137a57);
-    box-shadow: 0 14px 30px rgba(19, 122, 87, .2);
-  }
-
-  .main-chamra-overview-label {
-    color: rgba(255,255,255,.72);
-    font-size: .82rem;
-    font-weight: 700;
-  }
-
-  .main-chamra-overview-value {
-    margin-top: .2rem;
-    color: #fff;
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  .main-chamra-progress-ring {
-    display: grid;
-    width: 6.2rem;
-    height: 6.2rem;
-    place-items: center;
-    border-radius: 50%;
-    background: conic-gradient(#74e0b3 var(--chamra-progress, 0%), rgba(255,255,255,.16) 0);
-  }
-
-  .main-chamra-progress-ring::before {
-    content: '';
-    grid-area: 1 / 1;
-    width: 4.75rem;
-    height: 4.75rem;
-    border-radius: 50%;
-    background: #17664f;
-  }
-
-  .main-chamra-progress-value {
-    z-index: 1;
-    grid-area: 1 / 1;
-    font-size: 1.05rem;
-    font-weight: 700;
-  }
-
-  .main-chamra-kind-list {
-    display: grid;
-    grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: .6rem;
-    margin-top: 1.1rem;
-  }
-
-  .main-chamra-kind {
-    padding: .7rem;
-    border: 1px solid rgba(255,255,255,.15);
-    border-radius: 12px;
-    background: rgba(255,255,255,.09);
-  }
-
-  .main-chamra-kind span { display:block; color:rgba(255,255,255,.7); font-size:.72rem; }
-  .main-chamra-kind strong { display:block; margin-top:.2rem; color:#fff; font-size:1.15rem; }
-
-  .main-chamra-kpi {
-    padding: 1rem;
-    border: 1px solid var(--main-line);
-    background: #fff;
-    box-shadow: 0 8px 22px rgba(15,23,42,.045);
-  }
-
-  .main-chamra-kpi-label { color:var(--main-muted); font-size:.8rem; font-weight:700; }
-  .main-chamra-kpi-value { margin-top:.3rem; font-size:1.55rem; font-weight:700; line-height:1.1; }
-  .main-chamra-kpi-note { margin-top:.35rem; color:var(--main-muted); font-size:.74rem; }
-
-  .main-chamra-stage-panel {
-    padding: 1rem;
-    border: 1px solid var(--main-line);
-    background: #fff;
-    box-shadow: 0 8px 22px rgba(15,23,42,.045);
-  }
-
-  .main-chamra-stage-list { display:grid; gap:.65rem; margin-top:.85rem; }
-  .main-chamra-stage {
-    display:grid;
-    grid-template-columns:minmax(11rem,1.35fr) minmax(6rem,1fr) 3.5rem;
-    align-items:center;
-    gap:.75rem;
-  }
-  .main-chamra-stage-label { min-width:0; color:#344054; font-size:.8rem; font-weight:600; }
-  .main-chamra-stage-label strong { color:var(--main-green); }
-  .main-chamra-stage-bar { height:.52rem; overflow:hidden; border-radius:999px; background:#edf1f6; }
-  .main-chamra-stage-bar-fill { width:var(--stage-width,0%); height:100%; border-radius:inherit; background:linear-gradient(90deg,#1b8f67,#4bc394); }
-  .main-chamra-stage-count { text-align:right; color:var(--main-ink); font-size:.8rem; font-weight:700; }
-
-  @media (max-width: 575.98px) {
-    .main-chamra-stage { grid-template-columns:minmax(0,1fr) 3rem; gap:.4rem .65rem; }
-    .main-chamra-stage-bar { grid-column:1 / -1; grid-row:2; }
-    .main-chamra-stage-count { grid-column:2; grid-row:1; }
-  }
-
-  .main-strength-grade-list {
-    display: grid;
-    gap: .55rem;
-    margin-top: .85rem;
-  }
-
-  .main-strength-grade-row {
-    align-items: center;
-    display: grid;
-    gap: .65rem;
-    grid-template-columns: 4.2rem minmax(0, 1fr) 3.3rem;
-  }
-
-  .main-strength-grade-label {
-    color: var(--main-muted);
-    font-size: .8rem;
-    font-weight: 700;
-  }
-
-  .main-strength-bar {
-    background: #edf1f6;
-    border-radius: 999px;
-    height: .48rem;
-    overflow: hidden;
-  }
-
-  .main-strength-bar-fill {
-    border-radius: inherit;
-    height: 100%;
-    width: var(--strength-width, 0%);
-  }
-
-  .main-strength-bar-fill.grade-1 { background: var(--main-green); }
-  .main-strength-bar-fill.grade-2 { background: var(--main-amber); }
-  .main-strength-bar-fill.grade-3 { background: var(--main-red); }
-
-  .main-strength-grade-value {
-    color: var(--main-ink);
-    font-size: .9rem;
-    font-weight: 700;
-    text-align: right;
-  }
-
-  .main-institution-section {
-    margin-top: 1.15rem;
-  }
-
-  .main-section-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: .85rem;
-    padding: .15rem .1rem;
-  }
-
-  .main-section-title h2 {
-    margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
-  }
-
-  .main-institution-card {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    padding: 1.05rem;
-    text-align: left;
-    background: #fff;
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-
-  .main-institution-card::before {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto;
-    height: .22rem;
-    background: var(--card-accent, var(--main-green));
-  }
-
-  .main-institution-card:hover {
-    border-color: #a5dfe4;
-    box-shadow: var(--main-shadow);
-    transform: translateY(-1px);
-  }
-
-  .main-institution-card:focus-visible {
-    outline: 3px solid rgba(34, 160, 107, .3);
-    outline-offset: 2px;
-  }
-
-  .main-institution-label {
-    color: var(--main-muted);
-    font-size: .9rem;
-    font-weight: 700;
-  }
-
-  .main-institution-count {
-    color: var(--main-ink);
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.1;
-  }
-
-  .main-institution-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    color: var(--card-accent, var(--main-green));
-    font-size: .82rem;
-    font-weight: 700;
-  }
-
-  .main-institution-card[data-institution-type="agri"] { --card-accent: var(--main-green); }
-  .main-institution-card[data-institution-type="non_agri"] { --card-accent: var(--main-teal); }
-  .main-institution-card[data-institution-type="farmer"] { --card-accent: var(--main-amber); }
-
-  .main-institution-chart-card {
-    height: 100%;
-    min-height: 19rem;
-    padding: 1.05rem;
-    background: #fff;
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-  }
-
-  .main-chart-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: .9rem;
-  }
-
-  .main-chart-title {
-    display: flex;
-    align-items: center;
-    gap: .55rem;
-    margin: 0;
-    color: var(--main-ink);
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .main-chart-title i {
-    color: var(--main-green);
-  }
-
-  .main-chart-canvas-wrap {
-    position: relative;
-    min-height: 13.5rem;
-  }
-
-  .main-chart-canvas-wrap.tall {
-    min-height: 17rem;
-  }
-
-  .main-chart-canvas-wrap.compact {
-    min-height: 12rem;
-  }
-
-  .main-chart-canvas-wrap canvas {
-    width: 100% !important;
-  }
-
-  .main-chart-fallback {
-    display: grid;
-    gap: .55rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .main-chart-fallback[hidden] {
-    display: none;
-  }
-
-  .main-chart-fallback li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    padding: .62rem .75rem;
-    border: 1px solid #edf1f6;
-    border-radius: 8px;
-    background: #f8fafc;
-    color: var(--main-ink);
-    font-size: .9rem;
-    font-weight: 700;
-  }
-
-  .main-chart-fallback span {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-  }
-
-  .main-chart-dot {
-    width: .65rem;
-    height: .65rem;
-    border-radius: 999px;
-    background: var(--dot-color, var(--main-green));
-    flex: 0 0 auto;
-  }
-
-  .main-chart-kpi-grid {
-    display: grid;
-    gap: .6rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: .85rem;
-  }
-
-  .main-chart-kpi {
-    border: 1px solid #edf1f6;
-    border-radius: 8px;
-    background: #f8fafc;
-    padding: .65rem;
-    min-width: 0;
-  }
-
-  .main-chart-kpi-label {
-    color: var(--main-muted);
-    font-size: .74rem;
-    line-height: 1.25;
-  }
-
-  .main-chart-kpi-value {
-    color: var(--main-ink);
-    font-size: 1.05rem;
-    font-weight: 700;
-    line-height: 1.15;
-    margin-top: .25rem;
-    overflow-wrap: anywhere;
-  }
-
-  .main-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    background: #fff;
-    color: var(--main-muted);
-    padding: .35rem .55rem;
-    font-size: .82rem;
-    font-weight: 700;
-  }
-
-  .main-institution-modal-table {
-    font-size: .92rem;
-  }
-
-  .main-institution-modal-table th {
-    background: #f8fafc;
-    color: var(--main-muted);
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .main-institution-modal-table td {
-    vertical-align: middle;
-  }
-
-  .main-institution-name {
-    min-width: 14rem;
-    color: var(--main-ink);
-    font-weight: 700;
-  }
-
-  .main-system-link {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    padding: .8rem .9rem;
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--main-ink);
-    background: #fff;
-    box-shadow: var(--main-shadow-soft);
-    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-
-  .main-system-link:hover {
-    color: var(--main-teal);
-    border-color: #a5dfe4;
-    box-shadow: 0 .55rem 1.2rem rgba(31, 42, 55, .08);
-    transform: translateY(-1px);
-  }
-
-  .main-system-link i {
-    width: 2.1rem;
-    height: 2.1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: #eef5ff;
-    color: var(--main-blue);
-    flex: 0 0 auto;
-  }
-
-  .main-deadline-section {
-    margin-top: 1.15rem;
-  }
-
-  .main-empty {
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-    color: var(--main-muted);
-    padding: 1rem;
-    text-align: center;
-    background: #f8fafc;
-  }
-
-  .main-download-list {
-    display: grid;
-    gap: .6rem;
-  }
-
-  .main-download-item {
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    min-width: 0;
-    padding: .78rem .9rem;
-    background: #fff;
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-    text-decoration: none;
-    color: var(--main-ink);
-    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-
-  .main-download-item:hover {
-    border-color: #a5dfe4;
-    box-shadow: var(--main-shadow);
-    color: var(--main-ink);
-    transform: translateY(-1px);
-  }
-
-  .main-download-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: #eaf7f1;
-    color: var(--main-green);
-    flex: 0 0 auto;
-    font-size: 1.15rem;
-  }
-
-  .main-download-content {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-
-  .main-download-subject {
-    color: var(--main-ink);
-    font-size: .92rem;
-    font-weight: 700;
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .main-download-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
-    margin-top: .35rem;
-    color: var(--main-muted);
-    font-size: .78rem;
-  }
-
-  .main-download-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    max-width: 100%;
-    padding: .25rem .45rem;
-    border-radius: 8px;
-    background: #f5f8fb;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .main-download-action {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    flex: 0 0 auto;
-  }
-
-  .main-online-card {
-    background: var(--main-panel);
-    border: 1px solid var(--main-line);
-    border-radius: 8px;
-    box-shadow: var(--main-shadow-soft);
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .main-online-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.1rem;
-    background: linear-gradient(180deg, #fff, #fbfcfe);
-    border-bottom: 1px solid var(--main-line);
-  }
-
-  .main-online-title {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    margin: 0;
-    color: var(--main-ink);
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .main-online-title i {
-    width: 2.1rem;
-    height: 2.1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: #e9f7ef;
-    color: var(--main-green);
-  }
-
-  .main-online-body {
-    padding: 1rem 1.1rem 1.1rem;
-  }
-
-  .main-online-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .85rem;
-    border-radius: 8px;
-    background: #f6fbf8;
-    border: 1px solid #d9f0e3;
-    margin-bottom: 1rem;
-  }
-
-  .main-online-count {
-    color: var(--main-green);
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0;
-  }
-
-  .main-online-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .75rem;
-  }
-
-  .main-online-user {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: .75rem;
-    padding: .75rem;
-    border: 1px solid #edf1f6;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  .main-online-avatar {
-    width: 2.35rem;
-    height: 2.35rem;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #edf2f7;
-  }
-
-  .main-online-name,
-  .main-online-position {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .main-online-name {
-    color: var(--main-green);
-    font-weight: 700;
-  }
-
-  .main-online-position {
-    color: var(--main-muted);
-    font-size: .8rem;
-  }
-
-  .main-online-dot {
-    color: var(--main-green);
-    font-size: .48rem;
-    line-height: 1;
-  }
-
-  .main-modal-content {
-    border: 0;
-    border-radius: 8px;
-    box-shadow: 0 1.4rem 4rem rgba(20, 32, 51, .2);
-  }
-
-  .main-modal-header {
-    background: linear-gradient(180deg, #fff, #f9fbfd);
-    border-bottom-color: var(--main-line);
-  }
-
-  .main-table-code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-    letter-spacing: 0;
-  }
-
-  .main-dashboard-body #a2hs-banner {
-    left: auto !important;
-    right: 1rem;
-    transform: none !important;
-    max-width: 25rem;
-  }
-
-  @media (max-width: 1199.98px) {
-    .main-dashboard-shell {
-      grid-template-columns: 1fr;
-    }
-
-    .main-sidebar {
-      position: static;
-      height: auto;
-      min-height: 0;
-      padding: .9rem;
-    }
-
-    .main-nav {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .main-sidebar-foot {
-      display: none;
-    }
-
-  }
-
-  @media (max-width: 767.98px) {
-    .main-dashboard-wrap {
-      padding-left: .75rem;
-      padding-right: .75rem;
-    }
-
-    .main-topbar {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: .75rem;
-    }
-
-    .main-nav {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .45rem;
-      margin: .9rem 0 0;
-    }
-
-    .main-nav-link {
-      padding: .65rem .7rem;
-      font-size: .9rem;
-    }
-
-    .main-hero {
-      min-height: 26rem;
-      background:
-        linear-gradient(180deg, rgba(9, 20, 34, .92) 0%, rgba(16, 54, 67, .76) 58%, rgba(19, 122, 87, .46) 100%),
-        url('/images/coopchain-network-hero.png') center / cover no-repeat;
-    }
-
-    .main-hero h2 {
-      font-size: 1.55rem;
-      line-height: 1.28;
-    }
-
-    .main-hero p {
-      font-size: 1rem;
-    }
-
-    .main-institution-chart-card {
-      min-height: 18rem;
-    }
-
-    .main-chart-head {
-      align-items: stretch;
-      flex-direction: column;
-      gap: .55rem;
-    }
-
-    .main-chart-canvas-wrap {
-      min-height: 12.5rem;
-    }
-
-    .main-chart-canvas-wrap.tall {
-      min-height: 15.5rem;
-    }
-
-    .main-chart-kpi-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .main-online-head,
-    .main-online-summary {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .main-online-list {
-      grid-template-columns: 1fr;
-    }
-
-    .main-section-title {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: .55rem;
-    }
-
-    .main-download-item {
-      align-items: flex-start;
-    }
-
-    .main-download-action {
-      align-self: flex-start;
-    }
-
-    .main-dashboard-body #a2hs-banner {
-      left: 50% !important;
-      right: auto;
-      transform: translateX(-50%) !important;
-      max-width: 420px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .main-nav-link,
-    .main-login-card .btn,
-    .main-stat,
-    .main-institution-card,
-    .main-system-link,
-    .main-download-item {
-      transition: none;
-    }
-
-    .main-nav-link:hover,
-    .main-nav-link.active,
-    .main-login-card .btn:hover,
-    .main-stat:hover,
-    .main-institution-card:hover,
-    .main-system-link:hover,
-    .main-download-item:hover {
-      transform: none;
-    }
-  }
-
-  /* Calm landing page: light surfaces and clear section spacing. */
-  .main-dashboard-body {
-    background: #f6f8f7;
-    line-height: 1.65;
-  }
-
-  .main-dashboard-wrap {
-    max-width: 1360px;
-    padding-top: 1.25rem !important;
-    padding-bottom: 2.5rem !important;
-  }
-
-  .main-dashboard-shell {
-    display: block;
-    min-height: 0;
-  }
-
-  .main-sidebar {
-    align-items: center;
-    background: #fff;
-    color: var(--main-ink);
-    border: 1px solid var(--main-line);
-    border-radius: 18px;
-    box-shadow: var(--main-shadow-soft);
-    flex-direction: row !important;
-    gap: 1.25rem;
-    height: auto;
-    min-height: 0;
-    padding: .7rem .8rem;
-    position: sticky;
-    top: .75rem;
-    z-index: 1020;
-  }
-
-  .main-brand {
-    border: 0;
-    flex: 0 0 auto;
-    padding: .2rem .45rem .2rem .2rem;
-  }
-
-  .main-brand img {
-    border-radius: 12px;
-    height: 2.7rem;
-    width: 2.7rem;
-  }
-
-  .main-brand-subtitle {
-    color: var(--main-muted);
-    font-size: .8rem;
-  }
-
-  .main-nav {
-    display: flex;
-    flex: 1 1 auto;
-    gap: .3rem;
-    justify-content: center;
-    margin: 0;
-  }
-
-  .main-nav-link {
-    border-radius: 11px;
-    color: #52635c;
-    font-size: .9rem;
-    gap: .5rem;
-    padding: .6rem .75rem;
-  }
-
-  .main-nav-link:hover,
-  .main-nav-link.active {
-    background: #edf5f0;
-    color: var(--main-green);
-    transform: none;
-  }
-
-  .main-sidebar-foot {
-    align-items: center;
-    background: #f6f8f7;
-    border-radius: 11px;
-    display: flex;
-    flex: 0 0 auto;
-    gap: .75rem;
-    margin: 0;
-    padding: .55rem .7rem;
-  }
-
-  .main-sidebar-foot > .small {
-    display: none;
-  }
-
-  .main-sidebar-foot .d-flex {
-    gap: .6rem !important;
-  }
-
-  .main-sidebar-foot .fw-semibold {
-    font-size: .8rem;
-  }
-
-  .main-content {
-    padding-top: 1.2rem;
-  }
-
-  .main-topbar {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    margin-bottom: 1.1rem;
-    padding: .35rem .25rem;
-  }
-
-  .main-topbar h1 {
-    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
-    letter-spacing: -.02em;
-  }
-
-  .main-avatar {
-    border: 1px solid #d9ece4;
-    border-radius: 12px;
-    height: 2.65rem;
-    width: 2.65rem;
-  }
-
-  .main-topbar .main-pill {
-    background: rgba(255, 255, 255, .78);
-  }
-
-  .main-topbar,
-  .main-panel,
-  .main-stat,
-  .main-login-card,
-  .main-hero,
-  .main-turnover-card,
-  .main-strength-card,
-  .main-institution-card,
-  .main-institution-chart-card,
-  .main-system-link,
-  .main-download-item,
-  .main-online-card {
-    border-radius: 12px;
-  }
-
-  .main-hero {
-    min-height: 25rem;
-    background: #edf4ef;
-    color: var(--main-ink);
-    box-shadow: none;
-    padding: clamp(1.65rem, 3vw, 2.6rem);
-  }
-
-  .main-brand-title { color: var(--main-ink); }
-  .main-brand img { box-shadow: none; }
-  .main-nav-link i { color: var(--main-green); }
-  .main-avatar { flex-shrink: 0; background: #edf5f0; }
-
-  .main-hero::before,
-  .main-hero::after { content: none; }
-
-  .main-hero-kicker {
-    background: #fff;
-    border-color: #d8e5dc;
-    color: var(--main-green);
-    font-weight: 600;
-  }
-
-  .main-hero p { color: #52635c; line-height: 1.7; }
-
-  .main-hero-kicker {
-    border-radius: 12px;
-  }
-
-  .main-hero h2 {
-    color: var(--main-ink);
-    font-size: clamp(1.65rem, 2.8vw, 2.35rem);
-    line-height: 1.45;
-    letter-spacing: -.025em;
-  }
-
-  .main-login-card {
-    border: 1px solid rgba(221, 229, 238, .85) !important;
-    box-shadow: var(--main-shadow-soft) !important;
-  }
-
-  .main-login-card .card-body {
-    padding: clamp(1.35rem, 2.5vw, 2rem) !important;
-  }
-
-  .main-login-card .form-label {
-    color: #344054;
-    font-size: .9rem;
-    font-weight: 600;
-  }
-
-  .main-login-card .form-control {
-    background: #fff;
-    border-radius: 12px;
-  }
-
-  .main-login-card .btn {
-    border-radius: 12px;
-  }
-
-  .main-stat,
-  .main-system-link {
-    min-height: 5.5rem;
-    padding: 1rem 1.05rem;
-  }
-
-  .main-stat-icon,
-  .main-system-link i,
-  .main-online-title i,
-  .main-download-icon {
-    border-radius: 12px;
-  }
-
-  .main-institution-section,
-  .main-deadline-section {
-    background: transparent;
-    border: 0;
-    border-radius: 20px;
-    margin-top: 2rem;
-    padding: 0;
-  }
-
-  .main-section-title {
-    margin-bottom: 1rem;
-    padding: 0 .15rem;
-  }
-
-  .main-section-title h2 {
-    font-size: 1.15rem;
-    letter-spacing: -.01em;
-  }
-
-  .main-section-title .badge,
-  .main-online-head .badge {
-    border-radius: 999px;
-    padding: .45rem .7rem;
-  }
-
-  .main-turnover-card,
-  .main-strength-card,
-  .main-institution-card,
-  .main-institution-chart-card {
-    box-shadow: var(--main-shadow-soft);
-  }
-
-  .main-turnover-card::before,
-  .main-institution-card::before {
-    display: none;
-  }
-
-  .main-online-head {
-    padding: 1rem 1.15rem;
-  }
-
-  .main-download-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .main-download-item {
-    box-shadow: none;
-    min-height: 5.15rem;
-  }
-
-  .main-online-summary {
-    border-radius: 14px;
-  }
-
-  .main-modal-content {
-    border-radius: 18px;
-  }
-
-  @media (max-width: 1199.98px) {
-    .main-sidebar {
-      align-items: stretch;
-      flex-direction: column !important;
-      gap: .4rem;
-      position: static;
-    }
-
-    .main-brand {
-      border-bottom: 1px solid var(--main-line);
-      padding: .25rem .25rem .7rem;
-    }
-
-    .main-nav {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      width: 100%;
-    }
-
-    .main-sidebar-foot {
-      display: none;
-    }
-  }
-
-  @media (max-width: 767.98px) {
-    .main-dashboard-wrap {
-      padding-top: .65rem !important;
-    }
-
-    .main-sidebar {
-      border-radius: 12px;
-      padding: .65rem;
-    }
-
-    .main-nav {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-top: .35rem;
-    }
-
-    .main-nav-link {
-      font-size: .9rem;
-    }
-
-    .main-content {
-      padding-top: .8rem;
-    }
-
-    .main-topbar {
-      align-items: center;
-      flex-direction: row;
-    }
-
-    .main-topbar .text-muted.small {
-      display: none;
-    }
-
-    .main-topbar h1 {
-      font-size: 1.2rem;
-    }
-
-    .main-hero {
-      min-height: 0;
-      padding: 1.35rem;
-    }
-
-    .main-institution-section,
-    .main-deadline-section {
-      border-radius: 12px;
-      padding: 0;
-    }
-
-    .main-download-list {
-      grid-template-columns: 1fr;
-    }
-
-  }
-
-  .main-login-card .card-body,
-  .main-online-head,
-  .main-modal-header { background: #fff; }
-
-  .main-login-card .btn {
-    background: var(--main-green);
-    box-shadow: none;
-  }
-
-  .main-nav-link:focus-visible,
-  .main-system-link:focus-visible,
-  .main-download-item:focus-visible {
-    outline: 3px solid var(--main-green);
-    outline-offset: 3px;
-  }
-
-  .main-stat:hover,
-  .main-institution-card:hover,
-  .main-system-link:hover,
-  .main-download-item:hover,
-  .main-login-card .btn:hover { transform: none; }
-
-  .main-chamra-overview {
-    background: #235c49;
-    box-shadow: none;
-  }
-
-  .main-chamra-stage-bar-fill { background: var(--main-green); }
-
-  .main-dashboard-body .table > :not(caption) > * > * { padding: .8rem; }
-  .main-dashboard-body section[id] { scroll-margin-top: 6rem; }
-
-  /* Animated feature cards adapted for the server-rendered strength summary. */
-  .main-strength-heading {
-    align-items: flex-end;
-  }
-
-  .main-strength-actions {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: .65rem;
-    justify-content: flex-end;
-  }
-
-  .main-strength-self-assess {
-    align-items: center;
-    background: var(--main-green);
-    border: 1px solid var(--main-green);
-    border-radius: 999px;
-    color: #fff;
-    display: inline-flex;
-    font-size: .86rem;
-    font-weight: 700;
-    gap: .45rem;
-    padding: .58rem .9rem;
-    text-decoration: none;
-    transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease;
-  }
-
-  .main-strength-self-assess:hover {
-    background: #0f6749;
-    box-shadow: 0 10px 22px rgba(19, 122, 87, .18);
-    color: #fff;
-    transform: translateY(-2px);
-  }
-
-  .main-strength-feature-card {
-    --feature-color: #137a57;
-    --feature-light: #dff3e9;
-    --feature-soft: #f5fbf7;
-    background: #fff;
-    border: 1px solid color-mix(in srgb, var(--feature-color) 20%, var(--main-line));
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(24, 34, 48, .04);
-    height: 23.5rem;
-    overflow: hidden;
-    padding: 1.25rem;
-    position: relative;
-    transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
-  }
-
-  .main-strength-feature-card::before {
-    background: radial-gradient(circle, var(--feature-light) 0%, rgba(255, 255, 255, 0) 68%);
-    content: '';
-    height: 20rem;
-    left: 50%;
-    opacity: .8;
-    pointer-events: none;
-    position: absolute;
-    top: -3.5rem;
-    transform: translateX(-50%);
-    width: 24rem;
-  }
-
-  .main-strength-feature-card.teal {
-    --feature-color: #3478c7;
-    --feature-light: #dcecff;
-    --feature-soft: #f4f8ff;
-  }
-
-  .main-strength-feature-card.amber {
-    --feature-color: #bd7410;
-    --feature-light: #ffebc4;
-    --feature-soft: #fff9ed;
-  }
-
-  .main-strength-feature-card:hover {
-    border-color: color-mix(in srgb, var(--feature-color) 38%, var(--main-line));
-    box-shadow: 0 20px 36px rgba(24, 34, 48, .11);
-    transform: translateY(-7px);
-  }
-
-  .main-strength-feature-top {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    z-index: 2;
-  }
-
-  .main-strength-feature-index {
-    color: #7a8798;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: .86rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-  }
-
-  .main-strength-feature-tag {
-    background: var(--feature-soft);
-    border: 1px solid color-mix(in srgb, var(--feature-color) 18%, transparent);
-    border-radius: 999px;
-    color: var(--feature-color);
-    font-size: .72rem;
-    font-weight: 700;
-    padding: .35rem .65rem;
-  }
-
-  .main-strength-feature-visual {
-    align-items: center;
-    display: flex;
-    height: 9.5rem;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-  }
-
-  .main-strength-feature-icon {
-    align-items: center;
-    background: rgba(255, 255, 255, .72);
-    border: 1px solid rgba(255, 255, 255, .9);
-    border-radius: 28px;
-    box-shadow: 0 16px 34px color-mix(in srgb, var(--feature-color) 16%, transparent);
-    color: var(--feature-color);
-    display: inline-flex;
-    font-size: 3.25rem;
-    height: 6.5rem;
-    justify-content: center;
-    transform: translateY(0) scale(1);
-    transition: transform .3s cubic-bezier(.2, .75, .25, 1);
-    width: 6.5rem;
-  }
-
-  .main-strength-feature-card:hover .main-strength-feature-icon {
-    transform: translateY(-7px) scale(1.1);
-  }
-
-  .main-strength-feature-content {
-    background: rgba(255, 255, 255, .88);
-    border: 1px solid rgba(221, 229, 238, .9);
-    border-radius: 14px;
-    bottom: 1.15rem;
-    left: 1.15rem;
-    padding: .95rem 1rem;
-    position: absolute;
-    right: 1.15rem;
-    z-index: 2;
-  }
-
-  .main-strength-feature-title {
-    color: var(--main-ink);
-    font-size: .95rem;
-    font-weight: 700;
-    line-height: 1.35;
-  }
-
-  .main-strength-feature-total {
-    align-items: baseline;
-    display: flex;
-    gap: .35rem;
-    margin-top: .3rem;
-  }
-
-  .main-strength-feature-total strong {
-    color: var(--feature-color);
-    font-size: 1.75rem;
-    line-height: 1;
-  }
-
-  .main-strength-feature-total span {
-    color: var(--main-muted);
-    font-size: .78rem;
-  }
-
-  .main-strength-feature-card .main-strength-grade-list {
-    gap: .36rem;
-    margin-top: .75rem;
-  }
-
-  .main-strength-feature-card .main-strength-grade-row {
-    gap: .5rem;
-    grid-template-columns: 3.4rem minmax(0, 1fr) 2.7rem;
-  }
-
-  .main-strength-feature-card .main-strength-grade-label,
-  .main-strength-feature-card .main-strength-grade-value {
-    font-size: .74rem;
-  }
-
-  .main-coop-map-card {
-    background: #fff;
-    border: 1px solid var(--main-line);
-    border-radius: 20px;
-    box-shadow: var(--main-shadow-soft);
-    overflow: hidden;
-  }
-
-  .main-coop-map-head {
-    align-items: flex-start;
-    display: flex;
-    gap: 1rem;
-    justify-content: space-between;
-    padding: 1.15rem 1.2rem 1rem;
-  }
-
-  #cooperativeMapSection { scroll-margin-top: 7rem; }
-
-  .main-coop-map-tools {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: .75rem;
-    padding: 0 1.2rem 1rem;
-  }
-
-  .main-coop-map-search { flex: 1 1 17rem; min-width: 0; }
-  .main-coop-map-district { flex: 0 1 13rem; }
-  .main-coop-map-tools label { font-size: .8rem; font-weight: 600; margin-bottom: .3rem; }
-  .main-coop-map-tools .main-coop-map-filters { flex: 1 0 100%; justify-content: flex-start; }
-
-  .main-coop-map-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 20rem;
-    border-top: 1px solid var(--main-line);
-  }
-
-  .main-coop-map-results {
-    min-width: 0;
-    border-left: 1px solid var(--main-line);
-    background: #fafcfb;
-  }
-
-  .main-coop-map-results h3 {
-    font-size: .88rem;
-    font-weight: 700;
-    margin: 0;
-    padding: 1rem;
-    border-bottom: 1px solid var(--main-line);
-  }
-
-  .main-coop-map-result-scroll { height: 24.5rem; overflow-y: auto; }
-  .main-coop-map-list { list-style: none; margin: 0; padding: 0; }
-  .main-coop-map-result { padding: 1rem; border-bottom: 1px solid var(--main-line); overflow-wrap: anywhere; }
-  .main-coop-map-result-name { display: block; font-size: .9rem; line-height: 1.6; }
-  .main-coop-map-result-detail { color: var(--main-muted); font-size: .78rem; margin-top: .3rem; }
-  .main-coop-map-result-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .65rem; }
-  .main-coop-map-result-actions a, .main-coop-map-result-actions button { font-size: .75rem; }
-  .main-coop-map-result-actions button { color: var(--main-green); border: 1px solid #cce7da; border-radius: 6px; background: #eef7f2; padding: .2rem .5rem; }
-  .main-coop-map-empty { padding: 1.5rem 1rem; color: var(--main-muted); font-size: .85rem; }
-  .main-coop-map-notice { padding: .75rem 1.2rem; background: #fff5df; color: #805711; font-size: .85rem; }
-  .main-coop-map-filter:focus-visible, .main-coop-map-result-actions button:focus-visible { outline: 3px solid #147957; outline-offset: 3px; }
-
-  .main-coop-map-title {
-    align-items: center;
-    display: flex;
-    gap: .65rem;
-  }
-
-  .main-coop-map-title-icon {
-    align-items: center;
-    background: #e9f7ef;
-    border-radius: 12px;
-    color: var(--main-green);
-    display: inline-flex;
-    flex: 0 0 auto;
-    font-size: 1.15rem;
-    height: 2.65rem;
-    justify-content: center;
-    width: 2.65rem;
-  }
-
-  .main-coop-map-title h2 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin: 0;
-  }
-
-  .main-coop-map-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .45rem;
-    justify-content: flex-end;
-  }
-
-  .main-coop-map-filter {
-    background: #f6f8f7;
-    border: 1px solid #e0e7e3;
-    border-radius: 999px;
-    color: #52635c;
-    font-size: .78rem;
-    font-weight: 700;
-    padding: .42rem .7rem;
-    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
-  }
-
-  .main-coop-map-filter:hover,
-  .main-coop-map-filter.active {
-    background: #e9f7ef;
-    border-color: #9dd3bc;
-    color: var(--main-green);
-  }
-
-  .main-coop-map-wrap {
-    background: #e8eeeb;
-    height: 28rem;
-    position: relative;
-    isolation: isolate;
-  }
-
-  .main-coop-map-canvas {
-    height: 100%;
-    width: 100%;
-  }
-
-  .main-coop-map-count {
-    align-items: center;
-    background: rgba(255, 255, 255, .94);
-    border: 1px solid rgba(221, 229, 238, .95);
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(24, 34, 48, .1);
-    display: flex;
-    gap: .5rem;
-    right: 1rem;
-    padding: .55rem .75rem;
-    pointer-events: none;
-    position: absolute;
-    top: 1rem;
-    z-index: 500;
-  }
-
-  .main-coop-map-count strong {
-    color: var(--main-green);
-    font-size: 1.05rem;
-  }
-
-  .main-coop-map-count span {
-    color: var(--main-muted);
-    font-size: .75rem;
-  }
-
-  .main-coop-map-legend {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: .55rem 1rem;
-    padding: .8rem 1.2rem;
-  }
-
-  .main-coop-map-legend span {
-    align-items: center;
-    color: var(--main-muted);
-    display: inline-flex;
-    font-size: .75rem;
-    gap: .4rem;
-  }
-
-  .main-coop-map-dot {
-    background: var(--map-dot, var(--main-green));
-    border: 2px solid #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px var(--map-dot, var(--main-green));
-    display: inline-block;
-    height: .68rem;
-    width: .68rem;
-  }
-
-  .main-coop-map-popup {
-    min-width: 12rem;
-  }
-
-  .main-coop-map-popup strong,
-  .main-coop-map-popup span {
-    display: block;
-  }
-
-  .main-coop-map-popup strong {
-    color: var(--main-ink);
-    font-family: 'Sarabun', sans-serif;
-    font-size: .88rem;
-    line-height: 1.45;
-  }
-
-  .main-coop-map-popup span {
-    color: var(--main-muted);
-    font-family: 'Sarabun', sans-serif;
-    font-size: .74rem;
-    margin-top: .2rem;
-  }
-
-  .main-coop-map-popup-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
-    margin-top: .65rem;
-  }
-
-  .main-coop-map-popup-link {
-    align-items: center;
-    background: #eef7f2;
-    border: 1px solid #cce7da;
-    border-radius: 999px;
-    color: #0c704c !important;
-    display: inline-flex !important;
-    font-family: 'Sarabun', sans-serif;
-    font-size: .7rem;
-    font-weight: 700;
-    gap: .25rem;
-    padding: .3rem .55rem;
-    text-decoration: none;
-  }
-
-  .main-coop-map-popup-link:hover {
-    background: #daf0e5;
-    color: #07583b !important;
-  }
-
-  .main-coop-map-error {
-    align-items: center;
-    color: var(--main-muted);
-    display: none;
-    inset: 0;
-    justify-content: center;
-    padding: 2rem;
-    position: absolute;
-    text-align: center;
-  }
-
-  .main-coop-map-wrap.map-error .main-coop-map-error { display: flex; }
-  .main-coop-map-wrap.map-error .main-coop-map-canvas { visibility: hidden; }
-
-  .main-district-summary { margin-top: 1.25rem; }
-  .main-district-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; margin-bottom: 1rem; }
-  .main-district-total { background: #fff; border: 1px solid #d8e5dc; border-radius: 12px; padding: .7rem .85rem; }
-  .main-district-total dt { color: #52635c; font-size: .8rem; font-weight: 600; }
-  .main-district-total dd { color: var(--main-green); font-size: 1.65rem; font-weight: 700; line-height: 1.3; margin: .2rem 0 0; }
-  .main-district-total dd small { color: #69786e; font-size: .75rem; font-weight: 400; }
-  .main-district-total:last-child { background: #e0eee5; }
-  .main-district-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
-  .main-district-head h3 { font-size: .95rem; font-weight: 700; margin: 0; }
-  .main-district-head span { color: #52635c; font-size: .75rem; }
-  .main-district-table-wrap { max-height: 18rem; overflow: auto; border: 1px solid #d8e5dc; border-radius: 12px; background: #fff; scrollbar-color: #aabeb0 #f2f7f3; scrollbar-width: thin; }
-  .main-district-table { border-collapse: separate; border-spacing: 0; font-size: .84rem; width: 100%; }
-  .main-district-table th, .main-district-table td { padding: .55rem .7rem; border-bottom: 1px solid #e7eee9; text-align: right; font-variant-numeric: tabular-nums; }
-  .main-district-table th:first-child { text-align: left; }
-  .main-district-table thead th { background: #f3f8f4; color: #52635c; font-weight: 600; position: sticky; top: 0; z-index: 1; }
-  .main-district-table tbody th { font-weight: 400; }
-  .main-district-table tbody tr:hover { background: #f7faf8; }
-  .main-district-table tr > :last-child { color: var(--main-green); font-weight: 700; padding-right: 1rem; }
-  .main-district-table tfoot th, .main-district-table tfoot td { background: #edf5ef; border-bottom: 0; font-weight: 700; }
-  .main-district-table .main-district-unknown { background: #fff9ec; }
-  .main-hero .main-district-note { color: #68776e; font-size: .75rem; margin: .65rem 0 0; }
-  .main-district-table-wrap:focus-visible { outline: 3px solid var(--main-green); outline-offset: 3px; }
-
-  @media (max-width: 575.98px) {
-    .main-district-totals { gap: .4rem; }
-    .main-district-total { padding: .65rem .5rem; }
-    .main-district-total dt { font-size: .72rem; }
-    .main-district-total dd { font-size: 1.4rem; }
-    .main-district-table { font-size: .75rem; }
-    .main-district-table th, .main-district-table td { padding: .5rem .4rem; }
-    .main-district-head { align-items: flex-start; flex-direction: column; gap: .25rem; }
-  }
-
-  @media (max-width: 991.98px) {
-    .main-coop-map-layout { grid-template-columns: 1fr; }
-    .main-coop-map-results { border-left: 0; border-top: 1px solid var(--main-line); }
-    .main-coop-map-result-scroll { height: auto; max-height: 20rem; }
-  }
-
-  @media (max-width: 767.98px) {
-    .main-strength-heading {
-      align-items: flex-start;
-    }
-
-    .main-strength-actions {
-      justify-content: flex-start;
-      width: 100%;
-    }
-
-    .main-strength-self-assess {
-      justify-content: center;
-      width: 100%;
-    }
-
-    .main-strength-feature-card {
-      height: 22.5rem;
-    }
-
-    .main-coop-map-head {
-      align-items: stretch;
-      flex-direction: column;
-    }
-
-    .main-coop-map-filters {
-      justify-content: flex-start;
-    }
-
-    .main-coop-map-filter {
-      flex: 0 0 auto;
-    }
-
-    .main-coop-map-district { flex-grow: 1; }
-
-    .main-coop-map-wrap {
-      height: 23rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .main-strength-feature-card,
-    .main-strength-feature-icon,
-    .main-strength-self-assess {
-      transition: none;
-    }
-
-    .main-strength-feature-card:hover,
-    .main-strength-feature-card:hover .main-strength-feature-icon,
-    .main-strength-self-assess:hover {
-      transform: none;
-    }
-  }
-</style>
 
 <%
+  const _unavailable = typeof mainUnavailable !== 'undefined' ? mainUnavailable : {};
   const _institutionSummary = (typeof institutionSummary !== 'undefined' && institutionSummary) ? institutionSummary : {
     agri: { key: 'agri', label: 'สหกรณ์ภาคการเกษตร', shortLabel: 'ภาคการเกษตร', icon: 'bi-flower1', tone: 'green', count: 0, rows: [] },
     non_agri: { key: 'non_agri', label: 'สหกรณ์นอกภาค', shortLabel: 'นอกภาค', icon: 'bi-buildings', tone: 'teal', count: 0, rows: [] },
@@ -2123,7 +98,7 @@
     return `${amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`;
   };
   const _strengthGradeSummary = (typeof strengthGradeSummary !== 'undefined' && strengthGradeSummary) ? strengthGradeSummary : {
-    year: 2568,
+    year: 0,
     list: [],
     totals: { total: 0, grade1: 0, grade2: 0, grade3: 0 }
   };
@@ -2153,40 +128,44 @@
       </div>
     </div>
 
-    <nav class="main-nav" aria-label="เมนูหลัก">
+    <button class="btn btn-outline-success d-xl-none mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-expanded="false" aria-controls="mainNavigation">เมนูหลัก <i class="bi bi-list" aria-hidden="true"></i></button>
+    <div class="collapse d-xl-block" id="mainNavigation"><nav class="main-nav" aria-label="เมนูหลัก">
       <a href="/main" class="main-nav-link active" aria-current="page">
         <i class="bi bi-grid-1x2-fill"></i>
         <span>หน้าแรก</span>
-      </a>
-      <a href="/register" class="main-nav-link">
-        <i class="bi bi-person-plus"></i>
-        <span>สมัครสมาชิก</span>
       </a>
       <a href="/loan-limit" class="main-nav-link">
         <i class="bi bi-calculator" aria-hidden="true"></i>
         <span>การคำนวณวงเงินกู้ยืมหรือค้ำประกัน</span>
       </a>
+      <a href="https://script.google.com/macros/s/AKfycbwTSFIYJuOKzGlERx9xw0L6sBnvKbtjrGkyNldJrwJLhUh4IfEpuyib2hacXFMvTr06BQ/exec" class="main-nav-link" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+        <span>ระบบลาออนไลน์<span class="visually-hidden"> (เปิดหน้าต่างใหม่)</span></span>
+      </a>
       <a href="/chamra" class="main-nav-link">
         <i class="bi bi-circle-fill"></i>
         <span>งานชำระบัญชี</span>
       </a>
-      <a href="#cooperativeMapSection" class="main-nav-link">
-        <i class="bi bi-pin-map"></i>
-        <span>แผนที่สถาบัน</span>
+
+
+      <% if (!_currentUser) { %>
+      <button type="button" class="main-nav-link main-login-menu" data-bs-toggle="modal" data-bs-target="#mainLoginModal">
+        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+        <span>เข้าสู่ระบบ</span>
+      </button>
+      <% } else { %>
+      <a href="<%= _dashboardPath %>" class="main-nav-link">
+        <i class="bi bi-speedometer2" aria-hidden="true"></i><span>ไปหน้าทำงาน</span>
       </a>
+      <a href="/auth/logout" class="main-nav-link">
+        <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>ออกจากระบบ</span>
+      </a>
+      <% } %>
+    </nav></div>
 
-    </nav>
-
-    <div class="main-sidebar-foot">
-      <div class="small fw-semibold text-white-50 mb-2">สถานะระบบ</div>
-      <div class="d-flex align-items-center justify-content-between gap-3">
-        <span class="fw-semibold text-success">พร้อมใช้งาน</span>
-        <span class="badge text-bg-success">Online</span>
-      </div>
-    </div>
   </aside>
 
-  <section class="main-content">
+  <section class="main-content main-compact-layout">
     <div class="main-topbar">
       <div>
         <div class="text-muted small">หน้าหลัก CoopChain</div>
@@ -2195,259 +174,13 @@
       <div class="d-flex align-items-center gap-3">
         <span class="main-pill d-none d-lg-inline-flex">
           <i class="bi bi-check-circle-fill text-success"></i>
-          <span><%= _currentUser ? 'อยู่ในระบบแล้ว' : `${_institutionTotal} สถาบัน` %></span>
+          <span><%= _currentUser ? 'อยู่ในระบบแล้ว' : (_unavailable.institutions ? 'ข้อมูลสถาบันไม่พร้อมใช้งาน' : `${_institutionTotal} สถาบัน`) %></span>
         </span>
         <div class="main-avatar"><%= _avatarLabel %></div>
       </div>
     </div>
 
-    <div class="row g-3 align-items-stretch">
-      <div class="col-xl-4 order-1 order-xl-2">
-        <div class="card main-login-card border-0 shadow-sm h-100">
-          <div class="card-body p-4 d-flex flex-column <%= _currentUser ? '' : 'justify-content-center' %>">
-            <% if (_currentUser) { %>
-              <div class="mb-4">
-                <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                  <div class="main-stat-icon green"><i class="bi bi-person-check"></i></div>
-                  <span class="badge text-bg-success">เข้าสู่ระบบแล้ว</span>
-                </div>
-                <h2 class="h4 fw-bold mb-2">คุณเข้าสู่ระบบแล้ว</h2>
-                <p class="text-muted mb-0">ยังอยู่ใน session ของ <%= _displayName || 'ผู้ใช้งาน' %></p>
-              </div>
-
-              <div class="d-flex align-items-center gap-3 p-3 rounded-3 bg-light border mb-4">
-                <% if (_currentUser.m_img) { %>
-                  <img src="<%= _currentUser.m_img %>" alt="Profile" class="rounded-circle" style="width: 52px; height: 52px; object-fit: cover;">
-                <% } else { %>
-                  <div class="main-avatar"><%= _avatarLabel %></div>
-                <% } %>
-                <div class="min-w-0">
-                  <div class="fw-bold text-dark text-truncate"><%= _displayName || 'ผู้ใช้งาน' %></div>
-                  <div class="small text-muted text-truncate"><%= _displayPosition || (_isInstitutionUser ? 'สมาชิกสถาบัน' : 'ผู้ใช้งานระบบ') %></div>
-                </div>
-              </div>
-
-              <div class="d-grid gap-2 mt-auto">
-                <a href="<%= _dashboardPath %>" class="btn btn-success btn-lg">
-                  <i class="bi bi-speedometer2 me-1"></i>กลับเข้าแดชบอร์ด
-                </a>
-                <a href="/auth/logout" class="btn btn-outline-danger">
-                  <i class="bi bi-box-arrow-right me-1"></i>ออกจากระบบ
-                </a>
-              </div>
-            <% } else { %>
-            <div class="mb-4">
-              <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                <div class="main-stat-icon green"><i class="bi bi-shield-lock"></i></div>
-                <span class="badge text-bg-light text-success">ระบบปลอดภัย</span>
-              </div>
-              <h2 class="h4 fw-bold mb-2">เข้าสู่ระบบ</h2>
-              <p class="text-muted mb-0">ลงชื่อเข้าใช้เพื่อเข้าสู่หน้าหลักตามสิทธิ์ของบัญชี</p>
-            </div>
-
-            <form action="/auth/login" method="POST" class="mb-4">
-              <div class="mb-3">
-                <label for="username" class="form-label">ชื่อผู้ใช้</label>
-                <input type="text" name="username" id="username" class="form-control form-control-lg" autocomplete="username" required autofocus>
-                <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="password" class="form-label">รหัสผ่าน</label>
-                <input type="password" name="password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
-                <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
-              </div>
-
-              <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
-                <label class="form-check-label" for="rememberMe">จดจำฉัน</label>
-              </div>
-
-              <button type="submit" class="btn btn-success btn-lg w-100">
-                <i class="bi bi-box-arrow-in-right me-1"></i>เข้าสู่ระบบ
-              </button>
-            </form>
-            <% } %>
-
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xl-8 order-2 order-xl-1">
-        <div class="main-hero">
-          <div>
-            <span class="main-hero-kicker"><i class="bi bi-shield-check"></i> <%= _currentUser ? 'หน้าหลัก CoopChain' : 'เข้าสู่ระบบ CoopChain' %></span>
-            <h2 class="display-6 mb-0">ระบบสารสนเทศและเครือข่าย</h2>
-            <p class="lead mb-0 mt-3">สหกรณ์และกลุ่มเกษตรกรในจังหวัดชัยภูมิ</p>
-          </div>
-          <section class="main-district-summary" aria-labelledby="institutionDistrictTitle">
-            <% if (!_institutionDistrictUnavailable) { %>
-              <dl class="main-district-totals" aria-label="จำนวนสถาบันที่ดำเนินการ">
-                <div class="main-district-total"><dt>สหกรณ์</dt><dd><%= _institutionDistrictSummary.totals.cooperatives.toLocaleString('th-TH') %> <small>แห่ง</small></dd></div>
-                <div class="main-district-total"><dt>กลุ่มเกษตรกร</dt><dd><%= _institutionDistrictSummary.totals.farmerGroups.toLocaleString('th-TH') %> <small>แห่ง</small></dd></div>
-                <div class="main-district-total"><dt>รวมทั้งหมด</dt><dd><%= _institutionDistrictSummary.totals.total.toLocaleString('th-TH') %> <small>แห่ง</small></dd></div>
-              </dl>
-            <% } %>
-            <div class="main-district-head">
-              <h3 id="institutionDistrictTitle">จำนวนแยกตามอำเภอ</h3>
-              <span>เฉพาะสถานะดำเนินการ · หน่วย: แห่ง</span>
-            </div>
-            <% if (_institutionDistrictUnavailable) { %>
-              <div class="main-empty" role="status">ไม่สามารถโหลดจำนวนรายอำเภอได้ในขณะนี้ กรุณาลองใหม่ภายหลัง</div>
-            <% } else if (_institutionDistrictSummary.rows.length) { %>
-              <div class="main-district-table-wrap" tabindex="0" role="region" aria-labelledby="institutionDistrictTitle">
-                <table class="main-district-table">
-                  <caption class="visually-hidden">จำนวนสหกรณ์และกลุ่มเกษตรกรที่ดำเนินการในจังหวัดชัยภูมิ แยกตามอำเภอ</caption>
-                  <thead><tr><th scope="col">อำเภอ</th><th scope="col">สหกรณ์</th><th scope="col">กลุ่มเกษตรกร</th><th scope="col">รวม</th></tr></thead>
-                  <tbody>
-                    <% _institutionDistrictSummary.rows.forEach(function(item) { %>
-                      <tr class="<%= item.isUnknown ? 'main-district-unknown' : '' %>">
-                        <th scope="row"><%= item.district %></th>
-                        <td><%= item.cooperatives.toLocaleString('th-TH') %></td>
-                        <td><%= item.farmerGroups.toLocaleString('th-TH') %></td>
-                        <td><%= item.total.toLocaleString('th-TH') %></td>
-                      </tr>
-                    <% }); %>
-                  </tbody>
-                  <tfoot><tr><th scope="row">รวมทั้งหมด</th><td><%= _institutionDistrictSummary.totals.cooperatives.toLocaleString('th-TH') %></td><td><%= _institutionDistrictSummary.totals.farmerGroups.toLocaleString('th-TH') %></td><td><%= _institutionDistrictSummary.totals.total.toLocaleString('th-TH') %></td></tr></tfoot>
-                </table>
-              </div>
-              <p class="main-district-note">เลื่อนตารางเพื่อดูทุกอำเภอ<% if (_institutionDistrictSummary.unknownTotal) { %> · ยังไม่ระบุอำเภอ <%= _institutionDistrictSummary.unknownTotal.toLocaleString('th-TH') %> แห่ง<% } %></p>
-            <% } else { %>
-              <div class="main-empty">ยังไม่มีข้อมูลสหกรณ์และกลุ่มเกษตรกรที่ดำเนินการ</div>
-            <% } %>
-          </section>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-3 mt-1">
-      <div class="col-md-6">
-        <a href="/meetingroom" class="main-system-link h-100">
-          <i class="bi bi-calendar2-check"></i>
-          <span>
-            <span class="d-block fw-semibold">จองห้องประชุม</span>
-            <span class="small text-muted">ระบบจองใช้ห้อง</span>
-          </span>
-        </a>
-      </div>
-      <div class="col-md-6">
-        <a href="/register" class="main-system-link h-100">
-          <i class="bi bi-person-plus"></i>
-          <span>
-            <span class="d-block fw-semibold">สมัครสมาชิก</span>
-            <span class="small text-muted">สร้างบัญชีใหม่</span>
-          </span>
-        </a>
-      </div>
-    </div>
-
-        <section class="main-institution-section" aria-labelledby="institutionSummaryTitle">
-      <div class="main-section-title">
-        <div>
-          <h2 id="institutionSummaryTitle">สรุปจำนวนสถาบันที่ดำเนินการ</h2>
-          <div class="text-muted small">คลิกการ์ดเพื่อดูชื่อ สังกัด และปีบัญชีที่เปิดเผยได้</div>
-        </div>
-        <span class="badge text-bg-success"><%= _institutionTotal %> แห่ง</span>
-      </div>
-
-      <div class="row g-3 align-items-stretch">
-        <div class="col-12 col-xl-4">
-          <div class="main-institution-chart-card">
-            <div class="main-chart-head">
-              <div>
-                <h3 class="main-chart-title">
-                  <i class="bi bi-bar-chart-line"></i>
-                  กราฟจำนวนสถาบัน
-                </h3>
-                <div class="text-muted small mt-1">แสดงเฉพาะจำนวนรวมตามประเภทสถาบัน</div>
-              </div>
-              <span class="main-pill">
-                <i class="bi bi-database-check text-success"></i>
-                <span><%= _institutionTotal %> แห่ง</span>
-              </span>
-            </div>
-
-            <div class="main-chart-canvas-wrap">
-              <canvas id="institutionSummaryChart" aria-label="กราฟจำนวนสถาบันตามประเภท" role="img"></canvas>
-              <ul class="main-chart-fallback" id="institutionSummaryChartFallback" hidden>
-                <% _institutionChartData.forEach(function(item) { %>
-                  <li>
-                    <span><span class="main-chart-dot" style="--dot-color: <%= item.color %>"></span><%= item.label %></span>
-                    <strong><%= item.count %> แห่ง</strong>
-                  </li>
-                <% }); %>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-xl-4">
-          <div class="main-institution-chart-card">
-            <div class="main-chart-head">
-              <div>
-                <h3 class="main-chart-title">
-                  <i class="bi bi-pie-chart"></i>
-                  สัดส่วนตามประเภท
-                </h3>
-                <div class="text-muted small mt-1">เทียบสัดส่วนจำนวนสถาบันทั้งหมด</div>
-              </div>
-            </div>
-
-            <div class="main-chart-canvas-wrap compact">
-              <canvas id="institutionShareChart" aria-label="กราฟสัดส่วนจำนวนสถาบันตามประเภท" role="img"></canvas>
-              <ul class="main-chart-fallback" id="institutionShareChartFallback" hidden>
-                <% _institutionChartData.forEach(function(item) { %>
-                  <li>
-                    <span><span class="main-chart-dot" style="--dot-color: <%= item.color %>"></span><%= item.label %></span>
-                    <strong><%= _institutionTotal ? Math.round((Number(item.count || 0) / _institutionTotal) * 100) : 0 %>%</strong>
-                  </li>
-                <% }); %>
-              </ul>
-            </div>
-            <div class="main-chart-kpi-grid">
-              <% _institutionChartData.forEach(function(item) { %>
-                <div class="main-chart-kpi">
-                  <div class="main-chart-kpi-label"><%= item.label %></div>
-                  <div class="main-chart-kpi-value"><%= _institutionTotal ? Math.round((Number(item.count || 0) / _institutionTotal) * 100) : 0 %>%</div>
-                </div>
-              <% }); %>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-xl-4">
-          <div class="row g-3 h-100">
-            <% _institutionSummaryList.forEach(function(item) { %>
-              <div class="col-md-4 col-xl-12">
-                <button
-                  type="button"
-                  class="main-institution-card"
-                  data-institution-type="<%= item.key %>"
-                  data-bs-toggle="modal"
-                  data-bs-target="#institutionSummaryModal">
-                  <div class="d-flex align-items-start justify-content-between gap-3">
-                    <div>
-                      <div class="main-institution-label"><%= item.label %></div>
-                      <div class="main-institution-count mt-2"><%= item.count || 0 %></div>
-                      <div class="main-institution-hint mt-2">
-                        <span>ดูรายชื่อ</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                      </div>
-                    </div>
-                    <div class="main-stat-icon <%= item.tone %>">
-                      <i class="bi <%= item.icon %>"></i>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            <% }); %>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="main-institution-section" id="cooperativeMapSection" aria-labelledby="cooperativeMapTitle" data-unavailable="<%= _cooperativeMapUnavailable %>">
+    <section class="main-institution-section main-wide-section" id="cooperativeMapSection" aria-labelledby="cooperativeMapTitle" data-unavailable="<%= _cooperativeMapUnavailable %>">
       <div class="main-coop-map-card">
         <div class="main-coop-map-head">
           <div class="main-coop-map-title">
@@ -2533,10 +266,153 @@
       </div>
       <script type="application/json" id="cooperativeMapData"><%- _cooperativeMapJson %></script>
     </section>
+
+    <div class="row g-3 align-items-stretch">
+      <div class="col-12">
+        <div class="main-hero">
+          <div>
+            <span class="main-hero-kicker"><i class="bi bi-shield-check"></i> หน้าหลัก CoopChain</span>
+            <h2 class="display-6 mb-0">ระบบสารสนเทศและเครือข่าย</h2>
+            <p class="lead mb-0 mt-3">สหกรณ์และกลุ่มเกษตรกรในจังหวัดชัยภูมิ</p>
+          </div>
+          <% if (!_unavailable.institutions) { %>
+          <dl class="main-overview-numbers mt-4" aria-label="ภาพรวมสถาบันที่ดำเนินการ">
+            <% _institutionSummaryList.forEach(function(item) { %>
+              <div><dt><%= item.label %></dt><dd><%= Number(item.count || 0).toLocaleString('th-TH') %> <small>แห่ง</small></dd></div>
+            <% }); %>
+          </dl>
+          <% } else { %><p role="status">ข้อมูลภาพรวมสถาบันไม่พร้อมใช้งานชั่วคราว</p><% } %>
+          <div class="main-hero-shortcuts mt-4">
+            <a href="#institutionSummaryTitle" class="btn btn-success">ดูภาพรวมสถาบัน</a>
+            <a href="#cooperativeMapSection" class="btn btn-outline-success">ค้นหาที่ตั้งสถาบัน</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-12">
+        <a href="/meetingroom" class="main-system-link h-100">
+          <i class="bi bi-calendar2-check"></i>
+          <span>
+            <span class="d-block fw-semibold">จองห้องประชุม</span>
+            <span class="small text-muted">ระบบจองใช้ห้อง</span>
+          </span>
+        </a>
+      </div>
+    </div>
+
+        <section class="main-institution-section main-wide-section" aria-labelledby="institutionSummaryTitle">
+      <% if (_unavailable.institutions) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
+      <div class="main-section-title">
+        <div>
+          <h2 id="institutionSummaryTitle">สรุปจำนวนสถาบันที่ดำเนินการ</h2>
+          <div class="text-muted small">คลิกการ์ดเพื่อดูชื่อ สังกัด และปีบัญชีที่เปิดเผยได้</div>
+        </div>
+        <span class="badge text-bg-success"><%= _institutionTotal %> แห่ง</span>
+      </div>
+
+      <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-xl-6">
+          <div class="main-institution-chart-card">
+            <div class="main-chart-head">
+              <div>
+                <h3 class="main-chart-title">
+                  <i class="bi bi-bar-chart-line"></i>
+                  กราฟจำนวนสถาบัน
+                </h3>
+                <div class="text-muted small mt-1">แสดงเฉพาะจำนวนรวมตามประเภทสถาบัน</div>
+              </div>
+              <span class="main-pill">
+                <i class="bi bi-database-check text-success"></i>
+                <span><%= _institutionTotal %> แห่ง</span>
+              </span>
+            </div>
+
+            <div class="main-chart-canvas-wrap">
+              <canvas id="institutionSummaryChart" aria-label="กราฟจำนวนสถาบันตามประเภท" role="img"></canvas>
+              <ul class="main-chart-fallback" id="institutionSummaryChartFallback" hidden>
+                <% _institutionChartData.forEach(function(item) { %>
+                  <li>
+                    <span><span class="main-chart-dot" style="--dot-color: <%= item.color %>"></span><%= item.label %></span>
+                    <strong><%= item.count %> แห่ง</strong>
+                  </li>
+                <% }); %>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+          <div class="row g-3 h-100">
+            <% _institutionSummaryList.forEach(function(item) { %>
+              <div class="col-md-4 col-xl-12">
+                <button
+                  type="button"
+                  class="main-institution-card"
+                  data-institution-type="<%= item.key %>"
+                  data-bs-toggle="modal"
+                  data-bs-target="#institutionSummaryModal">
+                  <div class="d-flex align-items-start justify-content-between gap-3">
+                    <div>
+                      <div class="main-institution-label"><%= item.label %></div>
+                      <div class="main-institution-count mt-2"><%= item.count || 0 %></div>
+                      <div class="main-institution-hint mt-2">
+                        <span>ดูรายชื่อ</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                      </div>
+                    </div>
+                    <div class="main-stat-icon <%= item.tone %>">
+                      <i class="bi <%= item.icon %>"></i>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <% } %>
+              <details class="main-district-summary main-report-details"><summary>ดูจำนวนสถาบันแยกตามอำเภอ</summary>
+            <div class="main-district-head">
+              <h3 id="institutionDistrictTitle">จำนวนแยกตามอำเภอ</h3>
+              <span>เฉพาะสถานะดำเนินการ · หน่วย: แห่ง</span>
+            </div>
+            <% if (_institutionDistrictUnavailable) { %>
+              <div class="main-empty" role="status">ไม่สามารถโหลดจำนวนรายอำเภอได้ในขณะนี้ กรุณาลองใหม่ภายหลัง</div>
+            <% } else if (_institutionDistrictSummary.rows.length) { %>
+              <div class="main-district-table-wrap" tabindex="0" role="region" aria-labelledby="institutionDistrictTitle">
+                <table class="main-district-table">
+                  <caption class="visually-hidden">จำนวนสหกรณ์และกลุ่มเกษตรกรที่ดำเนินการในจังหวัดชัยภูมิ แยกตามอำเภอ</caption>
+                  <thead><tr><th scope="col">อำเภอ</th><th scope="col">สหกรณ์</th><th scope="col">กลุ่มเกษตรกร</th><th scope="col">รวม</th></tr></thead>
+                  <tbody>
+                    <% _institutionDistrictSummary.rows.forEach(function(item) { %>
+                      <tr class="<%= item.isUnknown ? 'main-district-unknown' : '' %>">
+                        <th scope="row"><%= item.district %></th>
+                        <td><%= item.cooperatives.toLocaleString('th-TH') %></td>
+                        <td><%= item.farmerGroups.toLocaleString('th-TH') %></td>
+                        <td><%= item.total.toLocaleString('th-TH') %></td>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                  <tfoot><tr><th scope="row">รวมทั้งหมด</th><td><%= _institutionDistrictSummary.totals.cooperatives.toLocaleString('th-TH') %></td><td><%= _institutionDistrictSummary.totals.farmerGroups.toLocaleString('th-TH') %></td><td><%= _institutionDistrictSummary.totals.total.toLocaleString('th-TH') %></td></tr></tfoot>
+                </table>
+              </div>
+              <p class="main-district-note">เลื่อนตารางเพื่อดูทุกอำเภอ<% if (_institutionDistrictSummary.unknownTotal) { %> · ยังไม่ระบุอำเภอ <%= _institutionDistrictSummary.unknownTotal.toLocaleString('th-TH') %> แห่ง<% } %></p>
+            <% } else { %>
+              <div class="main-empty">ยังไม่มีข้อมูลสหกรณ์และกลุ่มเกษตรกรที่ดำเนินการ</div>
+            <% } %>
+          </details>
+</section>
+
+
+
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/js/cooperative-map.js"></script>
 
     <section class="main-institution-section" aria-labelledby="chamraSummaryTitle">
+      <% if (_unavailable.chamra) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-section-title">
         <div>
           <h2 id="chamraSummaryTitle">สรุปผลการชำระบัญชี</h2>
@@ -2552,7 +428,7 @@
 
       <% if (Number(_chamraSummary.total || 0) > 0) { %>
         <div class="row g-3 align-items-stretch">
-          <div class="col-lg-4">
+          <div class="col-12">
             <div class="main-chamra-overview">
               <div class="d-flex align-items-center justify-content-between gap-3">
                 <div>
@@ -2577,7 +453,7 @@
             </div>
           </div>
 
-          <div class="col-lg-8">
+          <div class="col-12">
             <div class="row g-3 mb-3">
               <div class="col-4">
                 <div class="main-chamra-kpi">
@@ -2624,14 +500,17 @@
       <% } else { %>
         <div class="main-empty">ยังไม่มีข้อมูลการชำระบัญชีสำหรับแสดงผล</div>
       <% } %>
+
+      <% } %>
     </section>
 
     <section class="main-institution-section" aria-labelledby="strengthGradeSummaryTitle">
+      <% if (_unavailable.strength) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-section-title main-strength-heading">
         <div>
           <h2 id="strengthGradeSummaryTitle">สรุปผลความเข้มแข็งสหกรณ์และกลุ่มเกษตรกร</h2>
           <div class="text-muted small">
-            ประจำปี <%= _strengthGradeSummary.year || 2568 %> แยกตามชั้นและประเภทสถาบัน
+            ประจำปี <%= _strengthGradeSummary.year || '—' %> แยกตามชั้นและประเภทสถาบัน
           </div>
         </div>
         <div class="main-strength-actions">
@@ -2655,7 +534,7 @@
               { label: 'ชั้น 2', value: Number(item.grade2 || 0), className: 'grade-2' },
               { label: 'ชั้น 3', value: Number(item.grade3 || 0), className: 'grade-3' }
             ]; %>
-            <div class="col-md-4">
+            <div class="col-12">
               <article class="main-strength-feature-card <%= item.tone %>">
                 <div class="main-strength-feature-top">
                   <span class="main-strength-feature-index"><%= String(itemIndex + 1).padStart(3, '0') %></span>
@@ -2688,10 +567,13 @@
           <% }); %>
         </div>
       <% } else { %>
-        <div class="main-empty">ยังไม่มีข้อมูลความเข้มแข็งประจำปี <%= _strengthGradeSummary.year || 2568 %></div>
+        <div class="main-empty">ยังไม่มีข้อมูลความเข้มแข็งประจำปี <%= _strengthGradeSummary.year || '—' %></div>
+      <% } %>
+
       <% } %>
     </section>
     <section class="main-institution-section" aria-labelledby="turnoverSummaryTitle">
+      <% if (_unavailable.turnover) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-section-title">
         <div>
           <h2 id="turnoverSummaryTitle">ปริมาณธุรกิจภาพรวม</h2>
@@ -2704,7 +586,7 @@
 
       <% if (_turnoverCategoryList.length && _turnoverTotalAmount > 0) { %>
         <div class="row g-3 align-items-stretch mb-3">
-          <div class="col-lg-7">
+          <div class="col-12">
             <div class="main-institution-chart-card">
               <div class="main-chart-head">
                 <div>
@@ -2732,35 +614,11 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-5">
-            <div class="main-institution-chart-card">
-              <div class="main-chart-head">
-                <div>
-                  <h3 class="main-chart-title">
-                    <i class="bi bi-pie-chart"></i>
-                    สัดส่วนปริมาณธุรกิจ
-                  </h3>
-                  <div class="text-muted small mt-1">แสดงน้ำหนักมูลค่าธุรกิจของแต่ละประเภท</div>
-                </div>
-              </div>
-              <div class="main-chart-canvas-wrap tall">
-                <canvas id="turnoverShareChart" aria-label="กราฟสัดส่วนปริมาณธุรกิจตามประเภทสถาบัน" role="img"></canvas>
-                <ul class="main-chart-fallback" id="turnoverShareChartFallback" hidden>
-                  <% _turnoverCategoryList.forEach(function(item) { %>
-                    <li>
-                      <span><span class="main-chart-dot" style="--dot-color: <%= item.tone === 'teal' ? '#116c7a' : item.tone === 'amber' ? '#c98312' : '#137a57' %>"></span><%= item.label %></span>
-                      <strong><%= _turnoverTotalAmount ? Number((Number(item.totalAmount || 0) / _turnoverTotalAmount) * 100).toFixed(1) : '0.0' %>%</strong>
-                    </li>
-                  <% }); %>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="row g-3 align-items-stretch">
           <% _turnoverCategoryList.forEach(function(item) { %>
-            <div class="col-md-4">
+            <div class="col-12">
               <div class="main-turnover-card <%= item.tone %>">
                 <div class="d-flex align-items-start justify-content-between gap-3">
                   <div class="min-w-0">
@@ -2782,6 +640,8 @@
         </div>
       <% } else { %>
         <div class="main-empty">ยังไม่มีข้อมูลปริมาณธุรกิจสำหรับแสดงภาพรวม</div>
+      <% } %>
+
       <% } %>
     </section>
 
@@ -2819,6 +679,7 @@
 </div>
 
     <section class="main-institution-section" aria-labelledby="mainDownloadTitle">
+      <% if (_unavailable.downloads) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-section-title">
         <div>
           <h2 id="mainDownloadTitle">ดาวน์โหลด</h2>
@@ -2862,7 +723,7 @@
               </div>
               <span class="main-download-action">
                 <span class="badge <%= item.down_for === 'all' ? 'text-bg-success' : 'text-bg-info' %>">
-                  <%= item.down_for === 'all' ? 'all' : 'coop' %>
+                  <%= item.down_for === 'all' ? 'บุคคลทั่วไป' : 'สำหรับสถาบัน' %>
                 </span>
                 <i class="bi bi-box-arrow-up-right text-muted"></i>
               </span>
@@ -2870,11 +731,14 @@
           <% }); %>
         </div>
       <% } else { %>
-        <div class="main-empty">ยังไม่มีรายการดาวน์โหลดสำหรับ all หรือ coop</div>
+        <div class="main-empty">ยังไม่มีรายการดาวน์โหลด</div>
+      <% } %>
+
       <% } %>
     </section>
 
- <section class="main-deadline-section" aria-labelledby="mainOnlineTitle">
+ <section class="main-deadline-section main-wide-section" aria-labelledby="mainOnlineTitle">
+      <% if (_unavailable.online) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-online-card">
         <div class="main-online-head">
           <h2 class="main-online-title" id="mainOnlineTitle">
@@ -2917,7 +781,12 @@
           <% } %>
         </div>
       </div>
+
+      <% } %>
     </section>
+
+  </section>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -2955,367 +824,49 @@
       color: item.tone === 'teal' ? '#116c7a' : item.tone === 'amber' ? '#c98312' : '#137a57'
     }))).replace(/</g, '\\u003c') %>;
     var turnoverTotalAmount = <%- JSON.stringify(_turnoverTotalAmount).replace(/</g, '\\u003c') %>;
-    var modalEl = document.getElementById('institutionSummaryModal');
-    var titleEl = document.getElementById('institutionSummaryModalTitle');
-    var subtitleEl = document.getElementById('institutionSummaryModalSubtitle');
-    var rowsEl = document.getElementById('institutionSummaryModalRows');
-    var chartCanvas = document.getElementById('institutionSummaryChart');
-    var chartFallback = document.getElementById('institutionSummaryChartFallback');
-    var institutionShareCanvas = document.getElementById('institutionShareChart');
-    var institutionShareFallback = document.getElementById('institutionShareChartFallback');
-    var turnoverAmountCanvas = document.getElementById('turnoverAmountChart');
-    var turnoverAmountFallback = document.getElementById('turnoverAmountChartFallback');
-    var turnoverShareCanvas = document.getElementById('turnoverShareChart');
-    var turnoverShareFallback = document.getElementById('turnoverShareChartFallback');
-
-    function escapeHtml(value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function formatNumber(value, digits) {
-      return Number(value || 0).toLocaleString('th-TH', {
-        minimumFractionDigits: digits || 0,
-        maximumFractionDigits: digits || 0
-      });
-    }
-
-    function formatMillionBaht(value) {
-      return formatNumber(Number(value || 0) / 1000000, 2) + ' ล้านบาท';
-    }
-
-    function formatCompactMillionBaht(value) {
-      return formatNumber(Number(value || 0) / 1000000) + ' ลบ.';
-    }
-
-    function makeChart(canvas, fallback, hasVisibleData, configFactory) {
-      function showFallback() {
-        if (canvas) canvas.hidden = true;
-        if (fallback) fallback.hidden = false;
-      }
-
-      if (!canvas || !fallback) return;
-      if (!hasVisibleData || typeof Chart === 'undefined') {
-        showFallback();
-        return;
-      }
-
-      try {
-        new Chart(canvas.getContext('2d'), configFactory());
-      } catch (error) {
-        showFallback();
-      }
-    }
-
-    if (!modalEl || !titleEl || !subtitleEl || !rowsEl) return;
-
-    modalEl.addEventListener('show.bs.modal', function(event) {
-      var trigger = event.relatedTarget;
-      var type = trigger ? trigger.getAttribute('data-institution-type') : '';
-      var data = institutionSummary[type] || { label: 'รายชื่อสถาบัน', rows: [], count: 0 };
-      var rows = Array.isArray(data.rows) ? data.rows : [];
-
-      titleEl.textContent = data.label || 'รายชื่อสถาบัน';
-      subtitleEl.textContent = 'จำนวน ' + rows.length + ' แห่ง';
-
-      if (!rows.length) {
-        rowsEl.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">ไม่มีข้อมูลสถาบันในประเภทนี้</td></tr>';
-        return;
-      }
-
-      rowsEl.innerHTML = rows.map(function(row) {
-        return [
-          '<tr>',
-            '<td><span class="badge text-bg-light text-secondary main-table-code">' + escapeHtml(row.c_code || '-') + '</span></td>',
-            '<td class="main-institution-name">' + escapeHtml(row.c_name || '-') + '</td>',
-            '<td>' + escapeHtml(row.c_group || '-') + '</td>',
-            '<td><span class="badge text-bg-success">' + escapeHtml(row.accountingYearLabel || '-') + '</span></td>',
-          '</tr>'
-        ].join('');
-      }).join('');
-    });
-
-    window.addEventListener('load', function() {
-      var chartRows = Array.isArray(institutionChartData) ? institutionChartData : [];
-      var turnoverRows = Array.isArray(turnoverChartData) ? turnoverChartData : [];
-      var hasVisibleData = chartRows.some(function(item) {
-        return Number(item.count || 0) > 0;
-      });
-      var hasTurnoverData = turnoverRows.some(function(item) {
-        return Number(item.totalAmount || 0) > 0;
-      });
-
-      try {
-        var plugins = [];
-        if (typeof ChartDataLabels !== 'undefined') {
-          Chart.register(ChartDataLabels);
-          plugins.push(ChartDataLabels);
-        }
-
-        Chart.defaults.font.family = 'Sarabun, system-ui, -apple-system, Segoe UI, sans-serif';
-        Chart.defaults.color = '#172033';
-
-        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var values = chartRows.map(function(item) { return Number(item.count || 0); });
-        var maxValue = Math.max.apply(null, values);
-        var turnoverValues = turnoverRows.map(function(item) { return Number(item.totalAmount || 0); });
-        var turnoverMaxValue = Math.max.apply(null, turnoverValues);
-
-        makeChart(chartCanvas, chartFallback, hasVisibleData, function() {
-          return {
-          type: 'bar',
-          data: {
-            labels: chartRows.map(function(item) { return item.label; }),
-            datasets: [{
-              label: 'จำนวนสถาบัน',
-              data: values,
-              backgroundColor: chartRows.map(function(item) { return item.color; }),
-              borderWidth: 0,
-              borderRadius: 8,
-              borderSkipped: false,
-              barThickness: 26,
-              maxBarThickness: 32
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: reduceMotion ? 0 : 320,
-              easing: 'easeOutQuart'
-            },
-            layout: {
-              padding: { top: 4, right: 26, bottom: 0, left: 0 }
-            },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return 'จำนวน ' + Number(context.parsed.x || 0).toLocaleString('th-TH') + ' แห่ง';
-                  }
-                }
-              },
-              datalabels: {
-                anchor: 'end',
-                align: 'right',
-                clamp: true,
-                color: '#172033',
-                font: { weight: '700', size: 12 },
-                formatter: function(value) {
-                  return Number(value || 0).toLocaleString('th-TH');
-                }
-              }
-            },
-            scales: {
-              x: {
-                beginAtZero: true,
-                suggestedMax: Math.max(maxValue + 5, Math.ceil(maxValue * 1.16)),
-                grid: { color: '#edf1f6' },
-                border: { display: false },
-                ticks: {
-                  precision: 0,
-                  color: '#667085',
-                  callback: function(value) {
-                    return Number(value).toLocaleString('th-TH');
-                  }
-                }
-              },
-              y: {
-                grid: { display: false },
-                border: { display: false },
-                ticks: {
-                  color: '#172033',
-                  font: { weight: '700', size: 12 }
-                }
-              }
-            }
-          },
-          plugins: plugins
-        };
-        });
-
-        makeChart(institutionShareCanvas, institutionShareFallback, hasVisibleData, function() {
-          return {
-            type: 'doughnut',
-            data: {
-              labels: chartRows.map(function(item) { return item.label; }),
-              datasets: [{
-                data: values,
-                backgroundColor: chartRows.map(function(item) { return item.color; }),
-                borderColor: '#ffffff',
-                borderWidth: 3
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: {
-                duration: reduceMotion ? 0 : 320,
-                easing: 'easeOutQuart'
-              },
-              cutout: '62%',
-              plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      var value = Number(context.parsed || 0);
-                      var total = values.reduce(function(sum, item) { return sum + Number(item || 0); }, 0);
-                      var percent = total > 0 ? (value / total) * 100 : 0;
-                      return context.label + ': ' + formatNumber(value) + ' แห่ง (' + percent.toFixed(1) + '%)';
-                    }
-                  }
-                },
-                datalabels: {
-                  color: '#ffffff',
-                  font: { weight: '700', size: 11 },
-                  formatter: function(value) {
-                    var total = values.reduce(function(sum, item) { return sum + Number(item || 0); }, 0);
-                    if (!total || !value) return '';
-                    return Math.round((Number(value) / total) * 100) + '%';
-                  }
-                }
-              }
-            },
-            plugins: plugins
-          };
-        });
-
-        makeChart(turnoverAmountCanvas, turnoverAmountFallback, hasTurnoverData, function() {
-          return {
-            type: 'bar',
-            data: {
-              labels: turnoverRows.map(function(item) { return item.label; }),
-              datasets: [{
-                label: 'ปริมาณธุรกิจ',
-                data: turnoverValues,
-                backgroundColor: turnoverRows.map(function(item) { return item.color; }),
-                borderWidth: 0,
-                borderRadius: 8,
-                borderSkipped: false,
-                barThickness: 28,
-                maxBarThickness: 36
-              }]
-            },
-            options: {
-              indexAxis: 'y',
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: {
-                duration: reduceMotion ? 0 : 320,
-                easing: 'easeOutQuart'
-              },
-              layout: {
-                padding: { top: 4, right: 42, bottom: 0, left: 0 }
-              },
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      return formatMillionBaht(context.parsed.x || 0);
-                    }
-                  }
-                },
-                datalabels: {
-                  anchor: 'end',
-                  align: 'right',
-                  clamp: true,
-                  color: '#172033',
-                  font: { weight: '700', size: 12 },
-                  formatter: function(value) {
-                    return formatCompactMillionBaht(value);
-                  }
-                }
-              },
-              scales: {
-                x: {
-                  beginAtZero: true,
-                  suggestedMax: Math.max(turnoverMaxValue * 1.18, turnoverMaxValue + 1),
-                  grid: { color: '#edf1f6' },
-                  border: { display: false },
-                  ticks: {
-                    color: '#667085',
-                    callback: function(value) {
-                      return formatNumber(Number(value || 0) / 1000000) + ' ลบ.';
-                    }
-                  }
-                },
-                y: {
-                  grid: { display: false },
-                  border: { display: false },
-                  ticks: {
-                    color: '#172033',
-                    font: { weight: '700', size: 12 }
-                  }
-                }
-              }
-            },
-            plugins: plugins
-          };
-        });
-
-        makeChart(turnoverShareCanvas, turnoverShareFallback, hasTurnoverData, function() {
-          return {
-            type: 'doughnut',
-            data: {
-              labels: turnoverRows.map(function(item) { return item.label; }),
-              datasets: [{
-                data: turnoverValues,
-                backgroundColor: turnoverRows.map(function(item) { return item.color; }),
-                borderColor: '#ffffff',
-                borderWidth: 3
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: {
-                duration: reduceMotion ? 0 : 320,
-                easing: 'easeOutQuart'
-              },
-              cutout: '62%',
-              plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      var value = Number(context.parsed || 0);
-                      var percent = Number(turnoverTotalAmount || 0) > 0 ? (value / Number(turnoverTotalAmount || 0)) * 100 : 0;
-                      return context.label + ': ' + formatMillionBaht(value) + ' (' + percent.toFixed(1) + '%)';
-                    }
-                  }
-                },
-                datalabels: {
-                  color: '#ffffff',
-                  font: { weight: '700', size: 11 },
-                  formatter: function(value) {
-                    var total = Number(turnoverTotalAmount || 0);
-                    if (!total || !value) return '';
-                    return ((Number(value) / total) * 100).toFixed(1) + '%';
-                  }
-                }
-              }
-            },
-            plugins: plugins
-          };
-        });
-      } catch (error) {
-        [chartCanvas, institutionShareCanvas, turnoverAmountCanvas, turnoverShareCanvas].forEach(function(canvas) {
-          if (canvas) canvas.hidden = true;
-        });
-        [chartFallback, institutionShareFallback, turnoverAmountFallback, turnoverShareFallback].forEach(function(fallback) {
-          if (fallback) fallback.hidden = false;
-        });
-      }
-    });
+    window.mainDashboardData = { institutionSummary, institutionChartData, turnoverChartData, turnoverTotalAmount };
   })();
 </script>
+
+
+<% if (!_currentUser) { %>
+<div class="modal fade" id="mainLoginModal" tabindex="-1" aria-labelledby="mainLoginModalTitle" aria-describedby="mainLoginModalDescription" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5 fw-bold" id="mainLoginModalTitle">เข้าสู่ระบบ CoopChain</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted" id="mainLoginModalDescription">กรอกชื่อผู้ใช้และรหัสผ่านเพื่อเข้าสู่หน้าทำงาน</p>
+            <form action="/auth/login" method="POST" class="mb-0">
+              <div class="mb-3">
+                <label for="username" class="form-label">ชื่อผู้ใช้</label>
+                <input type="text" name="username" id="username" class="form-control form-control-lg" autocomplete="username" required>
+                <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label">รหัสผ่าน</label>
+                <input type="password" name="password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
+                <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+              </div>
+
+              <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                <label class="form-check-label" for="rememberMe">จดจำฉัน</label>
+              </div>
+
+              <button type="submit" class="btn btn-success btn-lg w-100">
+                <i class="bi bi-box-arrow-in-right me-1"></i>เข้าสู่ระบบ
+              </button>
+            </form>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<script src="/js/main-dashboard.js"></script>
 
 <%- include('partials/footer') %>

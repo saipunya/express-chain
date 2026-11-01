@@ -26,7 +26,7 @@ test('empty district data has an empty list and zero totals', () => {
   });
 });
 
-test('main displays district counts in the hero and escapes district labels', async () => {
+test('main displays district counts in a collapsed report and escapes district labels', async () => {
   const summary = buildInstitutionDistrictSummary([
     { district: 'เมืองชัยภูมิ', cooperatives: '14', farmerGroups: '4' },
     { district: '<img src=x onerror=alert(1)>', cooperatives: '1', farmerGroups: '0' },
@@ -36,7 +36,9 @@ test('main displays district counts in the hero and escapes district labels', as
     title: 'หน้าแรก', user: null, returnTo: '', institutionDistrictSummary: summary
   });
   const dom = new JSDOM(html);
-  const hero = dom.window.document.querySelector('.main-hero');
+  const hero = dom.window.document.querySelector('details.main-district-summary');
+  assert.equal(hero.open, false);
+  assert.equal(dom.window.document.querySelector('.main-hero table'), null);
   assert.ok(hero.querySelector('#institutionDistrictTitle'));
   assert.equal(hero.querySelectorAll('tbody tr').length, 3);
   assert.equal(hero.querySelector('table img'), null);

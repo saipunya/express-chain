@@ -21,7 +21,7 @@ function stubSummaries(t) {
     [bigmeet, 'findByCodes', []], [bigmeet, 'getLatestFiscalYearCategorySummary', { categories: [] }],
     [online, 'getOnlineUsers', []], [online, 'getOnlineCount', 0],
     [turnover, 'getCategorySummaryByFiscalYear', []], [strength, 'getGradeSummaryByInOutGroup', []],
-    [downloads, 'getMainDownloads', []], [chamra, 'getAll', []]
+    [strength, 'getLatestYear', 2569], [downloads, 'getMainDownloads', []], [chamra, 'getAll', []]
   ].forEach(([model, method, value]) => t.mock.method(model, method, async () => value));
   t.mock.method(console, 'error', () => {});
 }
@@ -35,6 +35,9 @@ test('main retains published map locations when another dashboard summary fails'
   let rendered;
   await showMain({ session: {}, path: '/main' }, { render(view, data) { rendered = { view, data }; } });
   assert.equal(rendered.view, 'main');
+  assert.equal(rendered.data.mainUnavailable.institutions, true);
+  assert.equal(rendered.data.mainUnavailable.strength, undefined);
+  assert.equal(rendered.data.strengthGradeSummary.year, 2569);
   assert.deepEqual(rendered.data.cooperativeMapLocations, published);
   assert.equal(rendered.data.cooperativeMapUnavailable, false);
   assert.deepEqual(rendered.data.institutionDistrictSummary.totals, { cooperatives: 2, farmerGroups: 1, total: 3 });

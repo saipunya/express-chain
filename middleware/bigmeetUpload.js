@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('./secureUpload');
 const path = require('path');
 const fs = require('fs');
 
@@ -7,25 +7,10 @@ fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const safeName = String(file.originalname || 'bigmeet.xlsx').replace(/\s+/g, '_');
-    cb(null, `${Date.now()}_${safeName}`);
-  },
 });
-
-const allowedMimes = [
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
 
 module.exports = multer({
   storage,
   limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '').toLowerCase();
-    const mimeOk = allowedMimes.includes(file.mimetype);
-    const extOk = ['.xls', '.xlsx'].includes(ext);
-    if (mimeOk || extOk) return cb(null, true);
-    return cb(new Error('รองรับเฉพาะไฟล์ .xls หรือ .xlsx'));
-  },
+  fileFilter: multer.fileFilter(['.xls', '.xlsx']),
 });

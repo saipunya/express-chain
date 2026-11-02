@@ -72,197 +72,20 @@
   ].filter(Boolean).length;
 %>
 
-<style>
-  .sangket-report-page {
-    background:
-      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 28%),
-      radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 24%),
-      #f6f8fb;
-    min-height: calc(100vh - 120px);
-  }
-  .report-hero,
-  .report-card {
-    border: 1px solid #e6eef2;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
-  }
-  .report-hero__surface {
-    background:
-      linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(14, 165, 233, 0.04) 52%, rgba(255,255,255,0.95));
-  }
-  .eyebrow {
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #64748b;
-  }
-  .report-title {
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.15;
-  }
-  .report-subtitle {
-    color: #64748b;
-    max-width: 72ch;
-  }
-  .metric-card {
-    border: 1px solid #e5edf2;
-    border-radius: 18px;
-    background: #fff;
-    padding: 1rem 1.1rem;
-    height: 100%;
-  }
-  .metric-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-  }
-  .metric-value {
-    font-size: 1.55rem;
-    line-height: 1.1;
-    font-weight: 800;
-    color: #0f172a;
-  }
-  .metric-note {
-    font-size: 0.82rem;
-    color: #64748b;
-  }
-  .soft-badge {
-    border-radius: 999px;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-  }
-  .report-toolbar .btn {
-    border-radius: 999px;
-  }
-  .table thead th {
-    background: #f5fbf8;
-    color: #0f172a;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .table td,
-  .table th {
-    vertical-align: top;
-    overflow-wrap: anywhere;
-  }
-  .report-observation {
-    min-width: 320px;
-  }
-  .report-observation__text {
-    white-space: normal;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    line-height: 1.5;
-  }
-  .report-inline-actions {
-    display: inline-flex;
-    gap: 0.35rem;
-  }
-  .icon-btn {
-    width: 2.25rem;
-    height: 2.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-  }
-  .mobile-report-card {
-    border: 1px solid #e5edf2;
-    border-radius: 18px;
-    background: #fff;
-    padding: 1rem;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-  }
-  .mobile-report-card + .mobile-report-card {
-    margin-top: 0.75rem;
-  }
-  .mobile-report-card__top {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  .mobile-report-card__title {
-    font-weight: 800;
-    color: #0f172a;
-  }
-  .mobile-report-card__meta {
-    color: #64748b;
-    font-size: 0.86rem;
-  }
-  .mobile-report-card__text {
-    margin-top: 0.7rem;
-    color: #334155;
-    line-height: 1.55;
-  }
-  .mobile-report-card__footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    align-items: center;
-    margin-top: 0.9rem;
-    flex-wrap: wrap;
-  }
-  .category-summary-item {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-  .category-summary-label {
-    min-width: 0;
-    flex: 1 1 auto;
-    line-height: 1.35;
-    word-break: break-word;
-  }
-  .category-legend-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .category-legend-pill {
-    max-width: 100%;
-    white-space: normal;
-    text-align: left;
-    line-height: 1.35;
-  }
-  @media print {
-    .no-print {
-      display: none !important;
-    }
-    .sangket-report-page {
-      background: #fff !important;
-    }
-    .report-hero,
-    .report-card {
-      box-shadow: none !important;
-    }
-  }
-  @media (max-width: 767.98px) {
-    .report-title {
-      font-size: 1.5rem;
-    }
-    .metric-value {
-      font-size: 1.3rem;
-    }
-  }
-</style>
+<link rel="stylesheet" href="/css/sangket-report.css">
+<link rel="stylesheet" href="/css/sangket.css">
 
-<div class="sangket-report-page py-4">
+<div class="sangket-report-page py-3 sangket-workspace">
   <div class="container">
+    <%- include('navigation', { current: 'report', pageLabel: 'รายงานข้อสังเกต' }) %>
     <div class="report-hero mb-4">
-      <div class="report-hero__surface p-4 p-lg-5">
-        <div class="d-flex flex-column flex-lg-row justify-content-between gap-4 align-items-start no-print">
+      <div class="report-hero__surface p-3 p-lg-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-start no-print">
           <div class="flex-grow-1">
-            <div class="eyebrow mb-2">Sangket Report</div>
+
             <h1 class="report-title mb-2">รายงานทะเบียนข้อสังเกต</h1>
             <p class="report-subtitle mb-0">
-              สรุปข้อมูลข้อสังเกตแบบอ่านง่าย พร้อมตัวกรองและทางลัดสำหรับ export เป็น Excel หรือ PDF
+              ตรวจสอบข้อสังเกตรายข้อ และดาวน์โหลดรายงานตามตัวกรอง
             </p>
           </div>
           <div class="report-toolbar d-flex flex-wrap gap-2">
@@ -273,10 +96,10 @@
               <i class="bi bi-file-earmark-arrow-up me-1"></i> นำเข้า Excel
             </a>
             <a href="/sangket/report.xlsx<%= querySuffix %>" class="btn btn-outline-success">
-              <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+              <i class="bi bi-file-earmark-excel me-1"></i> ดาวน์โหลด Excel
             </a>
             <a href="/sangket/report.pdf<%= querySuffix %>" class="btn btn-primary">
-              <i class="bi bi-filetype-pdf me-1"></i> Download PDF
+              <i class="bi bi-filetype-pdf me-1"></i> ดาวน์โหลด PDF
             </a>
           </div>
         </div>
@@ -289,7 +112,7 @@
                 <span class="soft-badge bg-success-subtle text-success"><i class="bi bi-journal-text me-1"></i>รวม</span>
               </div>
               <div class="metric-value"><%= summary.total_observations || 0 %></div>
-              <div class="metric-note">รายการทั้งหมดที่ถูกบันทึกไว้</div>
+              <div class="metric-note">รายการตามตัวกรองปัจจุบัน</div>
             </div>
           </div>
           <div class="col-6 col-xl-3">
@@ -306,10 +129,10 @@
             <div class="metric-card">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <div class="metric-label">งานค้างดำเนินการ</div>
-                <span class="soft-badge bg-warning-subtle text-warning"><i class="bi bi-hourglass-split me-1"></i>Open</span>
+                <span class="soft-badge bg-warning-subtle text-warning"><i class="bi bi-hourglass-split me-1"></i>ค้างดำเนินการ</span>
               </div>
               <div class="metric-value"><%= summary.open_items || 0 %></div>
-              <div class="metric-note">สถานะ new, in_progress, monitoring</div>
+              <div class="metric-note">ใหม่ / กำลังดำเนินการ / ติดตาม</div>
             </div>
           </div>
           <div class="col-6 col-xl-3">
@@ -328,8 +151,9 @@
 
     <div class="report-card mb-4 p-3 p-lg-4">
       <form class="row g-3 align-items-end" method="GET" action="/sangket/report">
+        <% ['auditType', 'coopType', 'fiscalYearEnd'].forEach((key) => { if (filters[key]) { %><input type="hidden" name="<%= key %>" value="<%= filters[key] %>"><% } }); %>
         <div class="col-12 col-lg-4">
-          <label class="form-label fw-semibold">ค้นหา</label>
+          <label class="form-label fw-semibold" for="sangket-report-field-1">ค้นหา</label>
           <div class="input-group">
             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
             <input type="text" name="search" value="<%= filters.search || '' %>" class="form-control" placeholder="ชื่อสหกรณ์ / เลขหนังสือ / ข้อความข้อสังเกต">
@@ -337,7 +161,7 @@
         </div>
         <div class="col-6 col-lg-2">
           <label class="form-label fw-semibold">กสส.</label>
-          <select name="groupNo" class="form-select">
+          <select name="groupNo" class="form-select" id="sangket-report-field-1">
             <option value="">ทั้งหมด</option>
             <% groupList.forEach((group) => { %>
               <option value="<%= group.group_no %>" <%= String(filters.groupNo || '') === String(group.group_no) ? 'selected' : '' %>>
@@ -347,8 +171,8 @@
           </select>
         </div>
         <div class="col-6 col-lg-2">
-          <label class="form-label fw-semibold">หมวด</label>
-          <select name="categoryId" class="form-select">
+          <label class="form-label fw-semibold" for="sangket-report-field-2">หมวด</label>
+          <select name="categoryId" class="form-select" id="sangket-report-field-2">
             <option value="">ทั้งหมด</option>
             <% categoriesList.forEach((cat) => { %>
               <option value="<%= cat.id %>" <%= String(filters.categoryId || '') === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
@@ -356,8 +180,8 @@
           </select>
         </div>
         <div class="col-6 col-lg-2">
-          <label class="form-label fw-semibold">สถานะ</label>
-          <select name="status" class="form-select">
+          <label class="form-label fw-semibold" for="sangket-report-field-3">สถานะ</label>
+          <select name="status" class="form-select" id="sangket-report-field-3">
             <option value="">ทั้งหมด</option>
             <% ['new', 'in_progress', 'monitoring', 'resolved', 'closed'].forEach((value) => { %>
               <option value="<%= value %>" <%= filters.status === value ? 'selected' : '' %>><%= statusLabel(value) %></option>
@@ -365,8 +189,8 @@
           </select>
         </div>
         <div class="col-6 col-lg-2">
-          <label class="form-label fw-semibold">ความรุนแรง</label>
-          <select name="severityCase" class="form-select">
+          <label class="form-label fw-semibold" for="sangket-report-field-4">ความรุนแรง</label>
+          <select name="severityCase" class="form-select" id="sangket-report-field-4">
             <option value="">ทั้งหมด</option>
             <option value="serious_order" <%= filters.severityCase === 'serious_order' ? 'selected' : '' %>>ร้ายแรง</option>
             <option value="advice" <%= filters.severityCase === 'advice' ? 'selected' : '' %>>คำแนะนำ</option>
@@ -375,23 +199,24 @@
         </div>
         <div class="col-12 col-lg-2 d-grid">
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-funnel-fill me-1"></i> ค้นหา
+            <i class="bi bi-search me-1"></i> ค้นหา
           </button>
         </div>
       </form>
 
       <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mt-3 pt-3 border-top">
         <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'new' ? 'active' : '' %>" href="?status=new">
+          <a href="/sangket/report" class="btn btn-sm btn-outline-secondary">ล้างตัวกรอง</a>
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'new' ? 'active' : '' %>" href="<%= buildQuery({ status: 'new' }) %>">
             <i class="bi bi-dot me-1"></i> ใหม่
           </a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'in_progress' ? 'active' : '' %>" href="?status=in_progress">
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'in_progress' ? 'active' : '' %>" href="<%= buildQuery({ status: 'in_progress' }) %>">
             <i class="bi bi-arrow-repeat me-1"></i> กำลังดำเนินการ
           </a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'monitoring' ? 'active' : '' %>" href="?status=monitoring">
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'monitoring' ? 'active' : '' %>" href="<%= buildQuery({ status: 'monitoring' }) %>">
             <i class="bi bi-eye me-1"></i> ติดตาม
           </a>
-          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'resolved' ? 'active' : '' %>" href="?status=resolved">
+          <a class="btn btn-sm btn-outline-secondary <%= filters.status === 'resolved' ? 'active' : '' %>" href="<%= buildQuery({ status: 'resolved' }) %>">
             <i class="bi bi-check2-circle me-1"></i> ปิดแล้ว
           </a>
         </div>
@@ -408,15 +233,15 @@
       </div>
     </div>
 
-    <div class="row g-3 mb-4">
+<details class="sangket-disclosure mb-3"><summary>ดูงานใกล้ครบกำหนดและสรุปตามกลุ่ม / หมวด</summary>    <div class="row g-3 mb-4">
       <div class="col-lg-4">
         <div class="report-card p-3 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
               <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>งานใกล้ครบกำหนด</h6>
-              <div class="text-muted small">แสดง 6 รายการล่าสุด</div>
+              <div class="text-muted small">แสดงสูงสุด 6 รายการตามกำหนดติดตาม</div>
             </div>
-            <span class="soft-badge bg-primary-subtle text-primary"><%= summary.open_items || 0 %></span>
+            <span class="soft-badge bg-primary-subtle text-primary"><%= summary.due_soon || 0 %></span>
           </div>
           <div class="list-group list-group-flush">
             <% ((dashboard && dashboard.dueSoonRows) || []).slice(0, 6).forEach((row) => { %>
@@ -489,6 +314,7 @@
       </div>
     </div>
 
+</details>
     <div class="report-card p-3 p-lg-4 mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -524,7 +350,7 @@
                 <div class="d-flex flex-wrap gap-1">
                   <% if (row.categories && row.categories.length) { %>
                     <% row.categories.slice(0, 2).forEach((cat) => { %>
-                      <span class="badge text-bg-light border" title="<%= cat.name %>">#<%= cat.id %></span>
+                      <span class="badge text-bg-light border" title="<%= cat.name %>"><%= cat.name %></span>
                     <% }) %>
                   <% } else { %>
                     <span class="text-muted small">ไม่มีหมวด</span>
@@ -532,10 +358,10 @@
                 </div>
                 <div class="report-inline-actions">
                   <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-sm btn-outline-primary icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
-                    <i class="bi bi-eye"></i>
+                    <i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายละเอียด
                   </a>
                   <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-sm btn-outline-secondary icon-btn" title="แก้ไข" aria-label="แก้ไข">
-                    <i class="bi bi-pencil-square"></i>
+                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>แก้ไข
                   </a>
                 </div>
               </div>
@@ -553,15 +379,14 @@
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th style="width: 72px;">#</th>
-              <th>สหกรณ์</th>
-              <th>ปีบัญชี</th>
+
+              <th>สถาบัน</th>
+
               <th>หนังสือ</th>
-              <th>หัวข้อ</th>
+
               <th>ข้อสังเกต</th>
               <th>หมวด</th>
-              <th>ความรุนแรง</th>
-              <th>สถานะ</th>
+              <th>กรณี / สถานะ</th>
               <th class="text-end">การทำงาน</th>
             </tr>
           </thead>
@@ -569,7 +394,7 @@
             <% if (hasAnyRows) { %>
               <% items.forEach((row, idx) => { %>
                 <tr>
-                  <td><%= ((pagination.page - 1) * pagination.pageSize) + idx + 1 %></td>
+
                   <td>
                     <div class="fw-semibold"><%= row.cooperative_name %></div>
                     <div class="small text-muted">
@@ -583,17 +408,15 @@
                       <% } %>
                     </div>
                   </td>
-                  <td><%= row.fiscal_year_end || '-' %></td>
+
                   <td>
-                    <div><%= row.audit_office_letter_no || '-' %></div>
+                    <div><%= row.audit_office_letter_no || '-' %></div><div class="small text-muted">ปีบัญชี <%= row.fiscal_year_end || '-' %></div>
                     <div class="small text-muted">
                       <i class="bi bi-calendar-event me-1"></i> <%= row.received_date || '-' %>
                     </div>
                   </td>
-                  <td>
-                    <div class="fw-semibold"><%= row.observation_title || (row.observation_text ? row.observation_text.slice(0, 120) : '-') %></div>
-                  </td>
                   <td class="report-observation">
+                    <div class="fw-semibold mb-1"><%= row.observation_title || 'ข้อสังเกต' %></div>
                     <div class="report-observation__text"><%= row.observation_text || '-' %></div>
                     <div class="small text-muted mt-1">
                       <i class="bi bi-person-badge me-1"></i> <%= row.auditor_name || '-' %>
@@ -607,7 +430,7 @@
                     <% if (row.categories && row.categories.length) { %>
                       <div class="d-flex text-wrap gap-1">
                         <% row.categories.slice(0, 2).forEach((cat) => { %>
-                          <span class="badge text-bg-light border" title="<%= cat.name %>">#<%= cat.id %></span>
+                          <span class="badge text-bg-light border" title="<%= cat.name %>"><%= cat.name %></span>
                         <% }) %>
                         <% if (row.categories.length > 2) { %>
                           <span class="badge text-bg-secondary">+<%= row.categories.length - 2 %></span>
@@ -619,17 +442,15 @@
                   </td>
                   <td>
                     <span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span>
-                  </td>
-                  <td>
-                    <span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
+                    <br><span class="badge mt-1 text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
                   </td>
                   <td class="text-end">
                     <div class="report-inline-actions justify-content-end">
-                      <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-outline-primary btn-sm icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
-                        <i class="bi bi-eye"></i>
+                      <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายละเอียด
                       </a>
-                      <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-outline-secondary btn-sm icon-btn" title="แก้ไข" aria-label="แก้ไข">
-                        <i class="bi bi-pencil-square"></i>
+                      <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>แก้ไข
                       </a>
                     </div>
                   </td>
@@ -637,7 +458,7 @@
               <% }) %>
             <% } else { %>
             <tr>
-              <td colspan="10">
+              <td colspan="6">
                 <div class="text-center py-5 text-muted">
                   <i class="bi bi-inbox display-6 d-block mb-2"></i>
                   ไม่พบข้อมูลตามเงื่อนไขที่เลือก

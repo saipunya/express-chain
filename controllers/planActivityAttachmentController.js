@@ -1,49 +1,28 @@
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const { activityReportsDir } = require('../config/paths');
 const AttachmentModel = require('../models/planActivityMonthlyAttachment');
 
 fs.mkdirSync(activityReportsDir, { recursive: true });
 
-const allowedMimeTypes = new Set([
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'image/jpeg',
-  'image/png',
-  'image/gif'
-]);
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const proCode = String(req.query.pro_code || '').trim();
     const reportMonth = String(req.query.report_month || '').trim();
-    if (!proCode || !/^\d{4}-\d{2}$/.test(reportMonth)) {
+    if (!/^[A-Za-z0-9_-]+$/.test(proCode) || !/^\d{4}-\d{2}$/.test(reportMonth)) {
       return cb(new Error('ข้อมูลโครงการหรือเดือนไม่ครบถ้วน'));
     }
     const dest = path.join(activityReportsDir, proCode, reportMonth);
     fs.mkdirSync(dest, { recursive: true });
     cb(null, dest);
   },
-  filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]+/g, '_');
-    const timestamp = Date.now();
-    cb(null, `${timestamp}_${safeName}`);
-  }
 });
 
 const upload = multer({
   storage,
   limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!allowedMimeTypes.has(file.mimetype)) {
-      return cb(new Error('ชนิดไฟล์ไม่รองรับ (รองรับ PDF, Word, Excel, JPG, PNG)'));
-    }
-    cb(null, true);
-  }
+  fileFilter: multer.fileFilter(['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.gif'])
 }).single('attachment');
 
 exports.uploadAttachment = (req, res) => {

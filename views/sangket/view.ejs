@@ -21,99 +21,21 @@
     fact_check: 'ตรวจข้อเท็จจริง'
   }[item?.severity_case] || '-';
   const observationTitle = item?.observation_title || (item?.observation_text ? item.observation_text.slice(0, 120) : '-');
-  const statusLabel = item?.status || '-';
+  const statusLabel = ({new:'ใหม่', in_progress:'กำลังดำเนินการ', monitoring:'ติดตาม', resolved:'ปิดแล้ว', closed:'ยุติ'})[item?.status] || '-';
   const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
 %>
 
-<style>
-  .sangket-view-page {
-    background:
-      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
-      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
-      #f6f8fb;
-    min-height: calc(100vh - 120px);
-  }
-  .view-shell {
-    border: 1px solid #e5eef0;
-    border-radius: 24px;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
-    overflow: hidden;
-  }
-  .view-hero {
-    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
-    border-bottom: 1px solid #e5eef0;
-  }
-  .detail-card {
-    border: 1px solid #e5edf2;
-    border-radius: 18px;
-    background: #fff;
-    padding: 1rem 1.1rem;
-    height: 100%;
-  }
-  .detail-label {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    color: #64748b;
-    font-weight: 700;
-  }
-  .detail-value {
-    color: #0f172a;
-    font-weight: 600;
-  }
-  .timeline-item {
-    border-left: 3px solid #bde8df;
-    padding-left: 1rem;
-    position: relative;
-  }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -7px;
-    top: 0.35rem;
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: #0f8f7b;
-  }
-  .action-box {
-    border: 1px dashed #cfe8df;
-    background: #f7fcfa;
-    border-radius: 18px;
-  }
-  .sangket-view-page .btn-primary {
-    background-color: #0f8f7b;
-    border-color: #0f8f7b;
-  }
-  .badge-soft {
-    border-radius: 999px;
-    padding: 0.35rem 0.7rem;
-  }
-  .category-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .category-pill {
-    max-width: 100%;
-    white-space: normal;
-    text-align: left;
-    line-height: 1.35;
-  }
-  .mini-note {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-top: 0.35rem;
-  }
-</style>
+<link rel="stylesheet" href="/css/sangket-view.css">
+<link rel="stylesheet" href="/css/sangket.css">
 
-<div class="sangket-view-page py-4">
+<div class="sangket-view-page py-3 sangket-workspace">
   <div class="container">
+    <%- include('navigation', { current: 'view', pageLabel: 'รายละเอียดข้อสังเกต' }) %>
     <div class="view-shell">
-      <div class="view-hero p-4 p-lg-5">
+      <div class="view-hero p-3 p-lg-4">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
           <div>
-            <div class="eyebrow mb-2">Sangket</div>
+
             <h1 class="h3 fw-bold mb-2"><%= item.cooperative_name %></h1>
             <div class="text-dark fw-semibold mb-2"><%= observationTitle %></div>
             <p class="text-muted mb-0">
@@ -122,17 +44,17 @@
             </p>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-start">
-            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-pill">
+            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-3">
               <i class="bi bi-pencil-square me-1"></i> แก้ไข
             </a>
-            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">
-              <i class="bi bi-arrow-left-circle me-1"></i> กลับรายการ
+            <a href="/sangket/cooperatives/<%= item.cooperative_id %>" class="btn btn-outline-secondary rounded-3">
+              <i class="bi bi-arrow-left-circle me-1"></i> ข้อสังเกตของสถาบัน
             </a>
           </div>
         </div>
       </div>
 
-      <div class="p-4 p-lg-5">
+      <div class="p-3 p-lg-4">
         <div class="row g-3 mb-4">
           <div class="col-6 col-lg-3">
             <div class="detail-card">
@@ -193,7 +115,7 @@
                     <span class="badge text-bg-light border badge-soft category-pill" title="<%= cat.name %>">
                       <span class="fw-semibold">#<%= cat.id %></span>
                       <span class="text-muted">-</span>
-                      <%= cat.shortName || cat.name || '-' %>
+                      <%= cat.name || '-' %>
                     </span>
                   <% }) %>
                 <% } else { %>
@@ -201,7 +123,7 @@
                 <% } %>
               </div>
               <% if (categoryItems.length) { %>
-                <div class="mini-note mt-2">หมายเหตุ: hover ที่ป้ายหมวดเพื่อดูชื่อเต็ม</div>
+                <div class="mini-note mt-2"></div>
               <% } %>
               <div class="mini-note">ผู้สอบบัญชี: <%= item.auditor_name || '-' %></div>
               <div class="mini-note">หนังสือรับ: <%= item.received_date || '-' %></div>
@@ -251,12 +173,12 @@
           </div>
 
           <div class="col-lg-5">
-            <div class="action-box p-4">
-              <h5 class="fw-bold mb-3">เพิ่มหนังสือจากนายทะเบียนสหกรณ์</h5>
+            <details class="action-box sangket-disclosure p-3">
+              <summary>เพิ่มหนังสือ / ผลการติดตาม</summary>
               <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions" class="row g-3">
                 <div class="col-12">
-                  <label class="form-label">ประเภทหนังสือ</label>
-                  <select name="action_type" class="form-select">
+                  <label class="form-label" for="sangket-view-field-1">ประเภทหนังสือ</label>
+                  <select name="action_type" class="form-select" id="sangket-view-field-1">
                     <option value="follow_up">หนังสือติดตาม</option>
                     <option value="order">หนังสือสั่งการ</option>
                     <option value="advice">หนังสือคำแนะนำ</option>
@@ -265,20 +187,20 @@
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">เลขที่หนังสือ</label>
-                  <input type="text" name="letter_no" class="form-control">
+                  <label class="form-label" for="sangket-view-field-2">เลขที่หนังสือ</label>
+                  <input type="text" name="letter_no" class="form-control" id="sangket-view-field-2">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">วันที่หนังสือ</label>
-                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 เม.ย. 69">
+                  <label class="form-label" for="sangket-view-field-3">วันที่หนังสือ</label>
+                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 เม.ย. 69" id="sangket-view-field-3">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
-                  <textarea name="action_detail" class="form-control" rows="4"></textarea>
+                  <label class="form-label" for="sangket-view-field-4">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
+                  <textarea name="action_detail" class="form-control" rows="4" id="sangket-view-field-4"></textarea>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">หมายเหตุ/ผลการดำเนินการ</label>
-                  <textarea name="result" class="form-control" rows="3"></textarea>
+                  <label class="form-label" for="sangket-view-field-5">หมายเหตุ/ผลการดำเนินการ</label>
+                  <textarea name="result" class="form-control" rows="3" id="sangket-view-field-5"></textarea>
                 </div>
                 <div class="col-12 d-grid">
                   <button type="submit" class="btn btn-primary">
@@ -286,7 +208,7 @@
                   </button>
                 </div>
               </form>
-            </div>
+            </details>
           </div>
         </div>
       </div>

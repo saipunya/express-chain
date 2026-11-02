@@ -1,0 +1,79 @@
+.sangket-view-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .view-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .view-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .detail-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem 1.1rem;
+    height: 100%;
+  }
+  .detail-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+  }
+  .detail-value {
+    color: #0f172a;
+    font-weight: 600;
+  }
+  .timeline-item {
+    border-left: 3px solid #bde8df;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0.35rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #0f8f7b;
+  }
+  .action-box {
+    border: 1px dashed #cfe8df;
+    background: #f7fcfa;
+    border-radius: 18px;
+  }
+  .sangket-view-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .badge-soft {
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+  }
+  .category-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .category-pill {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+  }
+  .mini-note {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.35rem;
+  }

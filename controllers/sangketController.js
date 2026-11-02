@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const ExcelJS = require('exceljs');
 const PdfPrinter = require('pdfmake');
 const { fontsDir } = require('../config/paths');
@@ -11,21 +11,11 @@ fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const safeBase = String(file.originalname || 'sangket.xlsx').replace(/[^\w.-]+/g, '_');
-    cb(null, `${Date.now()}-${safeBase}`);
-  }
 });
 
 const upload = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '').toLowerCase();
-    if (ext && ext !== '.xlsx') {
-      return cb(new Error('กรุณาอัปโหลดไฟล์ .xlsx เท่านั้น'));
-    }
-    cb(null, true);
-  }
+  fileFilter: multer.fileFilter(['.xlsx'])
 });
 
 function getFilters(query = {}) {

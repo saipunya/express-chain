@@ -32,153 +32,17 @@
   const observationTitle = (row) => row?.observation_title || (row?.observation_text ? row.observation_text.slice(0, 120) : '-');
 %>
 
-<style>
-  .sangket-coop-page {
-    background:
-      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
-      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
-      #f6f8fb;
-    min-height: calc(100vh - 120px);
-  }
-  .coop-shell {
-    border: 1px solid #e5eef0;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
-    overflow: hidden;
-  }
-  .coop-hero {
-    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
-    border-bottom: 1px solid #e5eef0;
-  }
-  .eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 0;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #64748b;
-  }
-  .detail-card {
-    border: 1px solid #e5edf2;
-    border-radius: 18px;
-    background: #fff;
-    padding: 1rem 1.1rem;
-    height: 100%;
-  }
-  .detail-label {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    color: #64748b;
-    font-weight: 700;
-  }
-  .detail-value {
-    color: #0f172a;
-    font-weight: 700;
-  }
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-  .summary-chip {
-    border: 1px solid #e5edf2;
-    border-radius: 16px;
-    background: #fff;
-    padding: 0.8rem 0.85rem;
-  }
-  .summary-chip__label {
-    font-size: 0.76rem;
-    color: #64748b;
-    font-weight: 700;
-  }
-  .summary-chip__value {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #0f172a;
-  }
-  .observation-card {
-    border: 1px solid #e5edf2;
-    border-radius: 18px;
-    background: #fff;
-    padding: 1rem 1.05rem;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-  }
-  .observation-card + .observation-card {
-    margin-top: 0.8rem;
-  }
-  .observation-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  .observation-title {
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.35;
-  }
-  .observation-meta {
-    color: #64748b;
-    font-size: 0.86rem;
-  }
-  .observation-text {
-    white-space: pre-line;
-    line-height: 1.65;
-    color: #334155;
-    margin-top: 0.75rem;
-  }
-  .category-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.8rem;
-  }
-  .category-pill {
-    border-radius: 999px;
-    white-space: normal;
-    text-align: left;
-    line-height: 1.35;
-  }
-  .action-icons {
-    display: inline-flex;
-    gap: 0.35rem;
-  }
-  .icon-btn {
-    width: 2.25rem;
-    height: 2.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-  }
-  .timeline-item {
-    border-left: 3px solid #bde8df;
-    padding-left: 1rem;
-    position: relative;
-  }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -7px;
-    top: 0.35rem;
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: #0f8f7b;
-  }
-  @media (max-width: 767.98px) {
-    .summary-grid { grid-template-columns: 1fr; }
-  }
-</style>
+<link rel="stylesheet" href="/css/sangket-cooperative.css">
+<link rel="stylesheet" href="/css/sangket.css">
 
-<div class="sangket-coop-page py-4">
+<div class="sangket-coop-page py-3 sangket-workspace">
   <div class="container">
+    <%- include('navigation', { current: 'cooperative', pageLabel: 'ข้อสังเกตของสถาบัน' }) %>
     <div class="coop-shell">
-      <div class="coop-hero p-4 p-lg-5">
+      <div class="coop-hero p-3 p-lg-4">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
           <div>
-            <div class="eyebrow mb-2">Sangket</div>
+
             <h1 class="h3 fw-bold mb-2"><%= cooperative.cooperative_name %></h1>
             <p class="text-muted mb-0">
               <span class="badge text-bg-success me-1"><%= typeLabel %></span>
@@ -188,14 +52,14 @@
             </p>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-start">
-            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">
+            <a href="/sangket" class="btn btn-outline-secondary rounded-3">
               <i class="bi bi-arrow-left-circle me-1"></i> กลับรายการ
             </a>
           </div>
         </div>
       </div>
 
-      <div class="p-4 p-lg-5">
+      <div class="p-3 p-lg-4">
         <div class="row g-3 mb-4">
           <div class="col-6 col-lg-3">
             <div class="detail-card">
@@ -211,7 +75,7 @@
           </div>
           <div class="col-6 col-lg-3">
             <div class="detail-card">
-              <div class="detail-label">ปิดแล้ว</div>
+              <div class="detail-label">ปิดแล้ว / ยุติ</div>
               <div class="detail-value"><%= summary.closed_items || 0 %></div>
             </div>
           </div>
@@ -336,11 +200,11 @@
                     <% } %>
                   </div>
                   <div class="action-icons">
-                    <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-outline-primary btn-sm icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
-                      <i class="bi bi-eye"></i>
+                    <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-outline-primary btn-sm">
+                      <i class="bi bi-eye me-1" aria-hidden="true"></i>ดูรายละเอียด
                     </a>
-                    <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-outline-secondary btn-sm icon-btn" title="แก้ไข" aria-label="แก้ไข">
-                      <i class="bi bi-pencil-square"></i>
+                    <a href="/sangket/edit/<%= row.observation_id %>" class="btn btn-outline-secondary btn-sm">
+                      <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>แก้ไข
                     </a>
                   </div>
                 </div>

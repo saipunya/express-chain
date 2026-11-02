@@ -5,7 +5,7 @@ const Model = require('../models/chamraManagementModel');
 const { TYPES, TARGET_TYPES, validate } = require('../services/chamraManagementService');
 const { resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
 const { validDocument, documentPath, normalizeDocumentName } = require('../services/chamraDocumentService');
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 20 } }).single('report');
 
 async function removeUploadedReport(reportPath) {

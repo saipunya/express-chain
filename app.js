@@ -118,7 +118,7 @@ app.use((req, res, next) => {
 app.use(require('./middlewares/memberCoopLocals'));
 
 app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', require('./middleware/uploadStatic').uploadStatic(path.join(__dirname, 'uploads')));
 app.use(morgan('dev'));
 const onlineStatus = require('./middlewares/onlineMiddleware');
 const bahtText = require('./utils/bahtText');
@@ -196,6 +196,10 @@ app.use('/random-names', randomNamesRoutes);
 app.use((err, req, res, next) => {
   console.error(`[${req._rid || 'no-request-id'}]`, err && (err.stack || err));
   if (res.headersSent) return next(err);
+
+  if (err.code === 'UNSAFE_UPLOAD' || err.name === 'MulterError') {
+    return res.status(err.code === 'LIMIT_FILE_SIZE' ? 413 : 400).send('ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบชนิด เนื้อหา และขนาดไฟล์');
+  }
 
   if (req.path === '/survey' || req.path.startsWith('/survey/')) {
     return res.status(500).send('ระบบไม่สามารถดำเนินการได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง');

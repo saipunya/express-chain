@@ -1,0 +1,96 @@
+.sangket-form-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.07), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.05), transparent 26%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .form-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .form-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .form-hero__title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .form-hero__subtitle {
+    color: #64748b;
+  }
+  .section-title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .form-label {
+    font-weight: 600;
+    color: #334155;
+  }
+  .form-control,
+  .form-select {
+    border-radius: 14px;
+    border-color: #dbe8e3;
+    min-height: 48px;
+    box-shadow: none;
+  }
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #8dd4c7;
+    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.08);
+  }
+  textarea.form-control {
+    min-height: 120px;
+  }
+  .mini-note {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  .category-box {
+    border: 1px solid #e5edf2;
+    border-radius: 14px;
+    padding: 0.85rem 0.9rem;
+    background: #fbfdfc;
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+  }
+  .category-box input {
+    margin-top: 0.2rem;
+  }
+  .action-panel {
+    border: 1px dashed #cfe8df;
+    background: #f7fcfa;
+    border-radius: 18px;
+  }
+  .coop-selector {
+    border: 1px solid #d6ebe4;
+    background: linear-gradient(180deg, #fbfffe 0%, #f5fbf8 100%);
+    border-radius: 18px;
+  }
+  .coop-selector .form-control[readonly] {
+    background-color: #f8fafc;
+  }
+  .sangket-form-page .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .sangket-form-page .btn-outline-secondary {
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .sangket-form-page .btn-outline-secondary:hover {
+    background: #f4f6f9;
+  }
+  @media (max-width: 767.98px) {
+    .category-grid { grid-template-columns: 1fr; }
+  }

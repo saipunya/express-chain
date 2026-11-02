@@ -1,0 +1,25 @@
+.sangket-import-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .import-shell {
+    border: 1px solid #e5eef0;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.96);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+  }
+  .import-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
+    border-bottom: 1px solid #e5eef0;
+  }
+  .import-shell .btn-primary {
+    background-color: #0f8f7b;
+    border-color: #0f8f7b;
+  }
+  .hint-list li + li {
+    margin-top: 0.4rem;
+  }

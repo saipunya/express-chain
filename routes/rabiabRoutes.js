@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
+const multer = require('../middleware/secureUpload');
 const rabiabController = require('../controllers/rabiabController');
 const { requireLogin , requireLevel } = require('../middlewares/authMiddleware');
 
@@ -11,21 +10,11 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/rabiab/');
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1E9);
-    cb(null, req.body.ra_year + '_' + req.body.ra_code + '_' + uniqueSuffix + path.extname(file.originalname));
-  }
 });
 
 const upload = multer({ 
   storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('upload เฉพาะไฟล์ pdf เท่านั้น'), false);
-    }
-  }
+  fileFilter: multer.fileFilter(['.pdf'])
 });
 
 // เ่่ม route API ก่อน route อื่นๆ

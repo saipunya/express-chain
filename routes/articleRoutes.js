@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const articleController = require('../controllers/articleController');
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,13 +12,8 @@ const storage = multer.diskStorage({
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
-  filename: function (req, file, cb) {
-    // เปลี่ยนชื่อไฟล์: arimg-เวลา-สุ่ม4หลัก-นามสกุลเดิม
-    const unique = Date.now() + '-' + Math.floor(Math.random() * 10000);
-    cb(null, 'arimg-' + unique + path.extname(file.originalname));
-  }
 });
-const upload = multer({ storage });
+const upload = multer({ storage, fileFilter: multer.fileFilter(['.jpg', '.jpeg', '.png', '.gif', '.webp']) });
 
 router.get('/', articleController.list);
 router.get('/view/:id', articleController.view);

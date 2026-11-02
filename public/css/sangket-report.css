@@ -1,0 +1,178 @@
+.sangket-report-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 24%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .report-hero,
+  .report-card {
+    border: 1px solid #e6eef2;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+  }
+  .report-hero__surface {
+    background:
+      linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(14, 165, 233, 0.04) 52%, rgba(255,255,255,0.95));
+  }
+  .eyebrow {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+  .report-title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+  }
+  .report-subtitle {
+    color: #64748b;
+    max-width: 72ch;
+  }
+  .metric-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem 1.1rem;
+    height: 100%;
+  }
+  .metric-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+  .metric-value {
+    font-size: 1.55rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .metric-note {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+  .soft-badge {
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .report-toolbar .btn {
+    border-radius: 999px;
+  }
+  .table thead th {
+    background: #f5fbf8;
+    color: #0f172a;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .table td,
+  .table th {
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  .report-observation {
+    min-width: 320px;
+  }
+  .report-observation__text {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+  .report-inline-actions {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+  .icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+  }
+  .mobile-report-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  }
+  .mobile-report-card + .mobile-report-card {
+    margin-top: 0.75rem;
+  }
+  .mobile-report-card__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .mobile-report-card__title {
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .mobile-report-card__meta {
+    color: #64748b;
+    font-size: 0.86rem;
+  }
+  .mobile-report-card__text {
+    margin-top: 0.7rem;
+    color: #334155;
+    line-height: 1.55;
+  }
+  .mobile-report-card__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .category-summary-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .category-summary-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+  .category-legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .category-legend-pill {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+  }
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    .sangket-report-page {
+      background: #fff !important;
+    }
+    .report-hero,
+    .report-card {
+      box-shadow: none !important;
+    }
+  }
+  @media (max-width: 767.98px) {
+    .report-title {
+      font-size: 1.5rem;
+    }
+    .metric-value {
+      font-size: 1.3rem;
+    }
+  }

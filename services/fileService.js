@@ -2,30 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const { PDFDocument, rgb, degrees } = require('pdf-lib');
 const fontkit = require('@pdf-lib/fontkit');
+const { validateMetadata } = require('./uploadSecurity');
 const { uploadDownDir, watermarkFont } = require('../config/paths');
-
-const ALLOWED_EXTENSIONS = new Set([
-  '.pdf',
-]);
-
-const ALLOWED_MIME_TYPES = new Set([
-  'application/pdf',
-]);
 
 function validateUpload(file) {
   if (!file) return { ok: false, message: 'ไม่พบไฟล์อัปโหลด (req.file ว่าง)' };
 
-  const original = (file.originalname || '').toLowerCase();
-  const ext = path.extname(original);
-  const mime = (file.mimetype || '').toLowerCase();
-
-  // ต้องผ่านอย่างน้อย 1 เงื่อนไข (กันบาง client ส่ง mimetype เพี้ยน)
-  const extOk = !!ext && ALLOWED_EXTENSIONS.has(ext);
-  const mimeOk = !!mime && ALLOWED_MIME_TYPES.has(mime);
-
-  if (!extOk && !mimeOk) {
-    return { ok: false, message: `ชนิดไฟล์ไม่รองรับ: ext=${ext || '-'} mime=${mime || '-'}` };
-  }
+  try { validateMetadata(file, ['.pdf']); }
+  catch (error) { return { ok: false, message: error.message }; }
   return { ok: true };
 }
 

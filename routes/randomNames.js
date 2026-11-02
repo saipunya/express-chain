@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const router = express.Router();
 const randomNamesController = require('../controllers/randomNamesController');
 
@@ -27,12 +27,7 @@ const uploadDocxFile = multer({
   limits: {
     fileSize: 10 * 1024 * 1024
   },
-  fileFilter: (req, file, cb) => {
-    const isDocx = file.originalname.toLowerCase().endsWith('.docx') ||
-      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
-    cb(isDocx ? null : new Error('รองรับเฉพาะไฟล์ .docx'), isDocx);
-  }
+  fileFilter: multer.fileFilter(['.docx'])
 });
 
 const uploadMusicFile = multer({
@@ -40,14 +35,7 @@ const uploadMusicFile = multer({
   limits: {
     fileSize: 20 * 1024 * 1024
   },
-  fileFilter: (req, file, cb) => {
-    const extension = file.originalname.toLowerCase().match(/\.[^.]+$/);
-    const allowedExtensions = new Set(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.webm']);
-    const isAudio = file.mimetype.startsWith('audio/') || file.mimetype === 'video/webm';
-    const isAllowedExtension = extension && allowedExtensions.has(extension[0]);
-
-    cb(isAudio && isAllowedExtension ? null : new Error('รองรับเฉพาะไฟล์เสียง .mp3, .wav, .ogg, .m4a, .aac, .webm'), isAudio && isAllowedExtension);
-  }
+  fileFilter: multer.fileFilter(['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.webm'])
 });
 
 function uploadDocx(req, res, next) {

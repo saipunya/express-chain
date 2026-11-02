@@ -1,0 +1,10 @@
+<nav class="sangket-navigation no-print" aria-label="ระบบข้อสังเกต">
+  <div class="sangket-navigation-title"><i class="bi bi-journal-check" aria-hidden="true"></i> ระบบข้อสังเกต</div>
+  <div class="sangket-navigation-links">
+    <% [ ['index', '/sangket', 'ทะเบียนสถาบัน'], ['report', '/sangket/report', 'รายงานรายข้อ'], ['import', '/sangket/import', 'นำเข้า Excel'] ].forEach(([key, href, label]) => { %>
+      <a href="<%= href %>" class="<%= current === key || (key === 'index' && ['view', 'cooperative'].includes(current)) ? 'active' : '' %>" <%- current === key ? 'aria-current="page"' : '' %>><%= label %></a>
+    <% }); %>
+    <a href="/sangket/create" class="sangket-add <%= current === 'form' ? 'active' : '' %>"><i class="bi bi-plus-lg" aria-hidden="true"></i> เพิ่มข้อสังเกต</a>
+  </div>
+</nav>
+<div class="sangket-location no-print"><a href="/sangket">ข้อสังเกต</a><span aria-hidden="true">/</span><span><%= pageLabel %></span></div>

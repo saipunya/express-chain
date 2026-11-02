@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const path = require('path');
 const fs = require('fs');
 const businessModel = require('../models/businessModel');
@@ -11,14 +11,9 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
   },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const originalName = file.originalname;
-    cb(null, `${timestamp}-${originalName}`);
-  },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage, fileFilter: multer.fileFilter(['.pdf']) });
 
 const showUploadForm = async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('../middleware/secureUpload');
 const ruleModel = require('../models/ruleModel');
 const path = require('path');
 const fs = require('fs');
@@ -8,12 +8,8 @@ const uploadPath = path.join(__dirname, '..', 'uploads', 'rule');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadPath),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + file.originalname;
-    cb(null, unique);
-  }
 });
-exports.upload = multer({ storage });
+exports.upload = multer({ storage, fileFilter: multer.fileFilter(['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png']) });
 
 // หน้า upload rule
 exports.showUploadForm = async (req, res) => {

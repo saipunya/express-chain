@@ -3,126 +3,29 @@
   const isEdit = Boolean(item && item.id);
   const actionUrl = isEdit ? `/sangket/edit/${item.id}` : '/sangket/create';
   const selectedCategoryIds = Array.isArray(item && item.category_ids) ? item.category_ids.map(String) : (item && item.category_id ? [String(item.category_id)] : []);
+  const statusNames = { new: 'ใหม่', in_progress: 'กำลังดำเนินการ', monitoring: 'ติดตาม', resolved: 'ปิดแล้ว', closed: 'ยุติ' };
   const currentStatus = (item && item.status) || 'new';
 %>
 
-<style>
-  .sangket-form-page {
-    background:
-      radial-gradient(circle at top left, rgba(16, 185, 129, 0.07), transparent 30%),
-      radial-gradient(circle at top right, rgba(45, 212, 191, 0.05), transparent 26%),
-      #f6f8fb;
-    min-height: calc(100vh - 120px);
-  }
-  .form-shell {
-    border: 1px solid #e5eef0;
-    border-radius: 24px;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
-    overflow: hidden;
-  }
-  .form-hero {
-    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(45,212,191,0.03));
-    border-bottom: 1px solid #e5eef0;
-  }
-  .form-hero__title {
-    font-weight: 800;
-    color: #0f172a;
-  }
-  .form-hero__subtitle {
-    color: #64748b;
-  }
-  .section-title {
-    font-weight: 800;
-    color: #0f172a;
-  }
-  .form-label {
-    font-weight: 600;
-    color: #334155;
-  }
-  .form-control,
-  .form-select {
-    border-radius: 14px;
-    border-color: #dbe8e3;
-    min-height: 48px;
-    box-shadow: none;
-  }
-  .form-control:focus,
-  .form-select:focus {
-    border-color: #8dd4c7;
-    box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.08);
-  }
-  textarea.form-control {
-    min-height: 120px;
-  }
-  .mini-note {
-    font-size: 0.82rem;
-    color: #64748b;
-  }
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
-  }
-  .category-box {
-    border: 1px solid #e5edf2;
-    border-radius: 14px;
-    padding: 0.85rem 0.9rem;
-    background: #fbfdfc;
-    display: flex;
-    gap: 0.7rem;
-    align-items: flex-start;
-  }
-  .category-box input {
-    margin-top: 0.2rem;
-  }
-  .action-panel {
-    border: 1px dashed #cfe8df;
-    background: #f7fcfa;
-    border-radius: 18px;
-  }
-  .coop-selector {
-    border: 1px solid #d6ebe4;
-    background: linear-gradient(180deg, #fbfffe 0%, #f5fbf8 100%);
-    border-radius: 18px;
-  }
-  .coop-selector .form-control[readonly] {
-    background-color: #f8fafc;
-  }
-  .sangket-form-page .btn-primary {
-    background-color: #0f8f7b;
-    border-color: #0f8f7b;
-  }
-  .sangket-form-page .btn-outline-secondary {
-    color: #475569;
-    border-color: #cbd5e1;
-  }
-  .sangket-form-page .btn-outline-secondary:hover {
-    background: #f4f6f9;
-  }
-  @media (max-width: 767.98px) {
-    .category-grid { grid-template-columns: 1fr; }
-  }
-</style>
+<link rel="stylesheet" href="/css/sangket-form.css">
+<link rel="stylesheet" href="/css/sangket.css">
 
-<div class="sangket-form-page py-4">
+<div class="sangket-form-page py-3 sangket-workspace">
   <div class="container">
+    <%- include('navigation', { current: isEdit ? 'edit' : 'form', pageLabel: isEdit ? 'แก้ไขข้อสังเกต' : 'เพิ่มข้อสังเกต' }) %>
     <div class="form-shell">
-      <div class="form-hero p-4 p-lg-5">
+      <div class="form-hero p-3 p-lg-4">
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
           <div>
-            <div class="eyebrow mb-2">Sangket</div>
+
             <h1 class="form-hero__title mb-2"><%= isEdit ? 'แก้ไขข้อสังเกต' : 'บันทึกข้อสังเกตใหม่' %></h1>
-            <p class="form-hero__subtitle mb-0">บันทึกข้อมูลสหกรณ์ รายงานสอบบัญชี ข้อสังเกตหลายข้อ และหมวดที่เกี่ยวข้องแบบ normalized</p>
+            <p class="form-hero__subtitle mb-0">เลือกสถาบัน → ระบุรายงานสอบบัญชี → บันทึกข้อสังเกตและกำหนดติดตาม</p>
           </div>
-          <div class="d-flex gap-2">
-            <a href="/sangket" class="btn btn-outline-secondary rounded-pill">กลับหน้ารวม</a>
-            <a href="/sangket/import" class="btn btn-outline-primary rounded-pill">นำเข้า Excel</a>
-          </div>
+
         </div>
       </div>
 
-      <form action="<%= actionUrl %>" method="POST" class="p-4 p-lg-5">
+      <form action="<%= actionUrl %>" method="POST" class="p-3 p-lg-4">
         <% if (error) { %>
           <div class="alert alert-danger"><%= error %></div>
         <% } %>
@@ -138,15 +41,13 @@
         <input type="hidden" name="coop_type" id="coop_type" value="<%= initialCoopType %>">
         <input type="hidden" name="promotion_group_no" id="promotion_group_no" value="<%= initialPromotionGroupNo %>">
 
-        <div class="row g-4">
+        <div class="sangket-form-sections">
+        <fieldset class="sangket-form-section"><legend>1. ข้อมูลสถาบัน</legend><div class="row g-3">
           <div class="col-12">
-            <h5 class="section-title mb-0">1. ข้อมูลสหกรณ์</h5>
-          </div>
-          <div class="col-12 col-lg-7">
             <div class="coop-selector p-3 p-lg-4">
               <div class="row g-3">
-                <div class="col-12 col-lg-4">
-                  <label class="form-label">เลือกประเภท</label>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="coop_group_select">เลือกประเภท</label>
                   <select id="coop_group_select" class="form-select" required>
                     <option value="">เลือกประเภท</option>
                     <% (activeCoopHierarchy || []).forEach((group) => { %>
@@ -154,35 +55,35 @@
                     <% }) %>
                   </select>
                 </div>
-                <div class="col-12 col-lg-4">
-                  <label class="form-label">เลือกกลุ่มส่งเสริม</label>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="c_group_select">เลือกกลุ่มส่งเสริม</label>
                   <select id="c_group_select" class="form-select" disabled required>
                     <option value="">เลือกกลุ่มส่งเสริม</option>
                   </select>
                 </div>
-                <div class="col-12 col-lg-4">
-                  <label class="form-label">เลือกสถาบัน</label>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="c_name_select">เลือกสถาบัน</label>
                   <select id="c_name_select" class="form-select" disabled required>
                     <option value="">เลือกสถาบัน</option>
                   </select>
                 </div>
                 <div class="col-12">
                   <div class="mini-note">
-                    เลือกตามลำดับ <code>ประเภท</code> &gt; <code>กลุ่มส่งเสริม</code> &gt; <code>สถาบัน</code> แล้วระบบจะเก็บ <code>c_code</code> ให้เอง
+                    เลือกประเภท → กลุ่มส่งเสริม → สถาบัน ระบบจะเติมรหัสสถาบันให้อัตโนมัติ
                   </div>
                 </div>
                 <div class="col-12">
                   <div class="row g-3">
                     <div class="col-12 col-lg-6">
-                      <label class="form-label">สถาบันที่เลือก</label>
+                      <label class="form-label" for="selected_coop_name">สถาบันที่เลือก</label>
                       <input type="text" id="selected_coop_name" class="form-control" readonly value="<%= initialCooperativeName %>" placeholder="ยังไม่ได้เลือก">
                     </div>
                     <div class="col-6 col-lg-3">
-                      <label class="form-label">c_code</label>
+                      <label class="form-label" for="selected_coop_code">รหัสสถาบัน</label>
                       <input type="text" id="selected_coop_code" class="form-control" readonly value="<%= initialCooperativeCode %>" placeholder="-">
                     </div>
                     <div class="col-6 col-lg-3">
-                      <label class="form-label">ประเภท</label>
+                      <label class="form-label" for="selected_coop_type">ประเภท</label>
                       <input type="text" id="selected_coop_type" class="form-control" readonly value="<%= initialCoopType === 'group_farmer' ? 'กลุ่มเกษตรกร' : (initialCoopType === 'cooperative' ? 'สหกรณ์' : '') %>" placeholder="-">
                     </div>
                   </div>
@@ -190,82 +91,79 @@
               </div>
             </div>
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">เขต / จังหวัด / อำเภอ</label>
-            <input type="text" name="district" class="form-control" value="<%= item?.district || '' %>" placeholder="ถ้ามี">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-7">เขต / จังหวัด / อำเภอ</label>
+            <input id="sangket-form-field-7" type="text" name="district" class="form-control" value="<%= item?.district || '' %>" placeholder="ถ้ามี">
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">สถานะสหกรณ์</label>
-            <input type="text" name="cooperative_status" class="form-control" value="<%= item?.cooperative_status || '' %>" placeholder="ถ้ามี">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-8">สถานะสหกรณ์</label>
+            <input id="sangket-form-field-8" type="text" name="cooperative_status" class="form-control" value="<%= item?.cooperative_status || '' %>" placeholder="ถ้ามี">
           </div>
 
-          <div class="col-12">
-            <h5 class="section-title mb-0 mt-2">2. ข้อมูลรายงานสอบบัญชี</h5>
+          </div></fieldset><fieldset class="sangket-form-section"><legend>2. รายงานสอบบัญชี</legend><div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-9">ปีบัญชีสิ้นสุด</label>
+            <input id="sangket-form-field-9" type="text" name="fiscal_year_end" class="form-control" value="<%= item?.fiscal_year_end || '' %>" placeholder="เช่น 30 ก.ย. 68">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">ปีบัญชีสิ้นสุด</label>
-            <input type="text" name="fiscal_year_end" class="form-control" value="<%= item?.fiscal_year_end || '' %>" placeholder="เช่น 30 ก.ย. 68">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-10">หนังสือสตส. เลขที่</label>
+            <input id="sangket-form-field-10" type="text" name="audit_office_letter_no" class="form-control" value="<%= item?.audit_office_letter_no || '' %>">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">หนังสือสตส. เลขที่</label>
-            <input type="text" name="audit_office_letter_no" class="form-control" value="<%= item?.audit_office_letter_no || '' %>">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-11">วันที่หนังสือ</label>
+            <input id="sangket-form-field-11" type="text" name="audit_office_letter_date" class="form-control" value="<%= item?.audit_office_letter_date || '' %>" placeholder="เช่น 25 พ.ย. 2568">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">วันที่หนังสือ</label>
-            <input type="text" name="audit_office_letter_date" class="form-control" value="<%= item?.audit_office_letter_date || '' %>" placeholder="เช่น 25 พ.ย. 2568">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-12">วันที่รับหนังสือ</label>
+            <input id="sangket-form-field-12" type="text" name="received_date" class="form-control" value="<%= item?.received_date || '' %>" placeholder="เช่น 26 พ.ย. 2568">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">วันที่รับหนังสือ</label>
-            <input type="text" name="received_date" class="form-control" value="<%= item?.received_date || '' %>" placeholder="เช่น 26 พ.ย. 2568">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-13">ผู้สอบบัญชี</label>
+            <input id="sangket-form-field-13" type="text" name="auditor_name" class="form-control" value="<%= item?.auditor_name || '' %>">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">ผู้สอบบัญชี</label>
-            <input type="text" name="auditor_name" class="form-control" value="<%= item?.auditor_name || '' %>">
-          </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">ประเภทงานตรวจ</label>
-            <select name="audit_type" class="form-select">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-14">ประเภทงานตรวจ</label>
+            <select name="audit_type" class="form-select" id="sangket-form-field-14">
               <option value="">-</option>
               <option value="interim" <%= String(item?.audit_type || '') === 'interim' ? 'selected' : '' %>>ระหว่างปี</option>
               <option value="annual" <%= String(item?.audit_type || '') === 'annual' ? 'selected' : '' %>>ประจำปี</option>
             </select>
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">เลขอ้างอิงต้นทาง</label>
-            <input type="text" name="source_sheet" class="form-control" value="<%= item?.source_sheet || '' %>" placeholder="กรณีนำเข้า Excel">
+<div class="col-12"><details class="sangket-disclosure" <%= item?.source_sheet || item?.source_row ? 'open' : '' %>><summary>ข้อมูลอ้างอิงจาก Excel (ถ้ามี)</summary><div class="row g-3">          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-15">เลขอ้างอิงต้นทาง</label>
+            <input id="sangket-form-field-15" type="text" name="source_sheet" class="form-control" value="<%= item?.source_sheet || '' %>" placeholder="กรณีนำเข้า Excel">
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">แถวต้นทาง</label>
-            <input type="number" name="source_row" class="form-control" value="<%= item?.source_row || '' %>" min="1">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-16">แถวต้นทาง</label>
+            <input id="sangket-form-field-16" type="number" name="source_row" class="form-control" value="<%= item?.source_row || '' %>" min="1">
           </div>
 
-          <div class="col-12">
-            <h5 class="section-title mb-0 mt-2">3) ข้อมูลข้อสังเกต</h5>
+</div></details></div>
+          </div></fieldset><fieldset class="sangket-form-section sangket-form-section-wide"><legend>3. ข้อสังเกตและการติดตาม</legend><div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-17">ลำดับข้อ</label>
+            <input id="sangket-form-field-17" type="number" name="observation_no" class="form-control" min="1" value="<%= item?.observation_no || '' %>">
           </div>
-          <div class="col-12 col-lg-2">
-            <label class="form-label">ลำดับข้อ</label>
-            <input type="number" name="observation_no" class="form-control" min="1" value="<%= item?.observation_no || '' %>">
-          </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">กรณีข้อสังเกต</label>
-            <select name="severity_case" class="form-select">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-18">กรณีข้อสังเกต</label>
+            <select name="severity_case" class="form-select" id="sangket-form-field-18">
               <option value="">-</option>
               <option value="serious_order" <%= item?.severity_case === 'serious_order' ? 'selected' : '' %>>ร้ายแรง / ออกคำสั่ง</option>
               <option value="advice" <%= item?.severity_case === 'advice' ? 'selected' : '' %>>ไม่ร้ายแรง / ออกคำแนะนำ</option>
               <option value="fact_check" <%= item?.severity_case === 'fact_check' ? 'selected' : '' %>>ข้อเท็จจริงไม่ครบ / ตรวจเพิ่ม</option>
             </select>
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">สถานะ</label>
-            <select name="status" class="form-select">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-19">สถานะ</label>
+            <select name="status" class="form-select" id="sangket-form-field-19">
               <% ['new','in_progress','monitoring','resolved','closed'].forEach((status) => { %>
-                <option value="<%= status %>" <%= currentStatus === status ? 'selected' : '' %>><%= status %></option>
+                <option value="<%= status %>" <%= currentStatus === status ? 'selected' : '' %>><%= statusNames[status] %></option>
               <% }) %>
             </select>
           </div>
-          <div class="col-12 col-lg-3">
-            <label class="form-label">หมวดหลัก</label>
-            <select name="category_id" class="form-select">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-20">หมวดหลัก</label>
+            <select name="category_id" class="form-select" id="sangket-form-field-20">
               <option value="">-</option>
               <% categories.forEach((cat) => { %>
                 <option value="<%= cat.id %>" <%= String(item?.category_id || '') === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
@@ -273,11 +171,11 @@
             </select>
           </div>
           <div class="col-12">
-            <label class="form-label">หัวข้อข้อสังเกต</label>
-            <input type="text" name="observation_title" class="form-control" value="<%= item?.observation_title || item?.title || '' %>" placeholder="หัวข้อสั้น ๆ ของข้อสังเกต">
+            <label class="form-label" for="sangket-form-field-21">หัวข้อข้อสังเกต</label>
+            <input id="sangket-form-field-21" type="text" name="observation_title" class="form-control" value="<%= item?.observation_title || item?.title || '' %>" placeholder="หัวข้อสั้น ๆ ของข้อสังเกต">
           </div>
           <div class="col-12">
-            <label class="form-label">หมวดเพิ่มเติม</label>
+            <label class="form-label" for="sangket-form-field-22">หมวดเพิ่มเติม</label>
             <div class="category-grid">
               <% categories.forEach((cat) => { %>
                 <label class="category-box">
@@ -290,34 +188,35 @@
               <% }) %>
             </div>
           </div>
-          <div class="col-12 col-lg-4">
+          <div class="col-12 col-md-6">
             <label class="form-label">มูลค่าความเสียหาย</label>
-            <input type="text" name="potential_damage_amount" class="form-control" value="<%= item?.potential_damage_amount || '' %>" placeholder="เช่น 125000.00">
+            <input id="sangket-form-field-22" type="text" name="potential_damage_amount" class="form-control" value="<%= item?.potential_damage_amount || '' %>" placeholder="เช่น 125000.00">
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">กำหนดติดตาม</label>
-            <input type="date" name="due_date" class="form-control" value="<%= item?.due_date || '' %>">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-23">กำหนดติดตาม</label>
+            <input id="sangket-form-field-23" type="date" name="due_date" class="form-control" value="<%= item?.due_date || '' %>">
           </div>
-          <div class="col-12 col-lg-4">
-            <label class="form-label">วันที่ปิดเรื่อง</label>
-            <input type="date" name="resolved_date" class="form-control" value="<%= item?.resolved_date || '' %>">
-          </div>
-          <div class="col-12">
-            <label class="form-label">รายละเอียดข้อสังเกต</label>
-            <textarea name="observation_text" class="form-control" rows="5" required><%= item?.observation_text || '' %></textarea>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="sangket-form-field-24">วันที่ปิดเรื่อง</label>
+            <input id="sangket-form-field-24" type="date" name="resolved_date" class="form-control" value="<%= item?.resolved_date || '' %>">
           </div>
           <div class="col-12">
-            <label class="form-label">หมายเหตุ</label>
-            <textarea name="remark" class="form-control" rows="3"><%= item?.remark || '' %></textarea>
+            <label class="form-label" for="sangket-form-field-25">รายละเอียดข้อสังเกต <span class="text-danger">*</span></label>
+            <textarea name="observation_text" class="form-control" rows="4" required id="sangket-form-field-25"><%= item?.observation_text || '' %></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="sangket-form-field-26">หมายเหตุ</label>
+            <textarea name="remark" class="form-control" rows="3" id="sangket-form-field-26"><%= item?.remark || '' %></textarea>
           </div>
 
-          <div class="col-12">
-            <div class="action-panel p-3 p-lg-4">
-              <h5 class="section-title mb-3">4) หนังสือจากนายทะเบียนสหกรณ์</h5>
+          </div></fieldset>
+          <div class="col-12 sangket-form-section-wide">
+            <details class="action-panel sangket-disclosure p-3" <%= item?.letter_no || item?.action_type ? 'open' : '' %>>
+              <summary>4. หนังสือจากนายทะเบียน (ถ้ามี)</summary>
               <div class="row g-3">
-                <div class="col-12 col-lg-3">
-                  <label class="form-label">ประเภทหนังสือ</label>
-                  <select name="action_type" class="form-select">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="sangket-form-field-27">ประเภทหนังสือ</label>
+                  <select name="action_type" class="form-select" id="sangket-form-field-27">
                     <option value="">-</option>
                     <option value="order">หนังสือสั่งการ</option>
                     <option value="advice">หนังสือคำแนะนำ</option>
@@ -326,34 +225,34 @@
                     <option value="close">หนังสือปิดเรื่อง</option>
                   </select>
                 </div>
-                <div class="col-12 col-lg-3">
-                  <label class="form-label">เลขที่หนังสือ</label>
-                  <input type="text" name="letter_no" class="form-control" value="<%= item?.letter_no || '' %>">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="sangket-form-field-28">เลขที่หนังสือ</label>
+                  <input id="sangket-form-field-28" type="text" name="letter_no" class="form-control" value="<%= item?.letter_no || '' %>">
                 </div>
-                <div class="col-12 col-lg-3">
-                  <label class="form-label">วันที่หนังสือ</label>
-                  <input type="text" name="letter_date" class="form-control" value="<%= item?.letter_date || '' %>">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="sangket-form-field-29">วันที่หนังสือ</label>
+                  <input id="sangket-form-field-29" type="text" name="letter_date" class="form-control" value="<%= item?.letter_date || '' %>">
                 </div>
-                <div class="col-12 col-lg-3">
-                  <label class="form-label">ผู้บันทึก</label>
-                  <input type="text" name="created_by" class="form-control" value="<%= item?.created_by || (user ? (user.fullname || user.username || '') : '') %>">
-                </div>
-                <div class="col-12">
-                  <label class="form-label">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
-                  <textarea name="action_detail" class="form-control" rows="3" placeholder="เช่น สั่งแก้ไข, ให้คำแนะนำ, ขอเอกสารเพิ่มเติม"></textarea>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="sangket-form-field-30">ผู้บันทึก</label>
+                  <input id="sangket-form-field-30" type="text" name="created_by" class="form-control" value="<%= item?.created_by || (user ? (user.fullname || user.username || '') : '') %>">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">หมายเหตุ/ผลการดำเนินการ</label>
-                  <textarea name="result" class="form-control" rows="2"></textarea>
+                  <label class="form-label" for="sangket-form-field-31">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
+                  <textarea name="action_detail" class="form-control" rows="3" placeholder="เช่น สั่งแก้ไข, ให้คำแนะนำ, ขอเอกสารเพิ่มเติม" id="sangket-form-field-31"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="sangket-form-field-32">หมายเหตุ/ผลการดำเนินการ</label>
+                  <textarea name="result" class="form-control" rows="2" id="sangket-form-field-32"></textarea>
                 </div>
               </div>
-              <div class="mini-note mt-2">ถ้ายังไม่มีหนังสือจากนายทะเบียนสหกรณ์ในขณะนี้ ปล่อยส่วนนี้ว่างได้</div>
-            </div>
+              <div class="mini-note mt-2">ถ้ายังไม่มีหนังสือ ปล่อยส่วนนี้ว่างได้ และเพิ่มภายหลังในหน้ารายละเอียด</div>
+            </details>
           </div>
 
-          <div class="col-12 d-flex flex-wrap gap-2 justify-content-end pt-2">
-            <a href="/sangket" class="btn btn-outline-secondary rounded-pill px-4">ยกเลิก</a>
-            <button type="submit" class="btn btn-primary rounded-pill px-4"><%= isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อสังเกต' %></button>
+          <div class="sangket-form-section-wide sangket-savebar d-flex flex-wrap gap-2 justify-content-end">
+            <a href="/sangket" class="btn btn-outline-secondary rounded-3 px-4">ยกเลิก</a>
+            <button type="submit" class="btn btn-primary rounded-3 px-4"><%= isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อสังเกต' %></button>
           </div>
         </div>
       </form>

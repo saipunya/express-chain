@@ -1,0 +1,195 @@
+.sangket-page {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(45, 212, 191, 0.06), transparent 28%),
+      #f6f8fb;
+    min-height: calc(100vh - 120px);
+  }
+  .sangket-hero,
+  .sangket-panel {
+    border: 1px solid #e5eef0;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+  }
+  .sangket-hero {
+    overflow: hidden;
+  }
+  .sangket-hero__surface {
+    background:
+      linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(45, 212, 191, 0.03) 45%, rgba(255, 255, 255, 0.92));
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+  }
+  .hero-title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+  }
+  .hero-subtitle {
+    color: #64748b;
+    max-width: 70ch;
+  }
+  .metric-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    height: 100%;
+  }
+  .metric-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+  .metric-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .metric-note {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+  .quick-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .quick-filters .btn {
+    border-radius: 999px;
+  }
+  .soft-badge {
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .table thead th {
+    background: #f4faf8;
+    color: #0f172a;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .table td {
+    vertical-align: top;
+  }
+  .table td,
+  .table th {
+    overflow-wrap: anywhere;
+  }
+  .coop-cell {
+    min-width: 18rem;
+  }
+  .coop-title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .coop-meta {
+    color: #64748b;
+    font-size: 0.86rem;
+  }
+  .coop-snippet {
+    color: #334155;
+    line-height: 1.55;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  .summary-chip {
+    border: 1px solid #e5edf2;
+    border-radius: 16px;
+    background: #fff;
+    padding: 0.7rem 0.8rem;
+  }
+  .summary-chip__label {
+    font-size: 0.76rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+  .summary-chip__value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .mobile-cards {
+    display: none;
+  }
+  .mobile-card {
+    border: 1px solid #e5edf2;
+    border-radius: 18px;
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  }
+  .mobile-card + .mobile-card {
+    margin-top: 0.75rem;
+  }
+  .mobile-card__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .mobile-card__title {
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+  .mobile-card__meta {
+    color: #64748b;
+    font-size: 0.86rem;
+  }
+  .mobile-card__text {
+    margin-top: 0.65rem;
+    color: #334155;
+    line-height: 1.55;
+  }
+  .mobile-card__footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .action-icons {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+  .icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+  }
+  .list-group-item {
+    border-color: #e8eef3;
+  }
+  .filter-list-item {
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+  .filter-list-item:hover {
+    transform: translateY(-1px);
+  }
+  @media (max-width: 767.98px) {
+    .hero-title { font-size: 1.45rem; }
+    .metric-value { font-size: 1.25rem; }
+    .mobile-cards { display: block; }
+    .desktop-table { display: none; }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 768px) {
+    .mobile-cards { display: none; }
+  }

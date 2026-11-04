@@ -46,6 +46,21 @@ test('institution register shows total, resolved, in-progress and new issue coun
   assert.match(summary, /ยังไม่แก้ไข\s*1/);
 });
 
+test('institution detail keeps the summary and issue list compact', async (t) => {
+  const observation = {
+    ...row,
+    actions: [{ id: 11, action_detail: 'ปรับปรุงเอกสารแล้ว', attachment_path: 'evidence.pdf', attachment_name: 'หลักฐาน.pdf' }]
+  };
+  const dom = await render(t, 'cooperative', { observations: [observation] });
+  const doc = dom.window.document;
+  assert.equal(doc.querySelectorAll('.status-stat').length, 4);
+  assert.equal(doc.querySelectorAll('.issue-row').length, 1);
+  assert.match(doc.querySelector('.issue-row').textContent, /นางสาวเจ้าหน้าที่ ตัวอย่าง/);
+  assert.match(doc.querySelector('.issue-row').textContent, /ปรับปรุงเอกสารแล้ว/);
+  assert.equal(doc.querySelector('.issue-row a[href="/sangket/view/7/actions/11/evidence"]').textContent.trim(), 'หลักฐาน.pdf');
+  assert.doesNotMatch(doc.querySelector('.coop-shell').textContent, /ภาพรวมสหกรณ์|ปีบัญชี|มูลค่าความเสียหาย/);
+});
+
 test('create and edit forms keep submitted fields and institution selection working', async (t) => {
   for (const item of [null, row]) {
     const dom = await render(t, 'form', { item });

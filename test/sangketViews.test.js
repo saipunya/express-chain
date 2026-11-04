@@ -37,6 +37,15 @@ test('status shortcuts and filter forms preserve other active filters', async (t
   }
 });
 
+test('institution register shows total, resolved, in-progress and new issue counts', async (t) => {
+  const dom = await render(t, 'index');
+  const summary = dom.window.document.querySelector('.summary-grid').textContent;
+  assert.match(summary, /ทั้งหมด\s*4/);
+  assert.match(summary, /แก้ไขแล้ว\s*1/);
+  assert.match(summary, /ระหว่างดำเนินการ\s*2/);
+  assert.match(summary, /ยังไม่แก้ไข\s*1/);
+});
+
 test('create and edit forms keep submitted fields and institution selection working', async (t) => {
   for (const item of [null, row]) {
     const dom = await render(t, 'form', { item });

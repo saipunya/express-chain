@@ -198,8 +198,7 @@
           <thead>
             <tr>
               <th>สถาบัน</th>
-              <th>สรุปข้อสังเกต</th>
-              <th>หนังสือและกำหนดติดตาม</th>
+              <th>จำนวนประเด็นตามสถานะ</th>
               <th class="text-end">การทำงาน</th>
             </tr>
           </thead>
@@ -219,29 +218,21 @@
                   <td>
                     <div class="summary-grid">
                       <div class="summary-chip">
-                        <div class="summary-chip__label">จำนวนข้อสังเกต</div>
+                        <div class="summary-chip__label">ทั้งหมด</div>
                         <div class="summary-chip__value"><%= row.observation_total || 0 %></div>
                       </div>
                       <div class="summary-chip">
-                        <div class="summary-chip__label">ค้างดำเนินการ</div>
-                        <div class="summary-chip__value"><%= row.open_items || 0 %></div>
+                        <div class="summary-chip__label">แก้ไขแล้ว</div>
+                        <div class="summary-chip__value text-success"><%= row.resolved_items || 0 %></div>
                       </div>
                       <div class="summary-chip">
-                        <div class="summary-chip__label">ปิดแล้ว / ยุติ</div>
-                        <div class="summary-chip__value"><%= row.closed_items || 0 %></div>
+                        <div class="summary-chip__label">ระหว่างดำเนินการ</div>
+                        <div class="summary-chip__value text-primary"><%= row.in_progress_items || 0 %></div>
                       </div>
                       <div class="summary-chip">
-                        <div class="summary-chip__label">ความเสียหาย (บาท)</div>
-                        <div class="summary-chip__value"><%= fmtMoney(row.total_damage || 0) %></div>
+                        <div class="summary-chip__label">ยังไม่แก้ไข</div>
+                        <div class="summary-chip__value text-danger"><%= row.new_items || 0 %></div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="coop-snippet">
-                      <div><span class="text-muted">ปีบัญชี:</span> <%= row.latest_fiscal_year_end || '-' %></div>
-                      <div><span class="text-muted">หนังสือ:</span> <%= row.latest_audit_office_letter_no || '-' %></div>
-                      <div><span class="text-muted">รับเรื่อง:</span> <%= row.latest_received_date || '-' %></div>
-                      <div><span class="text-muted">กำหนดติดตาม:</span> <%= row.latest_due_date || '-' %></div>
                     </div>
                   </td>
                   <td class="text-end">
@@ -255,7 +246,7 @@
               <% }) %>
             <% } else { %>
               <tr>
-                <td colspan="4">
+                <td colspan="3">
                   <div class="text-center py-5 text-muted">
                     <i class="bi bi-inbox display-6 d-block mb-2"></i>
                     ยังไม่มีข้อมูลสหกรณ์ที่ตรงกับตัวกรอง
@@ -282,17 +273,12 @@
                 <span class="badge text-bg-success"><%= row.observation_total || 0 %> ข้อสังเกต</span>
               </div>
               <div class="mobile-card__text">
-                <div>ค้างดำเนินการ <%= row.open_items || 0 %> รายการ</div>
-                <div>ปิดแล้ว / ยุติ <%= row.closed_items || 0 %> รายการ</div>
-                <div>มูลค่าความเสียหาย <%= fmtMoney(row.total_damage || 0) %> บาท</div>
-                <div class="mt-2 text-muted">
-                  ปีบัญชี <%= row.latest_fiscal_year_end || '-' %> | หนังสือ <%= row.latest_audit_office_letter_no || '-' %>
-                </div>
+                <div class="text-success">แก้ไขแล้ว <strong><%= row.resolved_items || 0 %></strong> ประเด็น</div>
+                <div class="text-primary">ระหว่างดำเนินการ <strong><%= row.in_progress_items || 0 %></strong> ประเด็น</div>
+                <div class="text-danger">ยังไม่แก้ไข <strong><%= row.new_items || 0 %></strong> ประเด็น</div>
               </div>
               <div class="mobile-card__footer">
-                <div class="text-muted small">
-                  กำหนดติดตาม <%= row.latest_due_date || '-' %>
-                </div>
+                <div class="text-muted small">ทั้งหมด <%= row.observation_total || 0 %> ประเด็น</div>
                 <a href="/sangket/cooperatives/<%= row.cooperative_id %>" class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-eye me-1" aria-hidden="true"></i>ดูข้อสังเกต
                 </a>

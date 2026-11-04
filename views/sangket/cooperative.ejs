@@ -63,26 +63,26 @@
         <div class="row g-3 mb-4">
           <div class="col-6 col-lg-3">
             <div class="detail-card">
-              <div class="detail-label">จำนวนข้อสังเกต</div>
+              <div class="detail-label">ประเด็นทั้งหมด</div>
               <div class="detail-value"><%= summary.observation_total || 0 %></div>
             </div>
           </div>
           <div class="col-6 col-lg-3">
             <div class="detail-card">
-              <div class="detail-label">ค้างดำเนินการ</div>
-              <div class="detail-value"><%= summary.open_items || 0 %></div>
+              <div class="detail-label">แก้ไขแล้ว</div>
+              <div class="detail-value text-success"><%= summary.resolved_items || 0 %></div>
             </div>
           </div>
           <div class="col-6 col-lg-3">
             <div class="detail-card">
-              <div class="detail-label">ปิดแล้ว / ยุติ</div>
-              <div class="detail-value"><%= summary.closed_items || 0 %></div>
+              <div class="detail-label">ระหว่างดำเนินการ</div>
+              <div class="detail-value text-primary"><%= summary.in_progress_items || 0 %></div>
             </div>
           </div>
           <div class="col-6 col-lg-3">
             <div class="detail-card">
-              <div class="detail-label">มูลค่าความเสียหาย</div>
-              <div class="detail-value"><%= fmtMoney(summary.total_damage || 0) %> บาท</div>
+              <div class="detail-label">ยังไม่แก้ไข</div>
+              <div class="detail-value text-danger"><%= summary.new_items || 0 %></div>
             </div>
           </div>
         </div>

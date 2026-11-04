@@ -1,28 +1,8 @@
 <%- include('../partials/header.ejs', { title: title || 'รายละเอียดข้อสังเกต' }) %>
 <%
-  const categoriesList = (item && item.categories) || [];
   const actions = (item && item.actions) || [];
-  const categoryItems = categoriesList.map((cat) => {
-    const name = String(cat.name || '').trim();
-    const shortName = name.length > 30 ? `${name.slice(0, 30).trimEnd()}…` : name;
-    return { id: cat.id, name, shortName };
-  });
-  const actionTypeLabel = (value) => {
-    if (value === 'follow_up') return 'หนังสือติดตาม';
-    if (value === 'order') return 'หนังสือสั่งการ';
-    if (value === 'advice') return 'หนังสือคำแนะนำ';
-    if (value === 'fact_check') return 'หนังสือตรวจข้อเท็จจริง';
-    if (value === 'close') return 'หนังสือปิดเรื่อง';
-    return value || '-';
-  };
-  const severityLabel = {
-    serious_order: 'ร้ายแรง / คำสั่ง',
-    advice: 'คำแนะนำ',
-    fact_check: 'ตรวจข้อเท็จจริง'
-  }[item?.severity_case] || '-';
-  const observationTitle = item?.observation_title || (item?.observation_text ? item.observation_text.slice(0, 120) : '-');
+  const observationTitle = item?.observation_title || (item?.observation_text ? item.observation_text.slice(0, 120) : 'ข้อสังเกต');
   const statusLabel = ({new:'ใหม่', in_progress:'กำลังดำเนินการ', monitoring:'ติดตาม', resolved:'ปิดแล้ว', closed:'ยุติ'})[item?.status] || '-';
-  const fmtMoney = (value) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(Number(value || 0));
 %>
 
 <link rel="stylesheet" href="/css/sangket-view.css">
@@ -35,182 +15,94 @@
       <div class="view-hero p-3 p-lg-4">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
           <div>
-
-            <h1 class="h3 fw-bold mb-2"><%= item.cooperative_name %></h1>
-            <div class="text-dark fw-semibold mb-2"><%= observationTitle %></div>
-            <p class="text-muted mb-0">
-              <i class="bi bi-hash me-1"></i><%= item.cooperative_code || '-' %> |
-              <%= item.fiscal_year_end || '-' %> | หนังสือ <%= item.audit_office_letter_no || '-' %>
-            </p>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+              <span class="badge text-bg-primary"><%= statusLabel %></span>
+              <span class="text-muted small">กสส. <%= item.promotion_group_no || '-' %></span>
+            </div>
+            <h1 class="h3 fw-bold mb-1"><%= item.cooperative_name %></h1>
+            <p class="text-muted mb-0"><%= item.cooperative_code || '-' %> · <%= item.fiscal_year_end || '-' %></p>
           </div>
           <div class="d-flex flex-wrap gap-2 align-items-start">
-            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-warning rounded-3">
-              <i class="bi bi-pencil-square me-1"></i> แก้ไข
-            </a>
-            <a href="/sangket/cooperatives/<%= item.cooperative_id %>" class="btn btn-outline-secondary rounded-3">
-              <i class="bi bi-arrow-left-circle me-1"></i> ข้อสังเกตของสถาบัน
-            </a>
+            <a href="/sangket/edit/<%= item.observation_id %>" class="btn btn-outline-secondary"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i> แก้ไขข้อสังเกต</a>
+            <a href="/sangket/cooperatives/<%= item.cooperative_id %>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i> กลับ</a>
           </div>
         </div>
       </div>
 
       <div class="p-3 p-lg-4">
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-lg-3">
-            <div class="detail-card">
-              <div class="detail-label">ประเภท</div>
-              <div class="detail-value"><%= item.coop_type === 'group_farmer' ? 'กลุ่มเกษตรกร' : 'สหกรณ์' %></div>
-            </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="detail-card">
-              <div class="detail-label">กสส.</div>
-              <div class="detail-value"><%= item.promotion_group_no || '-' %></div>
-            </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="detail-card">
-              <div class="detail-label">กรณี</div>
-              <div class="detail-value"><%= severityLabel %></div>
-            </div>
-          </div>
-          <div class="col-6 col-lg-3">
-            <div class="detail-card">
-              <div class="detail-label">สถานะ</div>
-              <div class="detail-value"><span class="badge text-bg-primary"><%= statusLabel %></span></div>
-            </div>
-          </div>
-        </div>
+        <div class="simple-workflow-grid mb-4">
+          <section class="detail-card observation-card" aria-labelledby="observation-heading">
+            <div class="step-label mb-2"><span>1</span> รายละเอียดข้อสังเกต</div>
+            <h2 id="observation-heading" class="h5 fw-bold mb-3"><%= observationTitle %></h2>
+            <div class="observation-text"><%= item.observation_text || '-' %></div>
+            <dl class="observation-meta row g-3 mt-3 mb-0">
+              <div class="col-md-6"><dt>กลุ่มส่งเสริมสหกรณ์</dt><dd><%= item.promotion_group_no ? `กลุ่ม ${item.promotion_group_no}` : '-' %></dd></div>
+              <div class="col-md-6"><dt>ผู้รับผิดชอบ</dt><dd><%= item.responsible_name || '-' %></dd></div>
+              <div class="col-12"><dt>หมายเหตุอื่น ๆ</dt><dd class="mb-0"><%= item.remark || '-' %></dd></div>
+            </dl>
+          </section>
 
-        <div class="row g-3 mb-4">
-          <div class="col-lg-8">
-            <div class="detail-card h-100">
-              <div class="detail-label mb-2">หัวข้อข้อสังเกต</div>
-              <div class="detail-value mb-3"><%= observationTitle %></div>
-              <div class="detail-label mb-2">รายละเอียดข้อสังเกต</div>
-              <div class="detail-value" style="white-space: pre-line; line-height: 1.7;"><%= item.observation_text || '-' %></div>
-              <hr>
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <div class="detail-label">มูลค่าความเสียหาย</div>
-                  <div class="detail-value"><%= item.potential_damage_amount ? fmtMoney(item.potential_damage_amount) + ' บาท' : '-' %></div>
-                </div>
-                <div class="col-md-4">
-                  <div class="detail-label">ลำดับข้อ</div>
-                  <div class="detail-value"><%= item.observation_no || '-' %></div>
-                </div>
-                <div class="col-md-4">
-                  <div class="detail-label">กำหนดติดตาม</div>
-                  <div class="detail-value"><%= item.due_date || '-' %></div>
-                </div>
+          <section class="detail-card report-card-simple" aria-labelledby="report-heading">
+            <div class="step-label mb-2"><span>2</span> รายงานการแก้ไข</div>
+            <h2 id="report-heading" class="h5 fw-bold mb-1">ส่งรายงานผลพร้อมหลักฐาน</h2>
+            <p class="text-muted small mb-3">สำหรับเจ้าหน้าที่ส่งเสริม กรุณากรอกผลการดำเนินงานและแนบไฟล์หลักฐาน</p>
+            <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions" enctype="multipart/form-data" class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="sangket-report-detail">รายงานผลการแก้ไข <span class="text-danger">*</span></label>
+                <textarea name="action_detail" class="form-control" rows="6" id="sangket-report-detail" maxlength="5000" placeholder="ระบุสิ่งที่ดำเนินการ ผลการแก้ไข และข้อมูลที่เกี่ยวข้อง" required></textarea>
               </div>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="detail-card h-100">
-              <div class="detail-label mb-2">หมวดข้อสังเกต</div>
-              <div class="category-grid mb-3">
-                <% if (categoryItems.length) { %>
-                  <% categoryItems.forEach((cat) => { %>
-                    <span class="badge text-bg-light border badge-soft category-pill" title="<%= cat.name %>">
-                      <span class="fw-semibold">#<%= cat.id %></span>
-                      <span class="text-muted">-</span>
-                      <%= cat.name || '-' %>
-                    </span>
+              <div class="col-12">
+                <label class="form-label" for="sangket-status">สถานะของข้อสังเกต</label>
+                <select name="status" class="form-select" id="sangket-status">
+                  <% Object.entries({new:'ใหม่', in_progress:'กำลังดำเนินการ', monitoring:'ติดตาม', resolved:'ปิดแล้ว', closed:'ยุติ'}).forEach(([value, label]) => { %>
+                    <option value="<%= value %>" <%= item.status === value ? 'selected' : '' %>><%= label %></option>
                   <% }) %>
-                <% } else { %>
-                  <span class="text-muted">-</span>
-                <% } %>
+                </select>
               </div>
-              <% if (categoryItems.length) { %>
-                <div class="mini-note mt-2"></div>
-              <% } %>
-              <div class="mini-note">ผู้สอบบัญชี: <%= item.auditor_name || '-' %></div>
-              <div class="mini-note">หนังสือรับ: <%= item.received_date || '-' %></div>
-              <div class="mini-note">วันที่หนังสือ: <%= item.audit_office_letter_date || '-' %></div>
-              <div class="mini-note">แหล่งข้อมูล: <%= item.source_sheet || '-' %> แถว <%= item.source_row || '-' %></div>
-            </div>
-          </div>
+              <div class="col-12">
+                <label class="form-label" for="sangket-evidence">ไฟล์หลักฐาน <span class="text-danger">*</span></label>
+                <input type="file" name="evidence" class="form-control" id="sangket-evidence" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" required>
+                <div class="form-text">รองรับ PDF, Word, Excel และรูปภาพ ขนาดไม่เกิน 10 MB</div>
+              </div>
+              <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1" aria-hidden="true"></i> ส่งรายงานและหลักฐาน</button>
+              </div>
+            </form>
+          </section>
         </div>
 
-        <div class="row g-4">
-          <div class="col-lg-7">
-            <div class="detail-card">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 fw-bold">หนังสือจากนายทะเบียนสหกรณ์</h5>
-                <span class="badge text-bg-success"><%= actions.length %> รายการ</span>
-              </div>
-              <% if (actions.length) { %>
-                <div class="d-grid gap-3">
-                  <% actions.forEach((action) => { %>
-                    <div class="timeline-item">
-                      <div class="d-flex justify-content-between gap-3">
-                        <div class="fw-semibold"><%= actionTypeLabel(action.action_type) %></div>
-                        <div class="d-flex align-items-start gap-2">
-                          <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
-                          <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions/<%= action.id %>/delete" onsubmit="return confirm('ต้องการลบหนังสือรายการนี้ใช่ไหม');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="ลบหนังสือ" aria-label="ลบหนังสือ">
-                              <i class="bi bi-trash"></i>
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                      <div class="small text-muted">
-                        <i class="bi bi-journal-text me-1"></i>เลขที่ <%= action.letter_no || '-' %>
-                        <% if (action.letter_date) { %> | <%= action.letter_date %><% } %>
-                      </div>
-                      <div class="mt-1" style="white-space: pre-line;"><%= action.action_detail || '-' %></div>
-                      <% if (action.result) { %>
-                        <div class="mt-1 text-success" style="white-space: pre-line;"><%= action.result %></div>
-                      <% } %>
+        <section class="detail-card" aria-labelledby="history-heading">
+          <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+            <h2 id="history-heading" class="h5 fw-bold mb-0">ประวัติรายงานการแก้ไข</h2>
+            <span class="badge text-bg-light border"><%= actions.length %> รายการ</span>
+          </div>
+          <% if (actions.length) { %>
+            <div class="d-grid gap-3">
+              <% actions.forEach((action) => { %>
+                <article class="timeline-item">
+                  <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+                    <div>
+                      <div class="fw-semibold"><%= action.created_by || 'เจ้าหน้าที่ส่งเสริม' %></div>
+                      <div class="text-muted small"><%= action.created_at ? new Date(action.created_at).toLocaleString('th-TH') : '' %></div>
                     </div>
-                  <% }) %>
-                </div>
-              <% } else { %>
-                <div class="text-muted">ยังไม่มีการบันทึกหนังสือจากนายทะเบียนสหกรณ์</div>
-              <% } %>
+                    <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions/<%= action.id %>/delete" onsubmit="return confirm('ต้องการลบรายงานรายการนี้ใช่ไหม');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="ลบรายงาน"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                    </form>
+                  </div>
+                  <div class="report-detail mt-2"><%= action.action_detail || action.result || '-' %></div>
+                  <% if (action.attachment_path) { %>
+                    <a class="btn btn-sm btn-outline-primary mt-3" href="/sangket/view/<%= item.observation_id %>/actions/<%= action.id %>/evidence" target="_blank" rel="noopener"><i class="bi bi-paperclip me-1" aria-hidden="true"></i><%= action.attachment_name || 'เปิดไฟล์หลักฐาน' %></a>
+                  <% } %>
+                </article>
+              <% }) %>
             </div>
-          </div>
-
-          <div class="col-lg-5">
-            <details class="action-box sangket-disclosure p-3">
-              <summary>เพิ่มหนังสือ / ผลการติดตาม</summary>
-              <form method="POST" action="/sangket/view/<%= item.observation_id %>/actions" class="row g-3">
-                <div class="col-12">
-                  <label class="form-label" for="sangket-view-field-1">ประเภทหนังสือ</label>
-                  <select name="action_type" class="form-select" id="sangket-view-field-1">
-                    <option value="follow_up">หนังสือติดตาม</option>
-                    <option value="order">หนังสือสั่งการ</option>
-                    <option value="advice">หนังสือคำแนะนำ</option>
-                    <option value="fact_check">หนังสือตรวจข้อเท็จจริง</option>
-                    <option value="close">หนังสือปิดเรื่อง</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-view-field-2">เลขที่หนังสือ</label>
-                  <input type="text" name="letter_no" class="form-control" id="sangket-view-field-2">
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-view-field-3">วันที่หนังสือ</label>
-                  <input type="text" name="letter_date" class="form-control" placeholder="เช่น 30 เม.ย. 69" id="sangket-view-field-3">
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-view-field-4">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
-                  <textarea name="action_detail" class="form-control" rows="4" id="sangket-view-field-4"></textarea>
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-view-field-5">หมายเหตุ/ผลการดำเนินการ</label>
-                  <textarea name="result" class="form-control" rows="3" id="sangket-view-field-5"></textarea>
-                </div>
-                <div class="col-12 d-grid">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-send-check me-1"></i> บันทึกหนังสือ
-                  </button>
-                </div>
-              </form>
-            </details>
-          </div>
-        </div>
+          <% } else { %>
+            <div class="empty-report text-center py-4">
+              <i class="bi bi-file-earmark-check fs-2 text-muted" aria-hidden="true"></i>
+              <p class="text-muted mb-0 mt-2">ยังไม่มีรายงานการแก้ไข</p>
+            </div>
+          <% } %>
+        </section>
       </div>
     </div>
   </div>

@@ -131,7 +131,7 @@ async function getActiveCoopLookup() {
 
   activeCoopLookupPromise = (async () => {
     const [rows] = await db.query(
-      'SELECT c_code, c_name, coop_group FROM active_coop WHERE c_name IS NOT NULL AND c_name <> ""'
+      'SELECT c_code, c_name, coop_group, c_group, c_person FROM active_coop WHERE c_name IS NOT NULL AND c_name <> ""'
     );
 
     const exactMap = new Map();
@@ -200,7 +200,7 @@ async function resolveActiveCoopByCode(code) {
 
 async function getActiveCoopHierarchy() {
   const [rows] = await db.query(
-    `SELECT c_code, c_name, coop_group, c_group
+    `SELECT c_code, c_name, coop_group, c_group, c_person
      FROM active_coop
      WHERE c_name IS NOT NULL AND c_name <> ''
      ORDER BY coop_group ASC, c_group ASC, c_name ASC`
@@ -231,7 +231,8 @@ async function getActiveCoopHierarchy() {
       c_code: row.c_code,
       c_name: row.c_name,
       coop_group: row.coop_group,
-      c_group: row.c_group
+      c_group: row.c_group,
+      c_person: row.c_person
     });
   }
 
@@ -332,6 +333,7 @@ async function ensureSchema() {
         category_id INT NULL,
         status ENUM('new', 'in_progress', 'resolved', 'monitoring', 'closed') NOT NULL DEFAULT 'new',
         responsible_user_id INT NULL,
+        responsible_name VARCHAR(255) NULL,
         due_date DATE NULL,
         resolved_date DATE NULL,
         remark TEXT NULL,
@@ -346,6 +348,7 @@ async function ensureSchema() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await ensureColumn('sangket_observations', 'observation_title', 'observation_title VARCHAR(255) NULL', 'observation_no');
+    await ensureColumn('sangket_observations', 'responsible_name', 'responsible_name VARCHAR(255) NULL', 'responsible_user_id');
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS sangket_observation_categories (
@@ -375,12 +378,14 @@ async function ensureSchema() {
         result TEXT NULL,
         created_by VARCHAR(255) NULL,
         attachment_path VARCHAR(255) NULL,
+        attachment_name VARCHAR(255) NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         KEY idx_action_obs (observation_id),
         KEY idx_action_type (action_type)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    await ensureColumn('sangket_observation_actions', 'attachment_name', 'attachment_name VARCHAR(255) NULL', 'attachment_path');
 
     for (const category of CATEGORY_SEED) {
       // eslint-disable-next-line no-await-in-loop
@@ -544,9 +549,14 @@ async function fetchObservationRows(whereSql, params, limitClause = '') {
       o.category_id,
       o.status,
       o.responsible_user_id,
+      o.responsible_name,
       o.due_date,
       o.resolved_date,
       o.remark,
+      (SELECT a.id FROM sangket_observation_actions a WHERE a.observation_id = o.id ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS latest_action_id,
+      (SELECT a.action_detail FROM sangket_observation_actions a WHERE a.observation_id = o.id ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS latest_correction,
+      (SELECT a.attachment_path FROM sangket_observation_actions a WHERE a.observation_id = o.id ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS latest_attachment_path,
+      (SELECT a.attachment_name FROM sangket_observation_actions a WHERE a.observation_id = o.id ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS latest_attachment_name,
       o.source_sheet,
       o.source_row,
       o.created_at AS observation_created_at,
@@ -584,8 +594,8 @@ function buildWhere(filters = {}) {
 
   if (filters.search) {
     const kw = `%${filters.search}%`;
-    where.push('(c.name LIKE ? OR c.c_code LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_title LIKE ? OR o.observation_text LIKE ? OR o.remark LIKE ?)');
-    params.push(kw, kw, kw, kw, kw, kw, kw);
+    where.push('(c.name LIKE ? OR c.c_code LIKE ? OR r.auditor_name LIKE ? OR r.audit_office_letter_no LIKE ? OR o.observation_title LIKE ? OR o.observation_text LIKE ? OR o.responsible_name LIKE ? OR o.remark LIKE ?)');
+    params.push(kw, kw, kw, kw, kw, kw, kw, kw);
   }
 
   if (filters.groupNo) {
@@ -662,8 +672,8 @@ async function addObservationAction(observationId, data = {}) {
 
   const [result] = await db.query(
     `INSERT INTO sangket_observation_actions
-      (observation_id, action_type, letter_no, letter_date, action_detail, result, created_by, attachment_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (observation_id, action_type, letter_no, letter_date, action_detail, result, created_by, attachment_path, attachment_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       observationId,
       actionType,
@@ -672,11 +682,22 @@ async function addObservationAction(observationId, data = {}) {
       data.action_detail || null,
       data.result || null,
       data.created_by || null,
-      data.attachment_path || null
+      data.attachment_path || null,
+      data.attachment_name || null
     ]
   );
 
-  if (actionType === 'close') {
+  const requestedStatus = ['new', 'in_progress', 'monitoring', 'resolved', 'closed'].includes(data.status)
+    ? data.status
+    : null;
+  if (requestedStatus) {
+    await db.query(
+      `UPDATE sangket_observations
+       SET status = ?, resolved_date = CASE WHEN ? IN ('resolved', 'closed') THEN CURDATE() ELSE NULL END
+       WHERE id = ?`,
+      [requestedStatus, requestedStatus, observationId]
+    );
+  } else if (actionType === 'close') {
     await db.query(
       `UPDATE sangket_observations
        SET status = 'closed', resolved_date = COALESCE(?, resolved_date)
@@ -703,12 +724,18 @@ async function deleteObservationAction(observationId, actionId) {
   const observation = await getById(observationId);
   if (!observation) return null;
 
+  const [[action]] = await db.query(
+    'SELECT id, attachment_path, attachment_name FROM sangket_observation_actions WHERE id = ? AND observation_id = ?',
+    [actionId, observationId]
+  );
+  if (!action) return null;
+
   const [result] = await db.query(
     'DELETE FROM sangket_observation_actions WHERE id = ? AND observation_id = ?',
     [actionId, observationId]
   );
 
-  return result.affectedRows > 0;
+  return result.affectedRows > 0 ? action : null;
 }
 
 async function create(payload) {
@@ -737,8 +764,8 @@ async function create(payload) {
 
   const [result] = await db.query(
     `INSERT INTO sangket_observations
-      (audit_report_id, observation_no, observation_title, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, due_date, resolved_date, remark, source_sheet, source_row)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (audit_report_id, observation_no, observation_title, observation_text, potential_damage_amount, severity_case, category_id, status, responsible_user_id, responsible_name, due_date, resolved_date, remark, source_sheet, source_row)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       auditReportId,
       payload.observation_no || null,
@@ -749,6 +776,7 @@ async function create(payload) {
       payload.category_id || null,
       payload.status || payload.sang_status || 'new',
       payload.responsible_user_id || null,
+      payload.responsible_name || null,
       payload.due_date || null,
       payload.resolved_date || null,
       payload.remark || payload.sang_maihed || null,
@@ -821,7 +849,7 @@ async function update(id, payload) {
 
   await db.query(
     `UPDATE sangket_observations
-     SET observation_no = ?, observation_title = ?, observation_text = ?, potential_damage_amount = ?, severity_case = ?, category_id = ?, status = ?, responsible_user_id = ?, due_date = ?, resolved_date = ?, remark = ?, source_sheet = ?, source_row = ?
+     SET observation_no = ?, observation_title = ?, observation_text = ?, potential_damage_amount = ?, severity_case = ?, category_id = ?, status = ?, responsible_user_id = ?, responsible_name = ?, due_date = ?, resolved_date = ?, remark = ?, source_sheet = ?, source_row = ?
      WHERE id = ?`,
     [
       payload.observation_no || current.observation_no || null,
@@ -832,6 +860,7 @@ async function update(id, payload) {
       payload.category_id || current.category_id || null,
       payload.status || current.status || 'new',
       payload.responsible_user_id || current.responsible_user_id || null,
+      payload.responsible_name || null,
       payload.due_date || current.due_date || null,
       payload.resolved_date || current.resolved_date || null,
       payload.remark || payload.sang_maihed || current.remark || null,

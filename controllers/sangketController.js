@@ -7,7 +7,9 @@ const { fontsDir } = require('../config/paths');
 const Sangket = require('../models/sangketModel');
 
 const uploadDir = path.join(__dirname, '..', 'uploads', 'sangket');
+const evidenceDir = path.join(uploadDir, 'evidence');
 fs.mkdirSync(uploadDir, { recursive: true });
+fs.mkdirSync(evidenceDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -17,6 +19,34 @@ const upload = multer({
   storage,
   fileFilter: multer.fileFilter(['.xlsx'])
 });
+
+const evidenceStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, evidenceDir),
+});
+
+const evidenceUpload = multer({
+  storage: evidenceStorage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: multer.fileFilter(['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'])
+});
+
+function removeEvidenceFile(filename) {
+  if (!filename) return;
+  const safeName = path.basename(String(filename));
+  if (safeName !== filename) return;
+  const filePath = path.join(evidenceDir, safeName);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+}
+
+function normalizeOriginalFilename(value) {
+  let name = String(value || 'evidence');
+  if (name && Array.from(name).every((char) => char.codePointAt(0) <= 255)) {
+    const bytes = Buffer.from(name, 'latin1');
+    const decoded = bytes.toString('utf8');
+    if (Buffer.from(decoded, 'utf8').equals(bytes)) name = decoded;
+  }
+  return path.basename(name).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 255) || 'evidence';
+}
 
 function getFilters(query = {}) {
   return {
@@ -54,6 +84,7 @@ function pickBody(body = {}) {
     category_ids: Array.isArray(body.category_ids) ? body.category_ids : (body.category_ids ? [body.category_ids] : []),
     status: body.status || 'new',
     responsible_user_id: body.responsible_user_id || null,
+    responsible_name: String(body.responsible_name || '').trim() || null,
     due_date: body.due_date || null,
     resolved_date: body.resolved_date || null,
     remark: body.remark || body.sang_maihed || null,
@@ -66,6 +97,20 @@ function pickBody(body = {}) {
     source_sheet: body.source_sheet || null,
     source_row: body.source_row || null
   };
+}
+
+function validateCorePayload(payload) {
+  const validStatuses = ['new', 'in_progress', 'monitoring', 'resolved', 'closed'];
+  const groupNo = Number(payload.promotion_group_no);
+  if (!String(payload.cooperative_name || '').trim()) return 'กรุณาเลือกสถาบัน';
+  if (!Number.isInteger(groupNo) || groupNo <= 0) return 'กรุณาเลือกกลุ่มส่งเสริมสหกรณ์';
+  if (!payload.responsible_name) return 'กรุณาระบุผู้รับผิดชอบ';
+  if (!String(payload.observation_text || '').trim()) return 'กรุณาระบุรายละเอียดข้อสังเกต';
+  if (String(payload.observation_text).length > 10000) return 'รายละเอียดข้อสังเกตต้องไม่เกิน 10,000 ตัวอักษร';
+  if (String(payload.remark || '').length > 5000) return 'หมายเหตุต้องไม่เกิน 5,000 ตัวอักษร';
+  if (!validStatuses.includes(payload.status)) return 'สถานะของข้อสังเกตไม่ถูกต้อง';
+  payload.promotion_group_no = groupNo;
+  return null;
 }
 
 function observationTitle(row = {}) {
@@ -169,16 +214,13 @@ function observationPdfRows(rows = []) {
 }
 
 async function renderForm(res, item, error = null) {
-  const [refs, categories] = await Promise.all([
-    Sangket.getReferenceData(),
-    Sangket.getCategoryOptions()
-  ]);
+  const refs = await Sangket.getReferenceData();
 
   res.render('sangket/form', {
     title: item ? 'แก้ไขข้อสังเกต' : 'บันทึกข้อสังเกต',
     item,
     error,
-    categories,
+    categories: refs.categories,
     groups: refs.groups,
     cooperatives: refs.cooperatives,
     activeCoopHierarchy: refs.activeCoopHierarchy || []
@@ -187,6 +229,7 @@ async function renderForm(res, item, error = null) {
 
 const controller = {
   upload,
+  evidenceUpload,
 
   index: async (req, res) => {
     try {
@@ -255,13 +298,11 @@ const controller = {
   exportExcel: async (req, res) => {
     try {
       const filters = getFilters(req.query);
-      const [dashboard, rows, categories] = await Promise.all([
+      const [dashboard, rows] = await Promise.all([
         Sangket.getDashboard(filters),
-        Sangket.getExportRows(filters),
-        Sangket.getCategoryOptions()
+        Sangket.getExportRows(filters)
       ]);
 
-      const categoryLookup = new Map((categories || []).map((item) => [Number(item.id), item.name]));
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'express-chain';
       workbook.created = new Date();
@@ -287,20 +328,13 @@ const controller = {
       ws.columns = [
         { header: '#', key: 'no', width: 8 },
         { header: 'สหกรณ์/กลุ่ม', key: 'cooperative_name', width: 28 },
-        { header: 'กสส.', key: 'promotion_group_no', width: 10 },
-        { header: 'ปีบัญชี', key: 'fiscal_year_end', width: 16 },
-        { header: 'เลขหนังสือ', key: 'audit_office_letter_no', width: 18 },
-        { header: 'วันที่รับ', key: 'received_date', width: 14 },
-        { header: 'หัวข้อข้อสังเกต', key: 'observation_title', width: 36 },
-        { header: 'ข้อสังเกต', key: 'observation_text', width: 48 },
-        { header: 'หมวด', key: 'categories', width: 28 },
-        { header: 'กรณี', key: 'severity_case', width: 18 },
+        { header: 'กลุ่มส่งเสริมสหกรณ์', key: 'promotion_group_no', width: 20 },
+        { header: 'ผู้รับผิดชอบ', key: 'responsible_name', width: 25 },
+        { header: 'รายละเอียดข้อสังเกต', key: 'observation_text', width: 48 },
+        { header: 'การแก้ไขล่าสุด', key: 'latest_correction', width: 48 },
+        { header: 'เอกสารแนบการแก้ไข', key: 'latest_attachment_name', width: 28 },
         { header: 'สถานะ', key: 'status', width: 16 },
-        { header: 'มูลค่าความเสียหาย', key: 'potential_damage_amount', width: 18 },
-        { header: 'ผู้สอบบัญชี', key: 'auditor_name', width: 22 },
-        { header: 'กำหนดติดตาม', key: 'due_date', width: 14 },
-        { header: 'วันปิด', key: 'resolved_date', width: 14 },
-        { header: 'หมายเหตุ', key: 'remark', width: 32 }
+        { header: 'หมายเหตุอื่น ๆ', key: 'remark', width: 32 }
       ];
       ws.getRow(1).font = { bold: true };
       ws.views = [{ state: 'frozen', ySplit: 1 }];
@@ -310,23 +344,14 @@ const controller = {
           no: idx + 1,
           cooperative_name: row.cooperative_name || '',
           promotion_group_no: row.promotion_group_no || '',
-          fiscal_year_end: row.fiscal_year_end || '',
-          audit_office_letter_no: row.audit_office_letter_no || '',
-          received_date: row.received_date || '',
-          observation_title: observationTitle(row),
+          responsible_name: row.responsible_name || '',
           observation_text: row.observation_text || '',
-          categories: (row.categories || []).map((cat) => cat.name || categoryLookup.get(Number(cat.id)) || '').filter(Boolean).join(', '),
-          severity_case: severityLabel(row.severity_case),
+          latest_correction: row.latest_correction || '',
+          latest_attachment_name: row.latest_attachment_name || '',
           status: statusLabel(row.status),
-          potential_damage_amount: Number(row.potential_damage_amount || 0),
-          auditor_name: row.auditor_name || '',
-          due_date: row.due_date || '',
-          resolved_date: row.resolved_date || '',
           remark: row.remark || ''
         });
       });
-
-      ws.getColumn('potential_damage_amount').numFmt = '#,##0.00';
 
       const filename = buildExportFilename('sangket-report', 'xlsx');
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -343,38 +368,36 @@ const controller = {
   exportPdf: async (req, res) => {
     try {
       const filters = getFilters(req.query);
-      const [dashboard, rows, categories] = await Promise.all([
+      const [dashboard, rows] = await Promise.all([
         Sangket.getDashboard(filters),
-        Sangket.getExportRows(filters),
-        Sangket.getCategoryOptions()
+        Sangket.getExportRows(filters)
       ]);
 
-      const categoryLookup = new Map((categories || []).map((item) => [Number(item.id), item.name]));
       const printer = createThaiPdfPrinter();
       const filterText = buildExportFilterTitle(filters);
       const body = [[
         { text: '#', bold: true, color: '#fff' },
-        { text: 'สหกรณ์', bold: true, color: '#fff' },
-        { text: 'ปีบัญชี', bold: true, color: '#fff' },
-        { text: 'เลขหนังสือ', bold: true, color: '#fff' },
-        { text: 'หัวข้อข้อสังเกต', bold: true, color: '#fff' },
-        { text: 'ข้อสังเกต', bold: true, color: '#fff' },
-        { text: 'หมวด', bold: true, color: '#fff' },
-        { text: 'กรณี', bold: true, color: '#fff' },
-        { text: 'สถานะ', bold: true, color: '#fff' }
+        { text: 'สถาบัน', bold: true, color: '#fff' },
+        { text: 'กลุ่ม', bold: true, color: '#fff' },
+        { text: 'ผู้รับผิดชอบ', bold: true, color: '#fff' },
+        { text: 'รายละเอียดข้อสังเกต', bold: true, color: '#fff' },
+        { text: 'การแก้ไขล่าสุด', bold: true, color: '#fff' },
+        { text: 'เอกสารแนบ', bold: true, color: '#fff' },
+        { text: 'สถานะ', bold: true, color: '#fff' },
+        { text: 'หมายเหตุ', bold: true, color: '#fff' }
       ]];
 
       (rows || []).forEach((row, idx) => {
         body.push([
           { text: String(idx + 1), alignment: 'center' },
           { text: safeText(row.cooperative_name), noWrap: false, fontSize: 9 },
-          { text: safeText(row.fiscal_year_end), noWrap: false },
-          { text: `${safeText(row.audit_office_letter_no)}\n${safeText(row.received_date, '')}`.trim(), noWrap: false },
-          { text: safeText(observationTitle(row)), noWrap: false },
+          { text: safeText(row.promotion_group_no), noWrap: false },
+          { text: safeText(row.responsible_name), noWrap: false },
           { text: safeText(row.observation_text), noWrap: false },
-          { text: compactCategoryCodes(row), alignment: 'center', noWrap: false },
-          { text: severityLabel(row.severity_case), noWrap: false },
-          { text: statusLabel(row.status), noWrap: false }
+          { text: safeText(row.latest_correction), noWrap: false },
+          { text: safeText(row.latest_attachment_name), noWrap: false },
+          { text: statusLabel(row.status), noWrap: false },
+          { text: safeText(row.remark), noWrap: false }
         ]);
       });
 
@@ -414,15 +437,9 @@ const controller = {
             margin: [0, 0, 0, 12]
           },
           {
-            text: `หมวด: ${categories.map((cat) => `${cat.id} = ${safeText(cat.name)}`).join(' | ')}`,
-            fontSize: 9,
-            color: '#4b5563',
-            margin: [0, 0, 0, 8]
-          },
-          {
             table: {
               headerRows: 1,
-              widths: [16, 96, 40, 62, 110, 170, 42, 50, 58],
+              widths: [16, 92, 40, 74, 150, 140, 76, 56, 90],
               body
             },
             dontBreakRows: true,
@@ -465,6 +482,11 @@ const controller = {
   create: async (req, res) => {
     try {
       const payload = pickBody(req.body);
+      const validationError = validateCorePayload(payload);
+      if (validationError) {
+        res.status(400);
+        return await renderForm(res, req.body, validationError);
+      }
       payload.created_by = req.session?.user?.fullname || req.session?.user?.username || 'system';
       const id = await Sangket.create(payload);
       res.redirect(`/sangket/view/${id}`);
@@ -489,6 +511,11 @@ const controller = {
   update: async (req, res) => {
     try {
       const payload = pickBody(req.body);
+      const validationError = validateCorePayload(payload);
+      if (validationError) {
+        res.status(400);
+        return await renderForm(res, { ...req.body, id: req.params.id }, validationError);
+      }
       payload.created_by = req.session?.user?.fullname || req.session?.user?.username || 'system';
       await Sangket.update(req.params.id, payload);
       res.redirect(`/sangket/view/${req.params.id}`);
@@ -610,21 +637,50 @@ const controller = {
   addAction: async (req, res) => {
     try {
       const item = await Sangket.getById(req.params.id);
-      if (!item) return res.status(404).send('ไม่พบข้อมูล');
+      if (!item) {
+        removeEvidenceFile(req.file?.filename);
+        return res.status(404).send('ไม่พบข้อมูล');
+      }
+
+      const reportDetail = String(req.body.action_detail || '').trim();
+      const reportStatus = String(req.body.status || '');
+      if (!reportDetail || reportDetail.length > 5000 || !req.file || !['new', 'in_progress', 'monitoring', 'resolved', 'closed'].includes(reportStatus)) {
+        removeEvidenceFile(req.file?.filename);
+        return res.status(400).send('กรุณากรอกรายงานผลการแก้ไขไม่เกิน 5,000 ตัวอักษร และแนบไฟล์หลักฐาน');
+      }
 
       await Sangket.addAction(req.params.id, {
-        action_type: req.body.action_type || 'follow_up',
-        letter_no: req.body.letter_no || null,
-        letter_date: req.body.letter_date || null,
-        action_detail: req.body.action_detail || null,
-        result: req.body.result || null,
-        created_by: req.session?.user?.fullname || req.session?.user?.username || 'system'
+        action_type: 'follow_up',
+        action_detail: reportDetail,
+        status: reportStatus,
+        created_by: req.session?.user?.fullname || req.session?.user?.username || 'system',
+        attachment_path: req.file.filename,
+        attachment_name: normalizeOriginalFilename(req.file.originalname)
       });
 
       res.redirect(`/sangket/view/${req.params.id}`);
     } catch (error) {
+      removeEvidenceFile(req.file?.filename);
       console.error('Add sangket action error:', error);
-      res.status(500).send('บันทึกการติดตามผลไม่สำเร็จ');
+      res.status(500).send('บันทึกรายงานผลการแก้ไขไม่สำเร็จ');
+    }
+  },
+
+  downloadEvidence: async (req, res) => {
+    try {
+      const item = await Sangket.getById(req.params.id);
+      const action = item?.actions?.find((entry) => String(entry.id) === String(req.params.actionId));
+      if (!action?.attachment_path) return res.status(404).send('ไม่พบไฟล์หลักฐาน');
+
+      const filename = path.basename(String(action.attachment_path));
+      if (filename !== action.attachment_path) return res.status(404).send('ไม่พบไฟล์หลักฐาน');
+      const filePath = path.join(evidenceDir, filename);
+      if (!fs.existsSync(filePath)) return res.status(404).send('ไม่พบไฟล์หลักฐาน');
+
+      return res.download(filePath, action.attachment_name || filename);
+    } catch (error) {
+      console.error('Download sangket evidence error:', error);
+      return res.status(500).send('ดาวน์โหลดไฟล์หลักฐานไม่สำเร็จ');
     }
   },
 
@@ -632,12 +688,13 @@ const controller = {
     try {
       const observationId = req.params.id;
       const actionId = req.params.actionId;
-      const ok = await Sangket.deleteAction(observationId, actionId);
-      if (!ok) return res.status(404).send('ไม่พบรายการติดตามผล');
+      const deletedAction = await Sangket.deleteAction(observationId, actionId);
+      if (!deletedAction) return res.status(404).send('ไม่พบรายงานผลการแก้ไข');
+      removeEvidenceFile(deletedAction.attachment_path);
       res.redirect(`/sangket/view/${observationId}`);
     } catch (error) {
       console.error('Delete sangket action error:', error);
-      res.status(500).send('ลบประวัติการติดตามไม่สำเร็จ');
+      res.status(500).send('ลบรายงานผลการแก้ไขไม่สำเร็จ');
     }
   }
 };

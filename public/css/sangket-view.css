@@ -77,3 +77,58 @@
     color: #64748b;
     margin-top: 0.35rem;
   }
+  .simple-workflow-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .step-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f765f;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+  .step-label span {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    color: #fff;
+    background: #0f8f7b;
+  }
+  .observation-text,
+  .report-detail {
+    white-space: pre-line;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+  }
+  .report-card-simple {
+    border-color: #bfe4d9;
+    background: #f8fdfa;
+  }
+  .observation-meta {
+    border-top: 1px solid #e5edf2;
+    padding-top: 0.85rem;
+  }
+  .observation-meta dt {
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .observation-meta dd {
+    margin-top: 0.2rem;
+    margin-bottom: 0;
+    white-space: pre-line;
+  }
+  .empty-report {
+    border: 1px dashed #d8e1e7;
+    border-radius: 10px;
+    background: #fafbfc;
+  }
+  @media (max-width: 991.98px) {
+    .simple-workflow-grid { grid-template-columns: minmax(0, 1fr); }
+  }

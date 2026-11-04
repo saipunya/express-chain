@@ -19,7 +19,8 @@ router.post('/create', controller.create);
 
 router.get('/cooperatives/:id', controller.cooperativeView);
 router.get('/view/:id', controller.view);
-router.post('/view/:id/actions', controller.addAction);
+router.post('/view/:id/actions', controller.evidenceUpload.single('evidence'), controller.addAction);
+router.get('/view/:id/actions/:actionId/evidence', controller.downloadEvidence);
 router.post('/view/:id/actions/:actionId/delete', controller.deleteAction);
 
 router.get('/edit/:id', controller.editForm);

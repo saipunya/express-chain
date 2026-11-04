@@ -45,8 +45,8 @@ test('create and edit forms keep submitted fields and institution selection work
     const form = doc.querySelector('.form-shell form');
     assert.equal(form.getAttribute('action'), item ? '/sangket/edit/7' : '/sangket/create');
     assert.equal(form.querySelector('select[name="status"] option[value="in_progress"]').textContent, 'กำลังดำเนินการ');
-    assert.equal(form.querySelectorAll('fieldset').length, 3);
-    for (const name of ['observation_text', 'category_id', 'category_ids[]', 'source_sheet', 'source_row', 'action_type', 'letter_no', 'action_detail', 'result']) assert.ok(form.elements.namedItem(name), name);
+    assert.equal(form.querySelectorAll('fieldset').length, 2);
+    for (const name of ['cooperative_name', 'promotion_group_no', 'responsible_name', 'observation_text', 'status', 'remark']) assert.ok(form.elements.namedItem(name), name);
     if (!item) {
       doc.getElementById('coop_group_select').value = 'สหกรณ์';
       doc.getElementById('coop_group_select').dispatchEvent(new dom.window.Event('change'));
@@ -57,19 +57,36 @@ test('create and edit forms keep submitted fields and institution selection work
     }
     assert.equal(form.elements.namedItem('c_code').value, '360001');
     assert.equal(form.elements.namedItem('cooperative_name').value, row.cooperative_name);
+    assert.equal(form.elements.namedItem('responsible_name').value, row.responsible_name);
     assert.equal(form.querySelector('button[type="submit"]').form, form);
     assert.equal(form.querySelector('[name="observation_text"]').required, true);
   }
 });
 
-test('detail page uses Thai status and keeps add-letter form in an accessible disclosure', async (t) => {
-  const dom = await render(t, 'view');
+test('detail page shows a simple correction report and evidence upload flow', async (t) => {
+  const item = {
+    ...row,
+    actions: [{
+      id: 11,
+      action_detail: 'แก้ไขเอกสารเรียบร้อยแล้ว',
+      created_by: 'เจ้าหน้าที่ส่งเสริม',
+      attachment_path: 'evidence.pdf',
+      attachment_name: 'หลักฐาน.pdf'
+    }]
+  };
+  const dom = await render(t, 'view', { item });
   const doc = dom.window.document;
   assert.match(doc.querySelector('.view-shell').textContent, /กำลังดำเนินการ/);
   assert.ok(doc.querySelector('a[href="/sangket/cooperatives/3"]'));
   const form = doc.querySelector('form[action="/sangket/view/7/actions"]');
-  assert.ok(form.closest('details').querySelector('summary'));
-  assert.equal(form.querySelector('[name="action_detail"]').form, form);
+  assert.equal(form.getAttribute('enctype'), 'multipart/form-data');
+  assert.equal(form.querySelector('[name="action_detail"]').required, true);
+  assert.equal(form.querySelector('[name="evidence"]').required, true);
+  assert.equal(form.querySelector('[name="status"]').value, 'in_progress');
+  assert.match(doc.querySelector('.observation-card').textContent, /รายละเอียดข้อสังเกต/);
+  assert.match(doc.querySelector('.observation-card').textContent, /นางสาวเจ้าหน้าที่ ตัวอย่าง/);
+  assert.ok(doc.querySelector('a[href="/sangket/view/7/actions/11/evidence"]'));
+  assert.match(doc.querySelector('#history-heading').parentElement.parentElement.textContent, /หลักฐาน\.pdf/);
 });
 
 test('index separates administrative controls and escapes institution names', async (t) => {

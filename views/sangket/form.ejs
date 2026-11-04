@@ -2,9 +2,13 @@
 <%
   const isEdit = Boolean(item && item.id);
   const actionUrl = isEdit ? `/sangket/edit/${item.id}` : '/sangket/create';
-  const selectedCategoryIds = Array.isArray(item && item.category_ids) ? item.category_ids.map(String) : (item && item.category_id ? [String(item.category_id)] : []);
   const statusNames = { new: 'ใหม่', in_progress: 'กำลังดำเนินการ', monitoring: 'ติดตาม', resolved: 'ปิดแล้ว', closed: 'ยุติ' };
   const currentStatus = (item && item.status) || 'new';
+  const initialCooperativeCode = item?.cooperative_code || item?.c_code || '';
+  const initialCooperativeName = item?.cooperative_name || item?.sang_name || '';
+  const initialCoopType = item?.coop_type || '';
+  const initialPromotionGroupNo = item?.promotion_group_no || '';
+  const initialResponsible = item?.responsible_name || '';
 %>
 
 <link rel="stylesheet" href="/css/sangket-form.css">
@@ -15,244 +19,72 @@
     <%- include('navigation', { current: isEdit ? 'edit' : 'form', pageLabel: isEdit ? 'แก้ไขข้อสังเกต' : 'เพิ่มข้อสังเกต' }) %>
     <div class="form-shell">
       <div class="form-hero p-3 p-lg-4">
-        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-          <div>
-
-            <h1 class="form-hero__title mb-2"><%= isEdit ? 'แก้ไขข้อสังเกต' : 'บันทึกข้อสังเกตใหม่' %></h1>
-            <p class="form-hero__subtitle mb-0">เลือกสถาบัน → ระบุรายงานสอบบัญชี → บันทึกข้อสังเกตและกำหนดติดตาม</p>
-          </div>
-
-        </div>
+        <h1 class="form-hero__title mb-2"><%= isEdit ? 'แก้ไขข้อสังเกต' : 'บันทึกข้อสังเกตใหม่' %></h1>
+        <p class="form-hero__subtitle mb-0">บันทึกเฉพาะข้อมูลที่จำเป็น แล้วให้เจ้าหน้าที่ส่งรายงานการแก้ไขพร้อมหลักฐานในหน้ารายละเอียด</p>
       </div>
 
       <form action="<%= actionUrl %>" method="POST" class="p-3 p-lg-4">
-        <% if (error) { %>
-          <div class="alert alert-danger"><%= error %></div>
-        <% } %>
+        <% if (error) { %><div class="alert alert-danger"><%= error %></div><% } %>
 
-        <%
-          const initialCooperativeCode = item?.cooperative_code || item?.c_code || '';
-          const initialCooperativeName = item?.cooperative_name || item?.sang_name || '';
-          const initialCoopType = item?.coop_type || '';
-          const initialPromotionGroupNo = item?.promotion_group_no || '';
-        %>
         <input type="hidden" name="cooperative_name" id="cooperative_name" value="<%= initialCooperativeName %>">
         <input type="hidden" name="c_code" id="cooperative_code" value="<%= initialCooperativeCode %>">
         <input type="hidden" name="coop_type" id="coop_type" value="<%= initialCoopType %>">
         <input type="hidden" name="promotion_group_no" id="promotion_group_no" value="<%= initialPromotionGroupNo %>">
 
         <div class="sangket-form-sections">
-        <fieldset class="sangket-form-section"><legend>1. ข้อมูลสถาบัน</legend><div class="row g-3">
-          <div class="col-12">
-            <div class="coop-selector p-3 p-lg-4">
-              <div class="row g-3">
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="coop_group_select">เลือกประเภท</label>
-                  <select id="coop_group_select" class="form-select" required>
-                    <option value="">เลือกประเภท</option>
-                    <% (activeCoopHierarchy || []).forEach((group) => { %>
-                      <option value="<%= group.coop_group %>"><%= group.coop_group %></option>
-                    <% }) %>
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="c_group_select">เลือกกลุ่มส่งเสริม</label>
-                  <select id="c_group_select" class="form-select" disabled required>
-                    <option value="">เลือกกลุ่มส่งเสริม</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="c_name_select">เลือกสถาบัน</label>
-                  <select id="c_name_select" class="form-select" disabled required>
-                    <option value="">เลือกสถาบัน</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <div class="mini-note">
-                    เลือกประเภท → กลุ่มส่งเสริม → สถาบัน ระบบจะเติมรหัสสถาบันให้อัตโนมัติ
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="row g-3">
-                    <div class="col-12 col-lg-6">
-                      <label class="form-label" for="selected_coop_name">สถาบันที่เลือก</label>
-                      <input type="text" id="selected_coop_name" class="form-control" readonly value="<%= initialCooperativeName %>" placeholder="ยังไม่ได้เลือก">
-                    </div>
-                    <div class="col-6 col-lg-3">
-                      <label class="form-label" for="selected_coop_code">รหัสสถาบัน</label>
-                      <input type="text" id="selected_coop_code" class="form-control" readonly value="<%= initialCooperativeCode %>" placeholder="-">
-                    </div>
-                    <div class="col-6 col-lg-3">
-                      <label class="form-label" for="selected_coop_type">ประเภท</label>
-                      <input type="text" id="selected_coop_type" class="form-control" readonly value="<%= initialCoopType === 'group_farmer' ? 'กลุ่มเกษตรกร' : (initialCoopType === 'cooperative' ? 'สหกรณ์' : '') %>" placeholder="-">
-                    </div>
-                  </div>
-                </div>
+          <fieldset class="sangket-form-section sangket-form-section-wide">
+            <legend>1. สถาบันและผู้รับผิดชอบ</legend>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="coop_group_select">ประเภทสถาบัน</label>
+                <select id="coop_group_select" class="form-select" required>
+                  <option value="">เลือกประเภท</option>
+                  <% (activeCoopHierarchy || []).forEach((group) => { %><option value="<%= group.coop_group %>"><%= group.coop_group %></option><% }) %>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="c_group_select">กลุ่มส่งเสริมสหกรณ์</label>
+                <select id="c_group_select" class="form-select" disabled required><option value="">เลือกกลุ่มส่งเสริม</option></select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="c_name_select">สถาบัน <span class="text-danger">*</span></label>
+                <select id="c_name_select" class="form-select" disabled required><option value="">เลือกสถาบัน</option></select>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label" for="responsible_name">ผู้รับผิดชอบ</label>
+                <input type="text" id="responsible_name" name="responsible_name" class="form-control" maxlength="255" value="<%= initialResponsible %>" placeholder="ชื่อเจ้าหน้าที่ผู้รับผิดชอบ" required>
+                <div class="form-text">ระบบเติมจากเจ้าหน้าที่ประจำสถาบันให้อัตโนมัติ และสามารถแก้ไขได้</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="selected_coop_code">รหัสสถาบัน</label>
+                <input type="text" id="selected_coop_code" class="form-control" readonly value="<%= initialCooperativeCode %>" placeholder="-">
               </div>
             </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-7">เขต / จังหวัด / อำเภอ</label>
-            <input id="sangket-form-field-7" type="text" name="district" class="form-control" value="<%= item?.district || '' %>" placeholder="ถ้ามี">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-8">สถานะสหกรณ์</label>
-            <input id="sangket-form-field-8" type="text" name="cooperative_status" class="form-control" value="<%= item?.cooperative_status || '' %>" placeholder="ถ้ามี">
-          </div>
+          </fieldset>
 
-          </div></fieldset><fieldset class="sangket-form-section"><legend>2. รายงานสอบบัญชี</legend><div class="row g-3">
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-9">ปีบัญชีสิ้นสุด</label>
-            <input id="sangket-form-field-9" type="text" name="fiscal_year_end" class="form-control" value="<%= item?.fiscal_year_end || '' %>" placeholder="เช่น 30 ก.ย. 68">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-10">หนังสือสตส. เลขที่</label>
-            <input id="sangket-form-field-10" type="text" name="audit_office_letter_no" class="form-control" value="<%= item?.audit_office_letter_no || '' %>">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-11">วันที่หนังสือ</label>
-            <input id="sangket-form-field-11" type="text" name="audit_office_letter_date" class="form-control" value="<%= item?.audit_office_letter_date || '' %>" placeholder="เช่น 25 พ.ย. 2568">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-12">วันที่รับหนังสือ</label>
-            <input id="sangket-form-field-12" type="text" name="received_date" class="form-control" value="<%= item?.received_date || '' %>" placeholder="เช่น 26 พ.ย. 2568">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-13">ผู้สอบบัญชี</label>
-            <input id="sangket-form-field-13" type="text" name="auditor_name" class="form-control" value="<%= item?.auditor_name || '' %>">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-14">ประเภทงานตรวจ</label>
-            <select name="audit_type" class="form-select" id="sangket-form-field-14">
-              <option value="">-</option>
-              <option value="interim" <%= String(item?.audit_type || '') === 'interim' ? 'selected' : '' %>>ระหว่างปี</option>
-              <option value="annual" <%= String(item?.audit_type || '') === 'annual' ? 'selected' : '' %>>ประจำปี</option>
-            </select>
-          </div>
-<div class="col-12"><details class="sangket-disclosure" <%= item?.source_sheet || item?.source_row ? 'open' : '' %>><summary>ข้อมูลอ้างอิงจาก Excel (ถ้ามี)</summary><div class="row g-3">          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-15">เลขอ้างอิงต้นทาง</label>
-            <input id="sangket-form-field-15" type="text" name="source_sheet" class="form-control" value="<%= item?.source_sheet || '' %>" placeholder="กรณีนำเข้า Excel">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-16">แถวต้นทาง</label>
-            <input id="sangket-form-field-16" type="number" name="source_row" class="form-control" value="<%= item?.source_row || '' %>" min="1">
-          </div>
-
-</div></details></div>
-          </div></fieldset><fieldset class="sangket-form-section sangket-form-section-wide"><legend>3. ข้อสังเกตและการติดตาม</legend><div class="row g-3">
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-17">ลำดับข้อ</label>
-            <input id="sangket-form-field-17" type="number" name="observation_no" class="form-control" min="1" value="<%= item?.observation_no || '' %>">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-18">กรณีข้อสังเกต</label>
-            <select name="severity_case" class="form-select" id="sangket-form-field-18">
-              <option value="">-</option>
-              <option value="serious_order" <%= item?.severity_case === 'serious_order' ? 'selected' : '' %>>ร้ายแรง / ออกคำสั่ง</option>
-              <option value="advice" <%= item?.severity_case === 'advice' ? 'selected' : '' %>>ไม่ร้ายแรง / ออกคำแนะนำ</option>
-              <option value="fact_check" <%= item?.severity_case === 'fact_check' ? 'selected' : '' %>>ข้อเท็จจริงไม่ครบ / ตรวจเพิ่ม</option>
-            </select>
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-19">สถานะ</label>
-            <select name="status" class="form-select" id="sangket-form-field-19">
-              <% ['new','in_progress','monitoring','resolved','closed'].forEach((status) => { %>
-                <option value="<%= status %>" <%= currentStatus === status ? 'selected' : '' %>><%= statusNames[status] %></option>
-              <% }) %>
-            </select>
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-20">หมวดหลัก</label>
-            <select name="category_id" class="form-select" id="sangket-form-field-20">
-              <option value="">-</option>
-              <% categories.forEach((cat) => { %>
-                <option value="<%= cat.id %>" <%= String(item?.category_id || '') === String(cat.id) ? 'selected' : '' %>><%= cat.name %></option>
-              <% }) %>
-            </select>
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="sangket-form-field-21">หัวข้อข้อสังเกต</label>
-            <input id="sangket-form-field-21" type="text" name="observation_title" class="form-control" value="<%= item?.observation_title || item?.title || '' %>" placeholder="หัวข้อสั้น ๆ ของข้อสังเกต">
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="sangket-form-field-22">หมวดเพิ่มเติม</label>
-            <div class="category-grid">
-              <% categories.forEach((cat) => { %>
-                <label class="category-box">
-                  <input type="checkbox" name="category_ids[]" value="<%= cat.id %>" <%= selectedCategoryIds.includes(String(cat.id)) ? 'checked' : '' %>>
-                  <span>
-                    <strong class="d-block"><%= cat.name %></strong>
-                    <span class="mini-note">หมวด <%= cat.id %></span>
-                  </span>
-                </label>
-              <% }) %>
-            </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">มูลค่าความเสียหาย</label>
-            <input id="sangket-form-field-22" type="text" name="potential_damage_amount" class="form-control" value="<%= item?.potential_damage_amount || '' %>" placeholder="เช่น 125000.00">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-23">กำหนดติดตาม</label>
-            <input id="sangket-form-field-23" type="date" name="due_date" class="form-control" value="<%= item?.due_date || '' %>">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label" for="sangket-form-field-24">วันที่ปิดเรื่อง</label>
-            <input id="sangket-form-field-24" type="date" name="resolved_date" class="form-control" value="<%= item?.resolved_date || '' %>">
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="sangket-form-field-25">รายละเอียดข้อสังเกต <span class="text-danger">*</span></label>
-            <textarea name="observation_text" class="form-control" rows="4" required id="sangket-form-field-25"><%= item?.observation_text || '' %></textarea>
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="sangket-form-field-26">หมายเหตุ</label>
-            <textarea name="remark" class="form-control" rows="3" id="sangket-form-field-26"><%= item?.remark || '' %></textarea>
-          </div>
-
-          </div></fieldset>
-          <div class="col-12 sangket-form-section-wide">
-            <details class="action-panel sangket-disclosure p-3" <%= item?.letter_no || item?.action_type ? 'open' : '' %>>
-              <summary>4. หนังสือจากนายทะเบียน (ถ้ามี)</summary>
-              <div class="row g-3">
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="sangket-form-field-27">ประเภทหนังสือ</label>
-                  <select name="action_type" class="form-select" id="sangket-form-field-27">
-                    <option value="">-</option>
-                    <option value="order">หนังสือสั่งการ</option>
-                    <option value="advice">หนังสือคำแนะนำ</option>
-                    <option value="fact_check">หนังสือตรวจข้อเท็จจริง</option>
-                    <option value="follow_up">หนังสือติดตาม</option>
-                    <option value="close">หนังสือปิดเรื่อง</option>
-                  </select>
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="sangket-form-field-28">เลขที่หนังสือ</label>
-                  <input id="sangket-form-field-28" type="text" name="letter_no" class="form-control" value="<%= item?.letter_no || '' %>">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="sangket-form-field-29">วันที่หนังสือ</label>
-                  <input id="sangket-form-field-29" type="text" name="letter_date" class="form-control" value="<%= item?.letter_date || '' %>">
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="sangket-form-field-30">ผู้บันทึก</label>
-                  <input id="sangket-form-field-30" type="text" name="created_by" class="form-control" value="<%= item?.created_by || (user ? (user.fullname || user.username || '') : '') %>">
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-form-field-31">เรื่อง/สาระสำคัญที่เกี่ยวกับข้อสังเกตนี้</label>
-                  <textarea name="action_detail" class="form-control" rows="3" placeholder="เช่น สั่งแก้ไข, ให้คำแนะนำ, ขอเอกสารเพิ่มเติม" id="sangket-form-field-31"></textarea>
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="sangket-form-field-32">หมายเหตุ/ผลการดำเนินการ</label>
-                  <textarea name="result" class="form-control" rows="2" id="sangket-form-field-32"></textarea>
-                </div>
+          <fieldset class="sangket-form-section sangket-form-section-wide">
+            <legend>2. ข้อสังเกต</legend>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="observation_text">รายละเอียดข้อสังเกต <span class="text-danger">*</span></label>
+                <textarea id="observation_text" name="observation_text" class="form-control" rows="6" maxlength="10000" required placeholder="ระบุรายละเอียดข้อสังเกตให้ชัดเจน"><%= item?.observation_text || '' %></textarea>
               </div>
-              <div class="mini-note mt-2">ถ้ายังไม่มีหนังสือ ปล่อยส่วนนี้ว่างได้ และเพิ่มภายหลังในหน้ารายละเอียด</div>
-            </details>
-          </div>
+              <div class="col-md-6">
+                <label class="form-label" for="status">สถานะของข้อสังเกต</label>
+                <select id="status" name="status" class="form-select">
+                  <% Object.entries(statusNames).forEach(([value, label]) => { %><option value="<%= value %>" <%= currentStatus === value ? 'selected' : '' %>><%= label %></option><% }) %>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="remark">หมายเหตุอื่น ๆ</label>
+                <textarea id="remark" name="remark" class="form-control" rows="3" maxlength="5000" placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"><%= item?.remark || '' %></textarea>
+              </div>
+            </div>
+          </fieldset>
 
           <div class="sangket-form-section-wide sangket-savebar d-flex flex-wrap gap-2 justify-content-end">
-            <a href="/sangket" class="btn btn-outline-secondary rounded-3 px-4">ยกเลิก</a>
-            <button type="submit" class="btn btn-primary rounded-3 px-4"><%= isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อสังเกต' %></button>
+            <a href="<%= isEdit ? `/sangket/view/${item.id}` : '/sangket' %>" class="btn btn-outline-secondary px-4">ยกเลิก</a>
+            <button type="submit" class="btn btn-primary px-4"><%= isEdit ? 'บันทึกการแก้ไข' : 'บันทึกข้อสังเกต' %></button>
           </div>
         </div>
       </form>
@@ -262,286 +94,93 @@
 
 <script>
   (function () {
-    const activeCoopHierarchy = <%- JSON.stringify(activeCoopHierarchy || []).replace(/</g, '\\u003c') %>;
-    const initialCooperativeCode = <%- JSON.stringify(initialCooperativeCode || '').replace(/</g, '\\u003c') %>;
-    const initialCooperativeName = <%- JSON.stringify(initialCooperativeName || '').replace(/</g, '\\u003c') %>;
-    const initialCoopType = <%- JSON.stringify(initialCoopType || '').replace(/</g, '\\u003c') %>;
-    const initialPromotionGroupNo = <%- JSON.stringify(initialPromotionGroupNo || '').replace(/</g, '\\u003c') %>;
+    const hierarchy = <%- JSON.stringify(activeCoopHierarchy || []).replace(/</g, '\\u003c') %>;
+    const initialCode = <%- JSON.stringify(initialCooperativeCode).replace(/</g, '\\u003c') %>;
+    const initialName = <%- JSON.stringify(initialCooperativeName).replace(/</g, '\\u003c') %>;
+    const initialResponsible = <%- JSON.stringify(initialResponsible).replace(/</g, '\\u003c') %>;
+    const typeSelect = document.getElementById('coop_group_select');
+    const groupSelect = document.getElementById('c_group_select');
+    const coopSelect = document.getElementById('c_name_select');
+    const hiddenName = document.getElementById('cooperative_name');
+    const hiddenCode = document.getElementById('cooperative_code');
+    const hiddenType = document.getElementById('coop_type');
+    const hiddenGroup = document.getElementById('promotion_group_no');
+    const responsible = document.getElementById('responsible_name');
+    const codePreview = document.getElementById('selected_coop_code');
+    const clean = (value) => String(value || '').trim();
+    const groupNumber = (value) => (clean(value).match(/(\d+)/) || [])[1] || '';
+    const coopType = (value) => clean(value) === 'กลุ่มเกษตรกร' ? 'group_farmer' : 'cooperative';
 
-    const els = {
-      coopGroup: document.getElementById('coop_group_select'),
-      cGroup: document.getElementById('c_group_select'),
-      cName: document.getElementById('c_name_select'),
-      hiddenName: document.getElementById('cooperative_name'),
-      hiddenCode: document.getElementById('cooperative_code'),
-      hiddenType: document.getElementById('coop_type'),
-      hiddenPromotion: document.getElementById('promotion_group_no'),
-      previewName: document.getElementById('selected_coop_name'),
-      previewCode: document.getElementById('selected_coop_code'),
-      previewType: document.getElementById('selected_coop_type')
-    };
-
-    function clean(text) {
-      return String(text || '').trim();
-    }
-
-    function groupNoFromText(text) {
-      const match = clean(text).match(/(\d+)/);
-      return match ? match[1] : '';
-    }
-
-    function coopTypeFromGroup(coopGroup) {
-      const group = clean(coopGroup);
-      if (group === 'กลุ่มเกษตรกร') return 'group_farmer';
-      if (group === 'สหกรณ์') return 'cooperative';
-      return initialCoopType || '';
-    }
-
-    function setPreview(item) {
-      if (!item) {
-        els.previewName.value = '';
-        els.previewCode.value = '';
-        els.previewType.value = '';
-        return;
-      }
-
-      const coopName = item ? clean(item.c_name) : clean(els.hiddenName.value || initialCooperativeName);
-      const coopCode = item ? clean(item.c_code) : clean(els.hiddenCode.value || initialCooperativeCode);
-      const coopType = item ? coopTypeFromGroup(item.coop_group) : clean(els.hiddenType.value || initialCoopType);
-      els.previewName.value = coopName;
-      els.previewCode.value = coopCode;
-      els.previewType.value = coopType === 'group_farmer' ? 'กลุ่มเกษตรกร' : (coopType === 'cooperative' ? 'สหกรณ์' : '');
-    }
-
-    function setHiddenFromItem(item) {
-      if (!item) return;
-      els.hiddenName.value = clean(item.c_name);
-      els.hiddenCode.value = clean(item.c_code);
-      els.hiddenType.value = coopTypeFromGroup(item.coop_group);
-      els.hiddenPromotion.value = groupNoFromText(item.c_group) || clean(initialPromotionGroupNo);
-      setPreview(item);
-    }
-
-    function renderOptions(select, items, placeholder, selectedValue) {
-      select.innerHTML = '';
-      const first = document.createElement('option');
-      first.value = '';
-      first.textContent = placeholder;
-      select.appendChild(first);
-
-      items.forEach((item) => {
+    function options(select, rows, placeholder, selected = '') {
+      select.innerHTML = `<option value="">${placeholder}</option>`;
+      rows.forEach((row) => {
         const option = document.createElement('option');
-        option.value = item.value;
-        option.textContent = item.label;
-        if (selectedValue && String(selectedValue) === String(item.value)) {
-          option.selected = true;
-        }
+        option.value = row.value;
+        option.textContent = row.label;
+        option.selected = String(row.value) === String(selected);
         select.appendChild(option);
       });
-      select.disabled = items.length === 0;
+      select.disabled = rows.length === 0;
     }
-
-    function findGroupNode(coopGroup) {
-      return activeCoopHierarchy.find((group) => clean(group.coop_group) === clean(coopGroup)) || null;
-    }
-
-    function findCGroupNode(groupNode, cGroup) {
-      if (!groupNode) return null;
-      return (groupNode.c_groups || []).find((group) => clean(group.c_group) === clean(cGroup)) || null;
-    }
-
-    function findItemByCode(code) {
-      const target = clean(code);
-      if (!target) return null;
-      for (const group of activeCoopHierarchy) {
-        for (const cGroup of group.c_groups || []) {
-          const found = (cGroup.items || []).find((item) => clean(item.c_code) === target);
-          if (found) return { group, cGroup, item: found };
-        }
+    function findByCode(code) {
+      for (const type of hierarchy) for (const group of type.c_groups || []) {
+        const item = (group.items || []).find((row) => clean(row.c_code) === clean(code));
+        if (item) return { type, group, item };
       }
       return null;
     }
-
-    function findItemByName(name) {
-      const target = clean(name);
-      if (!target) return null;
-      for (const group of activeCoopHierarchy) {
-        for (const cGroup of group.c_groups || []) {
-          const found = (cGroup.items || []).find((item) => clean(item.c_name) === target);
-          if (found) return { group, cGroup, item: found };
-        }
-      }
-      return null;
+    function typeNode(value) { return hierarchy.find((row) => clean(row.coop_group) === clean(value)); }
+    function groupNode(type, value) { return (type?.c_groups || []).find((row) => clean(row.c_group) === clean(value)); }
+    function showGroups(typeValue, selected = '') {
+      const type = typeNode(typeValue);
+      options(groupSelect, (type?.c_groups || []).map((row) => ({ value: row.c_group, label: row.c_group })), 'เลือกกลุ่มส่งเสริม', selected);
+    }
+    function showInstitutions(typeValue, groupValue, selected = '') {
+      const group = groupNode(typeNode(typeValue), groupValue);
+      options(coopSelect, (group?.items || []).map((row) => ({ value: row.c_code, label: row.c_name })), 'เลือกสถาบัน', selected);
+    }
+    function applyItem(item, replaceResponsible = true) {
+      hiddenName.value = clean(item?.c_name);
+      hiddenCode.value = clean(item?.c_code);
+      hiddenType.value = coopType(item?.coop_group);
+      hiddenGroup.value = groupNumber(item?.c_group);
+      codePreview.value = clean(item?.c_code);
+      if (replaceResponsible || !clean(responsible.value)) responsible.value = clean(item?.c_person);
+    }
+    function clearInstitution() {
+      hiddenName.value = '';
+      hiddenCode.value = '';
+      hiddenGroup.value = '';
+      codePreview.value = '';
     }
 
-    function populateCoopGroups(selectedValue = '') {
-      renderOptions(
-        els.coopGroup,
-        activeCoopHierarchy.map((group) => ({
-          value: group.coop_group,
-          label: group.coop_group
-        })),
-        'เลือกประเภท',
-        selectedValue
-      );
-    }
-
-    function populateCGroups(coopGroup, selectedValue = '') {
-      const groupNode = findGroupNode(coopGroup);
-      const items = (groupNode?.c_groups || []).map((group) => ({
-        value: group.c_group,
-        label: group.c_group
-      }));
-      renderOptions(els.cGroup, items, 'เลือกกลุ่มส่งเสริม', selectedValue);
-      els.cGroup.disabled = !groupNode;
-    }
-
-    function populateCNames(coopGroup, cGroup, selectedValue = '') {
-      const groupNode = findGroupNode(coopGroup);
-      const cGroupNode = findCGroupNode(groupNode, cGroup);
-      const items = (cGroupNode?.items || []).map((item) => ({
-        value: item.c_code,
-        label: `${item.c_name}${item.c_code ? ` (${item.c_code})` : ''}`
-      }));
-      renderOptions(els.cName, items, 'เลือกสถาบัน', selectedValue);
-      els.cName.disabled = !cGroupNode;
-    }
-
-    function resetSelection(keepGroup = false) {
-      if (!keepGroup) els.coopGroup.value = '';
-      els.cGroup.innerHTML = '<option value="">เลือกกลุ่มส่งเสริม</option>';
-      els.cGroup.disabled = true;
-      els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
-      els.cName.disabled = true;
-      els.hiddenName.value = '';
-      els.hiddenCode.value = '';
-      els.hiddenType.value = '';
-      els.hiddenPromotion.value = '';
-      setPreview(null);
-    }
-
-    function applyCurrentSelection() {
-      const selectedCode = clean(els.cName.value || initialCooperativeCode);
-      const selectedGroup = clean(els.coopGroup.value);
-      const selectedCGroup = clean(els.cGroup.value);
-
-      if (!selectedGroup) {
-        setPreview(null);
-        return;
-      }
-
-      populateCGroups(selectedGroup, selectedCGroup);
-      if (!selectedCGroup) {
-        setPreview(null);
-        return;
-      }
-
-      populateCNames(selectedGroup, selectedCGroup, selectedCode);
-      if (!selectedCode) {
-        const groupNode = findGroupNode(selectedGroup);
-        const cGroupNode = findCGroupNode(groupNode, selectedCGroup);
-        if (!cGroupNode?.items?.length) {
-          setPreview(null);
-          return;
-        }
-      }
-
-      const found = findItemByCode(selectedCode) || findItemByName(initialCooperativeName);
-      if (found) {
-        setHiddenFromItem(found.item);
-        els.coopGroup.value = found.group.coop_group;
-        populateCGroups(found.group.coop_group, found.cGroup.c_group);
-        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
-        els.cGroup.value = found.cGroup.c_group;
-        els.cName.value = found.item.c_code;
-        setHiddenFromItem(found.item);
-        return;
-      }
-
-      setPreview(null);
-    }
-
-    els.coopGroup.addEventListener('change', () => {
-      const groupValue = clean(els.coopGroup.value);
-      if (!groupValue) {
-        resetSelection(true);
-        return;
-      }
-      populateCGroups(groupValue);
-      els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
-      els.cName.disabled = true;
-      els.hiddenName.value = '';
-      els.hiddenCode.value = '';
-      els.hiddenType.value = coopTypeFromGroup(groupValue);
-      els.hiddenPromotion.value = '';
-      setPreview(null);
+    typeSelect.addEventListener('change', () => {
+      showGroups(typeSelect.value);
+      options(coopSelect, [], 'เลือกสถาบัน');
+      hiddenType.value = coopType(typeSelect.value);
+      clearInstitution();
+    });
+    groupSelect.addEventListener('change', () => {
+      showInstitutions(typeSelect.value, groupSelect.value);
+      clearInstitution();
+      hiddenGroup.value = groupNumber(groupSelect.value);
+    });
+    coopSelect.addEventListener('change', () => {
+      const found = findByCode(coopSelect.value);
+      if (found) applyItem(found.item, true); else clearInstitution();
     });
 
-    els.cGroup.addEventListener('change', () => {
-      const groupValue = clean(els.coopGroup.value);
-      const cGroupValue = clean(els.cGroup.value);
-      if (!groupValue || !cGroupValue) {
-        els.cName.innerHTML = '<option value="">เลือกสถาบัน</option>';
-        els.cName.disabled = true;
-        setPreview(null);
-        return;
-      }
-      populateCNames(groupValue, cGroupValue);
-      els.hiddenPromotion.value = groupNoFromText(cGroupValue);
-      setPreview(null);
-    });
-
-    els.cName.addEventListener('change', () => {
-      const found = findItemByCode(els.cName.value);
-      if (!found) {
-        els.hiddenName.value = '';
-        els.hiddenCode.value = '';
-        els.hiddenType.value = coopTypeFromGroup(els.coopGroup.value);
-        setPreview(null);
-        return;
-      }
-      els.coopGroup.value = found.group.coop_group;
-      els.cGroup.value = found.cGroup.c_group;
-      setHiddenFromItem(found.item);
-      populateCGroups(found.group.coop_group, found.cGroup.c_group);
-      populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
-      els.cName.value = found.item.c_code;
-    });
-
-    populateCoopGroups();
-    if (initialCooperativeCode) {
-      const found = findItemByCode(initialCooperativeCode);
+    if (initialCode || initialName) {
+      const found = findByCode(initialCode) || hierarchy.flatMap((type) => (type.c_groups || []).flatMap((group) => (group.items || []).map((item) => ({ type, group, item })))).find((row) => clean(row.item.c_name) === clean(initialName));
       if (found) {
-        els.coopGroup.value = found.group.coop_group;
-        populateCGroups(found.group.coop_group, found.cGroup.c_group);
-        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
-        els.cGroup.value = found.cGroup.c_group;
-        els.cName.value = found.item.c_code;
-        setHiddenFromItem(found.item);
-        return;
+        typeSelect.value = found.type.coop_group;
+        showGroups(found.type.coop_group, found.group.c_group);
+        groupSelect.value = found.group.c_group;
+        showInstitutions(found.type.coop_group, found.group.c_group, found.item.c_code);
+        coopSelect.value = found.item.c_code;
+        applyItem(found.item, !initialResponsible);
       }
     }
-
-    if (initialCooperativeName) {
-      const found = findItemByName(initialCooperativeName);
-      if (found) {
-        els.coopGroup.value = found.group.coop_group;
-        populateCGroups(found.group.coop_group, found.cGroup.c_group);
-        populateCNames(found.group.coop_group, found.cGroup.c_group, found.item.c_code);
-        els.cGroup.value = found.cGroup.c_group;
-        els.cName.value = found.item.c_code;
-        setHiddenFromItem(found.item);
-        return;
-      }
-    }
-
-    if (initialCoopType) {
-      els.hiddenType.value = initialCoopType;
-    }
-    if (initialPromotionGroupNo) {
-      els.hiddenPromotion.value = initialPromotionGroupNo;
-    }
-    setPreview(null);
   })();
 </script>
 

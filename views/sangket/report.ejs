@@ -337,24 +337,17 @@
                   <div class="mobile-report-card__meta">
                     <i class="bi bi-hash me-1"></i><%= row.cooperative_code || '-' %>
                     <span class="mx-1">|</span>
-                    <i class="bi bi-building me-1"></i> กสส. <%= row.promotion_group_no || '-' %>
-                    <span class="mx-1">|</span>
-                    <i class="bi bi-calendar3 me-1"></i> <%= row.fiscal_year_end || '-' %>
+                    <i class="bi bi-building me-1"></i> กลุ่มส่งเสริม <%= row.promotion_group_no || '-' %>
                   </div>
                 </div>
-                <span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span>
+                <span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
               </div>
-              <div class="fw-semibold mb-1"><%= row.observation_title || (row.observation_text ? row.observation_text.slice(0, 120) : '-') %></div>
               <div class="mobile-report-card__text"><%= row.observation_text || '-' %></div>
+              <div class="small text-muted mt-2"><i class="bi bi-person-badge me-1"></i><%= row.responsible_name || 'ยังไม่ระบุผู้รับผิดชอบ' %></div>
+              <% if (row.latest_correction) { %><div class="small mt-2"><strong>การแก้ไข:</strong> <%= row.latest_correction %></div><% } %>
               <div class="mobile-report-card__footer">
                 <div class="d-flex flex-wrap gap-1">
-                  <% if (row.categories && row.categories.length) { %>
-                    <% row.categories.slice(0, 2).forEach((cat) => { %>
-                      <span class="badge text-bg-light border" title="<%= cat.name %>"><%= cat.name %></span>
-                    <% }) %>
-                  <% } else { %>
-                    <span class="text-muted small">ไม่มีหมวด</span>
-                  <% } %>
+                  <span class="text-muted small"><%= row.remark || 'ไม่มีหมายเหตุ' %></span>
                 </div>
                 <div class="report-inline-actions">
                   <a href="/sangket/view/<%= row.observation_id %>" class="btn btn-sm btn-outline-primary icon-btn" title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
@@ -382,11 +375,10 @@
 
               <th>สถาบัน</th>
 
-              <th>หนังสือ</th>
-
+              <th>กลุ่ม / ผู้รับผิดชอบ</th>
               <th>ข้อสังเกต</th>
-              <th>หมวด</th>
-              <th>กรณี / สถานะ</th>
+              <th>การแก้ไข / เอกสารแนบ</th>
+              <th>สถานะ / หมายเหตุ</th>
               <th class="text-end">การทำงาน</th>
             </tr>
           </thead>
@@ -409,40 +401,17 @@
                     </div>
                   </td>
 
-                  <td>
-                    <div><%= row.audit_office_letter_no || '-' %></div><div class="small text-muted">ปีบัญชี <%= row.fiscal_year_end || '-' %></div>
-                    <div class="small text-muted">
-                      <i class="bi bi-calendar-event me-1"></i> <%= row.received_date || '-' %>
-                    </div>
-                  </td>
+                  <td><div>กลุ่มส่งเสริม <%= row.promotion_group_no || '-' %></div><div class="small text-muted"><i class="bi bi-person-badge me-1"></i><%= row.responsible_name || '-' %></div></td>
                   <td class="report-observation">
-                    <div class="fw-semibold mb-1"><%= row.observation_title || 'ข้อสังเกต' %></div>
                     <div class="report-observation__text"><%= row.observation_text || '-' %></div>
-                    <div class="small text-muted mt-1">
-                      <i class="bi bi-person-badge me-1"></i> <%= row.auditor_name || '-' %>
-                      <% if (row.potential_damage_amount) { %>
-                        <span class="mx-1">|</span>
-                        <i class="bi bi-cash-coin me-1"></i> <%= fmtMoney(row.potential_damage_amount) %> บาท
-                      <% } %>
-                    </div>
                   </td>
                   <td>
-                    <% if (row.categories && row.categories.length) { %>
-                      <div class="d-flex text-wrap gap-1">
-                        <% row.categories.slice(0, 2).forEach((cat) => { %>
-                          <span class="badge text-bg-light border" title="<%= cat.name %>"><%= cat.name %></span>
-                        <% }) %>
-                        <% if (row.categories.length > 2) { %>
-                          <span class="badge text-bg-secondary">+<%= row.categories.length - 2 %></span>
-                        <% } %>
-                      </div>
-                    <% } else { %>
-                      <span class="text-muted">-</span>
-                    <% } %>
+                    <div class="report-observation__text"><%= row.latest_correction || 'ยังไม่มีรายงานการแก้ไข' %></div>
+                    <% if (row.latest_attachment_path && row.latest_action_id) { %><a class="btn btn-sm btn-outline-primary mt-2" href="/sangket/view/<%= row.observation_id %>/actions/<%= row.latest_action_id %>/evidence"><i class="bi bi-paperclip me-1"></i><%= row.latest_attachment_name || 'เอกสารแนบ' %></a><% } %>
                   </td>
                   <td>
-                    <span class="badge text-bg-<%= severityBadge(row.severity_case) %>"><%= severityLabel(row.severity_case) %></span>
-                    <br><span class="badge mt-1 text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
+                    <span class="badge text-bg-<%= statusBadge(row.status) %>"><%= statusLabel(row.status) %></span>
+                    <div class="small text-muted mt-2"><%= row.remark || 'ไม่มีหมายเหตุ' %></div>
                   </td>
                   <td class="text-end">
                     <div class="report-inline-actions justify-content-end">

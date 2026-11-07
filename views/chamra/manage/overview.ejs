@@ -16,8 +16,16 @@
 <div class="row g-4 mb-4">
   <div class="col-12"><div class="card shadow-sm h-100"><div class="card-body">
     <h2 class="h5">เป้าหมายการชำระบัญชี ปี <%= managementYear %></h2>
+    <p class="small text-muted">ขั้นตอนล่าสุด ณ <%= period.asOfLabel %></p>
     <% if (!withdrawalTargets.length) { %><p class="text-muted">ยังไม่มีเป้าหมายถอนชื่อสำหรับปีนี้</p><% } %>
-    <ul class="list-group list-group-flush"><% withdrawalTargets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
+    <ul class="list-group list-group-flush"><% withdrawalTargets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="mt-2 mb-1">
+      <% if (row.latestStep) { %>
+        <span class="badge <%= row.latestStep >= 9 ? 'bg-success' : 'bg-primary' %>">ขั้นที่ <%= row.latestStep %> · <%= row.latestStepLabel %></span>
+        <span class="small text-muted ms-1"><%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.latestStepDate)) %></span>
+      <% } else { %>
+        <span class="badge bg-secondary">ยังไม่มีข้อมูลขั้นตอน</span>
+      <% } %>
+    </div><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
   </div></div></div>
   <div class="col-12"><div class="card shadow-sm h-100"><div class="card-body">
     <h2 class="h5">รายงานการประชุม ปี <%= managementYear %></h2>

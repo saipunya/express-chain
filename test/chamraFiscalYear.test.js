@@ -172,3 +172,25 @@ test('movement counts use institution names and types when codes are nonstandard
   assert.equal(locals.octoberMovementSummary.farmer, 2);
   assert.equal(locals.octoberMovementSummary.coop, 1);
 });
+
+test('targets show the latest process at reporting cutoff for each institution', async () => {
+  const controller = loadController({
+    getAll: async () => [
+      {c_code:'A1',pr_s2:'2025-10-01',pr_s9:'2026-10-01'},
+      {c_code:'C1',pr_s9:'2026-09-30',pr_s10:'2026-10-02'}
+    ], getProcessesInDateRange: async () => []
+  }, {list: async type => type === 'targets' ? [{c_code:'A1',target_type:'withdrawal'},{c_code:'C1',target_type:'withdrawal'},{c_code:'M1',target_type:'withdrawal'}] : []});
+  let locals;
+  await controller.list({query:{year:'2569'}}, {render:(view,data)=>{locals=data;}});
+  const targets = locals.managementData.targets;
+  assert.equal(targets[0].latestStep,2);
+  assert.equal(targets[0].latestStepDate,'2025-10-01');
+  assert.equal(targets[1].latestStep,9);
+  assert.equal(targets[1].latestStepLabel,'ถอนชื่อออกจากทะเบียน');
+  assert.equal(targets[2].latestStep,0);
+  const html = await require('ejs').renderFile(path.resolve(__dirname,'../views/chamra/manage/overview.ejs'),{
+    ...locals,user:null
+  });
+  assert.ok(html.includes('ขั้นที่ 9 · ถอนชื่อออกจากทะเบียน'));
+  assert.ok(html.includes('ยังไม่มีข้อมูลขั้นตอน'));
+});

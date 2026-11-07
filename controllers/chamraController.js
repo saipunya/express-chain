@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { buildProcessRegister, processLocation } = require('../services/chamraProcessService');
-const { snapshotProcesses } = require('../services/chamraSummaryService');
+const { snapshotProcesses, getLatestProcess, STEP_LABELS } = require('../services/chamraSummaryService');
 const { dateKey, resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
 const ChamraManagement = require('../models/chamraManagementModel');
 const { TARGET_TYPES } = require('../services/chamraManagementService');
@@ -327,7 +327,14 @@ chamraController.list = async (req, res) => {
   let managementData = null;
   try {
     const [indicators, targets, meetings] = await Promise.all(['indicators', 'targets', 'meetings'].map(type => ChamraManagement.list(type, managementYear)));
-    managementData = { indicators, targets, meetings };
+    const processesByCode = new Map(snapshotProcesses(data, period.asOfDate)
+      .map(row => [String(row.c_code || row.de_code), row]));
+    const targetsWithProgress = targets.map(target => {
+      const process = processesByCode.get(String(target.c_code));
+      const latest = getLatestProcess(process);
+      return { ...target, latestStep: latest.step, latestStepLabel: STEP_LABELS[latest.step] || '', latestStepDate: latest.date };
+    });
+    managementData = { indicators, targets: targetsWithProgress, meetings };
   } catch (err) {
     if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
   }

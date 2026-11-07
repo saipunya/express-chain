@@ -139,7 +139,13 @@ const getGradeSummaryByInOutGroup = async (year) => {
           WHEN ac.coop_group = 'สหกรณ์'
             AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'ใน'
             THEN 'สหกรณ์ภาคการเกษตร'
-          WHEN ac.coop_group = 'สหกรณ์' THEN 'สหกรณ์นอกภาคการเกษตร'
+          WHEN ac.coop_group = 'สหกรณ์'
+            AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = 'นอก'
+            THEN 'สหกรณ์นอกภาคการเกษตร'
+          WHEN ac.coop_group = 'สหกรณ์'
+            AND REPLACE(TRIM(COALESCE(ac.in_out_group,'')), CHAR(160), '') = ''
+            AND (TRIM(COALESCE(ac.c_type,'')) = 'เกษตร' OR UPPER(LEFT(TRIM(ac.c_code), 1)) = 'A')
+            THEN 'สหกรณ์ภาคการเกษตร'
           ELSE 'ไม่ทราบประเภท'
         END AS group_name
       FROM tbl_strength s

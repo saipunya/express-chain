@@ -2131,8 +2131,55 @@
   .main-header-actions .btn { padding: .6rem .65rem; font-size: .8rem; }
 }
 
-.main-room-group { height: 100%; padding: 1rem; border: 1px solid #e1e9e4; border-radius: 12px; }
-.main-room-booking { padding: .75rem 0; overflow-wrap: anywhere; }
-.main-room-booking:first-child { padding-top: 0; }
-.main-room-booking:last-child { padding-bottom: 0; }
-.main-room-booking + .main-room-booking { border-top: 1px solid #edf1ee; }
+/* Compact meeting room preview */
+.main-meeting-rooms {
+  padding: 1rem 1.1rem;
+  border: 1px solid #dce9e2;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #f4faf6, #fff 55%);
+  box-shadow: 0 4px 16px rgba(23, 70, 47, .035);
+}
+.main-meeting-rooms .main-section-title { margin-bottom: .85rem; gap: .75rem; }
+.main-meeting-rooms .main-section-title h2 { color: #20513d; }
+.main-meeting-rooms .main-section-title .btn { background: #fff; flex-shrink: 0; }
+.main-room-list { display: grid; gap: .4rem; }
+.main-room-booking { background: #fff; border: 1px solid #e4ece7; border-radius: 10px; }
+.main-room-booking summary {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) minmax(6rem, 12rem) 1.5rem;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem .8rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: .85rem;
+  border-radius: 10px;
+  transition: background-color .15s ease;
+}
+.main-room-booking summary::-webkit-details-marker { display: none; }
+.main-room-booking summary:hover { background: #f4faf6; }
+.main-room-booking summary:focus-visible { outline: 2px solid #198754; outline-offset: 3px; }
+.main-room-when { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .55rem; font-size: .78rem; }
+.main-room-when > span:first-child { padding: .15rem .45rem; border-radius: 6px; background: #f0f4f2; color: #476255; }
+.main-room-when > .text-success { background: #e4f5eb !important; color: #12633f !important; }
+.main-room-subject, .main-room-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.main-room-subject { font-weight: 600; color: #263e32; }
+.main-room-name { font-size: .78rem; padding-left: .75rem; border-left: 1px solid #e5ece8; }
+.main-room-chevron { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #f0f6f2; font-size: .7rem; color: #327456; }
+.main-room-booking[open] { border-color: #b9d9c6; }
+.main-room-booking[open] summary { background: #f3faf5; border-radius: 10px 10px 0 0; }
+.main-room-booking[open] .main-room-chevron { transform: rotate(180deg); background: #dceee2; }
+.main-room-detail { padding: .75rem .9rem; border-top: 1px solid #e3eee7; font-size: .85rem; line-height: 1.8; color: #53675b; overflow-wrap: anywhere; }
+.main-room-detail > .fw-semibold { color: #254a36; }
+@media (max-width: 767.98px) {
+  .main-meeting-rooms { padding: .85rem; border-radius: 12px; }
+  .main-meeting-rooms .main-section-title { flex-wrap: wrap; }
+  .main-room-booking summary { grid-template-columns: minmax(0, 1fr) 1.5rem; gap: .3rem .5rem; padding: .65rem .7rem; }
+  .main-room-when { grid-column: 1; font-size: .75rem; }
+  .main-room-subject { grid-column: 1; grid-row: 2; }
+  .main-room-name { grid-column: 1; grid-row: 3; font-size: .75rem; border-left: 0; padding-left: 0; }
+  .main-room-chevron { grid-column: 2; grid-row: 1 / 4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .main-room-booking summary { transition: none; }
+}

@@ -1,42 +1,44 @@
 <%
   const roomSummary = meetingRoomSummary || { today: [], upcoming: [] };
+  const todayRooms = roomSummary.today || [];
+  const nextRooms = roomSummary.upcoming || [];
+  const previewRooms = [
+    ...todayRooms.map(room => ({ ...room, isToday: true })),
+    ...nextRooms.map(room => ({ ...room, isToday: false }))
+  ].slice(0, 3);
   const roomDateLabel = value => value ? new Intl.DateTimeFormat('th-TH', {
     day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok'
-  }).format(new Date(value)) : '';
+  }).format(new Date(value)) : 'ไม่ระบุวันที่';
 %>
 <section class="main-institution-section main-wide-section main-meeting-rooms" aria-labelledby="meetingRoomsTitle">
   <div class="main-section-title">
     <div>
-      <h2 id="meetingRoomsTitle">การใช้ห้องประชุม</h2>
-      <div class="text-muted small">ตารางจองวันนี้และรายการถัดไป<% if (roomSummary.date) { %> · <%= roomDateLabel(roomSummary.date) %><% } %></div>
+      <h2 id="meetingRoomsTitle">การใช้ห้องประชุม <span class="small text-muted fw-normal">· วันนี้ <%= todayRooms.length %> รายการ</span></h2>
+      <div class="text-muted small">แสดงไม่เกิน 3 รายการใกล้ที่สุด · กดรายการเพื่อดูรายละเอียด</div>
     </div>
-    <a href="/meetingroom" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูตารางทั้งหมด <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+    <a href="/meetingroom" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูทั้งหมด <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
   </div>
   <% if (unavailable) { %>
     <div class="alert alert-warning mb-0" role="status">ไม่สามารถโหลดข้อมูลห้องประชุมได้ กรุณาลองใหม่ภายหลัง</div>
+  <% } else if (!previewRooms.length) { %>
+    <p class="text-muted small mb-0">ยังไม่มีรายการจองห้องประชุมตั้งแต่วันนี้เป็นต้นไป</p>
   <% } else { %>
-    <div class="row g-3">
-      <% [{ title: 'วันนี้', rows: roomSummary.today || [], empty: 'ไม่มีรายการจองห้องประชุมวันนี้', today: true },
-          { title: 'รายการถัดไป', rows: roomSummary.upcoming || [], empty: 'ยังไม่มีรายการจองล่วงหน้า', today: false }].forEach(group => { %>
-        <div class="col-12 col-lg-6">
-          <div class="main-room-group">
-            <h3 class="h6 fw-bold mb-3"><i class="bi bi-calendar-week text-success me-2" aria-hidden="true"></i><%= group.title %> <span class="text-muted small fw-normal">· <%= group.rows.length %> รายการ<%= group.today ? '' : 'ที่ใกล้ที่สุด' %></span></h3>
-            <% if (!group.rows.length) { %>
-              <p class="text-muted small mb-0"><%= group.empty %></p>
-            <% } else { %>
-              <ul class="list-unstyled mb-0">
-                <% group.rows.forEach(room => { %>
-                  <li class="main-room-booking">
-                    <div class="small text-success fw-semibold mb-1"><% if (!group.today) { %><%= roomDateLabel(room.mee_date) %> · <% } %><i class="bi bi-clock me-1" aria-hidden="true"></i><%= room.mee_time || 'ไม่ระบุเวลา' %></div>
-                    <div class="fw-semibold"><%= room.mee_subject || 'ไม่ระบุเรื่องประชุม' %></div>
-                    <div class="small text-muted mt-1"><i class="bi bi-door-open me-1" aria-hidden="true"></i><%= room.mee_room || 'ไม่ระบุห้อง' %></div>
-                    <% if (room.mee_respon) { %><div class="small text-muted"><i class="bi bi-person me-1" aria-hidden="true"></i>ผู้รับผิดชอบ: <%= room.mee_respon %></div><% } %>
-                  </li>
-                <% }); %>
-              </ul>
-            <% } %>
+    <div class="main-room-list">
+      <% previewRooms.forEach(room => { %>
+        <details class="main-room-booking">
+          <summary>
+            <span class="main-room-when"><span class="<%= room.isToday ? 'text-success fw-semibold' : '' %>"><%= room.isToday ? 'วันนี้' : roomDateLabel(room.mee_date) %></span><span class="text-muted"><%= room.mee_time || 'ไม่ระบุเวลา' %></span></span>
+            <span class="main-room-subject"><%= room.mee_subject || 'ไม่ระบุเรื่องประชุม' %></span>
+            <span class="main-room-name text-muted"><%= room.mee_room || 'ไม่ระบุห้อง' %></span>
+            <i class="bi bi-chevron-down main-room-chevron" aria-hidden="true"></i>
+          </summary>
+          <div class="main-room-detail">
+            <div class="fw-semibold mb-1"><%= room.mee_subject || 'ไม่ระบุเรื่องประชุม' %></div>
+            <div>วันที่ <%= roomDateLabel(room.mee_date) %> · <%= room.mee_time || 'ไม่ระบุเวลา' %></div>
+            <div>ห้อง: <%= room.mee_room || 'ไม่ระบุห้อง' %></div>
+            <div>ผู้รับผิดชอบ: <%= room.mee_respon || 'ไม่ระบุ' %></div>
           </div>
-        </div>
+        </details>
       <% }); %>
     </div>
   <% } %>

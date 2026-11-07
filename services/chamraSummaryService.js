@@ -136,3 +136,19 @@ function snapshotProcesses(rows, cutoffDate) {
   });
 }
 module.exports.snapshotProcesses = snapshotProcesses;
+
+function buildCurrentFiscalChamraSummary(rows = [], now = new Date()) {
+  const { dateKey, currentFiscalYear, fiscalPeriod } = require('./chamraFiscalYear');
+  const period = fiscalPeriod(currentFiscalYear(now), now);
+  const data = snapshotProcesses(Array.isArray(rows) ? rows : [], period.asOfDate)
+    .filter(row => {
+      // Carry unfinished work forward; withdrawal is achieved at step 9.
+      // Step 10 in a later year must not count the same withdrawal again.
+      const withdrawnDate = dateKey(row.pr_s9) || dateKey(row.pr_s10);
+      if (withdrawnDate && withdrawnDate < period.startDate) return false;
+      const dissolutionDate = dateKey(row.de_comdate);
+      return !dissolutionDate || dissolutionDate <= period.asOfDate;
+    });
+  return { ...buildChamraSummary(data), fiscalYear: period.year, period };
+}
+module.exports.buildCurrentFiscalChamraSummary = buildCurrentFiscalChamraSummary;

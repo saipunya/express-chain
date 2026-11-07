@@ -10,7 +10,7 @@ const strengthModel = require('../models/strengthModel');
 const downModel = require('../models/downModel');
 const chamraModel = require('../models/chamraModel');
 const cooperativeLocationModel = require('../models/cooperativeLocationModel');
-const { buildChamraSummary } = require('../services/chamraSummaryService');
+const { buildCurrentFiscalChamraSummary } = require('../services/chamraSummaryService');
 const { buildInstitutionDistrictSummary } = require('../services/institutionDistrictService');
 const { requireLogin, noCache } = require('../middlewares/authMiddleware');
 
@@ -716,7 +716,7 @@ async function showMain(req, res) {
       bigmeetFiscalSummary,
       strengthGradeSummary: buildStrengthGradeSummary(strengthGradeRows, strengthYear),
       mainDownloads: buildMainDownloads(mainDownloads),
-      chamraSummary: buildChamraSummary(chamraRows),
+      chamraSummary: buildCurrentFiscalChamraSummary(chamraRows),
       ...mapData,
       ...districtData,
       onlineUsers,
@@ -740,7 +740,7 @@ async function showMain(req, res) {
       bigmeetFiscalSummary: { fiscalYear: 0, fiscalYearThai: '', categories: [] },
       strengthGradeSummary: buildStrengthGradeSummary([], 2568),
       mainDownloads: [],
-      chamraSummary: buildChamraSummary([]),
+      chamraSummary: buildCurrentFiscalChamraSummary([]),
       ...await mapDataPromise,
       ...await districtDataPromise,
       onlineUsers: [],

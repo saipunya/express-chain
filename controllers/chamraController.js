@@ -63,8 +63,12 @@ function buildOct1MovementSummary(rows = []) {
   });
 }
 
-function getInstitutionKindByCode(code) {
-  const normalized = String(code || '').trim().toUpperCase();
+function getInstitutionKindByCode(row) {
+  const group = String(row.coop_group || row.institution_kind || '').trim();
+  const name = String(row.c_name || row.institution_name || '').trim();
+  if (group === 'กลุ่มเกษตรกร' || name.startsWith('กลุ่มเกษตร')) return 'farmer';
+  if (group === 'สหกรณ์' || name.startsWith('สหกรณ์')) return 'coop';
+  const normalized = String(row.c_code || row.institution_code || '').trim().toUpperCase();
   if (/^[AB]/.test(normalized)) return 'coop';
   if (/^C/.test(normalized)) return 'farmer';
   return 'other';
@@ -301,7 +305,7 @@ chamraController.list = async (req, res) => {
   });
   const withdrawnThisYearSummary = withdrawalRows.reduce((acc, item) => {
     acc.total += 1;
-    const kind = getInstitutionKindByCode(item.c_code || item.institution_code);
+    const kind = getInstitutionKindByCode(item);
     if (kind === 'coop') acc.coop += 1;
     if (kind === 'farmer') acc.farmer += 1;
     return acc;
@@ -311,7 +315,7 @@ chamraController.list = async (req, res) => {
     octoberMovement = buildOct1MovementSummary(movementRows || []);
     octoberMovementSummary = octoberMovement.reduce((acc, item) => {
       acc.total += 1;
-      const kind = getInstitutionKindByCode(item.institution_code);
+      const kind = getInstitutionKindByCode(item);
       if (kind === 'coop') acc.coop += 1;
       if (kind === 'farmer') acc.farmer += 1;
       return acc;

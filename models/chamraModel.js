@@ -7,13 +7,13 @@ const Chamra = {
   async getAll() {
     const [rows] = await db.query(
       `SELECT 
-         ac.c_code, ac.c_name, ac.c_status,
+         ac.c_code, ac.c_name, ac.c_status, ac.coop_group,
          cd.de_code, cd.de_case, cd.de_person, cd.de_comno, cd.de_comdate, cd.de_maihed,
          ${PROCESS_DATE_COLUMNS}
        FROM active_coop ac
        LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code
        LEFT JOIN chamra_process cp ON cp.pr_code = ac.c_code
-       WHERE ac.c_status IN ('เลิก')
+       WHERE ac.c_status IN ('เลิก', 'เลิก/ชำระบัญชี')
        ORDER BY ac.c_name DESC`
     );
     return rows;
@@ -274,7 +274,7 @@ const Chamra = {
       `SELECT cp.pr_code, ${PROCESS_DATE_COLUMNS}, ac.c_name, ac.c_status, ac.coop_group
        FROM chamra_process cp
        INNER JOIN active_coop ac ON ac.c_code = cp.pr_code
-       WHERE ac.c_status = 'เลิก' AND (${conditions.join(' OR ')})`,
+       WHERE ac.c_status IN ('เลิก', 'เลิก/ชำระบัญชี') AND (${conditions.join(' OR ')})`,
       values
     );
     return rows.map(row => buildMovementRow(row, startDate, endDate)).filter(Boolean)

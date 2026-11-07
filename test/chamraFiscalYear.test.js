@@ -156,3 +156,19 @@ test('available years combine stored forms, meeting follow-ups and process activ
   const years=await sandbox.module.exports.availableYears();
   assert.deepEqual(Array.from(years),[2570,2569,2567,2520]);
 });
+
+test('movement counts use institution names and types when codes are nonstandard', async () => {
+  const controller = loadController({
+    getAll: async () => [],
+    getProcessesInDateRange: async () => [
+      { institution_code: 'M001', institution_name: 'กลุ่มเกษตรกรทำนาวังชมภู', institution_kind: '', current_max_step: 3 },
+      { institution_code: 'C001', institution_name: 'กลุ่มเกษตรทำไร่หนองคอนไทย', institution_kind: 'กลุ่มเกษตรกร', current_max_step: 4 },
+      { institution_code: 'M002', institution_name: 'สหกรณ์หนึ่ง จำกัด', institution_kind: '', current_max_step: 2 }
+    ]
+  }, { list: async () => [] });
+  let locals;
+  await controller.list({query:{year:'2569'}}, {render: (view, data) => {locals = data;}});
+  assert.equal(locals.octoberMovementSummary.total, 3);
+  assert.equal(locals.octoberMovementSummary.farmer, 2);
+  assert.equal(locals.octoberMovementSummary.coop, 1);
+});

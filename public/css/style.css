@@ -774,3 +774,11 @@ footer { backdrop-filter: saturate(160%) blur(2px); }
   .compact-closing-card .card-body { padding: .75rem 1rem; }
   .compact-closing-card .card-footer { padding: .5rem 1rem; }
 }
+/* Keep the shared navigation compact as authenticated links are added. */
+.app-navbar .nav-link { white-space: nowrap; }
+.app-navbar .dropdown-menu { max-width: calc(100vw - 2rem); }
+.app-navbar .dropdown-item { white-space: normal; overflow-wrap: anywhere; padding: .65rem 1rem; }
+@media (max-width: 1199.98px) {
+  .app-navbar .navbar-collapse { max-height: 75vh; max-height: 75dvh; overflow-y: auto; }
+  .app-navbar .dropdown-menu { width: 100%; }
+}

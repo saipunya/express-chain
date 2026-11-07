@@ -9,6 +9,7 @@ const turnoverModel = require('../models/turnoverModel');
 const strengthModel = require('../models/strengthModel');
 const downModel = require('../models/downModel');
 const chamraModel = require('../models/chamraModel');
+const meetingRoomModel = require('../models/meetingRoomModel');
 const cooperativeLocationModel = require('../models/cooperativeLocationModel');
 const { buildCurrentFiscalChamraSummary } = require('../services/chamraSummaryService');
 const { buildInstitutionDistrictSummary } = require('../services/institutionDistrictService');
@@ -694,7 +695,7 @@ async function showMain(req, res) {
     });
 
   try {
-    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, mapData, districtData] = await Promise.all([
+    const [deadlineData, institutionRows, onlineUsers, onlineCount, turnoverCategoryRows, bigmeetFiscalSummary, strengthGradeRows, mainDownloads, chamraRows, mapData, districtData, meetingRoomSummary] = await Promise.all([
       load('deadlines', () => getMainDeadlineData(), {}),
       load('institutions', () => activeCoopModel.getActiveInstitutionSummaryRows(), []),
       load('online', () => onlineModel.getOnlineUsers(), []),
@@ -705,12 +706,19 @@ async function showMain(req, res) {
       load('downloads', () => downModel.getMainDownloads(8), []),
       load('chamra', () => chamraModel.getAll(), []),
       mapDataPromise,
-      districtDataPromise
+      districtDataPromise,
+      load('meetingRooms', async () => {
+        const [today, upcoming] = await Promise.all([
+          meetingRoomModel.getTodayBangkok(), meetingRoomModel.getUpcoming(5)
+        ]);
+        return { date: today.date, today: today.rows, upcoming };
+      }, { today: [], upcoming: [] })
     ]);
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',
       mainUnavailable,
+      meetingRoomSummary,
       institutionSummary: buildInstitutionSummary(institutionRows),
       turnoverCategorySummary: buildTurnoverCategorySummary(turnoverCategoryRows),
       bigmeetFiscalSummary,
@@ -725,6 +733,7 @@ async function showMain(req, res) {
     });
   } catch (error) {
     console.error('[homeRoutes] main deadline data error:', error);
+    mainUnavailable.meetingRooms = true;
     return res.render('main', {
       title: 'หน้าแรกระบบ CoopChain',
       returnTo: '',

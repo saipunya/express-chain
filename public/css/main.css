@@ -2130,3 +2130,9 @@
   .main-header-actions { gap: .3rem; }
   .main-header-actions .btn { padding: .6rem .65rem; font-size: .8rem; }
 }
+
+.main-room-group { height: 100%; padding: 1rem; border: 1px solid #e1e9e4; border-radius: 12px; }
+.main-room-booking { padding: .75rem 0; overflow-wrap: anywhere; }
+.main-room-booking:first-child { padding-top: 0; }
+.main-room-booking:last-child { padding-bottom: 0; }
+.main-room-booking + .main-room-booking { border-top: 1px solid #edf1ee; }

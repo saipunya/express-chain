@@ -10,6 +10,7 @@ const turnover = require('../models/turnoverModel');
 const strength = require('../models/strengthModel');
 const downloads = require('../models/downModel');
 const chamra = require('../models/chamraModel');
+const meetingRooms = require('../models/meetingRoomModel');
 const locations = require('../models/cooperativeLocationModel');
 const router = require('../routes/homeRoutes');
 const showMain = router.stack.find((layer) => layer.route?.path === '/main').route.stack.at(-1).handle;
@@ -21,6 +22,8 @@ function stubSummaries(t) {
     [bigmeet, 'findByCodes', []], [bigmeet, 'getLatestFiscalYearCategorySummary', { categories: [] }],
     [online, 'getOnlineUsers', []], [online, 'getOnlineCount', 0],
     [turnover, 'getCategorySummaryByFiscalYear', []], [strength, 'getGradeSummaryByInOutGroup', []],
+    [meetingRooms, 'getTodayBangkok', { date: '2026-11-07', rows: [] }],
+    [meetingRooms, 'getUpcoming', []],
     [strength, 'getLatestYear', 2569], [downloads, 'getMainDownloads', []], [chamra, 'getAll', []]
   ].forEach(([model, method, value]) => t.mock.method(model, method, async () => value));
   t.mock.method(console, 'error', () => {});
@@ -68,6 +71,27 @@ test('main distinguishes unavailable map data from a successful empty response',
   await showMain({ session: {}, path: '/main' }, res);
   assert.equal(rendered.cooperativeMapUnavailable, true);
   assert.deepEqual(rendered.cooperativeMapLocations, []);
+});
+
+test('main loads today and five upcoming room bookings and isolates loading errors', async (t) => {
+  stubSummaries(t);
+  t.mock.method(locations, 'getPublicMapLocations', async () => []);
+  const today = {date: '2026-11-07', rows: [{mee_id: 1, mee_subject: 'Today'}]};
+  t.mock.method(meetingRooms, 'getTodayBangkok', async () => today);
+  t.mock.method(meetingRooms, 'getUpcoming', async limit => {
+    assert.equal(limit, 5);
+    return [{mee_id: 2, mee_subject: 'Next'}];
+  });
+  let rendered;
+  const res = {render(_view, data) {rendered = data;}};
+  await showMain({session: {}, path: '/main'}, res);
+  assert.deepEqual(rendered.meetingRoomSummary.today, today.rows);
+  assert.equal(rendered.meetingRoomSummary.upcoming.length, 1);
+  t.mock.method(meetingRooms, 'getTodayBangkok', async () => {throw new Error('unavailable');});
+  await showMain({session: {}, path: '/main'}, res);
+  assert.equal(rendered.mainUnavailable.meetingRooms, true);
+  assert.deepEqual(rendered.meetingRoomSummary.today, []);
+  assert.equal(rendered.cooperativeMapUnavailable, false);
 });
 
 test.after(async () => { await db.end(); });

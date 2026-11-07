@@ -413,6 +413,11 @@
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script defer src="/js/cooperative-map.js"></script>
 
+    <%- include('partials/main-meeting-rooms', {
+      meetingRoomSummary: typeof meetingRoomSummary !== 'undefined' ? meetingRoomSummary : { today: [], upcoming: [] },
+      unavailable: Boolean(_unavailable.meetingRooms)
+    }) %>
+
     <section class="main-institution-section" aria-labelledby="chamraSummaryTitle">
       <% if (_unavailable.chamra) { %><div class="alert alert-warning" role="status">ไม่สามารถโหลดข้อมูลส่วนนี้ได้ กรุณาลองใหม่ภายหลัง</div><% } else { %>
       <div class="main-section-title">

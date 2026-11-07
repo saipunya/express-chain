@@ -1,0 +1,43 @@
+<%
+  const roomSummary = meetingRoomSummary || { today: [], upcoming: [] };
+  const roomDateLabel = value => value ? new Intl.DateTimeFormat('th-TH', {
+    day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok'
+  }).format(new Date(value)) : '';
+%>
+<section class="main-institution-section main-wide-section main-meeting-rooms" aria-labelledby="meetingRoomsTitle">
+  <div class="main-section-title">
+    <div>
+      <h2 id="meetingRoomsTitle">การใช้ห้องประชุม</h2>
+      <div class="text-muted small">ตารางจองวันนี้และรายการถัดไป<% if (roomSummary.date) { %> · <%= roomDateLabel(roomSummary.date) %><% } %></div>
+    </div>
+    <a href="/meetingroom" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูตารางทั้งหมด <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+  </div>
+  <% if (unavailable) { %>
+    <div class="alert alert-warning mb-0" role="status">ไม่สามารถโหลดข้อมูลห้องประชุมได้ กรุณาลองใหม่ภายหลัง</div>
+  <% } else { %>
+    <div class="row g-3">
+      <% [{ title: 'วันนี้', rows: roomSummary.today || [], empty: 'ไม่มีรายการจองห้องประชุมวันนี้', today: true },
+          { title: 'รายการถัดไป', rows: roomSummary.upcoming || [], empty: 'ยังไม่มีรายการจองล่วงหน้า', today: false }].forEach(group => { %>
+        <div class="col-12 col-lg-6">
+          <div class="main-room-group">
+            <h3 class="h6 fw-bold mb-3"><i class="bi bi-calendar-week text-success me-2" aria-hidden="true"></i><%= group.title %> <span class="text-muted small fw-normal">· <%= group.rows.length %> รายการ<%= group.today ? '' : 'ที่ใกล้ที่สุด' %></span></h3>
+            <% if (!group.rows.length) { %>
+              <p class="text-muted small mb-0"><%= group.empty %></p>
+            <% } else { %>
+              <ul class="list-unstyled mb-0">
+                <% group.rows.forEach(room => { %>
+                  <li class="main-room-booking">
+                    <div class="small text-success fw-semibold mb-1"><% if (!group.today) { %><%= roomDateLabel(room.mee_date) %> · <% } %><i class="bi bi-clock me-1" aria-hidden="true"></i><%= room.mee_time || 'ไม่ระบุเวลา' %></div>
+                    <div class="fw-semibold"><%= room.mee_subject || 'ไม่ระบุเรื่องประชุม' %></div>
+                    <div class="small text-muted mt-1"><i class="bi bi-door-open me-1" aria-hidden="true"></i><%= room.mee_room || 'ไม่ระบุห้อง' %></div>
+                    <% if (room.mee_respon) { %><div class="small text-muted"><i class="bi bi-person me-1" aria-hidden="true"></i>ผู้รับผิดชอบ: <%= room.mee_respon %></div><% } %>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</section>

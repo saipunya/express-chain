@@ -194,3 +194,21 @@ test('targets show the latest process at reporting cutoff for each institution',
   assert.ok(html.includes('ขั้นที่ 9 · ถอนชื่อออกจากทะเบียน'));
   assert.ok(html.includes('ยังไม่มีข้อมูลขั้นตอน'));
 });
+
+test('unassigned institutions exclude step 10 completed before the selected fiscal year', async () => {
+  const controller = loadController({
+    getAll: async () => [
+      {c_code:'old',pr_s10:'2025-09-30'},
+      {c_code:'start',pr_s10:'2025-10-01'},
+      {c_code:'later',pr_s10:'2026-10-01',pr_s9:'2025-09-30'},
+      {c_code:'ongoing',pr_s9:'2025-09-30'},
+      {c_code:'empty'},
+      {c_code:'assigned',pr_s10:'2025-09-30'}
+    ], getPoblemsByYear: async () => []
+  }, {list: async () => [{c_code:'assigned',target_type:'withdrawal'}]});
+  let locals;
+  await controller.showAll({query:{year:'2569'}},{render:(view,data)=>{locals=data;}});
+  const section = locals.sections.find(s => s.id === 'group-unassigned');
+  assert.deepEqual(Array.from(section.rows, r => r.c_code), ['start','later','ongoing','empty']);
+  assert.equal(locals.sections[0].rows[0].c_code,'assigned');
+});

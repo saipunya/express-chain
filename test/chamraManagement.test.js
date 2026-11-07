@@ -126,7 +126,8 @@ test('target lists read current institution responsible person instead of saved 
   vm.runInNewContext(fs.readFileSync(filename,'utf8'),sandbox,{filename});
   await sandbox.module.exports.list('targets',2570);
   assert.match(sql,/cd.de_person AS responsible/);
-  assert.match(sql,/LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code/);
+  assert.match(sql,/LEFT JOIN chamra_detail cd ON cd.de_id = \(SELECT MAX\(latest_detail.de_id\)/);
+  assert.match(sql,/latest_detail.de_code = t.c_code/);
   assert.equal(params[0],2570);
 });
 test('target form displays existing responsible person and prevents typing a separate name', async () => {

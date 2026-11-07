@@ -34,7 +34,7 @@ module.exports = {
   async list(type, year) {
     const { table } = config(type);
     const select = type === 'targets' ? "t.*, ac.c_name, cd.de_person AS responsible, DATE_FORMAT(t.due_date, '%Y-%m-%d') AS due_date" : type === 'meetings' ? "t.*, DATE_FORMAT(t.meeting_date, '%Y-%m-%d') AS meeting_date" : 't.*';
-    const join = type === 'targets' ? 'LEFT JOIN active_coop ac ON ac.c_code = t.c_code LEFT JOIN chamra_detail cd ON cd.de_code = t.c_code' : '';
+    const join = type === 'targets' ? 'LEFT JOIN active_coop ac ON ac.c_code = t.c_code LEFT JOIN chamra_detail cd ON cd.de_id = (SELECT MAX(latest_detail.de_id) FROM chamra_detail latest_detail WHERE latest_detail.de_code = t.c_code)' : '';
     const order = type === 'auditors' ? 't.id DESC' : type === 'documents' ? 't.is_pinned DESC, t.id DESC' : type === 'meetings' ? 't.meeting_no DESC' : 't.id ASC';
     const [rows] = await db.query(`SELECT ${select} FROM ${table} t ${join} WHERE t.fiscal_year = ? ORDER BY ${order}`, [year]);
     if (type === 'documents') rows.forEach(row => { row.original_name = normalizeDocumentName(row.original_name); });
@@ -57,11 +57,11 @@ module.exports = {
     return db.query(`DELETE FROM ${config(type).table} WHERE id = ?`, [id]);
   },
   async institutions() {
-    const [rows] = await db.query("SELECT ac.c_code, ac.c_name, cd.de_person FROM active_coop ac LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY c_name");
+    const [rows] = await db.query("SELECT ac.c_code, ac.c_name, cd.de_person FROM active_coop ac LEFT JOIN chamra_detail cd ON cd.de_id = (SELECT MAX(latest_detail.de_id) FROM chamra_detail latest_detail WHERE latest_detail.de_code = ac.c_code) WHERE c_status IN ('เลิก', 'เลิก/ชำระบัญชี') ORDER BY c_name");
     return rows;
   },
   async institution(code) {
-    const [rows] = await db.query('SELECT ac.c_code, ac.c_name, cd.de_person FROM active_coop ac LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code WHERE ac.c_code = ? LIMIT 1', [code]);
+    const [rows] = await db.query('SELECT ac.c_code, ac.c_name, cd.de_person FROM active_coop ac LEFT JOIN chamra_detail cd ON cd.de_id = (SELECT MAX(latest_detail.de_id) FROM chamra_detail latest_detail WHERE latest_detail.de_code = ac.c_code) WHERE ac.c_code = ? LIMIT 1', [code]);
     return rows[0] || null;
   },
   async institutionExists(code) {

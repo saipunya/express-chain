@@ -176,7 +176,13 @@ async function getShowAllSections(rows, year) {
     id, title, color, icon: 'bi-building', description: `เป้าหมายปีงบประมาณ ${year}`,
     rows: targets.filter(target => target.target_type === type).map(target => byCode.get(String(target.c_code))).filter(Boolean)
   }));
-  sections.push({ id: 'group-unassigned', title: 'สถาบันที่ยังไม่ได้กำหนดเป้าหมาย', color: 'secondary', icon: 'bi-building', description: `ยังไม่ได้กำหนดเป้าหมายในปีงบประมาณ ${year}`, rows: rows.filter(row => !assigned.has(String(row.c_code || row.de_code))) });
+  const { startDate } = fiscalPeriod(year);
+  const unassigned = rows.filter(row => {
+    if (assigned.has(String(row.c_code || row.de_code))) return false;
+    const completedDate = dateKey(row.pr_s10);
+    return !completedDate || completedDate >= startDate;
+  });
+  sections.push({ id: 'group-unassigned', title: 'สถาบันที่ยังไม่ได้กำหนดเป้าหมาย', color: 'secondary', icon: 'bi-building', description: `ยังไม่ได้กำหนดเป้าหมายในปีงบประมาณ ${year} (ไม่รวมสถาบันที่เสร็จขั้นที่ 10 ก่อนเริ่มปีงบประมาณ)`, rows: unassigned });
   return sections;
 }
 

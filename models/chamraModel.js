@@ -11,7 +11,7 @@ const Chamra = {
          cd.de_code, cd.de_case, cd.de_person, cd.de_comno, cd.de_comdate, cd.de_maihed,
          ${PROCESS_DATE_COLUMNS}
        FROM active_coop ac
-       LEFT JOIN chamra_detail cd ON cd.de_code = ac.c_code
+       LEFT JOIN chamra_detail cd ON cd.de_id = (SELECT MAX(latest_detail.de_id) FROM chamra_detail latest_detail WHERE latest_detail.de_code = ac.c_code)
        LEFT JOIN chamra_process cp ON cp.pr_code = ac.c_code
        WHERE ac.c_status IN ('เลิก', 'เลิก/ชำระบัญชี')
        ORDER BY ac.c_name DESC`
@@ -30,6 +30,7 @@ const Chamra = {
        LEFT JOIN active_coop ac ON ac.c_code = cd.de_code
        LEFT JOIN chamra_process cp ON cp.pr_code = cd.de_code
        WHERE cd.de_code = ?
+       ORDER BY cd.de_id DESC
        LIMIT 1`,
       [code]
     );

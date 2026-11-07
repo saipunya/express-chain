@@ -39,23 +39,52 @@
   })();
 </script>
 
-<div id="a2hs-banner" class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3" style="max-width:420px; z-index:1055; display:none;">
+<style>
+  .app-install-banner {
+    position: fixed;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: max-content;
+    max-width: calc(100vw - 20px);
+    z-index: 1055;
+  }
+  .app-install-banner .alert {
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .app-install-banner .btn {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .app-install-banner .btn-close {
+    position: static;
+    flex-shrink: 0;
+    padding: 6px;
+    font-size: 9px;
+  }
+  #ios-install-banner { max-width: min(300px, calc(100vw - 20px)); }
+</style>
+<div id="a2hs-banner" class="app-install-banner" style="display:none;">
   <div class="alert alert-primary alert-dismissible d-flex align-items-center shadow-sm mb-0" role="alert">
-    <i class="bi bi-phone-fill fs-4 me-2"></i>
+    <i class="bi bi-phone-fill fs-6"></i>
     <div class="flex-grow-1 text-start">
-      ติดตั้งแอปนี้ลงบนหน้าจอหลัก เพื่อเข้าใช้งานได้เร็วขึ้น
+      ติดตั้งแอปลงหน้าจอหลัก
     </div>
-    <button id="a2hs-button" class="btn btn-sm btn-success ms-3">ติดตั้ง</button>
-    <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('a2hs-banner').style.display='none'"></button>
+    <button id="a2hs-button" class="btn btn-sm btn-success">ติดตั้ง</button>
+    <button type="button" class="btn-close" aria-label="ปิดคำแนะนำติดตั้งแอป" onclick="document.getElementById('a2hs-banner').style.display='none'"></button>
   </div>
 </div>
-<div id="ios-install-banner" class="position-fixed bottom-0 start-50 translate-middle-x w-100 p-3 d-none" style="max-width:420px; z-index:1055;">
+<div id="ios-install-banner" class="app-install-banner d-none">
   <div class="alert alert-warning alert-dismissible d-flex align-items-center shadow-sm mb-0" role="alert">
-    <i class="bi bi-info-circle-fill fs-4 me-2"></i>
+    <i class="bi bi-info-circle-fill fs-6"></i>
     <div class="flex-grow-1 text-start">
       บน iPhone/iPad ให้เปิดเมนู Safari แล้วเลือก “Add to Home Screen” เพื่อเพิ่มทางลัด
     </div>
-    <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('ios-install-banner').classList.add('d-none')"></button>
+    <button type="button" class="btn-close" aria-label="ปิดคำแนะนำติดตั้งแอป" onclick="document.getElementById('ios-install-banner').classList.add('d-none')"></button>
   </div>
 </div>
 <script>

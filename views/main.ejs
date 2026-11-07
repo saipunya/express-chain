@@ -419,11 +419,7 @@
         <div>
           <h2 id="chamraSummaryTitle">สรุปผลการชำระบัญชี</h2>
           <div class="text-muted small">
-            ปีงบประมาณ <%= _chamraSummary.fiscalYear || '—' %>
-            <% if (_chamraSummary.period) { %>
-              · <%= _chamraSummary.period.startLabel %> – <%= _chamraSummary.period.endLabel %>
-              · ข้อมูล ณ <%= _chamraSummary.period.asOfLabel %>
-            <% } %>
+            สถานะล่าสุดของสหกรณ์และกลุ่มเกษตรกรที่อยู่ระหว่างการชำระบัญชี
             <% if (_chamraSummary.latestUpdateThai) { %> · อัปเดตล่าสุด <%= _chamraSummary.latestUpdateThai %><% } %>
           </div>
         </div>
@@ -440,7 +436,7 @@
                 <div>
                   <div class="main-chamra-overview-label">สถาบันทั้งหมด</div>
                   <div class="main-chamra-overview-value"><%= Number(_chamraSummary.total || 0).toLocaleString('th-TH') %></div>
-                  <div class="small text-white-50 mt-2">แห่งที่ยกมาและเข้าสู่การชำระบัญชีในปีงบประมาณนี้</div>
+                  <div class="small text-white-50 mt-2">แห่งที่อยู่ในทะเบียนชำระบัญชี</div>
                 </div>
                 <div class="main-chamra-progress-ring" style="--chamra-progress:<%= Math.max(0, Math.min(100, Number(_chamraSummary.completionPercent || 0))) %>%" aria-label="ถอนชื่อแล้ว <%= Number(_chamraSummary.completionPercent || 0).toFixed(1) %> เปอร์เซ็นต์">
                   <span class="main-chamra-progress-value"><%= Number(_chamraSummary.completionPercent || 0).toFixed(1) %>%</span>
@@ -472,7 +468,7 @@
                 <div class="main-chamra-kpi">
                   <div class="main-chamra-kpi-label">ถอนชื่อแล้ว</div>
                   <div class="main-chamra-kpi-value text-success"><%= Number(_chamraSummary.withdrawn || 0).toLocaleString('th-TH') %></div>
-                  <div class="main-chamra-kpi-note">ผลงานถอนชื่อในปีงบประมาณนี้</div>
+                  <div class="main-chamra-kpi-note">ขั้นที่ 9–10</div>
                 </div>
               </div>
               <div class="col-4">

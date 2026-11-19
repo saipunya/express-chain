@@ -1,6 +1,7 @@
 const db = require('../config/db');
 // Keep DATE columns as calendar dates regardless of the server's timezone.
 const PROCESS_DATE_COLUMNS = Array.from({ length: 10 }, (_, i) => `DATE_FORMAT(cp.pr_s${i + 1}, '%Y-%m-%d') AS pr_s${i + 1}`).join(', ');
+const PROBLEM_ORDER = 'p.po_year DESC, CAST(p.po_meeting AS UNSIGNED) DESC, p.po_meeting DESC, p.po_id DESC';
 
 const Chamra = {
   // List with coop + detail + process progress
@@ -115,10 +116,24 @@ const Chamra = {
 
   async getPoblemsByCode(code) {
     const [rows] = await db.query(
-      `SELECT p.* FROM chamra_poblem p WHERE p.po_code = ? ORDER BY p.po_year DESC, p.po_meeting DESC`,
+      `SELECT p.* FROM chamra_poblem p WHERE p.po_code = ? ORDER BY ${PROBLEM_ORDER}`,
       [code]
     );
     return rows;
+  },
+
+  async updateLatestProblem(code, id, problem, savedBy) {
+    const [result] = await db.query(
+      `UPDATE chamra_poblem AS target
+       JOIN (
+         SELECT p.po_id FROM chamra_poblem p
+         WHERE p.po_code = ? ORDER BY ${PROBLEM_ORDER} LIMIT 1
+       ) AS latest ON latest.po_id = target.po_id
+       SET target.po_problem = ?, target.po_saveby = ?, target.po_savedate = NOW()
+       WHERE target.po_id = ?`,
+      [code, problem, savedBy, id]
+    );
+    return result.affectedRows > 0;
   },
 
   async getPoblemById(id) {

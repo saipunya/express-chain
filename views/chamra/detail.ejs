@@ -133,7 +133,7 @@
           <th>ผู้รับผิดชอบ</th>
           <td>
             <% if (typeof responsibleSaved !== 'undefined' && responsibleSaved) { %><div class="alert alert-success py-2" role="status">บันทึกผู้รับผิดชอบแล้ว</div><% } %>
-            <% if (typeof canEditResponsible !== 'undefined' && canEditResponsible) { %>
+            <% if (canEditDetail) { %>
               <form method="post" action="/chamra/detail/<%= encodeURIComponent(data.de_code) %>/responsible" class="d-flex flex-wrap gap-2">
                 <input type="hidden" name="_csrf" value="<%= csrf %>">
                 <input type="text" name="de_person" aria-label="ผู้รับผิดชอบ" maxlength="150" class="form-control form-control-sm w-auto flex-grow-1" value="<%= data.de_person || '' %>">
@@ -196,22 +196,38 @@
   <% } else { %>
     <div class="problems-empty mb-4 small">ยังไม่มีข้อมูลกระบวนการ</div>
   <% } %>
-  <h2 class="h6 mt-4 mb-2">รายการปัญหา (Problems)</h2>
+  <h2 id="problems" class="h6 mt-4 mb-2" style="scroll-margin-top: 5rem;">รายการปัญหา (Problems)</h2>
+  <% if (problemSaved) { %>
+    <div class="alert alert-success py-2" role="status">บันทึกปัญหาอุปสรรคครั้งล่าสุดแล้ว</div>
+  <% } %>
   <% if (poblems && poblems.length) { %>
-    <% poblems.forEach(p => { %>
+    <% poblems.forEach((p, index) => { %>
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-success-subtle  d-flex justify-content-between align-items-center">
           <span>ประชุมครั้งที่ <strong><%= p.po_meeting %>/<%= p.po_year %></strong></span>
         </div>
         <div class="card-body">
           <p class="mb-2"><strong>รายละเอียด:</strong> <%= p.po_detail || '-' %></p>
-          <p class="mb-2"><strong>ปัญหาที่พบ:</strong> <%= p.po_problem || '-' %></p>
+          <% if (canEditDetail && index === 0) { %>
+            <form method="post" action="/chamra/detail/<%= encodeURIComponent(data.de_code) %>/problem">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <input type="hidden" name="po_id" value="<%= p.po_id %>">
+              <label for="latest-problem" class="form-label fw-semibold">ปัญหาอุปสรรคครั้งล่าสุด</label>
+              <textarea id="latest-problem" name="po_problem" class="form-control mb-2" rows="4" required><%= p.po_problem || '' %></textarea>
+              <button type="submit" class="btn btn-primary btn-sm">บันทึกปัญหาอุปสรรค</button>
+            </form>
+          <% } else { %>
+            <p class="mb-2" style="white-space: pre-wrap;"><strong>ปัญหาที่พบ:</strong> <%= p.po_problem || '-' %></p>
+          <% } %>
         </div>
       </div>
     <% }) %>
 
   <% } else { %>
-    <div class="problems-empty small">ยังไม่มีรายการปัญหา</div>
+    <div class="problems-empty small">
+      ยังไม่มีรายการปัญหา
+      <% if (canEditDetail) { %><a href="/chamra/poblem/add" class="ms-2">เพิ่มผลติดตามและปัญหา</a><% } %>
+    </div>
   <% } %>
   <% } else { %>
     <p class="text-muted">ไม่พบข้อมูล</p>

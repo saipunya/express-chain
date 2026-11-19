@@ -81,6 +81,7 @@ router.post('/poblem/delete/:po_id', ...canManage, chamraController.deletePoblem
 // Detail (new)
 router.get('/detail/:c_code', chamraController.detail);
 router.post('/detail/:c_code/responsible', ...canManage, chamraController.updateResponsible);
+router.post('/detail/:c_code/problem', ...canManage, chamraController.updateLatestProblem);
 
 // Export PDF for detail (server-side pdfmake)
 router.get('/detail/:c_code/export/pdf', chamraController.exportDetailPdf);

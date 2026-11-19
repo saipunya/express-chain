@@ -836,13 +836,14 @@ chamraController.detail = async (req, res) => {
     const record = await Chamra.getByCode(code); // detail + process + coop
     if (!record) return res.status(404).send('ไม่พบข้อมูล');
     const poblems = await Chamra.getPoblemsByCode(code);
-    const canEditResponsible = ['admin', 'kjs'].includes(req.session?.user?.mClass || req.session?.user?.m_class || req.session?.user?.level);
-    if (canEditResponsible && !req.session.chamraToken) req.session.chamraToken = crypto.randomBytes(32).toString('hex');
+    const canEditDetail = ['admin', 'kjs'].includes(req.session?.user?.mClass || req.session?.user?.m_class || req.session?.user?.level);
+    if (canEditDetail && !req.session.chamraToken) req.session.chamraToken = crypto.randomBytes(32).toString('hex');
     res.render('chamra/detail', {
       data: record,
-      canEditResponsible,
-      csrf: canEditResponsible ? req.session.chamraToken : '',
+      canEditDetail,
+      csrf: canEditDetail ? req.session.chamraToken : '',
       responsibleSaved: req.query.saved === '1',
+      problemSaved: canEditDetail && req.query.problemSaved === '1',
       poblems
     });
   } catch (e) {
@@ -851,11 +852,15 @@ chamraController.detail = async (req, res) => {
   }
 };
 
+function hasValidDetailToken(req) {
+  const supplied = Buffer.from(String(req.body?._csrf || ''));
+  const expected = Buffer.from(req.session?.chamraToken || '');
+  return expected.length > 0 && supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
+}
+
 // Update only the institution's responsible person from its detail page.
 chamraController.updateResponsible = async (req, res) => {
-  const supplied = Buffer.from(String(req.body?._csrf || ''));
-  const expected = Buffer.from(req.session.chamraToken || '');
-  if (!expected.length || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
+  if (!hasValidDetailToken(req)) {
     return res.status(403).send('แบบฟอร์มหมดอายุ กรุณาเปิดหน้ารายละเอียดใหม่');
   }
   const code = req.params.c_code;
@@ -865,6 +870,27 @@ chamraController.updateResponsible = async (req, res) => {
   }
   await Chamra.update(code, { de_person: req.body.de_person.trim() });
   return res.redirect(`/chamra/detail/${encodeURIComponent(code)}?saved=1`);
+};
+
+chamraController.updateLatestProblem = async (req, res) => {
+  if (!hasValidDetailToken(req)) {
+    return res.status(403).send('แบบฟอร์มหมดอายุ กรุณาเปิดหน้ารายละเอียดใหม่');
+  }
+  const { po_id, po_problem } = req.body;
+  if (typeof po_id !== 'string' || !/^\d+$/.test(po_id) ||
+      typeof po_problem !== 'string' || !po_problem.trim()) {
+    return res.status(400).send('กรุณาระบุปัญหาอุปสรรคให้ครบถ้วน');
+  }
+
+  const code = req.params.c_code;
+  if (!await Chamra.getByCode(code)) return res.status(404).send('ไม่พบข้อมูล');
+
+  const user = req.session.user;
+  const saved = await Chamra.updateLatestProblem(code, po_id, po_problem.trim(), user.fullname || user.username || 'system');
+  if (!saved) {
+    return res.status(409).send('รายการครั้งล่าสุดเปลี่ยนแปลงแล้ว กรุณาเปิดหน้ารายละเอียดใหม่ก่อนบันทึก');
+  }
+  return res.redirect(`/chamra/detail/${encodeURIComponent(code)}?problemSaved=1#problems`);
 };
 
 // แสดงรายการกระบวนการ

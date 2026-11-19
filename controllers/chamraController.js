@@ -844,6 +844,7 @@ chamraController.detail = async (req, res) => {
       csrf: canEditDetail ? req.session.chamraToken : '',
       responsibleSaved: req.query.saved === '1',
       problemSaved: canEditDetail && req.query.problemSaved === '1',
+      problemYear: resolveFiscalYear(),
       poblems
     });
   } catch (e) {
@@ -876,17 +877,30 @@ chamraController.updateLatestProblem = async (req, res) => {
   if (!hasValidDetailToken(req)) {
     return res.status(403).send('แบบฟอร์มหมดอายุ กรุณาเปิดหน้ารายละเอียดใหม่');
   }
-  const { po_id, po_problem } = req.body;
-  if (typeof po_id !== 'string' || !/^\d+$/.test(po_id) ||
-      typeof po_problem !== 'string' || !po_problem.trim()) {
+  const { po_id, po_problem, po_year, po_meeting } = req.body;
+  if (typeof po_problem !== 'string' || !po_problem.trim()) {
     return res.status(400).send('กรุณาระบุปัญหาอุปสรรคให้ครบถ้วน');
+  }
+  const isFirstProblem = po_id === '';
+  if (isFirstProblem) {
+    if (typeof po_year !== 'string' || !/^\d{4}$/.test(po_year) || Number(po_year) < 2500 || Number(po_year) > 2800 ||
+        !['1', '2', '3', '4'].includes(po_meeting)) {
+      return res.status(400).send('กรุณาระบุปีงบประมาณและครั้งที่ประชุม');
+    }
+  } else if (typeof po_id !== 'string' || !/^\d+$/.test(po_id)) {
+    return res.status(400).send('กรุณาระบุรายการที่ต้องการแก้ไข');
   }
 
   const code = req.params.c_code;
-  if (!await Chamra.getByCode(code)) return res.status(404).send('ไม่พบข้อมูล');
+  const detail = await Chamra.getByCode(code);
+  if (!detail) return res.status(404).send('ไม่พบข้อมูล');
 
   const user = req.session.user;
-  const saved = await Chamra.updateLatestProblem(code, po_id, po_problem.trim(), user.fullname || user.username || 'system');
+  const problem = po_problem.trim();
+  const savedBy = user.fullname || user.username || 'system';
+  const saved = isFirstProblem
+    ? await Chamra.createFirstProblem(detail, { year: po_year, meeting: po_meeting, problem, savedBy })
+    : await Chamra.updateLatestProblem(code, po_id, problem, savedBy);
   if (!saved) {
     return res.status(409).send('รายการครั้งล่าสุดเปลี่ยนแปลงแล้ว กรุณาเปิดหน้ารายละเอียดใหม่ก่อนบันทึก');
   }

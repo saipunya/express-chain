@@ -122,6 +122,33 @@ const Chamra = {
     return rows;
   },
 
+  async createFirstProblem(detail, { year, meeting, problem, savedBy }) {
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+      // Serialize first entries for the same institution.
+      const [rows] = await connection.query('SELECT de_code FROM chamra_detail WHERE de_id = ? FOR UPDATE', [detail.de_id]);
+      if (!rows.length) {
+        await connection.rollback();
+        return false;
+      }
+      const code = rows[0].de_code;
+      const [result] = await connection.query(
+        `INSERT INTO chamra_poblem (po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate)
+         SELECT ?, ?, ?, '', ?, ?, NOW()
+         WHERE NOT EXISTS (SELECT 1 FROM chamra_poblem WHERE po_code = ?)`,
+        [code, year, meeting, problem, savedBy, code]
+      );
+      await connection.commit();
+      return result.affectedRows > 0;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  },
+
   async updateLatestProblem(code, id, problem, savedBy) {
     const [result] = await db.query(
       `UPDATE chamra_poblem AS target

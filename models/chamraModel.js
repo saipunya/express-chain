@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { nextProblemMeeting } = require('../services/chamraFiscalYear');
 // Keep DATE columns as calendar dates regardless of the server's timezone.
 const PROCESS_DATE_COLUMNS = Array.from({ length: 10 }, (_, i) => `DATE_FORMAT(cp.pr_s${i + 1}, '%Y-%m-%d') AS pr_s${i + 1}`).join(', ');
 const PROBLEM_ORDER = 'p.po_year DESC, CAST(p.po_meeting AS UNSIGNED) DESC, p.po_meeting DESC, p.po_id DESC';
@@ -122,45 +123,41 @@ const Chamra = {
     return rows;
   },
 
-  async createFirstProblem(detail, { year, meeting, problem, savedBy }) {
+  async createNextProblem(detailId, { period, problem, savedBy }) {
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
-      // Serialize first entries for the same institution.
-      const [rows] = await connection.query('SELECT de_code FROM chamra_detail WHERE de_id = ? FOR UPDATE', [detail.de_id]);
+      // Allocate the next meeting while holding the institution's detail lock.
+      const [rows] = await connection.query('SELECT de_code FROM chamra_detail WHERE de_id = ? FOR UPDATE', [detailId]);
       if (!rows.length) {
         await connection.rollback();
         return false;
       }
       const code = rows[0].de_code;
-      const [result] = await connection.query(
+      const [problems] = await connection.query(
+        `SELECT p.po_year, p.po_meeting FROM chamra_poblem p
+         WHERE p.po_code = ? ORDER BY ${PROBLEM_ORDER} LIMIT 1 FOR UPDATE`,
+        [code]
+      );
+      const { meeting, year } = nextProblemMeeting(problems[0]);
+      if (period !== `${meeting}/${year}`) {
+        await connection.rollback();
+        return false;
+      }
+
+      await connection.query(
         `INSERT INTO chamra_poblem (po_code, po_year, po_meeting, po_detail, po_problem, po_saveby, po_savedate)
-         SELECT ?, ?, ?, '', ?, ?, NOW()
-         WHERE NOT EXISTS (SELECT 1 FROM chamra_poblem WHERE po_code = ?)`,
-        [code, year, meeting, problem, savedBy, code]
+         VALUES (?, ?, ?, '', ?, ?, NOW())`,
+        [code, year, meeting, problem, savedBy]
       );
       await connection.commit();
-      return result.affectedRows > 0;
+      return true;
     } catch (error) {
       await connection.rollback();
       throw error;
     } finally {
       connection.release();
     }
-  },
-
-  async updateLatestProblem(code, id, problem, savedBy) {
-    const [result] = await db.query(
-      `UPDATE chamra_poblem AS target
-       JOIN (
-         SELECT p.po_id FROM chamra_poblem p
-         WHERE p.po_code = ? ORDER BY ${PROBLEM_ORDER} LIMIT 1
-       ) AS latest ON latest.po_id = target.po_id
-       SET target.po_problem = ?, target.po_saveby = ?, target.po_savedate = NOW()
-       WHERE target.po_id = ?`,
-      [code, problem, savedBy, id]
-    );
-    return result.affectedRows > 0;
   },
 
   async getPoblemById(id) {

@@ -66,6 +66,190 @@
         border-radius: 10px;
       }
 
+      .withdrawal-targets {
+        --target-green: #123f35;
+        --target-border: #dde7e2;
+        --target-muted: #4c625c;
+        background: #fff;
+        border: 1px solid var(--target-border);
+        border-radius: 16px;
+      }
+
+      .withdrawal-targets-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: var(--target-green);
+        color: #fff;
+        border-radius: 15px 15px 0 0;
+      }
+
+      .withdrawal-targets-heading {
+        display: flex;
+        align-items: center;
+        gap: .875rem;
+      }
+
+      .withdrawal-targets-emblem,
+      .withdrawal-target-icon {
+        display: grid;
+        place-items: center;
+        flex: none;
+        border-radius: 12px;
+      }
+
+      .withdrawal-targets-emblem {
+        width: 3rem;
+        height: 3rem;
+        background: #245549;
+        color: #b8efd4;
+        font-size: 1.45rem;
+      }
+
+      .withdrawal-targets-caption,
+      .withdrawal-targets-total span {
+        color: #d0e8dc;
+        font-size: .875rem;
+      }
+
+      .withdrawal-targets-total {
+        display: flex;
+        align-items: baseline;
+        gap: .5rem;
+      }
+
+      .withdrawal-targets-total strong {
+        font-size: 1.75rem;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .withdrawal-target-list {
+        margin-inline: 1.5rem;
+      }
+
+      .withdrawal-target-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) minmax(0, 34%);
+        align-items: start;
+        gap: .625rem 1rem;
+        padding-block: 1rem;
+      }
+
+      .withdrawal-target-row + .withdrawal-target-row {
+        border-top: 1px solid var(--target-border);
+      }
+
+      .withdrawal-target-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: #e9f4ee;
+        color: #25634f;
+      }
+
+      .withdrawal-target-link {
+        color: var(--target-green);
+        font-weight: 700;
+        text-decoration: underline;
+        text-decoration-color: #a3bfb4;
+        text-underline-offset: .2em;
+        overflow-wrap: anywhere;
+      }
+
+      .withdrawal-target-link:hover {
+        color: #25634f;
+        text-decoration-color: currentColor;
+      }
+
+      .withdrawal-target-link:focus-visible {
+        outline: 2px solid #25634f;
+        outline-offset: 4px;
+        border-radius: 2px;
+      }
+
+      .withdrawal-target-link .bi {
+        font-size: .75em;
+      }
+
+      .withdrawal-target-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .25rem 1rem;
+        margin-top: .375rem;
+      }
+
+      .withdrawal-target-meta,
+      .withdrawal-target-date,
+      .withdrawal-target-empty {
+        color: var(--target-muted);
+        font-size: .875rem;
+      }
+
+      .withdrawal-target-meta > span,
+      .withdrawal-target-status {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .375rem;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .withdrawal-target-progress {
+        display: grid;
+        justify-items: start;
+        gap: .25rem;
+      }
+
+      .withdrawal-target-status {
+        border-radius: 8px;
+        background: #eaf1fb;
+        color: #254b78;
+        padding: .25rem .625rem;
+        font-size: .875rem;
+        font-weight: 600;
+      }
+
+      .withdrawal-target-status.is-withdrawn {
+        background: #e9f4ee;
+        color: var(--target-green);
+      }
+
+      .withdrawal-target-status.is-pending {
+        background: #eff2f2;
+        color: var(--target-muted);
+      }
+
+      .withdrawal-target-empty {
+        padding: 1.25rem 1.5rem;
+      }
+
+      @media (max-width: 767.98px) {
+        .withdrawal-targets-header,
+        .withdrawal-target-empty {
+          padding: 1rem;
+        }
+
+        .withdrawal-target-list {
+          margin-inline: 1rem;
+        }
+
+        .withdrawal-target-row {
+          grid-template-columns: auto minmax(0, 1fr);
+          column-gap: .75rem;
+        }
+
+        .withdrawal-target-link .bi {
+          display: none;
+        }
+
+        .withdrawal-target-progress {
+          grid-column: 2;
+        }
+      }
+
       /* Table styling */
       .table-responsive {
         border-radius: 16px;

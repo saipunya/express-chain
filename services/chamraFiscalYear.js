@@ -21,6 +21,11 @@ function currentFiscalYear(now = new Date()) {
 function resolveFiscalYear(value, now = new Date()) {
   return typeof value === 'string' && /^\d{4}$/.test(value) && Number(value) >= 2500 && Number(value) <= 2800 ? Number(value) : currentFiscalYear(now);
 }
+function nextProblemMeeting(latest, now = new Date()) {
+  const year = Number(latest?.po_year) || currentFiscalYear(now);
+  const meeting = Number(latest?.po_meeting) || 0;
+  return meeting >= 4 ? { year: year + 1, meeting: 1 } : { year, meeting: meeting + 1 };
+}
 function fiscalPeriod(year, now = new Date()) {
   if (!Number.isInteger(Number(year)) || Number(year) < 2500 || Number(year) > 2800) throw new Error('Invalid fiscal year');
   year = Number(year);
@@ -49,4 +54,4 @@ function fiscalNavigation(selectedYear, recordedYears = [], now = new Date()) {
   for (const year of [Number(selectedYear) - 1, Number(selectedYear) + 1]) if (year >= 2500 && year <= 2800) years.add(year);
   return { currentYear, yearOptions: [...years].sort((a, b) => b - a).map(year => ({ year, hasData: recorded.has(year) })) };
 }
-module.exports = { validDate, dateKey, currentFiscalYear, resolveFiscalYear, fiscalPeriod, fiscalNavigation };
+module.exports = { validDate, dateKey, currentFiscalYear, resolveFiscalYear, nextProblemMeeting, fiscalPeriod, fiscalNavigation };

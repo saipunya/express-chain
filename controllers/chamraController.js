@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { buildProcessRegister, processLocation } = require('../services/chamraProcessService');
 const { snapshotProcesses, getLatestProcess, STEP_LABELS } = require('../services/chamraSummaryService');
-const { dateKey, resolveFiscalYear, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
+const { dateKey, resolveFiscalYear, nextProblemMeeting, fiscalPeriod, fiscalNavigation } = require('../services/chamraFiscalYear');
 const ChamraManagement = require('../models/chamraManagementModel');
 const { TARGET_TYPES } = require('../services/chamraManagementService');
 const Chamra = require('../models/chamraModel'); // unified model
@@ -844,7 +844,7 @@ chamraController.detail = async (req, res) => {
       csrf: canEditDetail ? req.session.chamraToken : '',
       responsibleSaved: req.query.saved === '1',
       problemSaved: canEditDetail && req.query.problemSaved === '1',
-      problemYear: resolveFiscalYear(),
+      nextMeeting: canEditDetail ? nextProblemMeeting(poblems[0]) : null,
       poblems
     });
   } catch (e) {
@@ -873,22 +873,16 @@ chamraController.updateResponsible = async (req, res) => {
   return res.redirect(`/chamra/detail/${encodeURIComponent(code)}?saved=1`);
 };
 
-chamraController.updateLatestProblem = async (req, res) => {
+chamraController.addNextProblem = async (req, res) => {
   if (!hasValidDetailToken(req)) {
     return res.status(403).send('แบบฟอร์มหมดอายุ กรุณาเปิดหน้ารายละเอียดใหม่');
   }
-  const { po_id, po_problem, po_year, po_meeting } = req.body;
+  const { period, po_problem } = req.body;
   if (typeof po_problem !== 'string' || !po_problem.trim()) {
     return res.status(400).send('กรุณาระบุปัญหาอุปสรรคให้ครบถ้วน');
   }
-  const isFirstProblem = po_id === '';
-  if (isFirstProblem) {
-    if (typeof po_year !== 'string' || !/^\d{4}$/.test(po_year) || Number(po_year) < 2500 || Number(po_year) > 2800 ||
-        !['1', '2', '3', '4'].includes(po_meeting)) {
-      return res.status(400).send('กรุณาระบุปีงบประมาณและครั้งที่ประชุม');
-    }
-  } else if (typeof po_id !== 'string' || !/^\d+$/.test(po_id)) {
-    return res.status(400).send('กรุณาระบุรายการที่ต้องการแก้ไข');
+  if (typeof period !== 'string' || !/^[1-4]\/\d{4}$/.test(period)) {
+    return res.status(400).send('กรุณาเปิดหน้ารายละเอียดใหม่เพื่อเลือกครั้งที่ประชุมถัดไป');
   }
 
   const code = req.params.c_code;
@@ -898,9 +892,7 @@ chamraController.updateLatestProblem = async (req, res) => {
   const user = req.session.user;
   const problem = po_problem.trim();
   const savedBy = user.fullname || user.username || 'system';
-  const saved = isFirstProblem
-    ? await Chamra.createFirstProblem(detail, { year: po_year, meeting: po_meeting, problem, savedBy })
-    : await Chamra.updateLatestProblem(code, po_id, problem, savedBy);
+  const saved = await Chamra.createNextProblem(detail.de_id, { period, problem, savedBy });
   if (!saved) {
     return res.status(409).send('รายการครั้งล่าสุดเปลี่ยนแปลงแล้ว กรุณาเปิดหน้ารายละเอียดใหม่ก่อนบันทึก');
   }

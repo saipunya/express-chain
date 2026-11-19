@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
-const { dateKey, currentFiscalYear, resolveFiscalYear, fiscalPeriod } = require('../services/chamraFiscalYear');
+const { dateKey, currentFiscalYear, resolveFiscalYear, nextProblemMeeting, fiscalPeriod } = require('../services/chamraFiscalYear');
 const { validate } = require('../services/chamraManagementService');
 const { buildMovementRow } = require('../services/chamraSummaryService');
 
@@ -18,6 +18,13 @@ test('Thai fiscal year includes October 1 through September 30 in Bangkok', () =
   assert.equal(dateKey('2026-02-30'), null);
   assert.equal(resolveFiscalYear(['2569'], new Date('2026-10-19')), 2570);
   assert.equal(resolveFiscalYear('2569'), 2569);
+});
+test('problem meetings advance from the last saved meeting and roll over after meeting four', () => {
+  const now = new Date('2026-11-19T05:00:00Z');
+  assert.deepEqual(nextProblemMeeting(undefined, now), { year: 2570, meeting: 1 });
+  assert.deepEqual(nextProblemMeeting({ po_year: '2569', po_meeting: '3' }, now), { year: 2569, meeting: 4 });
+  assert.deepEqual(nextProblemMeeting({ po_year: '2569', po_meeting: '4' }, now), { year: 2570, meeting: 1 });
+  assert.deepEqual(nextProblemMeeting({ po_year: 2570, po_meeting: 1 }, now), { year: 2570, meeting: 2 });
 });
 test('periods cap past reports at September 30 and omit future activities', () => {
   const past = fiscalPeriod(2569, new Date('2026-10-19'));

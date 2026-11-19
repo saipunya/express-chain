@@ -1,6 +1,7 @@
 <%
   const manager = user && ['admin','kjs'].includes(user.mClass || user.m_class || user.level);
   const withdrawalTargets = managementData.targets.filter(row => row.target_type === 'withdrawal');
+  const targetDate = new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' });
 %>
 <div class="card shadow-sm mb-4"><div class="card-body">
   <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
@@ -14,19 +15,59 @@
   <p class="small text-muted mb-0">ผลดำเนินการตัวชี้วัดเป็นข้อมูลที่ผู้รับผิดชอบบันทึก</p>
 </div></div>
 <div class="row g-4 mb-4">
-  <div class="col-12"><div class="card shadow-sm h-100"><div class="card-body">
-    <h2 class="h5">เป้าหมายการชำระบัญชี ปี <%= managementYear %></h2>
-    <p class="small text-muted">ขั้นตอนล่าสุด ณ <%= period.asOfLabel %></p>
-    <% if (!withdrawalTargets.length) { %><p class="text-muted">ยังไม่มีเป้าหมายถอนชื่อสำหรับปีนี้</p><% } %>
-    <ul class="list-group list-group-flush"><% withdrawalTargets.forEach(row => { %><li class="list-group-item px-0"><a href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %></a><div class="mt-2 mb-1">
-      <% if (row.latestStep) { %>
-        <span class="badge <%= row.latestStep >= 9 ? 'bg-success' : 'bg-primary' %>">ขั้นที่ <%= row.latestStep %> · <%= row.latestStepLabel %></span>
-        <span class="small text-muted ms-1"><%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.latestStepDate)) %></span>
+  <div class="col-12">
+    <section class="withdrawal-targets" aria-labelledby="withdrawal-targets-title">
+      <div class="withdrawal-targets-header">
+        <div class="withdrawal-targets-heading">
+          <i class="bi bi-bullseye withdrawal-targets-emblem" aria-hidden="true"></i>
+          <div>
+            <h2 id="withdrawal-targets-title" class="h5 mb-1 fw-bold">เป้าหมายการชำระบัญชี ปี <%= managementYear %></h2>
+            <p class="withdrawal-targets-caption mb-0">ขั้นตอนล่าสุด ณ <%= period.asOfLabel %></p>
+          </div>
+        </div>
+        <div class="withdrawal-targets-total">
+          <strong><%= withdrawalTargets.length.toLocaleString('th-TH') %></strong>
+          <span>แห่งที่ตั้งเป้าถอนชื่อ</span>
+        </div>
+      </div>
+
+      <% if (withdrawalTargets.length) { %>
+        <ul class="withdrawal-target-list list-unstyled mb-0" role="list">
+          <% withdrawalTargets.forEach(row => { %>
+            <li class="withdrawal-target-row">
+              <i class="bi bi-building withdrawal-target-icon" aria-hidden="true"></i>
+              <div class="withdrawal-target-institution">
+                <a class="withdrawal-target-link" href="/chamra/detail/<%= encodeURIComponent(row.c_code) %>"><%= row.c_name || row.c_code %> <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                <% if (row.responsible || row.due_date) { %>
+                  <div class="withdrawal-target-meta">
+                    <% if (row.responsible) { %>
+                      <span><i class="bi bi-person" aria-hidden="true"></i><span>ผู้รับผิดชอบ <%= row.responsible %></span></span>
+                    <% } %>
+                    <% if (row.due_date) { %>
+                      <span><i class="bi bi-calendar-event" aria-hidden="true"></i><span>ครบกำหนด <%= targetDate.format(new Date(row.due_date)) %></span></span>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
+              <div class="withdrawal-target-progress">
+                <% if (row.latestStep) { %>
+                  <span class="withdrawal-target-status<%= row.latestStep >= 9 ? ' is-withdrawn' : '' %>">
+                    <i class="bi <%= row.latestStep >= 9 ? 'bi-check-circle' : 'bi-arrow-right-circle' %>" aria-hidden="true"></i>
+                    <span>ขั้นที่ <%= row.latestStep %> · <%= row.latestStepLabel %></span>
+                  </span>
+                  <% if (row.latestStepDate) { %><span class="withdrawal-target-date"><%= targetDate.format(new Date(row.latestStepDate)) %></span><% } %>
+                <% } else { %>
+                  <span class="withdrawal-target-status is-pending"><i class="bi bi-dash-circle" aria-hidden="true"></i><span>ยังไม่มีข้อมูลขั้นตอน</span></span>
+                <% } %>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
       <% } else { %>
-        <span class="badge bg-secondary">ยังไม่มีข้อมูลขั้นตอน</span>
+        <p class="withdrawal-target-empty mb-0">ยังไม่มีเป้าหมายถอนชื่อสำหรับปีนี้</p>
       <% } %>
-    </div><div class="small text-muted"><%= managementTargetTypes[row.target_type] %><%= row.responsible ? ' • '+row.responsible : '' %></div><% if (row.due_date) { %><div class="small">ครบกำหนด <%= new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeZone:'Asia/Bangkok'}).format(new Date(row.due_date)) %></div><% } %></li><% }) %></ul>
-  </div></div></div>
+    </section>
+  </div>
   <div class="col-12"><div class="card shadow-sm h-100"><div class="card-body">
     <h2 class="h5">รายงานการประชุม ปี <%= managementYear %></h2>
     <% if (!managementData.meetings.length) { %><p class="text-muted">ยังไม่มีการประชุมสำหรับปีนี้</p><% } %>

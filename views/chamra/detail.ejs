@@ -76,7 +76,7 @@
 </div>
 
     <div class="d-flex flex-wrap gap-2">
-      <% if (canEditDetail) { %><a href="#latest-problem" class="btn btn-outline-primary btn-sm">บันทึกปัญหาอุปสรรค</a><% } %>
+      <% if (canEditDetail) { %><a href="#next-problem" class="btn btn-outline-primary btn-sm">เพิ่มปัญหาอุปสรรค</a><% } %>
       <a href="../../chamra" class="btn btn-outline-secondary btn-sm">← กลับหน้ารายการ</a>
     </div>
 
@@ -201,44 +201,25 @@
   <% } %>
   <h2 id="problems" class="h6 mt-4 mb-2" style="scroll-margin-top: 5rem;">รายการปัญหา (Problems)</h2>
   <% if (problemSaved) { %>
-    <div class="alert alert-success py-2" role="status">บันทึกปัญหาอุปสรรคครั้งล่าสุดแล้ว</div>
+    <div class="alert alert-success py-2" role="status">เพิ่มปัญหาอุปสรรคแล้ว</div>
   <% } %>
-  <% const latestProblem = poblems[0]; %>
   <% if (canEditDetail) { %>
-    <div class="card shadow-sm mb-4" id="latest-problem" style="scroll-margin-top: 5rem;">
-      <% if (latestProblem) { %>
-        <div class="card-header bg-success-subtle">ประชุมครั้งที่ <strong><%= latestProblem.po_meeting %>/<%= latestProblem.po_year %></strong></div>
-      <% } %>
+    <% const period = `${nextMeeting.meeting}/${nextMeeting.year}`; %>
+    <div class="card shadow-sm mb-4" id="next-problem" style="scroll-margin-top: 5rem;">
+      <div class="card-header bg-success-subtle">การประชุมครั้งถัดไป <strong><%= period %></strong></div>
       <div class="card-body">
-        <% if (latestProblem) { %><p class="mb-2"><strong>รายละเอียด:</strong> <%= latestProblem.po_detail || '-' %></p><% } %>
         <form method="post" action="/chamra/detail/<%= encodeURIComponent(data.de_code) %>/problem">
           <input type="hidden" name="_csrf" value="<%= csrf %>">
-          <input type="hidden" name="po_id" value="<%= latestProblem?.po_id ?? '' %>">
-          <label for="latest-problem-text" class="form-label fw-semibold">ปัญหาอุปสรรคครั้งล่าสุด</label>
-          <textarea id="latest-problem-text" name="po_problem" class="form-control mb-3" rows="4" placeholder="พิมพ์ปัญหาอุปสรรคที่พบ" required><%= latestProblem?.po_problem || '' %></textarea>
-          <% if (!latestProblem) { %>
-            <div class="row g-2 mb-3">
-              <div class="col-sm-6">
-                <label for="latest-problem-year" class="form-label">ปีงบประมาณ พ.ศ.</label>
-                <input id="latest-problem-year" name="po_year" type="number" class="form-control" min="2500" max="2800" value="<%= problemYear %>" required>
-              </div>
-              <div class="col-sm-6">
-                <label for="latest-problem-meeting" class="form-label">ครั้งที่ประชุม</label>
-                <select id="latest-problem-meeting" name="po_meeting" class="form-select" required>
-                  <option value="">เลือกครั้งที่ประชุม</option>
-                  <% for (const meeting of [1, 2, 3, 4]) { %><option value="<%= meeting %>"><%= meeting %></option><% } %>
-                </select>
-              </div>
-            </div>
-          <% } %>
+          <input type="hidden" name="period" value="<%= period %>">
+          <label for="next-problem-text" class="form-label fw-semibold">ปัญหาอุปสรรค</label>
+          <textarea id="next-problem-text" name="po_problem" class="form-control mb-3" rows="4" required></textarea>
           <button type="submit" class="btn btn-primary btn-sm">บันทึกปัญหาอุปสรรค</button>
         </form>
       </div>
     </div>
   <% } %>
-  <% const readOnlyProblems = canEditDetail ? poblems.slice(1) : poblems; %>
-  <% if (readOnlyProblems.length) { %>
-    <% readOnlyProblems.forEach(p => { %>
+  <% if (poblems.length) { %>
+    <% poblems.forEach(p => { %>
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-success-subtle  d-flex justify-content-between align-items-center">
           <span>ประชุมครั้งที่ <strong><%= p.po_meeting %>/<%= p.po_year %></strong></span>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174735">
+  <title><%= title %> | ระบบเรียนรู้ออนไลน์ CoopChain</title>
+  <link rel="icon" href="/icon/seal.svg">
+  <link rel="stylesheet" href="/css/learning.css">
+  <% if (view === 'lesson' && !lesson.complete) { %><script src="/js/learning-timer.js" defer></script><% } %>
+  <% if (view === 'admin-course') { %><script src="/js/learning-course-editor.js" defer></script><% } %>
+</head>
+<body class="learning-body">
+  <a class="learning-skip" href="#learning-main">ข้ามไปยังเนื้อหา</a>
+  <header class="learning-header">
+    <div class="learning-shell learning-nav">
+      <a class="learning-brand" href="/learning">
+        <span class="learning-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>CoopChain <span class="learning-brand-detail">เรียนรู้ออนไลน์</span></span>
+      </a>
+      <nav aria-label="ระบบเรียนรู้ออนไลน์">
+        <% if (typeof adminAccount !== 'undefined') { %>
+          <span class="learning-account"><%= adminAccount.fullname || adminAccount.username %></span>
+          <a href="/learning/admin">หน้าจัดการ</a>
+        <% } else if (user) { %>
+          <span class="learning-account"><%= user.fullname || user.username %></span>
+          <form class="learning-logout" method="post" action="/learning/logout">
+            <input type="hidden" name="token" value="<%= token %>">
+            <button class="learning-text-button" type="submit">ออกจากระบบผู้เรียน</button>
+          </form>
+        <% } else if (view !== 'login' && view !== 'register') { %>
+          <a href="<%= loginUrl %>">เข้าสู่ระบบ</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+  <main class="learning-shell learning-main" id="learning-main" tabindex="-1">
+    <%- include(view) %>
+  </main>
+  <footer class="learning-footer">
+    <div class="learning-shell">
+      <span>สำนักงานสหกรณ์จังหวัดชัยภูมิ</span>
+      <div class="learning-inline-actions">
+        <a href="/learning/admin">สำหรับผู้ดูแล</a>
+        <a href="/main">กลับหน้า CoopChain</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

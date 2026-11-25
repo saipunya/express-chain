@@ -1,0 +1,9 @@
+<section class="learning-panel learning-error">
+  <h1><%= title %></h1>
+  <p><%= message %></p>
+  <% if (typeof adminAccount !== 'undefined') { %>
+    <a class="learning-button" href="/learning/admin">กลับไปยังหน้าจัดการ</a>
+  <% } else { %>
+    <a class="learning-button" href="<%= typeof course !== 'undefined' ? courseUrl(course) : '/learning' %>">กลับไปยังหลักสูตร</a>
+  <% } %>
+</section>

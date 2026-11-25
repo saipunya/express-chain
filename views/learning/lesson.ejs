@@ -1,0 +1,42 @@
+<a class="learning-back" href="<%= courseUrl(course) %>">กลับไปยังหลักสูตร</a>
+<p class="learning-office">บทที่ <%= lessonNumber %> จาก <%= course.lessons.length %></p>
+<h1><%= lesson.title %></h1>
+
+<div class="learning-course-grid learning-lesson-grid">
+  <article class="learning-panel learning-article" aria-label="เนื้อหาบทเรียน">
+    <% if (lesson.videoId) { %>
+      <div class="learning-player">
+        <iframe id="lesson-video" data-video-id="<%= lesson.videoId %>"
+          <% if (lesson.complete) { %>src="https://www.youtube-nocookie.com/embed/<%= lesson.videoId %>?playsinline=1&rel=0"<% } %>
+          title="วิดีโอบทเรียน <%= lesson.title %>" allow="encrypted-media; picture-in-picture; fullscreen"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <p class="learning-feedback" id="lesson-player-message" role="status" hidden></p>
+      <p class="learning-reference"><a href="https://www.youtube.com/watch?v=<%= lesson.videoId %>" target="_blank" rel="noopener noreferrer">เปิดคลิปบน YouTube (เปิดหน้าต่างใหม่)</a></p>
+    <% } %>
+    <% (lesson.sections || []).forEach(([heading, text]) => { %>
+      <section>
+        <h2><%= heading %></h2>
+        <p><%= text %></p>
+      </section>
+    <% }) %>
+    <% if (lesson.example) { %><aside class="learning-example">
+      <h2>ตัวอย่างในงานสหกรณ์</h2>
+      <p><%= lesson.example %></p>
+    </aside><% } %>
+    <% if (lesson.reference) { %>
+      <p class="learning-reference"><a href="<%= lesson.reference.url %>" target="_blank" rel="noopener noreferrer"><%= lesson.reference.label %> (เปิดหน้าต่างใหม่)</a></p>
+    <% } %>
+  </article>
+  <aside class="learning-panel learning-results" id="learning-timer" data-url="<%= lessonUrl(course, lesson) %>/heartbeat"
+    data-timer-key="<%= timerKey %>" data-token="<%= token %>" data-target="<%= lesson.requiredSeconds * 1000 %>">
+    <h2>เวลาเรียนบทนี้</h2>
+    <p class="learning-clock"><span id="lesson-elapsed"><%= duration(lesson.elapsedMs) %></span> / <%= duration(lesson.requiredSeconds * 1000) %> นาที</p>
+    <progress id="lesson-progress" value="<%= lesson.elapsedMs %>" max="<%= lesson.requiredSeconds * 1000 %>" aria-label="เวลาเรียนที่บันทึกแล้ว"></progress>
+    <p class="learning-muted" id="lesson-timer-status" role="status"><%= lesson.complete ? 'บันทึกเวลาเรียนครบแล้ว' : lesson.videoId ? 'ระบบบันทึกเวลาขณะเล่นวิดีโอในแท็บนี้' : 'ระบบบันทึกเวลาเมื่อเปิดและใช้งานหน้าบทเรียนนี้' %></p>
+    <% if (!lesson.complete) { %><noscript><p>เปิด JavaScript เพื่อบันทึกเวลาเรียน</p></noscript><% } %>
+    <% const showResults = progress.enrollment?.certificate_code && lessonNumber === course.lessons.length; %>
+    <a class="learning-button" id="lesson-next" href="<%= showResults ? `${courseUrl(course)}#results` : onwardUrl %>" <%= lesson.complete ? '' : 'hidden' %>><%= showResults ? 'ดูผลการเรียน' : onwardLabel %></a>
+    <a class="learning-row-link" id="lesson-login" href="<%= loginUrl %>" hidden>เข้าสู่ระบบอีกครั้ง</a>
+  </aside>
+</div>

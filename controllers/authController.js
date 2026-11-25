@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const authModel = require('../models/userModel');
 const onlineModel = require('../models/onlineModel');
-const { isInstitutionUser } = require('../middlewares/authMiddleware');
+const { isInstitutionUser, isLoginReturnPath, isLearningPath } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
   const group = String(user?.group || user?.m_group || '').trim().toLowerCase();
@@ -61,10 +61,11 @@ exports.login = async (req, res) => {
     let redirectTo = req.session.returnTo;
     delete req.session.returnTo; // one-time use
     const defaultLanding = getLandingPath(req.session.user);
-    if (typeof redirectTo !== 'string' || !redirectTo.startsWith('/') || redirectTo.startsWith('/auth')) {
+    if (!isLoginReturnPath(redirectTo)) {
       redirectTo = defaultLanding;
     }
-    if (isInstitutionUser(req.session.user) && redirectTo !== '/dashboard2' && !redirectTo.startsWith('/dashboard2/')) {
+    if (isInstitutionUser(req.session.user) && redirectTo !== '/dashboard2'
+      && !redirectTo.startsWith('/dashboard2/') && !isLearningPath(redirectTo)) {
       redirectTo = defaultLanding;
     }
     return res.redirect(redirectTo);

@@ -1,0 +1,49 @@
+<h1><%= title %></h1>
+<p class="learning-intro">เผยแพร่บทเรียน YouTube และตรวจสอบบัญชีสมาชิกสหกรณ์</p>
+
+<section class="learning-panel learning-admin-section" aria-labelledby="managed-courses">
+  <div class="learning-section-title">
+    <h2 id="managed-courses">รายวิชา</h2>
+    <a class="learning-button" href="/learning/admin/courses/new">เพิ่มรายวิชา</a>
+  </div>
+  <% if (!drafts.length) { %>
+    <p class="learning-muted">เริ่มจากเพิ่มรายวิชา แล้วใส่ลิงก์ YouTube และแบบทดสอบ</p>
+  <% } else { %>
+    <ul class="learning-steps learning-management-list">
+      <% drafts.forEach((course) => { %>
+        <li>
+          <div>
+            <strong><%= course.draft.title %></strong>
+            <small><%= course.published_revision ? (course.published_revision === course.revision ? 'เผยแพร่แล้ว' : 'เผยแพร่แล้ว มีร่างใหม่') : 'ร่าง' %></small>
+          </div>
+          <a class="learning-row-link" href="/learning/admin/courses/<%= course.id %>">แก้ไขรายวิชา</a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<section class="learning-panel learning-admin-section" aria-labelledby="learning-applications">
+  <h2 id="learning-applications">ใบสมัครรอตรวจสอบ</h2>
+  <% if (!pending.length) { %>
+    <p class="learning-muted">ไม่มีใบสมัครรอตรวจสอบ</p>
+  <% } else { %>
+    <p>ตรวจชื่อและเลขสมาชิกกับสหกรณ์ที่ระบุก่อนอนุมัติ</p>
+    <ul class="learning-steps learning-management-list">
+      <% pending.forEach((application) => { %>
+        <li>
+          <div>
+            <strong><%= application.full_name %></strong>
+            <small><%= application.cooperative_name %> · เลขสมาชิก <%= application.member_number %></small>
+            <small>ชื่อผู้ใช้ <%= application.username %></small>
+          </div>
+          <form class="learning-inline-actions" method="post" action="/learning/admin/members/<%= application.id %>/review">
+            <input type="hidden" name="token" value="<%= token %>">
+            <button class="learning-button" type="submit" name="decision" value="approve">อนุมัติ</button>
+            <button class="learning-button learning-button-outline" type="submit" name="decision" value="reject">ไม่อนุมัติ</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>

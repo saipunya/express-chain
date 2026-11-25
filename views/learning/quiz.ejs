@@ -1,0 +1,30 @@
+<div class="learning-quiz">
+  <a class="learning-back" href="<%= courseUrl(course) %>">กลับไปยังหลักสูตร</a>
+  <p class="learning-office"><%= course.title %></p>
+  <h1><%= quizNames[kind] %></h1>
+  <p class="learning-intro"><%= questions.length %> ข้อ ข้อละ 1 คะแนน เลือกคำตอบเดียวในแต่ละข้อ</p>
+  <% if (kind === 'pre') { %>
+    <p>คะแนนนี้ใช้สำรวจความรู้ก่อนเรียน คุณเริ่มเรียนได้ทุกระดับคะแนน</p>
+  <% } else { %>
+    <p>ตอบถูกอย่างน้อย <%= Math.ceil(questions.length * course.passPercent / 100) %> ข้อเพื่อผ่านเกณฑ์ <%= course.passPercent %>%</p>
+  <% } %>
+  <% if (error) { %><p class="learning-feedback" role="alert"><%= error %></p><% } %>
+
+  <form method="post" action="<%= courseUrl(course) %>/quizzes/<%= kind %>" class="learning-quiz-form">
+    <input type="hidden" name="token" value="<%= token %>">
+    <input type="hidden" name="submissionId" value="<%= submissionId %>">
+    <% questions.forEach((question, index) => { %>
+      <fieldset>
+        <legend><%= index + 1 %>. <%= question.prompt %></legend>
+        <% question.choices.forEach((choice, choiceIndex) => { %>
+          <label class="learning-choice">
+            <input type="radio" name="answers[q<%= index %>]" value="<%= choiceIndex %>" required
+              <%= answers[`q${index}`] === String(choiceIndex) ? 'checked' : '' %>>
+            <span><%= choice %></span>
+          </label>
+        <% }) %>
+      </fieldset>
+    <% }) %>
+    <button class="learning-button" type="submit">ส่งคำตอบและดูคะแนน</button>
+  </form>
+</div>

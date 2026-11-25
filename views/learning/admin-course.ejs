@@ -1,0 +1,47 @@
+<a class="learning-back" href="/learning/admin">กลับไปยังหน้าจัดการ</a>
+<h1><%= title %></h1>
+<p class="learning-intro">ผู้ที่ลงทะเบียนแล้วจะเรียนและทำแบบทดสอบตามฉบับที่ลงทะเบียน การเผยแพร่ฉบับใหม่มีผลกับผู้ลงทะเบียนใหม่</p>
+<% if (saved) { %><p class="learning-success" role="status"><%= draft.published_revision === draft.revision ? 'เผยแพร่รายวิชาแล้ว' : 'บันทึกร่างแล้ว' %></p><% } %>
+<% if (error) { %><p class="learning-feedback" role="alert"><%= error %></p><% } %>
+
+<form method="post" action="/learning/admin/courses<%= draft ? `/${draft.id}` : '' %>" class="learning-form learning-course-editor">
+  <input type="hidden" name="token" value="<%= token %>">
+  <% if (draft) { %><input type="hidden" name="revision" value="<%= draft.revision %>"><% } %>
+  <section class="learning-panel" aria-labelledby="edit-details">
+    <h2 id="edit-details">รายละเอียดรายวิชา</h2>
+    <div class="learning-form">
+      <label>ชื่อรายวิชา<input name="title" value="<%= form.title %>" maxlength="150" required></label>
+      <label>คำอธิบาย<textarea name="description" rows="3" maxlength="2000"><%= form.description %></textarea></label>
+      <label class="learning-short-field">เกณฑ์ผ่านหลังเรียน (%)<input type="number" name="passPercent" min="1" max="100" value="<%= form.passPercent %>" required></label>
+    </div>
+  </section>
+
+  <section class="learning-panel" data-editor-section aria-labelledby="edit-lessons">
+    <h2 id="edit-lessons">บทเรียน YouTube</h2>
+    <p>ใช้คลิปที่เปิดให้ฝังในเว็บไซต์ และตั้งเวลาเรียนขั้นต่ำให้เหมาะกับความยาวคลิป</p>
+    <div data-editor-items>
+      <% const lessonRows = form.lessons.length ? form.lessons : [{}]; %>
+      <% lessonRows.forEach((row, index) => { %><%- include('admin-lesson', { row, index }) %><% }) %>
+    </div>
+    <template><%- include('admin-lesson', { row: {}, index: '__INDEX__' }) %></template>
+    <button class="learning-button learning-button-outline" data-editor-add type="button">เพิ่มบทเรียน</button>
+  </section>
+
+  <% for (const [kind, name] of Object.entries(quizNames)) { %>
+    <section class="learning-panel" data-editor-section aria-labelledby="edit-<%= kind %>">
+      <h2 id="edit-<%= kind %>"><%= name %></h2>
+      <p>กำหนดคำถาม ตัวเลือก 3 ข้อ และคำตอบที่ถูกต้อง</p>
+      <div data-editor-items>
+        <% const questions = form.quizzes[kind].length ? form.quizzes[kind] : [{}]; %>
+        <% questions.forEach((row, index) => { %><%- include('admin-question', { row, index, kind }) %><% }) %>
+      </div>
+      <template><%- include('admin-question', { row: {}, index: '__INDEX__', kind }) %></template>
+      <button class="learning-button learning-button-outline" data-editor-add type="button">เพิ่มคำถาม<%= kind === 'pre' ? 'ก่อนเรียน' : 'หลังเรียน' %></button>
+    </section>
+  <% } %>
+
+  <div class="learning-inline-actions">
+    <button type="submit" name="intent" value="save" class="learning-button learning-button-outline">บันทึกร่าง</button>
+    <button type="submit" name="intent" value="publish" class="learning-button">เผยแพร่รายวิชา</button>
+  </div>
+</form>

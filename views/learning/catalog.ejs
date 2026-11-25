@@ -1,0 +1,42 @@
+<section class="learning-hero">
+  <div>
+    <p class="learning-office">สำนักงานสหกรณ์จังหวัดชัยภูมิ</p>
+    <h1>ระบบเรียนรู้ออนไลน์</h1>
+    <p>สำหรับสมาชิกสหกรณ์ในจังหวัดชัยภูมิ เรียนผ่านคลิป YouTube และรับใบรับรองเมื่อผ่านรายวิชา</p>
+    <% if (!user) { %>
+      <a class="learning-button learning-button-light" href="<%= loginUrl %>">เข้าสู่ระบบเพื่อเรียน</a>
+      <a class="learning-hero-register" href="<%= registerUrl %>">สมัครบัญชีผู้เรียน</a>
+    <% } else { %>
+      <a class="learning-button learning-button-light" href="#courses">ดูหลักสูตร</a>
+    <% } %>
+  </div>
+  <img src="/images/coopchain-chaiyaphum-hero.webp" alt="" width="1600" height="901">
+</section>
+
+<section class="learning-catalog" aria-labelledby="courses">
+  <h2 id="courses">หลักสูตรที่เปิดเรียน</h2>
+  <% if (!catalog.length) { %><p class="learning-panel learning-muted">ยังไม่มีรายวิชาที่เปิดเรียน</p><% } %>
+  <% catalog.forEach(({ course, progress, accessible }) => { %>
+    <article class="learning-course-card">
+      <div>
+        <h3><%= course.title %></h3>
+        <p><%= course.description %></p>
+        <div class="learning-course-meta">
+          <span><%= course.lessons.length %> บทเรียน</span>
+          <span>เวลาเรียนขั้นต่ำ <%= duration(progress.totalSeconds * 1000) %> นาที</span>
+          <span>ผ่านที่ <%= course.passPercent %>%</span>
+        </div>
+      </div>
+      <div class="learning-card-action">
+        <% if (progress.enrollment?.certificate_code) { %>
+          <span class="learning-badge">ผ่านหลักสูตร</span>
+        <% } else if (progress.enrollment) { %>
+          <span class="learning-muted">เรียนครบ <%= progress.lessons.filter((lesson) => lesson.complete).length %>/<%= course.lessons.length %> บท</span>
+        <% } %>
+        <% if (accessible) { %>
+          <a class="learning-button" href="<%= courseUrl(course) %>"><%= progress.enrollment?.certificate_code ? 'ดูผลการเรียน' : progress.enrollment ? 'เรียนต่อ' : 'ดูหลักสูตร' %></a>
+        <% } %>
+      </div>
+    </article>
+  <% }) %>
+</section>

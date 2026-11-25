@@ -1,0 +1,80 @@
+<a class="learning-back" href="/learning">กลับไปยังหลักสูตรทั้งหมด</a>
+<h1><%= course.title %></h1>
+<p class="learning-intro"><%= course.description %></p>
+
+<div class="learning-course-grid">
+  <section class="learning-panel" aria-labelledby="course-steps">
+    <h2 id="course-steps">ขั้นตอนการเรียน</h2>
+    <ol class="learning-steps">
+      <li>
+        <div>
+          <strong><%= quizNames.pre %></strong>
+          <small><%= course.quizzes.pre.length %> ข้อ</small>
+        </div>
+        <% if (progress.pre) { %>
+          <span class="learning-badge">ทำแล้ว</span>
+        <% } else if (progress.enrollment) { %>
+          <a class="learning-row-link" href="<%= courseUrl(course) %>/quizzes/pre">เริ่มทำแบบทดสอบ</a>
+        <% } else { %>
+          <span class="learning-muted">รอลงทะเบียน</span>
+        <% } %>
+      </li>
+      <% progress.lessons.forEach((lesson, index) => { %>
+        <li>
+          <div>
+            <strong>บทที่ <%= index + 1 %> <%= lesson.title %></strong>
+            <small>เวลา <%= duration(lesson.elapsedMs) %> / <%= duration(lesson.requiredSeconds * 1000) %> นาที</small>
+          </div>
+          <% if (lesson.complete) { %>
+            <a class="learning-row-link" href="<%= lessonUrl(course, lesson) %>">ทบทวน</a>
+          <% } else if (progress.pre && progress.nextLesson?.id === lesson.id) { %>
+            <a class="learning-row-link" href="<%= lessonUrl(course, lesson) %>"><%= lesson.elapsedMs ? 'เรียนต่อ' : 'เริ่มเรียน' %></a>
+          <% } else { %>
+            <span class="learning-muted">ยังไม่เปิด</span>
+          <% } %>
+        </li>
+      <% }) %>
+      <li>
+        <div>
+          <strong><%= quizNames.post %></strong>
+          <small><%= course.quizzes.post.length %> ข้อ · เกณฑ์ผ่าน <%= course.passPercent %>%</small>
+        </div>
+        <% if (progress.enrollment?.certificate_code) { %>
+          <span class="learning-badge">ผ่านเกณฑ์</span>
+        <% } else if (progress.pre && !progress.nextLesson) { %>
+          <a class="learning-row-link" href="<%= courseUrl(course) %>/quizzes/post"><%= progress.post ? 'ทำแบบทดสอบอีกครั้ง' : 'เริ่มทำแบบทดสอบ' %></a>
+        <% } else { %>
+          <span class="learning-muted">รอเรียนครบ</span>
+        <% } %>
+      </li>
+    </ol>
+  </section>
+
+  <section class="learning-panel learning-results" aria-labelledby="results">
+    <h2 id="results">ผลการเรียนของฉัน</h2>
+    <% if (!progress.enrollment) { %>
+      <p>ลงทะเบียนเพื่อทำแบบทดสอบก่อนเรียนและเริ่มบันทึกความคืบหน้า</p>
+      <form method="post" action="<%= courseUrl(course) %>/enroll">
+        <input type="hidden" name="token" value="<%= token %>">
+        <button class="learning-button" type="submit">ลงทะเบียนเรียน</button>
+      </form>
+    <% } else { %>
+      <dl>
+        <div>
+          <dt>เวลาเรียนสะสม</dt>
+          <dd><%= duration(progress.elapsedMs) %> / <%= duration(progress.totalSeconds * 1000) %> นาที</dd>
+        </div>
+        <div><dt>คะแนนก่อนเรียน</dt><dd><%= progress.pre ? `${progress.pre.score}/${progress.pre.total}` : 'ยังไม่ได้ทำ' %></dd></div>
+        <div><dt>คะแนนหลังเรียนล่าสุด</dt><dd><%= progress.post ? `${progress.post.score}/${progress.post.total}` : 'ยังไม่ได้ทำ' %></dd></div>
+      </dl>
+      <% if (progress.enrollment.certificate_code) { %>
+        <p class="learning-badge">ผ่านหลักสูตรแล้ว</p>
+        <a class="learning-button" href="<%= courseUrl(course) %>/certificate">ดาวน์โหลดใบรับรอง PDF</a>
+      <% } else if (progress.post) { %>
+        <p class="learning-feedback" role="status">คะแนนยังไม่ถึงเกณฑ์ <%= course.passPercent %>% คุณสามารถทบทวนบทเรียนแล้วทำแบบทดสอบอีกครั้งได้</p>
+      <% } else { %>
+        <p class="learning-muted">ดาวน์โหลดใบรับรองได้เมื่อผ่านแบบทดสอบหลังเรียน</p>
+      <% } %>
+    <% } %>
+  </section>
+</div>

@@ -1,0 +1,25 @@
+<section class="learning-panel learning-auth">
+  <h1><%= title %></h1>
+  <p class="learning-intro">กรอกชื่อและเลขสมาชิกตามทะเบียนสหกรณ์ เพื่อให้เจ้าหน้าที่ตรวจสอบก่อนเปิดบัญชี</p>
+  <% if (error) { %><p class="learning-feedback" role="alert"><%= error %></p><% } %>
+  <% if (!cooperatives.length) { %><p class="learning-feedback">ยังไม่มีรายชื่อสหกรณ์ให้เลือก กรุณาติดต่อสำนักงานสหกรณ์จังหวัดชัยภูมิ</p><% } %>
+  <form method="post" action="<%= registerUrl %>" class="learning-form">
+    <input type="hidden" name="token" value="<%= token %>">
+    <label>ชื่อและนามสกุล<input name="fullname" autocomplete="name" maxlength="150" value="<%= form.fullname || '' %>" required></label>
+    <label>สหกรณ์ของคุณ
+      <select name="cooperativeId" required>
+        <option value="">เลือกสหกรณ์</option>
+        <% cooperatives.forEach((coop) => { %>
+          <option value="<%= coop.c_id %>" <%= String(coop.c_id) === form.cooperativeId ? 'selected' : '' %>><%= coop.c_name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>เลขสมาชิกสหกรณ์<input name="memberNumber" maxlength="50" value="<%= form.memberNumber || '' %>" required></label>
+    <label>ชื่อผู้ใช้<input name="username" autocomplete="username" autocapitalize="none" minlength="3" maxlength="60" pattern="[A-Za-z0-9._\-]{3,60}" value="<%= form.username || '' %>" required>
+      <small>ใช้ตัวอักษรภาษาอังกฤษ ตัวเลข จุด ขีด หรือขีดล่าง</small></label>
+    <label>รหัสผ่าน<input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="72" required><small>อย่างน้อย 8 ตัวอักษร</small></label>
+    <label>ยืนยันรหัสผ่าน<input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" maxlength="72" required></label>
+    <button type="submit" class="learning-button" <%= cooperatives.length ? '' : 'disabled' %>>ส่งใบสมัคร</button>
+  </form>
+  <a class="learning-row-link" href="<%= loginUrl %>">มีบัญชีแล้ว เข้าสู่ระบบ</a>
+</section>

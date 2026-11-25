@@ -1,0 +1,9 @@
+<fieldset class="learning-edit-row" data-editor-item>
+  <legend data-editor-label>บทเรียน</legend>
+  <div class="learning-form">
+    <label>ชื่อบทเรียน<input name="lessons[<%= index %>][title]" value="<%= row.title || '' %>" maxlength="150"></label>
+    <label>ลิงก์ YouTube<input type="url" name="lessons[<%= index %>][videoUrl]" value="<%= row.videoUrl || '' %>" placeholder="https://www.youtube.com/watch?v=…" maxlength="2000"></label>
+    <label class="learning-short-field">เวลาเรียนขั้นต่ำ (วินาที)<input type="number" name="lessons[<%= index %>][requiredSeconds]" min="1" max="7200" value="<%= row.requiredSeconds ?? 60 %>"></label>
+  </div>
+  <button class="learning-text-button" type="button" data-editor-remove>นำบทเรียนออก</button>
+</fieldset>

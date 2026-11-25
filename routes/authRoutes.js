@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const onlineModel = require('../models/onlineModel');
-const { isInstitutionUser, noCache } = require('../middlewares/authMiddleware');
+const { isInstitutionUser, isLoginReturnPath, isLearningPath, noCache } = require('../middlewares/authMiddleware');
 
 function getLandingPath(user) {
   const group = String(user?.group || user?.m_group || '').trim().toLowerCase();
@@ -16,21 +16,21 @@ router.post('/register', authController.register);
 // Accept returnTo via query: /auth/login?returnTo=/some/path
 router.get('/login', noCache, (req, res) => {
   const { returnTo } = req.query || {};
-  if (typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('/auth')) {
+  if (isLoginReturnPath(returnTo)) {
     req.session.returnTo = returnTo;
   }
   // If user already logged in, redirect immediately
   if (req.session.user) {
     const defaultLanding = getLandingPath(req.session.user);
-    const redirectTo = (typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/') && !req.session.returnTo.startsWith('/auth'))
+    const redirectTo = isLoginReturnPath(req.session.returnTo)
       ? req.session.returnTo
       : defaultLanding;
     delete req.session.returnTo;
-    return res.redirect(isInstitutionUser(req.session.user) ? defaultLanding : redirectTo);
+    return res.redirect(isInstitutionUser(req.session.user) && !isLearningPath(redirectTo) ? defaultLanding : redirectTo);
   }
   const { registered } = req.query || {};
   const registeredMessage = registered ? 'สมัครสมาชิกสำเร็จ กำลังรอการอนุมัติจากผู้ดูแลระบบ' : null;
-  const safeReturnTo = (typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/') && !req.session.returnTo.startsWith('/auth'))
+  const safeReturnTo = isLoginReturnPath(req.session.returnTo)
     ? req.session.returnTo
     : '';
   res.render('login', { registeredMessage, returnTo: safeReturnTo });

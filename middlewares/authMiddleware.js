@@ -68,6 +68,11 @@ const INSTITUTION_ALLOWED_PATHS = [
 
 exports.isInstitutionUser = isInstitutionUser;
 
+exports.isLoginReturnPath = (path) => typeof path === 'string' && path.startsWith('/')
+    && !path.startsWith('//') && !path.startsWith('/auth') && !/[\\\x00-\x20\x7f]/.test(path);
+
+exports.isLearningPath = (path) => typeof path === 'string' && /^\/learning(?:\/|[?#]|$)/i.test(path);
+
 exports.requireOwnInstitution = (req, res, next) => {
     const user = req.session?.user;
     if (!isInstitutionUser(user)) return next();
@@ -155,6 +160,8 @@ exports.requireLogin = (req, res, next) => {
 
     return userLevels.some((level) => allowedLevels.includes(level));
   }
+
+  exports.hasRequiredLevel = hasRequiredLevel;
 
   exports.requireLevel = (requiredLevel) => {
     return (req, res, next) => {

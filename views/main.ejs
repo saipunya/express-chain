@@ -76,6 +76,7 @@
     && [_currentUser.mClass, _currentUser.m_class, _currentUser.level].some((level) => ['admin', 'pbt'].includes(String(level || '').trim()));
   const _dashboardPath = _isInstitutionUser ? '/dashboard2' : '/dashboard';
   const _serviceLinks = [
+    { href: '/learning', icon: 'bi-book', label: 'ระบบเรียนรู้ออนไลน์' },
     { href: '/strength/assessments/public', icon: 'bi-clipboard-check', label: 'ประเมินความเข้มแข็ง' },
     { href: '/loan-limit', icon: 'bi-calculator', label: 'คำนวณวงเงินกู้ยืมหรือค้ำประกัน' },
     { href: '/meetingroom', icon: 'bi-calendar2-check', label: 'จองห้องประชุม' },

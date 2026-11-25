@@ -1,0 +1,14 @@
+<section class="learning-panel learning-auth">
+  <h1><%= title %></h1>
+  <p class="learning-intro">สำหรับสมาชิกสหกรณ์ในจังหวัดชัยภูมิ</p>
+  <% if (registered) { %><p class="learning-success" role="status">ส่งใบสมัครแล้ว เมื่อเจ้าหน้าที่ตรวจสอบและอนุมัติ คุณจะเข้าสู่ระบบได้</p><% } %>
+  <% if (error) { %><p class="learning-feedback" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= loginUrl %>" class="learning-form">
+    <input type="hidden" name="token" value="<%= token %>">
+    <input type="hidden" name="returnTo" value="<%= returnTo %>">
+    <label>ชื่อผู้ใช้<input name="username" autocomplete="username" autocapitalize="none" maxlength="60" value="<%= username %>" required></label>
+    <label>รหัสผ่าน<input type="password" name="password" autocomplete="current-password" required></label>
+    <button type="submit" class="learning-button">เข้าสู่ระบบ</button>
+  </form>
+  <a class="learning-row-link" href="<%= registerUrl %>">สมัครบัญชีผู้เรียน</a>
+</section>

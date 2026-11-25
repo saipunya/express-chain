@@ -4,7 +4,8 @@
 <% if (saved) { %><p class="learning-success" role="status"><%= draft.published_revision === draft.revision ? 'เผยแพร่รายวิชาแล้ว' : 'บันทึกร่างแล้ว' %></p><% } %>
 <% if (error) { %><p class="learning-feedback" role="alert"><%= error %></p><% } %>
 
-<form method="post" action="/learning/admin/courses<%= draft ? `/${draft.id}` : '' %>" class="learning-form learning-course-editor">
+<form method="post" action="/learning/admin/courses<%= draft ? `/${draft.id}` : '' %>" class="learning-form learning-course-editor"
+  data-max-items="<%= maxCourseItems %>" data-excel-type="<%= quizExcelType %>">
   <input type="hidden" name="token" value="<%= token %>">
   <% if (draft) { %><input type="hidden" name="revision" value="<%= draft.revision %>"><% } %>
   <section class="learning-panel" aria-labelledby="edit-details">
@@ -27,18 +28,34 @@
     <button class="learning-button learning-button-outline" data-editor-add type="button">เพิ่มบทเรียน</button>
   </section>
 
-  <% for (const [kind, name] of Object.entries(quizNames)) { %>
-    <section class="learning-panel" data-editor-section aria-labelledby="edit-<%= kind %>">
-      <h2 id="edit-<%= kind %>"><%= name %></h2>
-      <p>กำหนดคำถาม ตัวเลือก 3 ข้อ และคำตอบที่ถูกต้อง</p>
-      <div data-editor-items>
-        <% const questions = form.quizzes[kind].length ? form.quizzes[kind] : [{}]; %>
-        <% questions.forEach((row, index) => { %><%- include('admin-question', { row, index, kind }) %><% }) %>
+  <section class="learning-panel" data-editor-section aria-labelledby="edit-questions">
+    <h2 id="edit-questions">ชุดข้อสอบก่อนและหลังเรียน</h2>
+    <p>ผู้เรียนใช้คำถามชุดเดียวกันทั้งสองช่วง ระบบสลับลำดับคำถามเมื่อเปิดแบบทดสอบ</p>
+    <% if (form.previousQuizSource) { %>
+      <% const otherSource = form.previousQuizSource === 'pre' ? 'post' : 'pre'; %>
+      <p class="learning-feedback">กำลังใช้<%= quizNames[form.previousQuizSource] %>เดิมสำหรับรายวิชาฉบับใหม่
+        <a href="?questionsFrom=<%= otherSource %>">โหลด<%= quizNames[otherSource] %>เดิมแทน</a>
+      </p>
+    <% } %>
+    <div class="learning-excel-import" data-excel-import>
+      <div class="learning-inline-actions learning-excel-heading">
+        <strong>นำเข้าคำถามจาก Excel</strong>
+        <a href="/learning/admin/quizzes/template">ดาวน์โหลดแม่แบบ .xlsx</a>
       </div>
-      <template><%- include('admin-question', { row: {}, index: '__INDEX__', kind }) %></template>
-      <button class="learning-button learning-button-outline" data-editor-add type="button">เพิ่มคำถาม<%= kind === 'pre' ? 'ก่อนเรียน' : 'หลังเรียน' %></button>
-    </section>
-  <% } %>
+      <p class="learning-muted">ใส่คำตอบที่ถูกต้องเป็นเลข 1, 2 หรือ 3 ระบบจะเพิ่มคำถามต่อจากรายการเดิมให้ตรวจทานก่อนบันทึก</p>
+      <div class="learning-excel-fields">
+        <label>ไฟล์ชุดข้อสอบ<input type="file" accept=".xlsx" data-excel-file></label>
+        <button type="button" class="learning-button learning-button-outline" data-excel-button>นำเข้า Excel</button>
+      </div>
+      <p data-excel-status role="status" hidden></p>
+    </div>
+    <div data-editor-items>
+      <% const questions = form.questions.length ? form.questions : [{}]; %>
+      <% questions.forEach((row, index) => { %><%- include('admin-question', { row, index }) %><% }) %>
+    </div>
+    <template><%- include('admin-question', { row: {}, index: '__INDEX__' }) %></template>
+    <button class="learning-button learning-button-outline" data-editor-add type="button">เพิ่มคำถาม</button>
+  </section>
 
   <div class="learning-inline-actions">
     <button type="submit" name="intent" value="save" class="learning-button learning-button-outline">บันทึกร่าง</button>

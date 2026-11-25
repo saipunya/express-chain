@@ -172,6 +172,10 @@
 .learning-section-title h2 { margin: 0; }
 .learning-management-list li { flex-wrap: wrap; }
 .learning-course-editor { margin-top: 1.3rem; }
+.learning-excel-import { margin-bottom: 1.15rem; padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: 8px; }
+.learning-excel-heading { justify-content: space-between; margin-bottom: 0.35rem; }
+.learning-excel-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 0.7rem; }
+.learning-excel-import [data-excel-status] { margin-top: 0.8rem; }
 .learning-edit-row { margin: 0 0 1rem; min-inline-size: 0; padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: 8px; }
 .learning-edit-row legend { padding-inline: 0.45rem; font-weight: 700; }
 .learning-edit-choices { display: grid; gap: 0.7rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -181,4 +185,5 @@
 
 @media (max-width: 36rem) {
   .learning-edit-choices { grid-template-columns: 1fr; }
+  .learning-excel-fields { grid-template-columns: 1fr; }
 }

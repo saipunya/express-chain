@@ -13,6 +13,7 @@
   <form method="post" action="<%= courseUrl(course) %>/quizzes/<%= kind %>" class="learning-quiz-form">
     <input type="hidden" name="token" value="<%= token %>">
     <input type="hidden" name="submissionId" value="<%= submissionId %>">
+    <input type="hidden" name="orderProof" value="<%= orderProof %>">
     <% questions.forEach((question, index) => { %>
       <fieldset>
         <legend><%= index + 1 %>. <%= question.prompt %></legend>

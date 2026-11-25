@@ -50,7 +50,8 @@
     "sanitize": "^2.1.2",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
-    "wkhtmltopdf": "^0.4.0"
+    "wkhtmltopdf": "^0.4.0",
+    "yauzl": "^2.10.0"
   },
   "devDependencies": {
     "kill": "^0.0.2"

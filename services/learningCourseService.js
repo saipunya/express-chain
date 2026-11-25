@@ -1,8 +1,8 @@
 const { randomUUID } = require('node:crypto');
 const db = require('../config/db');
 const { LearningError, isUuid } = require('./learningService');
+const { MAX_ITEMS, isValidQuestion } = require('../utils/learningQuestions');
 
-const MAX_ITEMS = 20;
 const videoIdPattern = /^[A-Za-z0-9_-]{11}$/;
 const youtubeHosts = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com']);
 
@@ -30,24 +30,29 @@ const trim = (value) => typeof value === 'string' ? value.trim() : '';
 const items = (value) => value && typeof value === 'object' ? Object.values(value) : [];
 
 function formValues(body) {
-  const questions = (kind) => items(body.quizzes?.[kind]).slice(0, MAX_ITEMS + 1).map((row) => ({
-    prompt: trim(row?.prompt), choices: [0, 1, 2].map((index) => trim(row?.choices?.[index])), correct: trim(row?.correct)
-  }));
   return {
     title: trim(body.title), description: trim(body.description), passPercent: trim(body.passPercent),
     lessons: items(body.lessons).slice(0, MAX_ITEMS + 1).map((row) => ({
       title: trim(row?.title), videoUrl: trim(row?.videoUrl), requiredSeconds: trim(row?.requiredSeconds)
     })),
-    quizzes: { pre: questions('pre'), post: questions('post') }
+    questions: items(body.questions).slice(0, MAX_ITEMS + 1).map((row) => ({
+      prompt: trim(row?.prompt), choices: [0, 1, 2].map((index) => trim(row?.choices?.[index])), correct: trim(row?.correct)
+    }))
   };
 }
 
-function toForm(course) {
-  const quiz = (kind) => course.quizzes[kind].map((question) => ({ ...question, correct: String(question.correct) }));
+function toForm(course, requestedSource) {
+  const previousPre = course.quizzes?.pre ?? [];
+  const previousPost = course.quizzes?.post ?? [];
+  const source = previousPost.length && (!previousPre.length || requestedSource === 'post') ? 'post' : 'pre';
+  const questions = course.questions ?? (source === 'post' ? previousPost : previousPre);
+  const canChooseSource = !course.questions && previousPre.length && previousPost.length
+    && JSON.stringify(previousPre) !== JSON.stringify(previousPost);
   return {
-    ...course, passPercent: String(course.passPercent),
+    title: course.title, description: course.description, passPercent: String(course.passPercent),
     lessons: course.lessons.map((lesson) => ({ ...lesson, videoUrl: videoUrl(lesson.videoId) })),
-    quizzes: { pre: quiz('pre'), post: quiz('post') }
+    questions: questions.map((question) => ({ ...question, correct: String(question.correct) })),
+    previousQuizSource: canChooseSource ? source : null
   };
 }
 
@@ -57,9 +62,8 @@ function validate(form, publish) {
   }
   if (!/^(?:[1-9]\d?|100)$/.test(form.passPercent)) throw new LearningError(400, 'เกณฑ์ผ่านต้องเป็นจำนวนเต็มระหว่าง 1 ถึง 100');
   const lessonRows = form.lessons.filter((row) => row.title || row.videoUrl);
-  const questionRows = (kind) => form.quizzes[kind].filter((row) => row.prompt || row.choices.some(Boolean));
-  if ([form.lessons, form.quizzes.pre, form.quizzes.post].some((rows) => rows.length > MAX_ITEMS)) {
-    throw new LearningError(400, `เพิ่มบทเรียนและคำถามแต่ละชุดได้สูงสุด ${MAX_ITEMS} รายการ`);
+  if (form.lessons.length > MAX_ITEMS || form.questions.length > MAX_ITEMS) {
+    throw new LearningError(400, `เพิ่มบทเรียนและคำถามได้อย่างละไม่เกิน ${MAX_ITEMS} รายการ`);
   }
   const lessons = lessonRows.map((row, index) => {
     const videoId = youtubeId(row.videoUrl);
@@ -70,20 +74,16 @@ function validate(form, publish) {
     }
     return { id: String(index + 1), title: row.title, videoId, requiredSeconds };
   });
-  function quiz(kind, label) {
-    return questionRows(kind).map((row, index) => {
-      if (!row.prompt || row.prompt.length > 350 || row.choices.some((choice) => !choice || choice.length > 250)
-        || new Set(row.choices).size !== 3 || !/^[0-2]$/.test(row.correct)) {
-        throw new LearningError(400, `${label}ข้อที่ ${index + 1} ต้องมีคำถาม ตัวเลือกต่างกัน 3 ตัว และคำตอบที่ถูก`);
-      }
-      return { ...row, correct: Number(row.correct) };
-    });
+  const questions = form.questions.filter((row) => row.prompt || row.choices.some(Boolean)).map((row, index) => {
+    if (!isValidQuestion(row)) {
+      throw new LearningError(400, `ข้อที่ ${index + 1} ต้องมีคำถาม ตัวเลือกต่างกัน 3 ตัว และคำตอบที่ถูก`);
+    }
+    return { ...row, correct: Number(row.correct) };
+  });
+  if (publish && (!lessons.length || !questions.length)) {
+    throw new LearningError(400, 'ก่อนเผยแพร่ให้เพิ่มอย่างน้อย 1 บทเรียน และ 1 คำถามในชุดข้อสอบ');
   }
-  const quizzes = { pre: quiz('pre', 'ก่อนเรียน'), post: quiz('post', 'หลังเรียน') };
-  if (publish && (!lessons.length || !quizzes.pre.length || !quizzes.post.length)) {
-    throw new LearningError(400, 'ก่อนเผยแพร่ให้เพิ่มอย่างน้อย 1 บทเรียน และอย่างน้อย 1 ข้อต่อแบบทดสอบ');
-  }
-  return { title: form.title, description: form.description, passPercent: Number(form.passPercent), lessons, quizzes };
+  return { title: form.title, description: form.description, passPercent: Number(form.passPercent), lessons, questions };
 }
 
 async function listPublished(learnerId, courseId = null) {

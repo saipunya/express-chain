@@ -30,7 +30,7 @@ async function readProgress(connection, course, enrollment) {
   // Read the certificate and its passing attempt together, including when a learner submits in another tab.
   const [results] = enrollment ? await connection.execute(`
     SELECT e.certificate_code, e.certificate_name, e.certificate_course,
-           a.kind, a.score, a.total, a.passed, a.submitted_ms
+           a.kind, a.score, a.total, a.passed, a.submitted_ms, a.submission_id
     FROM learning_enrollments e
     LEFT JOIN learning_attempts a ON a.id IN (
       SELECT MAX(id) FROM learning_attempts WHERE enrollment_id = ? GROUP BY kind
@@ -120,7 +120,7 @@ async function databaseTime(connection) {
   return Number(nowMs);
 }
 
-async function submitQuiz(user, course, kind, submissionId, answers) {
+async function submitQuiz(user, course, kind, { submissionId, questions }, answers) {
   if (!isUuid(submissionId)) throw new LearningError(400, 'กรุณาเปิดแบบทดสอบใหม่และส่งคำตอบอีกครั้ง');
   return withEnrollment(user, course, async (connection, enrollment) => {
     const [[existing]] = await connection.execute(`
@@ -132,7 +132,6 @@ async function submitQuiz(user, course, kind, submissionId, answers) {
     }
     const progress = await readProgress(connection, course, enrollment);
     assertQuizAvailable(kind, progress);
-    const questions = course.quizzes[kind];
     const score = gradeQuiz(questions, answers);
     const passed = kind === 'post' ? score * 100 >= questions.length * course.passPercent : null;
     await connection.execute(`

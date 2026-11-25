@@ -6,6 +6,8 @@ const accounts = require('../services/learningAccountService');
 const learning = require('../services/learningService');
 const renderCertificate = require('../services/learningCertificate');
 const { noCache, isLoginReturnPath, isLearningPath } = require('../middlewares/authMiddleware');
+const { quizQuestions } = require('../utils/learningQuestions');
+const { createQuizForm, readQuizForm } = require('../utils/learningQuizForm');
 
 const router = express.Router();
 const loginUrl = '/learning/login';
@@ -16,6 +18,7 @@ let nextAttemptCleanup = 0;
 const courseUrl = (course) => `/learning/${course.id}`;
 const lessonUrl = (course, lesson) => `${courseUrl(course)}/lessons/${lesson.id}`;
 const quizNames = { pre: 'แบบทดสอบก่อนเรียน', post: 'แบบทดสอบหลังเรียน' };
+const wantsJson = (req) => req.is('application/json') || req.get('accept') === 'application/json';
 
 function duration(milliseconds) {
   const seconds = Math.floor(milliseconds / 1000);
@@ -23,12 +26,18 @@ function duration(milliseconds) {
 }
 
 function render(res, view, locals) {
-  res.render('learning/layout', { view, duration, loginUrl, registerUrl, courseUrl, lessonUrl, quizNames, ...locals });
+  res.render('learning/layout', { view, duration, loginUrl, registerUrl, courseUrl, lessonUrl, quizNames, quizQuestions, ...locals });
 }
 
-function renderQuiz(res, kind, answers = {}, error = null) {
-  const questions = res.locals.course.quizzes[kind].map(({ prompt, choices }) => ({ prompt, choices }));
-  render(res, 'quiz', { title: quizNames[kind], kind, submissionId: randomUUID(), error, answers, questions });
+function renderQuiz(res, kind, quizForm, answers = {}, error = null) {
+  const questions = quizForm.questions.map(({ prompt, choices }) => ({ prompt, choices }));
+  render(res, 'quiz', {
+    title: quizNames[kind], kind, submissionId: quizForm.submissionId, orderProof: quizForm.proof, error, answers, questions
+  });
+}
+
+function quizScope(req, { course, account }) {
+  return JSON.stringify([req.sessionID, account.kind ?? 'coopchain', account.id, course.id, course.revision ?? null]);
 }
 
 function limitAttempts(key, limit) {
@@ -68,9 +77,9 @@ router.use(noCache, (req, res, next) => {
   }
   res.locals.token = req.session.learningToken;
   if (!isRead) {
-    const token = req.body?.token;
+    const token = req.body?.token ?? req.get('x-learning-csrf-token');
     const expected = req.session.learningToken;
-    if (!expected && req.is('application/json') && !req.session.learningLearner && !req.session.user) {
+    if (!expected && wantsJson(req) && !req.session.learningLearner && !req.session.user) {
       return res.status(401).json({ message: 'กรุณาเข้าสู่ระบบอีกครั้ง' });
     }
     if (!expected || typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)
@@ -146,6 +155,7 @@ router.post('/register', async (req, res) => {
 router.post('/logout', (req, res) => {
   delete req.session.learningLearner;
   delete req.session.learningToken;
+  delete req.session.lastLearningQuiz;
   res.redirect(303, '/learning');
 });
 
@@ -220,20 +230,32 @@ router.get('/:courseId/quizzes/:kind', async (req, res) => {
   const { kind } = req.params;
   const progress = await learning.getProgress(res.locals.account, course);
   learning.assertQuizAvailable(kind, progress);
-  renderQuiz(res, kind);
+  const questions = quizQuestions(course, kind);
+  if (!questions.length) throw new learning.LearningError(409, 'รายวิชานี้ยังไม่มีคำถามในแบบทดสอบ');
+  const scope = quizScope(req, res.locals);
+  const previous = req.session.lastLearningQuiz;
+  const lastAttempt = progress.post ?? progress.pre;
+  const lastId = previous?.scope === scope && previous.kind === kind ? previous.submissionId : lastAttempt?.submission_id;
+  const quizForm = createQuizForm(questions, scope, kind, lastId);
+  req.session.lastLearningQuiz = { scope, kind, submissionId: quizForm.submissionId };
+  renderQuiz(res, kind, quizForm);
 });
 
 router.post('/:courseId/quizzes/:kind', async (req, res) => {
   const { course } = res.locals;
   const { kind } = req.params;
-  const { submissionId, answers } = req.body || {};
+  const { submissionId, orderProof, answers } = req.body || {};
+  const scope = quizScope(req, res.locals);
+  const quizForm = readQuizForm(quizQuestions(course, kind), scope, kind, submissionId, orderProof);
+  if (!quizForm) throw new learning.LearningError(400, 'กรุณาเปิดแบบทดสอบใหม่และส่งคำตอบอีกครั้ง');
   try {
-    await learning.submitQuiz(res.locals.account, course, kind, submissionId, answers);
+    await learning.submitQuiz(res.locals.account, course, kind, quizForm, answers);
   } catch (error) {
     if (!(error instanceof learning.LearningError) || error.status !== 400) throw error;
     res.status(400);
-    return renderQuiz(res, kind, answers || {}, error.message);
+    return renderQuiz(res, kind, quizForm, answers || {}, error.message);
   }
+  req.session.lastLearningQuiz = { scope, kind, submissionId };
   res.redirect(303, `${courseUrl(course)}#results`);
 });
 
@@ -251,7 +273,7 @@ router.use((error, req, res, next) => {
   const status = error instanceof learning.LearningError ? error.status : 500;
   if (status === 500) console.error(`[${req._rid || 'learning'}]`, error);
   const message = status === 500 ? 'ระบบเรียนรู้ออนไลน์ขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' : error.message;
-  if (req.is('application/json')) return res.status(status).json({ message });
+  if (wantsJson(req)) return res.status(status).json({ message });
   res.status(status);
   render(res, 'error', { title: 'ระบบเรียนรู้ออนไลน์', message });
 });

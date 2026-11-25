@@ -9,7 +9,7 @@
       <li>
         <div>
           <strong><%= quizNames.pre %></strong>
-          <small><%= course.quizzes.pre.length %> ข้อ</small>
+          <small><%= quizQuestions(course, 'pre').length %> ข้อ</small>
         </div>
         <% if (progress.pre) { %>
           <span class="learning-badge">ทำแล้ว</span>
@@ -37,7 +37,7 @@
       <li>
         <div>
           <strong><%= quizNames.post %></strong>
-          <small><%= course.quizzes.post.length %> ข้อ · เกณฑ์ผ่าน <%= course.passPercent %>%</small>
+          <small><%= quizQuestions(course, 'post').length %> ข้อ · เกณฑ์ผ่าน <%= course.passPercent %>%</small>
         </div>
         <% if (progress.enrollment?.certificate_code) { %>
           <span class="learning-badge">ผ่านเกณฑ์</span>
